@@ -130,9 +130,9 @@ export default function Sidebar({
   const [rotation, setRotation] = useState(0);
   const [skewX, setSkewX] = useState(0);
   const [skewY, setSkewY] = useState(0);
-  
+
   // Shape properties will be passed from parent component via selectedShapes data
-  
+
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
     'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic', 'quadratic', 'nurbs'
@@ -144,7 +144,7 @@ export default function Sidebar({
         {allShapeTypes.map((type) => {
           const IconComponent = shapeIcons[type];
           const isEnabled = enabledShapeTypes.has(type);
-          
+
           return (
             <div key={type} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
               isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
@@ -166,7 +166,7 @@ export default function Sidebar({
           );
         })}
       </div>
-      
+
       <Button 
         onClick={onGenerateRandomShapes}
         className="w-full mt-4 bg-[var(--editor-primary)] hover:bg-blue-700 text-white font-medium"
@@ -182,7 +182,7 @@ export default function Sidebar({
       <div className="text-xs text-slate-400 mb-3">
         Select editing mode to control different aspects of your shapes
       </div>
-      
+
       <div className="grid grid-cols-1 gap-2">
         <Button
           variant={editMode === 'shapes' ? 'default' : 'secondary'}
@@ -196,7 +196,7 @@ export default function Sidebar({
           <MousePointer className={`w-3 h-3 mr-2 ${editMode === 'shapes' ? 'text-white' : 'text-slate-400'}`} />
           Shape Mode
         </Button>
-        
+
         <Button
           variant={editMode === 'points' ? 'default' : 'secondary'}
           size="sm"
@@ -209,7 +209,7 @@ export default function Sidebar({
           <Navigation className={`w-3 h-3 mr-2 ${editMode === 'points' ? 'text-white' : 'text-slate-400'}`} />
           Point Mode
         </Button>
-        
+
         <Button
           variant={editMode === 'segments' ? 'default' : 'secondary'}
           size="sm"
@@ -223,7 +223,7 @@ export default function Sidebar({
           Segment Mode
         </Button>
       </div>
-      
+
       <div className="text-xs text-slate-500 mt-3">
         {editMode === 'shapes' && "Select and transform entire shapes"}
         {editMode === 'points' && `Edit individual points - ${selectedPointsCount} selected`}
@@ -239,7 +239,7 @@ export default function Sidebar({
           Select shapes to transform
         </div>
       )}
-      
+
       {selectedCount > 0 && (
         <>
           {/* Move Controls */}
@@ -330,7 +330,7 @@ export default function Sidebar({
                       const factor = value / 100;
                       const currentFactor = scaleX / 100;
                       const deltaFactor = factor / currentFactor;
-                      
+
                       setScaleX(value);
                       if (lockAspectRatio) {
                         setScaleY(value);
@@ -348,7 +348,7 @@ export default function Sidebar({
                     const factor = value / 100;
                     const currentFactor = scaleX / 100;
                     const deltaFactor = factor / currentFactor;
-                    
+
                     setScaleX(value);
                     if (lockAspectRatio) {
                       setScaleY(value);
@@ -375,7 +375,7 @@ export default function Sidebar({
                         const factor = value / 100;
                         const currentFactor = scaleY / 100;
                         const deltaFactor = factor / currentFactor;
-                        
+
                         setScaleY(value);
                         onScaleBy(1, deltaFactor);
                       }}
@@ -388,7 +388,7 @@ export default function Sidebar({
                       const factor = value / 100;
                       const currentFactor = scaleY / 100;
                       const deltaFactor = factor / currentFactor;
-                      
+
                       setScaleY(value);
                       onScaleBy(1, deltaFactor);
                     }}
@@ -534,7 +534,7 @@ export default function Sidebar({
       )}
     </div>
   );
-  
+
   // Shape Properties Panel Component
   function ShapePropertiesPanel({ selectedShapes, selectedGroups, selectedCount }: {
     selectedShapes: Shape[];
@@ -542,7 +542,7 @@ export default function Sidebar({
     selectedCount: number;
   }) {
     const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
-    
+
     return (
       <div className="space-y-2 border-t border-slate-600 pt-2">
         <Label className="text-xs text-slate-300">Shape Properties</Label>
@@ -638,11 +638,6 @@ export default function Sidebar({
                       const newWidth = parseFloat(e.target.value) || 0;
                       selectedShapes.forEach(shape => {
                         shape.properties.strokeWidth = newWidth;
-                      });
-                      selectedGroups.forEach(group => {
-                        group.shapes.forEach(shape => {
-                          shape.properties.strokeWidth = newWidth;
-                        });
                       });
                     }}
                     min={0}
@@ -796,7 +791,7 @@ export default function Sidebar({
         <Layers className="w-4 h-4 mr-2" />
         Compose Shapes
       </Button>
-      
+
       <div className="space-y-3">
         <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
           scatterSettings.onPoints ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
@@ -832,13 +827,13 @@ export default function Sidebar({
             className="data-[state=checked]:bg-cyan-600"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label className="text-xs text-slate-400">Scatter Count</Label>
           <Slider
             value={[scatterSettings.count]}
             onValueChange={([value]) => onUpdateScatterSettings({ count: value })}
-            min={1}
+                        min={1}
             max={20}
             step={1}
             className="w-full"
@@ -854,7 +849,7 @@ export default function Sidebar({
       <div className="text-sm text-slate-400">
         Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
       </div>
-      
+
       {/* Shape Properties Panel */}
       {selectedCount > 0 && (
         <ShapePropertiesPanel 
@@ -863,13 +858,13 @@ export default function Sidebar({
           selectedCount={selectedCount}
         />
       )}
-      
+
       {selectedCount === 0 && (
         <div className="text-xs text-slate-500">
           Select shapes to edit their properties
         </div>
       )}
-      
+
       {(scatterSettings.onPoints || scatterSettings.insideArea) && (
         <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
           <div className="text-xs text-blue-200 font-medium mb-1">Scatter Mode Active</div>
@@ -897,7 +892,7 @@ export default function Sidebar({
             <Menu className="w-5 h-5" />
           </Button>
         </div>
-        
+
         {/* Icon Panels */}
         <div className="flex-1 flex flex-col space-y-2 py-4">
           {/* Shape Types */}
@@ -1072,11 +1067,11 @@ export default function Sidebar({
           <ChevronLeft className="w-4 h-4" />
         </Button>
       </div>
-      
+
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto">
         <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms"]} className="w-full">
-          
+
           {/* Shape Types Section */}
           <AccordionItem value="shapes" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-blue-300 data-[state=open]:bg-blue-900/20">
@@ -1092,7 +1087,7 @@ export default function Sidebar({
               <ShapeTypesContent />
             </AccordionContent>
           </AccordionItem>
-          
+
           {/* Edit Mode Section - Moved under Create */}
           <AccordionItem value="editmode" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-green-300 data-[state=open]:bg-green-900/20">
@@ -1114,7 +1109,7 @@ export default function Sidebar({
               <EditModeContent />
             </AccordionContent>
           </AccordionItem>
-          
+
           {/* Transform Tools Section */}
           <AccordionItem value="transforms" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-orange-300 data-[state=open]:bg-orange-900/20">
@@ -1132,7 +1127,7 @@ export default function Sidebar({
               <TransformToolsContent />
             </AccordionContent>
           </AccordionItem>
-          
+
           {/* Composition Section */}
           <AccordionItem value="composition" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-purple-300 data-[state=open]:bg-purple-900/20">
@@ -1150,7 +1145,7 @@ export default function Sidebar({
               <CompositionContent />
             </AccordionContent>
           </AccordionItem>
-          
+
           {/* Properties Section */}
           <AccordionItem value="properties" className="border-b-0">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-pink-300 data-[state=open]:bg-pink-900/20">
@@ -1168,7 +1163,7 @@ export default function Sidebar({
               <PropertiesContent />
             </AccordionContent>
           </AccordionItem>
-          
+
         </Accordion>
       </div>
     </div>
