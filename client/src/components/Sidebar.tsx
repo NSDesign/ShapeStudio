@@ -928,14 +928,8 @@ export default function Sidebar({
 
   return (
     <div className="w-80 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
-      {/* Compact Header */}
-      <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <FolderOpen className="w-5 h-5 text-blue-400" />
-          <div>
-            <h1 className="text-sm font-semibold text-white">Shape Editor</h1>
-          </div>
-        </div>
+      {/* Collapse Button */}
+      <div className="px-4 py-2 border-b border-slate-700 flex justify-end">
         <Button
           variant="ghost"
           size="sm"
