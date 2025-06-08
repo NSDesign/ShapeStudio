@@ -25,6 +25,8 @@ export const useShapeEditor = () => {
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchStartTime, setTouchStartTime] = useState<number>(0);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
   const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
@@ -399,6 +401,89 @@ export const useShapeEditor = () => {
     setDragStart(null);
   }, []);
 
+  // Touch event handlers for mobile multi-select
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 1) return; // Ignore multi-touch gestures
+    
+    const touch = e.touches[0];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / canvasSettings.zoom;
+    const y = (touch.clientY - rect.top) / canvasSettings.zoom;
+    
+    setTouchStartTime(Date.now());
+    setDragStart({ x, y });
+    setIsDragging(true);
+
+    // Handle different edit modes
+    switch (editMode) {
+      case 'points':
+        selectPointAt(x, y, isMultiSelectMode);
+        break;
+      case 'segments':
+        selectSegmentAt(x, y, isMultiSelectMode);
+        break;
+      default:
+        selectShapeAtPoint(x, y, isMultiSelectMode);
+        break;
+    }
+  }, [canvasSettings.zoom, editMode, isMultiSelectMode, selectShapeAtPoint, selectPointAt, selectSegmentAt]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDragging || !dragStart || e.touches.length > 1) return;
+    
+    const touch = e.touches[0];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / canvasSettings.zoom;
+    const y = (touch.clientY - rect.top) / canvasSettings.zoom;
+    
+    const deltaX = x - dragStart.x;
+    const deltaY = y - dragStart.y;
+    
+    // Handle different edit modes
+    switch (editMode) {
+      case 'points':
+        if (selectedPoints.length > 0) {
+          moveSelectedPoints(deltaX, deltaY);
+        }
+        break;
+      case 'segments':
+        if (selectedSegments.length > 0) {
+          moveSelectedSegments(deltaX, deltaY);
+        }
+        break;
+      default:
+        if (selectedShapes.length > 0 || selectedGroups.length > 0) {
+          moveSelected(deltaX, deltaY);
+        }
+        break;
+    }
+    
+    setDragStart({ x, y });
+  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    const touchDuration = Date.now() - touchStartTime;
+    
+    // Long press (>500ms) toggles multi-select mode
+    if (touchDuration > 500) {
+      setIsMultiSelectMode(!isMultiSelectMode);
+    }
+    
+    setIsDragging(false);
+    setDragStart(null);
+    setTouchStartTime(0);
+  }, [touchStartTime, isMultiSelectMode]);
+
+  const toggleMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+  }, [isMultiSelectMode]);
+
   return {
     // State
     shapes,
@@ -412,6 +497,7 @@ export const useShapeEditor = () => {
     editMode,
     selectedPoints,
     selectedSegments,
+    isMultiSelectMode,
     
     // Actions
     generateRandomShapes,
@@ -420,6 +506,7 @@ export const useShapeEditor = () => {
     composeShapes,
     scatterOnShape,
     setEditingMode,
+    toggleMultiSelectMode,
     
     // Transforms
     moveSelected,
@@ -439,6 +526,9 @@ export const useShapeEditor = () => {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     
     // Computed
     selectedCount: selectedShapes.length + selectedGroups.length,
