@@ -476,9 +476,20 @@ export const useShapeEditor = () => {
   }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {
+    if (isMarqueeSelecting) {
+      // Finalize marquee selection
+      setIsMarqueeSelecting(false);
+      setMarqueeStart(null);
+      setMarqueeEnd(null);
+      
+      // Update selected shapes array based on shape.selected flags
+      const newSelectedShapes = shapes.filter(shape => shape.selected);
+      setSelectedShapes(newSelectedShapes);
+    }
+    
     setIsDragging(false);
     setDragStart(null);
-  }, []);
+  }, [isMarqueeSelecting, shapes]);
 
   // Touch event handlers for mobile multi-select
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -595,6 +606,9 @@ export const useShapeEditor = () => {
     selectedPoints,
     selectedSegments,
     isMultiSelectMode,
+    marqueeStart,
+    marqueeEnd,
+    isMarqueeSelecting,
     
     // Actions
     generateRandomShapes,

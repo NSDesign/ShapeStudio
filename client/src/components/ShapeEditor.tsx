@@ -16,6 +16,9 @@ export default function ShapeEditor() {
     selectedPoints,
     selectedSegments,
     isMultiSelectMode,
+    marqueeStart,
+    marqueeEnd,
+    isMarqueeSelecting,
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
@@ -110,6 +113,9 @@ export default function ShapeEditor() {
         selectedPoints={selectedPoints}
         selectedSegments={selectedSegments}
         isMultiSelectMode={isMultiSelectMode}
+        marqueeStart={marqueeStart}
+        marqueeEnd={marqueeEnd}
+        isMarqueeSelecting={isMarqueeSelecting}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

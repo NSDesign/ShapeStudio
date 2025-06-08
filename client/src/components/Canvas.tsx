@@ -14,6 +14,9 @@ interface CanvasProps {
   selectedPoints: { shapeId: string; pointIndex: number }[];
   selectedSegments: { shapeId: string; segmentIndex: number }[];
   isMultiSelectMode: boolean;
+  marqueeStart: { x: number; y: number } | null;
+  marqueeEnd: { x: number; y: number } | null;
+  isMarqueeSelecting: boolean;
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -36,6 +39,9 @@ export default function Canvas({
   selectedPoints,
   selectedSegments,
   isMultiSelectMode,
+  marqueeStart,
+  marqueeEnd,
+  isMarqueeSelecting,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -100,6 +106,24 @@ export default function Canvas({
       }
 
       ctx.restore();
+
+      // Render marquee selection rectangle
+      if (isMarqueeSelecting && marqueeStart && marqueeEnd) {
+        const minX = Math.min(marqueeStart.x, marqueeEnd.x) * canvasSettings.zoom + canvasSettings.panX * canvasSettings.zoom;
+        const maxX = Math.max(marqueeStart.x, marqueeEnd.x) * canvasSettings.zoom + canvasSettings.panX * canvasSettings.zoom;
+        const minY = Math.min(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
+        const maxY = Math.max(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
+        
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        
+        ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
+        ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+        
+        ctx.setLineDash([]);
+      }
 
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(render);
