@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings } from '../lib/shapeTypes';
 import ExportDialog from './ExportDialog';
@@ -13,9 +13,14 @@ interface CanvasProps {
   editMode: 'shapes' | 'points' | 'segments';
   selectedPoints: { shapeId: string; pointIndex: number }[];
   selectedSegments: { shapeId: string; segmentIndex: number }[];
+  isMultiSelectMode: boolean;
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onTouchStart: (e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onTouchMove: (e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onTouchEnd: (e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onToggleMultiSelect: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
@@ -30,9 +35,14 @@ export default function Canvas({
   editMode,
   selectedPoints,
   selectedSegments,
+  isMultiSelectMode,
   onMouseDown,
   onMouseMove,
   onMouseUp,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onToggleMultiSelect,
   onZoomIn,
   onZoomOut,
   onResetView,
@@ -143,6 +153,15 @@ export default function Canvas({
           <Button
             variant="ghost"
             size="sm"
+            onClick={onToggleMultiSelect}
+            className={`text-slate-400 hover:text-white p-2 h-auto ${isMultiSelectMode ? 'bg-blue-500/20 text-blue-300' : ''}`}
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
+          <div className="h-4 w-px bg-slate-600"></div>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onZoomOut}
             className="text-slate-400 hover:text-white p-2 h-auto"
           >
@@ -179,12 +198,27 @@ export default function Canvas({
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         />
         
         {/* Canvas Overlay Messages */}
-        {selectedCount === 0 && (
+        {selectedCount === 0 && !isMultiSelectMode && (
           <div className="absolute top-4 left-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
             <span>Hold Shift to select multiple shapes</span>
+          </div>
+        )}
+        
+        {isMultiSelectMode && (
+          <div className="absolute top-4 left-4 bg-blue-500 bg-opacity-90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
+            <span>Multi-select mode: Tap shapes to add/remove from selection</span>
+          </div>
+        )}
+        
+        {editMode !== 'shapes' && (
+          <div className="absolute top-4 right-4 bg-purple-500 bg-opacity-90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
+            <span>{editMode === 'points' ? 'Point Edit Mode' : 'Segment Edit Mode'}</span>
           </div>
         )}
       </div>

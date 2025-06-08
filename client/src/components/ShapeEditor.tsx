@@ -15,11 +15,13 @@ export default function ShapeEditor() {
     editMode,
     selectedPoints,
     selectedSegments,
+    isMultiSelectMode,
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
     composeShapes,
     setEditingMode,
+    toggleMultiSelectMode,
     moveSelected,
     scaleSelected,
     rotateSelected,
@@ -31,6 +33,9 @@ export default function ShapeEditor() {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     selectedCount,
     selectedPointsCount,
     selectedSegmentsCount,
@@ -104,9 +109,14 @@ export default function ShapeEditor() {
         editMode={editMode}
         selectedPoints={selectedPoints}
         selectedSegments={selectedSegments}
+        isMultiSelectMode={isMultiSelectMode}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onToggleMultiSelect={toggleMultiSelectMode}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
         onResetView={resetView}
