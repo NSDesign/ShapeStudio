@@ -80,11 +80,15 @@ export default function ShapeEditor() {
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         selectedCount={selectedCount}
+        selectedPointsCount={selectedPointsCount}
+        selectedSegmentsCount={selectedSegmentsCount}
+        editMode={editMode}
         canComposeShapes={canComposeShapes}
         onToggleShapeType={toggleShapeType}
         onUpdateScatterSettings={updateScatterSettings}
         onGenerateRandomShapes={generateRandomShapes}
         onComposeShapes={composeShapes}
+        onSetEditMode={setEditingMode}
         onMove={handleMove}
         onScale={handleScale}
         onRotate={handleRotate}
@@ -97,6 +101,9 @@ export default function ShapeEditor() {
         groups={groups}
         canvasSettings={canvasSettings}
         selectedCount={selectedCount}
+        editMode={editMode}
+        selectedPoints={selectedPoints}
+        selectedSegments={selectedSegments}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
