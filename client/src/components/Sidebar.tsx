@@ -33,7 +33,8 @@ import {
   Navigation,
   Spline,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from "lucide-react";
 import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -91,6 +92,7 @@ interface SidebarProps {
   onSkewBy: (x: number, y: number) => void;
   onFlipHorizontal: () => void;
   onFlipVertical: () => void;
+  onDeleteSelected: () => void;
 }
 
 export default function Sidebar({
@@ -113,7 +115,8 @@ export default function Sidebar({
   onRotateBy,
   onSkewBy,
   onFlipHorizontal,
-  onFlipVertical
+  onFlipVertical,
+  onDeleteSelected
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -632,6 +635,19 @@ export default function Sidebar({
                 </div>
               </div>
             )}
+
+            {/* Delete Button */}
+            <div className="mt-4 pt-3 border-t border-slate-600">
+              <Button 
+                onClick={onDeleteSelected}
+                variant="destructive"
+                size="sm"
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Selected
+              </Button>
+            </div>
           </div>
         )}
       </div>

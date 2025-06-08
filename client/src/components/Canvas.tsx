@@ -83,11 +83,31 @@ export default function Canvas({
       ctx.translate(canvasSettings.panX * canvasSettings.zoom, canvasSettings.panY * canvasSettings.zoom);
       ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
 
-      // Render all groups first (they contain shapes)
-      groups.forEach(group => group.render(ctx));
+      // Performance optimization: Only render shapes visible in viewport
+      const viewportBounds = {
+        minX: -canvasSettings.panX - (rect.width / 2) / canvasSettings.zoom,
+        maxX: -canvasSettings.panX + (rect.width / 2) / canvasSettings.zoom,
+        minY: -canvasSettings.panY - (rect.height / 2) / canvasSettings.zoom,
+        maxY: -canvasSettings.panY + (rect.height / 2) / canvasSettings.zoom
+      };
 
-      // Render individual shapes
-      shapes.forEach(shape => shape.render(ctx));
+      // Render visible groups first (they contain shapes)
+      groups.forEach(group => {
+        const bounds = group.getBounds();
+        if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
+            bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
+          group.render(ctx);
+        }
+      });
+
+      // Render visible individual shapes
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
+            bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
+          shape.render(ctx);
+        }
+      });
 
       // Render points and segments in edit mode
       if (editMode === 'points' || editMode === 'segments') {

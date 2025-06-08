@@ -1,6 +1,7 @@
 import { useShapeEditor } from '../hooks/useShapeEditor';
 import Sidebar from './Sidebar';
 import Canvas from './Canvas';
+import ProjectDialog from './ProjectDialog';
 
 export default function ShapeEditor() {
   const {
@@ -112,6 +113,7 @@ export default function ShapeEditor() {
         onSkewBy={handleSkewBy}
         onFlipHorizontal={handleFlipHorizontal}
         onFlipVertical={handleFlipVertical}
+        onDeleteSelected={handleDeleteSelected}
       />
       <Canvas
         shapes={shapes}
