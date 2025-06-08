@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
@@ -57,7 +58,7 @@ const shapeNames: Record<ShapeType, string> = {
   square: 'Square',
   circle: 'Circle',
   ellipse: 'Ellipse',
-  polygon: 'Boxes',
+  polygon: 'Polygon',
   star: 'Star',
   line: 'Line',
   bezier: 'Bezier',
@@ -119,6 +120,9 @@ export default function Sidebar({
   const [rotation, setRotation] = useState(0);
   const [skewX, setSkewX] = useState(0);
   const [skewY, setSkewY] = useState(0);
+  
+  // Get shape editor data for properties panel
+  const { shapes, groups } = useShapeEditor();
   
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
@@ -510,61 +514,161 @@ export default function Sidebar({
           </div>
 
           {/* Shape Properties */}
-          <div className="space-y-2 border-t border-slate-600 pt-2">
-            <Label className="text-xs text-slate-300">Properties</Label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Fill Color</span>
-                <Input
-                  type="color"
-                  value="#3B82F6"
-                  className="h-6 w-12 p-0 border-slate-600"
-                />
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Stroke Color</span>
-                <Input
-                  type="color"
-                  value="#1E293B"
-                  className="h-6 w-12 p-0 border-slate-600"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between">
-                  <Label className="text-xs text-slate-400">Stroke Width</Label>
-                  <Input
-                    type="number"
-                    value={2}
-                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
+          {selectedCount > 0 && (() => {
+            const firstSelectedShape = shapes.find(shape => shape.selected) || groups.find(group => group.selected)?.shapes[0];
+            if (!firstSelectedShape) return null;
+
+            return (
+              <div className="space-y-2 border-t border-slate-600 pt-2">
+                <Label className="text-xs text-slate-300">Shape Properties</Label>
+                <div className="space-y-2">
+                  {/* Fill Properties */}
+                  <div>
+                    <Label className="text-xs text-slate-400 mb-1 block">Fill</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Select defaultValue="solid">
+                          <SelectTrigger className="h-6 text-xs bg-slate-800 border-slate-600">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="solid">Solid</SelectItem>
+                            <SelectItem value="gradient">Gradient</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="color"
+                          defaultValue={firstSelectedShape.properties.fillColor}
+                          className="h-6 w-12 p-0 border-slate-600"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-slate-400">Fill Opacity</Label>
+                          <Input
+                            type="number"
+                            defaultValue={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                            min={0}
+                            max={100}
+                            className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                        </div>
+                        <Slider
+                          defaultValue={[Math.round(firstSelectedShape.properties.fillOpacity * 100)]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stroke Properties */}
+                  <div>
+                    <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="color"
+                          defaultValue={firstSelectedShape.properties.strokeColor}
+                          className="h-6 w-12 p-0 border-slate-600"
+                        />
+                        <Input
+                          type="number"
+                          defaultValue={firstSelectedShape.properties.strokeWidth}
+                          min={0}
+                          max={20}
+                          step={0.5}
+                          className="h-6 flex-1 text-xs bg-slate-800 border-slate-600 text-white"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between">
+                          <Label className="text-xs text-slate-400">Stroke Opacity</Label>
+                          <Input
+                            type="number"
+                            defaultValue={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
+                            min={0}
+                            max={100}
+                            className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                        </div>
+                        <Slider
+                          defaultValue={[Math.round(firstSelectedShape.properties.strokeOpacity * 100)]}
+                          min={0}
+                          max={100}
+                          step={1}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shape-specific Properties */}
+                  {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
+                    <div>
+                      <Label className="text-xs text-slate-400 mb-1 block">Dimensions</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs text-slate-400">Width</Label>
+                          <Input
+                            type="number"
+                            defaultValue={firstSelectedShape.width || 0}
+                            className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-400">Height</Label>
+                          <Input
+                            type="number"
+                            defaultValue={firstSelectedShape.height || 0}
+                            className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
+                    <div>
+                      <Label className="text-xs text-slate-400 mb-1 block">Sides</Label>
+                      <Input
+                        type="number"
+                        defaultValue={firstSelectedShape.sides || 6}
+                        min={3}
+                        max={20}
+                        className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
+                      />
+                    </div>
+                  )}
+
+                  {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
+                    <div>
+                      <Label className="text-xs text-slate-400 mb-1 block">Points</Label>
+                      <Input
+                        type="number"
+                        value={firstSelectedShape.points?.length || 0}
+                        readOnly
+                        className="h-5 text-xs bg-slate-700 border-slate-600 text-slate-300"
+                      />
+                    </div>
+                  )}
+
+                  {(firstSelectedShape.type === 'circle' || firstSelectedShape.type === 'ring') && (
+                    <div>
+                      <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
+                      <Input
+                        type="number"
+                        defaultValue={firstSelectedShape.radius || 0}
+                        className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
+                      />
+                    </div>
+                  )}
                 </div>
-                <Slider
-                  value={[2]}
-                  min={0}
-                  max={20}
-                  step={0.5}
-                  className="w-full"
-                />
               </div>
-              <div>
-                <div className="flex justify-between">
-                  <Label className="text-xs text-slate-400">Opacity</Label>
-                  <Input
-                    type="number"
-                    value={100}
-                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                </div>
-                <Slider
-                  value={[100]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </>
       )}
     </div>
