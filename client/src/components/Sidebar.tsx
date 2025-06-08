@@ -949,10 +949,13 @@ export default function Sidebar({
           
           {/* Shape Types Section */}
           <AccordionItem value="shapes" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-blue-300 data-[state=open]:bg-blue-900/20">
               <div className="flex items-center space-x-2">
-                <Shapes className="w-4 h-4" />
+                <Shapes className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Shape Types</span>
+                <span className="ml-auto text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
+                  {enabledShapeTypes.size} enabled
+                </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -962,10 +965,19 @@ export default function Sidebar({
           
           {/* Edit Mode Section - Moved under Create */}
           <AccordionItem value="editmode" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-green-300 data-[state=open]:bg-green-900/20">
               <div className="flex items-center space-x-2">
-                <Settings className="w-4 h-4" />
+                <Settings className={`w-4 h-4 ${
+                  editMode === 'shapes' ? 'text-blue-400' :
+                  editMode === 'points' ? 'text-green-400' : 'text-purple-400'
+                }`} />
                 <span className="text-sm font-semibold uppercase tracking-wide">Edit Mode</span>
+                <span className={`ml-auto text-xs px-2 py-1 rounded-full text-white ${
+                  editMode === 'shapes' ? 'bg-blue-600' :
+                  editMode === 'points' ? 'bg-green-600' : 'bg-purple-600'
+                }`}>
+                  {editMode}
+                </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -975,10 +987,15 @@ export default function Sidebar({
           
           {/* Transform Tools Section */}
           <AccordionItem value="transforms" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-orange-300 data-[state=open]:bg-orange-900/20">
               <div className="flex items-center space-x-2">
-                <Move className="w-4 h-4" />
+                <Move className="w-4 h-4 text-orange-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Transform Tools</span>
+                {selectedCount > 0 && (
+                  <span className="ml-auto text-xs bg-orange-600 text-white px-2 py-1 rounded-full">
+                    {selectedCount} selected
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -988,10 +1005,15 @@ export default function Sidebar({
           
           {/* Composition Section */}
           <AccordionItem value="composition" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-purple-300 data-[state=open]:bg-purple-900/20">
               <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4" />
+                <Layers className="w-4 h-4 text-purple-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Composition</span>
+                {(scatterSettings.onPoints || scatterSettings.insideArea) && (
+                  <span className="ml-auto text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
+                    scatter active
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -1001,10 +1023,15 @@ export default function Sidebar({
           
           {/* Properties Section */}
           <AccordionItem value="properties" className="border-b-0">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-pink-300 data-[state=open]:bg-pink-900/20">
               <div className="flex items-center space-x-2">
-                <Palette className="w-4 h-4" />
+                <Palette className="w-4 h-4 text-pink-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Properties</span>
+                {selectedCount > 0 && (
+                  <span className="ml-auto text-xs bg-pink-600 text-white px-2 py-1 rounded-full">
+                    {selectedCount} shape{selectedCount !== 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">

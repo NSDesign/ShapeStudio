@@ -208,18 +208,21 @@ export default function Canvas({
             variant="ghost"
             size="sm"
             onClick={onZoomOut}
-            className="text-slate-400 hover:text-white p-2 h-auto"
+            className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 p-2 h-auto transition-colors"
           >
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <span className="text-sm text-slate-400 min-w-[60px] text-center">
+          <span className={`text-sm min-w-[60px] text-center font-medium transition-colors ${
+            canvasSettings.zoom === 1 ? 'text-green-400' : 
+            canvasSettings.zoom < 1 ? 'text-orange-400' : 'text-blue-400'
+          }`}>
             {Math.round(canvasSettings.zoom * 100)}%
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={onZoomIn}
-            className="text-slate-400 hover:text-white p-2 h-auto"
+            className="text-slate-400 hover:text-blue-400 hover:bg-blue-500/20 p-2 h-auto transition-colors"
           >
             <ZoomIn className="w-4 h-4" />
           </Button>
@@ -230,7 +233,7 @@ export default function Canvas({
                 variant="ghost"
                 size="sm"
                 onClick={onResetView}
-                className="text-slate-400 hover:text-white p-2 h-auto"
+                className="text-slate-400 hover:text-green-400 hover:bg-green-500/20 p-2 h-auto transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
