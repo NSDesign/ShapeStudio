@@ -518,168 +518,125 @@ export default function Sidebar({
           </div>
 
           {/* Shape Properties */}
-          {selectedCount > 0 && (() => {
-            const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
-            if (!firstSelectedShape) return null;
-
-            return (
-              <div className="space-y-2 border-t border-slate-600 pt-2">
-                <Label className="text-xs text-slate-300">Shape Properties</Label>
-                <div className="space-y-2">
-                  {/* Fill Properties */}
-                  <div>
-                    <Label className="text-xs text-slate-400 mb-1 block">Fill</Label>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Select defaultValue="solid">
-                          <SelectTrigger className="h-6 text-xs bg-slate-800 border-slate-600">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="solid">Solid</SelectItem>
-                            <SelectItem value="gradient">Gradient</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          type="color"
-                          defaultValue={firstSelectedShape.properties.fillColor}
-                          onChange={(e) => {
-                            firstSelectedShape.properties.fillColor = e.target.value;
-                          }}
-                          className="h-6 w-12 p-0 border-slate-600"
-                        />
-                      </div>
-                      <div>
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-slate-400">Fill Opacity</Label>
-                          <Input
-                            type="number"
-                            defaultValue={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
-                            min={0}
-                            max={100}
-                            className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                          />
-                        </div>
-                        <Slider
-                          defaultValue={[Math.round(firstSelectedShape.properties.fillOpacity * 100)]}
-                          min={0}
-                          max={100}
-                          step={1}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stroke Properties */}
-                  <div>
-                    <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="color"
-                          defaultValue={firstSelectedShape.properties.strokeColor}
-                          className="h-6 w-12 p-0 border-slate-600"
-                        />
-                        <Input
-                          type="number"
-                          defaultValue={firstSelectedShape.properties.strokeWidth}
-                          min={0}
-                          max={20}
-                          step={0.5}
-                          className="h-6 flex-1 text-xs bg-slate-800 border-slate-600 text-white"
-                        />
-                      </div>
-                      <div>
-                        <div className="flex justify-between">
-                          <Label className="text-xs text-slate-400">Stroke Opacity</Label>
-                          <Input
-                            type="number"
-                            defaultValue={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
-                            min={0}
-                            max={100}
-                            className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                          />
-                        </div>
-                        <Slider
-                          defaultValue={[Math.round(firstSelectedShape.properties.strokeOpacity * 100)]}
-                          min={0}
-                          max={100}
-                          step={1}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Shape-specific Properties */}
-                  {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
-                    <div>
-                      <Label className="text-xs text-slate-400 mb-1 block">Dimensions</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-xs text-slate-400">Width</Label>
-                          <Input
-                            type="number"
-                            defaultValue={firstSelectedShape.width || 0}
-                            className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-slate-400">Height</Label>
-                          <Input
-                            type="number"
-                            defaultValue={firstSelectedShape.height || 0}
-                            className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
-                    <div>
-                      <Label className="text-xs text-slate-400 mb-1 block">Sides</Label>
-                      <Input
-                        type="number"
-                        defaultValue={firstSelectedShape.sides || 6}
-                        min={3}
-                        max={20}
-                        className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
-                      />
-                    </div>
-                  )}
-
-                  {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
-                    <div>
-                      <Label className="text-xs text-slate-400 mb-1 block">Points</Label>
-                      <Input
-                        type="number"
-                        value={firstSelectedShape.points?.length || 0}
-                        readOnly
-                        className="h-5 text-xs bg-slate-700 border-slate-600 text-slate-300"
-                      />
-                    </div>
-                  )}
-
-                  {(firstSelectedShape.type === 'circle' || firstSelectedShape.type === 'ring') && (
-                    <div>
-                      <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
-                      <Input
-                        type="number"
-                        defaultValue={firstSelectedShape.radius || 0}
-                        className="h-5 text-xs bg-slate-800 border-slate-600 text-white"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
+          {selectedCount > 0 && (
+            <ShapePropertiesPanel 
+              selectedShapes={selectedShapes}
+              selectedGroups={selectedGroups}
+              selectedCount={selectedCount}
+            />
+          )}
         </>
       )}
     </div>
   );
+  
+  // Shape Properties Panel Component
+  function ShapePropertiesPanel({ selectedShapes, selectedGroups, selectedCount }: {
+    selectedShapes: Shape[];
+    selectedGroups: ShapeGroupClass[];
+    selectedCount: number;
+  }) {
+    const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
+    
+    return (
+      <div className="space-y-2 border-t border-slate-600 pt-2">
+        <Label className="text-xs text-slate-300">Shape Properties</Label>
+        {!firstSelectedShape ? (
+          <div className="text-xs text-slate-400">
+            {selectedCount} shape{selectedCount > 1 ? 's' : ''} selected
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {/* Fill Properties */}
+            <div>
+              <Label className="text-xs text-slate-400 mb-1 block">Fill</Label>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="color"
+                    value={firstSelectedShape.properties.fillColor}
+                    onChange={(e) => {
+                      firstSelectedShape.properties.fillColor = e.target.value;
+                    }}
+                    className="h-6 w-12 p-0 border-slate-600"
+                  />
+                  <span className="text-xs text-slate-400">
+                    {Math.round(firstSelectedShape.properties.fillOpacity * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stroke Properties */}
+            <div>
+              <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="color"
+                  value={firstSelectedShape.properties.strokeColor}
+                  onChange={(e) => {
+                    firstSelectedShape.properties.strokeColor = e.target.value;
+                  }}
+                  className="h-6 w-12 p-0 border-slate-600"
+                />
+                <Input
+                  type="number"
+                  value={firstSelectedShape.properties.strokeWidth}
+                  onChange={(e) => {
+                    firstSelectedShape.properties.strokeWidth = parseFloat(e.target.value) || 0;
+                  }}
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  className="h-6 flex-1 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+
+            {/* Shape-specific Properties */}
+            {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
+              <div>
+                <Label className="text-xs text-slate-400 mb-1 block">Sides</Label>
+                <Input
+                  type="number"
+                  value={firstSelectedShape.sides || 6}
+                  onChange={(e) => {
+                    firstSelectedShape.sides = parseInt(e.target.value) || 6;
+                  }}
+                  min={3}
+                  max={20}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            )}
+
+            {(firstSelectedShape.type === 'circle' || firstSelectedShape.type === 'ring') && (
+              <div>
+                <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
+                <Input
+                  type="number"
+                  value={firstSelectedShape.radius || 0}
+                  onChange={(e) => {
+                    firstSelectedShape.radius = parseFloat(e.target.value) || 0;
+                  }}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            )}
+
+            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
+              <div>
+                <Label className="text-xs text-slate-400 mb-1 block">Points</Label>
+                <div className="text-xs text-slate-300">
+                  {firstSelectedShape.points?.length || 0} points
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const CompositionContent = () => (
     <div className="space-y-3">

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings } from '../lib/shapeTypes';
@@ -203,14 +204,21 @@ export default function Canvas({
             <ZoomIn className="w-4 h-4" />
           </Button>
           <div className="h-4 w-px bg-slate-600"></div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onResetView}
-            className="text-slate-400 hover:text-white p-2 h-auto"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onResetView}
+                className="text-slate-400 hover:text-white p-2 h-auto"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Reset view to 100% zoom and center position</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
       
