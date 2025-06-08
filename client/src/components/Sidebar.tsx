@@ -109,6 +109,9 @@ export default function Sidebar({
   onFlipVertical
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
     'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic', 'quadratic', 'nurbs'
@@ -116,7 +119,15 @@ export default function Sidebar({
 
   const ShapeTypesContent = () => (
     <div className="space-y-3">
-      <div className="space-y-3 max-h-48 overflow-y-auto">
+      <div 
+        className="space-y-3 max-h-48 overflow-y-auto scroll-smooth"
+        onScroll={(e) => setScrollPosition(e.currentTarget.scrollTop)}
+        ref={(el) => {
+          if (el && scrollPosition > 0) {
+            el.scrollTop = scrollPosition;
+          }
+        }}
+      >
         {allShapeTypes.map((type) => {
           const IconComponent = shapeIcons[type];
           const isEnabled = enabledShapeTypes.has(type);
@@ -125,11 +136,15 @@ export default function Sidebar({
             <div key={type} className="shape-item flex items-center justify-between p-2 rounded-lg">
               <div className="flex items-center space-x-3">
                 <IconComponent className="w-4 h-4 text-[var(--editor-primary)]" />
-                <span className="text-sm font-medium">{shapeNames[type]}</span>
+                <span className="text-sm font-medium text-white">{shapeNames[type]}</span>
               </div>
               <Switch
                 checked={isEnabled}
-                onCheckedChange={() => onToggleShapeType(type)}
+                onCheckedChange={(checked) => {
+                  const currentScroll = document.querySelector('.overflow-y-auto')?.scrollTop || 0;
+                  setScrollPosition(currentScroll);
+                  onToggleShapeType(type);
+                }}
               />
             </div>
           );
@@ -346,17 +361,26 @@ export default function Sidebar({
         {/* Icon Panels */}
         <div className="flex-1 flex flex-col space-y-2 py-4">
           {/* Shape Types */}
-          <Popover>
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'shapes' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white p-3 h-auto mx-2"
+                className={`p-3 h-auto mx-2 transition-colors ${
+                  activePopover === 'shapes' 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                }`}
               >
                 <Shapes className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="right" className="w-80 bg-[var(--surface)] border-slate-700">
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Shapes className="w-4 h-4 mr-2" />
@@ -368,17 +392,26 @@ export default function Sidebar({
           </Popover>
 
           {/* Edit Mode */}
-          <Popover>
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'edit' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white p-3 h-auto mx-2"
+                className={`p-3 h-auto mx-2 transition-colors ${
+                  activePopover === 'edit' 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                }`}
               >
                 <Settings className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="right" className="w-80 bg-[var(--surface)] border-slate-700">
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Settings className="w-4 h-4 mr-2" />
@@ -390,17 +423,26 @@ export default function Sidebar({
           </Popover>
 
           {/* Transform Tools */}
-          <Popover>
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'transform' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white p-3 h-auto mx-2"
+                className={`p-3 h-auto mx-2 transition-colors ${
+                  activePopover === 'transform' 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                }`}
               >
                 <Move className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="right" className="w-80 bg-[var(--surface)] border-slate-700">
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Move className="w-4 h-4 mr-2" />
@@ -412,17 +454,26 @@ export default function Sidebar({
           </Popover>
 
           {/* Composition */}
-          <Popover>
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'composition' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white p-3 h-auto mx-2"
+                className={`p-3 h-auto mx-2 transition-colors ${
+                  activePopover === 'composition' 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                }`}
               >
                 <Layers className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="right" className="w-80 bg-[var(--surface)] border-slate-700">
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Layers className="w-4 h-4 mr-2" />
@@ -434,17 +485,26 @@ export default function Sidebar({
           </Popover>
 
           {/* Properties */}
-          <Popover>
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white p-3 h-auto mx-2"
+                className={`p-3 h-auto mx-2 transition-colors ${
+                  activePopover === 'properties' 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                }`}
               >
                 <Palette className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="right" className="w-80 bg-[var(--surface)] border-slate-700">
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Palette className="w-4 h-4 mr-2" />
