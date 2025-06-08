@@ -539,6 +539,9 @@ export default function Sidebar({
                         <Input
                           type="color"
                           defaultValue={firstSelectedShape.properties.fillColor}
+                          onChange={(e) => {
+                            firstSelectedShape.properties.fillColor = e.target.value;
+                          }}
                           className="h-6 w-12 p-0 border-slate-600"
                         />
                       </div>
