@@ -144,14 +144,21 @@ export default function Sidebar({
           const isEnabled = enabledShapeTypes.has(type);
           
           return (
-            <div key={type} className="flex items-center justify-between p-2 rounded-lg">
+            <div key={type} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+              isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+            }`}>
               <div className="flex items-center space-x-3">
-                <IconComponent className="w-4 h-4 text-[var(--editor-primary)]" />
-                <span className="text-sm font-medium text-white">{shapeNames[type]}</span>
+                <IconComponent className={`w-4 h-4 transition-colors ${
+                  isEnabled ? 'text-blue-400' : 'text-slate-400'
+                }`} />
+                <span className={`text-sm font-medium transition-colors ${
+                  isEnabled ? 'text-blue-200' : 'text-slate-300'
+                }`}>{shapeNames[type]}</span>
               </div>
               <Switch
                 checked={isEnabled}
                 onCheckedChange={() => onToggleShapeType(type)}
+                className="data-[state=checked]:bg-blue-600"
               />
             </div>
           );
@@ -180,11 +187,11 @@ export default function Sidebar({
           size="sm"
           onClick={() => onSetEditMode('shapes')}
           className={editMode === 'shapes' ? 
-            "bg-[var(--editor-primary)] text-white" : 
-            "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+            "bg-blue-600 hover:bg-blue-700 text-white border-blue-500" : 
+            "bg-slate-800/50 hover:bg-slate-700 text-slate-300 border-slate-600"
           }
         >
-          <MousePointer className="w-3 h-3 mr-2" />
+          <MousePointer className={`w-3 h-3 mr-2 ${editMode === 'shapes' ? 'text-white' : 'text-slate-400'}`} />
           Shape Mode
         </Button>
         
@@ -193,11 +200,11 @@ export default function Sidebar({
           size="sm"
           onClick={() => onSetEditMode('points')}
           className={editMode === 'points' ? 
-            "bg-[var(--editor-primary)] text-white" : 
-            "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+            "bg-green-600 hover:bg-green-700 text-white border-green-500" : 
+            "bg-slate-800/50 hover:bg-slate-700 text-slate-300 border-slate-600"
           }
         >
-          <Navigation className="w-3 h-3 mr-2" />
+          <Navigation className={`w-3 h-3 mr-2 ${editMode === 'points' ? 'text-white' : 'text-slate-400'}`} />
           Point Mode
         </Button>
         
@@ -206,11 +213,11 @@ export default function Sidebar({
           size="sm"
           onClick={() => onSetEditMode('segments')}
           className={editMode === 'segments' ? 
-            "bg-[var(--editor-primary)] text-white" : 
-            "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+            "bg-purple-600 hover:bg-purple-700 text-white border-purple-500" : 
+            "bg-slate-800/50 hover:bg-slate-700 text-slate-300 border-slate-600"
           }
         >
-          <Spline className="w-3 h-3 mr-2" />
+          <Spline className={`w-3 h-3 mr-2 ${editMode === 'segments' ? 'text-white' : 'text-slate-400'}`} />
           Segment Mode
         </Button>
       </div>
@@ -666,19 +673,39 @@ export default function Sidebar({
       </Button>
       
       <div className="space-y-3">
-        <div className="flex items-center space-x-3">
+        <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+          scatterSettings.onPoints ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <Navigation className={`w-4 h-4 transition-colors ${
+              scatterSettings.onPoints ? 'text-orange-400' : 'text-slate-400'
+            }`} />
+            <Label className={`text-sm transition-colors ${
+              scatterSettings.onPoints ? 'text-orange-200' : 'text-slate-300'
+            }`}>Scatter on Points</Label>
+          </div>
           <Switch
             checked={scatterSettings.onPoints}
             onCheckedChange={(checked) => onUpdateScatterSettings({ onPoints: checked })}
+            className="data-[state=checked]:bg-orange-600"
           />
-          <Label className="text-sm text-white">Scatter on Points</Label>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+          scatterSettings.insideArea ? 'bg-cyan-900/30 border border-cyan-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <Shapes className={`w-4 h-4 transition-colors ${
+              scatterSettings.insideArea ? 'text-cyan-400' : 'text-slate-400'
+            }`} />
+            <Label className={`text-sm transition-colors ${
+              scatterSettings.insideArea ? 'text-cyan-200' : 'text-slate-300'
+            }`}>Scatter Inside Area</Label>
+          </div>
           <Switch
             checked={scatterSettings.insideArea}
             onCheckedChange={(checked) => onUpdateScatterSettings({ insideArea: checked })}
+            className="data-[state=checked]:bg-cyan-600"
           />
-          <Label className="text-sm text-white">Scatter Inside Area</Label>
         </div>
         
         <div className="space-y-2">
