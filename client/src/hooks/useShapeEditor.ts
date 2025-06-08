@@ -540,6 +540,24 @@ export const useShapeEditor = () => {
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
+      
+      // Console log selected shape properties for debugging
+      console.log('=== SELECTED SHAPES DEBUG ===');
+      console.log('Selected shapes count:', newSelectedShapes.length);
+      newSelectedShapes.forEach((shape, index) => {
+        console.log(`Shape ${index + 1}:`, {
+          id: shape.id,
+          type: shape.type,
+          transform: shape.transform,
+          properties: shape.properties,
+          points: shape.points?.length || 0,
+          width: shape.width,
+          height: shape.height,
+          radius: shape.radius,
+          sides: shape.sides
+        });
+      });
+      console.log('=== END DEBUG ===');
     }
     
     setIsDragging(false);

@@ -52,27 +52,33 @@ export class Shape {
       case 'rectangle':
         this.width = 50 + Math.random() * 150;
         this.height = 30 + Math.random() * 120;
+        this.generateRectanglePoints();
         break;
       case 'square':
         const size = 40 + Math.random() * 100;
         this.width = size;
         this.height = size;
+        this.generateRectanglePoints();
         break;
       case 'circle':
         this.radius = 25 + Math.random() * 75;
+        this.generateCirclePoints();
         break;
       case 'ellipse':
         this.width = 40 + Math.random() * 120;
         this.height = 30 + Math.random() * 80;
+        this.generateEllipsePoints();
         break;
       case 'polygon':
         this.sides = 3 + Math.floor(Math.random() * 10);
         this.radius = 30 + Math.random() * 70;
+        this.generatePolygonPoints();
         break;
       case 'star':
         this.sides = 5 + Math.floor(Math.random() * 7);
         this.radius = 30 + Math.random() * 70;
         this.innerRadius = this.radius * (0.3 + Math.random() * 0.4);
+        this.generateStarPoints();
         break;
       case 'line':
         this.generateLinePoints();
@@ -88,6 +94,7 @@ export class Shape {
       case 'ring':
         this.radius = 30 + Math.random() * 70;
         this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
+        this.generateRingPoints();
         break;
     }
   }
@@ -140,6 +147,108 @@ export class Shape {
         y: Math.sin(angle) * radius
       });
     }
+    this.closed = true;
+  }
+
+  private generateRectanglePoints(): void {
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    this.points = [
+      { x: -w, y: -h },  // Top-left
+      { x: w, y: -h },   // Top-right
+      { x: w, y: h },    // Bottom-right
+      { x: -w, y: h }    // Bottom-left
+    ];
+    this.closed = true;
+  }
+
+  private generateCirclePoints(): void {
+    const numPoints = 16; // 16 points for smooth circle editing
+    this.points = [];
+    const radius = this.radius!;
+    
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      this.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+    this.closed = true;
+  }
+
+  private generateEllipsePoints(): void {
+    const numPoints = 16; // 16 points for smooth ellipse editing
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      this.points.push({
+        x: Math.cos(angle) * w,
+        y: Math.sin(angle) * h
+      });
+    }
+    this.closed = true;
+  }
+
+  private generatePolygonPoints(): void {
+    this.points = [];
+    const sides = this.sides!;
+    const radius = this.radius!;
+    
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+      this.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+    this.closed = true;
+  }
+
+  private generateStarPoints(): void {
+    this.points = [];
+    const sides = this.sides!;
+    const outerRadius = this.radius!;
+    const innerRadius = this.innerRadius!;
+    
+    for (let i = 0; i < sides * 2; i++) {
+      const angle = (i / (sides * 2)) * Math.PI * 2 - Math.PI / 2;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      this.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+    this.closed = true;
+  }
+
+  private generateRingPoints(): void {
+    const numPoints = 16;
+    this.points = [];
+    const outerRadius = this.radius!;
+    const innerRadius = this.innerRadius!;
+    
+    // Outer ring points
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      this.points.push({
+        x: Math.cos(angle) * outerRadius,
+        y: Math.sin(angle) * outerRadius
+      });
+    }
+    
+    // Inner ring points (reverse order for proper winding)
+    for (let i = numPoints - 1; i >= 0; i--) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      this.points.push({
+        x: Math.cos(angle) * innerRadius,
+        y: Math.sin(angle) * innerRadius
+      });
+    }
+    this.closed = true;
   }
 
   render(ctx: CanvasRenderingContext2D): void {
