@@ -213,15 +213,16 @@ export const useShapeEditor = () => {
     setSelectedSegments([]);
   }, []);
 
-  const selectPointAt = useCallback((x: number, y: number, multiSelect: boolean = false) => {
+  const selectPointAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
     let foundPoint: { shapeId: string; pointIndex: number } | null = null;
+    const threshold = isTouch ? 20 : 8; // Larger threshold for touch devices
     
     // Search through all shapes for nearby points
     for (const shape of shapes) {
       if (!shape.points || shape.points.length === 0) continue;
       
       for (let i = 0; i < shape.points.length; i++) {
-        if (shape.isPointNear(x, y, i)) {
+        if (shape.isPointNear(x, y, i, threshold)) {
           foundPoint = { shapeId: shape.id, pointIndex: i };
           break;
         }

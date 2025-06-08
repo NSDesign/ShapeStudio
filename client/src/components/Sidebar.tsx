@@ -228,38 +228,60 @@ export default function Sidebar({
               <Move className="w-3 h-3 mr-1" />
               Move
             </Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               <div>
-                <Label className="text-xs text-slate-400">X</Label>
-                <Input
-                  type="number"
-                  value={moveX}
-                  onChange={(e) => setMoveX(Number(e.target.value))}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">X</Label>
+                  <Input
+                    type="number"
+                    value={moveX}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setMoveX(value);
+                      onMoveBy(value - moveX, 0);
+                    }}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[moveX]}
+                  onValueChange={([value]) => {
+                    onMoveBy(value - moveX, 0);
+                    setMoveX(value);
+                  }}
+                  min={-500}
+                  max={500}
+                  step={1}
+                  className="w-full"
                 />
               </div>
               <div>
-                <Label className="text-xs text-slate-400">Y</Label>
-                <Input
-                  type="number"
-                  value={moveY}
-                  onChange={(e) => setMoveY(Number(e.target.value))}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">Y</Label>
+                  <Input
+                    type="number"
+                    value={moveY}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setMoveY(value);
+                      onMoveBy(0, value - moveY);
+                    }}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[moveY]}
+                  onValueChange={([value]) => {
+                    onMoveBy(0, value - moveY);
+                    setMoveY(value);
+                  }}
+                  min={-500}
+                  max={500}
+                  step={1}
+                  className="w-full"
                 />
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                onMoveBy(moveX, moveY);
-                setMoveX(0);
-                setMoveY(0);
-              }}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-            >
-              Apply Move
-            </Button>
           </div>
 
           {/* Scale Controls */}
@@ -276,46 +298,88 @@ export default function Sidebar({
               />
               <Label className="text-xs text-slate-400">Lock aspect ratio</Label>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               <div>
-                <Label className="text-xs text-slate-400">X %</Label>
-                <Input
-                  type="number"
-                  value={scaleX}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">X %</Label>
+                  <Input
+                    type="number"
+                    value={scaleX}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      const factor = value / 100;
+                      const currentFactor = scaleX / 100;
+                      const deltaFactor = factor / currentFactor;
+                      
+                      setScaleX(value);
+                      if (lockAspectRatio) {
+                        setScaleY(value);
+                        onScaleBy(deltaFactor, deltaFactor);
+                      } else {
+                        onScaleBy(deltaFactor, 1);
+                      }
+                    }}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[scaleX]}
+                  onValueChange={([value]) => {
+                    const factor = value / 100;
+                    const currentFactor = scaleX / 100;
+                    const deltaFactor = factor / currentFactor;
+                    
                     setScaleX(value);
-                    if (lockAspectRatio) setScaleY(value);
+                    if (lockAspectRatio) {
+                      setScaleY(value);
+                      onScaleBy(deltaFactor, deltaFactor);
+                    } else {
+                      onScaleBy(deltaFactor, 1);
+                    }
                   }}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  min={10}
+                  max={300}
+                  step={1}
+                  className="w-full"
                 />
               </div>
-              <div>
-                <Label className="text-xs text-slate-400">Y %</Label>
-                <Input
-                  type="number"
-                  value={scaleY}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    setScaleY(value);
-                    if (lockAspectRatio) setScaleX(value);
-                  }}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                />
-              </div>
+              {!lockAspectRatio && (
+                <div>
+                  <div className="flex justify-between">
+                    <Label className="text-xs text-slate-400">Y %</Label>
+                    <Input
+                      type="number"
+                      value={scaleY}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        const factor = value / 100;
+                        const currentFactor = scaleY / 100;
+                        const deltaFactor = factor / currentFactor;
+                        
+                        setScaleY(value);
+                        onScaleBy(1, deltaFactor);
+                      }}
+                      className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                  </div>
+                  <Slider
+                    value={[scaleY]}
+                    onValueChange={([value]) => {
+                      const factor = value / 100;
+                      const currentFactor = scaleY / 100;
+                      const deltaFactor = factor / currentFactor;
+                      
+                      setScaleY(value);
+                      onScaleBy(1, deltaFactor);
+                    }}
+                    min={10}
+                    max={300}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                onScaleBy(scaleX / 100, scaleY / 100);
-                setScaleX(100);
-                setScaleY(100);
-              }}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-            >
-              Apply Scale
-            </Button>
           </div>
 
           {/* Rotation Controls */}
@@ -325,25 +389,33 @@ export default function Sidebar({
               Rotate
             </Label>
             <div>
-              <Label className="text-xs text-slate-400">Degrees</Label>
-              <Input
-                type="number"
-                value={rotation}
-                onChange={(e) => setRotation(Number(e.target.value) % 360)}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+              <div className="flex justify-between">
+                <Label className="text-xs text-slate-400">Degrees</Label>
+                <Input
+                  type="number"
+                  value={rotation}
+                  onChange={(e) => {
+                    const value = Number(e.target.value) % 360;
+                    const delta = value - rotation;
+                    setRotation(value);
+                    onRotateBy(delta);
+                  }}
+                  className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+              <Slider
+                value={[rotation]}
+                onValueChange={([value]) => {
+                  const delta = value - rotation;
+                  setRotation(value);
+                  onRotateBy(delta);
+                }}
+                min={-180}
+                max={180}
+                step={1}
+                className="w-full"
               />
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                onRotateBy(rotation);
-                setRotation(0);
-              }}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-            >
-              Apply Rotation
-            </Button>
           </div>
 
           {/* Skew Controls */}
@@ -352,38 +424,64 @@ export default function Sidebar({
               <Italic className="w-3 h-3 mr-1" />
               Skew
             </Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               <div>
-                <Label className="text-xs text-slate-400">X</Label>
-                <Input
-                  type="number"
-                  value={skewX}
-                  onChange={(e) => setSkewX(Number(e.target.value))}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">X</Label>
+                  <Input
+                    type="number"
+                    value={skewX}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      const delta = value - skewX;
+                      setSkewX(value);
+                      onSkewBy(delta, 0);
+                    }}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[skewX]}
+                  onValueChange={([value]) => {
+                    const delta = value - skewX;
+                    setSkewX(value);
+                    onSkewBy(delta, 0);
+                  }}
+                  min={-45}
+                  max={45}
+                  step={1}
+                  className="w-full"
                 />
               </div>
               <div>
-                <Label className="text-xs text-slate-400">Y</Label>
-                <Input
-                  type="number"
-                  value={skewY}
-                  onChange={(e) => setSkewY(Number(e.target.value))}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">Y</Label>
+                  <Input
+                    type="number"
+                    value={skewY}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      const delta = value - skewY;
+                      setSkewY(value);
+                      onSkewBy(0, delta);
+                    }}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[skewY]}
+                  onValueChange={([value]) => {
+                    const delta = value - skewY;
+                    setSkewY(value);
+                    onSkewBy(0, delta);
+                  }}
+                  min={-45}
+                  max={45}
+                  step={1}
+                  className="w-full"
                 />
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                onSkewBy(skewX, skewY);
-                setSkewX(0);
-                setSkewY(0);
-              }}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-            >
-              Apply Skew
-            </Button>
           </div>
 
           {/* Flip Controls */}
@@ -408,6 +506,63 @@ export default function Sidebar({
                 <FlipVertical className="w-3 h-3 mr-1" />
                 Vertical
               </Button>
+            </div>
+          </div>
+
+          {/* Shape Properties */}
+          <div className="space-y-2 border-t border-slate-600 pt-2">
+            <Label className="text-xs text-slate-300">Properties</Label>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Fill Color</span>
+                <Input
+                  type="color"
+                  value="#3B82F6"
+                  className="h-6 w-12 p-0 border-slate-600"
+                />
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Stroke Color</span>
+                <Input
+                  type="color"
+                  value="#1E293B"
+                  className="h-6 w-12 p-0 border-slate-600"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">Stroke Width</Label>
+                  <Input
+                    type="number"
+                    value={2}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[2]}
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between">
+                  <Label className="text-xs text-slate-400">Opacity</Label>
+                  <Input
+                    type="number"
+                    value={100}
+                    className="h-5 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <Slider
+                  value={[100]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </>

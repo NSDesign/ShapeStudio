@@ -410,42 +410,42 @@ export class Shape {
     return Math.sqrt(dx * dx + dy * dy) <= threshold;
   }
 
-  renderPoints(ctx: CanvasRenderingContext2D, selectedPoints: number[] = [], selectedSegments: number[] = []): void {
+  renderPoints(ctx: CanvasRenderingContext2D, selectedPoints: number[] = [], selectedSegments: number[] = [], canvasZoom: number = 1): void {
     if (!this.points || this.points.length === 0) return;
     
     ctx.save();
     
-    // Apply transform to match shape rendering
-    ctx.translate(this.transform.x, this.transform.y);
-    ctx.rotate(this.transform.rotation * Math.PI / 180);
-    ctx.scale(this.transform.scaleX, this.transform.scaleY);
-    ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
-    
-    // Draw segment highlights
+    // Draw segment highlights first (in world space for constant size)
     selectedSegments.forEach(segmentIndex => {
       if (segmentIndex >= 0 && segmentIndex < this.points.length - 1) {
-        const p1 = this.points[segmentIndex];
-        const p2 = this.points[segmentIndex + 1];
+        const p1 = this.getWorldPoint(segmentIndex);
+        const p2 = this.getWorldPoint(segmentIndex + 1);
         
-        ctx.strokeStyle = '#10B981';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
+        if (p1 && p2) {
+          ctx.strokeStyle = '#10B981';
+          ctx.lineWidth = 4 / canvasZoom; // Constant thickness regardless of zoom
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
       }
     });
     
-    // Draw points
+    // Draw points in world space for constant size
     this.points.forEach((point, index) => {
+      const worldPoint = this.getWorldPoint(index);
+      if (!worldPoint) return;
+      
       const isSelected = selectedPoints.includes(index);
+      const radius = (isSelected ? 8 : 6) / canvasZoom; // Constant size regardless of zoom
       
       ctx.fillStyle = isSelected ? '#EF4444' : '#3B82F6';
       ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2 / canvasZoom; // Constant stroke width
       
       ctx.beginPath();
-      ctx.arc(point.x, point.y, isSelected ? 5 : 3, 0, Math.PI * 2);
+      ctx.arc(worldPoint.x, worldPoint.y, radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     });

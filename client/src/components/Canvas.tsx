@@ -95,7 +95,7 @@ export default function Canvas({
             .filter(ss => ss.shapeId === shape.id)
             .map(ss => ss.segmentIndex);
           
-          shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments);
+          shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments, canvasSettings.zoom);
         });
       }
 
