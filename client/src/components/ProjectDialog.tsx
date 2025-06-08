@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -145,6 +145,9 @@ export default function ProjectDialog({
               <FolderOpen className="w-5 h-5 mr-2" />
               Project Manager
             </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Save your current work or load an existing project file.
+            </DialogDescription>
           </DialogHeader>
           
           <Tabs defaultValue="save" className="w-full">

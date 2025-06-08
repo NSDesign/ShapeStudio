@@ -147,3 +147,34 @@
     pointer-events: none;
   }
 }
+
+/* Enhanced tab visibility and text contrast */
+@layer utilities {
+  [data-state="active"] {
+    color: hsl(0, 0%, 100%) !important;
+    font-weight: 600 !important;
+  }
+
+  [data-state="inactive"] {
+    color: hsl(215, 20%, 65%) !important;
+  }
+
+  /* Improve button text contrast in dark surface areas */
+  .bg-\[var\(--surface\)\] button,
+  .bg-\[var\(--surface\)\] .text-slate-400 {
+    color: hsl(210, 40%, 98%) !important;
+  }
+
+  .bg-\[var\(--surface\)\] button:hover {
+    color: hsl(0, 0%, 100%) !important;
+  }
+
+  /* Fix project header text visibility */
+  .text-white {
+    color: hsl(0, 0%, 100%) !important;
+  }
+
+  .text-slate-400 {
+    color: hsl(215, 20%, 65%) !important;
+  }
+}
