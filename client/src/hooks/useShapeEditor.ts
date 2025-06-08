@@ -491,7 +491,7 @@ export const useShapeEditor = () => {
     setDragStart(null);
   }, [isMarqueeSelecting, shapes]);
 
-  // Touch event handlers for mobile multi-select
+  // Touch event handlers for mobile multi-select and marquee
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     if (e.touches.length > 1) return; // Ignore multi-touch gestures
     
@@ -506,8 +506,34 @@ export const useShapeEditor = () => {
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
     
-    // Don't immediately select on touch start - wait for touch end to avoid drag conflicts
-  }, [canvasSettings.zoom]);
+    // Check if touching empty space for potential marquee selection
+    let touchedShape = false;
+    
+    switch (editMode) {
+      case 'points':
+        touchedShape = selectedPoints.some(p => {
+          const shape = shapes.find(s => s.id === p.shapeId);
+          return shape?.isPointNear(x, y, p.pointIndex, 20);
+        });
+        break;
+      case 'segments':
+        touchedShape = selectedSegments.some(s => {
+          const shape = shapes.find(sh => sh.id === s.shapeId);
+          return shape?.isSegmentNear(x, y, s.segmentIndex, 15);
+        });
+        break;
+      default:
+        touchedShape = shapes.some(shape => shape.containsPoint(x, y));
+        break;
+    }
+    
+    // Prepare for potential marquee selection if touching empty space
+    if (!touchedShape && editMode === 'shapes') {
+      // Will start marquee on touch move if not dragging existing selection
+      setMarqueeStart({ x, y });
+      setMarqueeEnd({ x, y });
+    }
+  }, [canvasSettings.zoom, editMode, shapes, selectedPoints, selectedSegments]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     if (!dragStart || e.touches.length > 1) return;
@@ -523,8 +549,35 @@ export const useShapeEditor = () => {
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
     
-    // Start dragging if movement detected
-    if (!isDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+    // Check if we should start marquee selection on touch devices
+    if (marqueeStart && !isMarqueeSelecting && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      setIsMarqueeSelecting(true);
+      clearSelection();
+    }
+    
+    // Handle marquee selection for touch
+    if (isMarqueeSelecting && marqueeStart) {
+      setMarqueeEnd({ x, y });
+      
+      // Select shapes within marquee rectangle
+      const minX = Math.min(marqueeStart.x, x);
+      const maxX = Math.max(marqueeStart.x, x);
+      const minY = Math.min(marqueeStart.y, y);
+      const maxY = Math.max(marqueeStart.y, y);
+      
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
+                              bounds.y >= minY && bounds.y + bounds.height <= maxY;
+        shape.selected = shapeInMarquee;
+      });
+      
+      setShapes(prev => [...prev]);
+      return;
+    }
+    
+    // Start dragging if movement detected and not doing marquee
+    if (!isDragging && !isMarqueeSelecting && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
       setIsDragging(true);
     }
     
@@ -555,7 +608,16 @@ export const useShapeEditor = () => {
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const touchDuration = Date.now() - touchStartTime;
     
-    if (!isDragging && dragStart) {
+    // Handle marquee selection completion
+    if (isMarqueeSelecting) {
+      setIsMarqueeSelecting(false);
+      setMarqueeStart(null);
+      setMarqueeEnd(null);
+      
+      // Update selected shapes array based on shape.selected flags
+      const newSelectedShapes = shapes.filter(shape => shape.selected);
+      setSelectedShapes(newSelectedShapes);
+    } else if (!isDragging && dragStart) {
       // This was a tap, not a drag
       const canvas = canvasRef.current;
       if (canvas) {
@@ -570,10 +632,10 @@ export const useShapeEditor = () => {
           // Short tap - select shape
           switch (editMode) {
             case 'points':
-              selectPointAt(x, y, isMultiSelectMode);
+              selectPointAt(x, y, isMultiSelectMode, true);
               break;
             case 'segments':
-              selectSegmentAt(x, y, isMultiSelectMode);
+              selectSegmentAt(x, y, isMultiSelectMode, true);
               break;
             default:
               selectShapeAtPoint(x, y, isMultiSelectMode);
@@ -586,7 +648,9 @@ export const useShapeEditor = () => {
     setIsDragging(false);
     setDragStart(null);
     setTouchStartTime(0);
-  }, [touchStartTime, isMultiSelectMode, isDragging, dragStart, canvasSettings.zoom, editMode, selectShapeAtPoint, selectPointAt, selectSegmentAt]);
+    setMarqueeStart(null);
+    setMarqueeEnd(null);
+  }, [touchStartTime, isMultiSelectMode, isDragging, dragStart, canvasSettings.zoom, editMode, selectShapeAtPoint, selectPointAt, selectSegmentAt, isMarqueeSelecting, shapes]);
 
   const toggleMultiSelectMode = useCallback(() => {
     setIsMultiSelectMode(!isMultiSelectMode);
