@@ -35,7 +35,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
-  FolderOpen
+  FolderOpen,
+  Menu
 } from "lucide-react";
 import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -753,7 +754,7 @@ export default function Sidebar({
   if (isCollapsed) {
     return (
       <div className="w-16 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
-        {/* Collapsed Header - Just Folder Icon */}
+        {/* Collapsed Header - Hamburger Menu */}
         <div className="p-3 border-b border-slate-700 flex justify-center">
           <Button
             variant="ghost"
@@ -761,7 +762,7 @@ export default function Sidebar({
             onClick={() => setIsCollapsed(false)}
             className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 p-2 h-auto transition-colors"
           >
-            <FolderOpen className="w-5 h-5" />
+            <Menu className="w-5 h-5" />
           </Button>
         </div>
         

@@ -33,6 +33,10 @@
   --editor-accent: hsl(262, 83%, 58%);
   --editor-text: hsl(210, 40%, 98%);
   --editor-text-muted: hsl(215, 20%, 65%);
+  
+  /* Active tab colors for better visibility */
+  --tab-active-text: hsl(0, 0%, 100%);
+  --tab-inactive-text: hsl(215, 20%, 65%);
 }
 
 .dark {
