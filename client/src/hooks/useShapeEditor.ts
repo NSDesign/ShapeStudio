@@ -30,6 +30,9 @@ export const useShapeEditor = () => {
   const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
   const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
+  const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
+  const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
+  const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -211,6 +214,18 @@ export const useShapeEditor = () => {
     setScatterSettings(prev => ({ ...prev, ...settings }));
   }, []);
 
+  // Clear all selections
+  const clearSelection = useCallback(() => {
+    shapes.forEach(shape => shape.selected = false);
+    groups.forEach(group => group.selected = false);
+    setSelectedShapes([]);
+    setSelectedGroups([]);
+    setSelectedPoints([]);
+    setSelectedSegments([]);
+    setShapes(prev => [...prev]);
+    setGroups(prev => [...prev]);
+  }, [shapes, groups]);
+
   // Point and segment editing functions
   const setEditingMode = useCallback((mode: 'shapes' | 'points' | 'segments') => {
     setEditMode(mode);
@@ -349,7 +364,9 @@ export const useShapeEditor = () => {
     const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
     setDragStart({ x, y });
-    setIsDragging(true);
+    
+    // Check if clicking on empty space to start marquee selection
+    let clickedOnShape = false;
     
     // If scatter mode is active, try to scatter on clicked shape
     if (scatterSettings.onPoints || scatterSettings.insideArea) {
@@ -363,26 +380,75 @@ export const useShapeEditor = () => {
     // Handle different edit modes
     switch (editMode) {
       case 'points':
-        selectPointAt(x, y, e.shiftKey);
+        clickedOnShape = selectedPoints.some(p => {
+          const shape = shapes.find(s => s.id === p.shapeId);
+          return shape?.isPointNear(x, y, p.pointIndex, 8);
+        });
+        if (!clickedOnShape) {
+          selectPointAt(x, y, e.shiftKey);
+          clickedOnShape = selectedPoints.length > 0;
+        }
         break;
       case 'segments':
-        selectSegmentAt(x, y, e.shiftKey);
+        clickedOnShape = selectedSegments.some(s => {
+          const shape = shapes.find(sh => sh.id === s.shapeId);
+          return shape?.isSegmentNear(x, y, s.segmentIndex, 5);
+        });
+        if (!clickedOnShape) {
+          selectSegmentAt(x, y, e.shiftKey);
+          clickedOnShape = selectedSegments.length > 0;
+        }
         break;
       default:
-        selectShapeAtPoint(x, y, e.shiftKey);
+        clickedOnShape = shapes.some(shape => shape.containsPoint(x, y));
+        if (clickedOnShape) {
+          selectShapeAtPoint(x, y, e.shiftKey);
+        }
         break;
     }
-  }, [canvasSettings.zoom, scatterSettings, shapes, editMode, selectShapeAtPoint, scatterOnShape, selectPointAt, selectSegmentAt]);
+    
+    // Start marquee selection if clicking on empty space and not holding shift
+    if (!clickedOnShape && !e.shiftKey && editMode === 'shapes') {
+      setMarqueeStart({ x, y });
+      setMarqueeEnd({ x, y });
+      setIsMarqueeSelecting(true);
+      // Clear existing selection when starting marquee
+      clearSelection();
+    } else {
+      setIsDragging(true);
+    }
+  }, [canvasSettings.zoom, scatterSettings, shapes, editMode, selectShapeAtPoint, scatterOnShape, selectPointAt, selectSegmentAt, selectedPoints, selectedSegments, clearSelection]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart) return;
-    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
     const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    
+    // Handle marquee selection
+    if (isMarqueeSelecting && marqueeStart) {
+      setMarqueeEnd({ x, y });
+      
+      // Select shapes within marquee rectangle
+      const minX = Math.min(marqueeStart.x, x);
+      const maxX = Math.max(marqueeStart.x, x);
+      const minY = Math.min(marqueeStart.y, y);
+      const maxY = Math.max(marqueeStart.y, y);
+      
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
+                              bounds.y >= minY && bounds.y + bounds.height <= maxY;
+        shape.selected = shapeInMarquee;
+      });
+      
+      setShapes(prev => [...prev]);
+      return;
+    }
+    
+    if (!isDragging || !dragStart) return;
     
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
@@ -407,7 +473,7 @@ export const useShapeEditor = () => {
     }
     
     setDragStart({ x, y });
-  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
+  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
