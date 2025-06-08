@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
@@ -80,10 +81,10 @@ interface SidebarProps {
   onGenerateRandomShapes: () => void;
   onComposeShapes: () => void;
   onSetEditMode: (mode: 'shapes' | 'points' | 'segments') => void;
-  onMove: () => void;
-  onScale: () => void;
-  onRotate: () => void;
-  onSkew: () => void;
+  onMoveBy: (x: number, y: number) => void;
+  onScaleBy: (x: number, y: number) => void;
+  onRotateBy: (angle: number) => void;
+  onSkewBy: (x: number, y: number) => void;
   onFlipHorizontal: () => void;
   onFlipVertical: () => void;
 }
@@ -101,15 +102,23 @@ export default function Sidebar({
   onGenerateRandomShapes,
   onComposeShapes,
   onSetEditMode,
-  onMove,
-  onScale,
-  onRotate,
-  onSkew,
+  onMoveBy,
+  onScaleBy,
+  onRotateBy,
+  onSkewBy,
   onFlipHorizontal,
   onFlipVertical
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [moveX, setMoveX] = useState(0);
+  const [moveY, setMoveY] = useState(0);
+  const [scaleX, setScaleX] = useState(100);
+  const [scaleY, setScaleY] = useState(100);
+  const [lockAspectRatio, setLockAspectRatio] = useState(true);
+  const [rotation, setRotation] = useState(0);
+  const [skewX, setSkewX] = useState(0);
+  const [skewY, setSkewY] = useState(0);
   
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
@@ -204,61 +213,205 @@ export default function Sidebar({
   );
 
   const TransformToolsContent = () => (
-    <div className="grid grid-cols-2 gap-2">
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onMove}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <Move className="w-3 h-3 mr-1" />
-        Move
-      </Button>
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onScale}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <Expand className="w-3 h-3 mr-1" />
-        Scale
-      </Button>
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onRotate}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <RotateCw className="w-3 h-3 mr-1" />
-        Rotate
-      </Button>
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onSkew}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <Italic className="w-3 h-3 mr-1" />
-        Skew
-      </Button>
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onFlipHorizontal}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <FlipHorizontal className="w-3 h-3 mr-1" />
-        Flip H
-      </Button>
-      <Button 
-        variant="secondary" 
-        size="sm" 
-        onClick={onFlipVertical}
-        className="bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
-      >
-        <FlipVertical className="w-3 h-3 mr-1" />
-        Flip V
-      </Button>
+    <div className="space-y-4">
+      {selectedCount === 0 && (
+        <div className="text-xs text-slate-400 text-center">
+          Select shapes to transform
+        </div>
+      )}
+      
+      {selectedCount > 0 && (
+        <>
+          {/* Move Controls */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300 flex items-center">
+              <Move className="w-3 h-3 mr-1" />
+              Move
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-slate-400">X</Label>
+                <Input
+                  type="number"
+                  value={moveX}
+                  onChange={(e) => setMoveX(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-400">Y</Label>
+                <Input
+                  type="number"
+                  value={moveY}
+                  onChange={(e) => setMoveY(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onMoveBy(moveX, moveY);
+                setMoveX(0);
+                setMoveY(0);
+              }}
+              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
+            >
+              Apply Move
+            </Button>
+          </div>
+
+          {/* Scale Controls */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300 flex items-center">
+              <Expand className="w-3 h-3 mr-1" />
+              Scale
+            </Label>
+            <div className="flex items-center space-x-2 mb-2">
+              <Checkbox
+                checked={lockAspectRatio}
+                onCheckedChange={setLockAspectRatio}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Lock aspect ratio</Label>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-slate-400">X %</Label>
+                <Input
+                  type="number"
+                  value={scaleX}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setScaleX(value);
+                    if (lockAspectRatio) setScaleY(value);
+                  }}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-400">Y %</Label>
+                <Input
+                  type="number"
+                  value={scaleY}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setScaleY(value);
+                    if (lockAspectRatio) setScaleX(value);
+                  }}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onScaleBy(scaleX / 100, scaleY / 100);
+                setScaleX(100);
+                setScaleY(100);
+              }}
+              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
+            >
+              Apply Scale
+            </Button>
+          </div>
+
+          {/* Rotation Controls */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300 flex items-center">
+              <RotateCw className="w-3 h-3 mr-1" />
+              Rotate
+            </Label>
+            <div>
+              <Label className="text-xs text-slate-400">Degrees</Label>
+              <Input
+                type="number"
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value) % 360)}
+                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+              />
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onRotateBy(rotation);
+                setRotation(0);
+              }}
+              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
+            >
+              Apply Rotation
+            </Button>
+          </div>
+
+          {/* Skew Controls */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300 flex items-center">
+              <Italic className="w-3 h-3 mr-1" />
+              Skew
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-slate-400">X</Label>
+                <Input
+                  type="number"
+                  value={skewX}
+                  onChange={(e) => setSkewX(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-slate-400">Y</Label>
+                <Input
+                  type="number"
+                  value={skewY}
+                  onChange={(e) => setSkewY(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onSkewBy(skewX, skewY);
+                setSkewX(0);
+                setSkewY(0);
+              }}
+              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
+            >
+              Apply Skew
+            </Button>
+          </div>
+
+          {/* Flip Controls */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300">Flip</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onFlipHorizontal}
+                className="bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                <FlipHorizontal className="w-3 h-3 mr-1" />
+                Horizontal
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onFlipVertical}
+                className="bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                <FlipVertical className="w-3 h-3 mr-1" />
+                Vertical
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -279,14 +432,14 @@ export default function Sidebar({
             checked={scatterSettings.onPoints}
             onCheckedChange={(checked) => onUpdateScatterSettings({ onPoints: checked })}
           />
-          <Label className="text-sm">Scatter on Points</Label>
+          <Label className="text-sm text-white">Scatter on Points</Label>
         </div>
         <div className="flex items-center space-x-3">
           <Switch
             checked={scatterSettings.insideArea}
             onCheckedChange={(checked) => onUpdateScatterSettings({ insideArea: checked })}
           />
-          <Label className="text-sm">Scatter Inside Area</Label>
+          <Label className="text-sm text-white">Scatter Inside Area</Label>
         </div>
         
         <div className="space-y-2">

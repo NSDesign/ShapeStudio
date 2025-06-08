@@ -154,9 +154,9 @@ export default function Canvas({
             variant="ghost"
             size="sm"
             onClick={onToggleMultiSelect}
-            className={`text-slate-400 hover:text-white p-2 h-auto ${isMultiSelectMode ? 'bg-blue-500/20 text-blue-300' : ''}`}
+            className={`p-2 h-auto ${isMultiSelectMode ? 'bg-blue-500 text-white hover:bg-blue-600' : 'text-slate-400 hover:text-white'}`}
           >
-            <MoreHorizontal className="w-4 h-4" />
+            <MoreHorizontal className={`w-4 h-4 ${isMultiSelectMode ? 'text-white' : ''}`} />
           </Button>
           <div className="h-4 w-px bg-slate-600"></div>
           <Button

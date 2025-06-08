@@ -415,24 +415,12 @@ export const useShapeEditor = () => {
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
-    setIsDragging(true);
-
-    // Handle different edit modes
-    switch (editMode) {
-      case 'points':
-        selectPointAt(x, y, isMultiSelectMode);
-        break;
-      case 'segments':
-        selectSegmentAt(x, y, isMultiSelectMode);
-        break;
-      default:
-        selectShapeAtPoint(x, y, isMultiSelectMode);
-        break;
-    }
-  }, [canvasSettings.zoom, editMode, isMultiSelectMode, selectShapeAtPoint, selectPointAt, selectSegmentAt]);
+    
+    // Don't immediately select on touch start - wait for touch end to avoid drag conflicts
+  }, [canvasSettings.zoom]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart || e.touches.length > 1) return;
+    if (!dragStart || e.touches.length > 1) return;
     
     const touch = e.touches[0];
     const canvas = canvasRef.current;
@@ -445,40 +433,70 @@ export const useShapeEditor = () => {
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
     
-    // Handle different edit modes
-    switch (editMode) {
-      case 'points':
-        if (selectedPoints.length > 0) {
-          moveSelectedPoints(deltaX, deltaY);
-        }
-        break;
-      case 'segments':
-        if (selectedSegments.length > 0) {
-          moveSelectedSegments(deltaX, deltaY);
-        }
-        break;
-      default:
-        if (selectedShapes.length > 0 || selectedGroups.length > 0) {
-          moveSelected(deltaX, deltaY);
-        }
-        break;
+    // Start dragging if movement detected
+    if (!isDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+      setIsDragging(true);
     }
     
-    setDragStart({ x, y });
+    if (isDragging) {
+      // Handle different edit modes
+      switch (editMode) {
+        case 'points':
+          if (selectedPoints.length > 0) {
+            moveSelectedPoints(deltaX, deltaY);
+          }
+          break;
+        case 'segments':
+          if (selectedSegments.length > 0) {
+            moveSelectedSegments(deltaX, deltaY);
+          }
+          break;
+        default:
+          if (selectedShapes.length > 0 || selectedGroups.length > 0) {
+            moveSelected(deltaX, deltaY);
+          }
+          break;
+      }
+      
+      setDragStart({ x, y });
+    }
   }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const touchDuration = Date.now() - touchStartTime;
     
-    // Long press (>500ms) toggles multi-select mode
-    if (touchDuration > 500) {
-      setIsMultiSelectMode(!isMultiSelectMode);
+    if (!isDragging && dragStart) {
+      // This was a tap, not a drag
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.changedTouches[0].clientX - rect.left) / canvasSettings.zoom;
+        const y = (e.changedTouches[0].clientY - rect.top) / canvasSettings.zoom;
+        
+        // Long press (>500ms) toggles multi-select mode
+        if (touchDuration > 500) {
+          setIsMultiSelectMode(!isMultiSelectMode);
+        } else {
+          // Short tap - select shape
+          switch (editMode) {
+            case 'points':
+              selectPointAt(x, y, isMultiSelectMode);
+              break;
+            case 'segments':
+              selectSegmentAt(x, y, isMultiSelectMode);
+              break;
+            default:
+              selectShapeAtPoint(x, y, isMultiSelectMode);
+              break;
+          }
+        }
+      }
     }
     
     setIsDragging(false);
     setDragStart(null);
     setTouchStartTime(0);
-  }, [touchStartTime, isMultiSelectMode]);
+  }, [touchStartTime, isMultiSelectMode, isDragging, dragStart, canvasSettings.zoom, editMode, selectShapeAtPoint, selectPointAt, selectSegmentAt]);
 
   const toggleMultiSelectMode = useCallback(() => {
     setIsMultiSelectMode(!isMultiSelectMode);
