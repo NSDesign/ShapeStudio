@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   Square, 
   Circle, 
@@ -19,7 +20,10 @@ import {
   ArrowUpDown,
   ArrowLeftRight,
   Expand,
-  Italic
+  Italic,
+  Shapes,
+  Settings,
+  Palette
 } from "lucide-react";
 import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";

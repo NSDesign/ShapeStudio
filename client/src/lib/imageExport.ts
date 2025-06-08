@@ -1,0 +1,301 @@
+import { Shape, ShapeGroupClass } from './shapes';
+import { CanvasSettings } from './shapeTypes';
+
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'svg' | 'bmp';
+
+export interface ExportOptions {
+  format: ImageFormat;
+  quality?: number; // 0-1, for lossy formats
+  width?: number;
+  height?: number;
+  scale?: number; // Scaling factor for high-res exports
+  backgroundColor?: string;
+  includeBackground?: boolean;
+}
+
+export class ImageExporter {
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
+  
+  constructor() {
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d')!;
+  }
+
+  async exportImage(
+    shapes: Shape[],
+    groups: ShapeGroupClass[],
+    canvasSettings: CanvasSettings,
+    options: ExportOptions
+  ): Promise<Blob> {
+    const {
+      format,
+      quality = 0.92,
+      width = canvasSettings.width,
+      height = canvasSettings.height,
+      scale = 1,
+      backgroundColor = 'transparent',
+      includeBackground = true
+    } = options;
+
+    // Set canvas size
+    const exportWidth = width * scale;
+    const exportHeight = height * scale;
+    this.canvas.width = exportWidth;
+    this.canvas.height = exportHeight;
+
+    // Clear and setup canvas
+    this.ctx.clearRect(0, 0, exportWidth, exportHeight);
+    
+    // Add background if requested
+    if (includeBackground && backgroundColor !== 'transparent') {
+      this.ctx.fillStyle = backgroundColor;
+      this.ctx.fillRect(0, 0, exportWidth, exportHeight);
+    }
+
+    // Apply scaling for high-res exports
+    this.ctx.scale(scale, scale);
+
+    // Apply canvas zoom and pan settings
+    this.ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
+    this.ctx.translate(canvasSettings.panX, canvasSettings.panY);
+
+    // Render all groups first
+    groups.forEach(group => {
+      group.render(this.ctx);
+    });
+
+    // Render individual shapes
+    shapes.forEach(shape => {
+      shape.render(this.ctx);
+    });
+
+    // Export based on format
+    switch (format) {
+      case 'svg':
+        return this.exportAsSVG(shapes, groups, canvasSettings, options);
+      case 'png':
+        return this.exportAsRaster('image/png');
+      case 'jpeg':
+        return this.exportAsRaster('image/jpeg', quality);
+      case 'webp':
+        return this.exportAsRaster('image/webp', quality);
+      case 'avif':
+        return this.exportAsRaster('image/avif', quality);
+      case 'bmp':
+        return this.exportAsRaster('image/bmp');
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+  }
+
+  private async exportAsRaster(mimeType: string, quality?: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      this.canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob'));
+          }
+        },
+        mimeType,
+        quality
+      );
+    });
+  }
+
+  private async exportAsSVG(
+    shapes: Shape[],
+    groups: ShapeGroupClass[],
+    canvasSettings: CanvasSettings,
+    options: ExportOptions
+  ): Promise<Blob> {
+    const {
+      width = canvasSettings.width,
+      height = canvasSettings.height,
+      backgroundColor = 'transparent',
+      includeBackground = true
+    } = options;
+
+    let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+    // Add background if requested
+    if (includeBackground && backgroundColor !== 'transparent') {
+      svgContent += `\n  <rect width="100%" height="100%" fill="${backgroundColor}"/>`;
+    }
+
+    // Add group for transforms
+    svgContent += `\n  <g transform="scale(${canvasSettings.zoom}) translate(${canvasSettings.panX}, ${canvasSettings.panY})">`;
+
+    // Convert groups to SVG
+    groups.forEach(group => {
+      svgContent += this.groupToSVG(group);
+    });
+
+    // Convert individual shapes to SVG
+    shapes.forEach(shape => {
+      svgContent += this.shapeToSVG(shape);
+    });
+
+    svgContent += '\n  </g>\n</svg>';
+
+    return new Blob([svgContent], { type: 'image/svg+xml' });
+  }
+
+  private shapeToSVG(shape: Shape): string {
+    const transform = `translate(${shape.transform.x}, ${shape.transform.y}) rotate(${shape.transform.rotation}) scale(${shape.transform.scaleX}, ${shape.transform.scaleY}) skewX(${shape.transform.skewX}) skewY(${shape.transform.skewY})`;
+    
+    let shapeElement = '';
+    
+    switch (shape.type) {
+      case 'rectangle':
+      case 'square':
+        shapeElement = `<rect x="${-shape.width! / 2}" y="${-shape.height! / 2}" width="${shape.width}" height="${shape.height}"`;
+        break;
+      case 'circle':
+        shapeElement = `<circle cx="0" cy="0" r="${shape.radius}"`;
+        break;
+      case 'ellipse':
+        shapeElement = `<ellipse cx="0" cy="0" rx="${shape.width! / 2}" ry="${shape.height! / 2}"`;
+        break;
+      case 'polygon':
+        const polygonPoints = this.getPolygonPoints(shape.sides!, shape.radius!);
+        shapeElement = `<polygon points="${polygonPoints}"`;
+        break;
+      case 'star':
+        const starPoints = this.getStarPoints(shape.sides!, shape.radius!, shape.innerRadius!);
+        shapeElement = `<polygon points="${starPoints}"`;
+        break;
+      case 'line':
+        const linePoints = shape.points.map(p => `${p.x},${p.y}`).join(' ');
+        shapeElement = `<polyline points="${linePoints}" fill="none"`;
+        break;
+      default:
+        // For complex shapes, use path
+        if (shape.points && shape.points.length > 0) {
+          const pathData = this.pointsToPath(shape.points, shape.type);
+          shapeElement = `<path d="${pathData}"`;
+        }
+        break;
+    }
+
+    if (shapeElement) {
+      const styles = `fill="${shape.properties.fillColor}" fill-opacity="${shape.properties.fillOpacity}" stroke="${shape.properties.strokeColor}" stroke-width="${shape.properties.strokeWidth}" stroke-opacity="${shape.properties.strokeOpacity}"`;
+      return `\n    <g transform="${transform}">\n      ${shapeElement} ${styles}/>\n    </g>`;
+    }
+
+    return '';
+  }
+
+  private groupToSVG(group: ShapeGroupClass): string {
+    const transform = `translate(${group.transform.x}, ${group.transform.y}) rotate(${group.transform.rotation}) scale(${group.transform.scaleX}, ${group.transform.scaleY})`;
+    
+    let groupContent = `\n    <g transform="${transform}">`;
+    group.shapes.forEach(shape => {
+      groupContent += this.shapeToSVG(shape);
+    });
+    groupContent += '\n    </g>';
+    
+    return groupContent;
+  }
+
+  private getPolygonPoints(sides: number, radius: number): string {
+    const points: string[] = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      points.push(`${x},${y}`);
+    }
+    return points.join(' ');
+  }
+
+  private getStarPoints(sides: number, outerRadius: number, innerRadius: number): string {
+    const points: string[] = [];
+    for (let i = 0; i < sides * 2; i++) {
+      const angle = (i * Math.PI) / sides - Math.PI / 2;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      points.push(`${x},${y}`);
+    }
+    return points.join(' ');
+  }
+
+  private pointsToPath(points: { x: number; y: number }[], shapeType: string): string {
+    if (points.length === 0) return '';
+    
+    let path = `M ${points[0].x} ${points[0].y}`;
+    
+    for (let i = 1; i < points.length; i++) {
+      if (shapeType === 'blob') {
+        // Use smooth curves for blobs
+        const current = points[i];
+        const next = points[(i + 1) % points.length];
+        const cp1x = current.x;
+        const cp1y = current.y;
+        const cp2x = (current.x + next.x) / 2;
+        const cp2y = (current.y + next.y) / 2;
+        path += ` Q ${cp1x} ${cp1y} ${cp2x} ${cp2y}`;
+      } else {
+        path += ` L ${points[i].x} ${points[i].y}`;
+      }
+    }
+    
+    if (shapeType === 'blob' || shapeType === 'polygon') {
+      path += ' Z';
+    }
+    
+    return path;
+  }
+
+  static async downloadImage(blob: Blob, filename: string): Promise<void> {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  static getFileExtension(format: ImageFormat): string {
+    const extensions: Record<ImageFormat, string> = {
+      png: 'png',
+      jpeg: 'jpg',
+      webp: 'webp',
+      avif: 'avif',
+      svg: 'svg',
+      bmp: 'bmp'
+    };
+    return extensions[format];
+  }
+
+  static isFormatSupported(format: ImageFormat): boolean {
+    // Check if the browser supports the format
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    
+    try {
+      switch (format) {
+        case 'png':
+        case 'jpeg':
+        case 'bmp':
+        case 'svg':
+          return true;
+        case 'webp':
+          return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+        case 'avif':
+          return canvas.toDataURL('image/avif').indexOf('data:image/avif') === 0;
+        default:
+          return false;
+      }
+    } catch {
+      return false;
+    }
+  }
+}

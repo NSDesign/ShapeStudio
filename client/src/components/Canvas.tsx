@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings } from '../lib/shapeTypes';
+import ExportDialog from './ExportDialog';
 
 interface CanvasProps {
   shapes: Shape[];
@@ -110,6 +111,12 @@ export default function Canvas({
         </div>
         
         <div className="flex items-center space-x-2">
+          <ExportDialog
+            shapes={shapes}
+            groups={groups}
+            canvasSettings={canvasSettings}
+          />
+          <div className="h-4 w-px bg-slate-600"></div>
           <Button
             variant="ghost"
             size="sm"
