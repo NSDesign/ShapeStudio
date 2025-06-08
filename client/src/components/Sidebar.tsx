@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
@@ -118,7 +118,7 @@ export default function Sidebar({
 
   const ShapeTypesContent = () => (
     <div className="space-y-3">
-      <div className="space-y-3 max-h-48 overflow-y-auto">
+      <div className="space-y-3 max-h-48 overflow-y-auto" style={{ scrollBehavior: 'auto' }}>
         {allShapeTypes.map((type) => {
           const IconComponent = shapeIcons[type];
           const isEnabled = enabledShapeTypes.has(type);
