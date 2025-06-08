@@ -566,9 +566,11 @@ export default function Sidebar({
                 <div className="flex items-center space-x-2">
                   <Input
                     type="color"
-                    value={firstSelectedShape.properties.fillColor}
+                    value={firstSelectedShape.properties.fillColor.includes('hsl') ? '#3B82F6' : firstSelectedShape.properties.fillColor}
                     onChange={(e) => {
                       firstSelectedShape.properties.fillColor = e.target.value;
+                      // Force re-render to show changes
+                      selectedShapes.forEach(shape => shape.selected = true);
                     }}
                     className="h-6 w-12 p-0 border-slate-600"
                   />
@@ -585,9 +587,11 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Input
                   type="color"
-                  value={firstSelectedShape.properties.strokeColor}
+                  value={firstSelectedShape.properties.strokeColor.includes('hsl') ? '#1F2937' : firstSelectedShape.properties.strokeColor}
                   onChange={(e) => {
                     firstSelectedShape.properties.strokeColor = e.target.value;
+                    // Force re-render to show changes
+                    selectedShapes.forEach(shape => shape.selected = true);
                   }}
                   className="h-6 w-12 p-0 border-slate-600"
                 />
@@ -596,6 +600,8 @@ export default function Sidebar({
                   value={firstSelectedShape.properties.strokeWidth}
                   onChange={(e) => {
                     firstSelectedShape.properties.strokeWidth = parseFloat(e.target.value) || 0;
+                    // Force re-render to show changes
+                    selectedShapes.forEach(shape => shape.selected = true);
                   }}
                   min={0}
                   max={20}

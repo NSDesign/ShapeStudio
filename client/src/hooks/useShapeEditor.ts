@@ -331,6 +331,8 @@ export const useShapeEditor = () => {
           }
         });
       }
+      // Force visual update
+      setShapes(prev => [...prev]);
     } else if (!multiSelect) {
       setSelectedPoints([]);
     }
@@ -366,6 +368,8 @@ export const useShapeEditor = () => {
           }
         });
       }
+      // Force visual update
+      setShapes(prev => [...prev]);
     } else if (!multiSelect) {
       setSelectedSegments([]);
     }
