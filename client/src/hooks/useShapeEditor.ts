@@ -113,9 +113,25 @@ export const useShapeEditor = () => {
       if (multiSelect && clickedShape.selected) {
         clickedShape.selected = false;
         setSelectedShapes(prev => prev.filter(s => s !== clickedShape));
+        console.log('Shape deselected:', clickedShape.id);
       } else {
         clickedShape.selected = true;
         setSelectedShapes(prev => multiSelect ? [...prev.filter(s => s !== clickedShape), clickedShape] : [clickedShape]);
+        
+        // Console log single shape selection for debugging
+        console.log('=== SINGLE SHAPE SELECTED ===');
+        console.log('Shape:', {
+          id: clickedShape.id,
+          type: clickedShape.type,
+          transform: clickedShape.transform,
+          properties: clickedShape.properties,
+          points: clickedShape.points?.length || 0,
+          width: clickedShape.width,
+          height: clickedShape.height,
+          radius: clickedShape.radius,
+          sides: clickedShape.sides
+        });
+        console.log('=== END SINGLE SHAPE DEBUG ===');
       }
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
