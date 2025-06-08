@@ -555,26 +555,43 @@ export default function Sidebar({
             {/* Fill Properties */}
             <div>
               <Label className="text-xs text-slate-400 mb-1 block">Fill</Label>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400 w-10">Color:</Label>
                   <Input
                     type="color"
                     value={firstSelectedShape.properties.fillColor.includes('hsl') ? '#3B82F6' : firstSelectedShape.properties.fillColor}
                     onChange={(e) => {
-                      firstSelectedShape.properties.fillColor = e.target.value;
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      selectedShapes.forEach(shape => {
+                        shape.properties.fillColor = e.target.value;
+                      });
+                      selectedGroups.forEach(group => {
+                        group.shapes.forEach(shape => {
+                          shape.properties.fillColor = e.target.value;
+                        });
+                      });
                     }}
                     className="h-6 w-12 p-0 border-slate-600"
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400 w-10">Opacity:</Label>
                   <Input
                     type="range"
                     min={0}
                     max={1}
-                    step={0.1}
+                    step={0.01}
                     value={firstSelectedShape.properties.fillOpacity}
                     onChange={(e) => {
-                      firstSelectedShape.properties.fillOpacity = parseFloat(e.target.value);
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      const newOpacity = parseFloat(e.target.value);
+                      selectedShapes.forEach(shape => {
+                        shape.properties.fillOpacity = newOpacity;
+                      });
+                      selectedGroups.forEach(group => {
+                        group.shapes.forEach(shape => {
+                          shape.properties.fillOpacity = newOpacity;
+                        });
+                      });
                     }}
                     className="flex-1 h-6"
                   />
@@ -593,23 +610,40 @@ export default function Sidebar({
             {/* Stroke Properties */}
             <div>
               <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400 w-10">Color:</Label>
                   <Input
                     type="color"
                     value={firstSelectedShape.properties.strokeColor.includes('hsl') ? '#1F2937' : firstSelectedShape.properties.strokeColor}
                     onChange={(e) => {
-                      firstSelectedShape.properties.strokeColor = e.target.value;
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      selectedShapes.forEach(shape => {
+                        shape.properties.strokeColor = e.target.value;
+                      });
+                      selectedGroups.forEach(group => {
+                        group.shapes.forEach(shape => {
+                          shape.properties.strokeColor = e.target.value;
+                        });
+                      });
                     }}
                     className="h-6 w-12 p-0 border-slate-600"
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400 w-10">Width:</Label>
                   <Input
                     type="number"
-                    value={firstSelectedShape.properties.strokeWidth}
+                    value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
                     onChange={(e) => {
-                      firstSelectedShape.properties.strokeWidth = parseFloat(e.target.value) || 0;
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      const newWidth = parseFloat(e.target.value) || 0;
+                      selectedShapes.forEach(shape => {
+                        shape.properties.strokeWidth = newWidth;
+                      });
+                      selectedGroups.forEach(group => {
+                        group.shapes.forEach(shape => {
+                          shape.properties.strokeWidth = newWidth;
+                        });
+                      });
                     }}
                     min={0}
                     max={20}
@@ -619,16 +653,23 @@ export default function Sidebar({
                   <span className="text-xs text-slate-400">px</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-400 w-12">Opacity:</span>
+                  <Label className="text-xs text-slate-400 w-10">Opacity:</Label>
                   <Input
                     type="range"
                     min={0}
                     max={1}
-                    step={0.1}
+                    step={0.01}
                     value={firstSelectedShape.properties.strokeOpacity}
                     onChange={(e) => {
-                      firstSelectedShape.properties.strokeOpacity = parseFloat(e.target.value);
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      const newOpacity = parseFloat(e.target.value);
+                      selectedShapes.forEach(shape => {
+                        shape.properties.strokeOpacity = newOpacity;
+                      });
+                      selectedGroups.forEach(group => {
+                        group.shapes.forEach(shape => {
+                          shape.properties.strokeOpacity = newOpacity;
+                        });
+                      });
                     }}
                     className="flex-1 h-6"
                   />
