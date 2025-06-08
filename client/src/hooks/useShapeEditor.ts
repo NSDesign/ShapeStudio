@@ -36,6 +36,22 @@ export const useShapeEditor = () => {
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Synchronize selectedShapes and selectedGroups with shape.selected flags
+  useEffect(() => {
+    const currentSelectedShapes = shapes.filter(shape => shape.selected);
+    const currentSelectedGroups = groups.filter(group => group.selected);
+    
+    if (currentSelectedShapes.length !== selectedShapes.length || 
+        !currentSelectedShapes.every(shape => selectedShapes.includes(shape))) {
+      setSelectedShapes(currentSelectedShapes);
+    }
+    
+    if (currentSelectedGroups.length !== selectedGroups.length || 
+        !currentSelectedGroups.every(group => selectedGroups.includes(group))) {
+      setSelectedGroups(currentSelectedGroups);
+    }
+  }, [shapes, groups]);
+
   // Generate random shapes
   const generateRandomShapes = useCallback(() => {
     const availableTypes = Array.from(enabledShapeTypes);
@@ -438,9 +454,12 @@ export const useShapeEditor = () => {
       const maxY = Math.max(marqueeStart.y, y);
       
       shapes.forEach(shape => {
-        const bounds = shape.getBounds();
-        const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
-                              bounds.y >= minY && bounds.y + bounds.height <= maxY;
+        // Check if shape center is within marquee bounds
+        const shapeCenterX = shape.transform.x;
+        const shapeCenterY = shape.transform.y;
+        
+        const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
+                              shapeCenterY >= minY && shapeCenterY <= maxY;
         shape.selected = shapeInMarquee;
       });
       
@@ -566,9 +585,12 @@ export const useShapeEditor = () => {
       const maxY = Math.max(marqueeStart.y, y);
       
       shapes.forEach(shape => {
-        const bounds = shape.getBounds();
-        const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
-                              bounds.y >= minY && bounds.y + bounds.height <= maxY;
+        // Check if shape center is within marquee bounds
+        const shapeCenterX = shape.transform.x;
+        const shapeCenterY = shape.transform.y;
+        
+        const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
+                              shapeCenterY >= minY && shapeCenterY <= maxY;
         shape.selected = shapeInMarquee;
       });
       
