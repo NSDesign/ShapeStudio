@@ -92,6 +92,8 @@ export default function ShapeEditor() {
         selectedSegmentsCount={selectedSegmentsCount}
         editMode={editMode}
         canComposeShapes={canComposeShapes}
+        selectedShapes={selectedShapes}
+        selectedGroups={selectedGroups}
         onToggleShapeType={toggleShapeType}
         onUpdateScatterSettings={updateScatterSettings}
         onGenerateRandomShapes={generateRandomShapes}

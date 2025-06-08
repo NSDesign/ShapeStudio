@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { 
   Square, 
   Circle, 
@@ -77,6 +78,8 @@ interface SidebarProps {
   selectedSegmentsCount: number;
   editMode: 'shapes' | 'points' | 'segments';
   canComposeShapes: boolean;
+  selectedShapes: Shape[];
+  selectedGroups: ShapeGroupClass[];
   onToggleShapeType: (type: ShapeType) => void;
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
   onGenerateRandomShapes: () => void;
@@ -98,6 +101,8 @@ export default function Sidebar({
   selectedSegmentsCount,
   editMode,
   canComposeShapes,
+  selectedShapes,
+  selectedGroups,
   onToggleShapeType,
   onUpdateScatterSettings,
   onGenerateRandomShapes,
@@ -121,8 +126,7 @@ export default function Sidebar({
   const [skewX, setSkewX] = useState(0);
   const [skewY, setSkewY] = useState(0);
   
-  // Get shape editor data for properties panel
-  const { shapes, groups } = useShapeEditor();
+  // Shape properties will be passed from parent component via selectedShapes data
   
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
@@ -515,7 +519,7 @@ export default function Sidebar({
 
           {/* Shape Properties */}
           {selectedCount > 0 && (() => {
-            const firstSelectedShape = shapes.find(shape => shape.selected) || groups.find(group => group.selected)?.shapes[0];
+            const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
             if (!firstSelectedShape) return null;
 
             return (
