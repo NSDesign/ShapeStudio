@@ -529,14 +529,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* Shape Properties */}
-          {selectedCount > 0 && (
-            <ShapePropertiesPanel 
-              selectedShapes={selectedShapes}
-              selectedGroups={selectedGroups}
-              selectedCount={selectedCount}
-            />
-          )}
+
         </>
       )}
     </div>
@@ -738,9 +731,18 @@ export default function Sidebar({
         Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
       </div>
       
+      {/* Shape Properties Panel */}
       {selectedCount > 0 && (
+        <ShapePropertiesPanel 
+          selectedShapes={selectedShapes}
+          selectedGroups={selectedGroups}
+          selectedCount={selectedCount}
+        />
+      )}
+      
+      {selectedCount === 0 && (
         <div className="text-xs text-slate-500">
-          Use the transform tools above to modify selected shapes, or drag them directly on the canvas.
+          Select shapes to edit their properties
         </div>
       )}
       
