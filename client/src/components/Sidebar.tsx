@@ -110,7 +110,6 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
   
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
@@ -119,32 +118,20 @@ export default function Sidebar({
 
   const ShapeTypesContent = () => (
     <div className="space-y-3">
-      <div 
-        className="space-y-3 max-h-48 overflow-y-auto scroll-smooth"
-        onScroll={(e) => setScrollPosition(e.currentTarget.scrollTop)}
-        ref={(el) => {
-          if (el && scrollPosition > 0) {
-            el.scrollTop = scrollPosition;
-          }
-        }}
-      >
+      <div className="space-y-3 max-h-48 overflow-y-auto">
         {allShapeTypes.map((type) => {
           const IconComponent = shapeIcons[type];
           const isEnabled = enabledShapeTypes.has(type);
           
           return (
-            <div key={type} className="shape-item flex items-center justify-between p-2 rounded-lg">
+            <div key={type} className="flex items-center justify-between p-2 rounded-lg">
               <div className="flex items-center space-x-3">
                 <IconComponent className="w-4 h-4 text-[var(--editor-primary)]" />
                 <span className="text-sm font-medium text-white">{shapeNames[type]}</span>
               </div>
               <Switch
                 checked={isEnabled}
-                onCheckedChange={(checked) => {
-                  const currentScroll = document.querySelector('.overflow-y-auto')?.scrollTop || 0;
-                  setScrollPosition(currentScroll);
-                  onToggleShapeType(type);
-                }}
+                onCheckedChange={() => onToggleShapeType(type)}
               />
             </div>
           );
