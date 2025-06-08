@@ -353,10 +353,10 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors ${
+                className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'shapes' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                    ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-400' 
+                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
                 }`}
               >
                 <Shapes className="w-5 h-5" />
@@ -384,10 +384,10 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors ${
+                className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'edit' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                    ? 'bg-green-500 text-white hover:bg-green-600 border-green-400' 
+                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
                 }`}
               >
                 <Settings className="w-5 h-5" />
@@ -415,10 +415,10 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors ${
+                className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'transform' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
+                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
                 }`}
               >
                 <Move className="w-5 h-5" />
@@ -446,10 +446,10 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors ${
+                className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'composition' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                    ? 'bg-blue-500 text-white hover:bg-blue-600 border-blue-400' 
+                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
                 }`}
               >
                 <Layers className="w-5 h-5" />
@@ -477,10 +477,10 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors ${
+                className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'properties' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                    : 'text-slate-800 hover:text-slate-700 hover:bg-slate-200 bg-white/90'
+                    ? 'bg-pink-500 text-white hover:bg-pink-600 border-pink-400' 
+                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
                 }`}
               >
                 <Palette className="w-5 h-5" />

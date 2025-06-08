@@ -80,7 +80,7 @@ export default function ShapeEditor() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full overflow-hidden">
       <Sidebar
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
