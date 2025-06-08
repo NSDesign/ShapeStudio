@@ -1,0 +1,542 @@
+import { BaseShape, ShapeType, Point, Transform, ShapeProperties, ShapeGroup } from './shapeTypes';
+
+export class Shape {
+  id: string;
+  type: ShapeType;
+  transform: Transform;
+  properties: ShapeProperties;
+  selected: boolean;
+  points: Point[];
+  sides?: number;
+  radius?: number;
+  innerRadius?: number;
+  width?: number;
+  height?: number;
+  controlPoints?: Point[];
+  closed?: boolean;
+
+  constructor(type: ShapeType, x: number = 0, y: number = 0) {
+    this.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.type = type;
+    this.transform = {
+      x,
+      y,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+      skewX: 0,
+      skewY: 0
+    };
+    this.properties = this.generateRandomProperties();
+    this.selected = false;
+    this.points = [];
+    this.generateShapeData();
+  }
+
+  private generateRandomProperties(): ShapeProperties {
+    const hue = Math.random() * 360;
+    const saturation = 50 + Math.random() * 50;
+    const lightness = 40 + Math.random() * 40;
+    
+    return {
+      fillColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+      fillOpacity: 0.7 + Math.random() * 0.3,
+      strokeColor: `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)`,
+      strokeWidth: 1 + Math.random() * 4,
+      strokeOpacity: 0.8 + Math.random() * 0.2
+    };
+  }
+
+  private generateShapeData(): void {
+    switch (this.type) {
+      case 'rectangle':
+        this.width = 50 + Math.random() * 150;
+        this.height = 30 + Math.random() * 120;
+        break;
+      case 'square':
+        const size = 40 + Math.random() * 100;
+        this.width = size;
+        this.height = size;
+        break;
+      case 'circle':
+        this.radius = 25 + Math.random() * 75;
+        break;
+      case 'ellipse':
+        this.width = 40 + Math.random() * 120;
+        this.height = 30 + Math.random() * 80;
+        break;
+      case 'polygon':
+        this.sides = 3 + Math.floor(Math.random() * 10);
+        this.radius = 30 + Math.random() * 70;
+        break;
+      case 'star':
+        this.sides = 5 + Math.floor(Math.random() * 7);
+        this.radius = 30 + Math.random() * 70;
+        this.innerRadius = this.radius * (0.3 + Math.random() * 0.4);
+        break;
+      case 'line':
+        this.generateLinePoints();
+        break;
+      case 'bezier':
+      case 'cubic':
+      case 'quadratic':
+        this.generateCurvePoints();
+        break;
+      case 'blob':
+        this.generateBlobPoints();
+        break;
+      case 'ring':
+        this.radius = 30 + Math.random() * 70;
+        this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
+        break;
+    }
+  }
+
+  private generateLinePoints(): void {
+    const numPoints = 2 + Math.floor(Math.random() * 6);
+    this.points = [];
+    for (let i = 0; i < numPoints; i++) {
+      this.points.push({
+        x: i * (20 + Math.random() * 40),
+        y: (Math.random() - 0.5) * 100
+      });
+    }
+  }
+
+  private generateCurvePoints(): void {
+    const numPoints = 3 + Math.floor(Math.random() * 5);
+    this.points = [];
+    this.controlPoints = [];
+    
+    for (let i = 0; i < numPoints; i++) {
+      this.points.push({
+        x: i * (30 + Math.random() * 50),
+        y: (Math.random() - 0.5) * 120
+      });
+      
+      if (i < numPoints - 1) {
+        this.controlPoints.push({
+          x: (i + 0.5) * (30 + Math.random() * 50) + (Math.random() - 0.5) * 40,
+          y: (Math.random() - 0.5) * 120
+        });
+      }
+    }
+    
+    this.closed = Math.random() > 0.5;
+  }
+
+  private generateBlobPoints(): void {
+    const numPoints = 6 + Math.floor(Math.random() * 6);
+    this.points = [];
+    const baseRadius = 40 + Math.random() * 60;
+    
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      const radiusVariation = 0.7 + Math.random() * 0.6;
+      const radius = baseRadius * radiusVariation;
+      
+      this.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    
+    // Apply transform
+    ctx.translate(this.transform.x, this.transform.y);
+    ctx.rotate(this.transform.rotation * Math.PI / 180);
+    ctx.scale(this.transform.scaleX, this.transform.scaleY);
+    ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
+    
+    // Set styles
+    ctx.fillStyle = this.properties.fillColor;
+    ctx.globalAlpha = this.properties.fillOpacity;
+    ctx.strokeStyle = this.properties.strokeColor;
+    ctx.lineWidth = this.properties.strokeWidth;
+    
+    // Draw shape
+    this.drawShape(ctx);
+    
+    // Draw selection indicator
+    if (this.selected) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#2563EB';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      this.drawSelectionBounds(ctx);
+      ctx.setLineDash([]);
+    }
+    
+    ctx.restore();
+  }
+
+  private drawShape(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    
+    switch (this.type) {
+      case 'rectangle':
+      case 'square':
+        ctx.rect(-this.width! / 2, -this.height! / 2, this.width!, this.height!);
+        break;
+      case 'circle':
+        ctx.arc(0, 0, this.radius!, 0, Math.PI * 2);
+        break;
+      case 'ellipse':
+        ctx.ellipse(0, 0, this.width! / 2, this.height! / 2, 0, 0, Math.PI * 2);
+        break;
+      case 'polygon':
+        this.drawPolygon(ctx);
+        break;
+      case 'star':
+        this.drawStar(ctx);
+        break;
+      case 'line':
+        this.drawLine(ctx);
+        break;
+      case 'bezier':
+      case 'cubic':
+      case 'quadratic':
+        this.drawCurve(ctx);
+        break;
+      case 'blob':
+        this.drawBlob(ctx);
+        break;
+      case 'ring':
+        this.drawRing(ctx);
+        break;
+    }
+    
+    if (this.type !== 'line') {
+      ctx.fill();
+    }
+    ctx.stroke();
+  }
+
+  private drawPolygon(ctx: CanvasRenderingContext2D): void {
+    for (let i = 0; i < this.sides!; i++) {
+      const angle = (i * 2 * Math.PI) / this.sides! - Math.PI / 2;
+      const x = Math.cos(angle) * this.radius!;
+      const y = Math.sin(angle) * this.radius!;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  private drawStar(ctx: CanvasRenderingContext2D): void {
+    for (let i = 0; i < this.sides! * 2; i++) {
+      const angle = (i * Math.PI) / this.sides! - Math.PI / 2;
+      const radius = i % 2 === 0 ? this.radius! : this.innerRadius!;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  private drawLine(ctx: CanvasRenderingContext2D): void {
+    this.points.forEach((point, i) => {
+      if (i === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+  }
+
+  private drawCurve(ctx: CanvasRenderingContext2D): void {
+    if (this.points.length < 2) return;
+    
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    
+    for (let i = 1; i < this.points.length; i++) {
+      if (this.type === 'bezier' && this.controlPoints && i - 1 < this.controlPoints.length) {
+        ctx.quadraticCurveTo(
+          this.controlPoints[i - 1].x,
+          this.controlPoints[i - 1].y,
+          this.points[i].x,
+          this.points[i].y
+        );
+      } else {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
+      }
+    }
+    
+    if (this.closed) ctx.closePath();
+  }
+
+  private drawBlob(ctx: CanvasRenderingContext2D): void {
+    if (this.points.length < 3) return;
+    
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    
+    for (let i = 1; i < this.points.length; i++) {
+      const current = this.points[i];
+      const next = this.points[(i + 1) % this.points.length];
+      const cp1x = current.x;
+      const cp1y = current.y;
+      const cp2x = (current.x + next.x) / 2;
+      const cp2y = (current.y + next.y) / 2;
+      
+      ctx.quadraticCurveTo(cp1x, cp1y, cp2x, cp2y);
+    }
+    
+    ctx.closePath();
+  }
+
+  private drawRing(ctx: CanvasRenderingContext2D): void {
+    ctx.arc(0, 0, this.radius!, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.innerRadius!, 0, Math.PI * 2, true);
+  }
+
+  private drawSelectionBounds(ctx: CanvasRenderingContext2D): void {
+    const bounds = this.getBounds();
+    ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+  }
+
+  getBounds(): { x: number; y: number; width: number; height: number } {
+    switch (this.type) {
+      case 'rectangle':
+      case 'square':
+      case 'ellipse':
+        return {
+          x: -this.width! / 2,
+          y: -this.height! / 2,
+          width: this.width!,
+          height: this.height!
+        };
+      case 'circle':
+      case 'polygon':
+      case 'star':
+      case 'ring':
+        return {
+          x: -this.radius!,
+          y: -this.radius!,
+          width: this.radius! * 2,
+          height: this.radius! * 2
+        };
+      default:
+        if (this.points.length > 0) {
+          const xs = this.points.map(p => p.x);
+          const ys = this.points.map(p => p.y);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const minY = Math.min(...ys);
+          const maxY = Math.max(...ys);
+          return {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+          };
+        }
+        return { x: 0, y: 0, width: 0, height: 0 };
+    }
+  }
+
+  containsPoint(x: number, y: number): boolean {
+    const bounds = this.getBounds();
+    const localX = x - this.transform.x;
+    const localY = y - this.transform.y;
+    
+    return localX >= bounds.x && localX <= bounds.x + bounds.width &&
+           localY >= bounds.y && localY <= bounds.y + bounds.height;
+  }
+
+  move(deltaX: number, deltaY: number): void {
+    this.transform.x += deltaX;
+    this.transform.y += deltaY;
+  }
+
+  scale(factor: number): void {
+    this.transform.scaleX *= factor;
+    this.transform.scaleY *= factor;
+  }
+
+  rotate(angle: number): void {
+    this.transform.rotation += angle;
+  }
+
+  skew(skewX: number, skewY: number): void {
+    this.transform.skewX += skewX;
+    this.transform.skewY += skewY;
+  }
+
+  flip(horizontal: boolean): void {
+    if (horizontal) {
+      this.transform.scaleX *= -1;
+    } else {
+      this.transform.scaleY *= -1;
+    }
+  }
+
+  clone(): Shape {
+    const cloned = new Shape(this.type, this.transform.x + 20, this.transform.y + 20);
+    cloned.transform = { ...this.transform };
+    cloned.properties = { ...this.properties };
+    cloned.points = [...this.points];
+    cloned.sides = this.sides;
+    cloned.radius = this.radius;
+    cloned.innerRadius = this.innerRadius;
+    cloned.width = this.width;
+    cloned.height = this.height;
+    cloned.controlPoints = this.controlPoints ? [...this.controlPoints] : undefined;
+    cloned.closed = this.closed;
+    return cloned;
+  }
+}
+
+export class ShapeGroupClass {
+  id: string;
+  shapes: Shape[];
+  transform: Transform;
+  selected: boolean;
+
+  constructor(shapes: Shape[]) {
+    this.id = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.shapes = shapes;
+    this.selected = false;
+    
+    // Calculate center point for group transform
+    const bounds = this.getBounds();
+    this.transform = {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2,
+      scaleX: 1,
+      scaleY: 1,
+      rotation: 0,
+      skewX: 0,
+      skewY: 0
+    };
+  }
+
+  getBounds(): { x: number; y: number; width: number; height: number } {
+    if (this.shapes.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+    
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    
+    this.shapes.forEach(shape => {
+      const bounds = shape.getBounds();
+      const shapeMinX = shape.transform.x + bounds.x;
+      const shapeMaxX = shape.transform.x + bounds.x + bounds.width;
+      const shapeMinY = shape.transform.y + bounds.y;
+      const shapeMaxY = shape.transform.y + bounds.y + bounds.height;
+      
+      minX = Math.min(minX, shapeMinX);
+      maxX = Math.max(maxX, shapeMaxX);
+      minY = Math.min(minY, shapeMinY);
+      maxY = Math.max(maxY, shapeMaxY);
+    });
+    
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    
+    // Apply group transform
+    ctx.translate(this.transform.x, this.transform.y);
+    ctx.rotate(this.transform.rotation * Math.PI / 180);
+    ctx.scale(this.transform.scaleX, this.transform.scaleY);
+    ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
+    ctx.translate(-this.transform.x, -this.transform.y);
+    
+    // Render all shapes
+    this.shapes.forEach(shape => shape.render(ctx));
+    
+    // Draw group selection
+    if (this.selected) {
+      const bounds = this.getBounds();
+      ctx.strokeStyle = '#7C3AED';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      ctx.setLineDash([]);
+    }
+    
+    ctx.restore();
+  }
+
+  move(deltaX: number, deltaY: number): void {
+    this.shapes.forEach(shape => shape.move(deltaX, deltaY));
+    this.transform.x += deltaX;
+    this.transform.y += deltaY;
+  }
+
+  scale(factor: number): void {
+    const centerX = this.transform.x;
+    const centerY = this.transform.y;
+    
+    this.shapes.forEach(shape => {
+      const dx = shape.transform.x - centerX;
+      const dy = shape.transform.y - centerY;
+      shape.transform.x = centerX + dx * factor;
+      shape.transform.y = centerY + dy * factor;
+      shape.scale(factor);
+    });
+    
+    this.transform.scaleX *= factor;
+    this.transform.scaleY *= factor;
+  }
+
+  rotate(angle: number): void {
+    const centerX = this.transform.x;
+    const centerY = this.transform.y;
+    const rad = angle * Math.PI / 180;
+    
+    this.shapes.forEach(shape => {
+      const dx = shape.transform.x - centerX;
+      const dy = shape.transform.y - centerY;
+      const newX = dx * Math.cos(rad) - dy * Math.sin(rad);
+      const newY = dx * Math.sin(rad) + dy * Math.cos(rad);
+      shape.transform.x = centerX + newX;
+      shape.transform.y = centerY + newY;
+      shape.rotate(angle);
+    });
+    
+    this.transform.rotation += angle;
+  }
+
+  skew(skewX: number, skewY: number): void {
+    this.shapes.forEach(shape => shape.skew(skewX, skewY));
+    this.transform.skewX += skewX;
+    this.transform.skewY += skewY;
+  }
+
+  flip(horizontal: boolean): void {
+    const centerX = this.transform.x;
+    const centerY = this.transform.y;
+    
+    this.shapes.forEach(shape => {
+      if (horizontal) {
+        const dx = shape.transform.x - centerX;
+        shape.transform.x = centerX - dx;
+      } else {
+        const dy = shape.transform.y - centerY;
+        shape.transform.y = centerY - dy;
+      }
+      shape.flip(horizontal);
+    });
+    
+    if (horizontal) {
+      this.transform.scaleX *= -1;
+    } else {
+      this.transform.scaleY *= -1;
+    }
+  }
+
+  containsPoint(x: number, y: number): boolean {
+    const bounds = this.getBounds();
+    return x >= bounds.x && x <= bounds.x + bounds.width &&
+           y >= bounds.y && y <= bounds.y + bounds.height;
+  }
+}
