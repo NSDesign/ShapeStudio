@@ -50,7 +50,7 @@ export const useShapeEditor = () => {
         !currentSelectedGroups.every(group => selectedGroups.includes(group))) {
       setSelectedGroups(currentSelectedGroups);
     }
-  }, [shapes, groups]);
+  }, [shapes, groups, selectedShapes, selectedGroups]);
 
   // Generate random shapes
   const generateRandomShapes = useCallback(() => {
@@ -160,6 +160,21 @@ export const useShapeEditor = () => {
     selectedGroups.forEach(group => group.flip(horizontal));
     setShapes(prev => [...prev]);
     setGroups(prev => [...prev]);
+  }, [selectedShapes, selectedGroups]);
+
+  // Delete selected shapes and groups
+  const deleteSelected = useCallback(() => {
+    if (selectedShapes.length === 0 && selectedGroups.length === 0) return;
+    
+    // Remove selected shapes
+    setShapes(prev => prev.filter(shape => !selectedShapes.includes(shape)));
+    
+    // Remove selected groups
+    setGroups(prev => prev.filter(group => !selectedGroups.includes(group)));
+    
+    // Clear selection
+    setSelectedShapes([]);
+    setSelectedGroups([]);
   }, [selectedShapes, selectedGroups]);
 
   // Compose shapes into group
@@ -496,7 +511,7 @@ export const useShapeEditor = () => {
 
   const handleMouseUp = useCallback(() => {
     if (isMarqueeSelecting) {
-      // Finalize marquee selection
+      // Finalize marquee selection and immediately hide marquee rectangle
       setIsMarqueeSelecting(false);
       setMarqueeStart(null);
       setMarqueeEnd(null);
@@ -711,6 +726,7 @@ export const useShapeEditor = () => {
     rotateSelected,
     skewSelected,
     flipSelected,
+    deleteSelected,
     moveSelectedPoints,
     moveSelectedSegments,
     

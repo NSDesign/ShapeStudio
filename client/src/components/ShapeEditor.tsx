@@ -30,6 +30,7 @@ export default function ShapeEditor() {
     rotateSelected,
     skewSelected,
     flipSelected,
+    deleteSelected,
     zoomIn,
     zoomOut,
     resetView,
@@ -79,6 +80,12 @@ export default function ShapeEditor() {
   const handleFlipVertical = () => {
     if (selectedCount > 0) {
       flipSelected(false); // Flip vertically
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedCount > 0) {
+      deleteSelected();
     }
   };
 
