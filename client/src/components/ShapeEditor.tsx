@@ -12,10 +12,14 @@ export default function ShapeEditor() {
     scatterSettings,
     canvasSettings,
     canvasRef,
+    editMode,
+    selectedPoints,
+    selectedSegments,
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
     composeShapes,
+    setEditingMode,
     moveSelected,
     scaleSelected,
     rotateSelected,
@@ -28,6 +32,8 @@ export default function ShapeEditor() {
     handleMouseMove,
     handleMouseUp,
     selectedCount,
+    selectedPointsCount,
+    selectedSegmentsCount,
     canComposeShapes
   } = useShapeEditor();
 

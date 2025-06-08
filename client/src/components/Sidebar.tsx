@@ -23,7 +23,10 @@ import {
   Italic,
   Shapes,
   Settings,
-  Palette
+  Palette,
+  MousePointer,
+  Navigation,
+  Spline
 } from "lucide-react";
 import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -64,11 +67,15 @@ interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
   selectedCount: number;
+  selectedPointsCount: number;
+  selectedSegmentsCount: number;
+  editMode: 'shapes' | 'points' | 'segments';
   canComposeShapes: boolean;
   onToggleShapeType: (type: ShapeType) => void;
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
   onGenerateRandomShapes: () => void;
   onComposeShapes: () => void;
+  onSetEditMode: (mode: 'shapes' | 'points' | 'segments') => void;
   onMove: () => void;
   onScale: () => void;
   onRotate: () => void;
@@ -81,11 +88,15 @@ export default function Sidebar({
   enabledShapeTypes,
   scatterSettings,
   selectedCount,
+  selectedPointsCount,
+  selectedSegmentsCount,
+  editMode,
   canComposeShapes,
   onToggleShapeType,
   onUpdateScatterSettings,
   onGenerateRandomShapes,
   onComposeShapes,
+  onSetEditMode,
   onMove,
   onScale,
   onRotate,
@@ -108,7 +119,71 @@ export default function Sidebar({
       
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto">
-        <Accordion type="multiple" defaultValue={["shapes", "transforms"]} className="w-full">
+        <Accordion type="multiple" defaultValue={["editmode", "shapes", "transforms"]} className="w-full">
+          
+          {/* Edit Mode Section */}
+          <AccordionItem value="editmode" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline">
+              <div className="flex items-center space-x-2">
+                <Settings className="w-4 h-4" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Edit Mode</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <div className="space-y-3">
+                <div className="text-xs text-slate-400 mb-3">
+                  Select editing mode to control different aspects of your shapes
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    variant={editMode === 'shapes' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => onSetEditMode('shapes')}
+                    className={editMode === 'shapes' ? 
+                      "bg-[var(--editor-primary)] text-white" : 
+                      "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+                    }
+                  >
+                    <MousePointer className="w-3 h-3 mr-2" />
+                    Shape Mode
+                  </Button>
+                  
+                  <Button
+                    variant={editMode === 'points' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => onSetEditMode('points')}
+                    className={editMode === 'points' ? 
+                      "bg-[var(--editor-primary)] text-white" : 
+                      "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+                    }
+                  >
+                    <Navigation className="w-3 h-3 mr-2" />
+                    Point Mode
+                  </Button>
+                  
+                  <Button
+                    variant={editMode === 'segments' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => onSetEditMode('segments')}
+                    className={editMode === 'segments' ? 
+                      "bg-[var(--editor-primary)] text-white" : 
+                      "bg-[var(--surface-light)] hover:bg-slate-600 text-slate-200"
+                    }
+                  >
+                    <Spline className="w-3 h-3 mr-2" />
+                    Segment Mode
+                  </Button>
+                </div>
+                
+                <div className="text-xs text-slate-500 mt-3">
+                  {editMode === 'shapes' && "Select and transform entire shapes"}
+                  {editMode === 'points' && `Edit individual points - ${selectedPointsCount} selected`}
+                  {editMode === 'segments' && `Edit shape segments - ${selectedSegmentsCount} selected`}
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
           
           {/* Shape Types Section */}
           <AccordionItem value="shapes" className="border-b border-slate-700">

@@ -409,6 +409,9 @@ export const useShapeEditor = () => {
     scatterSettings,
     canvasSettings,
     canvasRef,
+    editMode,
+    selectedPoints,
+    selectedSegments,
     
     // Actions
     generateRandomShapes,
@@ -416,6 +419,7 @@ export const useShapeEditor = () => {
     updateScatterSettings,
     composeShapes,
     scatterOnShape,
+    setEditingMode,
     
     // Transforms
     moveSelected,
@@ -423,6 +427,8 @@ export const useShapeEditor = () => {
     rotateSelected,
     skewSelected,
     flipSelected,
+    moveSelectedPoints,
+    moveSelectedSegments,
     
     // Canvas
     zoomIn,
@@ -436,6 +442,8 @@ export const useShapeEditor = () => {
     
     // Computed
     selectedCount: selectedShapes.length + selectedGroups.length,
+    selectedPointsCount: selectedPoints.length,
+    selectedSegmentsCount: selectedSegments.length,
     canComposeShapes: selectedShapes.length >= 2,
     isScatterMode: scatterSettings.onPoints || scatterSettings.insideArea
   };

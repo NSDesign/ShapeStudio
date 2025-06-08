@@ -10,6 +10,9 @@ interface CanvasProps {
   groups: ShapeGroupClass[];
   canvasSettings: CanvasSettings;
   selectedCount: number;
+  editMode: 'shapes' | 'points' | 'segments';
+  selectedPoints: { shapeId: string; pointIndex: number }[];
+  selectedSegments: { shapeId: string; segmentIndex: number }[];
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -24,6 +27,9 @@ export default function Canvas({
   groups,
   canvasSettings,
   selectedCount,
+  editMode,
+  selectedPoints,
+  selectedSegments,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -65,6 +71,23 @@ export default function Canvas({
 
       // Render individual shapes
       shapes.forEach(shape => shape.render(ctx));
+
+      // Render points and segments in edit mode
+      if (editMode === 'points' || editMode === 'segments') {
+        shapes.forEach(shape => {
+          if (!shape.points || shape.points.length === 0) return;
+          
+          const shapeSelectedPoints = selectedPoints
+            .filter(sp => sp.shapeId === shape.id)
+            .map(sp => sp.pointIndex);
+          
+          const shapeSelectedSegments = selectedSegments
+            .filter(ss => ss.shapeId === shape.id)
+            .map(ss => ss.segmentIndex);
+          
+          shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments);
+        });
+      }
 
       ctx.restore();
 
