@@ -542,135 +542,344 @@ export default function Sidebar({
     selectedCount: number;
   }) {
     const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
+    
+    // Helper function to convert HSL to hex for color input
+    const hslToHex = (hslString: string): string => {
+      if (hslString.startsWith('#')) return hslString;
+      const match = hslString.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
+      if (!match) return '#3B82F6';
+      
+      const h = parseFloat(match[1]) / 360;
+      const s = parseFloat(match[2]) / 100;
+      const l = parseFloat(match[3]) / 100;
+      
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+      const m = l - c / 2;
+      let r, g, b;
+      
+      if (0 <= h && h < 1/6) [r, g, b] = [c, x, 0];
+      else if (1/6 <= h && h < 2/6) [r, g, b] = [x, c, 0];
+      else if (2/6 <= h && h < 3/6) [r, g, b] = [0, c, x];
+      else if (3/6 <= h && h < 4/6) [r, g, b] = [0, x, c];
+      else if (4/6 <= h && h < 5/6) [r, g, b] = [x, 0, c];
+      else [r, g, b] = [c, 0, x];
+      
+      r = Math.round((r + m) * 255);
+      g = Math.round((g + m) * 255);
+      b = Math.round((b + m) * 255);
+      
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    };
+
+    // Helper function to convert hex to HSL
+    const hexToHsl = (hex: string): string => {
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const diff = max - min;
+      const sum = max + min;
+      const l = sum / 2;
+      
+      if (diff === 0) return `hsl(0, 0%, ${Math.round(l * 100)}%)`;
+      
+      const s = l > 0.5 ? diff / (2 - sum) : diff / sum;
+      
+      let h;
+      if (max === r) h = ((g - b) / diff + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / diff + 2) / 6;
+      else h = ((r - g) / diff + 4) / 6;
+      
+      return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+    };
+
+    const updateShapeProperty = (updater: (shape: Shape) => void) => {
+      selectedShapes.forEach(updater);
+      selectedGroups.forEach(group => group.shapes.forEach(updater));
+    };
+
+    const addGradientStop = () => {
+      if (!firstSelectedShape.properties.gradient) return;
+      const newStop = {
+        offset: 0.5,
+        color: 'hsl(200, 50%, 50%)'
+      };
+      updateShapeProperty(shape => {
+        if (shape.properties.gradient) {
+          shape.properties.gradient.stops.push(newStop);
+          shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
+        }
+      });
+    };
+
+    const removeGradientStop = (index: number) => {
+      if (!firstSelectedShape.properties.gradient || firstSelectedShape.properties.gradient.stops.length <= 2) return;
+      updateShapeProperty(shape => {
+        if (shape.properties.gradient && shape.properties.gradient.stops.length > 2) {
+          shape.properties.gradient.stops.splice(index, 1);
+        }
+      });
+    };
+
+    const updateGradientStop = (index: number, field: 'offset' | 'color', value: number | string) => {
+      updateShapeProperty(shape => {
+        if (shape.properties.gradient && shape.properties.gradient.stops[index]) {
+          if (field === 'offset') {
+            shape.properties.gradient.stops[index].offset = Math.max(0, Math.min(1, value as number));
+          } else {
+            shape.properties.gradient.stops[index].color = value as string;
+          }
+          shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
+        }
+      });
+    };
 
     return (
-      <div className="space-y-2 border-t border-slate-600 pt-2">
-        <Label className="text-xs text-slate-300">Shape Properties</Label>
+      <div className="space-y-3 border-t border-slate-600 pt-3">
+        <Label className="text-xs text-slate-300 font-semibold">Shape Properties</Label>
         {!firstSelectedShape ? (
           <div className="text-xs text-slate-400">
             {selectedCount} shape{selectedCount > 1 ? 's' : ''} selected
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {/* Fill Properties */}
-            <div>
-              <Label className="text-xs text-slate-400 mb-1 block">Fill</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-10">Color:</Label>
-                  <Input
-                    type="color"
-                    value={firstSelectedShape.properties.fillColor.includes('hsl') ? '#3B82F6' : firstSelectedShape.properties.fillColor}
-                    onChange={(e) => {
-                      selectedShapes.forEach(shape => {
-                        shape.properties.fillColor = e.target.value;
-                      });
-                      selectedGroups.forEach(group => {
-                        group.shapes.forEach(shape => {
-                          shape.properties.fillColor = e.target.value;
-                        });
-                      });
-                    }}
-                    className="h-6 w-12 p-0 border-slate-600"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-10">Opacity:</Label>
-                  <Input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={firstSelectedShape.properties.fillOpacity}
-                    onChange={(e) => {
-                      const newOpacity = parseFloat(e.target.value);
-                      selectedShapes.forEach(shape => {
-                        shape.properties.fillOpacity = newOpacity;
-                      });
-                      selectedGroups.forEach(group => {
-                        group.shapes.forEach(shape => {
-                          shape.properties.fillOpacity = newOpacity;
-                        });
-                      });
-                    }}
-                    className="flex-1 h-6"
-                  />
-                  <span className="text-xs text-slate-400 w-8">
-                    {Math.round(firstSelectedShape.properties.fillOpacity * 100)}%
-                  </span>
-                </div>
-                {firstSelectedShape.properties.gradient && (
-                  <div className="text-xs text-blue-300 bg-blue-500/20 p-1 rounded">
-                    {firstSelectedShape.properties.gradient.type} gradient ({firstSelectedShape.properties.gradient.stops.length} stops)
-                  </div>
-                )}
+            <div className="space-y-3">
+              <Label className="text-xs text-slate-400 font-medium">Fill</Label>
+              
+              {/* Fill Type Toggle */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={!firstSelectedShape.properties.gradient ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
+                  className="h-6 px-2 text-xs"
+                >
+                  Color
+                </Button>
+                <Button
+                  variant={firstSelectedShape.properties.gradient ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => updateShapeProperty(shape => {
+                    if (!shape.properties.gradient) {
+                      shape.properties.gradient = {
+                        type: 'linear',
+                        stops: [
+                          { offset: 0, color: shape.properties.fillColor },
+                          { offset: 1, color: 'hsl(200, 50%, 50%)' }
+                        ]
+                      };
+                    }
+                  })}
+                  className="h-6 px-2 text-xs"
+                >
+                  Gradient
+                </Button>
               </div>
+
+              {!firstSelectedShape.properties.gradient ? (
+                /* Solid Color Fill */
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Color:</Label>
+                    <Input
+                      type="color"
+                      value={hslToHex(firstSelectedShape.properties.fillColor)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.fillColor = hexToHsl(e.target.value);
+                      })}
+                      className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                    <Slider
+                      value={[firstSelectedShape.properties.fillOpacity]}
+                      onValueChange={([value]) => updateShapeProperty(shape => {
+                        shape.properties.fillOpacity = value;
+                      })}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                      })}
+                      min={0}
+                      max={100}
+                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">%</span>
+                  </div>
+                </div>
+              ) : (
+                /* Gradient Fill */
+                <div className="space-y-3">
+                  {/* Gradient Type */}
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Type:</Label>
+                    <Select
+                      value={firstSelectedShape.properties.gradient.type}
+                      onValueChange={(value: 'linear' | 'radial') => updateShapeProperty(shape => {
+                        if (shape.properties.gradient) {
+                          shape.properties.gradient.type = value;
+                        }
+                      })}
+                    >
+                      <SelectTrigger className="h-6 text-xs bg-slate-800 border-slate-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="linear">Linear</SelectItem>
+                        <SelectItem value="radial">Radial</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Gradient Stops */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-slate-400">Gradient Stops</Label>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={addGradientStop}
+                        className="h-5 px-2 text-xs bg-slate-700 hover:bg-slate-600"
+                      >
+                        + Add
+                      </Button>
+                    </div>
+                    
+                    {firstSelectedShape.properties.gradient.stops.map((stop, index) => (
+                      <div key={index} className="flex items-center space-x-2 p-2 bg-slate-800/50 rounded">
+                        <Input
+                          type="color"
+                          value={hslToHex(stop.color)}
+                          onChange={(e) => updateGradientStop(index, 'color', hexToHsl(e.target.value))}
+                          className="h-6 w-12 p-0 border-slate-600"
+                        />
+                        <Input
+                          type="number"
+                          value={Math.round(stop.offset * 100)}
+                          onChange={(e) => updateGradientStop(index, 'offset', (parseInt(e.target.value) || 0) / 100)}
+                          min={0}
+                          max={100}
+                          className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                        />
+                        <span className="text-xs text-slate-400">%</span>
+                        {firstSelectedShape.properties.gradient.stops.length > 2 && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeGradientStop(index)}
+                            className="h-6 w-6 p-0"
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Fill Opacity for gradients */}
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                    <Slider
+                      value={[firstSelectedShape.properties.fillOpacity]}
+                      onValueChange={([value]) => updateShapeProperty(shape => {
+                        shape.properties.fillOpacity = value;
+                      })}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                      })}
+                      min={0}
+                      max={100}
+                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">%</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Stroke Properties */}
-            <div>
-              <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
+            <div className="space-y-3">
+              <Label className="text-xs text-slate-400 font-medium">Stroke</Label>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-10">Color:</Label>
+                  <Label className="text-xs text-slate-400 w-12">Color:</Label>
                   <Input
                     type="color"
-                    value={firstSelectedShape.properties.strokeColor.includes('hsl') ? '#1F2937' : firstSelectedShape.properties.strokeColor}
-                    onChange={(e) => {
-                      selectedShapes.forEach(shape => {
-                        shape.properties.strokeColor = e.target.value;
-                      });
-                      selectedGroups.forEach(group => {
-                        group.shapes.forEach(shape => {
-                          shape.properties.strokeColor = e.target.value;
-                        });
-                      });
-                    }}
-                    className="h-6 w-12 p-0 border-slate-600"
+                    value={hslToHex(firstSelectedShape.properties.strokeColor)}
+                    onChange={(e) => updateShapeProperty(shape => {
+                      shape.properties.strokeColor = hexToHsl(e.target.value);
+                    })}
+                    className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-10">Width:</Label>
+                  <Label className="text-xs text-slate-400 w-12">Width:</Label>
+                  <Slider
+                    value={[firstSelectedShape.properties.strokeWidth]}
+                    onValueChange={([value]) => updateShapeProperty(shape => {
+                      shape.properties.strokeWidth = value;
+                    })}
+                    min={0}
+                    max={20}
+                    step={0.1}
+                    className="flex-1"
+                  />
                   <Input
                     type="number"
                     value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
-                    onChange={(e) => {
-                      const newWidth = parseFloat(e.target.value) || 0;
-                      selectedShapes.forEach(shape => {
-                        shape.properties.strokeWidth = newWidth;
-                      });
-                    }}
+                    onChange={(e) => updateShapeProperty(shape => {
+                      shape.properties.strokeWidth = Math.max(0, parseFloat(e.target.value) || 0);
+                    })}
                     min={0}
                     max={20}
-                    step={0.5}
+                    step={0.1}
                     className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
                   />
                   <span className="text-xs text-slate-400">px</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-10">Opacity:</Label>
-                  <Input
-                    type="range"
+                  <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                  <Slider
+                    value={[firstSelectedShape.properties.strokeOpacity]}
+                    onValueChange={([value]) => updateShapeProperty(shape => {
+                      shape.properties.strokeOpacity = value;
+                    })}
                     min={0}
                     max={1}
                     step={0.01}
-                    value={firstSelectedShape.properties.strokeOpacity}
-                    onChange={(e) => {
-                      const newOpacity = parseFloat(e.target.value);
-                      selectedShapes.forEach(shape => {
-                        shape.properties.strokeOpacity = newOpacity;
-                      });
-                      selectedGroups.forEach(group => {
-                        group.shapes.forEach(shape => {
-                          shape.properties.strokeOpacity = newOpacity;
-                        });
-                      });
-                    }}
-                    className="flex-1 h-6"
+                    className="flex-1"
                   />
-                  <span className="text-xs text-slate-400 w-8">
-                    {Math.round(firstSelectedShape.properties.strokeOpacity * 100)}%
-                  </span>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
+                    onChange={(e) => updateShapeProperty(shape => {
+                      shape.properties.strokeOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                    })}
+                    min={0}
+                    max={100}
+                    className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                  <span className="text-xs text-slate-400">%</span>
                 </div>
               </div>
             </div>
@@ -683,7 +892,12 @@ export default function Sidebar({
                   type="number"
                   value={firstSelectedShape.sides || 6}
                   onChange={(e) => {
-                    firstSelectedShape.sides = parseInt(e.target.value) || 6;
+                    const newSides = Math.max(3, Math.min(20, parseInt(e.target.value) || 6));
+                    updateShapeProperty(shape => {
+                      if (shape.type === 'polygon' || shape.type === 'star') {
+                        shape.sides = newSides;
+                      }
+                    });
                   }}
                   min={3}
                   max={20}
@@ -697,10 +911,16 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
                 <Input
                   type="number"
-                  value={firstSelectedShape.radius || 0}
+                  value={Math.round(firstSelectedShape.radius || 0)}
                   onChange={(e) => {
-                    firstSelectedShape.radius = parseFloat(e.target.value) || 0;
+                    const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                    updateShapeProperty(shape => {
+                      if (shape.type === 'circle' || shape.type === 'ring') {
+                        shape.radius = newRadius;
+                      }
+                    });
                   }}
+                  min={1}
                   className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
                 />
               </div>
@@ -715,13 +935,17 @@ export default function Sidebar({
                     type="number"
                     value={Math.round(firstSelectedShape.width || 0)}
                     onChange={(e) => {
-                      const newWidth = parseFloat(e.target.value) || 0;
-                      firstSelectedShape.width = newWidth;
-                      if (firstSelectedShape.type === 'square') {
-                        firstSelectedShape.height = newWidth;
-                      }
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      const newWidth = Math.max(1, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                          shape.width = newWidth;
+                          if (shape.type === 'square') {
+                            shape.height = newWidth;
+                          }
+                        }
+                      });
                     }}
+                    min={1}
                     className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
                   />
                   <span className="text-xs text-slate-400">×</span>
@@ -729,13 +953,17 @@ export default function Sidebar({
                     type="number"
                     value={Math.round(firstSelectedShape.height || 0)}
                     onChange={(e) => {
-                      const newHeight = parseFloat(e.target.value) || 0;
-                      firstSelectedShape.height = newHeight;
-                      if (firstSelectedShape.type === 'square') {
-                        firstSelectedShape.width = newHeight;
-                      }
-                      selectedShapes.forEach(shape => shape.selected = true);
+                      const newHeight = Math.max(1, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                          shape.height = newHeight;
+                          if (shape.type === 'square') {
+                            shape.width = newHeight;
+                          }
+                        }
+                      });
                     }}
+                    min={1}
                     className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
                     disabled={firstSelectedShape.type === 'square'}
                   />
