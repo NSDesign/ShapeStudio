@@ -423,8 +423,8 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
+    const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
@@ -440,8 +440,8 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
+    const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
