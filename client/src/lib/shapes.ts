@@ -344,6 +344,115 @@ export class Shape {
            localY >= bounds.y && localY <= bounds.y + bounds.height;
   }
 
+  getPointAt(index: number): Point | null {
+    if (!this.points || index < 0 || index >= this.points.length) return null;
+    return { ...this.points[index] };
+  }
+
+  getWorldPoint(index: number): Point | null {
+    const localPoint = this.getPointAt(index);
+    if (!localPoint) return null;
+    
+    return {
+      x: this.transform.x + localPoint.x,
+      y: this.transform.y + localPoint.y
+    };
+  }
+
+  updatePoint(index: number, newPoint: Point): void {
+    if (!this.points || index < 0 || index >= this.points.length) return;
+    this.points[index] = { ...newPoint };
+  }
+
+  updateWorldPoint(index: number, worldPoint: Point): void {
+    const localPoint = {
+      x: worldPoint.x - this.transform.x,
+      y: worldPoint.y - this.transform.y
+    };
+    this.updatePoint(index, localPoint);
+  }
+
+  isPointNear(worldX: number, worldY: number, pointIndex: number, threshold: number = 8): boolean {
+    const worldPoint = this.getWorldPoint(pointIndex);
+    if (!worldPoint) return false;
+    
+    const dx = worldX - worldPoint.x;
+    const dy = worldY - worldPoint.y;
+    return Math.sqrt(dx * dx + dy * dy) <= threshold;
+  }
+
+  isSegmentNear(worldX: number, worldY: number, segmentIndex: number, threshold: number = 5): boolean {
+    if (!this.points || segmentIndex < 0 || segmentIndex >= this.points.length - 1) return false;
+    
+    const point1 = this.getWorldPoint(segmentIndex);
+    const point2 = this.getWorldPoint(segmentIndex + 1);
+    if (!point1 || !point2) return false;
+    
+    // Calculate distance from point to line segment
+    const A = worldX - point1.x;
+    const B = worldY - point1.y;
+    const C = point2.x - point1.x;
+    const D = point2.y - point1.y;
+    
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    
+    if (lenSq === 0) return false;
+    
+    let param = dot / lenSq;
+    param = Math.max(0, Math.min(1, param));
+    
+    const closestX = point1.x + param * C;
+    const closestY = point1.y + param * D;
+    
+    const dx = worldX - closestX;
+    const dy = worldY - closestY;
+    return Math.sqrt(dx * dx + dy * dy) <= threshold;
+  }
+
+  renderPoints(ctx: CanvasRenderingContext2D, selectedPoints: number[] = [], selectedSegments: number[] = []): void {
+    if (!this.points || this.points.length === 0) return;
+    
+    ctx.save();
+    
+    // Apply transform to match shape rendering
+    ctx.translate(this.transform.x, this.transform.y);
+    ctx.rotate(this.transform.rotation * Math.PI / 180);
+    ctx.scale(this.transform.scaleX, this.transform.scaleY);
+    ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
+    
+    // Draw segment highlights
+    selectedSegments.forEach(segmentIndex => {
+      if (segmentIndex >= 0 && segmentIndex < this.points.length - 1) {
+        const p1 = this.points[segmentIndex];
+        const p2 = this.points[segmentIndex + 1];
+        
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    });
+    
+    // Draw points
+    this.points.forEach((point, index) => {
+      const isSelected = selectedPoints.includes(index);
+      
+      ctx.fillStyle = isSelected ? '#EF4444' : '#3B82F6';
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1;
+      
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, isSelected ? 5 : 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+    
+    ctx.restore();
+  }
+
   move(deltaX: number, deltaY: number): void {
     this.transform.x += deltaX;
     this.transform.y += deltaY;

@@ -8,7 +8,7 @@ export const useShapeEditor = () => {
   const [selectedShapes, setSelectedShapes] = useState<Shape[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<ShapeGroupClass[]>([]);
   const [enabledShapeTypes, setEnabledShapeTypes] = useState<Set<ShapeType>>(
-    new Set(['rectangle', 'circle', 'polygon'])
+    new Set(['rectangle' as ShapeType, 'circle' as ShapeType, 'polygon' as ShapeType])
   );
   const [scatterSettings, setScatterSettings] = useState<ScatterSettings>({
     onPoints: false,
@@ -25,6 +25,9 @@ export const useShapeEditor = () => {
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
+  const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
+  const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -195,6 +198,119 @@ export const useShapeEditor = () => {
     setScatterSettings(prev => ({ ...prev, ...settings }));
   }, []);
 
+  // Point and segment editing functions
+  const setEditingMode = useCallback((mode: 'shapes' | 'points' | 'segments') => {
+    setEditMode(mode);
+    setSelectedPoints([]);
+    setSelectedSegments([]);
+  }, []);
+
+  const selectPointAt = useCallback((x: number, y: number, multiSelect: boolean = false) => {
+    let foundPoint: { shapeId: string; pointIndex: number } | null = null;
+    
+    // Search through all shapes for nearby points
+    for (const shape of shapes) {
+      if (!shape.points || shape.points.length === 0) continue;
+      
+      for (let i = 0; i < shape.points.length; i++) {
+        if (shape.isPointNear(x, y, i)) {
+          foundPoint = { shapeId: shape.id, pointIndex: i };
+          break;
+        }
+      }
+      if (foundPoint) break;
+    }
+
+    if (foundPoint) {
+      if (!multiSelect) {
+        setSelectedPoints([foundPoint]);
+      } else {
+        setSelectedPoints(prev => {
+          const existing = prev.find(p => p.shapeId === foundPoint!.shapeId && p.pointIndex === foundPoint!.pointIndex);
+          if (existing) {
+            return prev.filter(p => p !== existing);
+          } else {
+            return [...prev, foundPoint!];
+          }
+        });
+      }
+    } else if (!multiSelect) {
+      setSelectedPoints([]);
+    }
+  }, [shapes]);
+
+  const selectSegmentAt = useCallback((x: number, y: number, multiSelect: boolean = false) => {
+    let foundSegment: { shapeId: string; segmentIndex: number } | null = null;
+    
+    // Search through all shapes for nearby segments
+    for (const shape of shapes) {
+      if (!shape.points || shape.points.length < 2) continue;
+      
+      for (let i = 0; i < shape.points.length - 1; i++) {
+        if (shape.isSegmentNear(x, y, i)) {
+          foundSegment = { shapeId: shape.id, segmentIndex: i };
+          break;
+        }
+      }
+      if (foundSegment) break;
+    }
+
+    if (foundSegment) {
+      if (!multiSelect) {
+        setSelectedSegments([foundSegment]);
+      } else {
+        setSelectedSegments(prev => {
+          const existing = prev.find(s => s.shapeId === foundSegment!.shapeId && s.segmentIndex === foundSegment!.segmentIndex);
+          if (existing) {
+            return prev.filter(s => s !== existing);
+          } else {
+            return [...prev, foundSegment!];
+          }
+        });
+      }
+    } else if (!multiSelect) {
+      setSelectedSegments([]);
+    }
+  }, [shapes]);
+
+  const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
+    selectedPoints.forEach(({ shapeId, pointIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        const worldPoint = shape.getWorldPoint(pointIndex);
+        if (worldPoint) {
+          shape.updateWorldPoint(pointIndex, {
+            x: worldPoint.x + deltaX,
+            y: worldPoint.y + deltaY
+          });
+        }
+      }
+    });
+    setShapes(prev => [...prev]);
+  }, [selectedPoints, shapes]);
+
+  const moveSelectedSegments = useCallback((deltaX: number, deltaY: number) => {
+    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        // Move both points of the segment
+        const point1 = shape.getWorldPoint(segmentIndex);
+        const point2 = shape.getWorldPoint(segmentIndex + 1);
+        if (point1 && point2) {
+          shape.updateWorldPoint(segmentIndex, {
+            x: point1.x + deltaX,
+            y: point1.y + deltaY
+          });
+          shape.updateWorldPoint(segmentIndex + 1, {
+            x: point2.x + deltaX,
+            y: point2.y + deltaY
+          });
+        }
+      }
+    });
+    setShapes(prev => [...prev]);
+  }, [selectedSegments, shapes]);
+
   // Canvas zoom and pan
   const zoomIn = useCallback(() => {
     setCanvasSettings(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 5) }));
@@ -229,11 +345,22 @@ export const useShapeEditor = () => {
       }
     }
     
-    selectShapeAtPoint(x, y, e.shiftKey);
-  }, [canvasSettings.zoom, scatterSettings, shapes, selectShapeAtPoint, scatterOnShape]);
+    // Handle different edit modes
+    switch (editMode) {
+      case 'points':
+        selectPointAt(x, y, e.shiftKey);
+        break;
+      case 'segments':
+        selectSegmentAt(x, y, e.shiftKey);
+        break;
+      default:
+        selectShapeAtPoint(x, y, e.shiftKey);
+        break;
+    }
+  }, [canvasSettings.zoom, scatterSettings, shapes, editMode, selectShapeAtPoint, scatterOnShape, selectPointAt, selectSegmentAt]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !dragStart || (selectedShapes.length === 0 && selectedGroups.length === 0)) return;
+    if (!isDragging || !dragStart) return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -245,9 +372,27 @@ export const useShapeEditor = () => {
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
     
-    moveSelected(deltaX, deltaY);
+    // Handle different edit modes
+    switch (editMode) {
+      case 'points':
+        if (selectedPoints.length > 0) {
+          moveSelectedPoints(deltaX, deltaY);
+        }
+        break;
+      case 'segments':
+        if (selectedSegments.length > 0) {
+          moveSelectedSegments(deltaX, deltaY);
+        }
+        break;
+      default:
+        if (selectedShapes.length > 0 || selectedGroups.length > 0) {
+          moveSelected(deltaX, deltaY);
+        }
+        break;
+    }
+    
     setDragStart({ x, y });
-  }, [isDragging, dragStart, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected]);
+  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
