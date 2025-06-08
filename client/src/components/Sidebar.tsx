@@ -34,7 +34,8 @@ import {
   Spline,
   ChevronLeft,
   ChevronRight,
-  Trash2
+  Trash2,
+  FolderOpen
 } from "lucide-react";
 import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -752,15 +753,15 @@ export default function Sidebar({
   if (isCollapsed) {
     return (
       <div className="w-16 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
-        {/* Collapsed Header */}
-        <div className="p-4 border-b border-slate-700 flex justify-center">
+        {/* Collapsed Header - Just Folder Icon */}
+        <div className="p-3 border-b border-slate-700 flex justify-center">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(false)}
-            className="text-slate-400 hover:text-white p-2 h-auto"
+            className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 p-2 h-auto transition-colors"
           >
-            <ChevronRight className="w-4 h-4" />
+            <FolderOpen className="w-5 h-5" />
           </Button>
         </div>
         
@@ -927,17 +928,19 @@ export default function Sidebar({
 
   return (
     <div className="w-80 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-slate-700 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white mb-1">Shape Editor Pro</h1>
-          <p className="text-sm text-slate-400">Create and manipulate shapes with precision</p>
+      {/* Compact Header */}
+      <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <FolderOpen className="w-5 h-5 text-blue-400" />
+          <div>
+            <h1 className="text-sm font-semibold text-white">Shape Editor</h1>
+          </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(true)}
-          className="text-slate-400 hover:text-white p-2 h-auto"
+          className="text-slate-400 hover:text-white p-1 h-auto"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
