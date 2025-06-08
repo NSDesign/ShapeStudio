@@ -39,12 +39,17 @@ export const useShapeEditor = () => {
     if (availableTypes.length === 0) return;
     
     const newShapes: Shape[] = [];
-    const numShapes = 3 + Math.floor(Math.random() * 5);
+    const numShapes = scatterSettings.count;
+    
+    // Generate shapes in the visible viewport area for infinite canvas
+    const viewportWidth = 800;
+    const viewportHeight = 600;
     
     for (let i = 0; i < numShapes; i++) {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-      const x = 100 + Math.random() * (canvasSettings.width - 300);
-      const y = 100 + Math.random() * (canvasSettings.height - 300);
+      // Convert viewport coordinates to world coordinates
+      const x = (Math.random() * viewportWidth - canvasSettings.panX) / canvasSettings.zoom;
+      const y = (Math.random() * viewportHeight - canvasSettings.panY) / canvasSettings.zoom;
       const shape = new Shape(type, x, y);
       newShapes.push(shape);
     }
@@ -248,15 +253,16 @@ export const useShapeEditor = () => {
     }
   }, [shapes]);
 
-  const selectSegmentAt = useCallback((x: number, y: number, multiSelect: boolean = false) => {
+  const selectSegmentAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
     let foundSegment: { shapeId: string; segmentIndex: number } | null = null;
+    const threshold = isTouch ? 15 : 5; // Larger threshold for touch devices
     
     // Search through all shapes for nearby segments
     for (const shape of shapes) {
       if (!shape.points || shape.points.length < 2) continue;
       
       for (let i = 0; i < shape.points.length - 1; i++) {
-        if (shape.isSegmentNear(x, y, i)) {
+        if (shape.isSegmentNear(x, y, i, threshold)) {
           foundSegment = { shapeId: shape.id, segmentIndex: i };
           break;
         }
@@ -339,8 +345,8 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
+    const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
     setDragStart({ x, y });
     setIsDragging(true);
@@ -375,8 +381,8 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
+    const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;

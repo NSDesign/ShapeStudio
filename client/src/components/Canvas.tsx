@@ -71,10 +71,10 @@ export default function Canvas({
       // Clear canvas
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      // Apply zoom and pan
+      // Apply zoom and pan for infinite canvas
       ctx.save();
+      ctx.translate(canvasSettings.panX * canvasSettings.zoom, canvasSettings.panY * canvasSettings.zoom);
       ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
-      ctx.translate(canvasSettings.panX, canvasSettings.panY);
 
       // Render all groups first (they contain shapes)
       groups.forEach(group => group.render(ctx));
