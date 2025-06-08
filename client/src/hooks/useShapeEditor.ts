@@ -177,6 +177,27 @@ export const useShapeEditor = () => {
     setSelectedGroups([]);
   }, [selectedShapes, selectedGroups]);
 
+  // Load project from file
+  const loadProject = useCallback((data: {
+    shapes: Shape[];
+    groups: ShapeGroupClass[];
+    canvasSettings: CanvasSettings;
+    scatterSettings: ScatterSettings;
+    enabledShapeTypes: Set<ShapeType>;
+  }) => {
+    setShapes(data.shapes);
+    setGroups(data.groups);
+    setCanvasSettings(data.canvasSettings);
+    setScatterSettings(data.scatterSettings);
+    setEnabledShapeTypes(data.enabledShapeTypes);
+    
+    // Clear selections
+    setSelectedShapes([]);
+    setSelectedGroups([]);
+    setSelectedPoints([]);
+    setSelectedSegments([]);
+  }, []);
+
   // Compose shapes into group
   const composeShapes = useCallback(() => {
     if (selectedShapes.length < 2) return;

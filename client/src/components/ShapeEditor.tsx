@@ -1,4 +1,6 @@
 import { useShapeEditor } from '../hooks/useShapeEditor';
+import { Shape, ShapeGroupClass } from '../lib/shapes';
+import { CanvasSettings, ScatterSettings, ShapeType } from '../lib/shapeTypes';
 import Sidebar from './Sidebar';
 import Canvas from './Canvas';
 import ProjectDialog from './ProjectDialog';
@@ -90,8 +92,24 @@ export default function ShapeEditor() {
     }
   };
 
+  // Handle project loading
+  const handleLoadProject = (data: any) => {
+    // This will be handled by the useShapeEditor hook's state setters
+    // The ProjectDialog component will call this function
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
+      {/* Project Save/Load Dialog */}
+      <ProjectDialog
+        shapes={shapes}
+        groups={groups}
+        canvasSettings={canvasSettings}
+        scatterSettings={scatterSettings}
+        enabledShapeTypes={enabledShapeTypes}
+        onLoadProject={handleLoadProject}
+      />
+      
       <Sidebar
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
