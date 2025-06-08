@@ -562,45 +562,80 @@ export default function Sidebar({
                     value={firstSelectedShape.properties.fillColor.includes('hsl') ? '#3B82F6' : firstSelectedShape.properties.fillColor}
                     onChange={(e) => {
                       firstSelectedShape.properties.fillColor = e.target.value;
-                      // Force re-render to show changes
                       selectedShapes.forEach(shape => shape.selected = true);
                     }}
                     className="h-6 w-12 p-0 border-slate-600"
                   />
-                  <span className="text-xs text-slate-400">
+                  <Input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={firstSelectedShape.properties.fillOpacity}
+                    onChange={(e) => {
+                      firstSelectedShape.properties.fillOpacity = parseFloat(e.target.value);
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    className="flex-1 h-6"
+                  />
+                  <span className="text-xs text-slate-400 w-8">
                     {Math.round(firstSelectedShape.properties.fillOpacity * 100)}%
                   </span>
                 </div>
+                {firstSelectedShape.properties.gradient && (
+                  <div className="text-xs text-blue-300 bg-blue-500/20 p-1 rounded">
+                    {firstSelectedShape.properties.gradient.type} gradient ({firstSelectedShape.properties.gradient.stops.length} stops)
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Stroke Properties */}
             <div>
               <Label className="text-xs text-slate-400 mb-1 block">Stroke</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="color"
-                  value={firstSelectedShape.properties.strokeColor.includes('hsl') ? '#1F2937' : firstSelectedShape.properties.strokeColor}
-                  onChange={(e) => {
-                    firstSelectedShape.properties.strokeColor = e.target.value;
-                    // Force re-render to show changes
-                    selectedShapes.forEach(shape => shape.selected = true);
-                  }}
-                  className="h-6 w-12 p-0 border-slate-600"
-                />
-                <Input
-                  type="number"
-                  value={firstSelectedShape.properties.strokeWidth}
-                  onChange={(e) => {
-                    firstSelectedShape.properties.strokeWidth = parseFloat(e.target.value) || 0;
-                    // Force re-render to show changes
-                    selectedShapes.forEach(shape => shape.selected = true);
-                  }}
-                  min={0}
-                  max={20}
-                  step={0.5}
-                  className="h-6 flex-1 text-xs bg-slate-800 border-slate-600 text-white"
-                />
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="color"
+                    value={firstSelectedShape.properties.strokeColor.includes('hsl') ? '#1F2937' : firstSelectedShape.properties.strokeColor}
+                    onChange={(e) => {
+                      firstSelectedShape.properties.strokeColor = e.target.value;
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    className="h-6 w-12 p-0 border-slate-600"
+                  />
+                  <Input
+                    type="number"
+                    value={firstSelectedShape.properties.strokeWidth}
+                    onChange={(e) => {
+                      firstSelectedShape.properties.strokeWidth = parseFloat(e.target.value) || 0;
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    min={0}
+                    max={20}
+                    step={0.5}
+                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                  <span className="text-xs text-slate-400">px</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-slate-400 w-12">Opacity:</span>
+                  <Input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={firstSelectedShape.properties.strokeOpacity}
+                    onChange={(e) => {
+                      firstSelectedShape.properties.strokeOpacity = parseFloat(e.target.value);
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    className="flex-1 h-6"
+                  />
+                  <span className="text-xs text-slate-400 w-8">
+                    {Math.round(firstSelectedShape.properties.strokeOpacity * 100)}%
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -635,6 +670,43 @@ export default function Sidebar({
               </div>
             )}
 
+            {/* Dimensions for rectangles and ellipses */}
+            {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400 mb-1 block">Dimensions</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.width || 0)}
+                    onChange={(e) => {
+                      const newWidth = parseFloat(e.target.value) || 0;
+                      firstSelectedShape.width = newWidth;
+                      if (firstSelectedShape.type === 'square') {
+                        firstSelectedShape.height = newWidth;
+                      }
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                  <span className="text-xs text-slate-400">×</span>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.height || 0)}
+                    onChange={(e) => {
+                      const newHeight = parseFloat(e.target.value) || 0;
+                      firstSelectedShape.height = newHeight;
+                      if (firstSelectedShape.type === 'square') {
+                        firstSelectedShape.width = newHeight;
+                      }
+                      selectedShapes.forEach(shape => shape.selected = true);
+                    }}
+                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    disabled={firstSelectedShape.type === 'square'}
+                  />
+                </div>
+              </div>
+            )}
+
             {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
               <div>
                 <Label className="text-xs text-slate-400 mb-1 block">Points</Label>
@@ -643,6 +715,17 @@ export default function Sidebar({
                 </div>
               </div>
             )}
+
+            {/* Shape Type and ID Info */}
+            <div className="border-t border-slate-600 pt-2 mt-2">
+              <div className="text-xs text-slate-400 space-y-1">
+                <div>Type: <span className="text-slate-300">{firstSelectedShape.type}</span></div>
+                <div>ID: <span className="text-slate-300 font-mono">{firstSelectedShape.id.slice(-8)}</span></div>
+                <div>Position: <span className="text-slate-300">
+                  ({Math.round(firstSelectedShape.transform.x)}, {Math.round(firstSelectedShape.transform.y)})
+                </span></div>
+              </div>
+            </div>
 
             {/* Delete Button */}
             <div className="mt-4 pt-3 border-t border-slate-600">

@@ -38,12 +38,38 @@ export class Shape {
     const saturation = 50 + Math.random() * 50;
     const lightness = 40 + Math.random() * 40;
     
+    // 50% chance for gradient fill
+    const useGradient = Math.random() > 0.5;
+    let gradient = undefined;
+    
+    if (useGradient) {
+      const gradientType = Math.random() > 0.5 ? 'linear' : 'radial';
+      const stopCount = 2 + Math.floor(Math.random() * 3); // 2-4 color stops
+      const stops = [];
+      
+      for (let i = 0; i < stopCount; i++) {
+        const stopHue = (hue + (i * 60)) % 360;
+        const stopSat = 40 + Math.random() * 60;
+        const stopLight = 30 + Math.random() * 50;
+        stops.push({
+          offset: i / (stopCount - 1),
+          color: `hsl(${stopHue}, ${stopSat}%, ${stopLight}%)`
+        });
+      }
+      
+      gradient = {
+        type: gradientType as 'linear' | 'radial',
+        stops
+      };
+    }
+    
     return {
       fillColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
       fillOpacity: 0.7 + Math.random() * 0.3,
       strokeColor: `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)`,
       strokeWidth: 1 + Math.random() * 4,
-      strokeOpacity: 0.8 + Math.random() * 0.2
+      strokeOpacity: 0.8 + Math.random() * 0.2,
+      gradient
     };
   }
 
@@ -319,8 +345,38 @@ export class Shape {
     }
     
     if (this.type !== 'line') {
+      // Apply fill with gradient if available
+      if (this.properties.gradient) {
+        const bounds = this.getBounds();
+        let gradient: CanvasGradient;
+        
+        if (this.properties.gradient.type === 'linear') {
+          gradient = ctx.createLinearGradient(
+            bounds.x, bounds.y, 
+            bounds.x + bounds.width, bounds.y + bounds.height
+          );
+        } else {
+          const centerX = bounds.x + bounds.width / 2;
+          const centerY = bounds.y + bounds.height / 2;
+          const radius = Math.max(bounds.width, bounds.height) / 2;
+          gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        }
+        
+        this.properties.gradient.stops.forEach(stop => {
+          gradient.addColorStop(stop.offset, stop.color);
+        });
+        
+        ctx.fillStyle = gradient;
+      } else {
+        ctx.fillStyle = this.properties.fillColor;
+      }
+      ctx.globalAlpha = this.properties.fillOpacity;
       ctx.fill();
     }
+    
+    ctx.globalAlpha = this.properties.strokeOpacity;
+    ctx.strokeStyle = this.properties.strokeColor;
+    ctx.lineWidth = this.properties.strokeWidth;
     ctx.stroke();
   }
 
