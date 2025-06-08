@@ -130,14 +130,13 @@ export default function ProjectDialog({
       
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-white"
-          >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Project
-          </Button>
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-slate-800/50 rounded-md px-2 py-1 transition-colors">
+            <FolderOpen className="w-5 h-5 text-blue-400" />
+            <div>
+              <span className="text-sm font-medium text-white">Project</span>
+              <span className="text-xs text-slate-400 ml-2">Shape Editor</span>
+            </div>
+          </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[500px] bg-[var(--surface)] border-slate-700">
           <DialogHeader>

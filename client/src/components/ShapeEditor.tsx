@@ -103,13 +103,6 @@ export default function ShapeEditor() {
     <div className="flex h-screen w-full overflow-hidden flex-col">
       {/* Project Header */}
       <div className="bg-[var(--surface)] border-b border-slate-700 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <FolderOpen className="w-5 h-5 text-blue-400" />
-          <div>
-            <span className="text-sm font-medium text-white">Project</span>
-            <span className="text-xs text-slate-400 ml-2">Shape Editor</span>
-          </div>
-        </div>
         <ProjectDialog
           shapes={shapes}
           groups={groups}
@@ -118,6 +111,7 @@ export default function ShapeEditor() {
           enabledShapeTypes={enabledShapeTypes}
           onLoadProject={handleLoadProject}
         />
+        <div className="flex-1" />
       </div>
       
       {/* Main Content */}
