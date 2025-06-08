@@ -42,28 +42,28 @@ export default function ShapeEditor() {
     canComposeShapes
   } = useShapeEditor();
 
-  // Transform handlers that apply transformations
-  const handleMove = () => {
+  // Transform handlers with precise control
+  const handleMoveBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      moveSelected(10, 0); // Move 10px to the right
+      moveSelected(x, y);
     }
   };
 
-  const handleScale = () => {
+  const handleScaleBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      scaleSelected(1.1); // Scale up by 10%
+      scaleSelected(x, y);
     }
   };
 
-  const handleRotate = () => {
+  const handleRotateBy = (angle: number) => {
     if (selectedCount > 0) {
-      rotateSelected(15); // Rotate 15 degrees
+      rotateSelected(angle);
     }
   };
 
-  const handleSkew = () => {
+  const handleSkewBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      skewSelected(0.1, 0); // Skew on X axis
+      skewSelected(x, y);
     }
   };
 
@@ -94,10 +94,10 @@ export default function ShapeEditor() {
         onGenerateRandomShapes={generateRandomShapes}
         onComposeShapes={composeShapes}
         onSetEditMode={setEditingMode}
-        onMove={handleMove}
-        onScale={handleScale}
-        onRotate={handleRotate}
-        onSkew={handleSkew}
+        onMoveBy={handleMoveBy}
+        onScaleBy={handleScaleBy}
+        onRotateBy={handleRotateBy}
+        onSkewBy={handleSkewBy}
         onFlipHorizontal={handleFlipHorizontal}
         onFlipVertical={handleFlipVertical}
       />

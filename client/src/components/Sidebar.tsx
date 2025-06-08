@@ -271,7 +271,7 @@ export default function Sidebar({
             <div className="flex items-center space-x-2 mb-2">
               <Checkbox
                 checked={lockAspectRatio}
-                onCheckedChange={setLockAspectRatio}
+                onCheckedChange={(checked) => setLockAspectRatio(checked === true)}
                 className="border-slate-600"
               />
               <Label className="text-xs text-slate-400">Lock aspect ratio</Label>

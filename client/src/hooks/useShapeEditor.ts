@@ -104,9 +104,15 @@ export const useShapeEditor = () => {
     setGroups(prev => [...prev]);
   }, [selectedShapes, selectedGroups]);
 
-  const scaleSelected = useCallback((factor: number = 1.1) => {
-    selectedShapes.forEach(shape => shape.scale(factor));
-    selectedGroups.forEach(group => group.scale(factor));
+  const scaleSelected = useCallback((factorX: number = 1.1, factorY: number = 1.1) => {
+    selectedShapes.forEach(shape => {
+      shape.transform.scaleX *= factorX;
+      shape.transform.scaleY *= factorY;
+    });
+    selectedGroups.forEach(group => {
+      group.transform.scaleX *= factorX;
+      group.transform.scaleY *= factorY;
+    });
     setShapes(prev => [...prev]);
     setGroups(prev => [...prev]);
   }, [selectedShapes, selectedGroups]);
