@@ -177,4 +177,22 @@
   .text-slate-400 {
     color: hsl(215, 20%, 65%) !important;
   }
+
+  /* Fix button text contrast on light backgrounds */
+  .bg-white button,
+  .bg-gray-100 button,
+  [data-state="active"] button {
+    color: hsl(0, 0%, 0%) !important;
+  }
+
+  /* Ensure icons match text color */
+  .bg-white svg,
+  .bg-gray-100 svg {
+    color: hsl(0, 0%, 0%) !important;
+  }
+
+  /* Tab content text contrast */
+  [data-state="active"] * {
+    color: inherit !important;
+  }
 }

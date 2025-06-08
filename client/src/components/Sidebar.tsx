@@ -777,7 +777,7 @@ export default function Sidebar({
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'shapes' 
                     ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-400' 
-                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
                 <Shapes className="w-5 h-5" />
@@ -808,7 +808,7 @@ export default function Sidebar({
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'edit' 
                     ? 'bg-green-500 text-white hover:bg-green-600 border-green-400' 
-                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
                 <Settings className="w-5 h-5" />
@@ -839,7 +839,7 @@ export default function Sidebar({
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'transform' 
                     ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
-                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
                 <Move className="w-5 h-5" />
@@ -870,7 +870,7 @@ export default function Sidebar({
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'composition' 
                     ? 'bg-blue-500 text-white hover:bg-blue-600 border-blue-400' 
-                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
                 <Layers className="w-5 h-5" />
@@ -901,7 +901,7 @@ export default function Sidebar({
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'properties' 
                     ? 'bg-pink-500 text-white hover:bg-pink-600 border-pink-400' 
-                    : 'text-slate-900 hover:text-black hover:bg-gray-100 bg-white border-slate-300'
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
                 <Palette className="w-5 h-5" />
