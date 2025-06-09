@@ -35,6 +35,7 @@ export default function ShapeEditor() {
     skewSelected,
     flipSelected,
     deleteSelected,
+    forceUpdate,
     zoomIn,
     zoomOut,
     resetView,
@@ -137,11 +138,7 @@ export default function ShapeEditor() {
           onSkewBy={handleSkewBy}
           onFlipHorizontal={handleFlipHorizontal}
           onFlipVertical={handleFlipVertical}
-          onShapeUpdate={() => {
-            // Force shapes array update to trigger re-render
-            setShapes(prev => [...prev]);
-            setGroups(prev => [...prev]);
-          }}
+          onShapeUpdate={forceUpdate}
           onDeleteSelected={handleDeleteSelected}
         />
         <Canvas

@@ -752,6 +752,12 @@ export const useShapeEditor = () => {
     setIsMultiSelectMode(!isMultiSelectMode);
   }, [isMultiSelectMode]);
 
+  // Force update function for shape property changes
+  const forceUpdate = useCallback(() => {
+    setShapes(prev => [...prev]);
+    setGroups(prev => [...prev]);
+  }, []);
+
   return {
     // State
     shapes,
@@ -778,6 +784,7 @@ export const useShapeEditor = () => {
     scatterOnShape,
     setEditingMode,
     toggleMultiSelectMode,
+    forceUpdate,
     
     // Transforms
     moveSelected,
