@@ -34,7 +34,18 @@ export const useShapeEditor = () => {
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
   
+  // Multi-touch gesture state
+  const [isMultiTouch, setIsMultiTouch] = useState(false);
+  const [initialTouchDistance, setInitialTouchDistance] = useState<number>(0);
+  const [initialTouchAngle, setInitialTouchAngle] = useState<number>(0);
+  const [initialScale, setInitialScale] = useState<number>(1);
+  const [initialRotation, setInitialRotation] = useState<number>(0);
+  const [gestureCenter, setGestureCenter] = useState<{ x: number; y: number } | null>(null);
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Touch device detection
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   // Synchronize selectedShapes and selectedGroups with shape.selected flags
   useEffect(() => {
@@ -293,6 +304,29 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
     setGroups(prev => [...prev]);
   }, [shapes, groups]);
+
+  // Multi-touch gesture utilities
+  const getTouchDistance = useCallback((touch1: React.Touch, touch2: React.Touch): number => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
+
+  const getTouchAngle = useCallback((touch1: React.Touch, touch2: React.Touch): number => {
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
+    return Math.atan2(dy, dx);
+  }, []);
+
+  const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
+    const rect = canvas.getBoundingClientRect();
+    const centerX = (touch1.clientX + touch2.clientX) / 2;
+    const centerY = (touch1.clientY + touch2.clientY) / 2;
+    return {
+      x: (centerX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom,
+      y: (centerY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom
+    };
+  }, [canvasSettings]);
 
   // Point and segment editing functions
   const setEditingMode = useCallback((mode: 'shapes' | 'points' | 'segments') => {
@@ -629,12 +663,33 @@ export const useShapeEditor = () => {
 
   // Touch event handlers for mobile multi-select and marquee
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (e.touches.length > 1) return; // Ignore multi-touch gestures
-    
-    const touch = e.touches[0];
     const canvas = canvasRef.current;
     if (!canvas) return;
     
+    // Handle multi-touch gestures for scaling and rotating shapes
+    if (e.touches.length === 2 && editMode === 'shapes' && selectedShapes.length > 0) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      setIsMultiTouch(true);
+      setInitialTouchDistance(getTouchDistance(touch1, touch2));
+      setInitialTouchAngle(getTouchAngle(touch1, touch2));
+      setGestureCenter(getTouchCenter(touch1, touch2, canvas));
+      
+      // Store initial transform values for selected shapes
+      if (selectedShapes.length > 0) {
+        setInitialScale(selectedShapes[0].transform.scaleX);
+        setInitialRotation(selectedShapes[0].transform.rotation);
+      }
+      
+      e.preventDefault();
+      return;
+    }
+    
+    // Single touch handling
+    if (e.touches.length > 1) return;
+    
+    const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
     const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
@@ -672,12 +727,41 @@ export const useShapeEditor = () => {
   }, [canvasSettings.zoom, editMode, shapes, selectedPoints, selectedSegments]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!dragStart || e.touches.length > 1) return;
-    
-    const touch = e.touches[0];
     const canvas = canvasRef.current;
     if (!canvas) return;
     
+    // Handle multi-touch gestures for scaling and rotating
+    if (e.touches.length === 2 && isMultiTouch && selectedShapes.length > 0) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const currentDistance = getTouchDistance(touch1, touch2);
+      const currentAngle = getTouchAngle(touch1, touch2);
+      
+      // Calculate scale factor from distance change
+      const scaleFactor = currentDistance / initialTouchDistance;
+      const newScale = initialScale * scaleFactor;
+      
+      // Calculate rotation from angle change
+      const rotationDelta = currentAngle - initialTouchAngle;
+      const newRotation = initialRotation + rotationDelta;
+      
+      // Apply transforms to selected shapes
+      selectedShapes.forEach(shape => {
+        shape.transform.scaleX = newScale;
+        shape.transform.scaleY = newScale;
+        shape.transform.rotation = newRotation;
+      });
+      
+      setShapes(prev => [...prev]);
+      e.preventDefault();
+      return;
+    }
+    
+    // Single touch handling
+    if (!dragStart || e.touches.length > 1) return;
+    
+    const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
     const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
@@ -747,6 +831,16 @@ export const useShapeEditor = () => {
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const touchDuration = Date.now() - touchStartTime;
     
+    // Reset multi-touch state when touches end
+    if (e.touches.length < 2) {
+      setIsMultiTouch(false);
+      setInitialTouchDistance(0);
+      setInitialTouchAngle(0);
+      setInitialScale(1);
+      setInitialRotation(0);
+      setGestureCenter(null);
+    }
+    
     // Handle marquee selection completion
     if (isMarqueeSelecting) {
       setIsMarqueeSelecting(false);
@@ -756,7 +850,7 @@ export const useShapeEditor = () => {
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
-    } else if (!isDragging && dragStart) {
+    } else if (!isDragging && dragStart && e.touches.length === 0) {
       // This was a tap, not a drag
       const canvas = canvasRef.current;
       if (canvas) {
