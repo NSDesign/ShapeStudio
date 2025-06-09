@@ -32,9 +32,9 @@ export type BlendMode =
   | 'luminosity';
 
 export interface ShapeProperties {
-  fillColor: string;
+  fillColor: string | 'none';
   fillOpacity: number;
-  strokeColor: string;
+  strokeColor: string | 'none';
   strokeWidth: number;
   strokeOpacity: number;
   blendMode: BlendMode;

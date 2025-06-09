@@ -31,6 +31,95 @@ interface CanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
+// Transform handle rendering functions
+function renderTransformHandles(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number) {
+  const bounds = shape.getBounds();
+  const handleSize = 8 / zoom;
+  const rotateHandleDistance = 30 / zoom;
+  
+  ctx.save();
+  
+  // Apply shape transform for handles
+  ctx.translate(shape.transform.x, shape.transform.y);
+  ctx.rotate(shape.transform.rotation * Math.PI / 180);
+  ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
+  
+  // Corner resize handles
+  const corners = [
+    { x: bounds.x, y: bounds.y }, // top-left
+    { x: bounds.x + bounds.width, y: bounds.y }, // top-right
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height }, // bottom-right
+    { x: bounds.x, y: bounds.y + bounds.height } // bottom-left
+  ];
+  
+  corners.forEach(corner => {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#2563EB';
+    ctx.lineWidth = 1 / zoom;
+    ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+    ctx.strokeRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+  });
+  
+  // Edge handles for scaling
+  const edges = [
+    { x: bounds.x + bounds.width/2, y: bounds.y }, // top
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height/2 }, // right
+    { x: bounds.x + bounds.width/2, y: bounds.y + bounds.height }, // bottom
+    { x: bounds.x, y: bounds.y + bounds.height/2 } // left
+  ];
+  
+  edges.forEach(edge => {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#2563EB';
+    ctx.lineWidth = 1 / zoom;
+    ctx.fillRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
+    ctx.strokeRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
+  });
+  
+  // Rotation handle
+  const rotateHandleX = bounds.x + bounds.width/2;
+  const rotateHandleY = bounds.y - rotateHandleDistance;
+  
+  ctx.strokeStyle = '#2563EB';
+  ctx.lineWidth = 1 / zoom;
+  ctx.beginPath();
+  ctx.moveTo(bounds.x + bounds.width/2, bounds.y);
+  ctx.lineTo(rotateHandleX, rotateHandleY);
+  ctx.stroke();
+  
+  ctx.fillStyle = '#10B981';
+  ctx.strokeStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(rotateHandleX, rotateHandleY, handleSize/2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function renderGroupTransformHandles(ctx: CanvasRenderingContext2D, group: ShapeGroupClass, zoom: number) {
+  const bounds = group.getBounds();
+  const handleSize = 10 / zoom;
+  
+  // Group handles are purple
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#7C3AED';
+  ctx.lineWidth = 2 / zoom;
+  
+  // Corner handles
+  const corners = [
+    { x: bounds.x, y: bounds.y },
+    { x: bounds.x + bounds.width, y: bounds.y },
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+    { x: bounds.x, y: bounds.y + bounds.height }
+  ];
+  
+  corners.forEach(corner => {
+    ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+    ctx.strokeRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+  });
+}
+
 export default function Canvas({
   shapes,
   groups,
@@ -124,6 +213,21 @@ export default function Canvas({
             .map(ss => ss.segmentIndex);
           
           shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments, canvasSettings.zoom);
+        });
+      }
+
+      // Render transform handles for selected shapes in shape mode
+      if (editMode === 'shapes') {
+        shapes.forEach(shape => {
+          if (shape.selected) {
+            renderTransformHandles(ctx, shape, canvasSettings.zoom);
+          }
+        });
+        
+        groups.forEach(group => {
+          if (group.selected) {
+            renderGroupTransformHandles(ctx, group, canvasSettings.zoom);
+          }
         });
       }
 

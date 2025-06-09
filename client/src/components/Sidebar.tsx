@@ -1614,8 +1614,7 @@ export default function Sidebar({
                 onClick={onSendBackward}
                 variant="secondary"
                 size="sm"
-                className="text-xs bg-slate-700```python
- hover:bg-slate-600 text-slate-200"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
               >
                 Send Backward
               </Button>

@@ -344,7 +344,8 @@ export class Shape {
         break;
     }
     
-    if (this.type !== 'line') {
+    // Only fill shapes that aren't lines and have fill enabled
+    if (this.type !== 'line' && this.properties.fillColor !== 'none') {
       // Apply fill with gradient if available
       if (this.properties.gradient) {
         const bounds = this.getBounds();
@@ -374,10 +375,13 @@ export class Shape {
       ctx.fill();
     }
     
-    ctx.globalAlpha = this.properties.strokeOpacity;
-    ctx.strokeStyle = this.properties.strokeColor;
-    ctx.lineWidth = this.properties.strokeWidth;
-    ctx.stroke();
+    // Only stroke if stroke is enabled
+    if (this.properties.strokeColor !== 'none' && this.properties.strokeWidth > 0) {
+      ctx.globalAlpha = this.properties.strokeOpacity;
+      ctx.strokeStyle = this.properties.strokeColor;
+      ctx.lineWidth = this.properties.strokeWidth;
+      ctx.stroke();
+    }
   }
 
   private drawPolygon(ctx: CanvasRenderingContext2D): void {
@@ -501,10 +505,29 @@ export class Shape {
   }
 
   containsPoint(x: number, y: number): boolean {
-    const bounds = this.getBounds();
-    const localX = x - this.transform.x;
-    const localY = y - this.transform.y;
+    // Transform the world point to local space using inverse transformation
+    let localX = x - this.transform.x;
+    let localY = y - this.transform.y;
     
+    // Inverse rotation
+    if (this.transform.rotation !== 0) {
+      const cos = Math.cos(-this.transform.rotation * Math.PI / 180);
+      const sin = Math.sin(-this.transform.rotation * Math.PI / 180);
+      const rotatedX = localX * cos - localY * sin;
+      const rotatedY = localX * sin + localY * cos;
+      localX = rotatedX;
+      localY = rotatedY;
+    }
+    
+    // Inverse skew (approximate)
+    if (this.transform.skewX !== 0) localX -= localY * Math.tan(this.transform.skewX);
+    if (this.transform.skewY !== 0) localY -= localX * Math.tan(this.transform.skewY);
+    
+    // Inverse scale
+    if (this.transform.scaleX !== 0) localX /= this.transform.scaleX;
+    if (this.transform.scaleY !== 0) localY /= this.transform.scaleY;
+    
+    const bounds = this.getBounds();
     return localX >= bounds.x && localX <= bounds.x + bounds.width &&
            localY >= bounds.y && localY <= bounds.y + bounds.height;
   }
