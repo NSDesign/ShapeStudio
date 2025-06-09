@@ -826,7 +826,7 @@ export default function Sidebar({
                           className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
                         />
                         <span className="text-xs text-slate-400">%</span>
-                        {firstSelectedShape.properties.gradient.stops.length > 2 && (
+                        {firstSelectedShape.properties.gradient && firstSelectedShape.properties.gradient.stops.length > 2 && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -958,7 +958,7 @@ export default function Sidebar({
               </div>
             )}
 
-            {(firstSelectedShape.type === 'circle' || firstSelectedShape.type === 'ring') && (
+            {firstSelectedShape.type === 'circle' && (
               <div>
                 <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
                 <Input
@@ -967,7 +967,7 @@ export default function Sidebar({
                   onChange={(e) => {
                     const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
                     updateShapeProperty(shape => {
-                      if (shape.type === 'circle' || shape.type === 'ring') {
+                      if (shape.type === 'circle') {
                         shape.radius = newRadius;
                       }
                     });
@@ -975,6 +975,98 @@ export default function Sidebar({
                   min={1}
                   className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
                 />
+              </div>
+            )}
+
+            {firstSelectedShape.type === 'ring' && (
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs text-slate-400 mb-1 block">Outer Radius</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.radius || 0)}
+                    onChange={(e) => {
+                      const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'ring') {
+                          shape.radius = newRadius;
+                          // Ensure inner radius doesn't exceed outer radius
+                          if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                            shape.innerRadius = newRadius * 0.5;
+                          }
+                        }
+                      });
+                    }}
+                    min={1}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 mb-1 block">Inner Radius</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.innerRadius || 0)}
+                    onChange={(e) => {
+                      const newInnerRadius = Math.max(0, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'ring') {
+                          // Ensure inner radius doesn't exceed outer radius
+                          const maxInner = (shape.radius || 50) - 1;
+                          shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                        }
+                      });
+                    }}
+                    min={0}
+                    max={(firstSelectedShape.radius || 50) - 1}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+              </div>
+            )}
+
+            {firstSelectedShape.type === 'star' && (
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs text-slate-400 mb-1 block">Outer Radius</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.radius || 0)}
+                    onChange={(e) => {
+                      const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'star') {
+                          shape.radius = newRadius;
+                          // Ensure inner radius doesn't exceed outer radius
+                          if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                            shape.innerRadius = newRadius * 0.5;
+                          }
+                        }
+                      });
+                    }}
+                    min={1}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 mb-1 block">Inner Radius</Label>
+                  <Input
+                    type="number"
+                    value={Math.round(firstSelectedShape.innerRadius || 0)}
+                    onChange={(e) => {
+                      const newInnerRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'star') {
+                          // Ensure inner radius doesn't exceed outer radius
+                          const maxInner = (shape.radius || 50) - 1;
+                          shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                        }
+                      });
+                    }}
+                    min={1}
+                    max={(firstSelectedShape.radius || 50) - 1}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
               </div>
             )}
 
@@ -1446,7 +1538,7 @@ export default function Sidebar({
             </PopoverTrigger>
             <PopoverContent 
               side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700"
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
               onOpenAutoFocus={(e) => e.preventDefault()}
               onCloseAutoFocus={(e) => e.preventDefault()}
             >
@@ -1455,7 +1547,9 @@ export default function Sidebar({
                   <Palette className="w-4 h-4 mr-2" />
                   Properties
                 </h3>
-                <PropertiesContent />
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <PropertiesContent />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -1477,7 +1571,7 @@ export default function Sidebar({
             </PopoverTrigger>
             <PopoverContent 
               side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700"
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
               onOpenAutoFocus={(e) => e.preventDefault()}
               onCloseAutoFocus={(e) => e.preventDefault()}
             >
@@ -1486,7 +1580,9 @@ export default function Sidebar({
                   <Navigation className="w-4 h-4 mr-2" />
                   Layers
                 </h3>
-                <LayersContent />
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <LayersContent />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
