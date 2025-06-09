@@ -109,10 +109,11 @@ export default function Canvas({
         }
       });
 
-      // Render points and segments in edit mode
+      // Render points and segments only for selected shapes in edit mode
       if (editMode === 'points' || editMode === 'segments') {
         shapes.forEach(shape => {
-          if (!shape.points || shape.points.length === 0) return;
+          // Only show points/segments for selected shapes
+          if (!shape.selected || !shape.points || shape.points.length === 0) return;
           
           const shapeSelectedPoints = selectedPoints
             .filter(sp => sp.shapeId === shape.id)

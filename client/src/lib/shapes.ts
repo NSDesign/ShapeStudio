@@ -518,9 +518,26 @@ export class Shape {
     const localPoint = this.getPointAt(index);
     if (!localPoint) return null;
     
+    // Apply full transformation matrix: scale, rotation, skew, then translate
+    const cos = Math.cos(this.transform.rotation);
+    const sin = Math.sin(this.transform.rotation);
+    
+    // Apply scale
+    let x = localPoint.x * this.transform.scaleX;
+    let y = localPoint.y * this.transform.scaleY;
+    
+    // Apply skew
+    x += y * Math.tan(this.transform.skewX);
+    y += x * Math.tan(this.transform.skewY);
+    
+    // Apply rotation
+    const rotatedX = x * cos - y * sin;
+    const rotatedY = x * sin + y * cos;
+    
+    // Apply translation
     return {
-      x: this.transform.x + localPoint.x,
-      y: this.transform.y + localPoint.y
+      x: this.transform.x + rotatedX,
+      y: this.transform.y + rotatedY
     };
   }
 
@@ -530,10 +547,29 @@ export class Shape {
   }
 
   updateWorldPoint(index: number, worldPoint: Point): void {
+    // Inverse transformation: translate, then inverse rotate, skew, and scale
+    let x = worldPoint.x - this.transform.x;
+    let y = worldPoint.y - this.transform.y;
+    
+    // Inverse rotation
+    const cos = Math.cos(-this.transform.rotation);
+    const sin = Math.sin(-this.transform.rotation);
+    const unrotatedX = x * cos - y * sin;
+    const unrotatedY = x * sin + y * cos;
+    
+    x = unrotatedX;
+    y = unrotatedY;
+    
+    // Inverse skew (approximate)
+    x -= y * Math.tan(this.transform.skewX);
+    y -= x * Math.tan(this.transform.skewY);
+    
+    // Inverse scale
     const localPoint = {
-      x: worldPoint.x - this.transform.x,
-      y: worldPoint.y - this.transform.y
+      x: x / this.transform.scaleX,
+      y: y / this.transform.scaleY
     };
+    
     this.updatePoint(index, localPoint);
   }
 

@@ -480,12 +480,18 @@ export const useShapeEditor = () => {
     }
     
     // Start marquee selection if clicking on empty space and not holding shift
-    if (!clickedOnShape && !e.shiftKey && editMode === 'shapes') {
+    if (!clickedOnShape && !e.shiftKey) {
       setMarqueeStart({ x, y });
       setMarqueeEnd({ x, y });
       setIsMarqueeSelecting(true);
       // Clear existing selection when starting marquee
-      clearSelection();
+      if (editMode === 'shapes') {
+        clearSelection();
+      } else if (editMode === 'points') {
+        setSelectedPoints([]);
+      } else if (editMode === 'segments') {
+        setSelectedSegments([]);
+      }
     } else {
       setIsDragging(true);
     }
@@ -503,23 +509,60 @@ export const useShapeEditor = () => {
     if (isMarqueeSelecting && marqueeStart) {
       setMarqueeEnd({ x, y });
       
-      // Select shapes within marquee rectangle
       const minX = Math.min(marqueeStart.x, x);
       const maxX = Math.max(marqueeStart.x, x);
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
       
-      shapes.forEach(shape => {
-        // Check if shape center is within marquee bounds
-        const shapeCenterX = shape.transform.x;
-        const shapeCenterY = shape.transform.y;
-        
-        const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
-                              shapeCenterY >= minY && shapeCenterY <= maxY;
-        shape.selected = shapeInMarquee;
-      });
+      if (editMode === 'shapes') {
+        // Select shapes within marquee rectangle
+        shapes.forEach(shape => {
+          const shapeCenterX = shape.transform.x;
+          const shapeCenterY = shape.transform.y;
+          
+          const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
+                                shapeCenterY >= minY && shapeCenterY <= maxY;
+          shape.selected = shapeInMarquee;
+        });
+        setShapes(prev => [...prev]);
+      } else if (editMode === 'points') {
+        // Select points within marquee rectangle
+        const newSelectedPoints: { shapeId: string; pointIndex: number }[] = [];
+        shapes.forEach(shape => {
+          if (!shape.selected || !shape.points) return;
+          
+          shape.points.forEach((_, pointIndex) => {
+            const worldPoint = shape.getWorldPoint(pointIndex);
+            if (worldPoint && 
+                worldPoint.x >= minX && worldPoint.x <= maxX &&
+                worldPoint.y >= minY && worldPoint.y <= maxY) {
+              newSelectedPoints.push({ shapeId: shape.id, pointIndex });
+            }
+          });
+        });
+        setSelectedPoints(newSelectedPoints);
+      } else if (editMode === 'segments') {
+        // Select segments within marquee rectangle
+        const newSelectedSegments: { shapeId: string; segmentIndex: number }[] = [];
+        shapes.forEach(shape => {
+          if (!shape.selected || !shape.points || shape.points.length < 2) return;
+          
+          for (let i = 0; i < shape.points.length - 1; i++) {
+            const point1 = shape.getWorldPoint(i);
+            const point2 = shape.getWorldPoint(i + 1);
+            if (point1 && point2) {
+              // Check if segment midpoint is within marquee
+              const midX = (point1.x + point2.x) / 2;
+              const midY = (point1.y + point2.y) / 2;
+              if (midX >= minX && midX <= maxX && midY >= minY && midY <= maxY) {
+                newSelectedSegments.push({ shapeId: shape.id, segmentIndex: i });
+              }
+            }
+          }
+        });
+        setSelectedSegments(newSelectedSegments);
+      }
       
-      setShapes(prev => [...prev]);
       return;
     }
     
