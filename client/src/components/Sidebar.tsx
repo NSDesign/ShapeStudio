@@ -1231,7 +1231,7 @@ export default function Sidebar({
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
                 {blendModes.map(mode => (
-                  <SelectItem key={mode} value={mode} className="text-xs">
+                  <SelectItem key={mode} value={mode} className="text-xs text-white hover:bg-slate-700 focus:bg-slate-700 data-[highlighted]:bg-slate-700 data-[highlighted]:text-white">
                     {mode.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                   </SelectItem>
                 ))}
