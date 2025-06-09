@@ -826,8 +826,8 @@ export default function Sidebar({
                       min={0}
                       max={1}
                       step={0.01}
-                      className="flex-1"```python
-/>
+                      className="flex-1"
+                    />
                     <Input
                       type="number"
                       value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
