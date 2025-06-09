@@ -95,6 +95,7 @@ interface SidebarProps {
   onFlipHorizontal: () => void;
   onFlipVertical: () => void;
   onDeleteSelected: () => void;
+  onShapeUpdate?: () => void;
 }
 
 export default function Sidebar({
@@ -118,7 +119,8 @@ export default function Sidebar({
   onSkewBy,
   onFlipHorizontal,
   onFlipVertical,
-  onDeleteSelected
+  onDeleteSelected,
+  onShapeUpdate
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -599,10 +601,11 @@ export default function Sidebar({
     const updateShapeProperty = (updater: (shape: Shape) => void) => {
       selectedShapes.forEach(updater);
       selectedGroups.forEach(group => group.shapes.forEach(updater));
+      onShapeUpdate?.(); // Trigger parent component update
     };
 
     const addGradientStop = () => {
-      if (!firstSelectedShape.properties.gradient) return;
+      if (!firstSelectedShape?.properties.gradient) return;
       const newStop = {
         offset: 0.5,
         color: 'hsl(200, 50%, 50%)'
@@ -616,7 +619,7 @@ export default function Sidebar({
     };
 
     const removeGradientStop = (index: number) => {
-      if (!firstSelectedShape.properties.gradient || firstSelectedShape.properties.gradient.stops.length <= 2) return;
+      if (!firstSelectedShape?.properties.gradient || firstSelectedShape.properties.gradient.stops.length <= 2) return;
       updateShapeProperty(shape => {
         if (shape.properties.gradient && shape.properties.gradient.stops.length > 2) {
           shape.properties.gradient.stops.splice(index, 1);
@@ -638,7 +641,7 @@ export default function Sidebar({
     };
 
     return (
-      <div className="space-y-3 border-t border-slate-600 pt-3">
+      <div className="space-y-3 border-t border-slate-600 pt-3 max-h-96 overflow-y-auto">
         <Label className="text-xs text-slate-300 font-semibold">Shape Properties</Label>
         {!firstSelectedShape ? (
           <div className="text-xs text-slate-400">
@@ -653,15 +656,19 @@ export default function Sidebar({
               {/* Fill Type Toggle */}
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={!firstSelectedShape.properties.gradient ? "default" : "secondary"}
+                  variant={!firstSelectedShape.properties.gradient ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
-                  className="h-6 px-2 text-xs"
+                  className={`h-7 px-3 text-xs ${
+                    !firstSelectedShape.properties.gradient 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                  }`}
                 >
                   Color
                 </Button>
                 <Button
-                  variant={firstSelectedShape.properties.gradient ? "default" : "secondary"}
+                  variant={firstSelectedShape.properties.gradient ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateShapeProperty(shape => {
                     if (!shape.properties.gradient) {
@@ -674,7 +681,11 @@ export default function Sidebar({
                       };
                     }
                   })}
-                  className="h-6 px-2 text-xs"
+                  className={`h-7 px-3 text-xs ${
+                    firstSelectedShape.properties.gradient 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                  }`}
                 >
                   Gradient
                 </Button>
