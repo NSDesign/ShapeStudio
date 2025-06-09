@@ -13,12 +13,32 @@ export interface Transform {
   skewY: number;
 }
 
+export type BlendMode = 
+  | 'source-over' 
+  | 'multiply' 
+  | 'screen' 
+  | 'overlay' 
+  | 'darken' 
+  | 'lighten' 
+  | 'color-dodge' 
+  | 'color-burn' 
+  | 'hard-light' 
+  | 'soft-light' 
+  | 'difference' 
+  | 'exclusion' 
+  | 'hue' 
+  | 'saturation' 
+  | 'color' 
+  | 'luminosity';
+
 export interface ShapeProperties {
   fillColor: string;
   fillOpacity: number;
   strokeColor: string;
   strokeWidth: number;
   strokeOpacity: number;
+  blendMode: BlendMode;
+  zIndex: number;
   gradient?: {
     type: 'linear' | 'radial';
     stops: { offset: number; color: string }[];

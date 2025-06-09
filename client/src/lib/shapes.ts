@@ -1,4 +1,4 @@
-import { BaseShape, ShapeType, Point, Transform, ShapeProperties, ShapeGroup } from './shapeTypes';
+import { BaseShape, ShapeType, Point, Transform, ShapeProperties, ShapeGroup, BlendMode } from './shapeTypes';
 
 export class Shape {
   id: string;
@@ -69,6 +69,8 @@ export class Shape {
       strokeColor: `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)`,
       strokeWidth: 1 + Math.random() * 4,
       strokeOpacity: 0.8 + Math.random() * 0.2,
+      blendMode: 'source-over' as BlendMode,
+      zIndex: Date.now() + Math.random(), // Unique z-index for layer ordering
       gradient
     };
   }
@@ -280,23 +282,21 @@ export class Shape {
   render(ctx: CanvasRenderingContext2D): void {
     ctx.save();
     
+    // Apply blend mode
+    ctx.globalCompositeOperation = this.properties.blendMode;
+    
     // Apply transform
     ctx.translate(this.transform.x, this.transform.y);
     ctx.rotate(this.transform.rotation * Math.PI / 180);
     ctx.scale(this.transform.scaleX, this.transform.scaleY);
     ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
     
-    // Set styles
-    ctx.fillStyle = this.properties.fillColor;
-    ctx.globalAlpha = this.properties.fillOpacity;
-    ctx.strokeStyle = this.properties.strokeColor;
-    ctx.lineWidth = this.properties.strokeWidth;
-    
     // Draw shape
     this.drawShape(ctx);
     
     // Draw selection indicator
     if (this.selected) {
+      ctx.globalCompositeOperation = 'source-over'; // Reset blend mode for selection
       ctx.globalAlpha = 1;
       ctx.strokeStyle = '#2563EB';
       ctx.lineWidth = 2;
