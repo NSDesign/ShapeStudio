@@ -616,22 +616,39 @@ export class Shape {
     
     ctx.save();
     
-    // Draw segment highlights first (in world space for constant size)
-    selectedSegments.forEach(segmentIndex => {
-      if (segmentIndex >= 0 && segmentIndex < this.points.length - 1) {
-        const p1 = this.getWorldPoint(segmentIndex);
-        const p2 = this.getWorldPoint(segmentIndex + 1);
+    // Draw all segment midpoints for visibility
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const p1 = this.getWorldPoint(i);
+      const p2 = this.getWorldPoint(i + 1);
+      
+      if (p1 && p2) {
+        const isSelected = selectedSegments.includes(i);
         
-        if (p1 && p2) {
+        // Draw segment highlight
+        if (isSelected) {
           ctx.strokeStyle = '#10B981';
-          ctx.lineWidth = 4 / canvasZoom; // Constant thickness regardless of zoom
+          ctx.lineWidth = 4 / canvasZoom;
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
         }
+        
+        // Draw segment midpoint indicator
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        const radius = (isSelected ? 6 : 4) / canvasZoom;
+        
+        ctx.fillStyle = isSelected ? '#10B981' : '#8B5CF6';
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1 / canvasZoom;
+        
+        ctx.beginPath();
+        ctx.rect(midX - radius/2, midY - radius/2, radius, radius);
+        ctx.fill();
+        ctx.stroke();
       }
-    });
+    }
     
     // Draw points in world space for constant size
     this.points.forEach((point, index) => {

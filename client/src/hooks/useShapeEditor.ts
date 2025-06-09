@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point } from '../lib/shapeTypes';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -858,6 +858,184 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
+  // Transform operations for selected points
+  const scaleSelectedPoints = useCallback((factor: number) => {
+    if (selectedPoints.length === 0) return;
+    
+    // Calculate center of selected points
+    let centerX = 0, centerY = 0;
+    const worldPoints: Point[] = [];
+    
+    selectedPoints.forEach(({ shapeId, pointIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        const worldPoint = shape.getWorldPoint(pointIndex);
+        if (worldPoint) {
+          worldPoints.push(worldPoint);
+          centerX += worldPoint.x;
+          centerY += worldPoint.y;
+        }
+      }
+    });
+    
+    if (worldPoints.length === 0) return;
+    
+    centerX /= worldPoints.length;
+    centerY /= worldPoints.length;
+    
+    // Scale points around center
+    selectedPoints.forEach(({ shapeId, pointIndex }, index) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && worldPoints[index]) {
+        const worldPoint = worldPoints[index];
+        const newX = centerX + (worldPoint.x - centerX) * factor;
+        const newY = centerY + (worldPoint.y - centerY) * factor;
+        shape.updateWorldPoint(pointIndex, { x: newX, y: newY });
+      }
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedPoints, shapes]);
+
+  const rotateSelectedPoints = useCallback((angle: number) => {
+    if (selectedPoints.length === 0) return;
+    
+    // Calculate center of selected points
+    let centerX = 0, centerY = 0;
+    const worldPoints: Point[] = [];
+    
+    selectedPoints.forEach(({ shapeId, pointIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        const worldPoint = shape.getWorldPoint(pointIndex);
+        if (worldPoint) {
+          worldPoints.push(worldPoint);
+          centerX += worldPoint.x;
+          centerY += worldPoint.y;
+        }
+      }
+    });
+    
+    if (worldPoints.length === 0) return;
+    
+    centerX /= worldPoints.length;
+    centerY /= worldPoints.length;
+    
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    
+    // Rotate points around center
+    selectedPoints.forEach(({ shapeId, pointIndex }, index) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && worldPoints[index]) {
+        const worldPoint = worldPoints[index];
+        const dx = worldPoint.x - centerX;
+        const dy = worldPoint.y - centerY;
+        const newX = centerX + dx * cos - dy * sin;
+        const newY = centerY + dx * sin + dy * cos;
+        shape.updateWorldPoint(pointIndex, { x: newX, y: newY });
+      }
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedPoints, shapes]);
+
+  const scaleSelectedSegments = useCallback((factor: number) => {
+    if (selectedSegments.length === 0) return;
+    
+    // Calculate center of selected segments
+    let centerX = 0, centerY = 0;
+    const segmentPoints: Point[][] = [];
+    
+    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        const point1 = shape.getWorldPoint(segmentIndex);
+        const point2 = shape.getWorldPoint(segmentIndex + 1);
+        if (point1 && point2) {
+          segmentPoints.push([point1, point2]);
+          centerX += (point1.x + point2.x) / 2;
+          centerY += (point1.y + point2.y) / 2;
+        }
+      }
+    });
+    
+    if (segmentPoints.length === 0) return;
+    
+    centerX /= segmentPoints.length;
+    centerY /= segmentPoints.length;
+    
+    // Scale segments around center
+    selectedSegments.forEach(({ shapeId, segmentIndex }, index) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && segmentPoints[index]) {
+        const [point1, point2] = segmentPoints[index];
+        
+        const newX1 = centerX + (point1.x - centerX) * factor;
+        const newY1 = centerY + (point1.y - centerY) * factor;
+        const newX2 = centerX + (point2.x - centerX) * factor;
+        const newY2 = centerY + (point2.y - centerY) * factor;
+        
+        shape.updateWorldPoint(segmentIndex, { x: newX1, y: newY1 });
+        shape.updateWorldPoint(segmentIndex + 1, { x: newX2, y: newY2 });
+      }
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedSegments, shapes]);
+
+  const rotateSelectedSegments = useCallback((angle: number) => {
+    if (selectedSegments.length === 0) return;
+    
+    // Calculate center of selected segments
+    let centerX = 0, centerY = 0;
+    const segmentPoints: Point[][] = [];
+    
+    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape) {
+        const point1 = shape.getWorldPoint(segmentIndex);
+        const point2 = shape.getWorldPoint(segmentIndex + 1);
+        if (point1 && point2) {
+          segmentPoints.push([point1, point2]);
+          centerX += (point1.x + point2.x) / 2;
+          centerY += (point1.y + point2.y) / 2;
+        }
+      }
+    });
+    
+    if (segmentPoints.length === 0) return;
+    
+    centerX /= segmentPoints.length;
+    centerY /= segmentPoints.length;
+    
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    
+    // Rotate segments around center
+    selectedSegments.forEach(({ shapeId, segmentIndex }, index) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && segmentPoints[index]) {
+        const [point1, point2] = segmentPoints[index];
+        
+        const dx1 = point1.x - centerX;
+        const dy1 = point1.y - centerY;
+        const newX1 = centerX + dx1 * cos - dy1 * sin;
+        const newY1 = centerY + dx1 * sin + dy1 * cos;
+        
+        const dx2 = point2.x - centerX;
+        const dy2 = point2.y - centerY;
+        const newX2 = centerX + dx2 * cos - dy2 * sin;
+        const newY2 = centerY + dx2 * sin + dy2 * cos;
+        
+        shape.updateWorldPoint(segmentIndex, { x: newX1, y: newY1 });
+        shape.updateWorldPoint(segmentIndex + 1, { x: newX2, y: newY2 });
+      }
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedSegments, shapes]);
+
   return {
     // State
     shapes,
@@ -902,6 +1080,10 @@ export const useShapeEditor = () => {
     deleteSelected,
     moveSelectedPoints,
     moveSelectedSegments,
+    scaleSelectedPoints,
+    rotateSelectedPoints,
+    scaleSelectedSegments,
+    rotateSelectedSegments,
     
     // Canvas
     zoomIn,
