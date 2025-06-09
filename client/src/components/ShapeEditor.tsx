@@ -23,6 +23,8 @@ export default function ShapeEditor() {
     marqueeStart,
     marqueeEnd,
     isMarqueeSelecting,
+    isTouchDevice,
+    isMultiTouch,
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
@@ -163,6 +165,8 @@ export default function ShapeEditor() {
           marqueeStart={marqueeStart}
           marqueeEnd={marqueeEnd}
           isMarqueeSelecting={isMarqueeSelecting}
+          isTouchDevice={isTouchDevice}
+          isMultiTouch={isMultiTouch}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
