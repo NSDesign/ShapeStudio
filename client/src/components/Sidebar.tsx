@@ -938,179 +938,332 @@ export default function Sidebar({
 
             {/* Shape-specific Properties */}
             {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
-              <div>
-                <Label className="text-xs text-slate-400 mb-1 block">Sides</Label>
-                <Input
-                  type="number"
-                  value={firstSelectedShape.sides || 6}
-                  onChange={(e) => {
-                    const newSides = Math.max(3, Math.min(20, parseInt(e.target.value) || 6));
-                    updateShapeProperty(shape => {
-                      if (shape.type === 'polygon' || shape.type === 'star') {
-                        shape.sides = newSides;
-                      }
-                    });
-                  }}
-                  min={3}
-                  max={20}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                />
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Sides</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    value={[firstSelectedShape.sides || 6]}
+                    onValueChange={([value]) => {
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'polygon' || shape.type === 'star') {
+                          shape.sides = value;
+                        }
+                      });
+                    }}
+                    min={3}
+                    max={20}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    value={firstSelectedShape.sides || 6}
+                    onChange={(e) => {
+                      const newSides = Math.max(3, Math.min(20, parseInt(e.target.value) || 6));
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'polygon' || shape.type === 'star') {
+                          shape.sides = newSides;
+                        }
+                      });
+                    }}
+                    min={3}
+                    max={20}
+                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
               </div>
             )}
 
             {firstSelectedShape.type === 'circle' && (
-              <div>
-                <Label className="text-xs text-slate-400 mb-1 block">Radius</Label>
-                <Input
-                  type="number"
-                  value={Math.round(firstSelectedShape.radius || 0)}
-                  onChange={(e) => {
-                    const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                    updateShapeProperty(shape => {
-                      if (shape.type === 'circle') {
-                        shape.radius = newRadius;
-                      }
-                    });
-                  }}
-                  min={1}
-                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                />
-              </div>
-            )}
-
-            {firstSelectedShape.type === 'ring' && (
               <div className="space-y-2">
-                <div>
-                  <Label className="text-xs text-slate-400 mb-1 block">Outer Radius</Label>
+                <Label className="text-xs text-slate-400">Radius</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    value={[firstSelectedShape.radius || 50]}
+                    onValueChange={([value]) => {
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'circle') {
+                          shape.radius = value;
+                        }
+                      });
+                    }}
+                    min={1}
+                    max={200}
+                    step={1}
+                    className="flex-1"
+                  />
                   <Input
                     type="number"
                     value={Math.round(firstSelectedShape.radius || 0)}
                     onChange={(e) => {
                       const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
                       updateShapeProperty(shape => {
-                        if (shape.type === 'ring') {
+                        if (shape.type === 'circle') {
                           shape.radius = newRadius;
-                          // Ensure inner radius doesn't exceed outer radius
-                          if (shape.innerRadius && shape.innerRadius >= newRadius) {
-                            shape.innerRadius = newRadius * 0.5;
-                          }
                         }
                       });
                     }}
                     min={1}
-                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
                   />
+                  <span className="text-xs text-slate-400">px</span>
                 </div>
-                <div>
-                  <Label className="text-xs text-slate-400 mb-1 block">Inner Radius</Label>
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.innerRadius || 0)}
-                    onChange={(e) => {
-                      const newInnerRadius = Math.max(0, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'ring') {
-                          // Ensure inner radius doesn't exceed outer radius
-                          const maxInner = (shape.radius || 50) - 1;
-                          shape.innerRadius = Math.min(newInnerRadius, maxInner);
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={(firstSelectedShape.radius || 50) - 1}
-                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
+              </div>
+            )}
+
+            {firstSelectedShape.type === 'ring' && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Outer Radius</Label>
+                  <div className="flex items-center space-x-2">
+                    <Slider
+                      value={[firstSelectedShape.radius || 50]}
+                      onValueChange={([value]) => {
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'ring') {
+                            shape.radius = value;
+                            // Ensure inner radius doesn't exceed outer radius
+                            if (shape.innerRadius && shape.innerRadius >= value) {
+                              shape.innerRadius = value * 0.5;
+                            }
+                          }
+                        });
+                      }}
+                      min={1}
+                      max={200}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.radius || 0)}
+                      onChange={(e) => {
+                        const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'ring') {
+                            shape.radius = newRadius;
+                            // Ensure inner radius doesn't exceed outer radius
+                            if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                              shape.innerRadius = newRadius * 0.5;
+                            }
+                          }
+                        });
+                      }}
+                      min={1}
+                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Inner Radius</Label>
+                  <div className="flex items-center space-x-2">
+                    <Slider
+                      value={[firstSelectedShape.innerRadius || 25]}
+                      onValueChange={([value]) => {
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'ring') {
+                            // Ensure inner radius doesn't exceed outer radius
+                            const maxInner = (shape.radius || 50) - 1;
+                            shape.innerRadius = Math.min(value, maxInner);
+                          }
+                        });
+                      }}
+                      min={0}
+                      max={(firstSelectedShape.radius || 50) - 1}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.innerRadius || 0)}
+                      onChange={(e) => {
+                        const newInnerRadius = Math.max(0, parseFloat(e.target.value) || 0);
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'ring') {
+                            // Ensure inner radius doesn't exceed outer radius
+                            const maxInner = (shape.radius || 50) - 1;
+                            shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                          }
+                        });
+                      }}
+                      min={0}
+                      max={(firstSelectedShape.radius || 50) - 1}
+                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </div>
                 </div>
               </div>
             )}
 
             {firstSelectedShape.type === 'star' && (
-              <div className="space-y-2">
-                <div>
-                  <Label className="text-xs text-slate-400 mb-1 block">Outer Radius</Label>
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.radius || 0)}
-                    onChange={(e) => {
-                      const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'star') {
-                          shape.radius = newRadius;
-                          // Ensure inner radius doesn't exceed outer radius
-                          if (shape.innerRadius && shape.innerRadius >= newRadius) {
-                            shape.innerRadius = newRadius * 0.5;
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Outer Radius</Label>
+                  <div className="flex items-center space-x-2">
+                    <Slider
+                      value={[firstSelectedShape.radius || 50]}
+                      onValueChange={([value]) => {
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'star') {
+                            shape.radius = value;
+                            // Ensure inner radius doesn't exceed outer radius
+                            if (shape.innerRadius && shape.innerRadius >= value) {
+                              shape.innerRadius = value * 0.5;
+                            }
                           }
-                        }
-                      });
-                    }}
-                    min={1}
-                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
+                        });
+                      }}
+                      min={1}
+                      max={200}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.radius || 0)}
+                      onChange={(e) => {
+                        const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'star') {
+                            shape.radius = newRadius;
+                            // Ensure inner radius doesn't exceed outer radius
+                            if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                              shape.innerRadius = newRadius * 0.5;
+                            }
+                          }
+                        });
+                      }}
+                      min={1}
+                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs text-slate-400 mb-1 block">Inner Radius</Label>
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.innerRadius || 0)}
-                    onChange={(e) => {
-                      const newInnerRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'star') {
-                          // Ensure inner radius doesn't exceed outer radius
-                          const maxInner = (shape.radius || 50) - 1;
-                          shape.innerRadius = Math.min(newInnerRadius, maxInner);
-                        }
-                      });
-                    }}
-                    min={1}
-                    max={(firstSelectedShape.radius || 50) - 1}
-                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Inner Radius</Label>
+                  <div className="flex items-center space-x-2">
+                    <Slider
+                      value={[firstSelectedShape.innerRadius || 25]}
+                      onValueChange={([value]) => {
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'star') {
+                            // Ensure inner radius doesn't exceed outer radius
+                            const maxInner = (shape.radius || 50) - 1;
+                            shape.innerRadius = Math.min(value, maxInner);
+                          }
+                        });
+                      }}
+                      min={1}
+                      max={(firstSelectedShape.radius || 50) - 1}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.innerRadius || 0)}
+                      onChange={(e) => {
+                        const newInnerRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'star') {
+                            // Ensure inner radius doesn't exceed outer radius
+                            const maxInner = (shape.radius || 50) - 1;
+                            shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                          }
+                        });
+                      }}
+                      min={1}
+                      max={(firstSelectedShape.radius || 50) - 1}
+                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Dimensions for rectangles and ellipses */}
             {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400 mb-1 block">Dimensions</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.width || 0)}
-                    onChange={(e) => {
-                      const newWidth = Math.max(1, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
-                          shape.width = newWidth;
-                          if (shape.type === 'square') {
-                            shape.height = newWidth;
-                          }
-                        }
-                      });
-                    }}
-                    min={1}
-                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                  <span className="text-xs text-slate-400">×</span>
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.height || 0)}
-                    onChange={(e) => {
-                      const newHeight = Math.max(1, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
-                          shape.height = newHeight;
-                          if (shape.type === 'square') {
-                            shape.width = newHeight;
-                          }
-                        }
-                      });
-                    }}
-                    min={1}
-                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    disabled={firstSelectedShape.type === 'square'}
-                  />
+              <div className="space-y-3">
+                <Label className="text-xs text-slate-400">Dimensions</Label>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Width</Label>
+                    <div className="flex items-center space-x-2">
+                      <Slider
+                        value={[firstSelectedShape.width || 100]}
+                        onValueChange={([value]) => {
+                          updateShapeProperty(shape => {
+                            if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                              shape.width = value;
+                              if (shape.type === 'square') {
+                                shape.height = value;
+                              }
+                            }
+                          });
+                        }}
+                        min={1}
+                        max={400}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="number"
+                        value={Math.round(firstSelectedShape.width || 0)}
+                        onChange={(e) => {
+                          const newWidth = Math.max(1, parseFloat(e.target.value) || 0);
+                          updateShapeProperty(shape => {
+                            if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                              shape.width = newWidth;
+                              if (shape.type === 'square') {
+                                shape.height = newWidth;
+                              }
+                            }
+                          });
+                        }}
+                        min={1}
+                        className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                      />
+                      <span className="text-xs text-slate-400">px</span>
+                    </div>
+                  </div>
+                  {firstSelectedShape.type !== 'square' && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-400">Height</Label>
+                      <div className="flex items-center space-x-2">
+                        <Slider
+                          value={[firstSelectedShape.height || 100]}
+                          onValueChange={([value]) => {
+                            updateShapeProperty(shape => {
+                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                                shape.height = value;
+                              }
+                            });
+                          }}
+                          min={1}
+                          max={400}
+                          step={1}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          value={Math.round(firstSelectedShape.height || 0)}
+                          onChange={(e) => {
+                            const newHeight = Math.max(1, parseFloat(e.target.value) || 0);
+                            updateShapeProperty(shape => {
+                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                                shape.height = newHeight;
+                              }
+                            });
+                          }}
+                          min={1}
+                          className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                        />
+                        <span className="text-xs text-slate-400">px</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
