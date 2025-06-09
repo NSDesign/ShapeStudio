@@ -169,9 +169,40 @@ export default function Sidebar({
         })}
       </div>
 
+      <div className="flex gap-2 mt-4">
+        <Button 
+          onClick={() => {
+            allShapeTypes.forEach(type => {
+              if (!enabledShapeTypes.has(type)) {
+                onToggleShapeType(type);
+              }
+            });
+          }}
+          variant="secondary"
+          size="sm"
+          className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200"
+        >
+          All On
+        </Button>
+        <Button 
+          onClick={() => {
+            allShapeTypes.forEach(type => {
+              if (enabledShapeTypes.has(type)) {
+                onToggleShapeType(type);
+              }
+            });
+          }}
+          variant="secondary"
+          size="sm"
+          className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200"
+        >
+          All Off
+        </Button>
+      </div>
+
       <Button 
         onClick={onGenerateRandomShapes}
-        className="w-full mt-4 bg-[var(--editor-primary)] hover:bg-blue-700 text-white font-medium"
+        className="w-full mt-3 bg-[var(--editor-primary)] hover:bg-blue-700 text-white font-medium"
       >
         <Wand2 className="w-4 h-4 mr-2" />
         Generate Random Shapes
