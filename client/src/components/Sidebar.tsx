@@ -38,7 +38,7 @@ import {
   FolderOpen,
   Menu
 } from "lucide-react";
-import { ShapeType, ScatterSettings } from "../lib/shapeTypes";
+import { ShapeType, ScatterSettings, BlendMode } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
 
 const shapeIcons: Record<ShapeType, any> = {
@@ -125,6 +125,11 @@ export default function Sidebar({
   onFlipHorizontal,
   onFlipVertical,
   onDeleteSelected,
+  onBringToFront,
+  onSendToBack,
+  onBringForward,
+  onSendBackward,
+  onChangeBlendMode,
   onShapeUpdate
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -1153,6 +1158,137 @@ export default function Sidebar({
     </div>
   );
 
+  const LayersContent = () => {
+    const blendModes: BlendMode[] = [
+      'source-over', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
+      'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
+      'exclusion', 'hue', 'saturation', 'color', 'luminosity'
+    ];
+
+    // Get all shapes from selectedShapes prop
+    const allShapes = [...selectedShapes, ...selectedGroups.flatMap(g => g.shapes)];
+    const sortedShapes = useMemo(() => {
+      return allShapes.sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    }, [selectedShapes, selectedGroups]);
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-slate-400">
+          Layers: <span className="text-white font-medium">{allShapes.length}</span> total
+        </div>
+
+        {/* Layer Ordering Controls */}
+        {selectedCount > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Layer Order</Label>
+            <div className="grid grid-cols-2 gap-1">
+              <Button
+                onClick={onBringToFront}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Bring to Front
+              </Button>
+              <Button
+                onClick={onSendToBack}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Send to Back
+              </Button>
+              <Button
+                onClick={onBringForward}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Bring Forward
+              </Button>
+              <Button
+                onClick={onSendBackward}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Send Backward
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Blend Mode Selection */}
+        {selectedCount > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Blend Mode</Label>
+            <Select
+              value={selectedShapes[0]?.properties.blendMode || 'source-over'}
+              onValueChange={(value: BlendMode) => onChangeBlendMode(value)}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                {blendModes.map(mode => (
+                  <SelectItem key={mode} value={mode} className="text-xs">
+                    {mode.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Layers List */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">All Layers</Label>
+          <div className="max-h-48 overflow-y-auto space-y-1">
+            {sortedShapes.map((shape, index) => (
+              <div
+                key={shape.id}
+                className={`p-2 rounded text-xs border transition-colors cursor-pointer ${
+                  shape.selected 
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-200' 
+                    : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50'
+                }`}
+                onClick={() => {
+                  // Toggle selection
+                  shape.selected = !shape.selected;
+                  const newSelected = shapes.filter(s => s.selected);
+                  onShapeUpdate?.();
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono text-slate-400">#{index + 1}</span>
+                    <span className="capitalize">{shape.type}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-slate-400">{shape.properties.blendMode}</span>
+                    <div 
+                      className="w-3 h-3 rounded border border-slate-500"
+                      style={{ backgroundColor: shape.properties.fillColor.includes('hsl') ? '#3B82F6' : shape.properties.fillColor }}
+                    />
+                  </div>
+                </div>
+                <div className="text-slate-400 mt-1">
+                  Z: {shape.properties.zIndex.toFixed(1)} | Opacity: {Math.round(shape.properties.fillOpacity * 100)}%
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {shapes.length === 0 && (
+          <div className="text-xs text-slate-500 text-center py-4">
+            No layers yet. Create some shapes to see them here.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (isCollapsed) {
     return (
       <div className="w-16 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
@@ -1321,6 +1457,37 @@ export default function Sidebar({
                   Properties
                 </h3>
                 <PropertiesContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Layers */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'layers' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'layers' 
+                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Navigation className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Layers
+                </h3>
+                <LayersContent />
               </div>
             </PopoverContent>
           </Popover>
