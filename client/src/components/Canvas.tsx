@@ -280,6 +280,35 @@ export default function Canvas({
         ctx.setLineDash([]);
       }
 
+      // Show multi-touch gesture indicator on touch devices
+      if (isTouchDevice && isMultiTouch && selectedCount > 0) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 2;
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        
+        const centerX = rect.width / 2;
+        const centerY = 40;
+        
+        // Background pill
+        const text = 'Pinch to scale • Rotate with two fingers';
+        const textWidth = ctx.measureText(text).width;
+        const pillWidth = textWidth + 24;
+        const pillHeight = 32;
+        
+        ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+        ctx.fillRect(centerX - pillWidth / 2, centerY - pillHeight / 2, pillWidth, pillHeight);
+        ctx.strokeRect(centerX - pillWidth / 2, centerY - pillHeight / 2, pillWidth, pillHeight);
+        
+        // Text
+        ctx.fillStyle = '#3B82F6';
+        ctx.fillText(text, centerX, centerY + 4);
+        
+        ctx.restore();
+      }
+
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(render);
     };

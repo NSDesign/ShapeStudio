@@ -666,6 +666,9 @@ export const useShapeEditor = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
+    // Prevent default browser touch behavior (zooming, scrolling)
+    e.preventDefault();
+    
     // Handle multi-touch gestures for scaling and rotating shapes
     if (e.touches.length === 2 && editMode === 'shapes' && selectedShapes.length > 0) {
       const touch1 = e.touches[0];
@@ -682,7 +685,6 @@ export const useShapeEditor = () => {
         setInitialRotation(selectedShapes[0].transform.rotation);
       }
       
-      e.preventDefault();
       return;
     }
     
@@ -730,6 +732,9 @@ export const useShapeEditor = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
+    // Prevent default browser touch behavior
+    e.preventDefault();
+    
     // Handle multi-touch gestures for scaling and rotating
     if (e.touches.length === 2 && isMultiTouch && selectedShapes.length > 0) {
       const touch1 = e.touches[0];
@@ -740,7 +745,7 @@ export const useShapeEditor = () => {
       
       // Calculate scale factor from distance change
       const scaleFactor = currentDistance / initialTouchDistance;
-      const newScale = initialScale * scaleFactor;
+      const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
       
       // Calculate rotation from angle change
       const rotationDelta = currentAngle - initialTouchAngle;
@@ -754,7 +759,6 @@ export const useShapeEditor = () => {
       });
       
       setShapes(prev => [...prev]);
-      e.preventDefault();
       return;
     }
     
@@ -829,6 +833,9 @@ export const useShapeEditor = () => {
   }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    // Prevent default browser touch behavior
+    e.preventDefault();
+    
     const touchDuration = Date.now() - touchStartTime;
     
     // Reset multi-touch state when touches end

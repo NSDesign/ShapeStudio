@@ -125,6 +125,19 @@
     transform: translateX(20px);
   }
   
+  /* Canvas touch behavior prevention */
+  canvas {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  
   .shape-item {
     transition: all 0.2s ease;
   }
