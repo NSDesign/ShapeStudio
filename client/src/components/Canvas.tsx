@@ -135,10 +135,10 @@ export default function Canvas({
         const minY = Math.min(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
         const maxY = Math.max(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
         
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = '#ec4899'; // Pink color
         ctx.lineWidth = 1;
         ctx.setLineDash([5, 5]);
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.fillStyle = 'rgba(236, 72, 153, 0.1)'; // Pink fill with transparency
         
         ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
         ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
@@ -159,7 +159,7 @@ export default function Canvas({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, groups, canvasSettings, canvasRef]);
+  }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments]);
 
   // Handle window resize
   useEffect(() => {
