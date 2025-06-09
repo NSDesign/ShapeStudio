@@ -1255,7 +1255,6 @@ export default function Sidebar({
                 onClick={() => {
                   // Toggle selection
                   shape.selected = !shape.selected;
-                  const newSelected = shapes.filter(s => s.selected);
                   onShapeUpdate?.();
                 }}
               >
@@ -1280,7 +1279,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {shapes.length === 0 && (
+        {allShapes.length === 0 && (
           <div className="text-xs text-slate-500 text-center py-4">
             No layers yet. Create some shapes to see them here.
           </div>

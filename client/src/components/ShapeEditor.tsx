@@ -48,7 +48,12 @@ export default function ShapeEditor() {
     selectedCount,
     selectedPointsCount,
     selectedSegmentsCount,
-    canComposeShapes
+    canComposeShapes,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+    changeBlendMode
   } = useShapeEditor();
 
   // Transform handlers with precise control
@@ -138,8 +143,13 @@ export default function ShapeEditor() {
           onSkewBy={handleSkewBy}
           onFlipHorizontal={handleFlipHorizontal}
           onFlipVertical={handleFlipVertical}
-          onShapeUpdate={forceUpdate}
           onDeleteSelected={handleDeleteSelected}
+          onBringToFront={bringToFront}
+          onSendToBack={sendToBack}
+          onBringForward={bringForward}
+          onSendBackward={sendBackward}
+          onChangeBlendMode={changeBlendMode}
+          onShapeUpdate={forceUpdate}
         />
         <Canvas
           shapes={shapes}
