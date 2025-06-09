@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode } from '../lib/shapeTypes';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -758,6 +758,63 @@ export const useShapeEditor = () => {
     setGroups(prev => [...prev]);
   }, []);
 
+  // Layer management functions
+  const bringToFront = useCallback(() => {
+    if (selectedShapes.length === 0) return;
+    
+    const maxZIndex = Math.max(...shapes.map(s => s.properties.zIndex));
+    selectedShapes.forEach(shape => {
+      shape.properties.zIndex = maxZIndex + 1 + Math.random() * 0.1;
+    });
+    
+    // Sort shapes by zIndex for proper rendering order
+    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
+  }, [selectedShapes, shapes]);
+
+  const sendToBack = useCallback(() => {
+    if (selectedShapes.length === 0) return;
+    
+    const minZIndex = Math.min(...shapes.map(s => s.properties.zIndex));
+    selectedShapes.forEach(shape => {
+      shape.properties.zIndex = minZIndex - 1 - Math.random() * 0.1;
+    });
+    
+    // Sort shapes by zIndex for proper rendering order
+    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
+  }, [selectedShapes, shapes]);
+
+  const bringForward = useCallback(() => {
+    if (selectedShapes.length === 0) return;
+    
+    selectedShapes.forEach(shape => {
+      shape.properties.zIndex += 1.1;
+    });
+    
+    // Sort shapes by zIndex for proper rendering order
+    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
+  }, [selectedShapes]);
+
+  const sendBackward = useCallback(() => {
+    if (selectedShapes.length === 0) return;
+    
+    selectedShapes.forEach(shape => {
+      shape.properties.zIndex -= 1.1;
+    });
+    
+    // Sort shapes by zIndex for proper rendering order
+    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
+  }, [selectedShapes]);
+
+  const changeBlendMode = useCallback((blendMode: BlendMode) => {
+    if (selectedShapes.length === 0) return;
+    
+    selectedShapes.forEach(shape => {
+      shape.properties.blendMode = blendMode;
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedShapes]);
+
   return {
     // State
     shapes,
@@ -785,6 +842,13 @@ export const useShapeEditor = () => {
     setEditingMode,
     toggleMultiSelectMode,
     forceUpdate,
+    
+    // Layer Management
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+    changeBlendMode,
     
     // Transforms
     moveSelected,
