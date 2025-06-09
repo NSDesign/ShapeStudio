@@ -698,6 +698,32 @@ export class Shape {
     }
   }
 
+  // Method to regenerate shape points when properties change
+  regenerateShapePoints(): void {
+    switch (this.type) {
+      case 'polygon':
+        this.generatePolygonPoints();
+        break;
+      case 'star':
+        this.generateStarPoints();
+        break;
+      case 'circle':
+        this.generateCirclePoints();
+        break;
+      case 'ellipse':
+        this.generateEllipsePoints();
+        break;
+      case 'rectangle':
+      case 'square':
+        this.generateRectanglePoints();
+        break;
+      case 'ring':
+        this.generateRingPoints();
+        break;
+      // Line and curve types don't auto-regenerate to preserve user edits
+    }
+  }
+
   clone(): Shape {
     const cloned = new Shape(this.type, this.transform.x + 20, this.transform.y + 20);
     cloned.transform = { ...this.transform };

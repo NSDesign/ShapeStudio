@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
@@ -585,33 +585,33 @@ export default function Sidebar({
     selectedCount: number;
   }) {
     const firstSelectedShape = selectedShapes[0] || selectedGroups[0]?.shapes[0];
-    
+
     // Helper function to convert HSL to hex for color input
     const hslToHex = (hslString: string): string => {
       if (hslString.startsWith('#')) return hslString;
       const match = hslString.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
       if (!match) return '#3B82F6';
-      
+
       const h = parseFloat(match[1]) / 360;
       const s = parseFloat(match[2]) / 100;
       const l = parseFloat(match[3]) / 100;
-      
+
       const c = (1 - Math.abs(2 * l - 1)) * s;
       const x = c * (1 - Math.abs((h * 6) % 2 - 1));
       const m = l - c / 2;
       let r, g, b;
-      
+
       if (0 <= h && h < 1/6) [r, g, b] = [c, x, 0];
       else if (1/6 <= h && h < 2/6) [r, g, b] = [x, c, 0];
       else if (2/6 <= h && h < 3/6) [r, g, b] = [0, c, x];
       else if (3/6 <= h && h < 4/6) [r, g, b] = [0, x, c];
       else if (4/6 <= h && h < 5/6) [r, g, b] = [x, 0, c];
       else [r, g, b] = [c, 0, x];
-      
+
       r = Math.round((r + m) * 255);
       g = Math.round((g + m) * 255);
       b = Math.round((b + m) * 255);
-      
+
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     };
 
@@ -620,30 +620,100 @@ export default function Sidebar({
       const r = parseInt(hex.slice(1, 3), 16) / 255;
       const g = parseInt(hex.slice(3, 5), 16) / 255;
       const b = parseInt(hex.slice(5, 7), 16) / 255;
-      
+
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
       const diff = max - min;
       const sum = max + min;
       const l = sum / 2;
-      
+
       if (diff === 0) return `hsl(0, 0%, ${Math.round(l * 100)}%)`;
-      
+
       const s = l > 0.5 ? diff / (2 - sum) : diff / sum;
-      
+
       let h;
       if (max === r) h = ((g - b) / diff + (g < b ? 6 : 0)) / 6;
       else if (max === g) h = ((b - r) / diff + 2) / 6;
       else h = ((r - g) / diff + 4) / 6;
-      
+
       return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
     };
 
-    const updateShapeProperty = (updater: (shape: Shape) => void) => {
-      selectedShapes.forEach(updater);
-      selectedGroups.forEach(group => group.shapes.forEach(updater));
-      onShapeUpdate?.(); // Trigger parent component update
+    const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
+    const updated = [...selectedShapes];
+    updated.forEach(updater);
+    onShapeUpdate();
+  }, [selectedShapes, onShapeUpdate]);
+
+  // Helper function to get minimum points for each shape type
+  const getMinPointsForShape = (shapeType: string): number => {
+    switch (shapeType) {
+      case 'line': return 2;
+      case 'bezier':
+      case 'quadratic': return 3;
+      case 'cubic': return 4;
+      case 'blob': return 3;
+      default: return 2;
+    }
+  };
+
+  // Helper function to add a point to a shape by interpolating
+  const addPointToShape = (shape: Shape) => {
+    if (!shape.points || shape.points.length < 2) return;
+
+    // Find the longest segment to split
+    let longestSegmentIndex = 0;
+    let longestDistance = 0;
+
+    for (let i = 0; i < shape.points.length - 1; i++) {
+      const p1 = shape.points[i];
+      const p2 = shape.points[i + 1];
+      const distance = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+
+      if (distance > longestDistance) {
+        longestDistance = distance;
+        longestSegmentIndex = i;
+      }
+    }
+
+    // Insert new point at midpoint of longest segment
+    const p1 = shape.points[longestSegmentIndex];
+    const p2 = shape.points[longestSegmentIndex + 1];
+    const newPoint = {
+      x: (p1.x + p2.x) / 2,
+      y: (p1.y + p2.y) / 2
     };
+
+    shape.points.splice(longestSegmentIndex + 1, 0, newPoint);
+  };
+
+  // Helper functions to regenerate shape points
+  const regeneratePolygonPoints = (shape: Shape) => {
+    if (!shape.sides || !shape.radius) return;
+
+    shape.points = [];
+    for (let i = 0; i < shape.sides; i++) {
+      const angle = (i / shape.sides) * Math.PI * 2 - Math.PI / 2;
+      shape.points.push({
+        x: Math.cos(angle) * shape.radius,
+        y: Math.sin(angle) * shape.radius
+      });
+    }
+  };
+
+  const regenerateStarPoints = (shape: Shape) => {
+    if (!shape.sides || !shape.radius || !shape.innerRadius) return;
+
+    shape.points = [];
+    for (let i = 0; i < shape.sides * 2; i++) {
+      const angle = (i / (shape.sides * 2)) * Math.PI * 2 - Math.PI / 2;
+      const radius = i % 2 === 0 ? shape.radius : shape.innerRadius;
+      shape.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+  };
 
     const addGradientStop = () => {
       if (!firstSelectedShape?.properties.gradient) return;
@@ -693,7 +763,7 @@ export default function Sidebar({
             {/* Fill Properties */}
             <div className="space-y-3">
               <Label className="text-xs text-slate-400 font-medium">Fill</Label>
-              
+
               {/* Fill Type Toggle */}
               <div className="flex items-center space-x-2">
                 <Button
@@ -756,8 +826,8 @@ export default function Sidebar({
                       min={0}
                       max={1}
                       step={0.01}
-                      className="flex-1"
-                    />
+                      className="flex-1"```python
+/>
                     <Input
                       type="number"
                       value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
@@ -808,7 +878,7 @@ export default function Sidebar({
                         + Add
                       </Button>
                     </div>
-                    
+
                     {firstSelectedShape.properties.gradient.stops.map((stop, index) => (
                       <div key={index} className="flex items-center space-x-2 p-2 bg-slate-800/50 rounded">
                         <Input
@@ -936,6 +1006,91 @@ export default function Sidebar({
               </div>
             </div>
 
+            {/* Points Management for Editable Shapes */}
+            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic' || firstSelectedShape.type === 'blob') && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Points ({firstSelectedShape.points?.length || 0})</Label>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        updateShapeProperty(shape => {
+                          if (shape.points && shape.points.length > getMinPointsForShape(shape.type)) {
+                            // Remove last point
+                            shape.points.pop();
+                          }
+                        });
+                      }}
+                      disabled={!firstSelectedShape.points || firstSelectedShape.points.length <= getMinPointsForShape(firstSelectedShape.type)}
+                      className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
+                    >
+                      <span className="text-xs">−</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        updateShapeProperty(shape => {
+                          if (shape.points && shape.points.length < 20) {
+                            // Add new point by interpolating between existing points
+                            addPointToShape(shape);
+                          }
+                        });
+                      }}
+                      disabled={!firstSelectedShape.points || firstSelectedShape.points.length >= 20}
+                      className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
+                    >
+                      <span className="text-xs">+</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="max-h-32 overflow-y-auto space-y-2">
+                  {firstSelectedShape.points?.map((point, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-xs">
+                      <span className="text-slate-400 w-4">{index}</span>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-slate-400 w-2">X:</span>
+                        <Input
+                          type="number"
+                          value={Math.round(point.x * 10) / 10}
+                          onChange={(e) => {
+                            const newX = parseFloat(e.target.value) || 0;
+                            updateShapeProperty(shape => {
+                              if (shape.points && shape.points[index]) {
+                                shape.points[index].x = newX;
+                              }
+                            });
+                          }}
+                          className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
+                          step={0.1}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-slate-400 w-2">Y:</span>
+                        <Input
+                          type="number"
+                          value={Math.round(point.y * 10) / 10}
+                          onChange={(e) => {
+                            const newY = parseFloat(e.target.value) || 0;
+                            updateShapeProperty(shape => {
+                              if (shape.points && shape.points[index]) {
+                                shape.points[index].y = newY;
+                              }
+                            });
+                          }}
+                          className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
+                          step={0.1}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Shape-specific Properties */}
             {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
               <div className="space-y-2">
@@ -947,6 +1102,12 @@ export default function Sidebar({
                       updateShapeProperty(shape => {
                         if (shape.type === 'polygon' || shape.type === 'star') {
                           shape.sides = value;
+                          // Regenerate points when sides change
+                          if (shape.type === 'polygon') {
+                            regeneratePolygonPoints(shape);
+                          } else if (shape.type === 'star') {
+                            regenerateStarPoints(shape);
+                          }
                         }
                       });
                     }}
@@ -963,6 +1124,12 @@ export default function Sidebar({
                       updateShapeProperty(shape => {
                         if (shape.type === 'polygon' || shape.type === 'star') {
                           shape.sides = newSides;
+                          // Regenerate points when sides change
+                          if (shape.type === 'polygon') {
+                            regeneratePolygonPoints(shape);
+                          } else if (shape.type === 'star') {
+                            regenerateStarPoints(shape);
+                          }
                         }
                       });
                     }}
@@ -970,6 +1137,7 @@ export default function Sidebar({
                     max={20}
                     className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
                   />
+                  <span className="text-xs text-slate-400">sides</span>
                 </div>
               </div>
             )}
@@ -1268,15 +1436,6 @@ export default function Sidebar({
               </div>
             )}
 
-            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
-              <div>
-                <Label className="text-xs text-slate-400 mb-1 block">Points</Label>
-                <div className="text-xs text-slate-300">
-                  {firstSelectedShape.points?.length || 0} points
-                </div>
-              </div>
-            )}
-
             {/* Shape Type and ID Info */}
             <div className="border-t border-slate-600 pt-2 mt-2">
               <div className="text-xs text-slate-400 space-y-1">
@@ -1455,7 +1614,8 @@ export default function Sidebar({
                 onClick={onSendBackward}
                 variant="secondary"
                 size="sm"
-                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+                className="text-xs bg-slate-700```python
+ hover:bg-slate-600 text-slate-200"
               >
                 Send Backward
               </Button>
