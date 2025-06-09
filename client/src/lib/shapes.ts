@@ -464,6 +464,77 @@ export class Shape {
     ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
   }
 
+  renderTransformHandles(ctx: CanvasRenderingContext2D, canvasZoom: number = 1, isTouchDevice: boolean = false): void {
+    if (!this.selected || isTouchDevice) return; // Only show handles on non-touch devices
+    
+    ctx.save();
+    
+    // Apply shape transformation
+    ctx.translate(this.transform.x, this.transform.y);
+    ctx.rotate(this.transform.rotation);
+    ctx.scale(this.transform.scaleX, this.transform.scaleY);
+    
+    const bounds = this.getBounds();
+    const handleSize = 8 / canvasZoom;
+    const handleOffset = handleSize / 2;
+    
+    // Corner handles for scaling
+    const corners = [
+      { x: bounds.x - handleOffset, y: bounds.y - handleOffset }, // Top-left
+      { x: bounds.x + bounds.width - handleOffset, y: bounds.y - handleOffset }, // Top-right
+      { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height - handleOffset }, // Bottom-right
+      { x: bounds.x - handleOffset, y: bounds.y + bounds.height - handleOffset } // Bottom-left
+    ];
+    
+    // Edge handles for scaling
+    const edges = [
+      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y - handleOffset }, // Top
+      { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset }, // Right
+      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height - handleOffset }, // Bottom
+      { x: bounds.x - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset } // Left
+    ];
+    
+    // Draw corner handles (for scaling)
+    ctx.fillStyle = '#3B82F6';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1 / canvasZoom;
+    
+    corners.forEach(corner => {
+      ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
+      ctx.strokeRect(corner.x, corner.y, handleSize, handleSize);
+    });
+    
+    // Draw edge handles (for scaling)
+    ctx.fillStyle = '#10B981';
+    edges.forEach(edge => {
+      ctx.fillRect(edge.x, edge.y, handleSize, handleSize);
+      ctx.strokeRect(edge.x, edge.y, handleSize, handleSize);
+    });
+    
+    // Draw rotation handle
+    const rotationHandleDistance = Math.max(bounds.width, bounds.height) / 2 + 20 / canvasZoom;
+    const rotationHandleX = bounds.x + bounds.width / 2 - handleOffset;
+    const rotationHandleY = bounds.y - rotationHandleDistance - handleOffset;
+    
+    ctx.fillStyle = '#EF4444';
+    ctx.beginPath();
+    ctx.arc(rotationHandleX + handleOffset, rotationHandleY + handleOffset, handleSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Draw line connecting rotation handle to shape
+    ctx.strokeStyle = '#EF4444';
+    ctx.lineWidth = 1 / canvasZoom;
+    ctx.setLineDash([2 / canvasZoom, 2 / canvasZoom]);
+    ctx.beginPath();
+    ctx.moveTo(bounds.x + bounds.width / 2, bounds.y);
+    ctx.lineTo(rotationHandleX + handleOffset, rotationHandleY + handleOffset);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.restore();
+  }
+
   getBounds(): { x: number; y: number; width: number; height: number } {
     switch (this.type) {
       case 'rectangle':

@@ -18,6 +18,8 @@ interface CanvasProps {
   marqueeStart: { x: number; y: number } | null;
   marqueeEnd: { x: number; y: number } | null;
   isMarqueeSelecting: boolean;
+  isTouchDevice: boolean;
+  isMultiTouch: boolean;
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -132,6 +134,8 @@ export default function Canvas({
   marqueeStart,
   marqueeEnd,
   isMarqueeSelecting,
+  isTouchDevice,
+  isMultiTouch,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -216,17 +220,42 @@ export default function Canvas({
         });
       }
 
-      // Render transform handles for selected shapes in shape mode
+      // Render transform handles for selected shapes on non-touch devices
       if (editMode === 'shapes') {
         shapes.forEach(shape => {
           if (shape.selected) {
-            renderTransformHandles(ctx, shape, canvasSettings.zoom);
+            shape.renderTransformHandles(ctx, canvasSettings.zoom, isTouchDevice);
           }
         });
         
         groups.forEach(group => {
           if (group.selected) {
-            renderGroupTransformHandles(ctx, group, canvasSettings.zoom);
+            // For groups, render handles around the group bounds
+            const bounds = group.getBounds();
+            const handleSize = 8 / canvasSettings.zoom;
+            const handleOffset = handleSize / 2;
+            
+            if (!isTouchDevice) {
+              ctx.save();
+              ctx.fillStyle = '#8B5CF6';
+              ctx.strokeStyle = '#FFFFFF';
+              ctx.lineWidth = 1 / canvasSettings.zoom;
+              
+              // Corner handles for group
+              const corners = [
+                { x: bounds.x - handleOffset, y: bounds.y - handleOffset },
+                { x: bounds.x + bounds.width - handleOffset, y: bounds.y - handleOffset },
+                { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height - handleOffset },
+                { x: bounds.x - handleOffset, y: bounds.y + bounds.height - handleOffset }
+              ];
+              
+              corners.forEach(corner => {
+                ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
+                ctx.strokeRect(corner.x, corner.y, handleSize, handleSize);
+              });
+              
+              ctx.restore();
+            }
           }
         });
       }
@@ -264,7 +293,7 @@ export default function Canvas({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments]);
+  }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, isTouchDevice]);
 
   // Handle window resize
   useEffect(() => {

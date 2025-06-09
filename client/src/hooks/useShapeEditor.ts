@@ -1147,6 +1147,8 @@ export const useShapeEditor = () => {
     marqueeStart,
     marqueeEnd,
     isMarqueeSelecting,
+    isTouchDevice,
+    isMultiTouch,
     
     // Actions
     generateRandomShapes,
