@@ -38,7 +38,7 @@ import {
   FolderOpen,
   Menu
 } from "lucide-react";
-import { ShapeType, ScatterSettings, BlendMode } from "../lib/shapeTypes";
+import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
 
 const shapeIcons: Record<ShapeType, any> = {
@@ -83,6 +83,8 @@ interface SidebarProps {
   canComposeShapes: boolean;
   selectedShapes: Shape[];
   selectedGroups: ShapeGroupClass[];
+  artboards: Artboard[];
+  activeArtboard: string;
   onToggleShapeType: (type: ShapeType) => void;
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
   onGenerateRandomShapes: () => void;
@@ -101,6 +103,10 @@ interface SidebarProps {
   onSendBackward: () => void;
   onChangeBlendMode: (blendMode: BlendMode) => void;
   onShapeUpdate?: () => void;
+  onAddArtboard: (preset: ArtboardPreset) => void;
+  onSelectArtboard: (artboardId: string) => void;
+  onDeleteArtboard: (artboardId: string) => void;
+  onUpdateArtboard: (artboardId: string, updates: Partial<Artboard>) => void;
 }
 
 export default function Sidebar({
@@ -113,6 +119,8 @@ export default function Sidebar({
   canComposeShapes,
   selectedShapes,
   selectedGroups,
+  artboards,
+  activeArtboard,
   onToggleShapeType,
   onUpdateScatterSettings,
   onGenerateRandomShapes,
@@ -130,7 +138,11 @@ export default function Sidebar({
   onBringForward,
   onSendBackward,
   onChangeBlendMode,
-  onShapeUpdate
+  onShapeUpdate,
+  onAddArtboard,
+  onSelectArtboard,
+  onDeleteArtboard,
+  onUpdateArtboard
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -642,7 +654,7 @@ export default function Sidebar({
     const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
     const updated = [...selectedShapes];
     updated.forEach(updater);
-    onShapeUpdate();
+    onShapeUpdate?.();
   }, [selectedShapes, onShapeUpdate]);
 
   // Helper function to get minimum points for each shape type

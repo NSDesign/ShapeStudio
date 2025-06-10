@@ -891,14 +891,7 @@ export const useShapeEditor = () => {
         } else if (rotationDelta < -Math.PI) {
           rotationDelta += 2 * Math.PI;
         }
-        const newRotation = gesture.initialRotation + rotationDelta;
-        
-        console.log('Touch rotation debug:', {
-          currentAngle: currentAngle * (180/Math.PI),
-          initialAngle: gesture.initialAngle * (180/Math.PI),
-          rotationDelta: rotationDelta * (180/Math.PI),
-          newRotation: newRotation * (180/Math.PI)
-        });
+        const newRotation = gesture.initialRotation + (rotationDelta * 180 / Math.PI);
         
         // Apply transforms to all selected shapes
         selectedShapes.forEach(shape => {
