@@ -85,10 +85,10 @@ export const useShapeEditor = () => {
     
     // Generate shapes in world coordinates within current visible area
     const margin = 200; // Extra margin around visible area
-    const minX = -canvasSettings.panX - viewportWidth/2 - margin;
-    const maxX = -canvasSettings.panX + viewportWidth/2 + margin;
-    const minY = -canvasSettings.panY - viewportHeight/2 - margin;
-    const maxY = -canvasSettings.panY + viewportHeight/2 + margin;
+    const minX = canvasSettings.panX - viewportWidth/2 - margin;
+    const maxX = canvasSettings.panX + viewportWidth/2 + margin;
+    const minY = canvasSettings.panY - viewportHeight/2 - margin;
+    const maxY = canvasSettings.panY + viewportHeight/2 + margin;
     
     for (let i = 0; i < numShapes; i++) {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
@@ -558,10 +558,10 @@ export const useShapeEditor = () => {
     
     const rect = canvas.getBoundingClientRect();
     // Convert screen coordinates to world coordinates
-    const screenX = e.clientX - rect.left - rect.width / 2;
-    const screenY = e.clientY - rect.top - rect.height / 2;
-    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
-    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
+    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     // Handle middle mouse button for panning
     if (e.button === 1) {
@@ -672,10 +672,10 @@ export const useShapeEditor = () => {
     }
     
     // Convert screen coordinates to world coordinates
-    const screenX = e.clientX - rect.left - rect.width / 2;
-    const screenY = e.clientY - rect.top - rect.height / 2;
-    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
-    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
+    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     // Handle marquee selection
     if (isMarqueeSelecting && marqueeStart) {
@@ -825,10 +825,10 @@ export const useShapeEditor = () => {
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     // Convert screen coordinates to world coordinates
-    const screenX = touch.clientX - rect.left - rect.width / 2;
-    const screenY = touch.clientY - rect.top - rect.height / 2;
-    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
-    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
+    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
