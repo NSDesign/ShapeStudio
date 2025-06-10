@@ -521,6 +521,52 @@ export const useShapeEditor = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [zoomIn, zoomOut, resetView]);
 
+  // Mouse wheel handler for zooming and panning
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    
+    if (e.ctrlKey || e.metaKey) {
+      // Zoom with Ctrl/Cmd + wheel towards mouse position
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Convert mouse position to world coordinates
+      const worldX = (mouseX - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
+      const worldY = (mouseY - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+      
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = e.deltaY > 0 ? 
+        Math.max(canvasSettings.zoom * zoomFactor, 0.1) : 
+        Math.min(canvasSettings.zoom * zoomFactor, 5);
+      
+      // Calculate new pan to keep mouse position stationary
+      const newPanX = mouseX / newZoom - worldX;
+      const newPanY = mouseY / newZoom - worldY;
+      
+      setCanvasSettings(prev => ({
+        ...prev,
+        zoom: newZoom,
+        panX: newPanX,
+        panY: newPanY
+      }));
+    } else {
+      // Pan with wheel
+      const panSpeed = 1;
+      const deltaX = e.deltaX * panSpeed;
+      const deltaY = e.deltaY * panSpeed;
+      
+      setCanvasSettings(prev => ({
+        ...prev,
+        panX: prev.panX - deltaX / canvasSettings.zoom,
+        panY: prev.panY - deltaY / canvasSettings.zoom
+      }));
+    }
+  }, [canvasSettings]);
+
   // Mouse event handlers
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -1333,6 +1379,7 @@ export const useShapeEditor = () => {
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    handleWheel,
     
     // Computed
     selectedCount: selectedShapes.length + selectedGroups.length,

@@ -30,6 +30,7 @@ interface CanvasProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
+  onWheel: (e: React.WheelEvent<HTMLCanvasElement>) => void;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
@@ -146,6 +147,7 @@ export default function Canvas({
   onZoomIn,
   onZoomOut,
   onResetView,
+  onWheel,
   canvasRef
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
@@ -420,6 +422,7 @@ export default function Canvas({
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          onWheel={onWheel}
         />
         
         {/* Canvas Overlay Messages */}
