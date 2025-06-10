@@ -338,8 +338,8 @@ export const useShapeEditor = () => {
     const centerX = (touch1.clientX + touch2.clientX) / 2;
     const centerY = (touch1.clientY + touch2.clientY) / 2;
     return {
-      x: (centerX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom,
-      y: (centerY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom
+      x: (centerX - rect.left) / canvasSettings.zoom - canvasSettings.panX,
+      y: (centerY - rect.top) / canvasSettings.zoom - canvasSettings.panY
     };
   }, [canvasSettings]);
 
