@@ -642,7 +642,7 @@ export default function Sidebar({
     const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
     const updated = [...selectedShapes];
     updated.forEach(updater);
-    onShapeUpdate();
+    onShapeUpdate?.();
   }, [selectedShapes, onShapeUpdate]);
 
   // Helper function to get minimum points for each shape type
