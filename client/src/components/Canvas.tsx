@@ -18,8 +18,6 @@ interface CanvasProps {
   marqueeStart: { x: number; y: number } | null;
   marqueeEnd: { x: number; y: number } | null;
   isMarqueeSelecting: boolean;
-  isTouchDevice: boolean;
-  isMultiTouch: boolean;
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -30,15 +28,14 @@ interface CanvasProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
-  onWheel: (e: React.WheelEvent<HTMLCanvasElement>) => void;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
 // Transform handle rendering functions
 function renderTransformHandles(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number) {
   const bounds = shape.getBounds();
-  const handleSize = 8 / zoom;
-  const rotateHandleDistance = 30 / zoom;
+  const handleSize = Math.max(12 / zoom, 8); // Larger minimum size for touch
+  const rotateHandleDistance = 40 / zoom;
   
   ctx.save();
   
@@ -47,62 +44,90 @@ function renderTransformHandles(ctx: CanvasRenderingContext2D, shape: Shape, zoo
   ctx.rotate(shape.transform.rotation * Math.PI / 180);
   ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
   
-  // Corner resize handles
+  // Corner resize handles (for proportional scaling)
   const corners = [
-    { x: bounds.x, y: bounds.y }, // top-left
-    { x: bounds.x + bounds.width, y: bounds.y }, // top-right
-    { x: bounds.x + bounds.width, y: bounds.y + bounds.height }, // bottom-right
-    { x: bounds.x, y: bounds.y + bounds.height } // bottom-left
+    { x: bounds.x, y: bounds.y, type: 'corner', cursor: 'nw-resize' }, // top-left
+    { x: bounds.x + bounds.width, y: bounds.y, type: 'corner', cursor: 'ne-resize' }, // top-right
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height, type: 'corner', cursor: 'se-resize' }, // bottom-right
+    { x: bounds.x, y: bounds.y + bounds.height, type: 'corner', cursor: 'sw-resize' } // bottom-left
   ];
   
-  corners.forEach(corner => {
+  corners.forEach((corner, index) => {
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#2563EB';
-    ctx.lineWidth = 1 / zoom;
+    ctx.lineWidth = 2 / zoom;
     ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
     ctx.strokeRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
+    
+    // Add corner indicator
+    ctx.fillStyle = '#2563EB';
+    ctx.fillRect(corner.x - 2/zoom, corner.y - 2/zoom, 4/zoom, 4/zoom);
   });
   
-  // Edge handles for scaling
+  // Edge handles for non-proportional scaling
   const edges = [
-    { x: bounds.x + bounds.width/2, y: bounds.y }, // top
-    { x: bounds.x + bounds.width, y: bounds.y + bounds.height/2 }, // right
-    { x: bounds.x + bounds.width/2, y: bounds.y + bounds.height }, // bottom
-    { x: bounds.x, y: bounds.y + bounds.height/2 } // left
+    { x: bounds.x + bounds.width/2, y: bounds.y, type: 'edge', direction: 'n' }, // top
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height/2, type: 'edge', direction: 'e' }, // right
+    { x: bounds.x + bounds.width/2, y: bounds.y + bounds.height, type: 'edge', direction: 's' }, // bottom
+    { x: bounds.x, y: bounds.y + bounds.height/2, type: 'edge', direction: 'w' } // left
   ];
   
   edges.forEach(edge => {
     ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#2563EB';
+    ctx.strokeStyle = '#3B82F6';
     ctx.lineWidth = 1 / zoom;
-    ctx.fillRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
-    ctx.strokeRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
+    const edgeHandleSize = handleSize * 0.7;
+    ctx.fillRect(edge.x - edgeHandleSize/2, edge.y - edgeHandleSize/2, edgeHandleSize, edgeHandleSize);
+    ctx.strokeRect(edge.x - edgeHandleSize/2, edge.y - edgeHandleSize/2, edgeHandleSize, edgeHandleSize);
   });
   
-  // Rotation handle
+  // Rotation handle with better visibility
   const rotateHandleX = bounds.x + bounds.width/2;
   const rotateHandleY = bounds.y - rotateHandleDistance;
   
-  ctx.strokeStyle = '#2563EB';
-  ctx.lineWidth = 1 / zoom;
+  // Connection line
+  ctx.strokeStyle = '#10B981';
+  ctx.lineWidth = 2 / zoom;
+  ctx.setLineDash([4 / zoom, 4 / zoom]);
   ctx.beginPath();
   ctx.moveTo(bounds.x + bounds.width/2, bounds.y);
   ctx.lineTo(rotateHandleX, rotateHandleY);
   ctx.stroke();
+  ctx.setLineDash([]);
   
+  // Rotation handle circle (larger for touch)
+  const rotateHandleSize = Math.max(16 / zoom, 12);
   ctx.fillStyle = '#10B981';
   ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2 / zoom;
   ctx.beginPath();
-  ctx.arc(rotateHandleX, rotateHandleY, handleSize/2, 0, Math.PI * 2);
+  ctx.arc(rotateHandleX, rotateHandleY, rotateHandleSize/2, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
+  
+  // Rotation icon
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5 / zoom;
+  ctx.beginPath();
+  ctx.arc(rotateHandleX, rotateHandleY, rotateHandleSize/3, 0, Math.PI * 1.5);
+  ctx.stroke();
+  
+  // Arrow tip
+  const arrowSize = 3 / zoom;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(rotateHandleX + rotateHandleSize/3, rotateHandleY);
+  ctx.lineTo(rotateHandleX + rotateHandleSize/3 - arrowSize, rotateHandleY - arrowSize);
+  ctx.lineTo(rotateHandleX + rotateHandleSize/3 - arrowSize, rotateHandleY + arrowSize);
+  ctx.closePath();
+  ctx.fill();
   
   ctx.restore();
 }
 
 function renderGroupTransformHandles(ctx: CanvasRenderingContext2D, group: ShapeGroupClass, zoom: number) {
   const bounds = group.getBounds();
-  const handleSize = 10 / zoom;
+  const handleSize = Math.max(12 / zoom, 8);
   
   // Group handles are purple
   ctx.fillStyle = '#ffffff';
@@ -123,6 +148,79 @@ function renderGroupTransformHandles(ctx: CanvasRenderingContext2D, group: Shape
   });
 }
 
+// Helper functions for transform handle detection
+export function getTransformHandleAt(shape: Shape, worldX: number, worldY: number, zoom: number): { type: string; index?: number } | null {
+  const bounds = shape.getBounds();
+  const handleSize = Math.max(12 / zoom, 8);
+  const rotateHandleDistance = 40 / zoom;
+  
+  // Transform world coordinates to shape-local coordinates
+  let localX = worldX - shape.transform.x;
+  let localY = worldY - shape.transform.y;
+  
+  // Apply inverse rotation
+  const cos = Math.cos(-shape.transform.rotation * Math.PI / 180);
+  const sin = Math.sin(-shape.transform.rotation * Math.PI / 180);
+  const rotatedX = localX * cos - localY * sin;
+  const rotatedY = localX * sin + localY * cos;
+  
+  // Apply inverse scale
+  localX = rotatedX / shape.transform.scaleX;
+  localY = rotatedY / shape.transform.scaleY;
+  
+  // Check rotation handle first (has priority)
+  const rotateHandleX = bounds.x + bounds.width/2;
+  const rotateHandleY = bounds.y - rotateHandleDistance;
+  const rotateHandleSize = Math.max(16 / zoom, 12);
+  
+  const rotateDistance = Math.sqrt(
+    Math.pow(localX - rotateHandleX, 2) + Math.pow(localY - rotateHandleY, 2)
+  );
+  
+  if (rotateDistance <= rotateHandleSize/2 + 4) {
+    return { type: 'rotate' };
+  }
+  
+  // Check corner handles
+  const corners = [
+    { x: bounds.x, y: bounds.y, index: 0 }, // top-left
+    { x: bounds.x + bounds.width, y: bounds.y, index: 1 }, // top-right
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height, index: 2 }, // bottom-right
+    { x: bounds.x, y: bounds.y + bounds.height, index: 3 } // bottom-left
+  ];
+  
+  for (const corner of corners) {
+    const distance = Math.sqrt(
+      Math.pow(localX - corner.x, 2) + Math.pow(localY - corner.y, 2)
+    );
+    
+    if (distance <= handleSize/2 + 4) {
+      return { type: 'corner', index: corner.index };
+    }
+  }
+  
+  // Check edge handles
+  const edges = [
+    { x: bounds.x + bounds.width/2, y: bounds.y, index: 0, direction: 'n' }, // top
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height/2, index: 1, direction: 'e' }, // right
+    { x: bounds.x + bounds.width/2, y: bounds.y + bounds.height, index: 2, direction: 's' }, // bottom
+    { x: bounds.x, y: bounds.y + bounds.height/2, index: 3, direction: 'w' } // left
+  ];
+  
+  const edgeHandleSize = handleSize * 0.7;
+  for (const edge of edges) {
+    const distance = Math.sqrt(
+      Math.pow(localX - edge.x, 2) + Math.pow(localY - edge.y, 2)
+    );
+    
+    if (distance <= edgeHandleSize/2 + 4) {
+      return { type: 'edge', index: edge.index };
+    }
+  }
+  
+  return null;
+}
+
 export default function Canvas({
   shapes,
   groups,
@@ -135,8 +233,6 @@ export default function Canvas({
   marqueeStart,
   marqueeEnd,
   isMarqueeSelecting,
-  isTouchDevice,
-  isMultiTouch,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -147,7 +243,6 @@ export default function Canvas({
   onZoomIn,
   onZoomOut,
   onResetView,
-  onWheel,
   canvasRef
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
@@ -179,12 +274,11 @@ export default function Canvas({
       ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
 
       // Performance optimization: Only render shapes visible in viewport
-      // Calculate viewport bounds in world coordinates for infinite canvas
       const viewportBounds = {
-        minX: -canvasSettings.panX - rect.width / canvasSettings.zoom,
-        maxX: -canvasSettings.panX + rect.width / canvasSettings.zoom,
-        minY: -canvasSettings.panY - rect.height / canvasSettings.zoom,
-        maxY: -canvasSettings.panY + rect.height / canvasSettings.zoom
+        minX: -canvasSettings.panX - (rect.width / 2) / canvasSettings.zoom,
+        maxX: -canvasSettings.panX + (rect.width / 2) / canvasSettings.zoom,
+        minY: -canvasSettings.panY - (rect.height / 2) / canvasSettings.zoom,
+        maxY: -canvasSettings.panY + (rect.height / 2) / canvasSettings.zoom
       };
 
       // Render visible groups first (they contain shapes)
@@ -223,42 +317,17 @@ export default function Canvas({
         });
       }
 
-      // Render transform handles for selected shapes on non-touch devices
+      // Render transform handles for selected shapes in shape mode
       if (editMode === 'shapes') {
         shapes.forEach(shape => {
           if (shape.selected) {
-            shape.renderTransformHandles(ctx, canvasSettings.zoom, isTouchDevice);
+            renderTransformHandles(ctx, shape, canvasSettings.zoom);
           }
         });
         
         groups.forEach(group => {
           if (group.selected) {
-            // For groups, render handles around the group bounds
-            const bounds = group.getBounds();
-            const handleSize = 8 / canvasSettings.zoom;
-            const handleOffset = handleSize / 2;
-            
-            if (!isTouchDevice) {
-              ctx.save();
-              ctx.fillStyle = '#8B5CF6';
-              ctx.strokeStyle = '#FFFFFF';
-              ctx.lineWidth = 1 / canvasSettings.zoom;
-              
-              // Corner handles for group
-              const corners = [
-                { x: bounds.x - handleOffset, y: bounds.y - handleOffset },
-                { x: bounds.x + bounds.width - handleOffset, y: bounds.y - handleOffset },
-                { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height - handleOffset },
-                { x: bounds.x - handleOffset, y: bounds.y + bounds.height - handleOffset }
-              ];
-              
-              corners.forEach(corner => {
-                ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
-                ctx.strokeRect(corner.x, corner.y, handleSize, handleSize);
-              });
-              
-              ctx.restore();
-            }
+            renderGroupTransformHandles(ctx, group, canvasSettings.zoom);
           }
         });
       }
@@ -283,35 +352,6 @@ export default function Canvas({
         ctx.setLineDash([]);
       }
 
-      // Show multi-touch gesture indicator on touch devices
-      if (isTouchDevice && isMultiTouch && selectedCount > 0) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 2;
-        ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'center';
-        
-        const centerX = rect.width / 2;
-        const centerY = 40;
-        
-        // Background pill
-        const text = 'Pinch to scale • Rotate with two fingers';
-        const textWidth = ctx.measureText(text).width;
-        const pillWidth = textWidth + 24;
-        const pillHeight = 32;
-        
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
-        ctx.fillRect(centerX - pillWidth / 2, centerY - pillHeight / 2, pillWidth, pillHeight);
-        ctx.strokeRect(centerX - pillWidth / 2, centerY - pillHeight / 2, pillWidth, pillHeight);
-        
-        // Text
-        ctx.fillStyle = '#3B82F6';
-        ctx.fillText(text, centerX, centerY + 4);
-        
-        ctx.restore();
-      }
-
       // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(render);
     };
@@ -325,7 +365,7 @@ export default function Canvas({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, isTouchDevice]);
+  }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments]);
 
   // Handle window resize
   useEffect(() => {
@@ -412,7 +452,7 @@ export default function Canvas({
       </div>
       
       {/* Canvas */}
-      <div className="flex-1 relative bg-slate-900">
+      <div className="flex-1 relative overflow-hidden bg-slate-900">
         <canvas
           ref={canvasRef}
           className="shape-canvas absolute inset-0 w-full h-full cursor-crosshair"
@@ -422,7 +462,6 @@ export default function Canvas({
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          onWheel={onWheel}
         />
         
         {/* Canvas Overlay Messages */}

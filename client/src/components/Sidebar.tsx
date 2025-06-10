@@ -760,88 +760,118 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Fill Properties */}
-            <div className="space-y-3">
-              <Label className="text-xs text-slate-400 font-medium">Fill</Label>
+            {/* Fill Properties - Hide for line types */}
+            {firstSelectedShape.type !== 'line' && (
+              <div className="space-y-3">
+                <Label className="text-xs text-slate-400 font-medium">Fill</Label>
 
-              {/* Fill Type Toggle */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={!firstSelectedShape.properties.gradient ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
-                  className={`h-7 px-3 text-xs ${
-                    !firstSelectedShape.properties.gradient 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                  }`}
-                >
-                  Color
-                </Button>
-                <Button
-                  variant={firstSelectedShape.properties.gradient ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => updateShapeProperty(shape => {
-                    if (!shape.properties.gradient) {
-                      shape.properties.gradient = {
-                        type: 'linear',
-                        stops: [
-                          { offset: 0, color: shape.properties.fillColor },
-                          { offset: 1, color: 'hsl(200, 50%, 50%)' }
-                        ]
-                      };
-                    }
-                  })}
-                  className={`h-7 px-3 text-xs ${
-                    firstSelectedShape.properties.gradient 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                  }`}
-                >
-                  Gradient
-                </Button>
-              </div>
-
-              {!firstSelectedShape.properties.gradient ? (
-                /* Solid Color Fill */
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Color:</Label>
-                    <Input
-                      type="color"
-                      value={hslToHex(firstSelectedShape.properties.fillColor)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.fillColor = hexToHsl(e.target.value);
-                      })}
-                      className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
-                    <Slider
-                      value={[firstSelectedShape.properties.fillOpacity]}
-                      onValueChange={([value]) => updateShapeProperty(shape => {
-                        shape.properties.fillOpacity = value;
-                      })}
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                      })}
-                      min={0}
-                      max={100}
-                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">%</span>
-                  </div>
+                {/* Fill Enable/None Toggle */}
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant={firstSelectedShape.properties.fillColor === 'none' ? "outline" : "default"}
+                    size="sm"
+                    onClick={() => updateShapeProperty(shape => {
+                      if (shape.properties.fillColor === 'none') {
+                        shape.properties.fillColor = 'hsl(200, 50%, 50%)';
+                      } else {
+                        shape.properties.fillColor = 'none';
+                        shape.properties.gradient = undefined;
+                      }
+                    })}
+                    className={`h-7 px-3 text-xs ${
+                      firstSelectedShape.properties.fillColor === 'none'
+                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {firstSelectedShape.properties.fillColor === 'none' ? 'None' : 'Fill'}
+                  </Button>
                 </div>
-              ) : (
+
+                {/* Fill Type Toggle - Only show if fill is enabled */}
+                {firstSelectedShape.properties.fillColor !== 'none' && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={!firstSelectedShape.properties.gradient ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
+                      className={`h-7 px-3 text-xs ${
+                        !firstSelectedShape.properties.gradient 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                      }`}
+                    >
+                      Color
+                    </Button>
+                    <Button
+                      variant={firstSelectedShape.properties.gradient ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateShapeProperty(shape => {
+                        if (!shape.properties.gradient) {
+                          shape.properties.gradient = {
+                            type: 'linear',
+                            stops: [
+                              { offset: 0, color: shape.properties.fillColor },
+                              { offset: 1, color: 'hsl(200, 50%, 50%)' }
+                            ]
+                          };
+                        }
+                      })}
+                      className={`h-7 px-3 text-xs ${
+                        firstSelectedShape.properties.gradient 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                      }`}
+                    >
+                      Gradient
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+              {firstSelectedShape.properties.fillColor !== 'none' && (
+                <>
+                  {!firstSelectedShape.properties.gradient ? (
+                    /* Solid Color Fill */
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-xs text-slate-400 w-12">Color:</Label>
+                        <Input
+                          type="color"
+                          value={hslToHex(firstSelectedShape.properties.fillColor)}
+                          onChange={(e) => updateShapeProperty(shape => {
+                            shape.properties.fillColor = hexToHsl(e.target.value);
+                          })}
+                          className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                        <Slider
+                          value={[firstSelectedShape.properties.fillOpacity]}
+                          onValueChange={([value]) => updateShapeProperty(shape => {
+                            shape.properties.fillOpacity = value;
+                          })}
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                          onChange={(e) => updateShapeProperty(shape => {
+                            shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                          })}
+                          min={0}
+                          max={100}
+                          className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                        />
+                        <span className="text-xs text-slate-400">%</span>
+                      </div>
+                    </div>
+                  ) : (
                 /* Gradient Fill */
                 <div className="space-y-3">
                   {/* Gradient Type */}
@@ -936,74 +966,121 @@ export default function Sidebar({
                     <span className="text-xs text-slate-400">%</span>
                   </div>
                 </div>
+                  )}
+                </>
               )}
-            </div>
+            )}
+
+            {/* Open/Close Toggle for Lines and Curves */}
+            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400 font-medium">Path</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={firstSelectedShape.closed || false}
+                    onCheckedChange={(checked) => updateShapeProperty(shape => {
+                      shape.closed = checked;
+                    })}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="text-xs text-slate-300">
+                    {firstSelectedShape.closed ? 'Closed Path' : 'Open Path'}
+                  </Label>
+                </div>
+              </div>
+            )}
 
             {/* Stroke Properties */}
             <div className="space-y-3">
               <Label className="text-xs text-slate-400 font-medium">Stroke</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-12">Color:</Label>
-                  <Input
-                    type="color"
-                    value={hslToHex(firstSelectedShape.properties.strokeColor)}
-                    onChange={(e) => updateShapeProperty(shape => {
-                      shape.properties.strokeColor = hexToHsl(e.target.value);
-                    })}
-                    className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-12">Width:</Label>
-                  <Slider
-                    value={[firstSelectedShape.properties.strokeWidth]}
-                    onValueChange={([value]) => updateShapeProperty(shape => {
-                      shape.properties.strokeWidth = value;
-                    })}
-                    min={0}
-                    max={20}
-                    step={0.1}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
-                    onChange={(e) => updateShapeProperty(shape => {
-                      shape.properties.strokeWidth = Math.max(0, parseFloat(e.target.value) || 0);
-                    })}
-                    min={0}
-                    max={20}
-                    step={0.1}
-                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                  <span className="text-xs text-slate-400">px</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
-                  <Slider
-                    value={[firstSelectedShape.properties.strokeOpacity]}
-                    onValueChange={([value]) => updateShapeProperty(shape => {
-                      shape.properties.strokeOpacity = value;
-                    })}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
-                    onChange={(e) => updateShapeProperty(shape => {
-                      shape.properties.strokeOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                    })}
-                    min={0}
-                    max={100}
-                    className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                  <span className="text-xs text-slate-400">%</span>
-                </div>
+
+              {/* Stroke Enable/None Toggle */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={firstSelectedShape.properties.strokeColor === 'none' ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => updateShapeProperty(shape => {
+                    if (shape.properties.strokeColor === 'none') {
+                      shape.properties.strokeColor = 'hsl(200, 50%, 50%)';
+                    } else {
+                      shape.properties.strokeColor = 'none';
+                    }
+                  })}
+                  className={`h-7 px-3 text-xs ${
+                    firstSelectedShape.properties.strokeColor === 'none'
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {firstSelectedShape.properties.strokeColor === 'none' ? 'None' : 'Stroke'}
+                </Button>
               </div>
+
+              {/* Stroke Properties - Only show if stroke is enabled */}
+              {firstSelectedShape.properties.strokeColor !== 'none' && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Color:</Label>
+                    <Input
+                      type="color"
+                      value={hslToHex(firstSelectedShape.properties.strokeColor)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.strokeColor = hexToHsl(e.target.value);
+                      })}
+                      className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Width:</Label>
+                    <Slider
+                      value={[firstSelectedShape.properties.strokeWidth]}
+                      onValueChange={([value]) => updateShapeProperty(shape => {
+                        shape.properties.strokeWidth = value;
+                      })}
+                      min={0}
+                      max={20}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.strokeWidth = Math.max(0, parseFloat(e.target.value) || 0);
+                      })}
+                      min={0}
+                      max={20}
+                      step={0.1}
+                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">px</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                    <Slider
+                      value={[firstSelectedShape.properties.strokeOpacity]}
+                      onValueChange={([value]) => updateShapeProperty(shape => {
+                        shape.properties.strokeOpacity = value;
+                      })}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
+                      onChange={(e) => updateShapeProperty(shape => {
+                        shape.properties.strokeOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                      })}
+                      min={0}
+                      max={100}
+                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                    />
+                    <span className="text-xs text-slate-400">%</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Points Management for Editable Shapes */}
