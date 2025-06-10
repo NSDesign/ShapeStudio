@@ -138,8 +138,12 @@ export const useShapeEditor = () => {
       return;
     }
 
-    // Check individual shapes
-    const clickedShape = shapes.find(shape => shape.containsPoint(x, y));
+    // Check individual shapes - find topmost (highest z-index) shape at point
+    const shapesAtPoint = shapes.filter(shape => shape.containsPoint(x, y));
+    const clickedShape = shapesAtPoint.length > 0 ? 
+      shapesAtPoint.reduce((topmost, current) => 
+        current.properties.zIndex > topmost.properties.zIndex ? current : topmost
+      ) : undefined;
     
     if (!multiSelect) {
       selectedShapes.forEach(shape => shape.selected = false);
@@ -615,7 +619,8 @@ export const useShapeEditor = () => {
         }
         break;
       default:
-        clickedOnShape = shapes.some(shape => shape.containsPoint(x, y));
+        const shapesAtMousePoint = shapes.filter(shape => shape.containsPoint(x, y));
+        clickedOnShape = shapesAtMousePoint.length > 0;
         if (clickedOnShape) {
           selectShapeAtPoint(x, y, e.shiftKey);
         }
@@ -821,7 +826,8 @@ export const useShapeEditor = () => {
         });
         break;
       default:
-        touchedShape = shapes.some(shape => shape.containsPoint(x, y));
+        const shapesAtTouchPoint = shapes.filter(shape => shape.containsPoint(x, y));
+        touchedShape = shapesAtTouchPoint.length > 0;
         break;
     }
     
@@ -878,7 +884,13 @@ export const useShapeEditor = () => {
         const newScale = Math.max(0.1, Math.min(5, gesture.initialScale * scaleFactor));
         
         // Calculate rotation from angle change (rotate with two fingers)
-        const rotationDelta = currentAngle - gesture.initialAngle;
+        // Handle angle wrapping to prevent jumps at -π/π boundary
+        let rotationDelta = currentAngle - gesture.initialAngle;
+        if (rotationDelta > Math.PI) {
+          rotationDelta -= 2 * Math.PI;
+        } else if (rotationDelta < -Math.PI) {
+          rotationDelta += 2 * Math.PI;
+        }
         const newRotation = gesture.initialRotation + rotationDelta;
         
 
