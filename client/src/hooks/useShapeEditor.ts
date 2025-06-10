@@ -36,14 +36,15 @@ export const useShapeEditor = () => {
   
   // Multi-touch gesture state
   const [isMultiTouch, setIsMultiTouch] = useState(false);
-  const [initialTouchDistance, setInitialTouchDistance] = useState<number>(0);
-  const [initialTouchAngle, setInitialTouchAngle] = useState<number>(0);
-  const [initialScale, setInitialScale] = useState<number>(1);
-  const [initialRotation, setInitialRotation] = useState<number>(0);
-  const [gestureCenter, setGestureCenter] = useState<{ x: number; y: number } | null>(null);
   
-  // Use ref to track gesture state immediately
-  const gestureActiveRef = useRef(false);
+  // Use refs for immediate access to gesture data
+  const gestureDataRef = useRef({
+    isActive: false,
+    initialDistance: 0,
+    initialAngle: 0,
+    initialScale: 1,
+    initialRotation: 0
+  });
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -731,21 +732,19 @@ export const useShapeEditor = () => {
       const touch2 = e.touches[1];
       
       // Initialize gesture if not started
-      if (!gestureActiveRef.current) {
+      if (!gestureDataRef.current.isActive) {
         const distance = getTouchDistance(touch1, touch2);
         const angle = getTouchAngle(touch1, touch2);
         
-        gestureActiveRef.current = true;
-        setIsMultiTouch(true);
-        setInitialTouchDistance(distance);
-        setInitialTouchAngle(angle);
-        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
+        gestureDataRef.current = {
+          isActive: true,
+          initialDistance: distance,
+          initialAngle: angle,
+          initialScale: selectedShapes[0].transform.scaleX,
+          initialRotation: selectedShapes[0].transform.rotation
+        };
         
-        // Store initial transform values for selected shapes
-        if (selectedShapes.length > 0) {
-          setInitialScale(selectedShapes[0].transform.scaleX);
-          setInitialRotation(selectedShapes[0].transform.rotation);
-        }
+        setIsMultiTouch(true);
         
         console.log('=== GESTURE INITIALIZED IN MOVE ===', { distance, angle });
         return;
@@ -754,23 +753,25 @@ export const useShapeEditor = () => {
       const currentDistance = getTouchDistance(touch1, touch2);
       const currentAngle = getTouchAngle(touch1, touch2);
       
+      const gesture = gestureDataRef.current;
+      
       console.log('=== GESTURE PROCESSING ===', { 
         currentDistance, 
         currentAngle, 
-        initialTouchDistance, 
-        initialTouchAngle,
-        gestureActive: gestureActiveRef.current 
+        initialDistance: gesture.initialDistance, 
+        initialAngle: gesture.initialAngle,
+        gestureActive: gesture.isActive 
       });
       
       // Only proceed if we have valid initial values
-      if (initialTouchDistance > 0) {
+      if (gesture.initialDistance > 0) {
         // Calculate scale factor from distance change (pinch to scale)
-        const scaleFactor = currentDistance / initialTouchDistance;
-        const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
+        const scaleFactor = currentDistance / gesture.initialDistance;
+        const newScale = Math.max(0.1, Math.min(5, gesture.initialScale * scaleFactor));
         
         // Calculate rotation from angle change (rotate with two fingers)
-        const rotationDelta = currentAngle - initialTouchAngle;
-        const newRotation = initialRotation + rotationDelta;
+        const rotationDelta = currentAngle - gesture.initialAngle;
+        const newRotation = gesture.initialRotation + rotationDelta;
         
         console.log('=== APPLYING GESTURE ===', { 
           scaleFactor, 
@@ -798,7 +799,7 @@ export const useShapeEditor = () => {
         setShapes(prev => [...prev]);
         setGroups(prev => [...prev]);
       } else {
-        console.log('=== GESTURE SKIPPED ===', 'Invalid initial distance:', initialTouchDistance);
+        console.log('=== GESTURE SKIPPED ===', 'Invalid initial distance:', gesture.initialDistance);
       }
       
       return;
@@ -882,13 +883,14 @@ export const useShapeEditor = () => {
     
     // Reset multi-touch state when touches end
     if (e.touches.length < 2) {
-      gestureActiveRef.current = false;
+      gestureDataRef.current = {
+        isActive: false,
+        initialDistance: 0,
+        initialAngle: 0,
+        initialScale: 1,
+        initialRotation: 0
+      };
       setIsMultiTouch(false);
-      setInitialTouchDistance(0);
-      setInitialTouchAngle(0);
-      setInitialScale(1);
-      setInitialRotation(0);
-      setGestureCenter(null);
       console.log('=== GESTURE ENDED ===');
     }
     
