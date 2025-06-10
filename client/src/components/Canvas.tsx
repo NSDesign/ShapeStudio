@@ -19,9 +19,11 @@ interface CanvasProps {
   marqueeEnd: { x: number; y: number } | null;
   isMarqueeSelecting: boolean;
   isTouchDevice: boolean;
+  isMultiTouch: boolean;
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onWheel: (e: React.WheelEvent<HTMLCanvasElement>) => void;
   onTouchStart: (e: React.TouchEvent<HTMLCanvasElement>) => void;
   onTouchMove: (e: React.TouchEvent<HTMLCanvasElement>) => void;
   onTouchEnd: (e: React.TouchEvent<HTMLCanvasElement>) => void;

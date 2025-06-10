@@ -23,7 +23,6 @@ import {
   Move, 
   RotateCw, 
   Scale, 
-  Flip, 
   FlipHorizontal, 
   FlipVertical, 
   Trash2, 
@@ -212,7 +211,7 @@ export default function Sidebar({
           {/* Flip Controls */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-300 flex items-center">
-              <Flip className="w-3 h-3 mr-1" />
+              <FlipHorizontal className="w-3 h-3 mr-1" />
               Flip
             </Label>
             <div className="grid grid-cols-2 gap-2">
