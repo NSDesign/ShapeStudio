@@ -639,11 +639,14 @@ export default function Sidebar({
       return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
     };
 
+  const TransformToolsContent = () => {
+    const firstSelectedShape = selectedShapes[0];
+
     const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
-    const updated = [...selectedShapes];
-    updated.forEach(updater);
-    onShapeUpdate();
-  }, [selectedShapes, onShapeUpdate]);
+      const updated = [...selectedShapes];
+      updated.forEach(updater);
+      onShapeUpdate?.();
+    }, [selectedShapes, onShapeUpdate]);
 
   // Helper function to get minimum points for each shape type
   const getMinPointsForShape = (shapeType: string): number => {
@@ -715,41 +718,56 @@ export default function Sidebar({
     }
   };
 
-    const addGradientStop = () => {
-      if (!firstSelectedShape?.properties.gradient) return;
-      const newStop = {
-        offset: 0.5,
-        color: 'hsl(200, 50%, 50%)'
-      };
-      updateShapeProperty(shape => {
-        if (shape.properties.gradient) {
-          shape.properties.gradient.stops.push(newStop);
-          shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
-        }
-      });
+  const addGradientStop = () => {
+    if (!firstSelectedShape?.properties.gradient) return;
+    const newStop = {
+      offset: 0.5,
+      color: 'hsl(200, 50%, 50%)'
     };
+    updateShapeProperty(shape => {
+      if (shape.properties.gradient) {
+        shape.properties.gradient.stops.push(newStop);
+        shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
+      }
+    });
+  };
 
-    const removeGradientStop = (index: number) => {
-      if (!firstSelectedShape?.properties.gradient || firstSelectedShape.properties.gradient.stops.length <= 2) return;
-      updateShapeProperty(shape => {
-        if (shape.properties.gradient && shape.properties.gradient.stops.length > 2) {
-          shape.properties.gradient.stops.splice(index, 1);
-        }
-      });
-    };
+  const removeGradientStop = (index: number) => {
+    if (!firstSelectedShape?.properties.gradient || firstSelectedShape.properties.gradient.stops.length <= 2) return;
+    updateShapeProperty(shape => {
+      if (shape.properties.gradient && shape.properties.gradient.stops.length > 2) {
+        shape.properties.gradient.stops.splice(index, 1);
+      }
+    });
+  };
 
-    const updateGradientStop = (index: number, field: 'offset' | 'color', value: number | string) => {
-      updateShapeProperty(shape => {
-        if (shape.properties.gradient && shape.properties.gradient.stops[index]) {
-          if (field === 'offset') {
-            shape.properties.gradient.stops[index].offset = Math.max(0, Math.min(1, value as number));
-          } else {
-            shape.properties.gradient.stops[index].color = value as string;
-          }
-          shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
+  const updateGradientStop = (index: number, field: 'offset' | 'color', value: number | string) => {
+    updateShapeProperty(shape => {
+      if (shape.properties.gradient && shape.properties.gradient.stops[index]) {
+        if (field === 'offset') {
+          shape.properties.gradient.stops[index].offset = Math.max(0, Math.min(1, value as number));
+        } else {
+          shape.properties.gradient.stops[index].color = value as string;
         }
+        shape.properties.gradient.stops.sort((a, b) => a.offset - b.offset);
+      }
+    });
+  };
+
+  const ShapePropertiesPanel = ({ selectedShapes, selectedGroups, selectedCount }: {
+    selectedShapes: Shape[];
+    selectedGroups: ShapeGroupClass[];
+    selectedCount: number;
+  }) => {
+    const firstSelectedShape = selectedShapes[0];
+
+    const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
+      selectedShapes.forEach(updater);
+      selectedGroups.forEach(group => {
+        group.shapes.forEach(updater);
       });
-    };
+      onShapeUpdate?.();
+    }, [selectedShapes, selectedGroups]);
 
     return (
       <div className="space-y-3 border-t border-slate-600 pt-3 max-h-96 overflow-y-auto">
@@ -1596,7 +1614,21 @@ export default function Sidebar({
         </div>
       </div>
     );
-  }
+  };
+
+  const TransformToolsContent = () => (
+    <div className="space-y-4">
+      {selectedCount > 0 ? (
+        <div className="text-sm text-slate-400">
+          Transform {selectedCount} selected shape{selectedCount !== 1 ? 's' : ''}
+        </div>
+      ) : (
+        <div className="text-sm text-slate-400">
+          Select shapes to transform them
+        </div>
+      )}
+    </div>
+  );
 
   const CompositionContent = () => (
     <div className="space-y-3">
