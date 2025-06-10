@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { CanvasSettings } from '../lib/shapeTypes';
+import { CanvasSettings, Artboard } from '../lib/shapeTypes';
 import ExportDialog from './ExportDialog';
 
 interface CanvasProps {
   shapes: Shape[];
   groups: ShapeGroupClass[];
   canvasSettings: CanvasSettings;
+  artboards: Artboard[];
+  activeArtboard: string;
   selectedCount: number;
   editMode: 'shapes' | 'points' | 'segments';
   selectedPoints: { shapeId: string; pointIndex: number }[];
@@ -126,6 +128,8 @@ export default function Canvas({
   shapes,
   groups,
   canvasSettings,
+  artboards,
+  activeArtboard,
   selectedCount,
   editMode,
   selectedPoints,
@@ -193,6 +197,21 @@ export default function Canvas({
         if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
             bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
           group.render(ctx);
+        }
+      });
+
+      // Render artboards first
+      artboards.forEach(artboard => {
+        ctx.strokeStyle = artboard.id === activeArtboard ? '#3B82F6' : '#64748B';
+        ctx.lineWidth = 2 / canvasSettings.zoom;
+        ctx.setLineDash([]);
+        ctx.strokeRect(artboard.x, artboard.y, artboard.width, artboard.height);
+        
+        // Artboard label
+        if (canvasSettings.zoom > 0.3) {
+          ctx.fillStyle = artboard.id === activeArtboard ? '#3B82F6' : '#64748B';
+          ctx.font = `${12 / canvasSettings.zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+          ctx.fillText(artboard.name, artboard.x + 5 / canvasSettings.zoom, artboard.y - 5 / canvasSettings.zoom);
         }
       });
 
@@ -345,9 +364,20 @@ export default function Canvas({
       {/* Top Toolbar */}
       <div className="bg-[var(--surface)] border-b border-slate-700 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-slate-400">
-            Canvas: <span className="text-white">{canvasSettings.width}</span> × <span className="text-white">{canvasSettings.height}</span>
-          </span>
+          {(() => {
+            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+            return (
+              <span className="text-sm text-slate-400">
+                {currentArtboard ? (
+                  <>
+                    <span className="text-blue-400">{currentArtboard.name}</span>: <span className="text-white">{currentArtboard.width}</span> × <span className="text-white">{currentArtboard.height}</span>
+                  </>
+                ) : (
+                  <>Canvas: <span className="text-white">Infinite</span></>
+                )}
+              </span>
+            );
+          })()}
           <div className="h-4 w-px bg-slate-600"></div>
           <span className="text-sm text-slate-400">
             Selected: <span className="text-white">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}

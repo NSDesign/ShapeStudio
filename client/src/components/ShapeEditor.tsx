@@ -159,6 +159,8 @@ export default function ShapeEditor() {
           shapes={shapes}
           groups={groups}
           canvasSettings={canvasSettings}
+          artboards={artboards}
+          activeArtboard={activeArtboard}
           selectedCount={selectedCount}
           editMode={editMode}
           selectedPoints={selectedPoints}
