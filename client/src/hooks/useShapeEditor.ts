@@ -139,19 +139,7 @@ export const useShapeEditor = () => {
     }
 
     // Check individual shapes
-    console.log('Selection debug:', { x, y, shapesCount: shapes.length });
-    shapes.forEach((shape, i) => {
-      const contains = shape.containsPoint(x, y);
-      console.log(`Shape ${i}:`, { 
-        id: shape.id, 
-        transform: shape.transform, 
-        contains,
-        bounds: shape.getBounds()
-      });
-    });
-    
     const clickedShape = shapes.find(shape => shape.containsPoint(x, y));
-    console.log('Clicked shape:', clickedShape?.id || 'none');
     
     if (!multiSelect) {
       selectedShapes.forEach(shape => shape.selected = false);
@@ -570,9 +558,11 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    // Convert screen coordinates to world coordinates
-    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    // Convert screen coordinates to world coordinates - match canvas transformation
+    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     // Handle middle mouse button for panning
     if (e.button === 1) {
@@ -633,9 +623,7 @@ export const useShapeEditor = () => {
     }
     
     // Start marquee selection if clicking on empty space and not holding shift
-    console.log('Marquee check:', { clickedOnShape, shiftKey: e.shiftKey });
     if (!clickedOnShape && !e.shiftKey) {
-      console.log('Starting marquee selection at:', { x, y });
       setMarqueeStart({ x, y });
       setMarqueeEnd({ x, y });
       setIsMarqueeSelecting(true);
@@ -673,9 +661,11 @@ export const useShapeEditor = () => {
       return;
     }
     
-    // Convert screen coordinates to world coordinates
-    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    // Convert screen coordinates to world coordinates - match canvas transformation
+    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     // Handle marquee selection
     if (isMarqueeSelecting && marqueeStart) {
@@ -805,9 +795,11 @@ export const useShapeEditor = () => {
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    // Convert screen coordinates to world coordinates
-    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    // Convert screen coordinates to world coordinates - match canvas transformation
+    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
@@ -919,8 +911,10 @@ export const useShapeEditor = () => {
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
