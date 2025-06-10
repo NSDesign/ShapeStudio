@@ -620,26 +620,40 @@ export const useShapeEditor = () => {
             current.properties.zIndex > topmost.properties.zIndex ? topmost : current
           );
           
-          // If shift is held and clicking on an already selected shape, don't deselect it
-          // to allow dragging the multi-selection
+          // Preserve multi-selection if:
+          // 1. Shift is held and clicking on a selected shape, OR
+          // 2. Clicking on any selected shape when multiple shapes are selected (for dragging)
+          const isMultiSelectDrag = topShape.selected && selectedShapes.length > 1;
           const allowDeselect = !(e.shiftKey && topShape.selected && selectedShapes.length > 1);
-          selectShapeAtPoint(x, y, e.shiftKey, allowDeselect);
+          
+          // If clicking on a selected shape with multiple selections, don't change selection
+          if (isMultiSelectDrag && !e.shiftKey) {
+            // Just start dragging without changing selection
+          } else {
+            selectShapeAtPoint(x, y, e.shiftKey, allowDeselect);
+          }
         }
         break;
     }
     
-    // Start marquee selection if clicking on empty space and not holding shift
-    if (!clickedOnShape && !e.shiftKey) {
-      setMarqueeStart({ x, y });
-      setMarqueeEnd({ x, y });
-      setIsMarqueeSelecting(true);
-      // Clear existing selection when starting marquee
-      if (editMode === 'shapes') {
-        clearSelection();
-      } else if (editMode === 'points') {
-        setSelectedPoints([]);
-      } else if (editMode === 'segments') {
-        setSelectedSegments([]);
+    // Handle empty space clicks
+    if (!clickedOnShape) {
+      if (e.shiftKey && (selectedShapes.length > 0 || selectedGroups.length > 0)) {
+        // If shift is held and we have selections, allow dragging the selection
+        setIsDragging(true);
+      } else if (!e.shiftKey) {
+        // Start marquee selection if not holding shift
+        setMarqueeStart({ x, y });
+        setMarqueeEnd({ x, y });
+        setIsMarqueeSelecting(true);
+        // Clear existing selection when starting marquee
+        if (editMode === 'shapes') {
+          clearSelection();
+        } else if (editMode === 'points') {
+          setSelectedPoints([]);
+        } else if (editMode === 'segments') {
+          setSelectedSegments([]);
+        }
       }
     } else {
       setIsDragging(true);
