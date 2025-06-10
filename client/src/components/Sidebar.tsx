@@ -760,783 +760,839 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Fill Properties - Hide for line types */}
-            {firstSelectedShape.type !== 'line' && (
-              <div className="space-y-3">
-                <Label className="text-xs text-slate-400 font-medium">Fill</Label>
+            <Accordion type="multiple" defaultValue={["fill", "stroke", "geometry"]} className="w-full">
 
-                {/* Fill Enable/None Toggle */}
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant={firstSelectedShape.properties.fillColor === 'none' ? "outline" : "default"}
-                    size="sm"
-                    onClick={() => updateShapeProperty(shape => {
-                      if (shape.properties.fillColor === 'none') {
-                        shape.properties.fillColor = 'hsl(200, 50%, 50%)';
-                      } else {
-                        shape.properties.fillColor = 'none';
-                        shape.properties.gradient = undefined;
-                      }
-                    })}
-                    className={`h-7 px-3 text-xs ${
-                      firstSelectedShape.properties.fillColor === 'none'
-                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    {firstSelectedShape.properties.fillColor === 'none' ? 'None' : 'Fill'}
-                  </Button>
-                </div>
-
-                {/* Fill Type Toggle - Only show if fill is enabled */}
-                {firstSelectedShape.properties.fillColor !== 'none' && (
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant={!firstSelectedShape.properties.gradient ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
-                      className={`h-7 px-3 text-xs ${
-                        !firstSelectedShape.properties.gradient 
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                      }`}
-                    >
-                      Color
-                    </Button>
-                    <Button
-                      variant={firstSelectedShape.properties.gradient ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => updateShapeProperty(shape => {
-                        if (!shape.properties.gradient) {
-                          shape.properties.gradient = {
-                            type: 'linear',
-                            stops: [
-                              { offset: 0, color: shape.properties.fillColor },
-                              { offset: 1, color: 'hsl(200, 50%, 50%)' }
-                            ]
-                          };
-                        }
-                      })}
-                      className={`h-7 px-3 text-xs ${
-                        firstSelectedShape.properties.gradient 
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                      }`}
-                    >
-                      Gradient
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-
-              {firstSelectedShape.properties.fillColor !== 'none' && (
-                <>
-                  {!firstSelectedShape.properties.gradient ? (
-                    /* Solid Color Fill */
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Label className="text-xs text-slate-400 w-12">Color:</Label>
-                        <Input
-                          type="color"
-                          value={hslToHex(firstSelectedShape.properties.fillColor)}
-                          onChange={(e) => updateShapeProperty(shape => {
-                            shape.properties.fillColor = hexToHsl(e.target.value);
-                          })}
-                          className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
-                        <Slider
-                          value={[firstSelectedShape.properties.fillOpacity]}
-                          onValueChange={([value]) => updateShapeProperty(shape => {
-                            shape.properties.fillOpacity = value;
-                          })}
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          className="flex-1"
-                        />
-                        <Input
-                          type="number"
-                          value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
-                          onChange={(e) => updateShapeProperty(shape => {
-                            shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                          })}
-                          min={0}
-                          max={100}
-                          className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                        />
-                        <span className="text-xs text-slate-400">%</span>
-                      </div>
+              {/* Fill Properties Accordion - Hide for line types */}
+              {firstSelectedShape.type !== 'line' && (
+                <AccordionItem value="fill" className="border-b border-slate-600">
+                  <AccordionTrigger className="py-3 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-blue-300">
+                    <div className="flex items-center space-x-2">
+                      <Palette className="w-3 h-3 text-blue-400" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Fill Properties</span>
+                      <span className={`ml-auto text-xs px-2 py-1 rounded-full text-white ${
+                        firstSelectedShape.properties.fillColor === 'none' ? 'bg-slate-600' : 'bg-blue-600'
+                      }`}>
+                        {firstSelectedShape.properties.fillColor === 'none' ? 'Disabled' : 'Enabled'}
+                      </span>
                     </div>
-                  ) : (
-                /* Gradient Fill */
-                <div className="space-y-3">
-                  {/* Gradient Type */}
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Type:</Label>
-                    <Select
-                      value={firstSelectedShape.properties.gradient.type}
-                      onValueChange={(value: 'linear' | 'radial') => updateShapeProperty(shape => {
-                        if (shape.properties.gradient) {
-                          shape.properties.gradient.type = value;
-                        }
-                      })}
-                    >
-                      <SelectTrigger className="h-6 text-xs bg-slate-800 border-slate-600">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
-                        <SelectItem value="linear">Linear</SelectItem>
-                        <SelectItem value="radial">Radial</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="space-y-3">
+                      {/* Fill Enable/Disable Toggle */}
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant={firstSelectedShape.properties.fillColor === 'none' ? "outline" : "default"}
+                          size="sm"
+                          onClick={() => updateShapeProperty(shape => {
+                            if (shape.properties.fillColor === 'none') {
+                              shape.properties.fillColor = 'hsl(200, 50%, 50%)';
+                            } else {
+                              shape.properties.fillColor = 'none';
+                              shape.properties.gradient = undefined;
+                            }
+                          })}
+                          className={`h-7 px-3 text-xs ${
+                            firstSelectedShape.properties.fillColor === 'none'
+                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {firstSelectedShape.properties.fillColor === 'none' ? 'Enable Fill' : 'Disable Fill'}
+                        </Button>
+                      </div>
 
-                  {/* Gradient Stops */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-slate-400">Gradient Stops</Label>
+                      {/* Fill Properties - Only show if fill is enabled */}
+                      {firstSelectedShape.properties.fillColor !== 'none' && (
+                        <>
+                          {/* Fill Type Toggle */}
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant={!firstSelectedShape.properties.gradient ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateShapeProperty(shape => { shape.properties.gradient = undefined; })}
+                              className={`h-7 px-3 text-xs ${
+                                !firstSelectedShape.properties.gradient 
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                              }`}
+                            >
+                              Solid Color
+                            </Button>
+                            <Button
+                              variant={firstSelectedShape.properties.gradient ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateShapeProperty(shape => {
+                                if (!shape.properties.gradient) {
+                                  shape.properties.gradient = {
+                                    type: 'linear',
+                                    stops: [
+                                      { offset: 0, color: shape.properties.fillColor },
+                                      { offset: 1, color: 'hsl(200, 50%, 50%)' }
+                                    ]
+                                  };
+                                }
+                              })}
+                              className={`h-7 px-3 text-xs ${
+                                firstSelectedShape.properties.gradient 
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                              }`}
+                            >
+                              Gradient
+                            </Button>
+                          </div>
+
+                          {!firstSelectedShape.properties.gradient ? (
+                            /* Solid Color Fill */
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <Label className="text-xs text-slate-400 w-12">Color:</Label>
+                                <Input
+                                  type="color"
+                                  value={hslToHex(firstSelectedShape.properties.fillColor)}
+                                  onChange={(e) => updateShapeProperty(shape => {
+                                    shape.properties.fillColor = hexToHsl(e.target.value);
+                                  })}
+                                  className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                                <Slider
+                                  value={[firstSelectedShape.properties.fillOpacity]}
+                                  onValueChange={([value]) => updateShapeProperty(shape => {
+                                    shape.properties.fillOpacity = value;
+                                  })}
+                                  min={0}
+                                  max={1}
+                                  step={0.01}
+                                  className="flex-1"
+                                />
+                                <Input
+                                  type="number"
+                                  value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                                  onChange={(e) => updateShapeProperty(shape => {
+                                    shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                                  })}
+                                  min={0}
+                                  max={100}
+                                  className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                                />
+                                <span className="text-xs text-slate-400">%</span>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Gradient Fill */
+                            <div className="space-y-3">
+                              {/* Gradient Type */}
+                              <div className="flex items-center space-x-2">
+                                <Label className="text-xs text-slate-400 w-12">Type:</Label>
+                                <Select
+                                  value={firstSelectedShape.properties.gradient.type}
+                                  onValueChange={(value: 'linear' | 'radial') => updateShapeProperty(shape => {
+                                    if (shape.properties.gradient) {
+                                      shape.properties.gradient.type = value;
+                                    }
+                                  })}
+                                >
+                                  <SelectTrigger className="h-6 text-xs bg-slate-800 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600">
+                                    <SelectItem value="linear">Linear</SelectItem>
+                                    <SelectItem value="radial">Radial</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Gradient Stops */}
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-slate-400">Gradient Stops</Label>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={addGradientStop}
+                                    className="h-5 px-2 text-xs bg-slate-700 hover:bg-slate-600"
+                                  >
+                                    + Add
+                                  </Button>
+                                </div>
+
+                                {firstSelectedShape.properties.gradient.stops.map((stop, index) => (
+                                  <div key={index} className="flex items-center space-x-2 p-2 bg-slate-800/50 rounded">
+                                    <Input
+                                      type="color"
+                                      value={hslToHex(stop.color)}
+                                      onChange={(e) => updateGradientStop(index, 'color', hexToHsl(e.target.value))}
+                                      className="h-6 w-12 p-0 border-slate-600"
+                                    />
+                                    <Input
+                                      type="number"
+                                      value={Math.round(stop.offset * 100)}
+                                      onChange={(e) => updateGradientStop(index, 'offset', (parseInt(e.target.value) || 0) / 100)}
+                                      min={0}
+                                      max={100}
+                                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                                    />
+                                    <span className="text-xs text-slate-400">%</span>
+                                    {firstSelectedShape.properties.gradient && firstSelectedShape.properties.gradient.stops.length > 2 && (
+                                      <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => removeGradientStop(index)}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        ×
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Fill Opacity for gradients */}
+                              <div className="flex items-center space-x-2">
+                                <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                                <Slider
+                                  value={[firstSelectedShape.properties.fillOpacity]}
+                                  onValueChange={([value]) => updateShapeProperty(shape => {
+                                    shape.properties.fillOpacity = value;
+                                  })}
+                                  min={0}
+                                  max={1}
+                                  step={0.01}
+                                  className="flex-1"
+                                />
+                                <Input
+                                  type="number"
+                                  value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
+                                  onChange={(e) => updateShapeProperty(shape => {
+                                    shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                                  })}
+                                  min={0}
+                                  max={100}
+                                  className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                                />
+                                <span className="text-xs text-slate-400">%</span>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Stroke Properties Accordion */}
+              <AccordionItem value="stroke" className="border-b border-slate-600">
+                <AccordionTrigger className="py-3 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-green-300">
+                  <div className="flex items-center space-x-2">
+                    <Minus className="w-3 h-3 text-green-400" />
+                    <span className="text-xs font-medium uppercase tracking-wide">Stroke Properties</span>
+                    <span className={`ml-auto text-xs px-2 py-1 rounded-full text-white ${
+                      firstSelectedShape.properties.strokeColor === 'none' ? 'bg-slate-600' : 'bg-green-600'
+                    }`}>
+                      {firstSelectedShape.properties.strokeColor === 'none' ? 'Disabled' : 'Enabled'}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="space-y-3">
+                    {/* Stroke Enable/Disable Toggle */}
+                    <div className="flex items-center space-x-2">
                       <Button
-                        variant="secondary"
+                        variant={firstSelectedShape.properties.strokeColor === 'none' ? "outline" : "default"}
                         size="sm"
-                        onClick={addGradientStop}
-                        className="h-5 px-2 text-xs bg-slate-700 hover:bg-slate-600"
+                        onClick={() => updateShapeProperty(shape => {
+                          if (shape.properties.strokeColor === 'none') {
+                            shape.properties.strokeColor = 'hsl(200, 50%, 50%)';
+                          } else {
+                            shape.properties.strokeColor = 'none';
+                          }
+                        })}
+                        className={`h-7 px-3 text-xs ${
+                          firstSelectedShape.properties.strokeColor === 'none'
+                            ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
                       >
-                        + Add
+                        {firstSelectedShape.properties.strokeColor === 'none' ? 'Enable Stroke' : 'Disable Stroke'}
                       </Button>
                     </div>
 
-                    {firstSelectedShape.properties.gradient.stops.map((stop, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-2 bg-slate-800/50 rounded">
-                        <Input
-                          type="color"
-                          value={hslToHex(stop.color)}
-                          onChange={(e) => updateGradientStop(index, 'color', hexToHsl(e.target.value))}
-                          className="h-6 w-12 p-0 border-slate-600"
-                        />
-                        <Input
-                          type="number"
-                          value={Math.round(stop.offset * 100)}
-                          onChange={(e) => updateGradientStop(index, 'offset', (parseInt(e.target.value) || 0) / 100)}
-                          min={0}
-                          max={100}
-                          className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                        />
-                        <span className="text-xs text-slate-400">%</span>
-                        {firstSelectedShape.properties.gradient && firstSelectedShape.properties.gradient.stops.length > 2 && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeGradientStop(index)}
-                            className="h-6 w-6 p-0"
-                          >
-                            ×
-                          </Button>
-                        )}
+                    {/* Stroke Properties - Only show if stroke is enabled */}
+                    {firstSelectedShape.properties.strokeColor !== 'none' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-xs text-slate-400 w-12">Color:</Label>
+                          <Input
+                            type="color"
+                            value={hslToHex(firstSelectedShape.properties.strokeColor)}
+                            onChange={(e) => updateShapeProperty(shape => {
+                              shape.properties.strokeColor = hexToHsl(e.target.value);
+                            })}
+                            className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-xs text-slate-400 w-12">Width:</Label>
+                          <Slider
+                            value={[firstSelectedShape.properties.strokeWidth]}
+                            onValueChange={([value]) => updateShapeProperty(shape => {
+                              shape.properties.strokeWidth = value;
+                            })}
+                            min={0}
+                            max={20}
+                            step={0.1}
+                            className="flex-1"
+                          />
+                          <Input
+                            type="number"
+                            value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
+                            onChange={(e) => updateShapeProperty(shape => {
+                              shape.properties.strokeWidth = Math.max(0, parseFloat(e.target.value) || 0);
+                            })}
+                            min={0}
+                            max={20}
+                            step={0.1}
+                            className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                          <span className="text-xs text-slate-400">px</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
+                          <Slider
+                            value={[firstSelectedShape.properties.strokeOpacity]}
+                            onValueChange={([value]) => updateShapeProperty(shape => {
+                              shape.properties.strokeOpacity = value;
+                            })}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            className="flex-1"
+                          />
+                          <Input
+                            type="number"
+                            value={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
+                            onChange={(e) => updateShapeProperty(shape => {
+                              shape.properties.strokeOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                            })}
+                            min={0}
+                            max={100}
+                            className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                          <span className="text-xs text-slate-400">%</span>
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
+                </AccordionContent>
+              </AccordionItem>
 
-                  {/* Fill Opacity for gradients */}
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
-                    <Slider
-                      value={[firstSelectedShape.properties.fillOpacity]}
-                      onValueChange={([value]) => updateShapeProperty(shape => {
-                        shape.properties.fillOpacity = value;
-                      })}
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.properties.fillOpacity * 100)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.fillOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                      })}
-                      min={0}
-                      max={100}
-                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">%</span>
-                  </div>
-                </div>
-                  )}
-                </>
+              {/* Path Properties Accordion - For lines and curves */}
+              {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
+                <AccordionItem value="path" className="border-b border-slate-600">
+                  <AccordionTrigger className="py-3 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-purple-300">
+                    <div className="flex items-center space-x-2">
+                      <Spline className="w-3 h-3 text-purple-400" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Path Properties</span>
+                      <span className={`ml-auto text-xs px-2 py-1 rounded-full text-white ${
+                        firstSelectedShape.closed ? 'bg-purple-600' : 'bg-slate-600'
+                      }`}>
+                        {firstSelectedShape.closed ? 'Closed' : 'Open'}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={firstSelectedShape.closed || false}
+                          onCheckedChange={(checked) => updateShapeProperty(shape => {
+                            shape.closed = checked;
+                          })}
+                          className="data-[state=checked]:bg-purple-600"
+                        />
+                        <Label className="text-xs text-slate-300">
+                          {firstSelectedShape.closed ? 'Closed Path' : 'Open Path'}
+                        </Label>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
-            )}
 
-            {/* Open/Close Toggle for Lines and Curves */}
-            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic') && (
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400 font-medium">Path</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={firstSelectedShape.closed || false}
-                    onCheckedChange={(checked) => updateShapeProperty(shape => {
-                      shape.closed = checked;
-                    })}
-                    className="data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="text-xs text-slate-300">
-                    {firstSelectedShape.closed ? 'Closed Path' : 'Open Path'}
-                  </Label>
+              {/* Geometry Properties Accordion */}
+              <AccordionItem value="geometry" className="border-b-0">
+                <AccordionTrigger className="py-3 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-orange-300">
+                  <div className="flex items-center space-x-2">
+                    <Shapes className="w-3 h-3 text-orange-400" />
+                    <span className="text-xs font-medium uppercase tracking-wide">Geometry Properties</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="space-y-4">
+
+                    {/* Points Management for Editable Shapes */}
+                    {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic' || firstSelectedShape.type === 'blob') && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-slate-400">Points ({firstSelectedShape.points?.length || 0})</Label>
+                          <div className="flex space-x-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                updateShapeProperty(shape => {
+                                  if (shape.points && shape.points.length > getMinPointsForShape(shape.type)) {
+                                    // Remove last point
+                                    shape.points.pop();
+                                  }
+                                });
+                              }}
+                              disabled={!firstSelectedShape.points || firstSelectedShape.points.length <= getMinPointsForShape(firstSelectedShape.type)}
+                              className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
+                            >
+                              <span className="text-xs">−</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                updateShapeProperty(shape => {
+                                  if (shape.points && shape.points.length < 20) {
+                                    // Add new point by interpolating between existing points
+                                    addPointToShape(shape);
+                                  }
+                                });
+                              }}
+                              disabled={!firstSelectedShape.points || firstSelectedShape.points.length >= 20}
+                              className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
+                            >
+                              <span className="text-xs">+</span>
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="max-h-32 overflow-y-auto space-y-2">
+                          {firstSelectedShape.points?.map((point, index) => (
+                            <div key={index} className="flex items-center space-x-2 text-xs">
+                              <span className="text-slate-400 w-4">{index}</span>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-slate-400 w-2">X:</span>
+                                <Input
+                                  type="number"
+                                  value={Math.round(point.x * 10) / 10}
+                                  onChange={(e) => {
+                                    const newX = parseFloat(e.target.value) || 0;
+                                    updateShapeProperty(shape => {
+                                      if (shape.points && shape.points[index]) {
+                                        shape.points[index].x = newX;
+                                      }
+                                    });
+                                  }}
+                                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
+                                  step={0.1}
+                                />
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-slate-400 w-2">Y:</span>
+                                <Input
+                                  type="number"
+                                  value={Math.round(point.y * 10) / 10}
+                                  onChange={(e) => {
+                                    const newY = parseFloat(e.target.value) || 0;
+                                    updateShapeProperty(shape => {
+                                      if (shape.points && shape.points[index]) {
+                                        shape.points[index].y = newY;
+                                      }
+                                    });
+                                  }}
+                                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
+                                  step={0.1}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Shape-specific Properties */}
+                    {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">Sides</Label>
+                        <div className="flex items-center space-x-2">
+                          <Slider
+                            value={[firstSelectedShape.sides || 6]}
+                            onValueChange={([value]) => {
+                              updateShapeProperty(shape => {
+                                if (shape.type === 'polygon' || shape.type === 'star') {
+                                  shape.sides = value;
+                                  // Regenerate points when sides change
+                                  if (shape.type === 'polygon') {
+                                    regeneratePolygonPoints(shape);
+                                  } else if (shape.type === 'star') {
+                                    regenerateStarPoints(shape);
+                                  }
+                                }
+                              });
+                            }}
+                            min={3}
+                            max={20}
+                            step={1}
+                            className="flex-1"
+                          />
+                          <Input
+                            type="number"
+                            value={firstSelectedShape.sides || 6}
+                            onChange={(e) => {
+                              const newSides = Math.max(3, Math.min(20, parseInt(e.target.value) || 6));
+                              updateShapeProperty(shape => {
+                                if (shape.type === 'polygon' || shape.type === 'star') {
+                                  shape.sides = newSides;
+                                  // Regenerate points when sides change
+                                  if (shape.type === 'polygon') {
+                                    regeneratePolygonPoints(shape);
+                                  } else if (shape.type === 'star') {
+                                    regenerateStarPoints(shape);
+                                  }
+                                }
+                              });
+                            }}
+                            min={3}
+                            max={20}
+                            className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                          <span className="text-xs text-slate-400">sides</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {firstSelectedShape.type === 'circle' && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">Radius</Label>
+                        <div className="flex items-center space-x-2">
+                          <Slider
+                            value={[firstSelectedShape.radius || 50]}
+                            onValueChange={([value]) => {
+                              updateShapeProperty(shape => {
+                                if (shape.type === 'circle') {
+                                  shape.radius = value;
+                                }
+                              });
+                            }}
+                            min={1}
+                            max={200}
+                            step={1}
+                            className="flex-1"
+                          />
+                          <Input
+                            type="number"
+                            value={Math.round(firstSelectedShape.radius || 0)}
+                            onChange={(e) => {
+                              const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                              updateShapeProperty(shape => {
+                                if (shape.type === 'circle') {
+                                  shape.radius = newRadius;
+                                }
+                              });
+                            }}
+                            min={1}
+                            className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                          />
+                          <span className="text-xs text-slate-400">px</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {firstSelectedShape.type === 'ring' && (
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Outer Radius</Label>
+                          <div className="flex items-center space-x-2">
+                            <Slider
+                              value={[firstSelectedShape.radius || 50]}
+                              onValueChange={([value]) => {
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'ring') {
+                                    shape.radius = value;
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    if (shape.innerRadius && shape.innerRadius >= value) {
+                                      shape.innerRadius = value * 0.5;
+                                    }
+                                  }
+                                });
+                              }}
+                              min={1}
+                              max={200}
+                              step={1}
+                              className="flex-1"
+                            />
+                            <Input
+                              type="number"
+                              value={Math.round(firstSelectedShape.radius || 0)}
+                              onChange={(e) => {
+                                const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'ring') {
+                                    shape.radius = newRadius;
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                                      shape.innerRadius = newRadius * 0.5;
+                                    }
+                                  }
+                                });
+                              }}
+                              min={1}
+                              className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                            />
+                            <span className="text-xs text-slate-400">px</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Inner Radius</Label>
+                          <div className="flex items-center space-x-2">
+                            <Slider
+                              value={[firstSelectedShape.innerRadius || 25]}
+                              onValueChange={([value]) => {
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'ring') {
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    const maxInner = (shape.radius || 50) - 1;
+                                    shape.innerRadius = Math.min(value, maxInner);
+                                  }
+                                });
+                              }}
+                              min={0}
+                              max={(firstSelectedShape.radius || 50) - 1}
+                              step={1}
+                              className="flex-1"
+                            />
+                            <Input
+                              type="number"
+                              value={Math.round(firstSelectedShape.innerRadius || 0)}
+                              onChange={(e) => {
+                                const newInnerRadius = Math.max(0, parseFloat(e.target.value) || 0);
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'ring') {
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    const maxInner = (shape.radius || 50) - 1;
+                                    shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                                  }
+                                });
+                              }}
+                              min={0}
+                              max={(firstSelectedShape.radius || 50) - 1}
+                              className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                            />
+                            <span className="text-xs text-slate-400">px</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {firstSelectedShape.type === 'star' && (
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Outer Radius</Label>
+                          <div className="flex items-center space-x-2">
+                            <Slider
+                              value={[firstSelectedShape.radius || 50]}
+                              onValueChange={([value]) => {
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'star') {
+                                    shape.radius = value;
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    if (shape.innerRadius && shape.innerRadius >= value) {
+                                      shape.innerRadius = value * 0.5;
+                                    }
+                                  }
+                                });
+                              }}
+                              min={1}
+                              max={200}
+                              step={1}
+                              className="flex-1"
+                            />
+                            <Input
+                              type="number"
+                              value={Math.round(firstSelectedShape.radius || 0)}
+                              onChange={(e) => {
+                                const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'star') {
+                                    shape.radius = newRadius;
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    if (shape.innerRadius && shape.innerRadius >= newRadius) {
+                                      shape.innerRadius = newRadius * 0.5;
+                                    }
+                                  }
+                                });
+                              }}
+                              min={1}
+                              className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                            />
+                            <span className="text-xs text-slate-400">px</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Inner Radius</Label>
+                          <div className="flex items-center space-x-2">
+                            <Slider
+                              value={[firstSelectedShape.innerRadius || 25]}
+                              onValueChange={([value]) => {
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'star') {
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    const maxInner = (shape.radius || 50) - 1;
+                                    shape.innerRadius = Math.min(value, maxInner);
+                                  }
+                                });
+                              }}
+                              min={1}
+                              max={(firstSelectedShape.radius || 50) - 1}
+                              step={1}
+                              className="flex-1"
+                            />
+                            <Input
+                              type="number"
+                              value={Math.round(firstSelectedShape.innerRadius || 0)}
+                              onChange={(e) => {
+                                const newInnerRadius = Math.max(1, parseFloat(e.target.value) || 0);
+                                updateShapeProperty(shape => {
+                                  if (shape.type === 'star') {
+                                    // Ensure inner radius doesn't exceed outer radius
+                                    const maxInner = (shape.radius || 50) - 1;
+                                    shape.innerRadius = Math.min(newInnerRadius, maxInner);
+                                  }
+                                });
+                              }}
+                              min={1}
+                              max={(firstSelectedShape.radius || 50) - 1}
+                              className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                            />
+                            <span className="text-xs text-slate-400">px</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dimensions for rectangles and ellipses */}
+                    {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
+                      <div className="space-y-3">
+                        <Label className="text-xs text-slate-400">Dimensions</Label>
+                        <div className="space-y-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Width</Label>
+                            <div className="flex items-center space-x-2">
+                              <Slider
+                                value={[firstSelectedShape.width || 100]}
+                                onValueChange={([value]) => {
+                                  updateShapeProperty(shape => {
+                                    if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                                      shape.width = value;
+                                      if (shape.type === 'square') {
+                                        shape.height = value;
+                                      }
+                                    }
+                                  });
+                                }}
+                                min={1}
+                                max={400}
+                                step={1}
+                                className="flex-1"
+                              />
+                              <Input
+                                type="number"
+                                value={Math.round(firstSelectedShape.width || 0)}
+                                onChange={(e) => {
+                                  const newWidth = Math.max(1, parseFloat(e.target.value) || 0);
+                                  updateShapeProperty(shape => {
+                                    if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
+                                      shape.width = newWidth;
+                                      if (shape.type === 'square') {
+                                        shape.height = newWidth;
+                                      }
+                                    }
+                                  });
+                                }}
+                                min={1}
+                                className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                              />
+                              <span className="text-xs text-slate-400">px</span>
+                            </div>
+                          </div>
+                          {firstSelectedShape.type !== 'square' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Height</Label>
+                              <div className="flex items-center space-x-2">
+                                <Slider
+                                  value={[firstSelectedShape.height || 100]}
+                                  onValueChange={([value]) => {
+                                    updateShapeProperty(shape => {
+                                      if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                                        shape.height = value;
+                                      }
+                                    });
+                                  }}
+                                  min={1}
+                                  max={400}
+                                  step={1}
+                                  className="flex-1"
+                                />
+                                <Input
+                                  type="number"
+                                  value={Math.round(firstSelectedShape.height || 0)}
+                                  onChange={(e) => {
+                                    const newHeight = Math.max(1, parseFloat(e.target.value) || 0);
+                                    updateShapeProperty(shape => {
+                                      if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                                        shape.height = newHeight;
+                                      }
+                                    });
+                                  }}
+                                  min={1}
+                                  className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
+                                />
+                                <span className="text-xs text-slate-400">px</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/*              {/* Shape Type and ID Info */}
+              <div className="border-t border-slate-600 pt-2 mt-2">
+                <div className="text-xs text-slate-400 space-y-1">
+                  <div>Type: <span className="text-slate-300">{firstSelectedShape.type}</span></div>
+                  <div>ID: <span className="text-slate-300 font-mono">{firstSelectedShape.id.slice(-8)}</span></div>
+                  <div>Position: <span className="text-slate-300">
+                    ({Math.round(firstSelectedShape.transform.x)}, {Math.round(firstSelectedShape.transform.y)})
+                  </span></div>
                 </div>
               </div>
-            )}
 
-            {/* Stroke Properties */}
-            <div className="space-y-3">
-              <Label className="text-xs text-slate-400 font-medium">Stroke</Label>
-
-              {/* Stroke Enable/None Toggle */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={firstSelectedShape.properties.strokeColor === 'none' ? "outline" : "default"}
+              {/* Delete Button */}
+              <div className="mt-4 pt-3 border-t border-slate-600">
+                <Button 
+                  onClick={onDeleteSelected}
+                  variant="destructive"
                   size="sm"
-                  onClick={() => updateShapeProperty(shape => {
-                    if (shape.properties.strokeColor === 'none') {
-                      shape.properties.strokeColor = 'hsl(200, 50%, 50%)';
-                    } else {
-                      shape.properties.strokeColor = 'none';
-                    }
-                  })}
-                  className={`h-7 px-3 text-xs ${
-                    firstSelectedShape.properties.strokeColor === 'none'
-                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {firstSelectedShape.properties.strokeColor === 'none' ? 'None' : 'Stroke'}
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Selected
                 </Button>
               </div>
-
-              {/* Stroke Properties - Only show if stroke is enabled */}
-              {firstSelectedShape.properties.strokeColor !== 'none' && (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Color:</Label>
-                    <Input
-                      type="color"
-                      value={hslToHex(firstSelectedShape.properties.strokeColor)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.strokeColor = hexToHsl(e.target.value);
-                      })}
-                      className="h-8 w-16 p-1 border-slate-600 bg-slate-800"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Width:</Label>
-                    <Slider
-                      value={[firstSelectedShape.properties.strokeWidth]}
-                      onValueChange={([value]) => updateShapeProperty(shape => {
-                        shape.properties.strokeWidth = value;
-                      })}
-                      min={0}
-                      max={20}
-                      step={0.1}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={firstSelectedShape.properties.strokeWidth.toFixed(1)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.strokeWidth = Math.max(0, parseFloat(e.target.value) || 0);
-                      })}
-                      min={0}
-                      max={20}
-                      step={0.1}
-                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">px</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400 w-12">Opacity:</Label>
-                    <Slider
-                      value={[firstSelectedShape.properties.strokeOpacity]}
-                      onValueChange={([value]) => updateShapeProperty(shape => {
-                        shape.properties.strokeOpacity = value;
-                      })}
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.properties.strokeOpacity * 100)}
-                      onChange={(e) => updateShapeProperty(shape => {
-                        shape.properties.strokeOpacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                      })}
-                      min={0}
-                      max={100}
-                      className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Points Management for Editable Shapes */}
-            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic' || firstSelectedShape.type === 'blob') && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-slate-400">Points ({firstSelectedShape.points?.length || 0})</Label>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        updateShapeProperty(shape => {
-                          if (shape.points && shape.points.length > getMinPointsForShape(shape.type)) {
-                            // Remove last point
-                            shape.points.pop();
-                          }
-                        });
-                      }}
-                      disabled={!firstSelectedShape.points || firstSelectedShape.points.length <= getMinPointsForShape(firstSelectedShape.type)}
-                      className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
-                    >
-                      <span className="text-xs">−</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        updateShapeProperty(shape => {
-                          if (shape.points && shape.points.length < 20) {
-                            // Add new point by interpolating between existing points
-                            addPointToShape(shape);
-                          }
-                        });
-                      }}
-                      disabled={!firstSelectedShape.points || firstSelectedShape.points.length >= 20}
-                      className="h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700 border-slate-600"
-                    >
-                      <span className="text-xs">+</span>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="max-h-32 overflow-y-auto space-y-2">
-                  {firstSelectedShape.points?.map((point, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-xs">
-                      <span className="text-slate-400 w-4">{index}</span>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-slate-400 w-2">X:</span>
-                        <Input
-                          type="number"
-                          value={Math.round(point.x * 10) / 10}
-                          onChange={(e) => {
-                            const newX = parseFloat(e.target.value) || 0;
-                            updateShapeProperty(shape => {
-                              if (shape.points && shape.points[index]) {
-                                shape.points[index].x = newX;
-                              }
-                            });
-                          }}
-                          className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
-                          step={0.1}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-slate-400 w-2">Y:</span>
-                        <Input
-                          type="number"
-                          value={Math.round(point.y * 10) / 10}
-                          onChange={(e) => {
-                            const newY = parseFloat(e.target.value) || 0;
-                            updateShapeProperty(shape => {
-                              if (shape.points && shape.points[index]) {
-                                shape.points[index].y = newY;
-                              }
-                            });
-                          }}
-                          className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white p-1"
-                          step={0.1}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Shape-specific Properties */}
-            {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Sides</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[firstSelectedShape.sides || 6]}
-                    onValueChange={([value]) => {
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'polygon' || shape.type === 'star') {
-                          shape.sides = value;
-                          // Regenerate points when sides change
-                          if (shape.type === 'polygon') {
-                            regeneratePolygonPoints(shape);
-                          } else if (shape.type === 'star') {
-                            regenerateStarPoints(shape);
-                          }
-                        }
-                      });
-                    }}
-                    min={3}
-                    max={20}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    value={firstSelectedShape.sides || 6}
-                    onChange={(e) => {
-                      const newSides = Math.max(3, Math.min(20, parseInt(e.target.value) || 6));
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'polygon' || shape.type === 'star') {
-                          shape.sides = newSides;
-                          // Regenerate points when sides change
-                          if (shape.type === 'polygon') {
-                            regeneratePolygonPoints(shape);
-                          } else if (shape.type === 'star') {
-                            regenerateStarPoints(shape);
-                          }
-                        }
-                      });
-                    }}
-                    min={3}
-                    max={20}
-                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                  <span className="text-xs text-slate-400">sides</span>
-                </div>
-              </div>
-            )}
-
-            {firstSelectedShape.type === 'circle' && (
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Radius</Label>
-                <div className="flex items-center space-x-2">
-                  <Slider
-                    value={[firstSelectedShape.radius || 50]}
-                    onValueChange={([value]) => {
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'circle') {
-                          shape.radius = value;
-                        }
-                      });
-                    }}
-                    min={1}
-                    max={200}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    value={Math.round(firstSelectedShape.radius || 0)}
-                    onChange={(e) => {
-                      const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                      updateShapeProperty(shape => {
-                        if (shape.type === 'circle') {
-                          shape.radius = newRadius;
-                        }
-                      });
-                    }}
-                    min={1}
-                    className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                  <span className="text-xs text-slate-400">px</span>
-                </div>
-              </div>
-            )}
-
-            {firstSelectedShape.type === 'ring' && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Outer Radius</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[firstSelectedShape.radius || 50]}
-                      onValueChange={([value]) => {
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'ring') {
-                            shape.radius = value;
-                            // Ensure inner radius doesn't exceed outer radius
-                            if (shape.innerRadius && shape.innerRadius >= value) {
-                              shape.innerRadius = value * 0.5;
-                            }
-                          }
-                        });
-                      }}
-                      min={1}
-                      max={200}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.radius || 0)}
-                      onChange={(e) => {
-                        const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'ring') {
-                            shape.radius = newRadius;
-                            // Ensure inner radius doesn't exceed outer radius
-                            if (shape.innerRadius && shape.innerRadius >= newRadius) {
-                              shape.innerRadius = newRadius * 0.5;
-                            }
-                          }
-                        });
-                      }}
-                      min={1}
-                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">px</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Inner Radius</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[firstSelectedShape.innerRadius || 25]}
-                      onValueChange={([value]) => {
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'ring') {
-                            // Ensure inner radius doesn't exceed outer radius
-                            const maxInner = (shape.radius || 50) - 1;
-                            shape.innerRadius = Math.min(value, maxInner);
-                          }
-                        });
-                      }}
-                      min={0}
-                      max={(firstSelectedShape.radius || 50) - 1}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.innerRadius || 0)}
-                      onChange={(e) => {
-                        const newInnerRadius = Math.max(0, parseFloat(e.target.value) || 0);
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'ring') {
-                            // Ensure inner radius doesn't exceed outer radius
-                            const maxInner = (shape.radius || 50) - 1;
-                            shape.innerRadius = Math.min(newInnerRadius, maxInner);
-                          }
-                        });
-                      }}
-                      min={0}
-                      max={(firstSelectedShape.radius || 50) - 1}
-                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">px</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {firstSelectedShape.type === 'star' && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Outer Radius</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[firstSelectedShape.radius || 50]}
-                      onValueChange={([value]) => {
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'star') {
-                            shape.radius = value;
-                            // Ensure inner radius doesn't exceed outer radius
-                            if (shape.innerRadius && shape.innerRadius >= value) {
-                              shape.innerRadius = value * 0.5;
-                            }
-                          }
-                        });
-                      }}
-                      min={1}
-                      max={200}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.radius || 0)}
-                      onChange={(e) => {
-                        const newRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'star') {
-                            shape.radius = newRadius;
-                            // Ensure inner radius doesn't exceed outer radius
-                            if (shape.innerRadius && shape.innerRadius >= newRadius) {
-                              shape.innerRadius = newRadius * 0.5;
-                            }
-                          }
-                        });
-                      }}
-                      min={1}
-                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">px</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Inner Radius</Label>
-                  <div className="flex items-center space-x-2">
-                    <Slider
-                      value={[firstSelectedShape.innerRadius || 25]}
-                      onValueChange={([value]) => {
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'star') {
-                            // Ensure inner radius doesn't exceed outer radius
-                            const maxInner = (shape.radius || 50) - 1;
-                            shape.innerRadius = Math.min(value, maxInner);
-                          }
-                        });
-                      }}
-                      min={1}
-                      max={(firstSelectedShape.radius || 50) - 1}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={Math.round(firstSelectedShape.innerRadius || 0)}
-                      onChange={(e) => {
-                        const newInnerRadius = Math.max(1, parseFloat(e.target.value) || 0);
-                        updateShapeProperty(shape => {
-                          if (shape.type === 'star') {
-                            // Ensure inner radius doesn't exceed outer radius
-                            const maxInner = (shape.radius || 50) - 1;
-                            shape.innerRadius = Math.min(newInnerRadius, maxInner);
-                          }
-                        });
-                      }}
-                      min={1}
-                      max={(firstSelectedShape.radius || 50) - 1}
-                      className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                    />
-                    <span className="text-xs text-slate-400">px</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Dimensions for rectangles and ellipses */}
-            {(firstSelectedShape.type === 'rectangle' || firstSelectedShape.type === 'square' || firstSelectedShape.type === 'ellipse') && (
-              <div className="space-y-3">
-                <Label className="text-xs text-slate-400">Dimensions</Label>
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-slate-400">Width</Label>
-                    <div className="flex items-center space-x-2">
-                      <Slider
-                        value={[firstSelectedShape.width || 100]}
-                        onValueChange={([value]) => {
-                          updateShapeProperty(shape => {
-                            if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
-                              shape.width = value;
-                              if (shape.type === 'square') {
-                                shape.height = value;
-                              }
-                            }
-                          });
-                        }}
-                        min={1}
-                        max={400}
-                        step={1}
-                        className="flex-1"
-                      />
-                      <Input
-                        type="number"
-                        value={Math.round(firstSelectedShape.width || 0)}
-                        onChange={(e) => {
-                          const newWidth = Math.max(1, parseFloat(e.target.value) || 0);
-                          updateShapeProperty(shape => {
-                            if (shape.type === 'rectangle' || shape.type === 'square' || shape.type === 'ellipse') {
-                              shape.width = newWidth;
-                              if (shape.type === 'square') {
-                                shape.height = newWidth;
-                              }
-                            }
-                          });
-                        }}
-                        min={1}
-                        className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                      />
-                      <span className="text-xs text-slate-400">px</span>
-                    </div>
-                  </div>
-                  {firstSelectedShape.type !== 'square' && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Height</Label>
-                      <div className="flex items-center space-x-2">
-                        <Slider
-                          value={[firstSelectedShape.height || 100]}
-                          onValueChange={([value]) => {
-                            updateShapeProperty(shape => {
-                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
-                                shape.height = value;
-                              }
-                            });
-                          }}
-                          min={1}
-                          max={400}
-                          step={1}
-                          className="flex-1"
-                        />
-                        <Input
-                          type="number"
-                          value={Math.round(firstSelectedShape.height || 0)}
-                          onChange={(e) => {
-                            const newHeight = Math.max(1, parseFloat(e.target.value) || 0);
-                            updateShapeProperty(shape => {
-                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
-                                shape.height = newHeight;
-                              }
-                            });
-                          }}
-                          min={1}
-                          className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-white"
-                        />
-                        <span className="text-xs text-slate-400">px</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Shape Type and ID Info */}
-            <div className="border-t border-slate-600 pt-2 mt-2">
-              <div className="text-xs text-slate-400 space-y-1">
-                <div>Type: <span className="text-slate-300">{firstSelectedShape.type}</span></div>
-                <div>ID: <span className="text-slate-300 font-mono">{firstSelectedShape.id.slice(-8)}</span></div>
-                <div>Position: <span className="text-slate-300">
-                  ({Math.round(firstSelectedShape.transform.x)}, {Math.round(firstSelectedShape.transform.y)})
-                </span></div>
-              </div>
-            </div>
-
-            {/* Delete Button */}
-            <div className="mt-4 pt-3 border-t border-slate-600">
-              <Button 
-                onClick={onDeleteSelected}
-                variant="destructive"
-                size="sm"
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Selected
-              </Button>
-            </div>
-          </div>
+            
+          
         )}
       </div>
     );
