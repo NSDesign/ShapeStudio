@@ -139,7 +139,19 @@ export const useShapeEditor = () => {
     }
 
     // Check individual shapes
+    console.log('Selection debug:', { x, y, shapesCount: shapes.length });
+    shapes.forEach((shape, i) => {
+      const contains = shape.containsPoint(x, y);
+      console.log(`Shape ${i}:`, { 
+        id: shape.id, 
+        transform: shape.transform, 
+        contains,
+        bounds: shape.getBounds()
+      });
+    });
+    
     const clickedShape = shapes.find(shape => shape.containsPoint(x, y));
+    console.log('Clicked shape:', clickedShape?.id || 'none');
     
     if (!multiSelect) {
       selectedShapes.forEach(shape => shape.selected = false);
@@ -621,7 +633,9 @@ export const useShapeEditor = () => {
     }
     
     // Start marquee selection if clicking on empty space and not holding shift
+    console.log('Marquee check:', { clickedOnShape, shiftKey: e.shiftKey });
     if (!clickedOnShape && !e.shiftKey) {
+      console.log('Starting marquee selection at:', { x, y });
       setMarqueeStart({ x, y });
       setMarqueeEnd({ x, y });
       setIsMarqueeSelecting(true);
