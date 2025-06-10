@@ -559,10 +559,8 @@ export const useShapeEditor = () => {
     
     const rect = canvas.getBoundingClientRect();
     // Convert screen coordinates to world coordinates
-    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
-    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
-    const x = screenX - canvasSettings.panX;
-    const y = screenY - canvasSettings.panY;
+    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
+    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
     
     // Handle middle mouse button for panning
     if (e.button === 1) {
@@ -662,10 +660,8 @@ export const useShapeEditor = () => {
     }
     
     // Convert screen coordinates to world coordinates
-    const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
-    const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
-    const x = screenX - canvasSettings.panX;
-    const y = screenY - canvasSettings.panY;
+    const x = (e.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
+    const y = (e.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
     
     // Handle marquee selection
     if (isMarqueeSelecting && marqueeStart) {
@@ -676,11 +672,7 @@ export const useShapeEditor = () => {
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
       
-      console.log('=== MARQUEE SELECTION ===', {
-        start: marqueeStart,
-        end: { x, y },
-        bounds: { minX, maxX, minY, maxY }
-      });
+
       
       if (editMode === 'shapes') {
         // Select shapes within marquee rectangle
@@ -800,10 +792,8 @@ export const useShapeEditor = () => {
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     // Convert screen coordinates to world coordinates
-    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
-    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
-    const x = screenX - canvasSettings.panX;
-    const y = screenY - canvasSettings.panY;
+    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
+    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });
@@ -915,8 +905,8 @@ export const useShapeEditor = () => {
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
-    const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    const x = (touch.clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
+    const y = (touch.clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
     
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
@@ -1013,8 +1003,8 @@ export const useShapeEditor = () => {
       const canvas = canvasRef.current;
       if (canvas) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.changedTouches[0].clientX - rect.left) / canvasSettings.zoom;
-        const y = (e.changedTouches[0].clientY - rect.top) / canvasSettings.zoom;
+        const x = (e.changedTouches[0].clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
+        const y = (e.changedTouches[0].clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
         
         // Long press (>500ms) toggles multi-select mode
         if (touchDuration > 500) {
