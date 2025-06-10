@@ -614,6 +614,17 @@ export const useShapeEditor = () => {
         }
         break;
       default:
+        console.log('=== SELECTION DEBUG ===', { x, y, shapesCount: shapes.length });
+        shapes.forEach((shape, index) => {
+          const contains = shape.containsPoint(x, y);
+          console.log(`Shape ${index}:`, {
+            id: shape.id,
+            transform: shape.transform,
+            contains,
+            bounds: shape.getBounds()
+          });
+        });
+        
         clickedOnShape = shapes.some(shape => shape.containsPoint(x, y));
         if (clickedOnShape) {
           selectShapeAtPoint(x, y, e.shiftKey);
