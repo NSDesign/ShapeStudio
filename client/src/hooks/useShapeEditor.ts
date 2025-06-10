@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard } from '../lib/shapeTypes';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -23,6 +23,20 @@ export const useShapeEditor = () => {
     panX: 0,
     panY: 0
   });
+  
+  // Artboard state
+  const [artboards, setArtboards] = useState<Artboard[]>([
+    {
+      id: 'artboard_1',
+      name: 'Artboard 1',
+      x: -200,  // Centered at origin
+      y: -200,
+      width: 400,
+      height: 400,
+      preset: 'Basic'
+    }
+  ]);
+  const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
@@ -1335,6 +1349,8 @@ export const useShapeEditor = () => {
     enabledShapeTypes,
     scatterSettings,
     canvasSettings,
+    artboards,
+    activeArtboard,
     canvasRef,
     editMode,
     selectedPoints,

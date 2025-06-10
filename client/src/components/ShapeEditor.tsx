@@ -15,6 +15,8 @@ export default function ShapeEditor() {
     enabledShapeTypes,
     scatterSettings,
     canvasSettings,
+    artboards,
+    activeArtboard,
     canvasRef,
     editMode,
     selectedPoints,
