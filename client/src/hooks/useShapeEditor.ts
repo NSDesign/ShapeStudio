@@ -157,20 +157,7 @@ export const useShapeEditor = () => {
         clickedShape.selected = true;
         setSelectedShapes(prev => multiSelect ? [...prev.filter(s => s !== clickedShape), clickedShape] : [clickedShape]);
         
-        // Console log single shape selection for debugging
-        console.log('=== SINGLE SHAPE SELECTED ===');
-        console.log('Shape:', {
-          id: clickedShape.id,
-          type: clickedShape.type,
-          transform: clickedShape.transform,
-          properties: clickedShape.properties,
-          points: clickedShape.points?.length || 0,
-          width: clickedShape.width,
-          height: clickedShape.height,
-          radius: clickedShape.radius,
-          sides: clickedShape.sides
-        });
-        console.log('=== END SINGLE SHAPE DEBUG ===');
+
       }
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
@@ -785,23 +772,8 @@ export const useShapeEditor = () => {
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
       
-      // Console log selected shape properties for debugging
-      console.log('=== SELECTED SHAPES DEBUG ===');
-      console.log('Selected shapes count:', newSelectedShapes.length);
-      newSelectedShapes.forEach((shape, index) => {
-        console.log(`Shape ${index + 1}:`, {
-          id: shape.id,
-          type: shape.type,
-          transform: shape.transform,
-          properties: shape.properties,
-          points: shape.points?.length || 0,
-          width: shape.width,
-          height: shape.height,
-          radius: shape.radius,
-          sides: shape.sides
-        });
-      });
-      console.log('=== END DEBUG ===');
+
+
     }
     
     setIsDragging(false);
@@ -818,7 +790,7 @@ export const useShapeEditor = () => {
     
     // Handle multi-touch gestures for scaling and rotating shapes
     if (e.touches.length === 2 && editMode === 'shapes' && selectedShapes.length > 0) {
-      console.log('=== GESTURE STARTED ===');
+
       return;
     }
     
@@ -892,7 +864,7 @@ export const useShapeEditor = () => {
         
         setIsMultiTouch(true);
         
-        console.log('=== GESTURE INITIALIZED IN MOVE ===', { distance, angle });
+
         return;
       }
       
