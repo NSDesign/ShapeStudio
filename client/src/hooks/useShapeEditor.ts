@@ -732,10 +732,13 @@ export const useShapeEditor = () => {
       
       // Initialize gesture if not started
       if (!gestureActiveRef.current) {
+        const distance = getTouchDistance(touch1, touch2);
+        const angle = getTouchAngle(touch1, touch2);
+        
         gestureActiveRef.current = true;
         setIsMultiTouch(true);
-        setInitialTouchDistance(getTouchDistance(touch1, touch2));
-        setInitialTouchAngle(getTouchAngle(touch1, touch2));
+        setInitialTouchDistance(distance);
+        setInitialTouchAngle(angle);
         setGestureCenter(getTouchCenter(touch1, touch2, canvas));
         
         // Store initial transform values for selected shapes
@@ -744,12 +747,20 @@ export const useShapeEditor = () => {
           setInitialRotation(selectedShapes[0].transform.rotation);
         }
         
-        console.log('=== GESTURE INITIALIZED IN MOVE ===');
+        console.log('=== GESTURE INITIALIZED IN MOVE ===', { distance, angle });
         return;
       }
       
       const currentDistance = getTouchDistance(touch1, touch2);
       const currentAngle = getTouchAngle(touch1, touch2);
+      
+      console.log('=== GESTURE PROCESSING ===', { 
+        currentDistance, 
+        currentAngle, 
+        initialTouchDistance, 
+        initialTouchAngle,
+        gestureActive: gestureActiveRef.current 
+      });
       
       // Only proceed if we have valid initial values
       if (initialTouchDistance > 0) {
@@ -786,6 +797,8 @@ export const useShapeEditor = () => {
         
         setShapes(prev => [...prev]);
         setGroups(prev => [...prev]);
+      } else {
+        console.log('=== GESTURE SKIPPED ===', 'Invalid initial distance:', initialTouchDistance);
       }
       
       return;
