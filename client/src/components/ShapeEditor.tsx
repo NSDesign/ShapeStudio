@@ -7,7 +7,6 @@ import Canvas from './Canvas';
 import ProjectDialog from './ProjectDialog';
 
 export default function ShapeEditor() {
-  console.log("ShapeEditor component rendering");
   const {
     shapes,
     groups,
