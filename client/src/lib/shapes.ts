@@ -489,7 +489,8 @@ export class Shape {
     ctx.scale(this.transform.scaleX, this.transform.scaleY);
     
     const bounds = this.getBounds();
-    const handleSize = 8 / canvasZoom;
+    // Handle size should be constant regardless of shape scale
+    const handleSize = 8 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
     const handleOffset = handleSize / 2;
     
     // Corner handles for scaling
@@ -511,7 +512,7 @@ export class Shape {
     // Draw corner handles (for scaling)
     ctx.fillStyle = '#3B82F6';
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1 / canvasZoom;
+    ctx.lineWidth = 1 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
     
     corners.forEach(corner => {
       ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
@@ -526,7 +527,7 @@ export class Shape {
     });
     
     // Draw rotation handle
-    const rotationHandleDistance = Math.max(bounds.width, bounds.height) / 2 + 20 / canvasZoom;
+    const rotationHandleDistance = Math.max(bounds.width, bounds.height) / 2 + 20 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
     const rotationHandleX = bounds.x + bounds.width / 2 - handleOffset;
     const rotationHandleY = bounds.y - rotationHandleDistance - handleOffset;
     
@@ -538,8 +539,8 @@ export class Shape {
     
     // Draw line connecting rotation handle to shape
     ctx.strokeStyle = '#EF4444';
-    ctx.lineWidth = 1 / canvasZoom;
-    ctx.setLineDash([2 / canvasZoom, 2 / canvasZoom]);
+    ctx.lineWidth = 1 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
+    ctx.setLineDash([2 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY)), 2 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY))]);
     ctx.beginPath();
     ctx.moveTo(bounds.x + bounds.width / 2, bounds.y);
     ctx.lineTo(rotationHandleX + handleOffset, rotationHandleY + handleOffset);
