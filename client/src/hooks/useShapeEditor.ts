@@ -338,8 +338,8 @@ export const useShapeEditor = () => {
     const centerX = (touch1.clientX + touch2.clientX) / 2;
     const centerY = (touch1.clientY + touch2.clientY) / 2;
     return {
-      x: (centerX - rect.left) / canvasSettings.zoom - canvasSettings.panX,
-      y: (centerY - rect.top) / canvasSettings.zoom - canvasSettings.panY
+      x: (centerX - rect.left - rect.width / 2) / canvasSettings.zoom - canvasSettings.panX,
+      y: (centerY - rect.top - rect.height / 2) / canvasSettings.zoom - canvasSettings.panY
     };
   }, [canvasSettings]);
 
@@ -1011,8 +1011,10 @@ export const useShapeEditor = () => {
       const canvas = canvasRef.current;
       if (canvas) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.changedTouches[0].clientX - rect.left) / canvasSettings.zoom - canvasSettings.panX;
-        const y = (e.changedTouches[0].clientY - rect.top) / canvasSettings.zoom - canvasSettings.panY;
+        const screenX = (e.changedTouches[0].clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+        const screenY = (e.changedTouches[0].clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+        const x = screenX - canvasSettings.panX;
+        const y = screenY - canvasSettings.panY;
         
         // Long press (>500ms) toggles multi-select mode
         if (touchDuration > 500) {
