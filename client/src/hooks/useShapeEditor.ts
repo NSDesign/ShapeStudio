@@ -81,7 +81,7 @@ export const useShapeEditor = () => {
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
 
-  // Generate random shapes within current viewport
+  // Generate random shapes within active artboard + 100px buffer
   const generateRandomShapes = useCallback(() => {
     const availableTypes = Array.from(enabledShapeTypes);
     if (availableTypes.length === 0) return;
@@ -89,20 +89,16 @@ export const useShapeEditor = () => {
     const newShapes: Shape[] = [];
     const numShapes = scatterSettings.count;
     
-    // Get canvas element to determine viewport size
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    // Get active artboard bounds
+    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+    if (!currentArtboard) return;
     
-    const rect = canvas.getBoundingClientRect();
-    const viewportWidth = rect.width / canvasSettings.zoom;
-    const viewportHeight = rect.height / canvasSettings.zoom;
-    
-    // Generate shapes in world coordinates within current visible area
-    const margin = 200; // Extra margin around visible area
-    const minX = canvasSettings.panX - viewportWidth/2 - margin;
-    const maxX = canvasSettings.panX + viewportWidth/2 + margin;
-    const minY = canvasSettings.panY - viewportHeight/2 - margin;
-    const maxY = canvasSettings.panY + viewportHeight/2 + margin;
+    // Create bounds with 100px buffer around artboard
+    const buffer = 100;
+    const minX = currentArtboard.x - buffer;
+    const maxX = currentArtboard.x + currentArtboard.width + buffer;
+    const minY = currentArtboard.y - buffer;
+    const maxY = currentArtboard.y + currentArtboard.height + buffer;
     
     for (let i = 0; i < numShapes; i++) {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
@@ -113,10 +109,10 @@ export const useShapeEditor = () => {
     }
     
     setShapes(prev => [...prev, ...newShapes]);
-  }, [enabledShapeTypes, canvasSettings, scatterSettings.count]);
+  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings.count]);
 
   // Select shape at point
-  const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false) => {
+  const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false, allowDeselect: boolean = true) => {
     // Check groups first
     const clickedGroup = groups.find(group => group.containsPoint(x, y));
     if (clickedGroup) {
@@ -127,10 +123,10 @@ export const useShapeEditor = () => {
         setSelectedGroups([clickedGroup]);
         clickedGroup.selected = true;
       } else {
-        if (clickedGroup.selected) {
+        if (clickedGroup.selected && allowDeselect) {
           clickedGroup.selected = false;
           setSelectedGroups(prev => prev.filter(g => g !== clickedGroup));
-        } else {
+        } else if (!clickedGroup.selected) {
           clickedGroup.selected = true;
           setSelectedGroups(prev => [...prev, clickedGroup]);
         }
@@ -153,15 +149,12 @@ export const useShapeEditor = () => {
     }
     
     if (clickedShape) {
-      if (multiSelect && clickedShape.selected) {
+      if (multiSelect && clickedShape.selected && allowDeselect) {
         clickedShape.selected = false;
         setSelectedShapes(prev => prev.filter(s => s !== clickedShape));
-
-      } else {
+      } else if (!clickedShape.selected || !multiSelect) {
         clickedShape.selected = true;
         setSelectedShapes(prev => multiSelect ? [...prev.filter(s => s !== clickedShape), clickedShape] : [clickedShape]);
-        
-
       }
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
@@ -622,7 +615,15 @@ export const useShapeEditor = () => {
         const shapesAtMousePoint = shapes.filter(shape => shape.containsPoint(x, y));
         clickedOnShape = shapesAtMousePoint.length > 0;
         if (clickedOnShape) {
-          selectShapeAtPoint(x, y, e.shiftKey);
+          // Find the topmost shape at the click point
+          const topShape = shapesAtMousePoint.reduce((topmost, current) => 
+            current.properties.zIndex > topmost.properties.zIndex ? topmost : current
+          );
+          
+          // If shift is held and clicking on an already selected shape, don't deselect it
+          // to allow dragging the multi-selection
+          const allowDeselect = !(e.shiftKey && topShape.selected && selectedShapes.length > 1);
+          selectShapeAtPoint(x, y, e.shiftKey, allowDeselect);
         }
         break;
     }
