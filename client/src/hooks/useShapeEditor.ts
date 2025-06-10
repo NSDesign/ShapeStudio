@@ -42,6 +42,9 @@ export const useShapeEditor = () => {
   const [initialRotation, setInitialRotation] = useState<number>(0);
   const [gestureCenter, setGestureCenter] = useState<{ x: number; y: number } | null>(null);
   
+  // Use ref to track gesture state immediately
+  const gestureActiveRef = useRef(false);
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Touch device detection
@@ -674,7 +677,8 @@ export const useShapeEditor = () => {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
-      if (!isMultiTouch) {
+      if (!gestureActiveRef.current) {
+        gestureActiveRef.current = true;
         setIsMultiTouch(true);
         setInitialTouchDistance(getTouchDistance(touch1, touch2));
         setInitialTouchAngle(getTouchAngle(touch1, touch2));
@@ -685,6 +689,8 @@ export const useShapeEditor = () => {
           setInitialScale(selectedShapes[0].transform.scaleX);
           setInitialRotation(selectedShapes[0].transform.rotation);
         }
+        
+        console.log('=== GESTURE STARTED ===');
       }
       
       return;
@@ -738,37 +744,9 @@ export const useShapeEditor = () => {
     e.preventDefault();
     
     // Handle multi-touch gestures for scaling and rotating
-    if (e.touches.length === 2 && selectedShapes.length > 0) {
+    if (e.touches.length === 2 && selectedShapes.length > 0 && gestureActiveRef.current) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      
-      console.log('=== MULTI-TOUCH GESTURE DETECTED ===');
-      console.log('isMultiTouch:', isMultiTouch);
-      console.log('selectedShapes count:', selectedShapes.length);
-      
-      // Initialize gesture if not already started
-      if (!isMultiTouch) {
-        const distance = getTouchDistance(touch1, touch2);
-        const angle = getTouchAngle(touch1, touch2);
-        
-        console.log('Initializing multi-touch:', { distance, angle });
-        
-        setIsMultiTouch(true);
-        setInitialTouchDistance(distance);
-        setInitialTouchAngle(angle);
-        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
-        
-        // Store initial transform values for selected shapes
-        if (selectedShapes.length > 0) {
-          setInitialScale(selectedShapes[0].transform.scaleX);
-          setInitialRotation(selectedShapes[0].transform.rotation);
-          console.log('Initial transform:', { 
-            scale: selectedShapes[0].transform.scaleX, 
-            rotation: selectedShapes[0].transform.rotation 
-          });
-        }
-        return;
-      }
       
       const currentDistance = getTouchDistance(touch1, touch2);
       const currentAngle = getTouchAngle(touch1, touch2);
@@ -783,7 +761,7 @@ export const useShapeEditor = () => {
         const rotationDelta = currentAngle - initialTouchAngle;
         const newRotation = initialRotation + rotationDelta;
         
-        console.log('Gesture transform:', { 
+        console.log('=== APPLYING GESTURE ===', { 
           scaleFactor, 
           newScale, 
           rotationDelta: rotationDelta * (180 / Math.PI), 
@@ -891,12 +869,14 @@ export const useShapeEditor = () => {
     
     // Reset multi-touch state when touches end
     if (e.touches.length < 2) {
+      gestureActiveRef.current = false;
       setIsMultiTouch(false);
       setInitialTouchDistance(0);
       setInitialTouchAngle(0);
       setInitialScale(1);
       setInitialRotation(0);
       setGestureCenter(null);
+      console.log('=== GESTURE ENDED ===');
     }
     
     // Handle marquee selection completion
