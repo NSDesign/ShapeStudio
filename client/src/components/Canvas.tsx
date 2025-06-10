@@ -177,11 +177,12 @@ export default function Canvas({
       ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
 
       // Performance optimization: Only render shapes visible in viewport
+      // Calculate viewport bounds in world coordinates for infinite canvas
       const viewportBounds = {
-        minX: -canvasSettings.panX - (rect.width / 2) / canvasSettings.zoom,
-        maxX: -canvasSettings.panX + (rect.width / 2) / canvasSettings.zoom,
-        minY: -canvasSettings.panY - (rect.height / 2) / canvasSettings.zoom,
-        maxY: -canvasSettings.panY + (rect.height / 2) / canvasSettings.zoom
+        minX: -canvasSettings.panX - rect.width / canvasSettings.zoom,
+        maxX: -canvasSettings.panX + rect.width / canvasSettings.zoom,
+        minY: -canvasSettings.panY - rect.height / canvasSettings.zoom,
+        maxY: -canvasSettings.panY + rect.height / canvasSettings.zoom
       };
 
       // Render visible groups first (they contain shapes)
@@ -409,7 +410,7 @@ export default function Canvas({
       </div>
       
       {/* Canvas */}
-      <div className="flex-1 relative overflow-hidden bg-slate-900">
+      <div className="flex-1 relative bg-slate-900">
         <canvas
           ref={canvasRef}
           className="shape-canvas absolute inset-0 w-full h-full cursor-crosshair"

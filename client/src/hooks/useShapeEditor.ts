@@ -17,8 +17,8 @@ export const useShapeEditor = () => {
     randomness: 0.5
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
-    width: 1200,
-    height: 800,
+    width: 10000,  // Large virtual canvas size for infinite canvas
+    height: 10000,
     zoom: 1,
     panX: 0,
     panY: 0
@@ -464,6 +464,63 @@ export const useShapeEditor = () => {
     setCanvasSettings(prev => ({ ...prev, zoom: 1, panX: 0, panY: 0 }));
   }, []);
 
+  // Keyboard shortcuts for canvas navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const panSpeed = 50;
+      
+      switch (e.code) {
+        case 'ArrowLeft':
+          if (e.altKey || e.metaKey) {
+            e.preventDefault();
+            setCanvasSettings(prev => ({ ...prev, panX: prev.panX + panSpeed }));
+          }
+          break;
+        case 'ArrowRight':
+          if (e.altKey || e.metaKey) {
+            e.preventDefault();
+            setCanvasSettings(prev => ({ ...prev, panX: prev.panX - panSpeed }));
+          }
+          break;
+        case 'ArrowUp':
+          if (e.altKey || e.metaKey) {
+            e.preventDefault();
+            setCanvasSettings(prev => ({ ...prev, panY: prev.panY + panSpeed }));
+          }
+          break;
+        case 'ArrowDown':
+          if (e.altKey || e.metaKey) {
+            e.preventDefault();
+            setCanvasSettings(prev => ({ ...prev, panY: prev.panY - panSpeed }));
+          }
+          break;
+        case 'Equal':
+        case 'NumpadAdd':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            zoomIn();
+          }
+          break;
+        case 'Minus':
+        case 'NumpadSubtract':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            zoomOut();
+          }
+          break;
+        case 'Digit0':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            resetView();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomIn, zoomOut, resetView]);
+
   // Mouse event handlers
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -472,6 +529,20 @@ export const useShapeEditor = () => {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
     const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    
+    // Handle middle mouse button for panning
+    if (e.button === 1) {
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setIsDragging(true);
+      return;
+    }
+    
+    // Handle space key + left click for panning
+    if (e.button === 0 && (e.metaKey || e.ctrlKey)) {
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setIsDragging(true);
+      return;
+    }
     
     setDragStart({ x, y });
     
@@ -540,6 +611,22 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
+    
+    // Handle canvas panning (middle mouse or Cmd/Ctrl+drag)
+    if (isDragging && dragStart && (e.buttons === 4 || (e.buttons === 1 && (e.metaKey || e.ctrlKey)))) {
+      const deltaX = (e.clientX - dragStart.x) / canvasSettings.zoom;
+      const deltaY = (e.clientY - dragStart.y) / canvasSettings.zoom;
+      
+      setCanvasSettings(prev => ({
+        ...prev,
+        panX: prev.panX + deltaX,
+        panY: prev.panY + deltaY
+      }));
+      
+      setDragStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+    
     const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
     const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
     
