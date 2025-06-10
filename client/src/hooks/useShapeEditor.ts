@@ -527,8 +527,11 @@ export const useShapeEditor = () => {
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
-    const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    // Convert screen coordinates to world coordinates
+    const screenX = e.clientX - rect.left - rect.width / 2;
+    const screenY = e.clientY - rect.top - rect.height / 2;
+    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
+    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
     
     // Handle middle mouse button for panning
     if (e.button === 1) {
@@ -627,8 +630,11 @@ export const useShapeEditor = () => {
       return;
     }
     
-    const x = (e.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
-    const y = (e.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    // Convert screen coordinates to world coordinates
+    const screenX = e.clientX - rect.left - rect.width / 2;
+    const screenY = e.clientY - rect.top - rect.height / 2;
+    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
+    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
     
     // Handle marquee selection
     if (isMarqueeSelecting && marqueeStart) {
@@ -771,8 +777,11 @@ export const useShapeEditor = () => {
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const x = (touch.clientX - rect.left - canvasSettings.panX * canvasSettings.zoom) / canvasSettings.zoom;
-    const y = (touch.clientY - rect.top - canvasSettings.panY * canvasSettings.zoom) / canvasSettings.zoom;
+    // Convert screen coordinates to world coordinates
+    const screenX = touch.clientX - rect.left - rect.width / 2;
+    const screenY = touch.clientY - rect.top - rect.height / 2;
+    const x = screenX / canvasSettings.zoom - canvasSettings.panX;
+    const y = screenY / canvasSettings.zoom - canvasSettings.panY;
     
     setTouchStartTime(Date.now());
     setDragStart({ x, y });

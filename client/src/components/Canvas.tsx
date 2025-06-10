@@ -171,18 +171,20 @@ export default function Canvas({
       // Clear canvas
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      // Apply zoom and pan for infinite canvas
+      // Apply transform for infinite canvas
       ctx.save();
-      ctx.translate(canvasSettings.panX * canvasSettings.zoom, canvasSettings.panY * canvasSettings.zoom);
+      ctx.translate(rect.width / 2, rect.height / 2); // Center the canvas
       ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
+      ctx.translate(canvasSettings.panX, canvasSettings.panY);
 
-      // Performance optimization: Only render shapes visible in viewport
-      // Calculate viewport bounds in world coordinates for infinite canvas
+      // Calculate viewport bounds in world coordinates for culling
+      const halfWidth = rect.width / (2 * canvasSettings.zoom);
+      const halfHeight = rect.height / (2 * canvasSettings.zoom);
       const viewportBounds = {
-        minX: -canvasSettings.panX - rect.width / canvasSettings.zoom,
-        maxX: -canvasSettings.panX + rect.width / canvasSettings.zoom,
-        minY: -canvasSettings.panY - rect.height / canvasSettings.zoom,
-        maxY: -canvasSettings.panY + rect.height / canvasSettings.zoom
+        minX: -canvasSettings.panX - halfWidth,
+        maxX: -canvasSettings.panX + halfWidth,
+        minY: -canvasSettings.panY - halfHeight,
+        maxY: -canvasSettings.panY + halfHeight
       };
 
       // Render visible groups first (they contain shapes)
@@ -261,18 +263,16 @@ export default function Canvas({
         });
       }
 
-      ctx.restore();
-
-      // Render marquee selection rectangle
+      // Render marquee selection rectangle (in world coordinates, before ctx.restore())
       if (isMarqueeSelecting && marqueeStart && marqueeEnd) {
-        const minX = Math.min(marqueeStart.x, marqueeEnd.x) * canvasSettings.zoom + canvasSettings.panX * canvasSettings.zoom;
-        const maxX = Math.max(marqueeStart.x, marqueeEnd.x) * canvasSettings.zoom + canvasSettings.panX * canvasSettings.zoom;
-        const minY = Math.min(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
-        const maxY = Math.max(marqueeStart.y, marqueeEnd.y) * canvasSettings.zoom + canvasSettings.panY * canvasSettings.zoom;
+        const minX = Math.min(marqueeStart.x, marqueeEnd.x);
+        const maxX = Math.max(marqueeStart.x, marqueeEnd.x);
+        const minY = Math.min(marqueeStart.y, marqueeEnd.y);
+        const maxY = Math.max(marqueeStart.y, marqueeEnd.y);
         
         ctx.strokeStyle = '#ec4899'; // Pink color
-        ctx.lineWidth = 1;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1 / canvasSettings.zoom;
+        ctx.setLineDash([5 / canvasSettings.zoom, 5 / canvasSettings.zoom]);
         ctx.fillStyle = 'rgba(236, 72, 153, 0.1)'; // Pink fill with transparency
         
         ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
