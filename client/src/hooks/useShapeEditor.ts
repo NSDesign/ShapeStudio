@@ -17,8 +17,8 @@ export const useShapeEditor = () => {
     randomness: 0.5
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
-    width: 10000,  // Large virtual canvas size for infinite canvas
-    height: 10000,
+    width: Number.MAX_SAFE_INTEGER,  // Truly infinite canvas
+    height: Number.MAX_SAFE_INTEGER,
     zoom: 1,
     panX: 0,
     panY: 0
@@ -67,7 +67,7 @@ export const useShapeEditor = () => {
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
 
-  // Generate random shapes
+  // Generate random shapes within current viewport
   const generateRandomShapes = useCallback(() => {
     const availableTypes = Array.from(enabledShapeTypes);
     if (availableTypes.length === 0) return;
@@ -75,21 +75,31 @@ export const useShapeEditor = () => {
     const newShapes: Shape[] = [];
     const numShapes = scatterSettings.count;
     
-    // Generate shapes in the visible viewport area for infinite canvas
-    const viewportWidth = 800;
-    const viewportHeight = 600;
+    // Get canvas element to determine viewport size
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const viewportWidth = rect.width / canvasSettings.zoom;
+    const viewportHeight = rect.height / canvasSettings.zoom;
+    
+    // Generate shapes in world coordinates within current visible area
+    const margin = 200; // Extra margin around visible area
+    const minX = -canvasSettings.panX - viewportWidth/2 - margin;
+    const maxX = -canvasSettings.panX + viewportWidth/2 + margin;
+    const minY = -canvasSettings.panY - viewportHeight/2 - margin;
+    const maxY = -canvasSettings.panY + viewportHeight/2 + margin;
     
     for (let i = 0; i < numShapes; i++) {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-      // Convert viewport coordinates to world coordinates
-      const x = (Math.random() * viewportWidth - canvasSettings.panX) / canvasSettings.zoom;
-      const y = (Math.random() * viewportHeight - canvasSettings.panY) / canvasSettings.zoom;
+      const x = minX + Math.random() * (maxX - minX);
+      const y = minY + Math.random() * (maxY - minY);
       const shape = new Shape(type, x, y);
       newShapes.push(shape);
     }
     
     setShapes(prev => [...prev, ...newShapes]);
-  }, [enabledShapeTypes, canvasSettings]);
+  }, [enabledShapeTypes, canvasSettings, scatterSettings.count]);
 
   // Select shape at point
   const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false) => {
@@ -451,23 +461,43 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedSegments, shapes]);
 
-  // Canvas zoom and pan
+  // Canvas zoom and pan with unlimited zoom range
   const zoomIn = useCallback(() => {
-    setCanvasSettings(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 5) }));
+    setCanvasSettings(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 100) }));
   }, []);
 
   const zoomOut = useCallback(() => {
-    setCanvasSettings(prev => ({ ...prev, zoom: Math.max(prev.zoom / 1.2, 0.1) }));
+    setCanvasSettings(prev => ({ ...prev, zoom: Math.max(prev.zoom / 1.2, 0.001) }));
   }, []);
 
   const resetView = useCallback(() => {
     setCanvasSettings(prev => ({ ...prev, zoom: 1, panX: 0, panY: 0 }));
   }, []);
 
+  // Mouse wheel zoom handler
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    
+    setCanvasSettings(prev => ({
+      ...prev,
+      zoom: Math.max(0.001, Math.min(100, prev.zoom * zoomFactor))
+    }));
+  }, []);
+
+  // Setup wheel event listener
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
+
   // Keyboard shortcuts for canvas navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const panSpeed = 50;
+      const panSpeed = 200 / canvasSettings.zoom; // Adjust speed based on zoom level
       
       switch (e.code) {
         case 'ArrowLeft':
@@ -519,7 +549,7 @@ export const useShapeEditor = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetView]);
+  }, [zoomIn, zoomOut, resetView, canvasSettings.zoom]);
 
   // Mouse event handlers
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
