@@ -1396,6 +1396,12 @@ export const useShapeEditor = () => {
     zoomOut,
     resetView,
     
+    // Artboard Management
+    addArtboard,
+    selectArtboard,
+    deleteArtboard,
+    updateArtboard,
+    
     // Events
     handleMouseDown,
     handleMouseMove,

@@ -57,7 +57,11 @@ export default function ShapeEditor() {
     sendToBack,
     bringForward,
     sendBackward,
-    changeBlendMode
+    changeBlendMode,
+    addArtboard,
+    selectArtboard,
+    deleteArtboard,
+    updateArtboard
   } = useShapeEditor();
 
   // Transform handlers with precise control
@@ -136,6 +140,8 @@ export default function ShapeEditor() {
           canComposeShapes={canComposeShapes}
           selectedShapes={selectedShapes}
           selectedGroups={selectedGroups}
+          artboards={artboards}
+          activeArtboard={activeArtboard}
           onToggleShapeType={toggleShapeType}
           onUpdateScatterSettings={updateScatterSettings}
           onGenerateRandomShapes={generateRandomShapes}
@@ -154,6 +160,10 @@ export default function ShapeEditor() {
           onSendBackward={sendBackward}
           onChangeBlendMode={changeBlendMode}
           onShapeUpdate={forceUpdate}
+          onAddArtboard={addArtboard}
+          onSelectArtboard={selectArtboard}
+          onDeleteArtboard={deleteArtboard}
+          onUpdateArtboard={updateArtboard}
         />
         <Canvas
           shapes={shapes}
