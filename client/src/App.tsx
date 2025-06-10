@@ -6,13 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 function App() {
-  // Temporarily use TestApp to debug the white screen issue
-  const useTestApp = true;
-  
-  if (useTestApp) {
-    return <TestApp />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
