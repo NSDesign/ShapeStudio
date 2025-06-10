@@ -152,7 +152,7 @@ export const useShapeEditor = () => {
       if (multiSelect && clickedShape.selected) {
         clickedShape.selected = false;
         setSelectedShapes(prev => prev.filter(s => s !== clickedShape));
-        console.log('Shape deselected:', clickedShape.id);
+
       } else {
         clickedShape.selected = true;
         setSelectedShapes(prev => multiSelect ? [...prev.filter(s => s !== clickedShape), clickedShape] : [clickedShape]);
@@ -901,13 +901,7 @@ export const useShapeEditor = () => {
       
       const gesture = gestureDataRef.current;
       
-      console.log('=== GESTURE PROCESSING ===', { 
-        currentDistance, 
-        currentAngle, 
-        initialDistance: gesture.initialDistance, 
-        initialAngle: gesture.initialAngle,
-        gestureActive: gesture.isActive 
-      });
+
       
       // Only proceed if we have valid initial values
       if (gesture.initialDistance > 0) {
@@ -919,12 +913,7 @@ export const useShapeEditor = () => {
         const rotationDelta = currentAngle - gesture.initialAngle;
         const newRotation = gesture.initialRotation + rotationDelta;
         
-        console.log('=== APPLYING GESTURE ===', { 
-          scaleFactor, 
-          newScale, 
-          rotationDelta: rotationDelta * (180 / Math.PI), 
-          newRotation: newRotation * (180 / Math.PI) 
-        });
+
         
         // Apply transforms to all selected shapes
         selectedShapes.forEach(shape => {
@@ -944,8 +933,6 @@ export const useShapeEditor = () => {
         
         setShapes(prev => [...prev]);
         setGroups(prev => [...prev]);
-      } else {
-        console.log('=== GESTURE SKIPPED ===', 'Invalid initial distance:', gesture.initialDistance);
       }
       
       return;
@@ -1037,7 +1024,7 @@ export const useShapeEditor = () => {
         initialRotation: 0
       };
       setIsMultiTouch(false);
-      console.log('=== GESTURE ENDED ===');
+
     }
     
     // Handle marquee selection completion
