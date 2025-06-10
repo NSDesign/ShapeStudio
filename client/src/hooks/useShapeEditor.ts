@@ -674,15 +674,17 @@ export const useShapeEditor = () => {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
-      setIsMultiTouch(true);
-      setInitialTouchDistance(getTouchDistance(touch1, touch2));
-      setInitialTouchAngle(getTouchAngle(touch1, touch2));
-      setGestureCenter(getTouchCenter(touch1, touch2, canvas));
-      
-      // Store initial transform values for selected shapes
-      if (selectedShapes.length > 0) {
-        setInitialScale(selectedShapes[0].transform.scaleX);
-        setInitialRotation(selectedShapes[0].transform.rotation);
+      if (!isMultiTouch) {
+        setIsMultiTouch(true);
+        setInitialTouchDistance(getTouchDistance(touch1, touch2));
+        setInitialTouchAngle(getTouchAngle(touch1, touch2));
+        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
+        
+        // Store initial transform values for selected shapes
+        if (selectedShapes.length > 0) {
+          setInitialScale(selectedShapes[0].transform.scaleX);
+          setInitialRotation(selectedShapes[0].transform.rotation);
+        }
       }
       
       return;
@@ -736,29 +738,78 @@ export const useShapeEditor = () => {
     e.preventDefault();
     
     // Handle multi-touch gestures for scaling and rotating
-    if (e.touches.length === 2 && isMultiTouch && selectedShapes.length > 0) {
+    if (e.touches.length === 2 && selectedShapes.length > 0) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
+      
+      console.log('=== MULTI-TOUCH GESTURE DETECTED ===');
+      console.log('isMultiTouch:', isMultiTouch);
+      console.log('selectedShapes count:', selectedShapes.length);
+      
+      // Initialize gesture if not already started
+      if (!isMultiTouch) {
+        const distance = getTouchDistance(touch1, touch2);
+        const angle = getTouchAngle(touch1, touch2);
+        
+        console.log('Initializing multi-touch:', { distance, angle });
+        
+        setIsMultiTouch(true);
+        setInitialTouchDistance(distance);
+        setInitialTouchAngle(angle);
+        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
+        
+        // Store initial transform values for selected shapes
+        if (selectedShapes.length > 0) {
+          setInitialScale(selectedShapes[0].transform.scaleX);
+          setInitialRotation(selectedShapes[0].transform.rotation);
+          console.log('Initial transform:', { 
+            scale: selectedShapes[0].transform.scaleX, 
+            rotation: selectedShapes[0].transform.rotation 
+          });
+        }
+        return;
+      }
       
       const currentDistance = getTouchDistance(touch1, touch2);
       const currentAngle = getTouchAngle(touch1, touch2);
       
-      // Calculate scale factor from distance change
-      const scaleFactor = currentDistance / initialTouchDistance;
-      const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
+      // Only proceed if we have valid initial values
+      if (initialTouchDistance > 0) {
+        // Calculate scale factor from distance change (pinch to scale)
+        const scaleFactor = currentDistance / initialTouchDistance;
+        const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
+        
+        // Calculate rotation from angle change (rotate with two fingers)
+        const rotationDelta = currentAngle - initialTouchAngle;
+        const newRotation = initialRotation + rotationDelta;
+        
+        console.log('Gesture transform:', { 
+          scaleFactor, 
+          newScale, 
+          rotationDelta: rotationDelta * (180 / Math.PI), 
+          newRotation: newRotation * (180 / Math.PI) 
+        });
+        
+        // Apply transforms to all selected shapes
+        selectedShapes.forEach(shape => {
+          shape.transform.scaleX = newScale;
+          shape.transform.scaleY = newScale;
+          shape.transform.rotation = newRotation;
+        });
+        
+        // Also apply to selected groups
+        selectedGroups.forEach(group => {
+          group.shapes.forEach(shape => {
+            shape.transform.scaleX = newScale;
+            shape.transform.scaleY = newScale;
+            shape.transform.rotation = newRotation;
+          });
+        });
+        
+        setShapes(prev => [...prev]);
+        setGroups(prev => [...prev]);
+      }
       
-      // Calculate rotation from angle change
-      const rotationDelta = currentAngle - initialTouchAngle;
-      const newRotation = initialRotation + rotationDelta;
-      
-      // Apply transforms to selected shapes
-      selectedShapes.forEach(shape => {
-        shape.transform.scaleX = newScale;
-        shape.transform.scaleY = newScale;
-        shape.transform.rotation = newRotation;
-      });
-      
-      setShapes(prev => [...prev]);
       return;
     }
     
