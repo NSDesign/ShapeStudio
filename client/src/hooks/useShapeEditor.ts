@@ -675,6 +675,12 @@ export const useShapeEditor = () => {
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
       
+      console.log('=== MARQUEE SELECTION ===', {
+        start: marqueeStart,
+        end: { x, y },
+        bounds: { minX, maxX, minY, maxY }
+      });
+      
       if (editMode === 'shapes') {
         // Select shapes within marquee rectangle
         shapes.forEach(shape => {

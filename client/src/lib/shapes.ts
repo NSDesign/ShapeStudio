@@ -462,6 +462,20 @@ export class Shape {
   private drawSelectionBounds(ctx: CanvasRenderingContext2D): void {
     const bounds = this.getBounds();
     ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+    
+    // Add corner indicators for better visibility
+    const cornerSize = 6;
+    const corners = [
+      [bounds.x, bounds.y],
+      [bounds.x + bounds.width, bounds.y],
+      [bounds.x + bounds.width, bounds.y + bounds.height],
+      [bounds.x, bounds.y + bounds.height]
+    ];
+    
+    ctx.fillStyle = '#2563EB';
+    corners.forEach(([x, y]) => {
+      ctx.fillRect(x - cornerSize/2, y - cornerSize/2, cornerSize, cornerSize);
+    });
   }
 
   renderTransformHandles(ctx: CanvasRenderingContext2D, canvasZoom: number = 1, isTouchDevice: boolean = false): void {
