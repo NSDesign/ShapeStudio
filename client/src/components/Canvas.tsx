@@ -281,6 +281,8 @@ export default function Canvas({
         ctx.setLineDash([]);
       }
 
+      ctx.restore();
+
       // Show multi-touch gesture indicator on touch devices
       if (isTouchDevice && isMultiTouch && selectedCount > 0) {
         ctx.save();
