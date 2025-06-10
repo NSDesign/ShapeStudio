@@ -674,25 +674,7 @@ export const useShapeEditor = () => {
     
     // Handle multi-touch gestures for scaling and rotating shapes
     if (e.touches.length === 2 && editMode === 'shapes' && selectedShapes.length > 0) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      
-      if (!gestureActiveRef.current) {
-        gestureActiveRef.current = true;
-        setIsMultiTouch(true);
-        setInitialTouchDistance(getTouchDistance(touch1, touch2));
-        setInitialTouchAngle(getTouchAngle(touch1, touch2));
-        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
-        
-        // Store initial transform values for selected shapes
-        if (selectedShapes.length > 0) {
-          setInitialScale(selectedShapes[0].transform.scaleX);
-          setInitialRotation(selectedShapes[0].transform.rotation);
-        }
-        
-        console.log('=== GESTURE STARTED ===');
-      }
-      
+      console.log('=== GESTURE STARTED ===');
       return;
     }
     
@@ -744,9 +726,27 @@ export const useShapeEditor = () => {
     e.preventDefault();
     
     // Handle multi-touch gestures for scaling and rotating
-    if (e.touches.length === 2 && selectedShapes.length > 0 && gestureActiveRef.current) {
+    if (e.touches.length === 2 && selectedShapes.length > 0) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
+      
+      // Initialize gesture if not started
+      if (!gestureActiveRef.current) {
+        gestureActiveRef.current = true;
+        setIsMultiTouch(true);
+        setInitialTouchDistance(getTouchDistance(touch1, touch2));
+        setInitialTouchAngle(getTouchAngle(touch1, touch2));
+        setGestureCenter(getTouchCenter(touch1, touch2, canvas));
+        
+        // Store initial transform values for selected shapes
+        if (selectedShapes.length > 0) {
+          setInitialScale(selectedShapes[0].transform.scaleX);
+          setInitialRotation(selectedShapes[0].transform.rotation);
+        }
+        
+        console.log('=== GESTURE INITIALIZED IN MOVE ===');
+        return;
+      }
       
       const currentDistance = getTouchDistance(touch1, touch2);
       const currentAngle = getTouchAngle(touch1, touch2);
