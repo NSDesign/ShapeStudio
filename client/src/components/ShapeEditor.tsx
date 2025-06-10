@@ -47,7 +47,6 @@ export default function ShapeEditor() {
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
-    handleWheel,
     selectedCount,
     selectedPointsCount,
     selectedSegmentsCount,
@@ -178,7 +177,6 @@ export default function ShapeEditor() {
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetView={resetView}
-          onWheel={handleWheel}
           canvasRef={canvasRef}
         />
       </div>
