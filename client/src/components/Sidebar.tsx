@@ -1568,7 +1568,7 @@ export default function Sidebar({
               </AccordionItem>
             </Accordion>
 
-            {/*              {/* Shape Type and ID Info */}
+              {/* Shape Type and ID Info */}
               <div className="border-t border-slate-600 pt-2 mt-2">
                 <div className="text-xs text-slate-400 space-y-1">
                   <div>Type: <span className="text-slate-300">{firstSelectedShape.type}</span></div>
@@ -1591,9 +1591,9 @@ export default function Sidebar({
                   Delete Selected
                 </Button>
               </div>
-            
-          
-        )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
