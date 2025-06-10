@@ -590,6 +590,159 @@ export default function Sidebar({
     </div>
   );
 
+  const ArtboardContent = () => {
+    const [selectedCategory, setSelectedCategory] = useState<string>('social');
+    const [customWidth, setCustomWidth] = useState(1080);
+    const [customHeight, setCustomHeight] = useState(1080);
+    
+    const categorizedPresets = useMemo(() => {
+      return ARTBOARD_PRESETS.reduce((acc, preset) => {
+        if (!acc[preset.category]) {
+          acc[preset.category] = [];
+        }
+        acc[preset.category].push(preset);
+        return acc;
+      }, {} as Record<string, ArtboardPreset[]>);
+    }, []);
+
+    const categories = [
+      { key: 'social', label: 'Social Media', icon: '📱' },
+      { key: 'print', label: 'Print', icon: '🖨️' },
+      { key: 'web', label: 'Web', icon: '🌐' },
+      { key: 'tv', label: 'TV/Display', icon: '📺' },
+      { key: 'mobile', label: 'Mobile', icon: '📱' }
+    ];
+
+    return (
+      <div className="space-y-4">
+        {/* Current Artboards */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Current Artboards</Label>
+          {artboards.length === 0 ? (
+            <div className="text-xs text-slate-500 text-center py-4 border border-slate-700 rounded bg-slate-800/50">
+              No artboards yet. Add one below.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {artboards.map((artboard) => (
+                <div 
+                  key={artboard.id}
+                  className={`p-2 rounded border cursor-pointer transition-colors ${
+                    artboard.id === activeArtboard 
+                      ? 'border-cyan-500 bg-cyan-900/30' 
+                      : 'border-slate-600 bg-slate-800/50 hover:bg-slate-700/50'
+                  }`}
+                  onClick={() => onSelectArtboard(artboard.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-medium text-slate-200">{artboard.name}</div>
+                      <div className="text-xs text-slate-400">{artboard.width} × {artboard.height}</div>
+                    </div>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteArtboard(artboard.id);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Separator className="bg-slate-700" />
+
+        {/* Add New Artboard */}
+        <div className="space-y-3">
+          <Label className="text-xs text-slate-400">Add New Artboard</Label>
+          
+          {/* Category Selection */}
+          <div className="grid grid-cols-2 gap-1">
+            {categories.map((category) => (
+              <Button
+                key={category.key}
+                onClick={() => setSelectedCategory(category.key)}
+                variant={selectedCategory === category.key ? 'default' : 'secondary'}
+                size="sm"
+                className={`text-xs ${
+                  selectedCategory === category.key
+                    ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+              >
+                {category.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Preset Selection */}
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {categorizedPresets[selectedCategory]?.map((preset) => (
+              <Button
+                key={preset.name}
+                onClick={() => onAddArtboard(preset)}
+                variant="ghost"
+                className="w-full justify-start text-xs p-2 h-auto bg-slate-800/50 hover:bg-slate-700 text-slate-300 border border-slate-600"
+              >
+                <div className="text-left">
+                  <div className="font-medium">{preset.name}</div>
+                  <div className="text-slate-400 text-xs">
+                    {preset.width} × {preset.height}
+                    {preset.description && ` • ${preset.description}`}
+                  </div>
+                </div>
+              </Button>
+            )) || []}
+          </div>
+
+          {/* Custom Size */}
+          <div className="space-y-2 pt-2 border-t border-slate-700">
+            <Label className="text-xs text-slate-400">Custom Size</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Input
+                  type="number"
+                  value={customWidth}
+                  onChange={(e) => setCustomWidth(parseInt(e.target.value) || 1080)}
+                  placeholder="Width"
+                  className="h-8 text-xs bg-slate-800 border-slate-600"
+                />
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  value={customHeight}
+                  onChange={(e) => setCustomHeight(parseInt(e.target.value) || 1080)}
+                  placeholder="Height"
+                  className="h-8 text-xs bg-slate-800 border-slate-600"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={() => onAddArtboard({
+                name: `Custom ${customWidth}×${customHeight}`,
+                width: customWidth,
+                height: customHeight,
+                category: 'custom'
+              })}
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
+              size="sm"
+            >
+              Add Custom Artboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Shape Properties Panel Component
   function ShapePropertiesPanel({ selectedShapes, selectedGroups, selectedCount }: {
     selectedShapes: Shape[];
@@ -654,7 +807,9 @@ export default function Sidebar({
     const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
     const updated = [...selectedShapes];
     updated.forEach(updater);
-    onShapeUpdate?.();
+    if (onShapeUpdate) {
+      onShapeUpdate();
+    }
   }, [selectedShapes, onShapeUpdate]);
 
   // Helper function to get minimum points for each shape type
@@ -2004,6 +2159,22 @@ export default function Sidebar({
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <CompositionContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Artboards Section */}
+          <AccordionItem value="artboards" className="border-b-0">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-cyan-300 data-[state=open]:bg-cyan-900/20">
+              <div className="flex items-center space-x-2">
+                <Square className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Artboards</span>
+                <span className="ml-auto text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">
+                  {artboards.length}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <ArtboardContent />
             </AccordionContent>
           </AccordionItem>
 

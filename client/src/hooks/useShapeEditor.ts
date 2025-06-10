@@ -1298,6 +1298,46 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedSegments, shapes]);
 
+  // Artboard management functions
+  const addArtboard = useCallback((preset: { name: string; width: number; height: number; category: string }) => {
+    const newArtboard: Artboard = {
+      id: `artboard_${Date.now()}`,
+      name: preset.name,
+      x: -preset.width / 2,
+      y: -preset.height / 2,
+      width: preset.width,
+      height: preset.height,
+      preset: preset.name,
+      category: preset.category
+    };
+    
+    setArtboards(prev => [...prev, newArtboard]);
+    setActiveArtboard(newArtboard.id);
+  }, []);
+
+  const selectArtboard = useCallback((artboardId: string) => {
+    setActiveArtboard(artboardId);
+  }, []);
+
+  const deleteArtboard = useCallback((artboardId: string) => {
+    if (artboards.length <= 1) return; // Keep at least one artboard
+    
+    setArtboards(prev => prev.filter(ab => ab.id !== artboardId));
+    
+    if (activeArtboard === artboardId) {
+      const remainingArtboards = artboards.filter(ab => ab.id !== artboardId);
+      if (remainingArtboards.length > 0) {
+        setActiveArtboard(remainingArtboards[0].id);
+      }
+    }
+  }, [artboards, activeArtboard]);
+
+  const updateArtboard = useCallback((artboardId: string, updates: Partial<Artboard>) => {
+    setArtboards(prev => prev.map(artboard => 
+      artboard.id === artboardId ? { ...artboard, ...updates } : artboard
+    ));
+  }, []);
+
   return {
     // State
     shapes,
