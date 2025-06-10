@@ -1,20 +1,17 @@
-import TestApp from "./TestApp";
-import ShapeEditor from "./components/ShapeEditor";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <div className="h-screen w-screen bg-slate-900 text-slate-50 overflow-hidden">
-          <ShapeEditor />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <div style={{ 
+      height: '100vh', 
+      width: '100vw', 
+      backgroundColor: '#1e293b', 
+      color: 'white',
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1>Shape Editor Loading...</h1>
+      <p>Testing basic React rendering</p>
+      <p>Time: {new Date().toLocaleTimeString()}</p>
+    </div>
   );
 }
 
