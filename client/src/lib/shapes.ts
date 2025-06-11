@@ -184,25 +184,52 @@ export class Shape {
   }
 
   private generateCurvePoints(): void {
-    const numPoints = 3 + Math.floor(Math.random() * 5);
+    const numPoints = this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3);
     this.points = [];
     this.controlPoints = [];
     
-    for (let i = 0; i < numPoints; i++) {
-      this.points.push({
-        x: i * (30 + Math.random() * 50),
-        y: (Math.random() - 0.5) * 120
-      });
+    if (this.type === 'cubic') {
+      // Generate cubic bezier curve with 4 points
+      this.points = [
+        { x: -60, y: 0 },
+        { x: -20, y: -40 },
+        { x: 20, y: 40 },
+        { x: 60, y: 0 }
+      ];
       
-      if (i < numPoints - 1) {
+      // For cubic curves, generate control points between each segment
+      for (let i = 0; i < this.points.length - 1; i++) {
+        const p1 = this.points[i];
+        const p2 = this.points[i + 1];
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        
+        // Add some curve to the control points
         this.controlPoints.push({
-          x: (i + 0.5) * (30 + Math.random() * 50) + (Math.random() - 0.5) * 40,
-          y: (Math.random() - 0.5) * 120
+          x: midX + (Math.random() - 0.5) * 40,
+          y: midY + (Math.random() - 0.5) * 40
         });
+      }
+    } else {
+      // Generate bezier curve
+      for (let i = 0; i < numPoints; i++) {
+        this.points.push({
+          x: (i - numPoints/2) * (40 + Math.random() * 30),
+          y: (Math.random() - 0.5) * 100
+        });
+        
+        if (i < numPoints - 1) {
+          const p1 = this.points[i];
+          const p2 = this.points[i + 1] || this.points[0];
+          this.controlPoints.push({
+            x: (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 30,
+            y: (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 30
+          });
+        }
       }
     }
     
-    this.closed = Math.random() > 0.5;
+    this.closed = this.type === 'cubic' ? false : Math.random() > 0.5;
   }
 
   private generateBlobPoints(): void {
@@ -377,7 +404,6 @@ export class Shape {
         break;
       case 'bezier':
       case 'cubic':
-      case 'quadratic':
         this.drawCurve(ctx);
         break;
       case 'blob':
@@ -485,29 +511,45 @@ export class Shape {
     // Use renderType to determine how to draw curves
     const renderType = this.renderType || 'polygon';
     
-    if (renderType === 'bezier' || renderType === 'smooth') {
-      // Draw smooth curves between points
-      for (let i = 1; i < this.points.length; i++) {
-        if (this.controlPoints && i - 1 < this.controlPoints.length) {
-          // Use control points for bezier curves
-          ctx.quadraticCurveTo(
-            this.controlPoints[i - 1].x,
-            this.controlPoints[i - 1].y,
-            this.points[i].x,
-            this.points[i].y
-          );
-        } else {
-          // Generate smooth curve without explicit control points
-          const prevPoint = this.points[i - 1];
-          const currentPoint = this.points[i];
-          const nextPoint = this.points[i + 1] || (this.closed ? this.points[0] : currentPoint);
+    if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
+      if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
+        // Draw cubic bezier curves using control points
+        for (let i = 0; i < this.points.length - 1; i++) {
+          const p1 = this.points[i];
+          const p2 = this.points[i + 1];
           
-          // Calculate control point for smooth curve
-          const tension = 0.3;
-          const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
-          const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
-          
-          ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
+          if (i < this.controlPoints.length) {
+            const cp = this.controlPoints[i];
+            // Use quadratic curve as approximation for cubic
+            ctx.quadraticCurveTo(cp.x, cp.y, p2.x, p2.y);
+          } else {
+            ctx.lineTo(p2.x, p2.y);
+          }
+        }
+      } else {
+        // Draw bezier curves between points
+        for (let i = 1; i < this.points.length; i++) {
+          if (this.controlPoints && i - 1 < this.controlPoints.length) {
+            // Use control points for bezier curves
+            ctx.quadraticCurveTo(
+              this.controlPoints[i - 1].x,
+              this.controlPoints[i - 1].y,
+              this.points[i].x,
+              this.points[i].y
+            );
+          } else {
+            // Generate smooth curve without explicit control points
+            const prevPoint = this.points[i - 1];
+            const currentPoint = this.points[i];
+            const nextPoint = this.points[i + 1] || (this.closed ? this.points[0] : currentPoint);
+            
+            // Calculate control point for smooth curve
+            const tension = 0.3;
+            const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
+            const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
+            
+            ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
+          }
         }
       }
     } else {

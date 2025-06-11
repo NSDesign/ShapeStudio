@@ -1172,7 +1172,7 @@ export default function Sidebar({
             </div>
 
             {/* Points Management for Editable Shapes */}
-            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'quadratic' || firstSelectedShape.type === 'blob') && (
+            {(firstSelectedShape.type === 'line' || firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic' || firstSelectedShape.type === 'blob') && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs text-slate-400">Points ({firstSelectedShape.points?.length || 0})</Label>
