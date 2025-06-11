@@ -1787,14 +1787,14 @@ export default function Sidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="random" className="text-white hover:bg-slate-700">Random</SelectItem>
-                <SelectItem value="grid" className="text-white hover:bg-slate-700">Grid</SelectItem>
-                <SelectItem value="circle" className="text-white hover:bg-slate-700">Circle</SelectItem>
-                <SelectItem value="spiral" className="text-white hover:bg-slate-700">Spiral</SelectItem>
-                <SelectItem value="organic" className="text-white hover:bg-slate-700">Organic</SelectItem>
-                <SelectItem value="physics" className="text-white hover:bg-slate-700">Physics</SelectItem>
-                <SelectItem value="wave" className="text-white hover:bg-slate-700">Wave</SelectItem>
-                <SelectItem value="cluster" className="text-white hover:bg-slate-700">Cluster</SelectItem>
+                <SelectItem value="random" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Random</SelectItem>
+                <SelectItem value="grid" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Grid</SelectItem>
+                <SelectItem value="circle" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Circle</SelectItem>
+                <SelectItem value="spiral" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Spiral</SelectItem>
+                <SelectItem value="organic" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Organic</SelectItem>
+                <SelectItem value="physics" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Physics</SelectItem>
+                <SelectItem value="wave" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Wave</SelectItem>
+                <SelectItem value="cluster" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Cluster</SelectItem>
               </SelectContent>
             </Select>
           </div>

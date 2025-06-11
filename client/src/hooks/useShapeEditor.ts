@@ -262,16 +262,18 @@ export const useShapeEditor = () => {
     if (selectedShapes.length < 2) return;
     
     const newGroup = new ShapeGroupClass([...selectedShapes]);
+    newGroup.selected = true; // Make the new group selected
     
     // Remove selected shapes from individual shapes array
     setShapes(prev => prev.filter(shape => !selectedShapes.includes(shape)));
     
-    // Clear selection
+    // Clear individual shape selection
     selectedShapes.forEach(shape => shape.selected = false);
     setSelectedShapes([]);
     
-    // Add new group
+    // Add new group and select it
     setGroups(prev => [...prev, newGroup]);
+    setSelectedGroups([newGroup]);
   }, [selectedShapes]);
 
   // Scatter shapes using smart distribution
@@ -1520,7 +1522,6 @@ export const useShapeEditor = () => {
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
-    distributeSelectedShapes,
     composeShapes,
     scatterOnShape,
     setEditingMode,
