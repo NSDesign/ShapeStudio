@@ -766,6 +766,15 @@ export class Shape {
   }
 
   updatePoint(index: number, newPoint: Point): void {
+    // Handle control points (offset by 1000)
+    if (index >= 1000) {
+      const controlIndex = index - 1000;
+      if (!this.controlPoints || controlIndex < 0 || controlIndex >= this.controlPoints.length) return;
+      this.controlPoints[controlIndex] = { ...newPoint };
+      return;
+    }
+    
+    // Handle regular points
     if (!this.points || index < 0 || index >= this.points.length) return;
     this.points[index] = { ...newPoint };
     
@@ -774,6 +783,40 @@ export class Shape {
   }
 
   updateWorldPoint(index: number, worldPoint: Point): void {
+    // Handle control points (offset by 1000)
+    if (index >= 1000) {
+      const controlIndex = index - 1000;
+      if (!this.controlPoints || controlIndex < 0 || controlIndex >= this.controlPoints.length) return;
+      
+      // Inverse transformation for control points
+      let x = worldPoint.x - this.transform.x;
+      let y = worldPoint.y - this.transform.y;
+      
+      // Inverse rotation
+      const rotationRad = -this.transform.rotation * Math.PI / 180;
+      const cos = Math.cos(rotationRad);
+      const sin = Math.sin(rotationRad);
+      const unrotatedX = x * cos - y * sin;
+      const unrotatedY = x * sin + y * cos;
+      
+      x = unrotatedX;
+      y = unrotatedY;
+      
+      // Inverse skew (approximate)
+      x -= y * Math.tan(this.transform.skewX);
+      y -= x * Math.tan(this.transform.skewY);
+      
+      // Inverse scale
+      const localControl = {
+        x: x / this.transform.scaleX,
+        y: y / this.transform.scaleY
+      };
+      
+      this.controlPoints[controlIndex] = localControl;
+      return;
+    }
+    
+    // Handle regular points
     // Inverse transformation: translate, then inverse rotate, skew, and scale
     let x = worldPoint.x - this.transform.x;
     let y = worldPoint.y - this.transform.y;
@@ -831,11 +874,23 @@ export class Shape {
   }
 
   isPointNear(worldX: number, worldY: number, pointIndex: number, threshold: number = 8): boolean {
-    const worldPoint = this.getWorldPoint(pointIndex);
-    if (!worldPoint) return false;
+    // Check regular points
+    if (pointIndex < 1000) {
+      const worldPoint = this.getWorldPoint(pointIndex);
+      if (!worldPoint) return false;
+      
+      const dx = worldX - worldPoint.x;
+      const dy = worldY - worldPoint.y;
+      return Math.sqrt(dx * dx + dy * dy) <= threshold;
+    }
     
-    const dx = worldX - worldPoint.x;
-    const dy = worldY - worldPoint.y;
+    // Check control points (offset by 1000)
+    const controlIndex = pointIndex - 1000;
+    const worldControl = this.getWorldControlPoint(controlIndex);
+    if (!worldControl) return false;
+    
+    const dx = worldX - worldControl.x;
+    const dy = worldY - worldControl.y;
     return Math.sqrt(dx * dx + dy * dy) <= threshold;
   }
 
@@ -997,10 +1052,27 @@ export class Shape {
   }
 
   flip(horizontal: boolean): void {
+    // Flip around the shape's local center axis
     if (horizontal) {
-      this.transform.scaleX *= -1;
+      // Horizontal flip: mirror points across vertical center line
+      this.points.forEach(point => {
+        point.x = -point.x;
+      });
+      if (this.controlPoints) {
+        this.controlPoints.forEach(control => {
+          control.x = -control.x;
+        });
+      }
     } else {
-      this.transform.scaleY *= -1;
+      // Vertical flip: mirror points across horizontal center line  
+      this.points.forEach(point => {
+        point.y = -point.y;
+      });
+      if (this.controlPoints) {
+        this.controlPoints.forEach(control => {
+          control.y = -control.y;
+        });
+      }
     }
   }
 
