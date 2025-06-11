@@ -140,6 +140,7 @@ export default function ShapeEditor() {
           canComposeShapes={canComposeShapes}
           selectedShapes={selectedShapes}
           selectedGroups={selectedGroups}
+          shapes={shapes}
           artboards={artboards}
           activeArtboard={activeArtboard}
           onToggleShapeType={toggleShapeType}

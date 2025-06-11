@@ -1740,13 +1740,13 @@ export default function Sidebar({
 
     // Get all shapes from props
     const sortedShapes = useMemo(() => {
-      return shapes.sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+      return (shapes || []).sort((a: Shape, b: Shape) => b.properties.zIndex - a.properties.zIndex);
     }, [shapes]);
 
     return (
       <div className="space-y-4">
         <div className="text-sm text-slate-400">
-          Layers: <span className="text-white font-medium">{shapes.length}</span> total
+          Layers: <span className="text-white font-medium">{(shapes || []).length}</span> total
         </div>
 
         {/* Layer Ordering Controls */}
@@ -1851,7 +1851,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {shapes.length === 0 && (
+        {(shapes || []).length === 0 && (
           <div className="text-xs text-slate-500 text-center py-4">
             No layers yet. Create some shapes to see them here.
           </div>
