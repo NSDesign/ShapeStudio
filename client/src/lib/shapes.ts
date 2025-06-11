@@ -616,43 +616,22 @@ export class Shape {
   }
 
   getBounds(): { x: number; y: number; width: number; height: number } {
-    switch (this.type) {
-      case 'rectangle':
-      case 'square':
-      case 'ellipse':
-        return {
-          x: -this.width! / 2,
-          y: -this.height! / 2,
-          width: this.width!,
-          height: this.height!
-        };
-      case 'circle':
-      case 'polygon':
-      case 'star':
-      case 'ring':
-        return {
-          x: -this.radius!,
-          y: -this.radius!,
-          width: this.radius! * 2,
-          height: this.radius! * 2
-        };
-      default:
-        if (this.points.length > 0) {
-          const xs = this.points.map(p => p.x);
-          const ys = this.points.map(p => p.y);
-          const minX = Math.min(...xs);
-          const maxX = Math.max(...xs);
-          const minY = Math.min(...ys);
-          const maxY = Math.max(...ys);
-          return {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-          };
-        }
-        return { x: 0, y: 0, width: 0, height: 0 };
+    // Always calculate bounds from actual points for dynamic bounding boxes
+    if (this.points.length > 0) {
+      const xs = this.points.map(p => p.x);
+      const ys = this.points.map(p => p.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+      };
     }
+    return { x: 0, y: 0, width: 0, height: 0 };
   }
 
   containsPoint(x: number, y: number): boolean {
@@ -758,6 +737,35 @@ export class Shape {
     this.updatePoint(index, localPoint);
   }
 
+  getWorldControlPoint(index: number): Point | null {
+    if (!this.controlPoints || index < 0 || index >= this.controlPoints.length) return null;
+    
+    const localControl = this.controlPoints[index];
+    
+    // Apply full transformation matrix: scale, rotation, skew, then translate
+    const rotationRad = this.transform.rotation * Math.PI / 180;
+    const cos = Math.cos(rotationRad);
+    const sin = Math.sin(rotationRad);
+    
+    // Apply scale
+    let x = localControl.x * this.transform.scaleX;
+    let y = localControl.y * this.transform.scaleY;
+    
+    // Apply skew
+    x += y * Math.tan(this.transform.skewX);
+    y += x * Math.tan(this.transform.skewY);
+    
+    // Apply rotation
+    const rotatedX = x * cos - y * sin;
+    const rotatedY = x * sin + y * cos;
+    
+    // Apply translation
+    return {
+      x: this.transform.x + rotatedX,
+      y: this.transform.y + rotatedY
+    };
+  }
+
   isPointNear(worldX: number, worldY: number, pointIndex: number, threshold: number = 8): boolean {
     const worldPoint = this.getWorldPoint(pointIndex);
     if (!worldPoint) return false;
@@ -800,6 +808,37 @@ export class Shape {
     if (!this.points || this.points.length === 0) return;
     
     ctx.save();
+    
+    // Draw control handles for curve types
+    if ((this.type === 'bezier' || this.type === 'cubic' || this.renderType === 'bezier' || this.renderType === 'cubic') && this.controlPoints) {
+      this.controlPoints.forEach((controlPoint, index) => {
+        const worldControl = this.getWorldControlPoint(index);
+        const worldPoint = this.getWorldPoint(index);
+        
+        if (worldControl && worldPoint) {
+          // Draw tangent line
+          ctx.strokeStyle = '#9CA3AF';
+          ctx.lineWidth = 1 / canvasZoom;
+          ctx.setLineDash([3 / canvasZoom, 3 / canvasZoom]);
+          ctx.beginPath();
+          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.lineTo(worldControl.x, worldControl.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw control handle
+          const radius = 4 / canvasZoom;
+          ctx.fillStyle = '#F59E0B';
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1 / canvasZoom;
+          
+          ctx.beginPath();
+          ctx.rect(worldControl.x - radius/2, worldControl.y - radius/2, radius, radius);
+          ctx.fill();
+          ctx.stroke();
+        }
+      });
+    }
     
     // Draw all segment midpoints for visibility
     for (let i = 0; i < this.points.length - 1; i++) {
