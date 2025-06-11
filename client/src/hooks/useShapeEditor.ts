@@ -599,8 +599,8 @@ export const useShapeEditor = () => {
       return;
     }
     
-    // Store drag start in screen coordinates for consistent delta calculation
-    setDragStart({ x: e.clientX, y: e.clientY });
+    // Store drag start in world coordinates for consistent delta calculation
+    setDragStart({ x, y });
     
     // Check if clicking on empty space to start marquee selection
     let clickedOnShape = false;

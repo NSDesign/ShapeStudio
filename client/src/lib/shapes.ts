@@ -1006,17 +1006,30 @@ export class Shape {
           ctx.beginPath();
           
           if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
-            // Draw curved segment
-            const cp1x = p1.x + (p2.x - p1.x) * 0.3;
-            const cp1y = p1.y + (p2.y - p1.y) * 0.3;
-            const cp2x = p1.x + (p2.x - p1.x) * 0.7;
-            const cp2y = p1.y + (p2.y - p1.y) * 0.7;
-            
+            // Draw curved segment using actual control points if available
             ctx.moveTo(p1.x, p1.y);
-            if (this.renderType === 'smooth') {
-              ctx.quadraticCurveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, p2.x, p2.y);
+            
+            if (this.controlPoints && i < this.controlPoints.length) {
+              // Use actual control point for this segment
+              const worldControl = this.getWorldControlPoint(i);
+              if (worldControl) {
+                ctx.quadraticCurveTo(worldControl.x, worldControl.y, p2.x, p2.y);
+              } else {
+                ctx.lineTo(p2.x, p2.y);
+              }
             } else {
-              ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+              // Generate smooth curve without explicit control points
+              const prevPoint = i > 0 ? this.getWorldPoint(i - 1) : p1;
+              const nextPoint = i + 2 < this.points.length ? this.getWorldPoint(i + 2) : p2;
+              
+              if (prevPoint && nextPoint) {
+                const tension = 0.3;
+                const controlX = p2.x + (nextPoint.x - prevPoint.x) * tension;
+                const controlY = p2.y + (nextPoint.y - prevPoint.y) * tension;
+                ctx.quadraticCurveTo(controlX, controlY, p2.x, p2.y);
+              } else {
+                ctx.lineTo(p2.x, p2.y);
+              }
             }
           } else {
             // Draw straight line segment
@@ -1083,25 +1096,29 @@ export class Shape {
   }
 
   flip(horizontal: boolean): void {
-    // Flip around the shape's local center axis
+    // Calculate the center of the actual point geometry
+    const bounds = this.getBounds();
+    const centerX = bounds.x + bounds.width / 2;
+    const centerY = bounds.y + bounds.height / 2;
+    
     if (horizontal) {
       // Horizontal flip: mirror points across vertical center line
       this.points.forEach(point => {
-        point.x = -point.x;
+        point.x = centerX - (point.x - centerX);
       });
       if (this.controlPoints) {
         this.controlPoints.forEach(control => {
-          control.x = -control.x;
+          control.x = centerX - (control.x - centerX);
         });
       }
     } else {
       // Vertical flip: mirror points across horizontal center line  
       this.points.forEach(point => {
-        point.y = -point.y;
+        point.y = centerY - (point.y - centerY);
       });
       if (this.controlPoints) {
         this.controlPoints.forEach(control => {
-          control.y = -control.y;
+          control.y = centerY - (control.y - centerY);
         });
       }
     }
