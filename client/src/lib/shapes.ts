@@ -652,8 +652,140 @@ export class Shape {
   }
 
   updateShapeFromPoints(): void {
-    // For geometric shapes, recalculate dimensions based on modified points
-    // Lines, curves, and blobs directly use their points without regeneration
+    if (!this.points || this.points.length === 0) return;
+    
+    switch (this.type) {
+      case 'rectangle':
+      case 'square':
+        if (this.points.length >= 4) {
+          // Calculate bounding box from points
+          const minX = Math.min(...this.points.map(p => p.x));
+          const maxX = Math.max(...this.points.map(p => p.x));
+          const minY = Math.min(...this.points.map(p => p.y));
+          const maxY = Math.max(...this.points.map(p => p.y));
+          
+          this.width = maxX - minX;
+          this.height = maxY - minY;
+          
+          // Regenerate rectangle points with new dimensions
+          this.generateRectanglePoints();
+        }
+        break;
+        
+      case 'circle':
+        if (this.points.length >= 2) {
+          // Calculate radius from center to any edge point
+          const centerX = this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length;
+          const centerY = this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length;
+          
+          // Find the farthest point from center for radius
+          let maxDistance = 0;
+          this.points.forEach(point => {
+            const dx = point.x - centerX;
+            const dy = point.y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            maxDistance = Math.max(maxDistance, distance);
+          });
+          
+          this.radius = maxDistance;
+          
+          // Regenerate circle points with new radius
+          this.generateCirclePoints();
+        }
+        break;
+        
+      case 'ellipse':
+        if (this.points.length >= 4) {
+          // Calculate width and height from bounding box
+          const minX = Math.min(...this.points.map(p => p.x));
+          const maxX = Math.max(...this.points.map(p => p.x));
+          const minY = Math.min(...this.points.map(p => p.y));
+          const maxY = Math.max(...this.points.map(p => p.y));
+          
+          this.width = maxX - minX;
+          this.height = maxY - minY;
+          
+          // Regenerate ellipse points with new dimensions
+          this.generateEllipsePoints();
+        }
+        break;
+        
+      case 'polygon':
+        // For polygons, keep the modified points as-is since they define the shape
+        // Update the sides count if it changed
+        if (this.sides && this.points.length !== this.sides) {
+          this.sides = this.points.length;
+        }
+        break;
+        
+      case 'star':
+        // For stars, recalculate radii based on modified points
+        if (this.points.length >= 6) {
+          const centerX = this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length;
+          const centerY = this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length;
+          
+          let outerRadius = 0;
+          let innerRadius = Infinity;
+          
+          // Calculate radii from outer and inner points
+          for (let i = 0; i < this.points.length; i++) {
+            const dx = this.points[i].x - centerX;
+            const dy = this.points[i].y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (i % 2 === 0) {
+              // Outer points
+              outerRadius = Math.max(outerRadius, distance);
+            } else {
+              // Inner points
+              innerRadius = Math.min(innerRadius, distance);
+            }
+          }
+          
+          this.radius = outerRadius;
+          this.innerRadius = innerRadius === Infinity ? outerRadius * 0.5 : innerRadius;
+          
+          // Regenerate star points with new radii
+          this.generateStarPoints();
+        }
+        break;
+        
+      case 'ring':
+        if (this.points.length >= 8) {
+          // Calculate center from all points
+          const centerX = this.points.reduce((sum, p) => sum + p.x, 0) / this.points.length;
+          const centerY = this.points.reduce((sum, p) => sum + p.y, 0) / this.points.length;
+          
+          let maxRadius = 0;
+          let minRadius = Infinity;
+          
+          // Find max and min distances to determine outer and inner radii
+          this.points.forEach(point => {
+            const dx = point.x - centerX;
+            const dy = point.y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            maxRadius = Math.max(maxRadius, distance);
+            minRadius = Math.min(minRadius, distance);
+          });
+          
+          this.radius = maxRadius;
+          this.innerRadius = minRadius;
+          
+          // Regenerate ring points with new radii
+          this.generateRingPoints();
+        }
+        break;
+        
+      // For curves, lines, and blobs, keep points as-is since they directly define the shape
+      case 'line':
+      case 'bezier':
+      case 'cubic':
+      case 'quadratic':
+      case 'nurbs':
+      case 'blob':
+        // These shapes are directly defined by their points, no regeneration needed
+        break;
+    }
   }
 
   updatePoint(index: number, newPoint: Point): void {
