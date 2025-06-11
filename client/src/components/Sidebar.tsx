@@ -220,6 +220,51 @@ export default function Sidebar({
         </Button>
       </div>
 
+      <div className="space-y-2 mt-4">
+        <Label className="text-xs text-slate-400">Shape Count Range</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Label className="text-xs text-slate-400 min-w-8">Min</Label>
+            <Slider
+              value={[scatterSettings.minCount]}
+              onValueChange={([value]) => onUpdateScatterSettings({ minCount: value })}
+              min={1}
+              max={scatterSettings.maxCount - 1}
+              step={1}
+              className="flex-1"
+            />
+            <Input
+              type="number"
+              value={scatterSettings.minCount}
+              onChange={(e) => onUpdateScatterSettings({ minCount: Math.max(1, Math.min(Number(e.target.value), scatterSettings.maxCount - 1)) })}
+              className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+              min={1}
+              max={scatterSettings.maxCount - 1}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label className="text-xs text-slate-400 min-w-8">Max</Label>
+            <Slider
+              value={[scatterSettings.maxCount]}
+              onValueChange={([value]) => onUpdateScatterSettings({ maxCount: value })}
+              min={scatterSettings.minCount + 1}
+              max={50}
+              step={1}
+              className="flex-1"
+            />
+            <Input
+              type="number"
+              value={scatterSettings.maxCount}
+              onChange={(e) => onUpdateScatterSettings({ maxCount: Math.max(scatterSettings.minCount + 1, Math.min(Number(e.target.value), 50)) })}
+              className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+              min={scatterSettings.minCount + 1}
+              max={50}
+            />
+          </div>
+          <span className="text-xs text-slate-400">{scatterSettings.minCount}-{scatterSettings.maxCount} shapes per generation</span>
+        </div>
+      </div>
+
       <Button 
         onClick={onGenerateRandomShapes}
         className="w-full mt-3 bg-[var(--editor-primary)] hover:bg-blue-700 text-white font-medium"
@@ -2057,6 +2102,39 @@ export default function Sidebar({
                 </h3>
                 <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
                   <PropertiesContent />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Artboards */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'artboards' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'artboards' 
+                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 border-cyan-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Square className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Square className="w-4 h-4 mr-2" />
+                  Artboards
+                </h3>
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <ArtboardContent />
                 </div>
               </div>
             </PopoverContent>
