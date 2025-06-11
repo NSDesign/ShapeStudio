@@ -85,6 +85,27 @@ export interface ShapeGroup {
   selected: boolean;
 }
 
+export type DistributionPattern = 
+  | 'random' 
+  | 'grid' 
+  | 'circle' 
+  | 'spiral' 
+  | 'organic' 
+  | 'physics' 
+  | 'wave' 
+  | 'cluster';
+
+export interface DistributionSettings {
+  pattern: DistributionPattern;
+  spacing: number;
+  randomness: number;
+  rotation: number;
+  scale: number;
+  density: number;
+  avoidOverlap: boolean;
+  respectBounds: boolean;
+}
+
 export interface ScatterSettings {
   onPoints: boolean;
   insideArea: boolean;
@@ -92,6 +113,7 @@ export interface ScatterSettings {
   minCount: number;
   maxCount: number;
   randomness: number;
+  distribution: DistributionSettings;
 }
 
 export interface CanvasSettings {

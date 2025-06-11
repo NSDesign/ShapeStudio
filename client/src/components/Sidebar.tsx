@@ -1766,6 +1766,139 @@ export default function Sidebar({
             <span className="text-xs text-slate-400">{scatterSettings.minCount}-{scatterSettings.maxCount} shapes per generation</span>
           </div>
         </div>
+
+        {/* Smart Distribution Controls */}
+        <div className="space-y-3 mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+          <Label className="text-xs text-blue-200 font-medium">Smart Distribution</Label>
+          
+          {/* Pattern Selection */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Pattern</Label>
+            <Select
+              value={scatterSettings.distribution.pattern}
+              onValueChange={(value) => onUpdateScatterSettings({ 
+                distribution: { ...scatterSettings.distribution, pattern: value as any }
+              })}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="random">Random</SelectItem>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="circle">Circle</SelectItem>
+                <SelectItem value="spiral">Spiral</SelectItem>
+                <SelectItem value="organic">Organic</SelectItem>
+                <SelectItem value="physics">Physics</SelectItem>
+                <SelectItem value="wave">Wave</SelectItem>
+                <SelectItem value="cluster">Cluster</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Distribution Parameters */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Spacing</Label>
+              <Slider
+                value={[scatterSettings.distribution.spacing]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, spacing: value }
+                })}
+                min={10}
+                max={200}
+                step={5}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{scatterSettings.distribution.spacing}px</span>
+            </div>
+            
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Randomness</Label>
+              <Slider
+                value={[scatterSettings.distribution.randomness]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, randomness: value }
+                })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.randomness * 100)}%</span>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Scale</Label>
+              <Slider
+                value={[scatterSettings.distribution.scale]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, scale: value }
+                })}
+                min={0.1}
+                max={3}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{scatterSettings.distribution.scale.toFixed(1)}x</span>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Density</Label>
+              <Slider
+                value={[scatterSettings.distribution.density]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, density: value }
+                })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.density * 100)}%</span>
+            </div>
+          </div>
+
+          {/* Rotation Control */}
+          <div className="space-y-1">
+            <Label className="text-xs text-slate-400">Rotation</Label>
+            <Slider
+              value={[scatterSettings.distribution.rotation]}
+              onValueChange={([value]) => onUpdateScatterSettings({ 
+                distribution: { ...scatterSettings.distribution, rotation: value }
+              })}
+              min={0}
+              max={Math.PI * 2}
+              step={0.1}
+              className="w-full"
+            />
+            <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.rotation * 180 / Math.PI)}°</span>
+          </div>
+
+          {/* Options */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={scatterSettings.distribution.avoidOverlap}
+                onCheckedChange={(checked) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, avoidOverlap: checked === true }
+                })}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Avoid Overlap</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={scatterSettings.distribution.respectBounds}
+                onCheckedChange={(checked) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, respectBounds: checked === true }
+                })}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Respect Bounds</Label>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

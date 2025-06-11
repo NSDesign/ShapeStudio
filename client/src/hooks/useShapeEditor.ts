@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard } from '../lib/shapeTypes';
+import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -16,7 +17,17 @@ export const useShapeEditor = () => {
     count: 5,
     minCount: 1,
     maxCount: 20,
-    randomness: 0.5
+    randomness: 0.5,
+    distribution: {
+      pattern: 'random',
+      spacing: 50,
+      randomness: 0.3,
+      rotation: 0,
+      scale: 1,
+      density: 0.5,
+      avoidOverlap: false,
+      respectBounds: true
+    }
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
     width: Number.MAX_SAFE_INTEGER,  // Truly infinite canvas
@@ -83,40 +94,42 @@ export const useShapeEditor = () => {
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
 
-  // Generate random shapes within active artboard + 100px buffer
+  // Generate random shapes using smart distribution algorithm
   const generateRandomShapes = useCallback(() => {
     const availableTypes = Array.from(enabledShapeTypes);
     if (availableTypes.length === 0) return;
     
-    const newShapes: Shape[] = [];
     const numShapes = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
     
     // Get active artboard bounds
     const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
     if (!currentArtboard) return;
     
-    // Create bounds with 100px buffer around artboard
+    // Create bounds with buffer around artboard
     const buffer = 100;
-    const minX = currentArtboard.x - buffer;
-    const maxX = currentArtboard.x + currentArtboard.width + buffer;
-    const minY = currentArtboard.y - buffer;
-    const maxY = currentArtboard.y + currentArtboard.height + buffer;
+    const bounds = {
+      x: currentArtboard.x - buffer,
+      y: currentArtboard.y - buffer,
+      width: currentArtboard.width + buffer * 2,
+      height: currentArtboard.height + buffer * 2
+    };
+    
+    // Generate positions using smart distribution algorithm
+    const positions = SmartDistributionAlgorithm.generatePositions(numShapes, bounds, scatterSettings.distribution);
     
     // Find highest existing z-index
     const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
     
-    for (let i = 0; i < numShapes; i++) {
+    const newShapes: Shape[] = [];
+    positions.forEach((position, i) => {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-      const x = minX + Math.random() * (maxX - minX);
-      const y = minY + Math.random() * (maxY - minY);
-      const shape = new Shape(type, x, y);
-      // Ensure new shapes appear above existing ones
+      const shape = new Shape(type, position.x, position.y);
       shape.properties.zIndex = highestZIndex + i + 1;
       newShapes.push(shape);
-    }
+    });
     
     setShapes(prev => [...prev, ...newShapes]);
-  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings.count, shapes]);
+  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings, shapes]);
 
   // Select shape at point
   const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false, allowDeselect: boolean = true) => {
@@ -261,7 +274,7 @@ export const useShapeEditor = () => {
     setGroups(prev => [...prev, newGroup]);
   }, [selectedShapes]);
 
-  // Scatter shapes
+  // Scatter shapes using smart distribution
   const scatterOnShape = useCallback((targetShape: Shape) => {
     if (!scatterSettings.onPoints && !scatterSettings.insideArea) return;
     
@@ -269,8 +282,6 @@ export const useShapeEditor = () => {
     if (availableTypes.length === 0) return;
     
     const newShapes: Shape[] = [];
-    
-    // Find highest existing z-index
     const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
     let shapeCounter = 1;
     
@@ -287,14 +298,22 @@ export const useShapeEditor = () => {
     
     if (scatterSettings.insideArea) {
       const bounds = targetShape.getBounds();
-      for (let i = 0; i < scatterSettings.count; i++) {
+      const shapeBounds = {
+        x: targetShape.transform.x + bounds.x,
+        y: targetShape.transform.y + bounds.y,
+        width: bounds.width,
+        height: bounds.height
+      };
+      
+      const numShapes = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+      const positions = SmartDistributionAlgorithm.generatePositions(numShapes, shapeBounds, scatterSettings.distribution);
+      
+      positions.forEach(position => {
         const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-        const x = targetShape.transform.x + bounds.x + Math.random() * bounds.width;
-        const y = targetShape.transform.y + bounds.y + Math.random() * bounds.height;
-        const shape = new Shape(type, x, y);
+        const shape = new Shape(type, position.x, position.y);
         shape.properties.zIndex = highestZIndex + shapeCounter++;
         newShapes.push(shape);
-      }
+      });
     }
     
     setShapes(prev => [...prev, ...newShapes]);
