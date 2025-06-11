@@ -71,7 +71,6 @@ export class Shape {
       case 'bezier':
         return 'bezier';
       case 'cubic':
-      case 'quadratic':
         return 'cubic';
       case 'blob':
         return 'cubic';
@@ -160,7 +159,6 @@ export class Shape {
         break;
       case 'bezier':
       case 'cubic':
-      case 'quadratic':
         this.generateCurvePoints();
         break;
       case 'blob':

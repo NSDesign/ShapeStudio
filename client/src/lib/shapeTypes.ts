@@ -56,9 +56,7 @@ export type ShapeType =
   | 'blob' 
   | 'ring'
   | 'bezier'
-  | 'cubic'
-  | 'quadratic'
-  | 'nurbs';
+  | 'cubic';
 
 export interface BaseShape {
   id: string;

@@ -49,10 +49,8 @@ const shapeIcons: Record<ShapeType, any> = {
   polygon: Boxes,
   star: Star,
   line: Minus,
-  bezier: Minus,
-  cubic: Minus,
-  quadratic: Minus,
-  nurbs: Minus,
+  bezier: Spline,
+  cubic: Spline,
   blob: Circle,
   ring: Circle
 };
@@ -67,8 +65,6 @@ const shapeNames: Record<ShapeType, string> = {
   line: 'Line',
   bezier: 'Bezier',
   cubic: 'Cubic',
-  quadratic: 'Quadratic',
-  nurbs: 'NURBS',
   blob: 'Blob',
   ring: 'Ring'
 };
@@ -161,7 +157,7 @@ export default function Sidebar({
 
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
-    'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic', 'quadratic', 'nurbs'
+    'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic'
   ];
 
   const ShapeTypesContent = () => (
