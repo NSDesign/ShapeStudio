@@ -1558,6 +1558,7 @@ export const useShapeEditor = () => {
     selectArtboard,
     deleteArtboard,
     updateArtboard,
+    distributeSelectedShapes,
     
     // Events
     handleMouseDown,

@@ -30,6 +30,7 @@ export default function ShapeEditor() {
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
+    distributeSelectedShapes,
     composeShapes,
     setEditingMode,
     toggleMultiSelectMode,
@@ -169,6 +170,7 @@ export default function ShapeEditor() {
           onSelectArtboard={selectArtboard}
           onDeleteArtboard={deleteArtboard}
           onUpdateArtboard={updateArtboard}
+          onDistributeSelected={distributeSelectedShapes}
         />
         <Canvas
           shapes={shapes}
