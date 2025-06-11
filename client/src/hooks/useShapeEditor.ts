@@ -349,13 +349,19 @@ export const useShapeEditor = () => {
 
   const selectPointAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
     let foundPoint: { shapeId: string; pointIndex: number } | null = null;
-    const threshold = isTouch ? 20 : 8; // Larger threshold for touch devices
+    const threshold = isTouch ? 20 : 8;
     
-    // Search through all shapes for nearby points (including control points)
-    for (const shape of shapes) {
+    // Search through ALL shapes for nearby points, prioritizing selected shapes
+    const sortedShapes = [...shapes].sort((a, b) => {
+      if (a.selected && !b.selected) return -1;
+      if (!a.selected && b.selected) return 1;
+      return b.properties.zIndex - a.properties.zIndex;
+    });
+    
+    for (const shape of sortedShapes) {
       if (!shape.points || shape.points.length === 0) continue;
       
-      // Check regular points
+      // Check regular points first
       for (let i = 0; i < shape.points.length; i++) {
         if (shape.isPointNear(x, y, i, threshold)) {
           foundPoint = { shapeId: shape.id, pointIndex: i };
@@ -363,10 +369,10 @@ export const useShapeEditor = () => {
         }
       }
       
-      // Check control points if no regular point found
-      if (!foundPoint && shape.controlPoints) {
+      // Check control points if no regular point found and shape has curves
+      if (!foundPoint && shape.controlPoints && (shape.type === 'bezier' || shape.type === 'cubic')) {
         for (let i = 0; i < shape.controlPoints.length; i++) {
-          if (shape.isPointNear(x, y, i + 1000, threshold)) { // Control points offset by 1000
+          if (shape.isPointNear(x, y, i + 1000, threshold)) {
             foundPoint = { shapeId: shape.id, pointIndex: i + 1000 };
             break;
           }
@@ -389,19 +395,26 @@ export const useShapeEditor = () => {
           }
         });
       }
-      // Force visual update
       setShapes(prev => [...prev]);
+      return true; // Indicate a point was selected
     } else if (!multiSelect) {
       setSelectedPoints([]);
     }
+    return false;
   }, [shapes]);
 
   const selectSegmentAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
     let foundSegment: { shapeId: string; segmentIndex: number } | null = null;
-    const threshold = isTouch ? 15 : 5; // Larger threshold for touch devices
+    const threshold = isTouch ? 15 : 5;
     
-    // Search through all shapes for nearby segments
-    for (const shape of shapes) {
+    // Search through ALL shapes for nearby segments, prioritizing selected shapes
+    const sortedShapes = [...shapes].sort((a, b) => {
+      if (a.selected && !b.selected) return -1;
+      if (!a.selected && b.selected) return 1;
+      return b.properties.zIndex - a.properties.zIndex;
+    });
+    
+    for (const shape of sortedShapes) {
       if (!shape.points || shape.points.length < 2) continue;
       
       for (let i = 0; i < shape.points.length - 1; i++) {
@@ -426,11 +439,12 @@ export const useShapeEditor = () => {
           }
         });
       }
-      // Force visual update
       setShapes(prev => [...prev]);
+      return true; // Indicate a segment was selected
     } else if (!multiSelect) {
       setSelectedSegments([]);
     }
+    return false;
   }, [shapes]);
 
   const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
@@ -777,9 +791,11 @@ export const useShapeEditor = () => {
     
     if (!isDragging || !dragStart) return;
     
-    // Calculate delta in world coordinates
-    const deltaX = x - dragStart.x;
-    const deltaY = y - dragStart.y;
+    // Calculate delta using correct coordinate transformation
+    const currentX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom - canvasSettings.panX;
+    const currentY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom - canvasSettings.panY;
+    const deltaX = currentX - dragStart.x;
+    const deltaY = currentY - dragStart.y;
     
     // Handle different edit modes
     switch (editMode) {

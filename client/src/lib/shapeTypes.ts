@@ -71,6 +71,8 @@ export interface BaseShape {
   width?: number;
   height?: number;
   controlPoints?: Point[];
+  tangentHandles?: { in: Point; out: Point }[]; // Bezier tangent handles for each point
+  smoothPoints?: boolean[]; // Track which points are smooth (continuous tangents) vs sharp
   closed?: boolean;
   segments?: number; // Number of segments for smooth curves
   renderType?: 'polygon' | 'bezier' | 'cubic' | 'smooth'; // How to render the shape

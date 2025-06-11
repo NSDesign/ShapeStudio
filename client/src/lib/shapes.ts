@@ -187,6 +187,8 @@ export class Shape {
     const numPoints = this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3);
     this.points = [];
     this.controlPoints = [];
+    this.tangentHandles = [];
+    this.smoothPoints = [];
     
     if (this.type === 'cubic') {
       // Generate cubic bezier curve with 4 points
@@ -197,39 +199,58 @@ export class Shape {
         { x: 60, y: 0 }
       ];
       
-      // For cubic curves, generate control points between each segment
-      for (let i = 0; i < this.points.length - 1; i++) {
-        const p1 = this.points[i];
-        const p2 = this.points[i + 1];
-        const midX = (p1.x + p2.x) / 2;
-        const midY = (p1.y + p2.y) / 2;
+      // Generate tangent handles for each point
+      this.points.forEach((point, i) => {
+        const handleLength = 20 + Math.random() * 15;
+        const angle1 = Math.random() * Math.PI * 2;
+        const angle2 = angle1 + Math.PI; // Opposite direction for smooth continuity
         
-        // Add some curve to the control points
-        this.controlPoints.push({
-          x: midX + (Math.random() - 0.5) * 40,
-          y: midY + (Math.random() - 0.5) * 40
+        this.tangentHandles!.push({
+          in: {
+            x: point.x + Math.cos(angle1) * handleLength,
+            y: point.y + Math.sin(angle1) * handleLength
+          },
+          out: {
+            x: point.x + Math.cos(angle2) * handleLength,
+            y: point.y + Math.sin(angle2) * handleLength
+          }
         });
-      }
+        
+        // All points start as smooth (continuous tangents)
+        this.smoothPoints!.push(true);
+      });
+      
     } else {
-      // Generate bezier curve
+      // Generate bezier curve with tangent handles
       for (let i = 0; i < numPoints; i++) {
-        this.points.push({
+        const point = {
           x: (i - numPoints/2) * (40 + Math.random() * 30),
           y: (Math.random() - 0.5) * 100
+        };
+        this.points.push(point);
+        
+        // Generate tangent handles
+        const handleLength = 15 + Math.random() * 10;
+        const angle1 = Math.random() * Math.PI * 2;
+        const angle2 = angle1 + Math.PI;
+        
+        this.tangentHandles!.push({
+          in: {
+            x: point.x + Math.cos(angle1) * handleLength,
+            y: point.y + Math.sin(angle1) * handleLength
+          },
+          out: {
+            x: point.x + Math.cos(angle2) * handleLength,
+            y: point.y + Math.sin(angle2) * handleLength
+          }
         });
         
-        if (i < numPoints - 1) {
-          const p1 = this.points[i];
-          const p2 = this.points[i + 1] || this.points[0];
-          this.controlPoints.push({
-            x: (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 30,
-            y: (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 30
-          });
-        }
+        this.smoothPoints!.push(true);
       }
     }
     
     this.closed = this.type === 'cubic' ? false : Math.random() > 0.5;
+    this.renderType = 'bezier';
   }
 
   private generateBlobPoints(): void {
@@ -742,18 +763,12 @@ export class Shape {
   }
 
   getBounds(): { x: number; y: number; width: number; height: number } {
-    // Always calculate bounds from actual points for dynamic bounding boxes
+    // Calculate bounds ONLY from actual shape geometry, excluding control handles
     if (this.points.length > 0) {
       const xs = this.points.map(p => p.x);
       const ys = this.points.map(p => p.y);
       
-      // Include control points in bounding box calculation for curved shapes
-      if (this.controlPoints && (this.renderType === 'bezier' || this.renderType === 'smooth')) {
-        this.controlPoints.forEach(cp => {
-          xs.push(cp.x);
-          ys.push(cp.y);
-        });
-      }
+      // DO NOT include control points in bounding box - they are UI elements only
       
       const minX = Math.min(...xs);
       const maxX = Math.max(...xs);
