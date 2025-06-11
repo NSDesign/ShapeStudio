@@ -484,15 +484,37 @@ export class Shape {
     
     ctx.moveTo(this.points[0].x, this.points[0].y);
     
-    for (let i = 1; i < this.points.length; i++) {
-      if (this.type === 'bezier' && this.controlPoints && i - 1 < this.controlPoints.length) {
-        ctx.quadraticCurveTo(
-          this.controlPoints[i - 1].x,
-          this.controlPoints[i - 1].y,
-          this.points[i].x,
-          this.points[i].y
-        );
-      } else {
+    // Use renderType to determine how to draw curves
+    const renderType = this.renderType || 'polygon';
+    
+    if (renderType === 'bezier' || renderType === 'smooth') {
+      // Draw smooth curves between points
+      for (let i = 1; i < this.points.length; i++) {
+        if (this.controlPoints && i - 1 < this.controlPoints.length) {
+          // Use control points for bezier curves
+          ctx.quadraticCurveTo(
+            this.controlPoints[i - 1].x,
+            this.controlPoints[i - 1].y,
+            this.points[i].x,
+            this.points[i].y
+          );
+        } else {
+          // Generate smooth curve without explicit control points
+          const prevPoint = this.points[i - 1];
+          const currentPoint = this.points[i];
+          const nextPoint = this.points[i + 1] || (this.closed ? this.points[0] : currentPoint);
+          
+          // Calculate control point for smooth curve
+          const tension = 0.3;
+          const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
+          const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
+          
+          ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
+        }
+      }
+    } else {
+      // Draw straight lines between points
+      for (let i = 1; i < this.points.length; i++) {
         ctx.lineTo(this.points[i].x, this.points[i].y);
       }
     }
@@ -684,6 +706,15 @@ export class Shape {
     if (this.points.length > 0) {
       const xs = this.points.map(p => p.x);
       const ys = this.points.map(p => p.y);
+      
+      // Include control points in bounding box calculation for curved shapes
+      if (this.controlPoints && (this.renderType === 'bezier' || this.renderType === 'smooth')) {
+        this.controlPoints.forEach(cp => {
+          xs.push(cp.x);
+          ys.push(cp.y);
+        });
+      }
+      
       const minX = Math.min(...xs);
       const maxX = Math.max(...xs);
       const minY = Math.min(...ys);

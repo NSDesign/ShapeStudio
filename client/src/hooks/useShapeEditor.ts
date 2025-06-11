@@ -351,16 +351,28 @@ export const useShapeEditor = () => {
     let foundPoint: { shapeId: string; pointIndex: number } | null = null;
     const threshold = isTouch ? 20 : 8; // Larger threshold for touch devices
     
-    // Search through all shapes for nearby points
+    // Search through all shapes for nearby points (including control points)
     for (const shape of shapes) {
       if (!shape.points || shape.points.length === 0) continue;
       
+      // Check regular points
       for (let i = 0; i < shape.points.length; i++) {
         if (shape.isPointNear(x, y, i, threshold)) {
           foundPoint = { shapeId: shape.id, pointIndex: i };
           break;
         }
       }
+      
+      // Check control points if no regular point found
+      if (!foundPoint && shape.controlPoints) {
+        for (let i = 0; i < shape.controlPoints.length; i++) {
+          if (shape.isPointNear(x, y, i + 1000, threshold)) { // Control points offset by 1000
+            foundPoint = { shapeId: shape.id, pointIndex: i + 1000 };
+            break;
+          }
+        }
+      }
+      
       if (foundPoint) break;
     }
 
@@ -421,23 +433,35 @@ export const useShapeEditor = () => {
     }
   }, [shapes]);
 
-  const moveSelectedPoints = useCallback((screenDeltaX: number, screenDeltaY: number) => {
+  const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
     selectedPoints.forEach(({ shapeId, pointIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape) {
-        const worldPoint = shape.getWorldPoint(pointIndex);
-        if (worldPoint) {
-          shape.updateWorldPoint(pointIndex, {
-            x: worldPoint.x + screenDeltaX,
-            y: worldPoint.y + screenDeltaY
-          });
+        // Handle control points (offset by 1000)
+        if (pointIndex >= 1000) {
+          const worldControl = shape.getWorldControlPoint(pointIndex - 1000);
+          if (worldControl) {
+            shape.updateWorldPoint(pointIndex, {
+              x: worldControl.x + deltaX,
+              y: worldControl.y + deltaY
+            });
+          }
+        } else {
+          // Handle regular points
+          const worldPoint = shape.getWorldPoint(pointIndex);
+          if (worldPoint) {
+            shape.updateWorldPoint(pointIndex, {
+              x: worldPoint.x + deltaX,
+              y: worldPoint.y + deltaY
+            });
+          }
         }
       }
     });
     setShapes(prev => [...prev]);
   }, [selectedPoints, shapes]);
 
-  const moveSelectedSegments = useCallback((screenDeltaX: number, screenDeltaY: number) => {
+  const moveSelectedSegments = useCallback((deltaX: number, deltaY: number) => {
     selectedSegments.forEach(({ shapeId, segmentIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape) {
@@ -446,12 +470,12 @@ export const useShapeEditor = () => {
         const point2 = shape.getWorldPoint(segmentIndex + 1);
         if (point1 && point2) {
           shape.updateWorldPoint(segmentIndex, {
-            x: point1.x + screenDeltaX,
-            y: point1.y + screenDeltaY
+            x: point1.x + deltaX,
+            y: point1.y + deltaY
           });
           shape.updateWorldPoint(segmentIndex + 1, {
-            x: point2.x + screenDeltaX,
-            y: point2.y + screenDeltaY
+            x: point2.x + deltaX,
+            y: point2.y + deltaY
           });
         }
       }
@@ -753,31 +777,31 @@ export const useShapeEditor = () => {
     
     if (!isDragging || !dragStart) return;
     
-    // Calculate delta in screen coordinates, then convert to world coordinates
-    const screenDeltaX = (e.clientX - dragStart.x) / canvasSettings.zoom;
-    const screenDeltaY = (e.clientY - dragStart.y) / canvasSettings.zoom;
+    // Calculate delta in world coordinates
+    const deltaX = x - dragStart.x;
+    const deltaY = y - dragStart.y;
     
     // Handle different edit modes
     switch (editMode) {
       case 'points':
         if (selectedPoints.length > 0) {
-          moveSelectedPoints(screenDeltaX, screenDeltaY);
+          moveSelectedPoints(deltaX, deltaY);
         }
         break;
       case 'segments':
         if (selectedSegments.length > 0) {
-          moveSelectedSegments(screenDeltaX, screenDeltaY);
+          moveSelectedSegments(deltaX, deltaY);
         }
         break;
       default:
         if (selectedShapes.length > 0 || selectedGroups.length > 0) {
-          moveSelected(screenDeltaX, screenDeltaY);
+          moveSelected(deltaX, deltaY);
         }
         break;
     }
     
-    // Update drag start to current screen coordinates
-    setDragStart({ x: e.clientX, y: e.clientY });
+    // Update drag start to current world coordinates
+    setDragStart({ x, y });
   }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {
