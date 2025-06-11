@@ -1784,14 +1784,14 @@ export default function Sidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="random">Random</SelectItem>
-                <SelectItem value="grid">Grid</SelectItem>
-                <SelectItem value="circle">Circle</SelectItem>
-                <SelectItem value="spiral">Spiral</SelectItem>
-                <SelectItem value="organic">Organic</SelectItem>
-                <SelectItem value="physics">Physics</SelectItem>
-                <SelectItem value="wave">Wave</SelectItem>
-                <SelectItem value="cluster">Cluster</SelectItem>
+                <SelectItem value="random" className="text-white hover:bg-slate-700">Random</SelectItem>
+                <SelectItem value="grid" className="text-white hover:bg-slate-700">Grid</SelectItem>
+                <SelectItem value="circle" className="text-white hover:bg-slate-700">Circle</SelectItem>
+                <SelectItem value="spiral" className="text-white hover:bg-slate-700">Spiral</SelectItem>
+                <SelectItem value="organic" className="text-white hover:bg-slate-700">Organic</SelectItem>
+                <SelectItem value="physics" className="text-white hover:bg-slate-700">Physics</SelectItem>
+                <SelectItem value="wave" className="text-white hover:bg-slate-700">Wave</SelectItem>
+                <SelectItem value="cluster" className="text-white hover:bg-slate-700">Cluster</SelectItem>
               </SelectContent>
             </Select>
           </div>

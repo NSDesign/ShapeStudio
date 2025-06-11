@@ -337,6 +337,65 @@ export const useShapeEditor = () => {
     setScatterSettings(prev => ({ ...prev, ...settings }));
   }, []);
 
+  // Distribute selected shapes using smart distribution algorithm
+  const distributeSelectedShapes = useCallback(() => {
+    if (selectedShapes.length < 2) return;
+    
+    // Calculate bounds of all selected shapes
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    selectedShapes.forEach(shape => {
+      const bounds = shape.getBounds();
+      const shapeMinX = shape.transform.x + bounds.x;
+      const shapeMinY = shape.transform.y + bounds.y;
+      const shapeMaxX = shapeMinX + bounds.width;
+      const shapeMaxY = shapeMinY + bounds.height;
+      
+      minX = Math.min(minX, shapeMinX);
+      minY = Math.min(minY, shapeMinY);
+      maxX = Math.max(maxX, shapeMaxX);
+      maxY = Math.max(maxY, shapeMaxY);
+    });
+    
+    const distributionBounds = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+    
+    // Generate new positions using smart distribution algorithm
+    const newPositions = SmartDistributionAlgorithm.generatePositions(
+      selectedShapes.length, 
+      distributionBounds, 
+      scatterSettings.distribution
+    );
+    
+    // Apply new positions to selected shapes
+    setShapes(prev => prev.map(shape => {
+      const selectedIndex = selectedShapes.findIndex(s => s.id === shape.id);
+      if (selectedIndex !== -1 && newPositions[selectedIndex]) {
+        const newPosition = newPositions[selectedIndex];
+        const bounds = shape.getBounds();
+        shape.transform.x = newPosition.x - bounds.x;
+        shape.transform.y = newPosition.y - bounds.y;
+      }
+      return shape;
+    }));
+    
+    // Update selected shapes state
+    setSelectedShapes(prev => prev.map(shape => {
+      const selectedIndex = selectedShapes.findIndex(s => s.id === shape.id);
+      if (selectedIndex !== -1 && newPositions[selectedIndex]) {
+        const newPosition = newPositions[selectedIndex];
+        const bounds = shape.getBounds();
+        shape.transform.x = newPosition.x - bounds.x;
+        shape.transform.y = newPosition.y - bounds.y;
+      }
+      return shape;
+    }));
+  }, [selectedShapes, scatterSettings.distribution]);
+
   // Clear all selections
   const clearSelection = useCallback(() => {
     shapes.forEach(shape => shape.selected = false);
@@ -1471,6 +1530,7 @@ export const useShapeEditor = () => {
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
+    distributeSelectedShapes,
     composeShapes,
     scatterOnShape,
     setEditingMode,
