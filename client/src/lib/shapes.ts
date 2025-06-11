@@ -14,6 +14,8 @@ export class Shape {
   height?: number;
   controlPoints?: Point[];
   closed?: boolean;
+  segments: number;
+  renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth';
 
   constructor(type: ShapeType, x: number = 0, y: number = 0) {
     this.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -30,7 +32,52 @@ export class Shape {
     this.properties = this.generateRandomProperties();
     this.selected = false;
     this.points = [];
+    
+    // Initialize with default values, will be set properly after shape data generation
+    this.segments = 8;
+    this.renderType = 'polygon';
+    
     this.generateShapeData();
+    
+    // Set proper defaults after shape initialization
+    this.segments = this.getDefaultSegments();
+    this.renderType = this.getDefaultRenderType();
+  }
+
+  private getDefaultSegments(): number {
+    switch (this.type) {
+      case 'circle':
+      case 'ellipse':
+        return 32; // Smooth circles/ellipses
+      case 'ring':
+        return 24; // Smooth rings
+      case 'polygon':
+      case 'star':
+        return this.sides || 6;
+      case 'rectangle':
+      case 'square':
+        return 4;
+      default:
+        return 8;
+    }
+  }
+
+  private getDefaultRenderType(): 'polygon' | 'bezier' | 'cubic' | 'smooth' {
+    switch (this.type) {
+      case 'circle':
+      case 'ellipse':
+      case 'ring':
+        return 'smooth'; // Use smooth curves for round shapes
+      case 'bezier':
+        return 'bezier';
+      case 'cubic':
+      case 'quadratic':
+        return 'cubic';
+      case 'blob':
+        return 'cubic';
+      default:
+        return 'polygon'; // Use polygon for geometric shapes
+    }
   }
 
   private generateRandomProperties(): ShapeProperties {
@@ -191,12 +238,11 @@ export class Shape {
   }
 
   private generateCirclePoints(): void {
-    const numPoints = 16; // 16 points for smooth circle editing
     this.points = [];
     const radius = this.radius!;
     
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * Math.PI * 2;
+    for (let i = 0; i < this.segments; i++) {
+      const angle = (i / this.segments) * Math.PI * 2;
       this.points.push({
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius

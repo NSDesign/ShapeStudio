@@ -74,6 +74,8 @@ export interface BaseShape {
   height?: number;
   controlPoints?: Point[];
   closed?: boolean;
+  segments?: number; // Number of segments for smooth curves
+  renderType?: 'polygon' | 'bezier' | 'cubic' | 'smooth'; // How to render the shape
 }
 
 export interface ShapeGroup {
