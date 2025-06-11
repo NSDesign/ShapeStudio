@@ -612,6 +612,70 @@ export class Shape {
     ctx.stroke();
     ctx.setLineDash([]);
     
+    // Draw skew handles
+    const skewDistance = 15 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
+    const skewHandles = [
+      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y - skewDistance - handleOffset, type: 'skewY' }, // Top skew
+      { x: bounds.x + bounds.width + skewDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'skewX' }, // Right skew
+      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height + skewDistance - handleOffset, type: 'skewY' }, // Bottom skew
+      { x: bounds.x - skewDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'skewX' } // Left skew
+    ];
+    
+    ctx.fillStyle = '#F59E0B';
+    skewHandles.forEach(handle => {
+      ctx.beginPath();
+      if (handle.type === 'skewX') {
+        // Diamond shape for horizontal skew
+        ctx.moveTo(handle.x + handleOffset, handle.y);
+        ctx.lineTo(handle.x + handleSize, handle.y + handleOffset);
+        ctx.lineTo(handle.x + handleOffset, handle.y + handleSize);
+        ctx.lineTo(handle.x, handle.y + handleOffset);
+      } else {
+        // Diamond shape for vertical skew
+        ctx.moveTo(handle.x, handle.y + handleOffset);
+        ctx.lineTo(handle.x + handleOffset, handle.y);
+        ctx.lineTo(handle.x + handleSize, handle.y + handleOffset);
+        ctx.lineTo(handle.x + handleOffset, handle.y + handleSize);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+    
+    // Draw flip handles
+    const flipDistance = 25 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
+    const flipHandles = [
+      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height + flipDistance - handleOffset, type: 'flipV' }, // Vertical flip
+      { x: bounds.x + bounds.width + flipDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'flipH' } // Horizontal flip
+    ];
+    
+    ctx.fillStyle = '#8B5CF6';
+    flipHandles.forEach(handle => {
+      ctx.beginPath();
+      if (handle.type === 'flipH') {
+        // Arrow shape for horizontal flip
+        ctx.moveTo(handle.x, handle.y + handleOffset);
+        ctx.lineTo(handle.x + handleSize * 0.6, handle.y);
+        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize * 0.3);
+        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.3);
+        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.7);
+        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize * 0.7);
+        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize);
+      } else {
+        // Arrow shape for vertical flip
+        ctx.moveTo(handle.x + handleOffset, handle.y);
+        ctx.lineTo(handle.x, handle.y + handleSize * 0.6);
+        ctx.lineTo(handle.x + handleSize * 0.3, handle.y + handleSize * 0.6);
+        ctx.lineTo(handle.x + handleSize * 0.3, handle.y + handleSize);
+        ctx.lineTo(handle.x + handleSize * 0.7, handle.y + handleSize);
+        ctx.lineTo(handle.x + handleSize * 0.7, handle.y + handleSize * 0.6);
+        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.6);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+    
     ctx.restore();
   }
 
@@ -826,14 +890,15 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw control handle
+          // Draw control handle - make it selectable
           const radius = 4 / canvasZoom;
-          ctx.fillStyle = '#F59E0B';
+          const isControlSelected = selectedPoints.includes(index + 1000); // Offset control point indices
+          ctx.fillStyle = isControlSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
           ctx.beginPath();
-          ctx.rect(worldControl.x - radius/2, worldControl.y - radius/2, radius, radius);
+          ctx.arc(worldControl.x, worldControl.y, radius, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         }
@@ -848,13 +913,30 @@ export class Shape {
       if (p1 && p2) {
         const isSelected = selectedSegments.includes(i);
         
-        // Draw segment highlight
+        // Draw segment highlight with curve matching render type
         if (isSelected) {
           ctx.strokeStyle = '#10B981';
           ctx.lineWidth = 4 / canvasZoom;
           ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
+          
+          if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
+            // Draw curved segment
+            const cp1x = p1.x + (p2.x - p1.x) * 0.3;
+            const cp1y = p1.y + (p2.y - p1.y) * 0.3;
+            const cp2x = p1.x + (p2.x - p1.x) * 0.7;
+            const cp2y = p1.y + (p2.y - p1.y) * 0.7;
+            
+            ctx.moveTo(p1.x, p1.y);
+            if (this.renderType === 'smooth') {
+              ctx.quadraticCurveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, p2.x, p2.y);
+            } else {
+              ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+            }
+          } else {
+            // Draw straight line segment
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+          }
           ctx.stroke();
         }
         

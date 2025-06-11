@@ -421,15 +421,15 @@ export const useShapeEditor = () => {
     }
   }, [shapes]);
 
-  const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
+  const moveSelectedPoints = useCallback((screenDeltaX: number, screenDeltaY: number) => {
     selectedPoints.forEach(({ shapeId, pointIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape) {
         const worldPoint = shape.getWorldPoint(pointIndex);
         if (worldPoint) {
           shape.updateWorldPoint(pointIndex, {
-            x: worldPoint.x + deltaX,
-            y: worldPoint.y + deltaY
+            x: worldPoint.x + screenDeltaX,
+            y: worldPoint.y + screenDeltaY
           });
         }
       }
@@ -437,7 +437,7 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedPoints, shapes]);
 
-  const moveSelectedSegments = useCallback((deltaX: number, deltaY: number) => {
+  const moveSelectedSegments = useCallback((screenDeltaX: number, screenDeltaY: number) => {
     selectedSegments.forEach(({ shapeId, segmentIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape) {
@@ -446,12 +446,12 @@ export const useShapeEditor = () => {
         const point2 = shape.getWorldPoint(segmentIndex + 1);
         if (point1 && point2) {
           shape.updateWorldPoint(segmentIndex, {
-            x: point1.x + deltaX,
-            y: point1.y + deltaY
+            x: point1.x + screenDeltaX,
+            y: point1.y + screenDeltaY
           });
           shape.updateWorldPoint(segmentIndex + 1, {
-            x: point2.x + deltaX,
-            y: point2.y + deltaY
+            x: point2.x + screenDeltaX,
+            y: point2.y + screenDeltaY
           });
         }
       }
