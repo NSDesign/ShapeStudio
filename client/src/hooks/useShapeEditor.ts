@@ -631,28 +631,40 @@ export const useShapeEditor = () => {
     // Handle different edit modes
     switch (editMode) {
       case 'points':
-        clickedOnShape = selectedPoints.some(p => {
-          const shape = shapes.find(s => s.id === p.shapeId);
-          return shape?.isPointNear(x, y, p.pointIndex, 8);
-        });
-        if (!clickedOnShape) {
-          const pointSelected = selectPointAt(x, y, e.shiftKey);
-          clickedOnShape = pointSelected;
+        // Always try to select points first, even if none are currently selected
+        const pointSelected = selectPointAt(x, y, e.shiftKey);
+        if (pointSelected) {
+          clickedOnShape = true;
           
           // Handle Alt-click for tangent continuity toggle
-          if (pointSelected && e.altKey) {
-            toggleTangentContinuity(x, y);
+          if (e.altKey) {
+            selectedPoints.forEach(({ shapeId, pointIndex }) => {
+              const shape = shapes.find(s => s.id === shapeId);
+              if (shape && shape.tangentHandles && shape.smoothPoints && pointIndex < shape.smoothPoints.length) {
+                shape.smoothPoints[pointIndex] = !shape.smoothPoints[pointIndex];
+              }
+            });
+            setShapes(prev => [...prev]);
           }
+        } else {
+          // Check if clicking on already selected points for dragging
+          clickedOnShape = selectedPoints.some(p => {
+            const shape = shapes.find(s => s.id === p.shapeId);
+            return shape?.isPointNear(x, y, p.pointIndex, 8);
+          });
         }
         break;
       case 'segments':
-        clickedOnShape = selectedSegments.some(s => {
-          const shape = shapes.find(sh => sh.id === s.shapeId);
-          return shape?.isSegmentNear(x, y, s.segmentIndex, 5);
-        });
-        if (!clickedOnShape) {
-          selectSegmentAt(x, y, e.shiftKey);
-          clickedOnShape = selectedSegments.length > 0;
+        // Always try to select segments first, even if none are currently selected
+        const segmentSelected = selectSegmentAt(x, y, e.shiftKey);
+        if (segmentSelected) {
+          clickedOnShape = true;
+        } else {
+          // Check if clicking on already selected segments for dragging
+          clickedOnShape = selectedSegments.some(s => {
+            const shape = shapes.find(sh => sh.id === s.shapeId);
+            return shape?.isSegmentNear(x, y, s.segmentIndex, 5);
+          });
         }
         break;
       default:
