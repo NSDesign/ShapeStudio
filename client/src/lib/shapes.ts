@@ -118,7 +118,7 @@ export class Shape {
       strokeWidth: 1 + Math.random() * 4,
       strokeOpacity: 0.8 + Math.random() * 0.2,
       blendMode: 'source-over' as BlendMode,
-      zIndex: Date.now() + Math.random() * 1000, // Higher z-index to appear above existing shapes
+      zIndex: 0, // Will be set properly when shape is added to canvas
       gradient
     };
   }

@@ -89,6 +89,8 @@ export interface ScatterSettings {
   onPoints: boolean;
   insideArea: boolean;
   count: number;
+  minCount: number;
+  maxCount: number;
   randomness: number;
 }
 

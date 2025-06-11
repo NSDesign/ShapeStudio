@@ -14,6 +14,8 @@ export const useShapeEditor = () => {
     onPoints: false,
     insideArea: false,
     count: 5,
+    minCount: 1,
+    maxCount: 20,
     randomness: 0.5
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
@@ -87,7 +89,7 @@ export const useShapeEditor = () => {
     if (availableTypes.length === 0) return;
     
     const newShapes: Shape[] = [];
-    const numShapes = scatterSettings.count;
+    const numShapes = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
     
     // Get active artboard bounds
     const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
