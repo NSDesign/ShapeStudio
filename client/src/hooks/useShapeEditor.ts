@@ -636,8 +636,13 @@ export const useShapeEditor = () => {
           return shape?.isPointNear(x, y, p.pointIndex, 8);
         });
         if (!clickedOnShape) {
-          selectPointAt(x, y, e.shiftKey);
-          clickedOnShape = selectedPoints.length > 0;
+          const pointSelected = selectPointAt(x, y, e.shiftKey);
+          clickedOnShape = pointSelected;
+          
+          // Handle Alt-click for tangent continuity toggle
+          if (pointSelected && e.altKey) {
+            toggleTangentContinuity(x, y);
+          }
         }
         break;
       case 'segments':

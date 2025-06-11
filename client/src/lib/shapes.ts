@@ -13,6 +13,8 @@ export class Shape {
   width?: number;
   height?: number;
   controlPoints?: Point[];
+  tangentHandles?: { in: Point; out: Point }[];
+  smoothPoints?: boolean[];
   closed?: boolean;
   segments: number;
   renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth';
