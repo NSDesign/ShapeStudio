@@ -83,6 +83,7 @@ interface SidebarProps {
   canComposeShapes: boolean;
   selectedShapes: Shape[];
   selectedGroups: ShapeGroupClass[];
+  shapes: Shape[]; // All shapes for layers panel
   artboards: Artboard[];
   activeArtboard: string;
   onToggleShapeType: (type: ShapeType) => void;
@@ -119,6 +120,7 @@ export default function Sidebar({
   canComposeShapes,
   selectedShapes,
   selectedGroups,
+  shapes,
   artboards,
   activeArtboard,
   onToggleShapeType,
@@ -1736,16 +1738,15 @@ export default function Sidebar({
       'exclusion', 'hue', 'saturation', 'color', 'luminosity'
     ];
 
-    // Get all shapes from selectedShapes prop
-    const allShapes = [...selectedShapes, ...selectedGroups.flatMap(g => g.shapes)];
+    // Get all shapes from props
     const sortedShapes = useMemo(() => {
-      return allShapes.sort((a, b) => b.properties.zIndex - a.properties.zIndex);
-    }, [selectedShapes, selectedGroups]);
+      return shapes.sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    }, [shapes]);
 
     return (
       <div className="space-y-4">
         <div className="text-sm text-slate-400">
-          Layers: <span className="text-white font-medium">{allShapes.length}</span> total
+          Layers: <span className="text-white font-medium">{shapes.length}</span> total
         </div>
 
         {/* Layer Ordering Controls */}
@@ -1850,7 +1851,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {allShapes.length === 0 && (
+        {shapes.length === 0 && (
           <div className="text-xs text-slate-500 text-center py-4">
             No layers yet. Create some shapes to see them here.
           </div>
@@ -2086,7 +2087,7 @@ export default function Sidebar({
 
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto">
-        <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms"]} className="w-full">
+        <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms", "artboards", "layers"]} className="w-full">
 
           {/* Shape Types Section */}
           <AccordionItem value="shapes" className="border-b border-slate-700">
@@ -2178,6 +2179,22 @@ export default function Sidebar({
             </AccordionContent>
           </AccordionItem>
 
+          {/* Layers Section */}
+          <AccordionItem value="layers" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-emerald-300 data-[state=open]:bg-emerald-900/20">
+              <div className="flex items-center space-x-2">
+                <Layers className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Layers</span>
+                <span className="ml-auto text-xs bg-emerald-600 text-white px-2 py-1 rounded-full">
+                  {selectedShapes.length + selectedGroups.length + artboards.length}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <LayersContent />
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Properties Section */}
           <AccordionItem value="properties" className="border-b-0">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-pink-300 data-[state=open]:bg-pink-900/20">
@@ -2192,7 +2209,7 @@ export default function Sidebar({
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
-              <PropertiesContent />
+              <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
             </AccordionContent>
           </AccordionItem>
 
