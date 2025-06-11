@@ -371,29 +371,19 @@ export const useShapeEditor = () => {
       scatterSettings.distribution
     );
     
-    // Apply new positions to selected shapes
-    setShapes(prev => prev.map(shape => {
-      const selectedIndex = selectedShapes.findIndex(s => s.id === shape.id);
-      if (selectedIndex !== -1 && newPositions[selectedIndex]) {
-        const newPosition = newPositions[selectedIndex];
+    // Apply new positions to selected shapes by mutating them directly
+    selectedShapes.forEach((shape, index) => {
+      if (newPositions[index]) {
+        const newPosition = newPositions[index];
         const bounds = shape.getBounds();
         shape.transform.x = newPosition.x - bounds.x;
         shape.transform.y = newPosition.y - bounds.y;
       }
-      return shape;
-    }));
+    });
     
-    // Update selected shapes state
-    setSelectedShapes(prev => prev.map(shape => {
-      const selectedIndex = selectedShapes.findIndex(s => s.id === shape.id);
-      if (selectedIndex !== -1 && newPositions[selectedIndex]) {
-        const newPosition = newPositions[selectedIndex];
-        const bounds = shape.getBounds();
-        shape.transform.x = newPosition.x - bounds.x;
-        shape.transform.y = newPosition.y - bounds.y;
-      }
-      return shape;
-    }));
+    // Force re-render
+    setShapes(prev => [...prev]);
+    setSelectedShapes(prev => [...prev]);
   }, [selectedShapes, scatterSettings.distribution]);
 
   // Clear all selections

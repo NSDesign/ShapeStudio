@@ -36,7 +36,8 @@ import {
   ChevronRight,
   Trash2,
   FolderOpen,
-  Menu
+  Menu,
+  Grid3X3
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -104,6 +105,7 @@ interface SidebarProps {
   onSelectArtboard: (artboardId: string) => void;
   onDeleteArtboard: (artboardId: string) => void;
   onUpdateArtboard: (artboardId: string, updates: Partial<Artboard>) => void;
+  onDistributeSelected: () => void;
 }
 
 export default function Sidebar({
@@ -140,7 +142,8 @@ export default function Sidebar({
   onAddArtboard,
   onSelectArtboard,
   onDeleteArtboard,
-  onUpdateArtboard
+  onUpdateArtboard,
+  onDistributeSelected
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -1898,6 +1901,16 @@ export default function Sidebar({
               <Label className="text-xs text-slate-400">Respect Bounds</Label>
             </div>
           </div>
+
+          {/* Distribute Button */}
+          <Button
+            onClick={onDistributeSelected}
+            disabled={selectedCount < 2}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
+          >
+            <Boxes className="w-4 h-4 mr-2" />
+            Distribute Selected ({selectedCount})
+          </Button>
         </div>
       </div>
     </div>
