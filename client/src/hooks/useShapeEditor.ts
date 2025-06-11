@@ -100,16 +100,21 @@ export const useShapeEditor = () => {
     const minY = currentArtboard.y - buffer;
     const maxY = currentArtboard.y + currentArtboard.height + buffer;
     
+    // Find highest existing z-index
+    const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
+    
     for (let i = 0; i < numShapes; i++) {
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
       const x = minX + Math.random() * (maxX - minX);
       const y = minY + Math.random() * (maxY - minY);
       const shape = new Shape(type, x, y);
+      // Ensure new shapes appear above existing ones
+      shape.properties.zIndex = highestZIndex + i + 1;
       newShapes.push(shape);
     }
     
     setShapes(prev => [...prev, ...newShapes]);
-  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings.count]);
+  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings.count, shapes]);
 
   // Select shape at point
   const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false, allowDeselect: boolean = true) => {
@@ -263,12 +268,17 @@ export const useShapeEditor = () => {
     
     const newShapes: Shape[] = [];
     
+    // Find highest existing z-index
+    const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
+    let shapeCounter = 1;
+    
     if (scatterSettings.onPoints && targetShape.points && targetShape.points.length > 0) {
       targetShape.points.forEach(point => {
         const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
         const x = targetShape.transform.x + point.x + (Math.random() - 0.5) * 20;
         const y = targetShape.transform.y + point.y + (Math.random() - 0.5) * 20;
         const shape = new Shape(type, x, y);
+        shape.properties.zIndex = highestZIndex + shapeCounter++;
         newShapes.push(shape);
       });
     }
@@ -280,12 +290,13 @@ export const useShapeEditor = () => {
         const x = targetShape.transform.x + bounds.x + Math.random() * bounds.width;
         const y = targetShape.transform.y + bounds.y + Math.random() * bounds.height;
         const shape = new Shape(type, x, y);
+        shape.properties.zIndex = highestZIndex + shapeCounter++;
         newShapes.push(shape);
       }
     }
     
     setShapes(prev => [...prev, ...newShapes]);
-  }, [scatterSettings, enabledShapeTypes]);
+  }, [scatterSettings, enabledShapeTypes, shapes]);
 
   // Toggle shape type
   const toggleShapeType = useCallback((type: ShapeType) => {
