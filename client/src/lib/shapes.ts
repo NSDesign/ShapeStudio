@@ -1181,7 +1181,7 @@ export class Shape {
           
           // Draw 'in' handle
           const radius = 4 / canvasZoom;
-          const isInSelected = selectedPoints.includes(index * 2 + 1000); // Offset for in handles
+          const isInSelected = selectedPoints.includes(2000 + index * 2); // Tangent handles start at 2000
           ctx.fillStyle = isInSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
@@ -1205,7 +1205,7 @@ export class Shape {
           
           // Draw 'out' handle
           const radius = 4 / canvasZoom;
-          const isOutSelected = selectedPoints.includes(index * 2 + 1 + 1000); // Offset for out handles
+          const isOutSelected = selectedPoints.includes(2000 + index * 2 + 1); // Out handle is +1 from in handle
           ctx.fillStyle = isOutSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;

@@ -153,9 +153,70 @@ export const useShapeEditor = () => {
   }, [shapes, clearSelection]);
 
   const selectPointAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
-    for (const shape of shapes) {
+    // Sort shapes by z-index from highest to lowest to respect layering
+    const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    
+    for (const shape of sortedShapes) {
       if (shape.points) {
-        // Check control points first (for bezier/cubic curves)
+        // Check if this shape blocks access to lower shapes
+        const shapeBlocks = shape.containsPoint(x, y);
+        
+        // Check tangent handles first (for cubic curves)
+        if (shape.tangentHandles) {
+          for (let i = 0; i < shape.tangentHandles.length; i++) {
+            // Check 'in' handle
+            const worldHandleIn = shape.getWorldTangentHandle(i, 'in');
+            if (worldHandleIn) {
+              const distance = Math.sqrt((worldHandleIn.x - x) ** 2 + (worldHandleIn.y - y) ** 2);
+              if (distance <= 6) {
+                const pointId = { shapeId: shape.id, pointIndex: 2000 + i * 2 }; // Tangent handles start at 2000
+                if (addToSelection) {
+                  const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (exists) {
+                    setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+                  } else {
+                    const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
+                    if (pointsFromOtherShapes.length > 0) {
+                      setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
+                    } else {
+                      setSelectedPoints(prev => [...prev, pointId]);
+                    }
+                  }
+                } else {
+                  setSelectedPoints([pointId]);
+                }
+                return true;
+              }
+            }
+            
+            // Check 'out' handle
+            const worldHandleOut = shape.getWorldTangentHandle(i, 'out');
+            if (worldHandleOut) {
+              const distance = Math.sqrt((worldHandleOut.x - x) ** 2 + (worldHandleOut.y - y) ** 2);
+              if (distance <= 6) {
+                const pointId = { shapeId: shape.id, pointIndex: 2000 + i * 2 + 1 }; // Out handle is +1 from in handle
+                if (addToSelection) {
+                  const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (exists) {
+                    setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+                  } else {
+                    const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
+                    if (pointsFromOtherShapes.length > 0) {
+                      setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
+                    } else {
+                      setSelectedPoints(prev => [...prev, pointId]);
+                    }
+                  }
+                } else {
+                  setSelectedPoints([pointId]);
+                }
+                return true;
+              }
+            }
+          }
+        }
+        
+        // Check control points (for bezier curves)
         if (shape.controlPoints) {
           for (let i = 0; i < shape.controlPoints.length; i++) {
             const worldControl = shape.getWorldControlPoint(i);
@@ -168,7 +229,6 @@ export const useShapeEditor = () => {
                   if (exists) {
                     setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
                   } else {
-                    // If selecting point from different shape, clear points from other shapes unless shift is held
                     const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
                     if (pointsFromOtherShapes.length > 0) {
                       setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
@@ -197,7 +257,6 @@ export const useShapeEditor = () => {
                 if (exists) {
                   setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
                 } else {
-                  // If selecting point from different shape, clear points from other shapes unless shift is held
                   const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
                   if (pointsFromOtherShapes.length > 0) {
                     setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
@@ -212,6 +271,11 @@ export const useShapeEditor = () => {
             }
           }
         }
+        
+        // If this shape blocks and we found no points, stop searching lower shapes
+        if (shapeBlocks) {
+          break;
+        }
       }
     }
 
@@ -222,8 +286,14 @@ export const useShapeEditor = () => {
   }, [shapes, selectedPoints]);
 
   const selectSegmentAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
-    for (const shape of shapes) {
+    // Sort shapes by z-index from highest to lowest to respect layering
+    const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    
+    for (const shape of sortedShapes) {
       if (shape.points && shape.points.length > 1) {
+        // Check if this shape blocks access to lower shapes
+        const shapeBlocks = shape.containsPoint(x, y);
+        
         for (let i = 0; i < shape.points.length - 1; i++) {
           const worldP1 = shape.getWorldPoint(i);
           const worldP2 = shape.getWorldPoint(i + 1);
@@ -280,6 +350,11 @@ export const useShapeEditor = () => {
             }
           }
         }
+        
+        // If this shape blocks and we found no segments, stop searching lower shapes
+        if (shapeBlocks) {
+          break;
+        }
       }
     }
 
@@ -311,11 +386,53 @@ export const useShapeEditor = () => {
   const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
     selectedPoints.forEach(({ shapeId, pointIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
-      if (shape && shape.points && shape.points[pointIndex]) {
-        // Transform world space delta to local space delta
-        const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
-        shape.points[pointIndex].x += localDelta.x;
-        shape.points[pointIndex].y += localDelta.y;
+      if (!shape) return;
+      
+      const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
+      
+      if (pointIndex < 1000) {
+        // Regular point
+        if (shape.points && shape.points[pointIndex]) {
+          shape.points[pointIndex].x += localDelta.x;
+          shape.points[pointIndex].y += localDelta.y;
+        }
+      } else if (pointIndex >= 1000 && pointIndex < 2000) {
+        // Control point (for bezier curves)
+        const controlIndex = pointIndex - 1000;
+        if (shape.controlPoints && shape.controlPoints[controlIndex]) {
+          shape.controlPoints[controlIndex].x += localDelta.x;
+          shape.controlPoints[controlIndex].y += localDelta.y;
+        }
+      } else if (pointIndex >= 2000) {
+        // Tangent handle (for cubic curves)
+        const handlePointIndex = Math.floor((pointIndex - 1000) / 2);
+        const isOut = (pointIndex - 1000) % 2 === 1;
+        
+        if (shape.tangentHandles && shape.tangentHandles[handlePointIndex]) {
+          const handleType = isOut ? 'out' : 'in';
+          shape.tangentHandles[handlePointIndex][handleType].x += localDelta.x;
+          shape.tangentHandles[handlePointIndex][handleType].y += localDelta.y;
+          
+          // If the point is marked as smooth, update the opposite handle to maintain continuity
+          if (shape.smoothPoints && shape.smoothPoints[handlePointIndex]) {
+            const oppositeType = isOut ? 'in' : 'out';
+            const currentHandle = shape.tangentHandles[handlePointIndex][handleType];
+            const oppositeHandle = shape.tangentHandles[handlePointIndex][oppositeType];
+            const basePoint = shape.points[handlePointIndex];
+            
+            if (basePoint) {
+              // Calculate the vector from base point to current handle
+              const currentVector = {
+                x: currentHandle.x - basePoint.x,
+                y: currentHandle.y - basePoint.y
+              };
+              
+              // Set opposite handle to be the reflection of current handle
+              oppositeHandle.x = basePoint.x - currentVector.x;
+              oppositeHandle.y = basePoint.y - currentVector.y;
+            }
+          }
+        }
       }
     });
     setShapes(prev => [...prev]);
