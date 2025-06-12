@@ -172,7 +172,7 @@ export default function Canvas({
     };
   }, [onWheel]);
 
-  // Render loop
+  // Render loop with proper dependencies
   useEffect(() => {
     const render = () => {
       const canvas = canvasRef.current;
@@ -181,14 +181,19 @@ export default function Canvas({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Set canvas size
+      // Set canvas size only if changed
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+      const newWidth = rect.width * dpr;
+      const newHeight = rect.height * dpr;
+      
+      if (canvas.width !== newWidth || canvas.height !== newHeight) {
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+      }
 
       // Clear canvas
       ctx.clearRect(0, 0, rect.width, rect.height);
@@ -233,14 +238,12 @@ export default function Canvas({
         }
       });
 
-      // Render visible individual shapes (always render for debugging)
-      console.log(`Canvas: Rendering ${shapes.length} shapes`);
+      // Render individual shapes
       shapes.forEach(shape => {
-        try {
-          console.log(`Canvas: Rendering shape ${shape.id} (${shape.type}) at (${shape.transform.x}, ${shape.transform.y})`);
+        const bounds = shape.getBounds();
+        if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
+            bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
           shape.render(ctx);
-        } catch (error) {
-          console.error('Canvas: Error rendering shape:', shape.id, error);
         }
       });
 
@@ -351,11 +354,9 @@ export default function Canvas({
         ctx.restore();
       }
 
-      // Schedule next frame
-      animationFrameRef.current = requestAnimationFrame(render);
     };
 
-    // Start render loop
+    // Render only once per dependency change
     render();
 
     // Cleanup

@@ -379,7 +379,6 @@ export class Shape {
 
   render(ctx: CanvasRenderingContext2D): void {
     if (!this.points || this.points.length === 0) {
-      console.warn(`Shape ${this.id} (${this.type}) has no points, skipping render`);
       return;
     }
     
@@ -488,7 +487,6 @@ export class Shape {
 
   private drawPolygon(ctx: CanvasRenderingContext2D): void {
     if (!this.points || this.points.length === 0) {
-      console.warn(`Shape ${this.id} has no points to render`);
       return;
     }
     

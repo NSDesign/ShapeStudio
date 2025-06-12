@@ -95,6 +95,7 @@ interface SidebarProps {
   onFlipHorizontal: () => void;
   onFlipVertical: () => void;
   onDeleteSelected: () => void;
+  onClearAll?: () => void;
   onBringToFront: () => void;
   onSendToBack: () => void;
   onBringForward: () => void;

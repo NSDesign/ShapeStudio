@@ -375,12 +375,18 @@ export const useShapeEditor = () => {
     
     if (enabledTypes.length === 0) return;
 
-    // Use smart distribution algorithm for better shape placement
-    const canvasBounds = {
-      x: -canvasSettings.width / 4,
-      y: -canvasSettings.height / 4,
-      width: canvasSettings.width / 2,
-      height: canvasSettings.height / 2
+    // Use current artboard bounds for shape placement
+    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+    const canvasBounds = currentArtboard ? {
+      x: currentArtboard.x,
+      y: currentArtboard.y,
+      width: currentArtboard.width,
+      height: currentArtboard.height
+    } : {
+      x: -200,
+      y: -200,
+      width: 400,
+      height: 400
     };
 
     const positions = SmartDistributionAlgorithm.generatePositions(
@@ -1171,6 +1177,11 @@ export const useShapeEditor = () => {
     // Layer operations
     deleteSelected: () => {
       setShapes(prev => prev.filter(shape => !shape.selected));
+      clearSelection();
+    },
+    clearAllShapes: () => {
+      setShapes([]);
+      setGroups([]);
       clearSelection();
     },
     bringToFront: () => {
