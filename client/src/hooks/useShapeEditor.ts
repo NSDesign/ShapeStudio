@@ -101,234 +101,262 @@ export const useShapeEditor = () => {
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
 
-  // Generate random shapes using smart distribution algorithm
-  const generateRandomShapes = useCallback(() => {
-    const availableTypes = Array.from(enabledShapeTypes);
-    if (availableTypes.length === 0) return;
-    
-    const numShapes = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
-    
-    // Get active artboard bounds
-    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
-    if (!currentArtboard) return;
-    
-    // Create bounds with buffer around artboard
-    const buffer = 100;
-    const bounds = {
-      x: currentArtboard.x - buffer,
-      y: currentArtboard.y - buffer,
-      width: currentArtboard.width + buffer * 2,
-      height: currentArtboard.height + buffer * 2
-    };
-    
-    // Generate positions using smart distribution algorithm
-    const positions = SmartDistributionAlgorithm.generatePositions(numShapes, bounds, scatterSettings.distribution);
-    
-    // Find highest existing z-index
-    const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
-    
-    const newShapes: Shape[] = [];
-    positions.forEach((position, i) => {
-      const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-      const shape = new Shape(type, position.x, position.y);
-      shape.properties.zIndex = highestZIndex + i + 1;
-      newShapes.push(shape);
-    });
-    
-    setShapes(prev => [...prev, ...newShapes]);
-  }, [enabledShapeTypes, artboards, activeArtboard, scatterSettings, shapes]);
+  const updateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
+    setCanvasSettings(prev => ({ ...prev, ...updates }));
+  }, []);
 
-  // Select shape at point
-  const selectShapeAtPoint = useCallback((x: number, y: number, multiSelect: boolean = false, allowDeselect: boolean = true) => {
-    // Check groups first
-    const clickedGroup = groups.find(group => group.containsPoint(x, y));
-    if (clickedGroup) {
-      if (!multiSelect) {
-        selectedShapes.forEach(shape => shape.selected = false);
-        selectedGroups.forEach(group => group.selected = false);
-        setSelectedShapes([]);
-        setSelectedGroups([clickedGroup]);
-        clickedGroup.selected = true;
-      } else {
-        if (clickedGroup.selected && allowDeselect) {
-          clickedGroup.selected = false;
-          setSelectedGroups(prev => prev.filter(g => g !== clickedGroup));
-        } else if (!clickedGroup.selected) {
-          clickedGroup.selected = true;
-          setSelectedGroups(prev => [...prev, clickedGroup]);
-        }
-      }
-      return;
-    }
+  const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
+    setScatterSettings(prev => ({ ...prev, ...updates }));
+  }, []);
 
-    // Check individual shapes - find topmost (highest z-index) shape at point
-    const shapesAtPoint = shapes.filter(shape => shape.containsPoint(x, y));
-    const clickedShape = shapesAtPoint.length > 0 ? 
-      shapesAtPoint.reduce((topmost, current) => 
-        current.properties.zIndex > topmost.properties.zIndex ? current : topmost
-      ) : undefined;
-    
-    if (!multiSelect) {
-      selectedShapes.forEach(shape => shape.selected = false);
-      selectedGroups.forEach(group => group.selected = false);
-      setSelectedShapes([]);
-      setSelectedGroups([]);
-    }
-    
-    if (clickedShape) {
-      if (multiSelect && clickedShape.selected && allowDeselect) {
-        clickedShape.selected = false;
-        setSelectedShapes(prev => prev.filter(s => s !== clickedShape));
-      } else if (!clickedShape.selected || !multiSelect) {
-        clickedShape.selected = true;
-        setSelectedShapes(prev => multiSelect ? [...prev.filter(s => s !== clickedShape), clickedShape] : [clickedShape]);
-      }
-    }
-  }, [shapes, groups, selectedShapes, selectedGroups]);
-
-  // Transform operations
-  const moveSelected = useCallback((deltaX: number, deltaY: number) => {
-    selectedShapes.forEach(shape => shape.move(deltaX, deltaY));
-    selectedGroups.forEach(group => group.move(deltaX, deltaY));
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [selectedShapes, selectedGroups]);
-
-  const scaleSelected = useCallback((factorX: number = 1.1, factorY: number = 1.1) => {
-    selectedShapes.forEach(shape => {
-      shape.transform.scaleX *= factorX;
-      shape.transform.scaleY *= factorY;
-    });
-    selectedGroups.forEach(group => {
-      group.transform.scaleX *= factorX;
-      group.transform.scaleY *= factorY;
-    });
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [selectedShapes, selectedGroups]);
-
-  const rotateSelected = useCallback((angle: number = 15) => {
-    selectedShapes.forEach(shape => shape.rotate(angle));
-    selectedGroups.forEach(group => group.rotate(angle));
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [selectedShapes, selectedGroups]);
-
-  const skewSelected = useCallback((skewX: number = 0.1, skewY: number = 0) => {
-    selectedShapes.forEach(shape => shape.skew(skewX, skewY));
-    selectedGroups.forEach(group => group.skew(skewX, skewY));
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [selectedShapes, selectedGroups]);
-
-  const flipSelected = useCallback((horizontal: boolean = true) => {
-    selectedShapes.forEach(shape => shape.flip(horizontal));
-    selectedGroups.forEach(group => group.flip(horizontal));
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [selectedShapes, selectedGroups]);
-
-  // Delete selected shapes and groups
-  const deleteSelected = useCallback(() => {
-    if (selectedShapes.length === 0 && selectedGroups.length === 0) return;
-    
-    // Remove selected shapes
-    setShapes(prev => prev.filter(shape => !selectedShapes.includes(shape)));
-    
-    // Remove selected groups
-    setGroups(prev => prev.filter(group => !selectedGroups.includes(group)));
-    
-    // Clear selection
-    setSelectedShapes([]);
-    setSelectedGroups([]);
-  }, [selectedShapes, selectedGroups]);
-
-  // Load project from file
-  const loadProject = useCallback((data: {
-    shapes: Shape[];
-    groups: ShapeGroupClass[];
-    canvasSettings: CanvasSettings;
-    scatterSettings: ScatterSettings;
-    enabledShapeTypes: Set<ShapeType>;
-  }) => {
-    setShapes(data.shapes);
-    setGroups(data.groups);
-    setCanvasSettings(data.canvasSettings);
-    setScatterSettings(data.scatterSettings);
-    setEnabledShapeTypes(data.enabledShapeTypes);
-    
-    // Clear selections
+  const clearSelection = useCallback(() => {
+    shapes.forEach(shape => shape.selected = false);
+    groups.forEach(group => group.selected = false);
     setSelectedShapes([]);
     setSelectedGroups([]);
     setSelectedPoints([]);
     setSelectedSegments([]);
-  }, []);
+  }, [shapes, groups]);
 
-  // Compose shapes into group
-  const composeShapes = useCallback(() => {
-    if (selectedShapes.length < 2) return;
-    
-    const newGroup = new ShapeGroupClass([...selectedShapes]);
-    newGroup.selected = true; // Make the new group selected
-    
-    // Remove selected shapes from individual shapes array
-    setShapes(prev => prev.filter(shape => !selectedShapes.includes(shape)));
-    
-    // Clear individual shape selection
-    selectedShapes.forEach(shape => shape.selected = false);
-    setSelectedShapes([]);
-    
-    // Add new group and select it
-    setGroups(prev => [...prev, newGroup]);
-    setSelectedGroups([newGroup]);
-  }, [selectedShapes]);
-
-  // Scatter shapes using smart distribution
-  const scatterOnShape = useCallback((targetShape: Shape) => {
-    if (!scatterSettings.onPoints && !scatterSettings.insideArea) return;
-    
-    const availableTypes = Array.from(enabledShapeTypes);
-    if (availableTypes.length === 0) return;
-    
-    const newShapes: Shape[] = [];
-    const highestZIndex = Math.max(...shapes.map(s => s.properties.zIndex), 0);
-    let shapeCounter = 1;
-    
-    if (scatterSettings.onPoints && targetShape.points && targetShape.points.length > 0) {
-      targetShape.points.forEach(point => {
-        const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-        const x = targetShape.transform.x + point.x + (Math.random() - 0.5) * 20;
-        const y = targetShape.transform.y + point.y + (Math.random() - 0.5) * 20;
-        const shape = new Shape(type, x, y);
-        shape.properties.zIndex = highestZIndex + shapeCounter++;
-        newShapes.push(shape);
-      });
+  const selectShapeAtPoint = useCallback((x: number, y: number, addToSelection: boolean = false) => {
+    const shapesAtPoint = shapes.filter(shape => shape.containsPoint(x, y));
+    if (shapesAtPoint.length === 0) {
+      if (!addToSelection) {
+        clearSelection();
+      }
+      return false;
     }
+
+    // Find the topmost shape (highest z-index)
+    const topShape = shapesAtPoint.reduce((topmost, current) => 
+      current.properties.zIndex > topmost.properties.zIndex ? current : topmost
+    );
+
+    if (addToSelection) {
+      topShape.selected = !topShape.selected;
+    } else {
+      clearSelection();
+      topShape.selected = true;
+    }
+
+    const newSelectedShapes = shapes.filter(shape => shape.selected);
+    setSelectedShapes(newSelectedShapes);
+    return true;
+  }, [shapes, clearSelection]);
+
+  const selectPointAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
+    for (const shape of shapes) {
+      if (shape.points) {
+        for (let i = 0; i < shape.points.length; i++) {
+          const point = shape.points[i];
+          const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
+          if (distance <= 5) {
+            const pointId = { shapeId: shape.id, pointIndex: i };
+            if (addToSelection) {
+              const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+              if (exists) {
+                setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+              } else {
+                setSelectedPoints(prev => [...prev, pointId]);
+              }
+            } else {
+              setSelectedPoints([pointId]);
+            }
+            return true;
+          }
+        }
+      }
+    }
+
+    if (!addToSelection) {
+      setSelectedPoints([]);
+    }
+    return false;
+  }, [shapes, selectedPoints]);
+
+  const selectSegmentAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
+    for (const shape of shapes) {
+      if (shape.points && shape.points.length > 1) {
+        for (let i = 0; i < shape.points.length - 1; i++) {
+          const p1 = shape.points[i];
+          const p2 = shape.points[i + 1];
+          
+          // Calculate distance from point to line segment
+          const A = x - p1.x;
+          const B = y - p1.y;
+          const C = p2.x - p1.x;
+          const D = p2.y - p1.y;
+
+          const dot = A * C + B * D;
+          const lenSq = C * C + D * D;
+          let param = -1;
+          if (lenSq !== 0) {
+            param = dot / lenSq;
+          }
+
+          let xx, yy;
+          if (param < 0) {
+            xx = p1.x;
+            yy = p1.y;
+          } else if (param > 1) {
+            xx = p2.x;
+            yy = p2.y;
+          } else {
+            xx = p1.x + param * C;
+            yy = p1.y + param * D;
+          }
+
+          const dx = x - xx;
+          const dy = y - yy;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance <= 5) {
+            const segmentId = { shapeId: shape.id, segmentIndex: i };
+            if (addToSelection) {
+              const exists = selectedSegments.some(s => s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex);
+              if (exists) {
+                setSelectedSegments(prev => prev.filter(s => !(s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex)));
+              } else {
+                setSelectedSegments(prev => [...prev, segmentId]);
+              }
+            } else {
+              setSelectedSegments([segmentId]);
+            }
+            return true;
+          }
+        }
+      }
+    }
+
+    if (!addToSelection) {
+      setSelectedSegments([]);
+    }
+    return false;
+  }, [shapes, selectedSegments]);
+
+  const moveSelected = useCallback((deltaX: number, deltaY: number) => {
+    selectedShapes.forEach(shape => {
+      shape.transform.x += deltaX;
+      shape.transform.y += deltaY;
+    });
+
+    selectedGroups.forEach(group => {
+      group.transform.x += deltaX;
+      group.transform.y += deltaY;
+      group.shapes.forEach(shape => {
+        shape.transform.x += deltaX;
+        shape.transform.y += deltaY;
+      });
+    });
+
+    setShapes(prev => [...prev]);
+    setGroups(prev => [...prev]);
+  }, [selectedShapes, selectedGroups]);
+
+  const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
+    selectedPoints.forEach(({ shapeId, pointIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && shape.points && shape.points[pointIndex]) {
+        shape.points[pointIndex].x += deltaX;
+        shape.points[pointIndex].y += deltaY;
+      }
+    });
+    setShapes(prev => [...prev]);
+  }, [selectedPoints, shapes]);
+
+  const moveSelectedSegments = useCallback((deltaX: number, deltaY: number) => {
+    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
+      const shape = shapes.find(s => s.id === shapeId);
+      if (shape && shape.points) {
+        const p1 = shape.points[segmentIndex];
+        const p2 = shape.points[segmentIndex + 1];
+        if (p1) {
+          p1.x += deltaX;
+          p1.y += deltaY;
+        }
+        if (p2) {
+          p2.x += deltaX;
+          p2.y += deltaY;
+        }
+      }
+    });
+    setShapes(prev => [...prev]);
+  }, [selectedSegments, shapes]);
+
+  const scatterOnShape = useCallback((targetShape: Shape) => {
+    if (!targetShape.points || targetShape.points.length === 0) return;
+
+    const newShapes: Shape[] = [];
+    const enabledTypes = Array.from(enabledShapeTypes);
     
-    if (scatterSettings.insideArea) {
+    // Use smart distribution algorithm
+    let positions: Point[] = [];
+    
+    if (scatterSettings.onPoints) {
+      // Scatter on shape points
+      positions = targetShape.points.slice();
+    } else if (scatterSettings.insideArea) {
+      // Scatter inside shape area using smart distribution
       const bounds = targetShape.getBounds();
-      const shapeBounds = {
-        x: targetShape.transform.x + bounds.x,
-        y: targetShape.transform.y + bounds.y,
-        width: bounds.width,
-        height: bounds.height
+      positions = SmartDistributionAlgorithm.generatePositions(
+        scatterSettings.count,
+        bounds,
+        scatterSettings.distribution
+      );
+      
+      // Filter positions to only include those inside the shape
+      positions = positions.filter(pos => targetShape.containsPoint(pos.x, pos.y));
+    } else {
+      // Use smart distribution algorithm for general scattering
+      const bounds = targetShape.getBounds();
+      // Expand bounds slightly for more interesting distributions
+      const expandedBounds = {
+        ...bounds,
+        x: bounds.x - bounds.width * 0.2,
+        y: bounds.y - bounds.height * 0.2,
+        width: bounds.width * 1.4,
+        height: bounds.height * 1.4
       };
       
-      const numShapes = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
-      const positions = SmartDistributionAlgorithm.generatePositions(numShapes, shapeBounds, scatterSettings.distribution);
-      
-      positions.forEach(position => {
-        const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-        const shape = new Shape(type, position.x, position.y);
-        shape.properties.zIndex = highestZIndex + shapeCounter++;
-        newShapes.push(shape);
-      });
+      positions = SmartDistributionAlgorithm.generatePositions(
+        scatterSettings.count,
+        expandedBounds,
+        scatterSettings.distribution
+      );
     }
-    
-    setShapes(prev => [...prev, ...newShapes]);
-  }, [scatterSettings, enabledShapeTypes, shapes]);
 
-  // Toggle shape type
+    positions.forEach((position, index) => {
+      if (enabledTypes.length === 0) return;
+      
+      const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
+      const randomness = scatterSettings.randomness;
+      
+      // Add some randomness to position
+      const finalX = position.x + (Math.random() - 0.5) * 20 * randomness;
+      const finalY = position.y + (Math.random() - 0.5) * 20 * randomness;
+      
+      const newShape = Shape.create(randomType, finalX, finalY);
+      
+      // Add some variation to scattered shapes
+      const sizeVariation = 0.5 + Math.random() * randomness;
+      newShape.transform.scaleX *= sizeVariation;
+      newShape.transform.scaleY *= sizeVariation;
+      
+      // Random rotation
+      newShape.transform.rotation = Math.random() * 360 * randomness;
+      
+      // Random color variation
+      const hue = Math.random() * 360;
+      const saturation = 50 + Math.random() * 50;
+      const lightness = 30 + Math.random() * 40;
+      newShape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      
+      newShapes.push(newShape);
+    });
+
+    setShapes(prev => [...prev, ...newShapes]);
+  }, [enabledShapeTypes, scatterSettings]);
+
   const toggleShapeType = useCallback((type: ShapeType) => {
     setEnabledShapeTypes(prev => {
       const newSet = new Set(prev);
@@ -341,349 +369,151 @@ export const useShapeEditor = () => {
     });
   }, []);
 
-  // Update scatter settings
-  const updateScatterSettings = useCallback((settings: Partial<ScatterSettings>) => {
-    setScatterSettings(prev => ({ ...prev, ...settings }));
-  }, []);
+  const generateRandomShapes = useCallback(() => {
+    const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+    const enabledTypes = Array.from(enabledShapeTypes);
+    
+    if (enabledTypes.length === 0) return;
 
-  // Distribute selected shapes using smart distribution algorithm
-  const distributeSelectedShapes = useCallback(() => {
-    if (selectedShapes.length < 2) return;
-    
-    // Calculate bounds of all selected shapes
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
-    selectedShapes.forEach(shape => {
-      const bounds = shape.getBounds();
-      const shapeMinX = shape.transform.x + bounds.x;
-      const shapeMinY = shape.transform.y + bounds.y;
-      const shapeMaxX = shapeMinX + bounds.width;
-      const shapeMaxY = shapeMinY + bounds.height;
-      
-      minX = Math.min(minX, shapeMinX);
-      minY = Math.min(minY, shapeMinY);
-      maxX = Math.max(maxX, shapeMaxX);
-      maxY = Math.max(maxY, shapeMaxY);
-    });
-    
-    const distributionBounds = {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY
+    // Use smart distribution algorithm for better shape placement
+    const canvasBounds = {
+      x: -canvasSettings.width / 4,
+      y: -canvasSettings.height / 4,
+      width: canvasSettings.width / 2,
+      height: canvasSettings.height / 2
     };
-    
-    // Generate new positions using smart distribution algorithm
-    const newPositions = SmartDistributionAlgorithm.generatePositions(
-      selectedShapes.length, 
-      distributionBounds, 
+
+    const positions = SmartDistributionAlgorithm.generatePositions(
+      count,
+      canvasBounds,
       scatterSettings.distribution
     );
-    
-    // Apply new positions to selected shapes by mutating them directly
-    selectedShapes.forEach((shape, index) => {
-      if (newPositions[index]) {
-        const newPosition = newPositions[index];
-        const bounds = shape.getBounds();
-        shape.transform.x = newPosition.x - bounds.x;
-        shape.transform.y = newPosition.y - bounds.y;
-      }
+
+    const newShapes = positions.map((position) => {
+      const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
+      const shape = Shape.create(randomType, position.x, position.y);
+      
+      // Random properties
+      const hue = Math.random() * 360;
+      const saturation = 50 + Math.random() * 50;
+      const lightness = 30 + Math.random() * 40;
+      shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      
+      // Random size
+      const scale = 0.5 + Math.random() * 2;
+      shape.transform.scaleX = scale;
+      shape.transform.scaleY = scale;
+      
+      // Random rotation
+      shape.transform.rotation = Math.random() * 360;
+      
+      return shape;
     });
-    
-    // Force re-render
-    setShapes(prev => [...prev]);
-    setSelectedShapes(prev => [...prev]);
-  }, [selectedShapes, scatterSettings.distribution]);
 
-  // Clear all selections
-  const clearSelection = useCallback(() => {
-    shapes.forEach(shape => shape.selected = false);
-    groups.forEach(group => group.selected = false);
-    setSelectedShapes([]);
-    setSelectedGroups([]);
-    setSelectedPoints([]);
-    setSelectedSegments([]);
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, [shapes, groups]);
-
-  // Multi-touch gesture utilities
-  const getTouchDistance = useCallback((touch1: React.Touch, touch2: React.Touch): number => {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }, []);
-
-  const getTouchAngle = useCallback((touch1: React.Touch, touch2: React.Touch): number => {
-    const dx = touch2.clientX - touch1.clientX;
-    const dy = touch2.clientY - touch1.clientY;
-    return Math.atan2(dy, dx);
-  }, []);
+    setShapes(prev => [...prev, ...newShapes]);
+  }, [enabledShapeTypes, scatterSettings, canvasSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
     const centerX = (touch1.clientX + touch2.clientX) / 2;
     const centerY = (touch1.clientY + touch2.clientY) / 2;
+    
+    const screenX = (centerX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (centerY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    
     return {
-      x: (centerX - rect.left - rect.width / 2) / canvasSettings.zoom - canvasSettings.panX,
-      y: (centerY - rect.top - rect.height / 2) / canvasSettings.zoom - canvasSettings.panY
+      x: screenX - canvasSettings.panX,
+      y: screenY - canvasSettings.panY
     };
   }, [canvasSettings]);
 
-  // Point and segment editing functions
-  const setEditingMode = useCallback((mode: 'shapes' | 'points' | 'segments') => {
-    setEditMode(mode);
-    setSelectedPoints([]);
-    setSelectedSegments([]);
-  }, []);
-
-  const selectPointAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
-    let foundPoint: { shapeId: string; pointIndex: number } | null = null;
-    const threshold = isTouch ? 20 : 8;
-    
-    // Search through ALL shapes for nearby points, prioritizing selected shapes
-    const sortedShapes = [...shapes].sort((a, b) => {
-      if (a.selected && !b.selected) return -1;
-      if (!a.selected && b.selected) return 1;
-      return b.properties.zIndex - a.properties.zIndex;
-    });
-    
-    for (const shape of sortedShapes) {
-      if (!shape.points || shape.points.length === 0) continue;
-      
-      // Check regular points first
-      for (let i = 0; i < shape.points.length; i++) {
-        if (shape.isPointNear(x, y, i, threshold)) {
-          foundPoint = { shapeId: shape.id, pointIndex: i };
-          break;
-        }
-      }
-      
-      // Check control points if no regular point found and shape has curves
-      if (!foundPoint && shape.controlPoints && (shape.type === 'bezier' || shape.type === 'cubic')) {
-        for (let i = 0; i < shape.controlPoints.length; i++) {
-          if (shape.isPointNear(x, y, i + 1000, threshold)) {
-            foundPoint = { shapeId: shape.id, pointIndex: i + 1000 };
-            break;
-          }
-        }
-      }
-      
-      if (foundPoint) break;
-    }
-
-    if (foundPoint) {
-      if (!multiSelect) {
-        setSelectedPoints([foundPoint]);
-      } else {
-        setSelectedPoints(prev => {
-          const existing = prev.find(p => p.shapeId === foundPoint!.shapeId && p.pointIndex === foundPoint!.pointIndex);
-          if (existing) {
-            return prev.filter(p => p !== existing);
-          } else {
-            return [...prev, foundPoint!];
-          }
-        });
-      }
-      setShapes(prev => [...prev]);
-      return true; // Indicate a point was selected
-    } else if (!multiSelect) {
-      setSelectedPoints([]);
-    }
-    return false;
-  }, [shapes]);
-
-  const selectSegmentAt = useCallback((x: number, y: number, multiSelect: boolean = false, isTouch: boolean = false) => {
-    let foundSegment: { shapeId: string; segmentIndex: number } | null = null;
-    const threshold = isTouch ? 15 : 5;
-    
-    // Search through ALL shapes for nearby segments, prioritizing selected shapes
-    const sortedShapes = [...shapes].sort((a, b) => {
-      if (a.selected && !b.selected) return -1;
-      if (!a.selected && b.selected) return 1;
-      return b.properties.zIndex - a.properties.zIndex;
-    });
-    
-    for (const shape of sortedShapes) {
-      if (!shape.points || shape.points.length < 2) continue;
-      
-      for (let i = 0; i < shape.points.length - 1; i++) {
-        if (shape.isSegmentNear(x, y, i, threshold)) {
-          foundSegment = { shapeId: shape.id, segmentIndex: i };
-          break;
-        }
-      }
-      if (foundSegment) break;
-    }
-
-    if (foundSegment) {
-      if (!multiSelect) {
-        setSelectedSegments([foundSegment]);
-      } else {
-        setSelectedSegments(prev => {
-          const existing = prev.find(s => s.shapeId === foundSegment!.shapeId && s.segmentIndex === foundSegment!.segmentIndex);
-          if (existing) {
-            return prev.filter(s => s !== existing);
-          } else {
-            return [...prev, foundSegment!];
-          }
-        });
-      }
-      setShapes(prev => [...prev]);
-      return true; // Indicate a segment was selected
-    } else if (!multiSelect) {
-      setSelectedSegments([]);
-    }
-    return false;
-  }, [shapes]);
-
-  const moveSelectedPoints = useCallback((deltaX: number, deltaY: number) => {
-    selectedPoints.forEach(({ shapeId, pointIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        // Handle control points (offset by 1000)
-        if (pointIndex >= 1000) {
-          const worldControl = shape.getWorldControlPoint(pointIndex - 1000);
-          if (worldControl) {
-            shape.updateWorldPoint(pointIndex, {
-              x: worldControl.x + deltaX,
-              y: worldControl.y + deltaY
-            });
-          }
-        } else {
-          // Handle regular points
-          const worldPoint = shape.getWorldPoint(pointIndex);
-          if (worldPoint) {
-            shape.updateWorldPoint(pointIndex, {
-              x: worldPoint.x + deltaX,
-              y: worldPoint.y + deltaY
-            });
-          }
-        }
-      }
-    });
-    setShapes(prev => [...prev]);
-  }, [selectedPoints, shapes]);
-
-  const moveSelectedSegments = useCallback((deltaX: number, deltaY: number) => {
-    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        // Move both points of the segment
-        const point1 = shape.getWorldPoint(segmentIndex);
-        const point2 = shape.getWorldPoint(segmentIndex + 1);
-        if (point1 && point2) {
-          shape.updateWorldPoint(segmentIndex, {
-            x: point1.x + deltaX,
-            y: point1.y + deltaY
-          });
-          shape.updateWorldPoint(segmentIndex + 1, {
-            x: point2.x + deltaX,
-            y: point2.y + deltaY
-          });
-        }
-      }
-    });
-    setShapes(prev => [...prev]);
-  }, [selectedSegments, shapes]);
-
-  // Canvas zoom and pan with unlimited zoom range
-  const zoomIn = useCallback(() => {
-    setCanvasSettings(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 100) }));
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    setCanvasSettings(prev => ({ ...prev, zoom: Math.max(prev.zoom / 1.2, 0.001) }));
-  }, []);
-
-  const resetView = useCallback(() => {
-    setCanvasSettings(prev => ({ ...prev, zoom: 1, panX: 0, panY: 0 }));
-  }, []);
-
-  // Mouse wheel zoom handler
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left - rect.width / 2;
+    const mouseY = e.clientY - rect.top - rect.height / 2;
+    
+    // World coordinates before zoom
+    const worldXBefore = (mouseX / canvasSettings.zoom) - canvasSettings.panX;
+    const worldYBefore = (mouseY / canvasSettings.zoom) - canvasSettings.panY;
+    
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newZoom = Math.max(0.1, Math.min(5, canvasSettings.zoom * zoomFactor));
+    
+    // World coordinates after zoom
+    const worldXAfter = (mouseX / newZoom) - canvasSettings.panX;
+    const worldYAfter = (mouseY / newZoom) - canvasSettings.panY;
+    
+    // Adjust pan to keep mouse position fixed
+    const panDeltaX = worldXAfter - worldXBefore;
+    const panDeltaY = worldYAfter - worldYBefore;
     
     setCanvasSettings(prev => ({
       ...prev,
-      zoom: Math.max(0.001, Math.min(100, prev.zoom * zoomFactor))
+      zoom: newZoom,
+      panX: prev.panX + panDeltaX,
+      panY: prev.panY + panDeltaY
     }));
-  }, []);
+  }, [canvasSettings]);
 
-  // Setup wheel event listener
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-    return () => canvas.removeEventListener('wheel', handleWheel);
-  }, [handleWheel]);
-
-  // Keyboard shortcuts for canvas navigation
+  // Add keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const panSpeed = 200 / canvasSettings.zoom; // Adjust speed based on zoom level
+      // Delete selected shapes/points/segments
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (editMode === 'points' && selectedPoints.length > 0) {
+          selectedPoints.forEach(({ shapeId, pointIndex }) => {
+            const shape = shapes.find(s => s.id === shapeId);
+            if (shape && shape.points && shape.points.length > 3) {
+              shape.points.splice(pointIndex, 1);
+            }
+          });
+          setSelectedPoints([]);
+          setShapes(prev => [...prev]);
+        } else if (editMode === 'segments' && selectedSegments.length > 0) {
+          // For segments, we could split the shape or remove the segment
+          setSelectedSegments([]);
+        } else if (selectedShapes.length > 0) {
+          setShapes(prev => prev.filter(shape => !shape.selected));
+          clearSelection();
+        }
+      }
       
-      switch (e.code) {
-        case 'ArrowLeft':
-          if (e.altKey || e.metaKey) {
-            e.preventDefault();
-            setCanvasSettings(prev => ({ ...prev, panX: prev.panX + panSpeed }));
+      // Escape to clear selection
+      if (e.key === 'Escape') {
+        clearSelection();
+        setIsMarqueeSelecting(false);
+        setMarqueeStart(null);
+        setMarqueeEnd(null);
+      }
+      
+      // Tab to cycle through edit modes
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        setEditMode(prev => {
+          switch (prev) {
+            case 'shapes': return 'points';
+            case 'points': return 'segments';
+            case 'segments': return 'shapes';
+            default: return 'shapes';
           }
-          break;
-        case 'ArrowRight':
-          if (e.altKey || e.metaKey) {
-            e.preventDefault();
-            setCanvasSettings(prev => ({ ...prev, panX: prev.panX - panSpeed }));
-          }
-          break;
-        case 'ArrowUp':
-          if (e.altKey || e.metaKey) {
-            e.preventDefault();
-            setCanvasSettings(prev => ({ ...prev, panY: prev.panY + panSpeed }));
-          }
-          break;
-        case 'ArrowDown':
-          if (e.altKey || e.metaKey) {
-            e.preventDefault();
-            setCanvasSettings(prev => ({ ...prev, panY: prev.panY - panSpeed }));
-          }
-          break;
-        case 'Equal':
-        case 'NumpadAdd':
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            zoomIn();
-          }
-          break;
-        case 'Minus':
-        case 'NumpadSubtract':
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            zoomOut();
-          }
-          break;
-        case 'Digit0':
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            resetView();
-          }
-          break;
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetView, canvasSettings.zoom]);
+  }, [editMode, selectedPoints, selectedSegments, selectedShapes, shapes, clearSelection]);
 
-  // Mouse event handlers
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    // Convert screen coordinates to world coordinates - match canvas transformation
     const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
@@ -730,43 +560,25 @@ export const useShapeEditor = () => {
     // Check if clicking on empty space to start marquee selection
     let clickedOnShape = false;
     
-    // If scatter mode is active, try to scatter on clicked shape
-    if (scatterSettings.onPoints || scatterSettings.insideArea) {
-      const clickedShape = shapes.find(shape => shape.containsPoint(x, y));
-      if (clickedShape) {
-        scatterOnShape(clickedShape);
-        return;
-      }
-    }
-    
-    // Handle different edit modes
     switch (editMode) {
       case 'points':
-        // Always try to select points first, even if none are currently selected
         const pointSelected = selectPointAt(x, y, e.shiftKey);
         if (pointSelected) {
           clickedOnShape = true;
-          
-          // Handle Alt-click for tangent continuity toggle
-          if (e.altKey) {
-            selectedPoints.forEach(({ shapeId, pointIndex }) => {
-              const shape = shapes.find(s => s.id === shapeId);
-              if (shape && shape.tangentHandles && shape.smoothPoints && pointIndex < shape.smoothPoints.length) {
-                shape.smoothPoints[pointIndex] = !shape.smoothPoints[pointIndex];
-              }
-            });
-            setShapes(prev => [...prev]);
-          }
         } else {
           // Check if clicking on already selected points for dragging
           clickedOnShape = selectedPoints.some(p => {
             const shape = shapes.find(s => s.id === p.shapeId);
-            return shape?.isPointNear(x, y, p.pointIndex, 8);
+            if (shape && shape.points && shape.points[p.pointIndex]) {
+              const point = shape.points[p.pointIndex];
+              const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
+              return distance <= 5;
+            }
+            return false;
           });
         }
         break;
       case 'segments':
-        // Always try to select segments first, even if none are currently selected
         const segmentSelected = selectSegmentAt(x, y, e.shiftKey);
         if (segmentSelected) {
           clickedOnShape = true;
@@ -794,38 +606,32 @@ export const useShapeEditor = () => {
           const allowDeselect = !(e.shiftKey && topShape.selected && selectedShapes.length > 1);
           
           // If clicking on a selected shape with multiple selections, don't change selection
-          if (isMultiSelectDrag && !e.shiftKey) {
-            // Just start dragging without changing selection
-          } else {
-            selectShapeAtPoint(x, y, e.shiftKey, allowDeselect);
+          if (!isMultiSelectDrag) {
+            if (e.shiftKey) {
+              // Toggle selection
+              topShape.selected = !topShape.selected;
+            } else {
+              // Single select
+              clearSelection();
+              topShape.selected = true;
+            }
+            
+            const newSelectedShapes = shapes.filter(shape => shape.selected);
+            setSelectedShapes(newSelectedShapes);
           }
         }
         break;
     }
     
-    // Handle empty space clicks
-    if (!clickedOnShape) {
-      if (e.shiftKey && (selectedShapes.length > 0 || selectedGroups.length > 0)) {
-        // If shift is held and we have selections, allow dragging the selection
-        setIsDragging(true);
-      } else if (!e.shiftKey) {
-        // Start marquee selection if not holding shift
-        setMarqueeStart({ x, y });
-        setMarqueeEnd({ x, y });
-        setIsMarqueeSelecting(true);
-        // Clear existing selection when starting marquee
-        if (editMode === 'shapes') {
-          clearSelection();
-        } else if (editMode === 'points') {
-          setSelectedPoints([]);
-        } else if (editMode === 'segments') {
-          setSelectedSegments([]);
-        }
-      }
-    } else {
-      setIsDragging(true);
+    // Start marquee selection if clicking on empty space
+    if (!clickedOnShape && !e.shiftKey) {
+      clearSelection();
+      setMarqueeStart({ x, y });
+      setIsMarqueeSelecting(false); // Will be set to true on mouse move
     }
-  }, [canvasSettings.zoom, scatterSettings, shapes, editMode, selectShapeAtPoint, scatterOnShape, selectPointAt, selectSegmentAt, selectedPoints, selectedSegments, clearSelection]);
+    
+    setIsDragging(true);
+  }, [canvasSettings.zoom, canvasSettings.panX, canvasSettings.panY, editMode, selectPointAt, selectSegmentAt, selectedPoints, selectedSegments, shapes, selectedShapes, clearSelection]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -858,58 +664,47 @@ export const useShapeEditor = () => {
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
     
-    // Handle marquee selection
+    // Update marquee selection
     if (isMarqueeSelecting && marqueeStart) {
       setMarqueeEnd({ x, y });
       
+      // Select shapes/points/segments within marquee
       const minX = Math.min(marqueeStart.x, x);
       const maxX = Math.max(marqueeStart.x, x);
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
       
-
-      
       if (editMode === 'shapes') {
-        // Select shapes within marquee rectangle
         shapes.forEach(shape => {
-          const shapeCenterX = shape.transform.x;
-          const shapeCenterY = shape.transform.y;
-          
-          const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
-                                shapeCenterY >= minY && shapeCenterY <= maxY;
-          shape.selected = shapeInMarquee;
+          const bounds = shape.getBounds();
+          const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
+                               bounds.y >= minY && bounds.y + bounds.height <= maxY;
+          if (shape.selected !== shapeInMarquee) {
+            shape.selected = shapeInMarquee;
+          }
         });
-        setShapes(prev => [...prev]);
       } else if (editMode === 'points') {
-        // Select points within marquee rectangle
         const newSelectedPoints: { shapeId: string; pointIndex: number }[] = [];
         shapes.forEach(shape => {
-          if (!shape.selected || !shape.points) return;
-          
-          shape.points.forEach((_, pointIndex) => {
-            const worldPoint = shape.getWorldPoint(pointIndex);
-            if (worldPoint && 
-                worldPoint.x >= minX && worldPoint.x <= maxX &&
-                worldPoint.y >= minY && worldPoint.y <= maxY) {
-              newSelectedPoints.push({ shapeId: shape.id, pointIndex });
+          shape.points?.forEach((point, index) => {
+            const pointInMarquee = point.x >= minX && point.x <= maxX &&
+                                 point.y >= minY && point.y <= maxY;
+            if (pointInMarquee) {
+              newSelectedPoints.push({ shapeId: shape.id, pointIndex: index });
             }
           });
         });
         setSelectedPoints(newSelectedPoints);
       } else if (editMode === 'segments') {
-        // Select segments within marquee rectangle
         const newSelectedSegments: { shapeId: string; segmentIndex: number }[] = [];
         shapes.forEach(shape => {
-          if (!shape.selected || !shape.points || shape.points.length < 2) return;
-          
-          for (let i = 0; i < shape.points.length - 1; i++) {
-            const point1 = shape.getWorldPoint(i);
-            const point2 = shape.getWorldPoint(i + 1);
-            if (point1 && point2) {
-              // Check if segment midpoint is within marquee
-              const midX = (point1.x + point2.x) / 2;
-              const midY = (point1.y + point2.y) / 2;
-              if (midX >= minX && midX <= maxX && midY >= minY && midY <= maxY) {
+          if (shape.points) {
+            for (let i = 0; i < shape.points.length - 1; i++) {
+              const midX = (shape.points[i].x + shape.points[i + 1].x) / 2;
+              const midY = (shape.points[i].y + shape.points[i + 1].y) / 2;
+              const segmentInMarquee = midX >= minX && midX <= maxX &&
+                                     midY >= minY && midY <= maxY;
+              if (segmentInMarquee) {
                 newSelectedSegments.push({ shapeId: shape.id, segmentIndex: i });
               }
             }
@@ -928,7 +723,7 @@ export const useShapeEditor = () => {
     const deltaY = (e.clientY - dragState.lastScreenY) / canvasSettings.zoom;
     
     // Only apply movement if there's actual delta
-    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
+    if (Math.abs(deltaX) > 0.01 || Math.abs(deltaY) > 0.01) {
       // Handle different edit modes
       switch (editMode) {
         case 'points':
@@ -979,22 +774,38 @@ export const useShapeEditor = () => {
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
-    // Prevent default browser touch behavior (zooming, scrolling)
-    e.preventDefault();
-    
-    // Handle multi-touch gestures for scaling and rotating shapes
-    if (e.touches.length === 2 && editMode === 'shapes' && selectedShapes.length > 0) {
 
+    // Handle multi-touch gestures
+    if (e.touches.length === 2) {
+      setIsMultiTouch(true);
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      const angle = Math.atan2(
+        touch2.clientY - touch1.clientY,
+        touch2.clientX - touch1.clientX
+      ) * 180 / Math.PI;
+      
+      gestureDataRef.current = {
+        isActive: true,
+        initialDistance: distance,
+        initialAngle: angle,
+        initialScale: canvasSettings.zoom,
+        initialRotation: 0
+      };
+      
       return;
     }
     
-    // Single touch handling
-    if (e.touches.length > 1) return;
+    setIsMultiTouch(false);
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    // Convert screen coordinates to world coordinates - match canvas transformation
     const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
@@ -1015,104 +826,61 @@ export const useShapeEditor = () => {
     
     switch (editMode) {
       case 'points':
-        touchedShape = selectedPoints.some(p => {
-          const shape = shapes.find(s => s.id === p.shapeId);
-          return shape?.isPointNear(x, y, p.pointIndex, 20);
-        });
+        touchedShape = selectPointAt(x, y, isMultiSelectMode);
         break;
       case 'segments':
-        touchedShape = selectedSegments.some(s => {
-          const shape = shapes.find(sh => sh.id === s.shapeId);
-          return shape?.isSegmentNear(x, y, s.segmentIndex, 15);
-        });
+        touchedShape = selectSegmentAt(x, y, isMultiSelectMode);
         break;
       default:
-        const shapesAtTouchPoint = shapes.filter(shape => shape.containsPoint(x, y));
-        touchedShape = shapesAtTouchPoint.length > 0;
+        touchedShape = selectShapeAtPoint(x, y, isMultiSelectMode);
         break;
     }
     
-    // Prepare for potential marquee selection if touching empty space
-    if (!touchedShape && editMode === 'shapes') {
-      // Will start marquee on touch move if not dragging existing selection
+    if (!touchedShape && !isMultiSelectMode) {
       setMarqueeStart({ x, y });
-      setMarqueeEnd({ x, y });
     }
-  }, [canvasSettings.zoom, editMode, shapes, selectedPoints, selectedSegments]);
+    
+    setIsDragging(true);
+  }, [canvasSettings.zoom, canvasSettings.panX, canvasSettings.panY, editMode, isMultiSelectMode, selectPointAt, selectSegmentAt, selectShapeAtPoint]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    // Prevent default browser touch behavior
     e.preventDefault();
     
-    // Handle multi-touch gestures for scaling and rotating
-    if (e.touches.length === 2 && selectedShapes.length > 0) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Handle multi-touch zoom and rotate
+    if (e.touches.length === 2 && gestureDataRef.current.isActive) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       
-      // Initialize gesture if not started
-      if (!gestureDataRef.current.isActive) {
-        const distance = getTouchDistance(touch1, touch2);
-        const angle = getTouchAngle(touch1, touch2);
-        
-        gestureDataRef.current = {
-          isActive: true,
-          initialDistance: distance,
-          initialAngle: angle,
-          initialScale: selectedShapes[0].transform.scaleX,
-          initialRotation: selectedShapes[0].transform.rotation
-        };
-        
-        setIsMultiTouch(true);
-        
-
-        return;
-      }
+      const currentDistance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
       
-      const currentDistance = getTouchDistance(touch1, touch2);
-      const currentAngle = getTouchAngle(touch1, touch2);
+      const scale = currentDistance / gestureDataRef.current.initialDistance;
+      const newZoom = Math.max(0.1, Math.min(5, gestureDataRef.current.initialScale * scale));
       
-      const gesture = gestureDataRef.current;
+      // Get center point for zoom
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = centerX - rect.left - rect.width / 2;
+      const mouseY = centerY - rect.top - rect.height / 2;
       
-
+      // Apply zoom with center point
+      const worldXBefore = (mouseX / canvasSettings.zoom) - canvasSettings.panX;
+      const worldYBefore = (mouseY / canvasSettings.zoom) - canvasSettings.panY;
+      const worldXAfter = (mouseX / newZoom) - canvasSettings.panX;
+      const worldYAfter = (mouseY / newZoom) - canvasSettings.panY;
       
-      // Only proceed if we have valid initial values
-      if (gesture.initialDistance > 0) {
-        // Calculate scale factor from distance change (pinch to scale)
-        const scaleFactor = currentDistance / gesture.initialDistance;
-        const newScale = Math.max(0.1, Math.min(5, gesture.initialScale * scaleFactor));
-        
-        // Calculate rotation from angle change (rotate with two fingers)
-        // Handle angle wrapping to prevent jumps at -π/π boundary
-        let rotationDelta = currentAngle - gesture.initialAngle;
-        if (rotationDelta > Math.PI) {
-          rotationDelta -= 2 * Math.PI;
-        } else if (rotationDelta < -Math.PI) {
-          rotationDelta += 2 * Math.PI;
-        }
-        const newRotation = gesture.initialRotation + (rotationDelta * 180 / Math.PI);
-        
-        // Apply transforms to all selected shapes
-        selectedShapes.forEach(shape => {
-          shape.transform.scaleX = newScale;
-          shape.transform.scaleY = newScale;
-          shape.transform.rotation = newRotation;
-        });
-        
-        // Also apply to selected groups
-        selectedGroups.forEach(group => {
-          group.shapes.forEach(shape => {
-            shape.transform.scaleX = newScale;
-            shape.transform.scaleY = newScale;
-            shape.transform.rotation = newRotation;
-          });
-        });
-        
-        setShapes(prev => [...prev]);
-        setGroups(prev => [...prev]);
-      }
+      setCanvasSettings(prev => ({
+        ...prev,
+        zoom: newZoom,
+        panX: prev.panX + (worldXAfter - worldXBefore),
+        panY: prev.panY + (worldYAfter - worldYBefore)
+      }));
       
       return;
     }
@@ -1122,6 +890,10 @@ export const useShapeEditor = () => {
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
+    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
+    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
+    const x = screenX - canvasSettings.panX;
+    const y = screenY - canvasSettings.panY;
     
     // Calculate precise delta from last position
     const deltaX = (touch.clientX - dragState.lastScreenX) / canvasSettings.zoom;
@@ -1153,17 +925,11 @@ export const useShapeEditor = () => {
         shape.selected = shapeInMarquee;
       });
       
-      setShapes(prev => [...prev]);
       return;
     }
     
-    // Start dragging if movement detected and not doing marquee
-    if (!isDragging && !isMarqueeSelecting && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-      setIsDragging(true);
-    }
-    
-    if (isDragging) {
-      // Handle different edit modes
+    // Handle shape/point/segment dragging
+    if (isDragging && Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
       switch (editMode) {
         case 'points':
           if (selectedPoints.length > 0) {
@@ -1182,9 +948,15 @@ export const useShapeEditor = () => {
           break;
       }
       
-      setDragStart({ x, y });
+      setDragState(prev => prev ? {
+        ...prev,
+        lastScreenX: touch.clientX,
+        lastScreenY: touch.clientY,
+        totalDeltaX: prev.totalDeltaX + deltaX,
+        totalDeltaY: prev.totalDeltaY + deltaY
+      } : null);
     }
-  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
+  }, [isDragging, dragState, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Prevent default browser touch behavior
@@ -1202,9 +974,8 @@ export const useShapeEditor = () => {
         initialRotation: 0
       };
       setIsMultiTouch(false);
-
     }
-    
+
     // Handle marquee selection completion
     if (isMarqueeSelecting) {
       setIsMarqueeSelecting(false);
@@ -1214,7 +985,7 @@ export const useShapeEditor = () => {
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
-    } else if (!isDragging && dragStart && e.touches.length === 0) {
+    } else if (!isDragging && dragState && e.touches.length === 0) {
       // This was a tap, not a drag
       const canvas = canvasRef.current;
       if (canvas) {
@@ -1224,22 +995,16 @@ export const useShapeEditor = () => {
         const x = screenX - canvasSettings.panX;
         const y = screenY - canvasSettings.panY;
         
-        // Long press (>500ms) toggles multi-select mode
-        if (touchDuration > 500) {
-          setIsMultiSelectMode(!isMultiSelectMode);
-        } else {
-          // Short tap - select shape
-          switch (editMode) {
-            case 'points':
-              selectPointAt(x, y, isMultiSelectMode, true);
-              break;
-            case 'segments':
-              selectSegmentAt(x, y, isMultiSelectMode, true);
-              break;
-            default:
-              selectShapeAtPoint(x, y, isMultiSelectMode);
-              break;
-          }
+        switch (editMode) {
+          case 'points':
+            selectPointAt(x, y, isMultiSelectMode);
+            break;
+          case 'segments':
+            selectSegmentAt(x, y, isMultiSelectMode);
+            break;
+          default:
+            selectShapeAtPoint(x, y, isMultiSelectMode);
+            break;
         }
       }
     }
@@ -1255,262 +1020,26 @@ export const useShapeEditor = () => {
     setIsMultiSelectMode(!isMultiSelectMode);
   }, [isMultiSelectMode]);
 
-  // Force update function for shape property changes
-  const forceUpdate = useCallback(() => {
-    setShapes(prev => [...prev]);
-    setGroups(prev => [...prev]);
-  }, []);
-
-  // Layer management functions
-  const bringToFront = useCallback(() => {
-    if (selectedShapes.length === 0) return;
-    
-    const maxZIndex = Math.max(...shapes.map(s => s.properties.zIndex));
-    selectedShapes.forEach(shape => {
-      shape.properties.zIndex = maxZIndex + 1 + Math.random() * 0.1;
-    });
-    
-    // Sort shapes by zIndex for proper rendering order
-    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
-  }, [selectedShapes, shapes]);
-
-  const sendToBack = useCallback(() => {
-    if (selectedShapes.length === 0) return;
-    
-    const minZIndex = Math.min(...shapes.map(s => s.properties.zIndex));
-    selectedShapes.forEach(shape => {
-      shape.properties.zIndex = minZIndex - 1 - Math.random() * 0.1;
-    });
-    
-    // Sort shapes by zIndex for proper rendering order
-    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
-  }, [selectedShapes, shapes]);
-
-  const bringForward = useCallback(() => {
-    if (selectedShapes.length === 0) return;
-    
-    selectedShapes.forEach(shape => {
-      shape.properties.zIndex += 1.1;
-    });
-    
-    // Sort shapes by zIndex for proper rendering order
-    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
-  }, [selectedShapes]);
-
-  const sendBackward = useCallback(() => {
-    if (selectedShapes.length === 0) return;
-    
-    selectedShapes.forEach(shape => {
-      shape.properties.zIndex -= 1.1;
-    });
-    
-    // Sort shapes by zIndex for proper rendering order
-    setShapes(prev => [...prev].sort((a, b) => a.properties.zIndex - b.properties.zIndex));
-  }, [selectedShapes]);
-
   const changeBlendMode = useCallback((blendMode: BlendMode) => {
-    if (selectedShapes.length === 0) return;
-    
     selectedShapes.forEach(shape => {
       shape.properties.blendMode = blendMode;
     });
-    
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
-  // Transform operations for selected points
-  const scaleSelectedPoints = useCallback((factor: number) => {
-    if (selectedPoints.length === 0) return;
-    
-    // Calculate center of selected points
-    let centerX = 0, centerY = 0;
-    const worldPoints: Point[] = [];
-    
-    selectedPoints.forEach(({ shapeId, pointIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        const worldPoint = shape.getWorldPoint(pointIndex);
-        if (worldPoint) {
-          worldPoints.push(worldPoint);
-          centerX += worldPoint.x;
-          centerY += worldPoint.y;
-        }
-      }
-    });
-    
-    if (worldPoints.length === 0) return;
-    
-    centerX /= worldPoints.length;
-    centerY /= worldPoints.length;
-    
-    // Scale points around center
-    selectedPoints.forEach(({ shapeId, pointIndex }, index) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape && worldPoints[index]) {
-        const worldPoint = worldPoints[index];
-        const newX = centerX + (worldPoint.x - centerX) * factor;
-        const newY = centerY + (worldPoint.y - centerY) * factor;
-        shape.updateWorldPoint(pointIndex, { x: newX, y: newY });
-      }
-    });
-    
-    setShapes(prev => [...prev]);
-  }, [selectedPoints, shapes]);
-
-  const rotateSelectedPoints = useCallback((angle: number) => {
-    if (selectedPoints.length === 0) return;
-    
-    // Calculate center of selected points
-    let centerX = 0, centerY = 0;
-    const worldPoints: Point[] = [];
-    
-    selectedPoints.forEach(({ shapeId, pointIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        const worldPoint = shape.getWorldPoint(pointIndex);
-        if (worldPoint) {
-          worldPoints.push(worldPoint);
-          centerX += worldPoint.x;
-          centerY += worldPoint.y;
-        }
-      }
-    });
-    
-    if (worldPoints.length === 0) return;
-    
-    centerX /= worldPoints.length;
-    centerY /= worldPoints.length;
-    
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    
-    // Rotate points around center
-    selectedPoints.forEach(({ shapeId, pointIndex }, index) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape && worldPoints[index]) {
-        const worldPoint = worldPoints[index];
-        const dx = worldPoint.x - centerX;
-        const dy = worldPoint.y - centerY;
-        const newX = centerX + dx * cos - dy * sin;
-        const newY = centerY + dx * sin + dy * cos;
-        shape.updateWorldPoint(pointIndex, { x: newX, y: newY });
-      }
-    });
-    
-    setShapes(prev => [...prev]);
-  }, [selectedPoints, shapes]);
-
-  const scaleSelectedSegments = useCallback((factor: number) => {
-    if (selectedSegments.length === 0) return;
-    
-    // Calculate center of selected segments
-    let centerX = 0, centerY = 0;
-    const segmentPoints: Point[][] = [];
-    
-    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        const point1 = shape.getWorldPoint(segmentIndex);
-        const point2 = shape.getWorldPoint(segmentIndex + 1);
-        if (point1 && point2) {
-          segmentPoints.push([point1, point2]);
-          centerX += (point1.x + point2.x) / 2;
-          centerY += (point1.y + point2.y) / 2;
-        }
-      }
-    });
-    
-    if (segmentPoints.length === 0) return;
-    
-    centerX /= segmentPoints.length;
-    centerY /= segmentPoints.length;
-    
-    // Scale segments around center
-    selectedSegments.forEach(({ shapeId, segmentIndex }, index) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape && segmentPoints[index]) {
-        const [point1, point2] = segmentPoints[index];
-        
-        const newX1 = centerX + (point1.x - centerX) * factor;
-        const newY1 = centerY + (point1.y - centerY) * factor;
-        const newX2 = centerX + (point2.x - centerX) * factor;
-        const newY2 = centerY + (point2.y - centerY) * factor;
-        
-        shape.updateWorldPoint(segmentIndex, { x: newX1, y: newY1 });
-        shape.updateWorldPoint(segmentIndex + 1, { x: newX2, y: newY2 });
-      }
-    });
-    
-    setShapes(prev => [...prev]);
-  }, [selectedSegments, shapes]);
-
-  const rotateSelectedSegments = useCallback((angle: number) => {
-    if (selectedSegments.length === 0) return;
-    
-    // Calculate center of selected segments
-    let centerX = 0, centerY = 0;
-    const segmentPoints: Point[][] = [];
-    
-    selectedSegments.forEach(({ shapeId, segmentIndex }) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape) {
-        const point1 = shape.getWorldPoint(segmentIndex);
-        const point2 = shape.getWorldPoint(segmentIndex + 1);
-        if (point1 && point2) {
-          segmentPoints.push([point1, point2]);
-          centerX += (point1.x + point2.x) / 2;
-          centerY += (point1.y + point2.y) / 2;
-        }
-      }
-    });
-    
-    if (segmentPoints.length === 0) return;
-    
-    centerX /= segmentPoints.length;
-    centerY /= segmentPoints.length;
-    
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    
-    // Rotate segments around center
-    selectedSegments.forEach(({ shapeId, segmentIndex }, index) => {
-      const shape = shapes.find(s => s.id === shapeId);
-      if (shape && segmentPoints[index]) {
-        const [point1, point2] = segmentPoints[index];
-        
-        const dx1 = point1.x - centerX;
-        const dy1 = point1.y - centerY;
-        const newX1 = centerX + dx1 * cos - dy1 * sin;
-        const newY1 = centerY + dx1 * sin + dy1 * cos;
-        
-        const dx2 = point2.x - centerX;
-        const dy2 = point2.y - centerY;
-        const newX2 = centerX + dx2 * cos - dy2 * sin;
-        const newY2 = centerY + dx2 * sin + dy2 * cos;
-        
-        shape.updateWorldPoint(segmentIndex, { x: newX1, y: newY1 });
-        shape.updateWorldPoint(segmentIndex + 1, { x: newX2, y: newY2 });
-      }
-    });
-    
-    setShapes(prev => [...prev]);
-  }, [selectedSegments, shapes]);
-
-  // Artboard management functions
-  const addArtboard = useCallback((preset: { name: string; width: number; height: number; category: string }) => {
+  // Artboard management
+  const addArtboard = useCallback((preset: any) => {
     const newArtboard: Artboard = {
       id: `artboard_${Date.now()}`,
-      name: preset.name,
-      x: -preset.width / 2,
-      y: -preset.height / 2,
+      name: `${preset.name}`,
+      x: 0,
+      y: 0,
       width: preset.width,
       height: preset.height,
       preset: preset.name,
       category: preset.category
     };
-    
     setArtboards(prev => [...prev, newArtboard]);
-    setActiveArtboard(newArtboard.id);
   }, []);
 
   const selectArtboard = useCallback((artboardId: string) => {
@@ -1519,22 +1048,40 @@ export const useShapeEditor = () => {
 
   const deleteArtboard = useCallback((artboardId: string) => {
     if (artboards.length <= 1) return; // Keep at least one artboard
-    
     setArtboards(prev => prev.filter(ab => ab.id !== artboardId));
-    
     if (activeArtboard === artboardId) {
-      const remainingArtboards = artboards.filter(ab => ab.id !== artboardId);
-      if (remainingArtboards.length > 0) {
-        setActiveArtboard(remainingArtboards[0].id);
-      }
+      setActiveArtboard(artboards[0].id);
     }
   }, [artboards, activeArtboard]);
 
   const updateArtboard = useCallback((artboardId: string, updates: Partial<Artboard>) => {
-    setArtboards(prev => prev.map(artboard => 
-      artboard.id === artboardId ? { ...artboard, ...updates } : artboard
+    setArtboards(prev => prev.map(ab => 
+      ab.id === artboardId ? { ...ab, ...updates } : ab
     ));
   }, []);
+
+  const distributeSelected = useCallback(() => {
+    if (selectedShapes.length < 2) return;
+    
+    // Sort shapes by position for proper distribution
+    const sortedShapes = [...selectedShapes].sort((a, b) => a.transform.x - b.transform.x);
+    
+    const firstX = sortedShapes[0].transform.x;
+    const lastX = sortedShapes[sortedShapes.length - 1].transform.x;
+    const totalDistance = lastX - firstX;
+    
+    if (totalDistance === 0) return;
+    
+    const spacing = totalDistance / (sortedShapes.length - 1);
+    
+    sortedShapes.forEach((shape, index) => {
+      if (index > 0 && index < sortedShapes.length - 1) {
+        shape.transform.x = firstX + spacing * index;
+      }
+    });
+    
+    setShapes(prev => [...prev]);
+  }, [selectedShapes]);
 
   return {
     // State
@@ -1547,73 +1094,138 @@ export const useShapeEditor = () => {
     canvasSettings,
     artboards,
     activeArtboard,
-    canvasRef,
+    selectedCount: selectedShapes.length + selectedGroups.length,
+    selectedPointsCount: selectedPoints.length,
+    selectedSegmentsCount: selectedSegments.length,
     editMode,
     selectedPoints,
     selectedSegments,
-    isMultiSelectMode,
     marqueeStart,
     marqueeEnd,
     isMarqueeSelecting,
     isTouchDevice,
     isMultiTouch,
+    isMultiSelectMode,
     
-    // Actions
-    generateRandomShapes,
-    toggleShapeType,
-    updateScatterSettings,
-    composeShapes,
-    scatterOnShape,
-    setEditingMode,
-    toggleMultiSelectMode,
-    forceUpdate,
-    
-    // Layer Management
-    bringToFront,
-    sendToBack,
-    bringForward,
-    sendBackward,
-    changeBlendMode,
-    
-    // Transforms
-    moveSelected,
-    scaleSelected,
-    rotateSelected,
-    skewSelected,
-    flipSelected,
-    deleteSelected,
-    moveSelectedPoints,
-    moveSelectedSegments,
-    scaleSelectedPoints,
-    rotateSelectedPoints,
-    scaleSelectedSegments,
-    rotateSelectedSegments,
-    
-    // Canvas
-    zoomIn,
-    zoomOut,
-    resetView,
-    
-    // Artboard Management
-    addArtboard,
-    selectArtboard,
-    deleteArtboard,
-    updateArtboard,
-    distributeSelectedShapes,
-    
-    // Events
+    // Canvas interaction
+    canvasRef,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    handleWheel,
     
-    // Computed
-    selectedCount: selectedShapes.length + selectedGroups.length,
-    selectedPointsCount: selectedPoints.length,
-    selectedSegmentsCount: selectedSegments.length,
+    // Actions
+    toggleShapeType,
+    updateScatterSettings,
+    generateRandomShapes,
+    scatterOnShape,
+    clearSelection,
+    setEditMode,
+    toggleMultiSelectMode,
+    changeBlendMode,
+    
+    // Canvas controls
+    zoomIn: () => updateCanvasSettings({ zoom: Math.min(5, canvasSettings.zoom * 1.2) }),
+    zoomOut: () => updateCanvasSettings({ zoom: Math.max(0.1, canvasSettings.zoom / 1.2) }),
+    resetView: () => updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 }),
+    
+    // Transform operations
+    moveBy: (x: number, y: number) => moveSelected(x, y),
+    scaleBy: (x: number, y: number) => {
+      selectedShapes.forEach(shape => {
+        shape.transform.scaleX *= x;
+        shape.transform.scaleY *= y;
+      });
+      setShapes(prev => [...prev]);
+    },
+    rotateBy: (angle: number) => {
+      selectedShapes.forEach(shape => {
+        shape.transform.rotation += angle;
+      });
+      setShapes(prev => [...prev]);
+    },
+    skewBy: (x: number, y: number) => {
+      selectedShapes.forEach(shape => {
+        shape.transform.skewX += x;
+        shape.transform.skewY += y;
+      });
+      setShapes(prev => [...prev]);
+    },
+    flipHorizontal: () => {
+      selectedShapes.forEach(shape => {
+        shape.transform.scaleX *= -1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    flipVertical: () => {
+      selectedShapes.forEach(shape => {
+        shape.transform.scaleY *= -1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    
+    // Layer operations
+    deleteSelected: () => {
+      setShapes(prev => prev.filter(shape => !shape.selected));
+      clearSelection();
+    },
+    bringToFront: () => {
+      const maxZ = Math.max(...shapes.map(s => s.properties.zIndex), 0);
+      selectedShapes.forEach(shape => {
+        shape.properties.zIndex = maxZ + 1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    sendToBack: () => {
+      const minZ = Math.min(...shapes.map(s => s.properties.zIndex), 0);
+      selectedShapes.forEach(shape => {
+        shape.properties.zIndex = minZ - 1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    bringForward: () => {
+      selectedShapes.forEach(shape => {
+        shape.properties.zIndex += 1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    sendBackward: () => {
+      selectedShapes.forEach(shape => {
+        shape.properties.zIndex -= 1;
+      });
+      setShapes(prev => [...prev]);
+    },
+    
+    // Group operations
+    composeShapes: () => {
+      if (selectedShapes.length < 2) return;
+      
+      const newGroup = new ShapeGroupClass([...selectedShapes]);
+      selectedShapes.forEach(shape => {
+        shape.selected = false;
+      });
+      
+      setGroups(prev => [...prev, newGroup]);
+      setSelectedShapes([]);
+      setSelectedGroups([newGroup]);
+    },
     canComposeShapes: selectedShapes.length >= 2,
-    isScatterMode: scatterSettings.onPoints || scatterSettings.insideArea
+    
+    // Artboard operations
+    addArtboard,
+    selectArtboard,
+    deleteArtboard,
+    updateArtboard,
+    distributeSelected,
+    
+    // Project management
+    setShapes,
+    setGroups,
+    setCanvasSettings,
+    setScatterSettings,
+    setEnabledShapeTypes
   };
 };
