@@ -127,10 +127,6 @@ export default function ShapeEditor() {
           onLoadProject={handleLoadProject}
         />
         <div className="flex-1" />
-        {/* Version Hash Display */}
-        <div className="text-xs text-slate-400 font-mono bg-slate-800 px-2 py-1 rounded">
-          v{btoa(`${shapes.length}-${Date.now().toString(36)}`).slice(-8).toUpperCase()}
-        </div>
       </div>
       
       {/* Main Content */}
