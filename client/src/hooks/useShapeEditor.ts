@@ -1086,6 +1086,7 @@ export const useShapeEditor = () => {
   return {
     // State
     shapes,
+    setShapes,
     groups,
     selectedShapes,
     selectedGroups,
@@ -1222,7 +1223,6 @@ export const useShapeEditor = () => {
     distributeSelected,
     
     // Project management
-    setShapes,
     setGroups,
     setCanvasSettings,
     setScatterSettings,

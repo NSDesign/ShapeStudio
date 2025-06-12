@@ -378,6 +378,11 @@ export class Shape {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length === 0) {
+      console.warn(`Shape ${this.id} (${this.type}) has no points, skipping render`);
+      return;
+    }
+    
     ctx.save();
     
     // Apply blend mode
@@ -482,7 +487,10 @@ export class Shape {
   }
 
   private drawPolygon(ctx: CanvasRenderingContext2D): void {
-    if (!this.points || this.points.length === 0) return;
+    if (!this.points || this.points.length === 0) {
+      console.warn(`Shape ${this.id} has no points to render`);
+      return;
+    }
     
     // Handle ring shapes with inner and outer points
     if (this.type === 'ring') {

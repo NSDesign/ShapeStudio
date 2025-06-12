@@ -51,6 +51,7 @@ export default function ShapeEditor() {
     handleTouchMove,
     handleTouchEnd,
     handleWheel,
+    setShapes,
     selectedCount,
     selectedPointsCount,
     selectedSegmentsCount,
@@ -162,7 +163,7 @@ export default function ShapeEditor() {
           onBringForward={bringForward}
           onSendBackward={sendBackward}
           onChangeBlendMode={changeBlendMode}
-          onShapeUpdate={() => {}}
+          onShapeUpdate={() => setShapes(prev => [...prev])}
           onAddArtboard={addArtboard}
           onSelectArtboard={selectArtboard}
           onDeleteArtboard={deleteArtboard}
