@@ -130,7 +130,7 @@ export default function ShapeEditor() {
       </div>
       
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         <Sidebar
           enabledShapeTypes={enabledShapeTypes}
           scatterSettings={scatterSettings}
@@ -168,7 +168,7 @@ export default function ShapeEditor() {
           onUpdateArtboard={updateArtboard}
           onDistributeSelected={distributeSelected}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           <Canvas
             shapes={shapes}
             groups={groups}

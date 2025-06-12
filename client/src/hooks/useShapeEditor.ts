@@ -335,7 +335,7 @@ export const useShapeEditor = () => {
       const finalX = position.x + (Math.random() - 0.5) * 20 * randomness;
       const finalY = position.y + (Math.random() - 0.5) * 20 * randomness;
       
-      const newShape = Shape.create(randomType, finalX, finalY);
+      const newShape = new Shape(randomType, finalX, finalY);
       
       // Add some variation to scattered shapes
       const sizeVariation = 0.5 + Math.random() * randomness;
@@ -391,7 +391,7 @@ export const useShapeEditor = () => {
 
     const newShapes = positions.map((position) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
-      const shape = Shape.create(randomType, position.x, position.y);
+      const shape = new Shape(randomType, position.x, position.y);
       
       // Random properties
       const hue = Math.random() * 360;

@@ -462,11 +462,6 @@ export default function Canvas({
         />
         
         {/* Canvas Overlay Messages */}
-        {selectedCount === 0 && !isMultiSelectMode && (
-          <div className="absolute top-4 left-4 bg-black bg-opacity-50 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
-            <span>Hold Shift to select multiple shapes</span>
-          </div>
-        )}
         
         {isMultiSelectMode && (
           <div className="absolute top-4 left-4 bg-blue-500 bg-opacity-90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
