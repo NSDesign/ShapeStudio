@@ -643,36 +643,33 @@ export class Shape {
     
     ctx.save();
     
-    // Apply shape transformation
-    ctx.translate(this.transform.x, this.transform.y);
-    ctx.rotate(this.transform.rotation);
-    ctx.scale(this.transform.scaleX, this.transform.scaleY);
+    // Get world-space bounds after transformation
+    const worldBounds = this.getWorldBounds();
     
-    const bounds = this.getBounds();
-    // Handle size should be constant regardless of shape scale
-    const handleSize = 8 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
+    // Handle size should be constant in screen space
+    const handleSize = 8 / canvasZoom;
     const handleOffset = handleSize / 2;
     
-    // Corner handles for scaling
+    // Corner handles for scaling - use world bounds
     const corners = [
-      { x: bounds.x - handleOffset, y: bounds.y - handleOffset }, // Top-left
-      { x: bounds.x + bounds.width - handleOffset, y: bounds.y - handleOffset }, // Top-right
-      { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height - handleOffset }, // Bottom-right
-      { x: bounds.x - handleOffset, y: bounds.y + bounds.height - handleOffset } // Bottom-left
+      { x: worldBounds.x - handleOffset, y: worldBounds.y - handleOffset }, // Top-left
+      { x: worldBounds.x + worldBounds.width - handleOffset, y: worldBounds.y - handleOffset }, // Top-right
+      { x: worldBounds.x + worldBounds.width - handleOffset, y: worldBounds.y + worldBounds.height - handleOffset }, // Bottom-right
+      { x: worldBounds.x - handleOffset, y: worldBounds.y + worldBounds.height - handleOffset } // Bottom-left
     ];
     
     // Edge handles for scaling
     const edges = [
-      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y - handleOffset }, // Top
-      { x: bounds.x + bounds.width - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset }, // Right
-      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height - handleOffset }, // Bottom
-      { x: bounds.x - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset } // Left
+      { x: worldBounds.x + worldBounds.width / 2 - handleOffset, y: worldBounds.y - handleOffset }, // Top
+      { x: worldBounds.x + worldBounds.width - handleOffset, y: worldBounds.y + worldBounds.height / 2 - handleOffset }, // Right
+      { x: worldBounds.x + worldBounds.width / 2 - handleOffset, y: worldBounds.y + worldBounds.height - handleOffset }, // Bottom
+      { x: worldBounds.x - handleOffset, y: worldBounds.y + worldBounds.height / 2 - handleOffset } // Left
     ];
     
     // Draw corner handles (for scaling)
     ctx.fillStyle = '#3B82F6';
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
+    ctx.lineWidth = 1 / canvasZoom;
     
     corners.forEach(corner => {
       ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
@@ -687,9 +684,9 @@ export class Shape {
     });
     
     // Draw rotation handle
-    const rotationHandleDistance = Math.max(bounds.width, bounds.height) / 2 + 20 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
-    const rotationHandleX = bounds.x + bounds.width / 2 - handleOffset;
-    const rotationHandleY = bounds.y - rotationHandleDistance - handleOffset;
+    const rotationHandleDistance = Math.max(worldBounds.width, worldBounds.height) / 2 + 20 / canvasZoom;
+    const rotationHandleX = worldBounds.x + worldBounds.width / 2 - handleOffset;
+    const rotationHandleY = worldBounds.y - rotationHandleDistance - handleOffset;
     
     ctx.fillStyle = '#EF4444';
     ctx.beginPath();
@@ -699,77 +696,13 @@ export class Shape {
     
     // Draw line connecting rotation handle to shape
     ctx.strokeStyle = '#EF4444';
-    ctx.lineWidth = 1 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
-    ctx.setLineDash([2 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY)), 2 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY))]);
+    ctx.lineWidth = 1 / canvasZoom;
+    ctx.setLineDash([2 / canvasZoom, 2 / canvasZoom]);
     ctx.beginPath();
-    ctx.moveTo(bounds.x + bounds.width / 2, bounds.y);
+    ctx.moveTo(worldBounds.x + worldBounds.width / 2, worldBounds.y);
     ctx.lineTo(rotationHandleX + handleOffset, rotationHandleY + handleOffset);
     ctx.stroke();
     ctx.setLineDash([]);
-    
-    // Draw skew handles
-    const skewDistance = 15 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
-    const skewHandles = [
-      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y - skewDistance - handleOffset, type: 'skewY' }, // Top skew
-      { x: bounds.x + bounds.width + skewDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'skewX' }, // Right skew
-      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height + skewDistance - handleOffset, type: 'skewY' }, // Bottom skew
-      { x: bounds.x - skewDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'skewX' } // Left skew
-    ];
-    
-    ctx.fillStyle = '#F59E0B';
-    skewHandles.forEach(handle => {
-      ctx.beginPath();
-      if (handle.type === 'skewX') {
-        // Diamond shape for horizontal skew
-        ctx.moveTo(handle.x + handleOffset, handle.y);
-        ctx.lineTo(handle.x + handleSize, handle.y + handleOffset);
-        ctx.lineTo(handle.x + handleOffset, handle.y + handleSize);
-        ctx.lineTo(handle.x, handle.y + handleOffset);
-      } else {
-        // Diamond shape for vertical skew
-        ctx.moveTo(handle.x, handle.y + handleOffset);
-        ctx.lineTo(handle.x + handleOffset, handle.y);
-        ctx.lineTo(handle.x + handleSize, handle.y + handleOffset);
-        ctx.lineTo(handle.x + handleOffset, handle.y + handleSize);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    });
-    
-    // Draw flip handles
-    const flipDistance = 25 / (canvasZoom * Math.min(this.transform.scaleX, this.transform.scaleY));
-    const flipHandles = [
-      { x: bounds.x + bounds.width / 2 - handleOffset, y: bounds.y + bounds.height + flipDistance - handleOffset, type: 'flipV' }, // Vertical flip
-      { x: bounds.x + bounds.width + flipDistance - handleOffset, y: bounds.y + bounds.height / 2 - handleOffset, type: 'flipH' } // Horizontal flip
-    ];
-    
-    ctx.fillStyle = '#8B5CF6';
-    flipHandles.forEach(handle => {
-      ctx.beginPath();
-      if (handle.type === 'flipH') {
-        // Arrow shape for horizontal flip
-        ctx.moveTo(handle.x, handle.y + handleOffset);
-        ctx.lineTo(handle.x + handleSize * 0.6, handle.y);
-        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize * 0.3);
-        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.3);
-        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.7);
-        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize * 0.7);
-        ctx.lineTo(handle.x + handleSize * 0.6, handle.y + handleSize);
-      } else {
-        // Arrow shape for vertical flip
-        ctx.moveTo(handle.x + handleOffset, handle.y);
-        ctx.lineTo(handle.x, handle.y + handleSize * 0.6);
-        ctx.lineTo(handle.x + handleSize * 0.3, handle.y + handleSize * 0.6);
-        ctx.lineTo(handle.x + handleSize * 0.3, handle.y + handleSize);
-        ctx.lineTo(handle.x + handleSize * 0.7, handle.y + handleSize);
-        ctx.lineTo(handle.x + handleSize * 0.7, handle.y + handleSize * 0.6);
-        ctx.lineTo(handle.x + handleSize, handle.y + handleSize * 0.6);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    });
     
     ctx.restore();
   }
@@ -794,6 +727,50 @@ export class Shape {
       };
     }
     return { x: 0, y: 0, width: 0, height: 0 };
+  }
+
+  getWorldBounds(): { x: number; y: number; width: number; height: number } {
+    if (this.points.length === 0) {
+      return { x: this.transform.x, y: this.transform.y, width: 0, height: 0 };
+    }
+
+    // Transform all points to world space
+    const worldPoints = this.points.map(p => {
+      // Apply scale
+      let x = p.x * this.transform.scaleX;
+      let y = p.y * this.transform.scaleY;
+      
+      // Apply skew
+      x += y * Math.tan(this.transform.skewX * Math.PI / 180);
+      y += x * Math.tan(this.transform.skewY * Math.PI / 180);
+      
+      // Apply rotation
+      const rotationRad = this.transform.rotation * Math.PI / 180;
+      const cos = Math.cos(rotationRad);
+      const sin = Math.sin(rotationRad);
+      const rotatedX = x * cos - y * sin;
+      const rotatedY = x * sin + y * cos;
+      
+      // Apply translation
+      return {
+        x: this.transform.x + rotatedX,
+        y: this.transform.y + rotatedY
+      };
+    });
+
+    const xs = worldPoints.map(p => p.x);
+    const ys = worldPoints.map(p => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
   }
 
   containsPoint(x: number, y: number): boolean {

@@ -338,8 +338,8 @@ export const useShapeEditor = () => {
       const newShape = new Shape(randomType, finalX, finalY);
       
       // Assign proper z-index for layering
-      const maxZ = Math.max(...shapes.map(s => s.properties.zIndex), 0);
-      newShape.properties.zIndex = maxZ + index + 1;
+      const existingMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
+      newShape.properties.zIndex = existingMaxZ + index + 1;
       
       // Add some variation to scattered shapes
       const sizeVariation = 0.5 + Math.random() * randomness;
@@ -404,8 +404,8 @@ export const useShapeEditor = () => {
       const shape = new Shape(randomType, position.x, position.y);
       
       // Assign proper z-index for layering
-      const maxZ = Math.max(...shapes.map(s => s.properties.zIndex), 0);
-      shape.properties.zIndex = maxZ + index + 1;
+      const existingMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
+      shape.properties.zIndex = existingMaxZ + index + 1;
       
       // Random properties
       const hue = Math.random() * 360;
