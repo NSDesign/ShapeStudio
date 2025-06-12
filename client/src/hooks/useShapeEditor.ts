@@ -119,23 +119,31 @@ export const useShapeEditor = () => {
   }, [shapes, groups]);
 
   const selectShapeAtPoint = useCallback((x: number, y: number, addToSelection: boolean = false) => {
-    const shapesAtPoint = shapes.filter(shape => shape.containsPoint(x, y));
-    if (shapesAtPoint.length === 0) {
+    // Sort shapes by z-index from highest to lowest and find first hit
+    const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    let topShape: Shape | null = null;
+    
+    // Find the first (topmost) shape that contains the point
+    for (const shape of sortedShapes) {
+      if (shape.containsPoint(x, y)) {
+        topShape = shape;
+        break;
+      }
+    }
+    
+    if (!topShape) {
       if (!addToSelection) {
         clearSelection();
       }
       return false;
     }
 
-    // Find the topmost shape (highest z-index)
-    const topShape = shapesAtPoint.reduce((topmost, current) => 
-      current.properties.zIndex > topmost.properties.zIndex ? current : topmost
-    );
-
     if (addToSelection) {
       topShape.selected = !topShape.selected;
     } else {
       clearSelection();
+      setSelectedPoints([]);
+      setSelectedSegments([]);
       topShape.selected = true;
     }
 
@@ -673,8 +681,10 @@ export const useShapeEditor = () => {
               // Toggle selection
               topShape.selected = !topShape.selected;
             } else {
-              // Single select
+              // Single select - clear everything including components
               clearSelection();
+              setSelectedPoints([]);
+              setSelectedSegments([]);
               topShape.selected = true;
             }
             
@@ -718,6 +728,9 @@ export const useShapeEditor = () => {
     // Start marquee selection if clicking on empty space
     if (!clickedOnShape && !e.shiftKey) {
       clearSelection();
+      // Clear all component selections when starting marquee
+      setSelectedPoints([]);
+      setSelectedSegments([]);
       setMarqueeStart({ x, y });
       setIsMarqueeSelecting(false); // Will be set to true on mouse move
     }
@@ -757,9 +770,9 @@ export const useShapeEditor = () => {
     const y = screenY - canvasSettings.panY;
     
     // Start marquee selection if dragging from empty space
-    if (marqueeStart && !isMarqueeSelecting) {
+    if (marqueeStart && !isMarqueeSelecting && isDragging) {
       const dragDistance = Math.sqrt((x - marqueeStart.x) ** 2 + (y - marqueeStart.y) ** 2);
-      if (dragDistance > 5) { // Start marquee after minimum drag distance
+      if (dragDistance > 10) { // Start marquee after minimum drag distance
         setIsMarqueeSelecting(true);
       }
     }
@@ -873,11 +886,15 @@ export const useShapeEditor = () => {
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
+    } else if (marqueeStart && !isMarqueeSelecting) {
+      // Single click without drag - clear marquee state
+      setMarqueeStart(null);
+      setMarqueeEnd(null);
     }
     
     setIsDragging(false);
     setDragState(null);
-  }, [isMarqueeSelecting, shapes]);
+  }, [isMarqueeSelecting, marqueeStart, shapes]);
 
   // Touch event handlers for mobile multi-select and marquee
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {

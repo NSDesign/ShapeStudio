@@ -174,35 +174,36 @@ export default function Canvas({
         }
       });
 
-      // Render individual shapes
-      shapes.forEach(shape => {
+      // Render shapes and their components in z-index order to maintain proper layering
+      const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+      
+      sortedShapes.forEach(shape => {
         const bounds = shape.getBounds();
         if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
             bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
+          
+          // Render the shape first
           shape.render(ctx);
-        }
-      });
-
-      // Render points and segments for shapes based on edit mode and selection
-      shapes.forEach(shape => {
-        if (!shape.points || shape.points.length === 0) return;
-        
-        // Only show components for shapes that have selected components or are currently selected
-        const hasSelectedComponents = selectedPoints.some(sp => sp.shapeId === shape.id) || 
-                                     selectedSegments.some(ss => ss.shapeId === shape.id);
-        const shouldShowComponents = (editMode === 'points' || editMode === 'segments') && 
-                                   (shape.selected || hasSelectedComponents);
-        
-        if (shouldShowComponents) {
-          const shapeSelectedPoints = selectedPoints
-            .filter(sp => sp.shapeId === shape.id)
-            .map(sp => sp.pointIndex);
           
-          const shapeSelectedSegments = selectedSegments
-            .filter(ss => ss.shapeId === shape.id)
-            .map(ss => ss.segmentIndex);
-          
-          shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments, canvasSettings.zoom);
+          // Then render its components immediately after (maintaining z-index order)
+          if (shape.points && shape.points.length > 0) {
+            const hasSelectedComponents = selectedPoints.some(sp => sp.shapeId === shape.id) || 
+                                         selectedSegments.some(ss => ss.shapeId === shape.id);
+            const shouldShowComponents = (editMode === 'points' || editMode === 'segments') && 
+                                       (shape.selected || hasSelectedComponents);
+            
+            if (shouldShowComponents) {
+              const shapeSelectedPoints = selectedPoints
+                .filter(sp => sp.shapeId === shape.id)
+                .map(sp => sp.pointIndex);
+              
+              const shapeSelectedSegments = selectedSegments
+                .filter(ss => ss.shapeId === shape.id)
+                .map(ss => ss.segmentIndex);
+              
+              shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments, canvasSettings.zoom);
+            }
+          }
         }
       });
 
