@@ -148,21 +148,23 @@ export const useShapeEditor = () => {
     for (const shape of shapes) {
       if (shape.points) {
         for (let i = 0; i < shape.points.length; i++) {
-          const point = shape.points[i];
-          const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
-          if (distance <= 5) {
-            const pointId = { shapeId: shape.id, pointIndex: i };
-            if (addToSelection) {
-              const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
-              if (exists) {
-                setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+          const worldPoint = shape.getWorldPoint(i);
+          if (worldPoint) {
+            const distance = Math.sqrt((worldPoint.x - x) ** 2 + (worldPoint.y - y) ** 2);
+            if (distance <= 8) {
+              const pointId = { shapeId: shape.id, pointIndex: i };
+              if (addToSelection) {
+                const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                if (exists) {
+                  setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+                } else {
+                  setSelectedPoints(prev => [...prev, pointId]);
+                }
               } else {
-                setSelectedPoints(prev => [...prev, pointId]);
+                setSelectedPoints([pointId]);
               }
-            } else {
-              setSelectedPoints([pointId]);
+              return true;
             }
-            return true;
           }
         }
       }
@@ -178,51 +180,53 @@ export const useShapeEditor = () => {
     for (const shape of shapes) {
       if (shape.points && shape.points.length > 1) {
         for (let i = 0; i < shape.points.length - 1; i++) {
-          const p1 = shape.points[i];
-          const p2 = shape.points[i + 1];
+          const worldP1 = shape.getWorldPoint(i);
+          const worldP2 = shape.getWorldPoint(i + 1);
           
-          // Calculate distance from point to line segment
-          const A = x - p1.x;
-          const B = y - p1.y;
-          const C = p2.x - p1.x;
-          const D = p2.y - p1.y;
+          if (worldP1 && worldP2) {
+            // Calculate distance from point to line segment using world coordinates
+            const A = x - worldP1.x;
+            const B = y - worldP1.y;
+            const C = worldP2.x - worldP1.x;
+            const D = worldP2.y - worldP1.y;
 
-          const dot = A * C + B * D;
-          const lenSq = C * C + D * D;
-          let param = -1;
-          if (lenSq !== 0) {
-            param = dot / lenSq;
-          }
-
-          let xx, yy;
-          if (param < 0) {
-            xx = p1.x;
-            yy = p1.y;
-          } else if (param > 1) {
-            xx = p2.x;
-            yy = p2.y;
-          } else {
-            xx = p1.x + param * C;
-            yy = p1.y + param * D;
-          }
-
-          const dx = x - xx;
-          const dy = y - yy;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance <= 5) {
-            const segmentId = { shapeId: shape.id, segmentIndex: i };
-            if (addToSelection) {
-              const exists = selectedSegments.some(s => s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex);
-              if (exists) {
-                setSelectedSegments(prev => prev.filter(s => !(s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex)));
-              } else {
-                setSelectedSegments(prev => [...prev, segmentId]);
-              }
-            } else {
-              setSelectedSegments([segmentId]);
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            if (lenSq !== 0) {
+              param = dot / lenSq;
             }
-            return true;
+
+            let xx, yy;
+            if (param < 0) {
+              xx = worldP1.x;
+              yy = worldP1.y;
+            } else if (param > 1) {
+              xx = worldP2.x;
+              yy = worldP2.y;
+            } else {
+              xx = worldP1.x + param * C;
+              yy = worldP1.y + param * D;
+            }
+
+            const dx = x - xx;
+            const dy = y - yy;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance <= 8) {
+              const segmentId = { shapeId: shape.id, segmentIndex: i };
+              if (addToSelection) {
+                const exists = selectedSegments.some(s => s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex);
+                if (exists) {
+                  setSelectedSegments(prev => prev.filter(s => !(s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex)));
+                } else {
+                  setSelectedSegments(prev => [...prev, segmentId]);
+                }
+              } else {
+                setSelectedSegments([segmentId]);
+              }
+              return true;
+            }
           }
         }
       }
@@ -678,6 +682,14 @@ export const useShapeEditor = () => {
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
     
+    // Start marquee selection if dragging from empty space
+    if (marqueeStart && !isMarqueeSelecting) {
+      const dragDistance = Math.sqrt((x - marqueeStart.x) ** 2 + (y - marqueeStart.y) ** 2);
+      if (dragDistance > 5) { // Start marquee after minimum drag distance
+        setIsMarqueeSelecting(true);
+      }
+    }
+
     // Update marquee selection
     if (isMarqueeSelecting && marqueeStart) {
       setMarqueeEnd({ x, y });
@@ -690,9 +702,10 @@ export const useShapeEditor = () => {
       
       if (editMode === 'shapes') {
         shapes.forEach(shape => {
-          const bounds = shape.getBounds();
-          const shapeInMarquee = bounds.x >= minX && bounds.x + bounds.width <= maxX &&
-                               bounds.y >= minY && bounds.y + bounds.height <= maxY;
+          // Use world bounds for proper marquee selection
+          const worldBounds = shape.getWorldBounds();
+          const shapeInMarquee = worldBounds.x >= minX && worldBounds.x + worldBounds.width <= maxX &&
+                               worldBounds.y >= minY && worldBounds.y + worldBounds.height <= maxY;
           if (shape.selected !== shapeInMarquee) {
             shape.selected = shapeInMarquee;
           }
@@ -701,10 +714,14 @@ export const useShapeEditor = () => {
         const newSelectedPoints: { shapeId: string; pointIndex: number }[] = [];
         shapes.forEach(shape => {
           shape.points?.forEach((point, index) => {
-            const pointInMarquee = point.x >= minX && point.x <= maxX &&
-                                 point.y >= minY && point.y <= maxY;
-            if (pointInMarquee) {
-              newSelectedPoints.push({ shapeId: shape.id, pointIndex: index });
+            // Transform point to world coordinates for marquee selection
+            const worldPoint = shape.getWorldPoint(index);
+            if (worldPoint) {
+              const pointInMarquee = worldPoint.x >= minX && worldPoint.x <= maxX &&
+                                   worldPoint.y >= minY && worldPoint.y <= maxY;
+              if (pointInMarquee) {
+                newSelectedPoints.push({ shapeId: shape.id, pointIndex: index });
+              }
             }
           });
         });
@@ -714,12 +731,16 @@ export const useShapeEditor = () => {
         shapes.forEach(shape => {
           if (shape.points) {
             for (let i = 0; i < shape.points.length - 1; i++) {
-              const midX = (shape.points[i].x + shape.points[i + 1].x) / 2;
-              const midY = (shape.points[i].y + shape.points[i + 1].y) / 2;
-              const segmentInMarquee = midX >= minX && midX <= maxX &&
-                                     midY >= minY && midY <= maxY;
-              if (segmentInMarquee) {
-                newSelectedSegments.push({ shapeId: shape.id, segmentIndex: i });
+              const worldPoint1 = shape.getWorldPoint(i);
+              const worldPoint2 = shape.getWorldPoint(i + 1);
+              if (worldPoint1 && worldPoint2) {
+                const midX = (worldPoint1.x + worldPoint2.x) / 2;
+                const midY = (worldPoint1.y + worldPoint2.y) / 2;
+                const segmentInMarquee = midX >= minX && midX <= maxX &&
+                                       midY >= minY && midY <= maxY;
+                if (segmentInMarquee) {
+                  newSelectedSegments.push({ shapeId: shape.id, segmentIndex: i });
+                }
               }
             }
           }
