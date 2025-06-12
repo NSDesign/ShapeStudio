@@ -698,7 +698,8 @@ export const useShapeEditor = () => {
     }
     
     // Store drag start in both world and screen coordinates for consistent delta calculation
-    setDragStart({ x, y, screenX: e.clientX, screenY: e.clientY });
+    setDragStart({ x, y });
+    setDragStartScreen({ x: e.clientX, y: e.clientY });
     
     // Check if clicking on empty space to start marquee selection
     let clickedOnShape = false;
@@ -890,11 +891,11 @@ export const useShapeEditor = () => {
       return;
     }
     
-    if (!isDragging || !dragStart) return;
+    if (!isDragging || !dragStart || !dragStartScreen) return;
     
     // Calculate delta using screen coordinates to avoid accumulation errors
-    const deltaX = (e.clientX - dragStart.screenX) / canvasSettings.zoom;
-    const deltaY = (e.clientY - dragStart.screenY) / canvasSettings.zoom;
+    const deltaX = (e.clientX - dragStartScreen.x) / canvasSettings.zoom;
+    const deltaY = (e.clientY - dragStartScreen.y) / canvasSettings.zoom;
     
     // Only apply movement if there's actual delta
     if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
@@ -917,15 +918,11 @@ export const useShapeEditor = () => {
           break;
       }
       
-      // Update drag start to current screen coordinates
-      setDragStart({ 
-        x: x, 
-        y: y, 
-        screenX: e.clientX, 
-        screenY: e.clientY 
-      });
+      // Update drag start to current coordinates
+      setDragStart({ x: x, y: y });
+      setDragStartScreen({ x: e.clientX, y: e.clientY });
     }
-  }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
+  }, [isDragging, dragStart, dragStartScreen, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {
     if (isMarqueeSelecting) {
@@ -937,13 +934,11 @@ export const useShapeEditor = () => {
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
-      
-
-
     }
     
     setIsDragging(false);
     setDragStart(null);
+    setDragStartScreen(null);
   }, [isMarqueeSelecting, shapes]);
 
   // Touch event handlers for mobile multi-select and marquee
