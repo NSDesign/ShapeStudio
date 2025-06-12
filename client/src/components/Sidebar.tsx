@@ -134,6 +134,7 @@ export default function Sidebar({
   onFlipHorizontal,
   onFlipVertical,
   onDeleteSelected,
+  onClearAll,
   onBringToFront,
   onSendToBack,
   onBringForward,
@@ -2026,7 +2027,19 @@ export default function Sidebar({
 
         {/* Layers List */}
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400">All Layers</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-slate-400">All Layers</Label>
+            {(shapes || []).length > 0 && onClearAll && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearAll}
+                className="h-6 px-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/20"
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
           <div className="max-h-48 overflow-y-auto space-y-1">
             {sortedShapes.map((shape, index) => (
               <div
