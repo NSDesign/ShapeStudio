@@ -472,13 +472,42 @@ export const useShapeEditor = () => {
         const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
         const p1 = shape.points[segmentIndex];
         const p2 = shape.points[segmentIndex + 1];
+        
         if (p1) {
           p1.x += localDelta.x;
           p1.y += localDelta.y;
+          
+          // Move associated control points and tangent handles with the first point
+          if (shape.controlPoints && segmentIndex < shape.controlPoints.length) {
+            shape.controlPoints[segmentIndex].x += localDelta.x;
+            shape.controlPoints[segmentIndex].y += localDelta.y;
+          }
+          
+          if (shape.tangentHandles && segmentIndex < shape.tangentHandles.length) {
+            shape.tangentHandles[segmentIndex].in.x += localDelta.x;
+            shape.tangentHandles[segmentIndex].in.y += localDelta.y;
+            shape.tangentHandles[segmentIndex].out.x += localDelta.x;
+            shape.tangentHandles[segmentIndex].out.y += localDelta.y;
+          }
         }
+        
         if (p2) {
           p2.x += localDelta.x;
           p2.y += localDelta.y;
+          
+          // Move associated control points and tangent handles with the second point
+          const p2Index = segmentIndex + 1;
+          if (shape.controlPoints && p2Index < shape.controlPoints.length) {
+            shape.controlPoints[p2Index].x += localDelta.x;
+            shape.controlPoints[p2Index].y += localDelta.y;
+          }
+          
+          if (shape.tangentHandles && p2Index < shape.tangentHandles.length) {
+            shape.tangentHandles[p2Index].in.x += localDelta.x;
+            shape.tangentHandles[p2Index].in.y += localDelta.y;
+            shape.tangentHandles[p2Index].out.x += localDelta.x;
+            shape.tangentHandles[p2Index].out.y += localDelta.y;
+          }
         }
       }
     });

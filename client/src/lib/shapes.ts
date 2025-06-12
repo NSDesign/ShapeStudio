@@ -227,7 +227,7 @@ export class Shape {
       });
       
     } else {
-      // Generate bezier curve with tangent handles
+      // Generate bezier curve with control points (not tangent handles)
       for (let i = 0; i < numPoints; i++) {
         const point = {
           x: (i - numPoints/2) * (40 + Math.random() * 30),
@@ -235,23 +235,22 @@ export class Shape {
         };
         this.points.push(point);
         
-        // Generate tangent handles
-        const handleLength = 15 + Math.random() * 10;
-        const angle1 = Math.random() * Math.PI * 2;
-        const angle2 = angle1 + Math.PI;
-        
-        this.tangentHandles!.push({
-          in: {
-            x: point.x + Math.cos(angle1) * handleLength,
-            y: point.y + Math.sin(angle1) * handleLength
-          },
-          out: {
-            x: point.x + Math.cos(angle2) * handleLength,
-            y: point.y + Math.sin(angle2) * handleLength
-          }
-        });
-        
-        this.smoothPoints!.push(true);
+        // Generate control points for quadratic bezier curves
+        if (i < numPoints - 1) {
+          const nextPoint = {
+            x: ((i + 1) - numPoints/2) * (40 + Math.random() * 30),
+            y: (Math.random() - 0.5) * 100
+          };
+          
+          // Control point positioned between current and next point with some offset
+          const controlX = (point.x + nextPoint.x) / 2 + (Math.random() - 0.5) * 40;
+          const controlY = (point.y + nextPoint.y) / 2 + (Math.random() - 0.5) * 40;
+          
+          this.controlPoints!.push({
+            x: controlX,
+            y: controlY
+          });
+        }
       }
     }
     
@@ -275,12 +274,19 @@ export class Shape {
         y: Math.sin(angle) * radius
       });
       
-      // Generate control points for smooth blob curves
-      const controlRadius = radius * (0.4 + Math.random() * 0.3);
-      const controlAngle = angle + (Math.random() - 0.5) * 0.8;
+      // Generate control points for smooth blob curves positioned between points
+      const nextAngle = ((i + 1) / numPoints) * Math.PI * 2;
+      const nextRadius = baseRadius * (0.7 + Math.random() * 0.6);
+      const nextX = Math.cos(nextAngle) * nextRadius;
+      const nextY = Math.sin(nextAngle) * nextRadius;
+      
+      // Control point positioned between current and next point for smooth curves
+      const controlX = (this.points[i].x + nextX) / 2 + (Math.random() - 0.5) * 20;
+      const controlY = (this.points[i].y + nextY) / 2 + (Math.random() - 0.5) * 20;
+      
       this.controlPoints.push({
-        x: Math.cos(controlAngle) * controlRadius,
-        y: Math.sin(controlAngle) * controlRadius
+        x: controlX,
+        y: controlY
       });
     }
     
@@ -745,25 +751,33 @@ export class Shape {
   }
 
   getBounds(): { x: number; y: number; width: number; height: number } {
-    // Calculate bounds ONLY from actual shape geometry, excluding control handles
-    if (this.points.length > 0) {
-      const xs = this.points.map(p => p.x);
-      const ys = this.points.map(p => p.y);
-      
-      // DO NOT include control points in bounding box - they are UI elements only
-      
-      const minX = Math.min(...xs);
-      const maxX = Math.max(...xs);
-      const minY = Math.min(...ys);
-      const maxY = Math.max(...ys);
-      return {
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY
-      };
+    if (this.points.length === 0) {
+      return { x: 0, y: 0, width: 0, height: 0 };
     }
-    return { x: 0, y: 0, width: 0, height: 0 };
+
+    let allPoints = [...this.points];
+    
+    // For cubic curves, include tangent handles in bounds calculation
+    if (this.type === 'cubic' && this.tangentHandles) {
+      this.tangentHandles.forEach(handles => {
+        allPoints.push(handles.in, handles.out);
+      });
+    }
+    
+    const xs = allPoints.map(p => p.x);
+    const ys = allPoints.map(p => p.y);
+    
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
   }
 
   getWorldBounds(): { x: number; y: number; width: number; height: number } {
@@ -1255,20 +1269,33 @@ export class Shape {
       // Draw control points for bezier curves and blob shapes
       this.controlPoints.forEach((controlPoint, index) => {
         const worldControl = this.getWorldControlPoint(index);
-        const associatedPointIndex = this.type === 'blob' ? 
-          (index + 1) % this.points.length : // For blobs, control points are between consecutive points
-          Math.min(index, this.points.length - 1); // For bezier, control points are associated with their index
-        const worldPoint = this.getWorldPoint(associatedPointIndex);
         
-        if (worldControl && worldPoint) {
-          // Draw tangent line
+        // For bezier curves, control points are between segments
+        // Control point at index controls the curve from point[index] to point[index+1]
+        const startPointIndex = index;
+        const endPointIndex = (index + 1) % this.points.length;
+        
+        const worldStartPoint = this.getWorldPoint(startPointIndex);
+        const worldEndPoint = this.getWorldPoint(endPointIndex);
+        
+        if (worldControl && worldStartPoint && worldEndPoint) {
+          // Draw tangent lines to both connected points
           ctx.strokeStyle = '#9CA3AF';
           ctx.lineWidth = 1 / canvasZoom;
           ctx.setLineDash([3 / canvasZoom, 3 / canvasZoom]);
+          
+          // Line from start point to control point
           ctx.beginPath();
-          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.moveTo(worldStartPoint.x, worldStartPoint.y);
           ctx.lineTo(worldControl.x, worldControl.y);
           ctx.stroke();
+          
+          // Line from control point to end point
+          ctx.beginPath();
+          ctx.moveTo(worldControl.x, worldControl.y);
+          ctx.lineTo(worldEndPoint.x, worldEndPoint.y);
+          ctx.stroke();
+          
           ctx.setLineDash([]);
           
           // Draw control handle
