@@ -234,11 +234,13 @@ export default function Canvas({
       });
 
       // Render visible individual shapes (always render for debugging)
+      console.log(`Canvas: Rendering ${shapes.length} shapes`);
       shapes.forEach(shape => {
         try {
+          console.log(`Canvas: Rendering shape ${shape.id} (${shape.type}) at (${shape.transform.x}, ${shape.transform.y})`);
           shape.render(ctx);
         } catch (error) {
-          console.error('Error rendering shape:', error);
+          console.error('Canvas: Error rendering shape:', shape.id, error);
         }
       });
 
