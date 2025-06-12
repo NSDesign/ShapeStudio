@@ -2036,8 +2036,9 @@ export default function Sidebar({
                     : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50'
                 }`}
                 onClick={() => {
-                  // Toggle selection
-                  shape.selected = !shape.selected;
+                  // Clear other selections first, then select this shape
+                  shapes.forEach(s => s.selected = false);
+                  shape.selected = true;
                   onShapeUpdate?.();
                 }}
               >

@@ -233,12 +233,12 @@ export default function Canvas({
         }
       });
 
-      // Render visible individual shapes
+      // Render visible individual shapes (always render for debugging)
       shapes.forEach(shape => {
-        const bounds = shape.getBounds();
-        if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
-            bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
+        try {
           shape.render(ctx);
+        } catch (error) {
+          console.error('Error rendering shape:', error);
         }
       });
 
@@ -463,10 +463,10 @@ export default function Canvas({
       </div>
       
       {/* Canvas */}
-      <div className="flex-1 relative bg-slate-900">
+      <div className="flex-1 relative bg-slate-900 overflow-hidden">
         <canvas
           ref={canvasRef}
-          className="shape-canvas absolute inset-0 w-full h-full cursor-crosshair"
+          className="shape-canvas w-full h-full cursor-crosshair"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}

@@ -169,7 +169,7 @@ export default function ShapeEditor() {
           onUpdateArtboard={updateArtboard}
           onDistributeSelected={distributeSelected}
         />
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 relative">
           <Canvas
             shapes={shapes}
             groups={groups}
