@@ -796,9 +796,132 @@ export class Shape {
     if (this.transform.scaleX !== 0) localX /= this.transform.scaleX;
     if (this.transform.scaleY !== 0) localY /= this.transform.scaleY;
     
-    const bounds = this.getBounds();
-    return localX >= bounds.x && localX <= bounds.x + bounds.width &&
-           localY >= bounds.y && localY <= bounds.y + bounds.height;
+    // Use pixel-perfect detection instead of bounding box
+    return this.isPointInsideShape(localX, localY);
+  }
+
+  private isPointInsideShape(x: number, y: number): boolean {
+    if (this.points.length === 0) return false;
+    
+    // For different shape types, use appropriate detection algorithms
+    switch (this.type) {
+      case 'circle':
+      case 'ellipse':
+        return this.isPointInEllipse(x, y);
+      case 'polygon':
+      case 'star':
+      case 'ring':
+        return this.isPointInPolygon(x, y);
+      case 'rectangle':
+        return this.isPointInRectangle(x, y);
+      case 'line':
+        return this.isPointOnLine(x, y);
+      case 'blob':
+        return this.isPointInPolygon(x, y); // Use polygon approximation for complex shapes
+      default:
+        return this.isPointInPolygon(x, y);
+    }
+  }
+
+  private isPointInEllipse(x: number, y: number): boolean {
+    if (!this.width || !this.height) return false;
+    const cx = 0; // Center at origin in local space
+    const cy = 0;
+    const rx = this.width / 2;
+    const ry = this.height / 2;
+    
+    const dx = x - cx;
+    const dy = y - cy;
+    return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
+  }
+
+  private isPointInRectangle(x: number, y: number): boolean {
+    if (!this.width || !this.height) return false;
+    return x >= -this.width / 2 && x <= this.width / 2 &&
+           y >= -this.height / 2 && y <= this.height / 2;
+  }
+
+  private isPointOnLine(x: number, y: number, tolerance: number = 3): boolean {
+    if (this.points.length < 2) return false;
+    
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const p1 = this.points[i];
+      const p2 = this.points[i + 1];
+      
+      const distance = this.distanceToLineSegment(x, y, p1.x, p1.y, p2.x, p2.y);
+      if (distance <= tolerance) return true;
+    }
+    return false;
+  }
+
+  private isPointInPolygon(x: number, y: number): boolean {
+    if (this.points.length < 3) return false;
+    
+    let inside = false;
+    for (let i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
+      const xi = this.points[i].x;
+      const yi = this.points[i].y;
+      const xj = this.points[j].x;
+      const yj = this.points[j].y;
+      
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  private distanceToLineSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+    const A = px - x1;
+    const B = py - y1;
+    const C = x2 - x1;
+    const D = y2 - y1;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    let param = -1;
+    if (lenSq !== 0) {
+      param = dot / lenSq;
+    }
+
+    let xx, yy;
+    if (param < 0) {
+      xx = x1;
+      yy = y1;
+    } else if (param > 1) {
+      xx = x2;
+      yy = y2;
+    } else {
+      xx = x1 + param * C;
+      yy = y1 + param * D;
+    }
+
+    const dx = px - xx;
+    const dy = py - yy;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  worldDeltaToLocal(worldDeltaX: number, worldDeltaY: number): Point {
+    // Transform world space delta to local space delta
+    let localDeltaX = worldDeltaX;
+    let localDeltaY = worldDeltaY;
+    
+    // Inverse rotation
+    if (this.transform.rotation !== 0) {
+      const rotationRad = -this.transform.rotation * Math.PI / 180;
+      const cos = Math.cos(rotationRad);
+      const sin = Math.sin(rotationRad);
+      const rotatedX = localDeltaX * cos - localDeltaY * sin;
+      const rotatedY = localDeltaX * sin + localDeltaY * cos;
+      localDeltaX = rotatedX;
+      localDeltaY = rotatedY;
+    }
+    
+    // Inverse scale
+    if (this.transform.scaleX !== 0) localDeltaX /= this.transform.scaleX;
+    if (this.transform.scaleY !== 0) localDeltaY /= this.transform.scaleY;
+    
+    return { x: localDeltaX, y: localDeltaY };
   }
 
   getPointAt(index: number): Point | null {

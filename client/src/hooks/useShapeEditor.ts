@@ -261,8 +261,10 @@ export const useShapeEditor = () => {
     selectedPoints.forEach(({ shapeId, pointIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape && shape.points && shape.points[pointIndex]) {
-        shape.points[pointIndex].x += deltaX;
-        shape.points[pointIndex].y += deltaY;
+        // Transform world space delta to local space delta
+        const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
+        shape.points[pointIndex].x += localDelta.x;
+        shape.points[pointIndex].y += localDelta.y;
       }
     });
     setShapes(prev => [...prev]);
@@ -272,15 +274,16 @@ export const useShapeEditor = () => {
     selectedSegments.forEach(({ shapeId, segmentIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (shape && shape.points) {
+        const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
         const p1 = shape.points[segmentIndex];
         const p2 = shape.points[segmentIndex + 1];
         if (p1) {
-          p1.x += deltaX;
-          p1.y += deltaY;
+          p1.x += localDelta.x;
+          p1.y += localDelta.y;
         }
         if (p2) {
-          p2.x += deltaX;
-          p2.y += deltaY;
+          p2.x += localDelta.x;
+          p2.y += localDelta.y;
         }
       }
     });
