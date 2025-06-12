@@ -51,8 +51,14 @@ export const useShapeEditor = () => {
   ]);
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [dragStartScreen, setDragStartScreen] = useState<{ x: number; y: number } | null>(null);
+  const [dragState, setDragState] = useState<{
+    startScreenX: number;
+    startScreenY: number;
+    lastScreenX: number;
+    lastScreenY: number;
+    totalDeltaX: number;
+    totalDeltaY: number;
+  } | null>(null);
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
@@ -685,21 +691,41 @@ export const useShapeEditor = () => {
     
     // Handle middle mouse button for panning
     if (e.button === 1) {
-      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragState({
+        startScreenX: e.clientX,
+        startScreenY: e.clientY,
+        lastScreenX: e.clientX,
+        lastScreenY: e.clientY,
+        totalDeltaX: 0,
+        totalDeltaY: 0
+      });
       setIsDragging(true);
       return;
     }
     
     // Handle space key + left click for panning
     if (e.button === 0 && (e.metaKey || e.ctrlKey)) {
-      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragState({
+        startScreenX: e.clientX,
+        startScreenY: e.clientY,
+        lastScreenX: e.clientX,
+        lastScreenY: e.clientY,
+        totalDeltaX: 0,
+        totalDeltaY: 0
+      });
       setIsDragging(true);
       return;
     }
     
-    // Store drag start in both world and screen coordinates for consistent delta calculation
-    setDragStart({ x, y });
-    setDragStartScreen({ x: e.clientX, y: e.clientY });
+    // Initialize new drag state tracking system
+    setDragState({
+      startScreenX: e.clientX,
+      startScreenY: e.clientY,
+      lastScreenX: e.clientX,
+      lastScreenY: e.clientY,
+      totalDeltaX: 0,
+      totalDeltaY: 0
+    });
     
     // Check if clicking on empty space to start marquee selection
     let clickedOnShape = false;
@@ -756,9 +782,9 @@ export const useShapeEditor = () => {
         const shapesAtMousePoint = shapes.filter(shape => shape.containsPoint(x, y));
         clickedOnShape = shapesAtMousePoint.length > 0;
         if (clickedOnShape) {
-          // Find the topmost shape at the click point
+          // Find the topmost shape at the click point (highest z-index)
           const topShape = shapesAtMousePoint.reduce((topmost, current) => 
-            current.properties.zIndex > topmost.properties.zIndex ? topmost : current
+            current.properties.zIndex > topmost.properties.zIndex ? current : topmost
           );
           
           // Preserve multi-selection if:
@@ -891,11 +917,11 @@ export const useShapeEditor = () => {
       return;
     }
     
-    if (!isDragging || !dragStart || !dragStartScreen) return;
+    if (!isDragging || !dragState) return;
     
-    // Calculate delta using screen coordinates to avoid accumulation errors
-    const deltaX = (e.clientX - dragStartScreen.x) / canvasSettings.zoom;
-    const deltaY = (e.clientY - dragStartScreen.y) / canvasSettings.zoom;
+    // Calculate precise delta from last position
+    const deltaX = (e.clientX - dragState.lastScreenX) / canvasSettings.zoom;
+    const deltaY = (e.clientY - dragState.lastScreenY) / canvasSettings.zoom;
     
     // Only apply movement if there's actual delta
     if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
@@ -918,11 +944,16 @@ export const useShapeEditor = () => {
           break;
       }
       
-      // Update drag start to current coordinates
-      setDragStart({ x: x, y: y });
-      setDragStartScreen({ x: e.clientX, y: e.clientY });
+      // Update drag state with new position and accumulated delta
+      setDragState(prev => prev ? {
+        ...prev,
+        lastScreenX: e.clientX,
+        lastScreenY: e.clientY,
+        totalDeltaX: prev.totalDeltaX + deltaX,
+        totalDeltaY: prev.totalDeltaY + deltaY
+      } : null);
     }
-  }, [isDragging, dragStart, dragStartScreen, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
+  }, [isDragging, dragState, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {
     if (isMarqueeSelecting) {
@@ -937,8 +968,7 @@ export const useShapeEditor = () => {
     }
     
     setIsDragging(false);
-    setDragStart(null);
-    setDragStartScreen(null);
+    setDragState(null);
   }, [isMarqueeSelecting, shapes]);
 
   // Touch event handlers for mobile multi-select and marquee

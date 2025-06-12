@@ -206,7 +206,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
           Export
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-[var(--surface)] border-slate-700">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] bg-[var(--surface)] border-slate-700 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center text-white">
             <FileImage className="w-5 h-5 mr-2" />
@@ -516,7 +516,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
                 <Checkbox
                   id="include-type"
                   checked={includeTypeInName}
-                  onCheckedChange={setIncludeTypeInName}
+                  onCheckedChange={(checked) => setIncludeTypeInName(checked === true)}
                 />
                 <Label htmlFor="include-type" className="text-xs text-slate-300 cursor-pointer">
                   Include shape type in filename (for selected shapes)
@@ -527,7 +527,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
                 <Checkbox
                   id="include-artboard"
                   checked={includeArtboardInName}
-                  onCheckedChange={setIncludeArtboardInName}
+                  onCheckedChange={(checked) => setIncludeArtboardInName(checked === true)}
                 />
                 <Label htmlFor="include-artboard" className="text-xs text-slate-300 cursor-pointer">
                   Include artboard name in filename (for artboard exports)
