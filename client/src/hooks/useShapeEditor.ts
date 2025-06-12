@@ -147,6 +147,31 @@ export const useShapeEditor = () => {
   const selectPointAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
     for (const shape of shapes) {
       if (shape.points) {
+        // Check control points first (for bezier/cubic curves)
+        if (shape.controlPoints) {
+          for (let i = 0; i < shape.controlPoints.length; i++) {
+            const worldControl = shape.getWorldControlPoint(i);
+            if (worldControl) {
+              const distance = Math.sqrt((worldControl.x - x) ** 2 + (worldControl.y - y) ** 2);
+              if (distance <= 6) {
+                const pointId = { shapeId: shape.id, pointIndex: i + 1000 }; // Offset control points
+                if (addToSelection) {
+                  const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (exists) {
+                    setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
+                  } else {
+                    setSelectedPoints(prev => [...prev, pointId]);
+                  }
+                } else {
+                  setSelectedPoints([pointId]);
+                }
+                return true;
+              }
+            }
+          }
+        }
+        
+        // Check regular points
         for (let i = 0; i < shape.points.length; i++) {
           const worldPoint = shape.getWorldPoint(i);
           if (worldPoint) {
@@ -578,43 +603,37 @@ export const useShapeEditor = () => {
       totalDeltaY: 0
     });
     
-    // Check if clicking on empty space to start marquee selection
+    // Intelligent mode detection and auto-switching
     let clickedOnShape = false;
+    let detectedMode: 'shapes' | 'points' | 'segments' = 'shapes';
     
-    switch (editMode) {
-      case 'points':
-        const pointSelected = selectPointAt(x, y, e.shiftKey);
-        if (pointSelected) {
-          clickedOnShape = true;
-        } else {
-          // Check if clicking on already selected points for dragging
-          clickedOnShape = selectedPoints.some(p => {
-            const shape = shapes.find(s => s.id === p.shapeId);
-            if (shape && shape.points && shape.points[p.pointIndex]) {
-              const point = shape.points[p.pointIndex];
-              const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
-              return distance <= 5;
-            }
-            return false;
-          });
+    // First, check for point selection (highest priority)
+    const pointSelected = selectPointAt(x, y, e.shiftKey);
+    if (pointSelected) {
+      clickedOnShape = true;
+      detectedMode = 'points';
+      if (editMode !== 'points') {
+        setEditMode('points');
+      }
+    } else {
+      // Check for segment selection
+      const segmentSelected = selectSegmentAt(x, y, e.shiftKey);
+      if (segmentSelected) {
+        clickedOnShape = true;
+        detectedMode = 'segments';
+        if (editMode !== 'segments') {
+          setEditMode('segments');
         }
-        break;
-      case 'segments':
-        const segmentSelected = selectSegmentAt(x, y, e.shiftKey);
-        if (segmentSelected) {
-          clickedOnShape = true;
-        } else {
-          // Check if clicking on already selected segments for dragging
-          clickedOnShape = selectedSegments.some(s => {
-            const shape = shapes.find(sh => sh.id === s.shapeId);
-            return shape?.isSegmentNear(x, y, s.segmentIndex, 5);
-          });
-        }
-        break;
-      default:
+      } else {
+        // Check for shape selection
         const shapesAtMousePoint = shapes.filter(shape => shape.containsPoint(x, y));
         clickedOnShape = shapesAtMousePoint.length > 0;
         if (clickedOnShape) {
+          detectedMode = 'shapes';
+          if (editMode !== 'shapes') {
+            setEditMode('shapes');
+          }
+          
           // Find the topmost shape at the click point (highest z-index)
           const topShape = shapesAtMousePoint.reduce((topmost, current) => 
             current.properties.zIndex > topmost.properties.zIndex ? current : topmost
@@ -624,7 +643,6 @@ export const useShapeEditor = () => {
           // 1. Shift is held and clicking on a selected shape, OR
           // 2. Clicking on any selected shape when multiple shapes are selected (for dragging)
           const isMultiSelectDrag = topShape.selected && selectedShapes.length > 1;
-          const allowDeselect = !(e.shiftKey && topShape.selected && selectedShapes.length > 1);
           
           // If clicking on a selected shape with multiple selections, don't change selection
           if (!isMultiSelectDrag) {
@@ -640,8 +658,38 @@ export const useShapeEditor = () => {
             const newSelectedShapes = shapes.filter(shape => shape.selected);
             setSelectedShapes(newSelectedShapes);
           }
+        } else {
+          // Check if clicking on already selected elements for dragging
+          if (editMode === 'points') {
+            clickedOnShape = selectedPoints.some(p => {
+              const shape = shapes.find(s => s.id === p.shapeId);
+              if (shape) {
+                const worldPoint = shape.getWorldPoint(p.pointIndex);
+                if (worldPoint) {
+                  const distance = Math.sqrt((worldPoint.x - x) ** 2 + (worldPoint.y - y) ** 2);
+                  return distance <= 8;
+                }
+              }
+              return false;
+            });
+          } else if (editMode === 'segments') {
+            clickedOnShape = selectedSegments.some(s => {
+              const shape = shapes.find(sh => sh.id === s.shapeId);
+              if (shape) {
+                const worldP1 = shape.getWorldPoint(s.segmentIndex);
+                const worldP2 = shape.getWorldPoint(s.segmentIndex + 1);
+                if (worldP1 && worldP2) {
+                  const midX = (worldP1.x + worldP2.x) / 2;
+                  const midY = (worldP1.y + worldP2.y) / 2;
+                  const distance = Math.sqrt((midX - x) ** 2 + (midY - y) ** 2);
+                  return distance <= 8;
+                }
+              }
+              return false;
+            });
+          }
         }
-        break;
+      }
     }
     
     // Start marquee selection if clicking on empty space

@@ -247,12 +247,17 @@ export default function Canvas({
         }
       });
 
-      // Render points and segments only for selected shapes in edit mode
-      if (editMode === 'points' || editMode === 'segments') {
-        shapes.forEach(shape => {
-          // Only show points/segments for selected shapes
-          if (!shape.selected || !shape.points || shape.points.length === 0) return;
-          
+      // Render points and segments for shapes based on edit mode and selection
+      shapes.forEach(shape => {
+        if (!shape.points || shape.points.length === 0) return;
+        
+        // Show points/segments for all shapes that have edited components or are selected in component modes
+        const hasEditedComponents = selectedPoints.some(sp => sp.shapeId === shape.id) || 
+                                   selectedSegments.some(ss => ss.shapeId === shape.id);
+        const shouldShowComponents = (editMode === 'points' || editMode === 'segments') && 
+                                   (shape.selected || hasEditedComponents);
+        
+        if (shouldShowComponents) {
           const shapeSelectedPoints = selectedPoints
             .filter(sp => sp.shapeId === shape.id)
             .map(sp => sp.pointIndex);
@@ -262,8 +267,8 @@ export default function Canvas({
             .map(ss => ss.segmentIndex);
           
           shape.renderPoints(ctx, shapeSelectedPoints, shapeSelectedSegments, canvasSettings.zoom);
-        });
-      }
+        }
+      });
 
       // Render transform handles for selected shapes on non-touch devices
       if (editMode === 'shapes') {
