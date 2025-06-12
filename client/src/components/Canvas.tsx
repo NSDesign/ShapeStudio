@@ -30,6 +30,7 @@ interface CanvasProps {
   onTouchStart: (e: React.TouchEvent<HTMLCanvasElement>) => void;
   onTouchMove: (e: React.TouchEvent<HTMLCanvasElement>) => void;
   onTouchEnd: (e: React.TouchEvent<HTMLCanvasElement>) => void;
+  onWheel: (e: WheelEvent) => void;
   onToggleMultiSelect: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -150,6 +151,7 @@ export default function Canvas({
   onTouchStart,
   onTouchMove,
   onTouchEnd,
+  onWheel,
   onToggleMultiSelect,
   onZoomIn,
   onZoomOut,
@@ -157,6 +159,18 @@ export default function Canvas({
   canvasRef
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
+
+  // Add wheel event listener
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('wheel', onWheel);
+    };
+  }, [onWheel]);
 
   // Render loop
   useEffect(() => {

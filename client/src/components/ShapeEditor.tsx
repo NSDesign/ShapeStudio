@@ -50,6 +50,7 @@ export default function ShapeEditor() {
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    handleWheel,
     selectedCount,
     selectedPointsCount,
     selectedSegmentsCount,
@@ -193,6 +194,7 @@ export default function ShapeEditor() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}
             onToggleMultiSelect={toggleMultiSelectMode}
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
