@@ -6,19 +6,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Image, FileImage } from "lucide-react";
 import { ImageExporter, ImageFormat, ExportOptions } from '../lib/imageExport';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { CanvasSettings } from '../lib/shapeTypes';
+import { CanvasSettings, Artboard } from '../lib/shapeTypes';
 import { useToast } from "@/hooks/use-toast";
 
 interface ExportDialogProps {
   shapes: Shape[];
   groups: ShapeGroupClass[];
   canvasSettings: CanvasSettings;
+  artboards: Artboard[];
+  selectedShapes: Shape[];
+  selectedGroups: ShapeGroupClass[];
 }
 
-export default function ExportDialog({ shapes, groups, canvasSettings }: ExportDialogProps) {
+export default function ExportDialog({ shapes, groups, canvasSettings, artboards, selectedShapes, selectedGroups }: ExportDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [format, setFormat] = useState<ImageFormat>('png');
@@ -29,6 +33,23 @@ export default function ExportDialog({ shapes, groups, canvasSettings }: ExportD
   const [useCustomSize, setUseCustomSize] = useState(false);
   const [includeBackground, setIncludeBackground] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('#1e293b');
+  
+  // Export scope options
+  const [exportScope, setExportScope] = useState<'all' | 'selected' | 'artboard'>('all');
+  const [selectedArtboardIds, setSelectedArtboardIds] = useState<string[]>([]);
+  
+  // Margin options
+  const [useMargins, setUseMargins] = useState(false);
+  const [uniformMargins, setUniformMargins] = useState(true);
+  const [marginTop, setMarginTop] = useState(20);
+  const [marginRight, setMarginRight] = useState(20);
+  const [marginBottom, setMarginBottom] = useState(20);
+  const [marginLeft, setMarginLeft] = useState(20);
+  
+  // Naming options
+  const [includeTypeInName, setIncludeTypeInName] = useState(false);
+  const [includeArtboardInName, setIncludeArtboardInName] = useState(false);
+  const [customPrefix, setCustomPrefix] = useState('');
   
   const { toast } = useToast();
 
@@ -57,11 +78,69 @@ export default function ExportDialog({ shapes, groups, canvasSettings }: ExportD
     return `${scale}x`;
   };
 
+  const generateFilename = (baseName: string = '') => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const parts = [];
+    
+    if (customPrefix) parts.push(customPrefix);
+    if (baseName) parts.push(baseName);
+    if (includeTypeInName && exportScope === 'selected' && selectedShapes.length > 0) {
+      const types = Array.from(new Set(selectedShapes.map(s => s.type)));
+      if (types.length === 1) parts.push(types[0]);
+      else if (types.length <= 3) parts.push(types.join('-'));
+      else parts.push('mixed');
+    }
+    if (includeArtboardInName && exportScope === 'artboard' && selectedArtboardIds.length === 1) {
+      const artboard = artboards.find(a => a.id === selectedArtboardIds[0]);
+      if (artboard) parts.push(artboard.name.replace(/\s+/g, '-'));
+    }
+    
+    const name = parts.length > 0 ? parts.join('_') : 'shape-editor';
+    return `${name}_${timestamp}.${ImageExporter.getFileExtension(format)}`;
+  };
+
+  const getExportShapes = () => {
+    switch (exportScope) {
+      case 'selected':
+        return selectedShapes;
+      case 'artboard':
+        if (selectedArtboardIds.length === 0) return shapes;
+        // Filter shapes that are within selected artboards
+        return shapes.filter(shape => {
+          return selectedArtboardIds.some(artboardId => {
+            const artboard = artboards.find(a => a.id === artboardId);
+            if (!artboard) return false;
+            return shape.transform.x >= artboard.x && 
+                   shape.transform.x <= artboard.x + artboard.width &&
+                   shape.transform.y >= artboard.y && 
+                   shape.transform.y <= artboard.y + artboard.height;
+          });
+        });
+      default:
+        return shapes;
+    }
+  };
+
+  const getExportGroups = () => {
+    switch (exportScope) {
+      case 'selected':
+        return selectedGroups;
+      case 'artboard':
+        // For artboards, include all groups for now
+        return groups;
+      default:
+        return groups;
+    }
+  };
+
   const handleExport = async () => {
-    if (shapes.length === 0 && groups.length === 0) {
+    const exportShapes = getExportShapes();
+    const exportGroups = getExportGroups();
+    
+    if (exportShapes.length === 0 && exportGroups.length === 0) {
       toast({
         title: "No content to export",
-        description: "Add some shapes to the canvas before exporting.",
+        description: exportScope === 'selected' ? "Select shapes to export first." : "Add some shapes to the canvas before exporting.",
         variant: "destructive"
       });
       return;
@@ -79,13 +158,18 @@ export default function ExportDialog({ shapes, groups, canvasSettings }: ExportD
         width: useCustomSize ? customWidth : canvasSettings.width,
         height: useCustomSize ? customHeight : canvasSettings.height,
         backgroundColor: includeBackground ? backgroundColor : 'transparent',
-        includeBackground
+        includeBackground,
+        margins: useMargins ? {
+          top: marginTop,
+          right: uniformMargins ? marginTop : marginRight,
+          bottom: uniformMargins ? marginTop : marginBottom,
+          left: uniformMargins ? marginTop : marginLeft
+        } : undefined
       };
 
-      const blob = await exporter.exportImage(shapes, groups, canvasSettings, options);
+      const blob = await exporter.exportImage(exportShapes, exportGroups, canvasSettings, options);
       
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const filename = `shape-editor-${timestamp}.${ImageExporter.getFileExtension(format)}`;
+      const filename = generateFilename();
       
       await ImageExporter.downloadImage(blob, filename);
       
@@ -131,6 +215,75 @@ export default function ExportDialog({ shapes, groups, canvasSettings }: ExportD
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Export Scope Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-slate-300">Export Scope</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant={exportScope === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setExportScope('all')}
+                className={exportScope === 'all' ? 
+                  'bg-blue-600 hover:bg-blue-700 text-white' : 
+                  'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                }
+              >
+                All Shapes
+              </Button>
+              <Button
+                variant={exportScope === 'selected' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setExportScope('selected')}
+                disabled={selectedShapes.length === 0 && selectedGroups.length === 0}
+                className={exportScope === 'selected' ? 
+                  'bg-blue-600 hover:bg-blue-700 text-white' : 
+                  'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600 disabled:opacity-50'
+                }
+              >
+                Selected ({selectedShapes.length + selectedGroups.length})
+              </Button>
+              <Button
+                variant={exportScope === 'artboard' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setExportScope('artboard')}
+                disabled={artboards.length === 0}
+                className={exportScope === 'artboard' ? 
+                  'bg-blue-600 hover:bg-blue-700 text-white' : 
+                  'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600 disabled:opacity-50'
+                }
+              >
+                Artboards
+              </Button>
+            </div>
+            
+            {/* Artboard Selection */}
+            {exportScope === 'artboard' && artboards.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Select Artboards</Label>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {artboards.map(artboard => (
+                    <div key={artboard.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={artboard.id}
+                        checked={selectedArtboardIds.includes(artboard.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedArtboardIds([...selectedArtboardIds, artboard.id]);
+                          } else {
+                            setSelectedArtboardIds(selectedArtboardIds.filter(id => id !== artboard.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={artboard.id} className="text-xs text-slate-300 cursor-pointer">
+                        {artboard.name} ({artboard.width}×{artboard.height})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Format Selection */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-300">Format</Label>

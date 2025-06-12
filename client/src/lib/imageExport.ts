@@ -11,6 +11,12 @@ export interface ExportOptions {
   scale?: number; // Scaling factor for high-res exports
   backgroundColor?: string;
   includeBackground?: boolean;
+  margins?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 }
 
 export class ImageExporter {

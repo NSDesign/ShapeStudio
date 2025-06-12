@@ -168,34 +168,36 @@ export default function ShapeEditor() {
           onUpdateArtboard={updateArtboard}
           onDistributeSelected={distributeSelectedShapes}
         />
-        <Canvas
-          shapes={shapes}
-          groups={groups}
-          canvasSettings={canvasSettings}
-          artboards={artboards}
-          activeArtboard={activeArtboard}
-          selectedCount={selectedCount}
-          editMode={editMode}
-          selectedPoints={selectedPoints}
-          selectedSegments={selectedSegments}
-          isMultiSelectMode={isMultiSelectMode}
-          marqueeStart={marqueeStart}
-          marqueeEnd={marqueeEnd}
-          isMarqueeSelecting={isMarqueeSelecting}
-          isTouchDevice={isTouchDevice}
-          isMultiTouch={isMultiTouch}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onToggleMultiSelect={toggleMultiSelectMode}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          onResetView={resetView}
-          canvasRef={canvasRef}
-        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Canvas
+            shapes={shapes}
+            groups={groups}
+            canvasSettings={canvasSettings}
+            artboards={artboards}
+            activeArtboard={activeArtboard}
+            selectedCount={selectedCount}
+            editMode={editMode}
+            selectedPoints={selectedPoints}
+            selectedSegments={selectedSegments}
+            isMultiSelectMode={isMultiSelectMode}
+            marqueeStart={marqueeStart}
+            marqueeEnd={marqueeEnd}
+            isMarqueeSelecting={isMarqueeSelecting}
+            isTouchDevice={isTouchDevice}
+            isMultiTouch={isMultiTouch}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onToggleMultiSelect={toggleMultiSelectMode}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onResetView={resetView}
+            canvasRef={canvasRef}
+          />
+        </div>
       </div>
     </div>
   );
