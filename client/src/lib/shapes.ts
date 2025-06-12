@@ -262,6 +262,7 @@ export class Shape {
   private generateBlobPoints(): void {
     const numPoints = 6 + Math.floor(Math.random() * 6);
     this.points = [];
+    this.controlPoints = [];
     const baseRadius = 40 + Math.random() * 60;
     
     for (let i = 0; i < numPoints; i++) {
@@ -273,8 +274,18 @@ export class Shape {
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius
       });
+      
+      // Generate control points for smooth blob curves
+      const controlRadius = radius * (0.4 + Math.random() * 0.3);
+      const controlAngle = angle + (Math.random() - 0.5) * 0.8;
+      this.controlPoints.push({
+        x: Math.cos(controlAngle) * controlRadius,
+        y: Math.sin(controlAngle) * controlRadius
+      });
     }
+    
     this.closed = true;
+    this.renderType = 'bezier';
   }
 
   private generateRectanglePoints(): void {
@@ -602,15 +613,39 @@ export class Shape {
     
     ctx.moveTo(this.points[0].x, this.points[0].y);
     
-    for (let i = 1; i < this.points.length; i++) {
-      const current = this.points[i];
-      const next = this.points[(i + 1) % this.points.length];
-      const cp1x = current.x;
-      const cp1y = current.y;
-      const cp2x = (current.x + next.x) / 2;
-      const cp2y = (current.y + next.y) / 2;
-      
-      ctx.quadraticCurveTo(cp1x, cp1y, cp2x, cp2y);
+    // Use control points if available, otherwise generate them
+    if (this.controlPoints && this.controlPoints.length > 0) {
+      for (let i = 1; i < this.points.length; i++) {
+        const controlIndex = (i - 1) % this.controlPoints.length;
+        ctx.quadraticCurveTo(
+          this.controlPoints[controlIndex].x,
+          this.controlPoints[controlIndex].y,
+          this.points[i].x,
+          this.points[i].y
+        );
+      }
+      // Close the curve back to the first point
+      if (this.controlPoints.length > 0) {
+        const lastControlIndex = this.controlPoints.length - 1;
+        ctx.quadraticCurveTo(
+          this.controlPoints[lastControlIndex].x,
+          this.controlPoints[lastControlIndex].y,
+          this.points[0].x,
+          this.points[0].y
+        );
+      }
+    } else {
+      // Fallback to generated smooth curves
+      for (let i = 1; i < this.points.length; i++) {
+        const current = this.points[i];
+        const next = this.points[(i + 1) % this.points.length];
+        const cp1x = current.x;
+        const cp1y = current.y;
+        const cp2x = (current.x + next.x) / 2;
+        const cp2y = (current.y + next.y) / 2;
+        
+        ctx.quadraticCurveTo(cp1x, cp1y, cp2x, cp2y);
+      }
     }
     
     ctx.closePath();
@@ -1216,11 +1251,14 @@ export class Shape {
           ctx.stroke();
         }
       });
-    } else if ((this.type === 'bezier' || this.renderType === 'bezier') && this.controlPoints) {
-      // Draw control points for bezier curves
+    } else if ((this.type === 'bezier' || this.type === 'blob' || this.renderType === 'bezier') && this.controlPoints) {
+      // Draw control points for bezier curves and blob shapes
       this.controlPoints.forEach((controlPoint, index) => {
         const worldControl = this.getWorldControlPoint(index);
-        const worldPoint = this.getWorldPoint(index);
+        const associatedPointIndex = this.type === 'blob' ? 
+          (index + 1) % this.points.length : // For blobs, control points are between consecutive points
+          Math.min(index, this.points.length - 1); // For bezier, control points are associated with their index
+        const worldPoint = this.getWorldPoint(associatedPointIndex);
         
         if (worldControl && worldPoint) {
           // Draw tangent line

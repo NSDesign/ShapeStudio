@@ -393,8 +393,35 @@ export const useShapeEditor = () => {
       if (pointIndex < 1000) {
         // Regular point
         if (shape.points && shape.points[pointIndex]) {
+          const oldX = shape.points[pointIndex].x;
+          const oldY = shape.points[pointIndex].y;
+          
           shape.points[pointIndex].x += localDelta.x;
           shape.points[pointIndex].y += localDelta.y;
+          
+          // Move associated control points and tangent handles with the point
+          if (shape.controlPoints) {
+            // For bezier curves, move the control point associated with this point
+            if (pointIndex < shape.controlPoints.length) {
+              shape.controlPoints[pointIndex].x += localDelta.x;
+              shape.controlPoints[pointIndex].y += localDelta.y;
+            }
+            
+            // For blob shapes, also move the previous control point (since they're between points)
+            if (shape.type === 'blob') {
+              const prevControlIndex = (pointIndex - 1 + shape.controlPoints.length) % shape.controlPoints.length;
+              shape.controlPoints[prevControlIndex].x += localDelta.x;
+              shape.controlPoints[prevControlIndex].y += localDelta.y;
+            }
+          }
+          
+          // Move associated tangent handles with the point
+          if (shape.tangentHandles && pointIndex < shape.tangentHandles.length) {
+            shape.tangentHandles[pointIndex].in.x += localDelta.x;
+            shape.tangentHandles[pointIndex].in.y += localDelta.y;
+            shape.tangentHandles[pointIndex].out.x += localDelta.x;
+            shape.tangentHandles[pointIndex].out.y += localDelta.y;
+          }
         }
       } else if (pointIndex >= 1000 && pointIndex < 2000) {
         // Control point (for bezier curves)
@@ -405,8 +432,8 @@ export const useShapeEditor = () => {
         }
       } else if (pointIndex >= 2000) {
         // Tangent handle (for cubic curves)
-        const handlePointIndex = Math.floor((pointIndex - 1000) / 2);
-        const isOut = (pointIndex - 1000) % 2 === 1;
+        const handlePointIndex = Math.floor((pointIndex - 2000) / 2);
+        const isOut = (pointIndex - 2000) % 2 === 1;
         
         if (shape.tangentHandles && shape.tangentHandles[handlePointIndex]) {
           const handleType = isOut ? 'out' : 'in';
