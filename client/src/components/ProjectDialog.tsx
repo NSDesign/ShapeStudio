@@ -151,10 +151,10 @@ export default function ProjectDialog({
           
           <Tabs defaultValue="save" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-[var(--surface-light)]">
-              <TabsTrigger value="save" className="text-slate-300 data-[state=active]:text-white">
+              <TabsTrigger value="save" className="text-slate-400 data-[state=active]:text-slate-800 data-[state=active]:bg-white">
                 Save Project
               </TabsTrigger>
-              <TabsTrigger value="load" className="text-slate-300 data-[state=active]:text-white">
+              <TabsTrigger value="load" className="text-slate-400 data-[state=active]:text-slate-800 data-[state=active]:bg-white">
                 Load Project
               </TabsTrigger>
             </TabsList>

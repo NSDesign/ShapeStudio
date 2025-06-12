@@ -754,7 +754,7 @@ export default function Sidebar({
                   value={customWidth}
                   onChange={(e) => setCustomWidth(parseInt(e.target.value) || 1080)}
                   placeholder="Width"
-                  className="h-8 text-xs bg-slate-800 border-slate-600"
+                  className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
                 />
               </div>
               <div>
@@ -763,7 +763,7 @@ export default function Sidebar({
                   value={customHeight}
                   onChange={(e) => setCustomHeight(parseInt(e.target.value) || 1080)}
                   placeholder="Height"
-                  className="h-8 text-xs bg-slate-800 border-slate-600"
+                  className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
                 />
               </div>
             </div>
