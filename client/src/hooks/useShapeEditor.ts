@@ -52,6 +52,7 @@ export const useShapeEditor = () => {
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragStartScreen, setDragStartScreen] = useState<{ x: number; y: number } | null>(null);
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
@@ -696,8 +697,8 @@ export const useShapeEditor = () => {
       return;
     }
     
-    // Store drag start in world coordinates for consistent delta calculation
-    setDragStart({ x, y });
+    // Store drag start in both world and screen coordinates for consistent delta calculation
+    setDragStart({ x, y, screenX: e.clientX, screenY: e.clientY });
     
     // Check if clicking on empty space to start marquee selection
     let clickedOnShape = false;
@@ -891,33 +892,39 @@ export const useShapeEditor = () => {
     
     if (!isDragging || !dragStart) return;
     
-    // Calculate delta using correct coordinate transformation
-    const currentX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom - canvasSettings.panX;
-    const currentY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom - canvasSettings.panY;
-    const deltaX = currentX - dragStart.x;
-    const deltaY = currentY - dragStart.y;
+    // Calculate delta using screen coordinates to avoid accumulation errors
+    const deltaX = (e.clientX - dragStart.screenX) / canvasSettings.zoom;
+    const deltaY = (e.clientY - dragStart.screenY) / canvasSettings.zoom;
     
-    // Handle different edit modes
-    switch (editMode) {
-      case 'points':
-        if (selectedPoints.length > 0) {
-          moveSelectedPoints(deltaX, deltaY);
-        }
-        break;
-      case 'segments':
-        if (selectedSegments.length > 0) {
-          moveSelectedSegments(deltaX, deltaY);
-        }
-        break;
-      default:
-        if (selectedShapes.length > 0 || selectedGroups.length > 0) {
-          moveSelected(deltaX, deltaY);
-        }
-        break;
+    // Only apply movement if there's actual delta
+    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
+      // Handle different edit modes
+      switch (editMode) {
+        case 'points':
+          if (selectedPoints.length > 0) {
+            moveSelectedPoints(deltaX, deltaY);
+          }
+          break;
+        case 'segments':
+          if (selectedSegments.length > 0) {
+            moveSelectedSegments(deltaX, deltaY);
+          }
+          break;
+        default:
+          if (selectedShapes.length > 0 || selectedGroups.length > 0) {
+            moveSelected(deltaX, deltaY);
+          }
+          break;
+      }
+      
+      // Update drag start to current screen coordinates
+      setDragStart({ 
+        x: x, 
+        y: y, 
+        screenX: e.clientX, 
+        screenY: e.clientY 
+      });
     }
-    
-    // Update drag start to current world coordinates
-    setDragStart({ x, y });
   }, [isDragging, dragStart, editMode, selectedPoints.length, selectedSegments.length, selectedShapes.length, selectedGroups.length, canvasSettings.zoom, moveSelected, moveSelectedPoints, moveSelectedSegments, isMarqueeSelecting, marqueeStart, shapes]);
 
   const handleMouseUp = useCallback(() => {

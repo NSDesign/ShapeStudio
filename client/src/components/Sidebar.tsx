@@ -1728,45 +1728,41 @@ export default function Sidebar({
         <div className="space-y-2">
           <Label className="text-xs text-slate-400">Shape Count Range</Label>
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Label className="text-xs text-slate-400 min-w-8">Min</Label>
-              <Slider
-                value={[scatterSettings.minCount]}
-                onValueChange={([value]) => onUpdateScatterSettings({ minCount: value })}
-                min={1}
-                max={scatterSettings.maxCount - 1}
-                step={1}
-                className="flex-1"
-              />
+            <Slider
+              value={[scatterSettings.minCount, scatterSettings.maxCount]}
+              onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+              min={1}
+              max={50}
+              step={1}
+              className="w-full"
+              minStepsBetweenThumbs={1}
+            />
+            <div className="flex justify-between items-center">
               <Input
                 type="number"
                 value={scatterSettings.minCount}
-                onChange={(e) => onUpdateScatterSettings({ minCount: Math.max(1, Math.min(Number(e.target.value), scatterSettings.maxCount - 1)) })}
+                onChange={(e) => {
+                  const value = Math.max(1, Math.min(Number(e.target.value), scatterSettings.maxCount - 1));
+                  onUpdateScatterSettings({ minCount: value });
+                }}
                 className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
                 min={1}
                 max={scatterSettings.maxCount - 1}
               />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-xs text-slate-400 min-w-8">Max</Label>
-              <Slider
-                value={[scatterSettings.maxCount]}
-                onValueChange={([value]) => onUpdateScatterSettings({ maxCount: value })}
-                min={scatterSettings.minCount + 1}
-                max={50}
-                step={1}
-                className="flex-1"
-              />
+              <span className="text-xs text-slate-400 px-2">to</span>
               <Input
                 type="number"
                 value={scatterSettings.maxCount}
-                onChange={(e) => onUpdateScatterSettings({ maxCount: Math.max(scatterSettings.minCount + 1, Math.min(Number(e.target.value), 50)) })}
+                onChange={(e) => {
+                  const value = Math.max(scatterSettings.minCount + 1, Math.min(Number(e.target.value), 50));
+                  onUpdateScatterSettings({ maxCount: value });
+                }}
                 className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
                 min={scatterSettings.minCount + 1}
                 max={50}
               />
             </div>
-            <span className="text-xs text-slate-400">{scatterSettings.minCount}-{scatterSettings.maxCount} shapes per generation</span>
+            <span className="text-xs text-slate-400 text-center">{scatterSettings.minCount}-{scatterSettings.maxCount} shapes per generation</span>
           </div>
         </div>
 
