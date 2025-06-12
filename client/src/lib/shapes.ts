@@ -46,6 +46,10 @@ export class Shape {
     this.renderType = this.getDefaultRenderType();
   }
 
+  static create(type: ShapeType, x: number = 0, y: number = 0): Shape {
+    return new Shape(type, x, y);
+  }
+
   private getDefaultSegments(): number {
     switch (this.type) {
       case 'circle':

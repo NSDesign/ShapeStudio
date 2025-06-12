@@ -30,17 +30,17 @@ export default function ShapeEditor() {
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
-    distributeSelectedShapes,
+    distributeSelected,
     composeShapes,
-    setEditingMode,
+    setEditMode,
     toggleMultiSelectMode,
-    moveSelected,
-    scaleSelected,
-    rotateSelected,
-    skewSelected,
-    flipSelected,
+    moveBy,
+    scaleBy,
+    rotateBy,
+    skewBy,
+    flipHorizontal,
+    flipVertical,
     deleteSelected,
-    forceUpdate,
     zoomIn,
     zoomOut,
     resetView,
@@ -68,37 +68,37 @@ export default function ShapeEditor() {
   // Transform handlers with precise control
   const handleMoveBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      moveSelected(x, y);
+      moveBy(x, y);
     }
   };
 
   const handleScaleBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      scaleSelected(x, y);
+      scaleBy(x, y);
     }
   };
 
   const handleRotateBy = (angle: number) => {
     if (selectedCount > 0) {
-      rotateSelected(angle);
+      rotateBy(angle);
     }
   };
 
   const handleSkewBy = (x: number, y: number) => {
     if (selectedCount > 0) {
-      skewSelected(x, y);
+      skewBy(x, y);
     }
   };
 
   const handleFlipHorizontal = () => {
     if (selectedCount > 0) {
-      flipSelected(true); // Flip horizontally
+      flipHorizontal();
     }
   };
 
   const handleFlipVertical = () => {
     if (selectedCount > 0) {
-      flipSelected(false); // Flip vertically
+      flipVertical();
     }
   };
 
@@ -148,7 +148,7 @@ export default function ShapeEditor() {
           onUpdateScatterSettings={updateScatterSettings}
           onGenerateRandomShapes={generateRandomShapes}
           onComposeShapes={composeShapes}
-          onSetEditMode={setEditingMode}
+          onSetEditMode={setEditMode}
           onMoveBy={handleMoveBy}
           onScaleBy={handleScaleBy}
           onRotateBy={handleRotateBy}
@@ -161,12 +161,12 @@ export default function ShapeEditor() {
           onBringForward={bringForward}
           onSendBackward={sendBackward}
           onChangeBlendMode={changeBlendMode}
-          onShapeUpdate={forceUpdate}
+          onShapeUpdate={() => {}}
           onAddArtboard={addArtboard}
           onSelectArtboard={selectArtboard}
           onDeleteArtboard={deleteArtboard}
           onUpdateArtboard={updateArtboard}
-          onDistributeSelected={distributeSelectedShapes}
+          onDistributeSelected={distributeSelected}
         />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Canvas
