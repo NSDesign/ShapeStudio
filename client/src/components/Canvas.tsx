@@ -22,6 +22,8 @@ interface CanvasProps {
   isMarqueeSelecting: boolean;
   isTouchDevice: boolean;
   isMultiTouch: boolean;
+  selectedShapes: Shape[];
+  selectedGroups: ShapeGroupClass[];
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -140,6 +142,8 @@ export default function Canvas({
   isMarqueeSelecting,
   isTouchDevice,
   isMultiTouch,
+  selectedShapes,
+  selectedGroups,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -389,6 +393,9 @@ export default function Canvas({
             shapes={shapes}
             groups={groups}
             canvasSettings={canvasSettings}
+            artboards={artboards}
+            selectedShapes={selectedShapes}
+            selectedGroups={selectedGroups}
           />
           <div className="h-4 w-px bg-slate-600"></div>
           <Button

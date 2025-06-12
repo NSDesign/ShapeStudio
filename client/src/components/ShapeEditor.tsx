@@ -185,6 +185,8 @@ export default function ShapeEditor() {
             isMarqueeSelecting={isMarqueeSelecting}
             isTouchDevice={isTouchDevice}
             isMultiTouch={isMultiTouch}
+            selectedShapes={selectedShapes}
+            selectedGroups={selectedGroups}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}

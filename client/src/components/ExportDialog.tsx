@@ -407,6 +407,135 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
             )}
           </div>
 
+          {/* Margins */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={useMargins}
+                onCheckedChange={setUseMargins}
+              />
+              <Label className="text-sm font-medium text-slate-300">Add Margins</Label>
+            </div>
+            
+            {useMargins && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={uniformMargins}
+                    onCheckedChange={setUniformMargins}
+                  />
+                  <Label className="text-xs text-slate-400">Uniform margins</Label>
+                </div>
+                
+                {uniformMargins ? (
+                  <div>
+                    <Label className="text-xs text-slate-400">Margin (px)</Label>
+                    <Input
+                      type="number"
+                      value={marginTop}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        setMarginTop(value);
+                        setMarginRight(value);
+                        setMarginBottom(value);
+                        setMarginLeft(value);
+                      }}
+                      className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                      min={0}
+                      max={200}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs text-slate-400">Top</Label>
+                      <Input
+                        type="number"
+                        value={marginTop}
+                        onChange={(e) => setMarginTop(parseInt(e.target.value) || 0)}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        min={0}
+                        max={200}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Right</Label>
+                      <Input
+                        type="number"
+                        value={marginRight}
+                        onChange={(e) => setMarginRight(parseInt(e.target.value) || 0)}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        min={0}
+                        max={200}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Bottom</Label>
+                      <Input
+                        type="number"
+                        value={marginBottom}
+                        onChange={(e) => setMarginBottom(parseInt(e.target.value) || 0)}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        min={0}
+                        max={200}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Left</Label>
+                      <Input
+                        type="number"
+                        value={marginLeft}
+                        onChange={(e) => setMarginLeft(parseInt(e.target.value) || 0)}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        min={0}
+                        max={200}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Naming Options */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-slate-300">File Naming</Label>
+            
+            <div>
+              <Label className="text-xs text-slate-400">Custom Prefix</Label>
+              <Input
+                value={customPrefix}
+                onChange={(e) => setCustomPrefix(e.target.value)}
+                placeholder="e.g. design, export"
+                className="bg-[var(--surface-light)] border-slate-600 text-white"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-type"
+                  checked={includeTypeInName}
+                  onCheckedChange={setIncludeTypeInName}
+                />
+                <Label htmlFor="include-type" className="text-xs text-slate-300 cursor-pointer">
+                  Include shape type in filename (for selected shapes)
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-artboard"
+                  checked={includeArtboardInName}
+                  onCheckedChange={setIncludeArtboardInName}
+                />
+                <Label htmlFor="include-artboard" className="text-xs text-slate-300 cursor-pointer">
+                  Include artboard name in filename (for artboard exports)
+                </Label>
+              </div>
+            </div>
+          </div>
+
           {/* Export Button */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-slate-700">
             <Button
