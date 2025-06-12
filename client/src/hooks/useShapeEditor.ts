@@ -639,6 +639,9 @@ export const useShapeEditor = () => {
       clickedOnShape = true;
       detectedMode = 'points';
       if (editMode !== 'points') {
+        // Clear shape selections when entering point mode
+        shapes.forEach(shape => shape.selected = false);
+        setSelectedShapes([]);
         setEditMode('points');
       }
     } else {
@@ -648,6 +651,9 @@ export const useShapeEditor = () => {
         clickedOnShape = true;
         detectedMode = 'segments';
         if (editMode !== 'segments') {
+          // Clear shape selections when entering segment mode
+          shapes.forEach(shape => shape.selected = false);
+          setSelectedShapes([]);
           setEditMode('segments');
         }
       } else {

@@ -545,16 +545,18 @@ export class Shape {
     const renderType = this.renderType || 'polygon';
     
     if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
-      if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
-        // Draw cubic bezier curves using control points
+      if (this.type === 'cubic' && this.tangentHandles && this.points.length >= 2) {
+        // Draw proper cubic bezier curves using tangent handles
         for (let i = 0; i < this.points.length - 1; i++) {
           const p1 = this.points[i];
           const p2 = this.points[i + 1];
           
-          if (i < this.controlPoints.length) {
-            const cp = this.controlPoints[i];
-            // Use quadratic curve as approximation for cubic
-            ctx.quadraticCurveTo(cp.x, cp.y, p2.x, p2.y);
+          if (i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
+            const cp1 = this.tangentHandles[i].out;
+            const cp2 = this.tangentHandles[i + 1].in;
+            
+            // Draw cubic bezier curve
+            ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
           } else {
             ctx.lineTo(p2.x, p2.y);
           }
@@ -1071,6 +1073,35 @@ export class Shape {
     };
   }
 
+  getWorldTangentHandle(index: number, type: 'in' | 'out'): Point | null {
+    if (!this.tangentHandles || index < 0 || index >= this.tangentHandles.length) return null;
+    
+    const localHandle = type === 'in' ? this.tangentHandles[index].in : this.tangentHandles[index].out;
+    
+    // Apply full transformation matrix: scale, rotation, skew, then translate
+    const rotationRad = this.transform.rotation * Math.PI / 180;
+    const cos = Math.cos(rotationRad);
+    const sin = Math.sin(rotationRad);
+    
+    // Apply scale
+    let x = localHandle.x * this.transform.scaleX;
+    let y = localHandle.y * this.transform.scaleY;
+    
+    // Apply skew
+    x += y * Math.tan(this.transform.skewX);
+    y += x * Math.tan(this.transform.skewY);
+    
+    // Apply rotation
+    const rotatedX = x * cos - y * sin;
+    const rotatedY = x * sin + y * cos;
+    
+    // Apply translation
+    return {
+      x: this.transform.x + rotatedX,
+      y: this.transform.y + rotatedY
+    };
+  }
+
   isPointNear(worldX: number, worldY: number, pointIndex: number, threshold: number = 8): boolean {
     // Check regular points
     if (pointIndex < 1000) {
@@ -1127,7 +1158,66 @@ export class Shape {
     ctx.save();
     
     // Draw control handles for curve types
-    if ((this.type === 'bezier' || this.type === 'cubic' || this.renderType === 'bezier' || this.renderType === 'cubic') && this.controlPoints) {
+    if (this.type === 'cubic' && this.tangentHandles) {
+      // Draw tangent handles for cubic curves
+      this.tangentHandles.forEach((tangentHandle, index) => {
+        const worldPoint = this.getWorldPoint(index);
+        if (!worldPoint) return;
+        
+        // Transform tangent handles to world coordinates
+        const worldHandleIn = this.getWorldTangentHandle(index, 'in');
+        const worldHandleOut = this.getWorldTangentHandle(index, 'out');
+        
+        if (worldHandleIn) {
+          // Draw tangent line for 'in' handle
+          ctx.strokeStyle = '#9CA3AF';
+          ctx.lineWidth = 1 / canvasZoom;
+          ctx.setLineDash([3 / canvasZoom, 3 / canvasZoom]);
+          ctx.beginPath();
+          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.lineTo(worldHandleIn.x, worldHandleIn.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw 'in' handle
+          const radius = 4 / canvasZoom;
+          const isInSelected = selectedPoints.includes(index * 2 + 1000); // Offset for in handles
+          ctx.fillStyle = isInSelected ? '#EF4444' : '#F59E0B';
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1 / canvasZoom;
+          
+          ctx.beginPath();
+          ctx.arc(worldHandleIn.x, worldHandleIn.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        
+        if (worldHandleOut) {
+          // Draw tangent line for 'out' handle
+          ctx.strokeStyle = '#9CA3AF';
+          ctx.lineWidth = 1 / canvasZoom;
+          ctx.setLineDash([3 / canvasZoom, 3 / canvasZoom]);
+          ctx.beginPath();
+          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.lineTo(worldHandleOut.x, worldHandleOut.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw 'out' handle
+          const radius = 4 / canvasZoom;
+          const isOutSelected = selectedPoints.includes(index * 2 + 1 + 1000); // Offset for out handles
+          ctx.fillStyle = isOutSelected ? '#EF4444' : '#F59E0B';
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1 / canvasZoom;
+          
+          ctx.beginPath();
+          ctx.arc(worldHandleOut.x, worldHandleOut.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      });
+    } else if ((this.type === 'bezier' || this.renderType === 'bezier') && this.controlPoints) {
+      // Draw control points for bezier curves
       this.controlPoints.forEach((controlPoint, index) => {
         const worldControl = this.getWorldControlPoint(index);
         const worldPoint = this.getWorldPoint(index);
@@ -1143,9 +1233,9 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw control handle - make it selectable
+          // Draw control handle
           const radius = 4 / canvasZoom;
-          const isControlSelected = selectedPoints.includes(index + 1000); // Offset control point indices
+          const isControlSelected = selectedPoints.includes(index + 1000);
           ctx.fillStyle = isControlSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
