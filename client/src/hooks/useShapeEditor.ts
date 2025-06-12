@@ -160,7 +160,13 @@ export const useShapeEditor = () => {
                   if (exists) {
                     setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
                   } else {
-                    setSelectedPoints(prev => [...prev, pointId]);
+                    // If selecting point from different shape, clear points from other shapes unless shift is held
+                    const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
+                    if (pointsFromOtherShapes.length > 0) {
+                      setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
+                    } else {
+                      setSelectedPoints(prev => [...prev, pointId]);
+                    }
                   }
                 } else {
                   setSelectedPoints([pointId]);
@@ -183,7 +189,13 @@ export const useShapeEditor = () => {
                 if (exists) {
                   setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
                 } else {
-                  setSelectedPoints(prev => [...prev, pointId]);
+                  // If selecting point from different shape, clear points from other shapes unless shift is held
+                  const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
+                  if (pointsFromOtherShapes.length > 0) {
+                    setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
+                  } else {
+                    setSelectedPoints(prev => [...prev, pointId]);
+                  }
                 }
               } else {
                 setSelectedPoints([pointId]);
@@ -245,7 +257,13 @@ export const useShapeEditor = () => {
                 if (exists) {
                   setSelectedSegments(prev => prev.filter(s => !(s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex)));
                 } else {
-                  setSelectedSegments(prev => [...prev, segmentId]);
+                  // If selecting segment from different shape, clear segments from other shapes
+                  const segmentsFromOtherShapes = selectedSegments.filter(s => s.shapeId !== shape.id);
+                  if (segmentsFromOtherShapes.length > 0) {
+                    setSelectedSegments(prev => prev.filter(s => s.shapeId === shape.id).concat([segmentId]));
+                  } else {
+                    setSelectedSegments(prev => [...prev, segmentId]);
+                  }
                 }
               } else {
                 setSelectedSegments([segmentId]);
@@ -625,19 +643,24 @@ export const useShapeEditor = () => {
           setEditMode('segments');
         }
       } else {
-        // Check for shape selection
-        const shapesAtMousePoint = shapes.filter(shape => shape.containsPoint(x, y));
-        clickedOnShape = shapesAtMousePoint.length > 0;
-        if (clickedOnShape) {
+        // Check for shape selection - iterate from highest to lowest z-index
+        const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+        let topShape: Shape | null = null;
+        
+        // Find the first (topmost) shape that contains the point
+        for (const shape of sortedShapes) {
+          if (shape.containsPoint(x, y)) {
+            topShape = shape;
+            break;
+          }
+        }
+        
+        clickedOnShape = topShape !== null;
+        if (clickedOnShape && topShape) {
           detectedMode = 'shapes';
           if (editMode !== 'shapes') {
             setEditMode('shapes');
           }
-          
-          // Find the topmost shape at the click point (highest z-index)
-          const topShape = shapesAtMousePoint.reduce((topmost, current) => 
-            current.properties.zIndex > topmost.properties.zIndex ? current : topmost
-          );
           
           // Preserve multi-selection if:
           // 1. Shift is held and clicking on a selected shape, OR

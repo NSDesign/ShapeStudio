@@ -38,71 +38,7 @@ interface CanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
-// Transform handle rendering functions
-function renderTransformHandles(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number) {
-  const bounds = shape.getBounds();
-  const handleSize = 8 / zoom;
-  const rotateHandleDistance = 30 / zoom;
-  
-  ctx.save();
-  
-  // Apply shape transform for handles
-  ctx.translate(shape.transform.x, shape.transform.y);
-  ctx.rotate(shape.transform.rotation * Math.PI / 180);
-  ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
-  
-  // Corner resize handles
-  const corners = [
-    { x: bounds.x, y: bounds.y }, // top-left
-    { x: bounds.x + bounds.width, y: bounds.y }, // top-right
-    { x: bounds.x + bounds.width, y: bounds.y + bounds.height }, // bottom-right
-    { x: bounds.x, y: bounds.y + bounds.height } // bottom-left
-  ];
-  
-  corners.forEach(corner => {
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#2563EB';
-    ctx.lineWidth = 1 / zoom;
-    ctx.fillRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
-    ctx.strokeRect(corner.x - handleSize/2, corner.y - handleSize/2, handleSize, handleSize);
-  });
-  
-  // Edge handles for scaling
-  const edges = [
-    { x: bounds.x + bounds.width/2, y: bounds.y }, // top
-    { x: bounds.x + bounds.width, y: bounds.y + bounds.height/2 }, // right
-    { x: bounds.x + bounds.width/2, y: bounds.y + bounds.height }, // bottom
-    { x: bounds.x, y: bounds.y + bounds.height/2 } // left
-  ];
-  
-  edges.forEach(edge => {
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#2563EB';
-    ctx.lineWidth = 1 / zoom;
-    ctx.fillRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
-    ctx.strokeRect(edge.x - handleSize/2, edge.y - handleSize/2, handleSize, handleSize);
-  });
-  
-  // Rotation handle
-  const rotateHandleX = bounds.x + bounds.width/2;
-  const rotateHandleY = bounds.y - rotateHandleDistance;
-  
-  ctx.strokeStyle = '#2563EB';
-  ctx.lineWidth = 1 / zoom;
-  ctx.beginPath();
-  ctx.moveTo(bounds.x + bounds.width/2, bounds.y);
-  ctx.lineTo(rotateHandleX, rotateHandleY);
-  ctx.stroke();
-  
-  ctx.fillStyle = '#10B981';
-  ctx.strokeStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(rotateHandleX, rotateHandleY, handleSize/2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  
-  ctx.restore();
-}
+// This duplicate function has been removed - using shape.renderTransformHandles() method instead
 
 function renderGroupTransformHandles(ctx: CanvasRenderingContext2D, group: ShapeGroupClass, zoom: number) {
   const bounds = group.getBounds();
@@ -251,11 +187,11 @@ export default function Canvas({
       shapes.forEach(shape => {
         if (!shape.points || shape.points.length === 0) return;
         
-        // Show points/segments for all shapes that have edited components or are selected in component modes
-        const hasEditedComponents = selectedPoints.some(sp => sp.shapeId === shape.id) || 
-                                   selectedSegments.some(ss => ss.shapeId === shape.id);
+        // Only show components for shapes that have selected components or are currently selected
+        const hasSelectedComponents = selectedPoints.some(sp => sp.shapeId === shape.id) || 
+                                     selectedSegments.some(ss => ss.shapeId === shape.id);
         const shouldShowComponents = (editMode === 'points' || editMode === 'segments') && 
-                                   (shape.selected || hasEditedComponents);
+                                   (shape.selected || hasSelectedComponents);
         
         if (shouldShowComponents) {
           const shapeSelectedPoints = selectedPoints
