@@ -834,9 +834,9 @@ export const useShapeEditor = () => {
     const rect = canvas.getBoundingClientRect();
     
     // Handle canvas panning (middle mouse or Cmd/Ctrl+drag)
-    if (isDragging && dragStart && (e.buttons === 4 || (e.buttons === 1 && (e.metaKey || e.ctrlKey)))) {
-      const deltaX = (e.clientX - dragStart.x) / canvasSettings.zoom;
-      const deltaY = (e.clientY - dragStart.y) / canvasSettings.zoom;
+    if (isDragging && dragState && (e.buttons === 4 || (e.buttons === 1 && (e.metaKey || e.ctrlKey)))) {
+      const deltaX = (e.clientX - dragState.lastScreenX) / canvasSettings.zoom;
+      const deltaY = (e.clientY - dragState.lastScreenY) / canvasSettings.zoom;
       
       setCanvasSettings(prev => ({
         ...prev,
@@ -844,7 +844,11 @@ export const useShapeEditor = () => {
         panY: prev.panY + deltaY
       }));
       
-      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragState(prev => prev ? {
+        ...prev,
+        lastScreenX: e.clientX,
+        lastScreenY: e.clientY
+      } : null);
       return;
     }
     
@@ -997,7 +1001,14 @@ export const useShapeEditor = () => {
     const y = screenY - canvasSettings.panY;
     
     setTouchStartTime(Date.now());
-    setDragStart({ x, y });
+    setDragState({
+      startScreenX: e.touches[0].clientX,
+      startScreenY: e.touches[0].clientY,
+      lastScreenX: e.touches[0].clientX,
+      lastScreenY: e.touches[0].clientY,
+      totalDeltaX: 0,
+      totalDeltaY: 0
+    });
     
     // Check if touching empty space for potential marquee selection
     let touchedShape = false;
@@ -1107,17 +1118,14 @@ export const useShapeEditor = () => {
     }
     
     // Single touch handling
-    if (!dragStart || e.touches.length > 1) return;
+    if (!dragState || e.touches.length > 1) return;
     
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
-    const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
-    const x = screenX - canvasSettings.panX;
-    const y = screenY - canvasSettings.panY;
     
-    const deltaX = x - dragStart.x;
-    const deltaY = y - dragStart.y;
+    // Calculate precise delta from last position
+    const deltaX = (touch.clientX - dragState.lastScreenX) / canvasSettings.zoom;
+    const deltaY = (touch.clientY - dragState.lastScreenY) / canvasSettings.zoom;
     
     // Check if we should start marquee selection on touch devices
     if (marqueeStart && !isMarqueeSelecting && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
@@ -1237,11 +1245,11 @@ export const useShapeEditor = () => {
     }
     
     setIsDragging(false);
-    setDragStart(null);
+    setDragState(null);
     setTouchStartTime(0);
     setMarqueeStart(null);
     setMarqueeEnd(null);
-  }, [touchStartTime, isMultiSelectMode, isDragging, dragStart, canvasSettings.zoom, editMode, selectShapeAtPoint, selectPointAt, selectSegmentAt, isMarqueeSelecting, shapes]);
+  }, [touchStartTime, isMultiSelectMode, isDragging, dragState, canvasSettings.zoom, editMode, selectShapeAtPoint, selectPointAt, selectSegmentAt, isMarqueeSelecting, shapes]);
 
   const toggleMultiSelectMode = useCallback(() => {
     setIsMultiSelectMode(!isMultiSelectMode);
