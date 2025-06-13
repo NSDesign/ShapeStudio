@@ -209,11 +209,68 @@ export default function Canvas({
 
       // Render transform handles for selected shapes on non-touch devices
       if (editMode === 'shapes') {
-        shapes.forEach(shape => {
-          if (shape.selected) {
-            shape.renderTransformHandles(ctx, canvasSettings.zoom, isTouchDevice);
-          }
-        });
+        const selectedShapeList = shapes.filter(shape => shape.selected);
+        const selectedGroupList = groups.filter(group => group.selected);
+        
+        // If multiple shapes are selected, show collective bounding box
+        if (selectedShapeList.length > 1 && !isTouchDevice) {
+          ctx.save();
+          
+          // Calculate collective bounds
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          
+          selectedShapeList.forEach(shape => {
+            const bounds = shape.getWorldBounds();
+            minX = Math.min(minX, bounds.x);
+            minY = Math.min(minY, bounds.y);
+            maxX = Math.max(maxX, bounds.x + bounds.width);
+            maxY = Math.max(maxY, bounds.y + bounds.height);
+          });
+          
+          const collectiveBounds = {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+          };
+          
+          // Draw collective bounding box
+          ctx.strokeStyle = '#3B82F6';
+          ctx.lineWidth = 2 / canvasSettings.zoom;
+          ctx.setLineDash([5 / canvasSettings.zoom, 5 / canvasSettings.zoom]);
+          ctx.strokeRect(collectiveBounds.x, collectiveBounds.y, collectiveBounds.width, collectiveBounds.height);
+          ctx.setLineDash([]);
+          
+          // Draw collective transform handles
+          const handleSize = 8 / canvasSettings.zoom;
+          const handleOffset = handleSize / 2;
+          
+          ctx.fillStyle = '#3B82F6';
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1 / canvasSettings.zoom;
+          
+          // Corner handles for multi-selection
+          const corners = [
+            { x: collectiveBounds.x - handleOffset, y: collectiveBounds.y - handleOffset },
+            { x: collectiveBounds.x + collectiveBounds.width - handleOffset, y: collectiveBounds.y - handleOffset },
+            { x: collectiveBounds.x + collectiveBounds.width - handleOffset, y: collectiveBounds.y + collectiveBounds.height - handleOffset },
+            { x: collectiveBounds.x - handleOffset, y: collectiveBounds.y + collectiveBounds.height - handleOffset }
+          ];
+          
+          corners.forEach(corner => {
+            ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
+            ctx.strokeRect(corner.x, corner.y, handleSize, handleSize);
+          });
+          
+          ctx.restore();
+        } else {
+          // Show individual shape handles when only one shape is selected
+          shapes.forEach(shape => {
+            if (shape.selected) {
+              shape.renderTransformHandles(ctx, canvasSettings.zoom, isTouchDevice);
+            }
+          });
+        }
         
         groups.forEach(group => {
           if (group.selected) {

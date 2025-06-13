@@ -1316,7 +1316,7 @@ export class Shape {
         // Draw segment highlight with curve matching render type
         if (isSelected) {
           ctx.strokeStyle = '#10B981';
-          ctx.lineWidth = 4 / canvasZoom;
+          ctx.lineWidth = 6 / canvasZoom;
           ctx.beginPath();
           
           if (this.type === 'bezier' && this.tangentHandles && i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
@@ -1373,9 +1373,60 @@ export class Shape {
           ctx.stroke();
         }
         
-        // Draw segment midpoint indicator
-        const midX = (p1.x + p2.x) / 2;
-        const midY = (p1.y + p2.y) / 2;
+        // Draw segment midpoint indicator - calculate true curve midpoint
+        let midX, midY;
+        
+        if (this.type === 'bezier' && this.tangentHandles && i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
+          // For bezier curves, calculate the actual curve midpoint
+          const cp1 = this.getWorldTangentHandle(i, 'out');
+          const cp2 = this.getWorldTangentHandle(i + 1, 'in');
+          
+          if (cp1 && cp2) {
+            // Calculate bezier curve midpoint at t=0.5
+            const t = 0.5;
+            const mt = 1 - t;
+            midX = mt * mt * mt * p1.x + 3 * mt * mt * t * cp1.x + 3 * mt * t * t * cp2.x + t * t * t * p2.x;
+            midY = mt * mt * mt * p1.y + 3 * mt * mt * t * cp1.y + 3 * mt * t * t * cp2.y + t * t * t * p2.y;
+          } else {
+            midX = (p1.x + p2.x) / 2;
+            midY = (p1.y + p2.y) / 2;
+          }
+        } else if (this.type === 'cubic' && this.controlPoints && i < this.controlPoints.length) {
+          // For cubic curves, calculate quadratic curve midpoint
+          const worldControl = this.getWorldControlPoint(i);
+          if (worldControl) {
+            // Calculate quadratic curve midpoint at t=0.5
+            const t = 0.5;
+            const mt = 1 - t;
+            midX = mt * mt * p1.x + 2 * mt * t * worldControl.x + t * t * p2.x;
+            midY = mt * mt * p1.y + 2 * mt * t * worldControl.y + t * t * p2.y;
+          } else {
+            midX = (p1.x + p2.x) / 2;
+            midY = (p1.y + p2.y) / 2;
+          }
+        } else if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
+          // For other curve types with control points
+          if (this.controlPoints && i < this.controlPoints.length) {
+            const worldControl = this.getWorldControlPoint(i);
+            if (worldControl) {
+              const t = 0.5;
+              const mt = 1 - t;
+              midX = mt * mt * p1.x + 2 * mt * t * worldControl.x + t * t * p2.x;
+              midY = mt * mt * p1.y + 2 * mt * t * worldControl.y + t * t * p2.y;
+            } else {
+              midX = (p1.x + p2.x) / 2;
+              midY = (p1.y + p2.y) / 2;
+            }
+          } else {
+            midX = (p1.x + p2.x) / 2;
+            midY = (p1.y + p2.y) / 2;
+          }
+        } else {
+          // For straight segments
+          midX = (p1.x + p2.x) / 2;
+          midY = (p1.y + p2.y) / 2;
+        }
+        
         const radius = (isSelected ? 6 : 4) / canvasZoom;
         
         ctx.fillStyle = isSelected ? '#10B981' : '#8B5CF6';
