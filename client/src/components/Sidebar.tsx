@@ -116,6 +116,7 @@ interface SidebarProps {
   onSendBackward: () => void;
   onChangeBlendMode: (blendMode: BlendMode) => void;
   onShapeUpdate?: () => void;
+  onAddCustomShape?: (shape: Shape) => void;
   onAddArtboard: (preset: ArtboardPreset) => void;
   onSelectArtboard: (artboardId: string) => void;
   onDeleteArtboard: (artboardId: string) => void;
@@ -157,6 +158,7 @@ export default function Sidebar({
   onSendBackward,
   onChangeBlendMode,
   onShapeUpdate,
+  onAddCustomShape,
   onAddArtboard,
   onSelectArtboard,
   onDeleteArtboard,
@@ -324,22 +326,25 @@ export default function Sidebar({
                       
                       // Copy all the saved data to the new shape
                       if (customShape.shapeData.points) {
-                        newShape.points = [...customShape.shapeData.points];
+                        newShape.points = customShape.shapeData.points.map((p: any) => ({ x: p.x, y: p.y }));
                       }
                       if (customShape.shapeData.controlPoints) {
-                        newShape.controlPoints = [...customShape.shapeData.controlPoints];
+                        newShape.controlPoints = customShape.shapeData.controlPoints.map((p: any) => ({ x: p.x, y: p.y }));
                       }
                       if (customShape.shapeData.tangentHandles) {
-                        newShape.tangentHandles = [...customShape.shapeData.tangentHandles];
+                        newShape.tangentHandles = customShape.shapeData.tangentHandles.map((h: any) => ({
+                          in: { x: h.in.x, y: h.in.y },
+                          out: { x: h.out.x, y: h.out.y }
+                        }));
                       }
                       newShape.properties = { ...customShape.shapeData.properties };
-                      newShape.width = customShape.shapeData.width;
-                      newShape.height = customShape.shapeData.height;
-                      newShape.radius = customShape.shapeData.radius;
-                      newShape.innerRadius = customShape.shapeData.innerRadius;
-                      newShape.sides = customShape.shapeData.sides;
-                      newShape.renderType = customShape.shapeData.renderType;
-                      newShape.closed = customShape.shapeData.closed;
+                      if (customShape.shapeData.width !== undefined) newShape.width = customShape.shapeData.width;
+                      if (customShape.shapeData.height !== undefined) newShape.height = customShape.shapeData.height;
+                      if (customShape.shapeData.radius !== undefined) newShape.radius = customShape.shapeData.radius;
+                      if (customShape.shapeData.innerRadius !== undefined) newShape.innerRadius = customShape.shapeData.innerRadius;
+                      if (customShape.shapeData.sides !== undefined) newShape.sides = customShape.shapeData.sides;
+                      if (customShape.shapeData.renderType !== undefined) newShape.renderType = customShape.shapeData.renderType;
+                      if (customShape.shapeData.closed !== undefined) newShape.closed = customShape.shapeData.closed;
                       
                       // Generate unique ID and position
                       newShape.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -348,7 +353,9 @@ export default function Sidebar({
                       newShape.selected = false;
                       
                       // Add the new shape to the canvas
-                      onShapeUpdate?.();
+                      if (onAddCustomShape) {
+                        onAddCustomShape(newShape);
+                      }
                     }}
                     variant="ghost"
                     size="sm"

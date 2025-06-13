@@ -320,7 +320,7 @@ export const useShapeEditor = () => {
             let distance = Infinity;
             
             // For spline shapes, use cubic Bézier curve distance calculation
-            if (shape.type.startsWith('spline-') && shape.tangentHandles) {
+            if (shape.type.startsWith('spline-') && shape.tangentHandles && i < shape.tangentHandles.length && (i + 1) < shape.tangentHandles.length) {
               // Get world-space tangent handles for this segment
               const worldTangent1Out = shape.getWorldTangentHandle(i, 'out');
               const worldTangent2In = shape.getWorldTangentHandle(i + 1, 'in');

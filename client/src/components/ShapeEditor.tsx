@@ -167,6 +167,7 @@ export default function ShapeEditor() {
           onSendBackward={sendBackward}
           onChangeBlendMode={changeBlendMode}
           onShapeUpdate={() => setShapes(prev => [...prev])}
+          onAddCustomShape={(shape) => setShapes(prev => [...prev, shape])}
           onClearAll={clearAllShapes}
           onAddArtboard={addArtboard}
           onSelectArtboard={selectArtboard}
