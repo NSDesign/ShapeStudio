@@ -2753,11 +2753,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Move className="w-4 h-4 text-orange-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Transform Tools</span>
-                {selectedCount > 0 && (
-                  <span className="ml-auto text-xs bg-orange-600 text-white px-2 py-1 rounded-full">
-                    {selectedCount} selected
-                  </span>
-                )}
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2771,11 +2767,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Layers className="w-4 h-4 text-purple-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Composition</span>
-                {(scatterSettings.onPoints || scatterSettings.insideArea) && (
-                  <span className="ml-auto text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
-                    scatter active
-                  </span>
-                )}
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2789,9 +2781,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Square className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Artboards</span>
-                <span className="ml-auto text-xs bg-cyan-600 text-white px-2 py-1 rounded-full">
-                  {artboards.length}
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2805,9 +2795,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <GitMerge className="w-4 h-4 text-indigo-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Boolean Operations</span>
-                <span className="ml-auto text-xs bg-indigo-600 text-white px-2 py-1 rounded-full">
-                  {selectedShapes.length === 1 ? 'Ready' : 'Select 1'}
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2821,9 +2809,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Pipette className="w-4 h-4 text-amber-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Color Manipulation</span>
-                <span className="ml-auto text-xs bg-amber-600 text-white px-2 py-1 rounded-full">
-                  HSL
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2837,9 +2823,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Layers className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Layers</span>
-                <span className="ml-auto text-xs bg-emerald-600 text-white px-2 py-1 rounded-full">
-                  {selectedShapes.length + selectedGroups.length + artboards.length}
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2853,11 +2837,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Palette className="w-4 h-4 text-pink-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Properties</span>
-                {selectedCount > 0 && (
-                  <span className="ml-auto text-xs bg-pink-600 text-white px-2 py-1 rounded-full">
-                    {selectedCount} shape{selectedCount !== 1 ? 's' : ''}
-                  </span>
-                )}
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
