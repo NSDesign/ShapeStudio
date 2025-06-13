@@ -11,6 +11,7 @@ export interface ExportOptions {
   scale?: number; // Scaling factor for high-res exports
   backgroundColor?: string;
   includeBackground?: boolean;
+  includeAdornments?: boolean; // Include selection handles and other UI elements
   margins?: {
     top: number;
     right: number;
@@ -84,12 +85,12 @@ export class ImageExporter {
         maxY = Math.max(maxY, bounds.y + bounds.height);
       });
 
-      // If no valid bounds found, use canvas settings
+      // If no valid bounds found after checking all content, use a minimal default
       if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
-        minX = -canvasSettings.width / 2;
-        minY = -canvasSettings.height / 2;
-        maxX = canvasSettings.width / 2;
-        maxY = canvasSettings.height / 2;
+        minX = 0;
+        minY = 0;
+        maxX = 100;
+        maxY = 100;
       }
     }
 
@@ -104,6 +105,7 @@ export class ImageExporter {
     const contentHeight = maxY - minY + marginTop + marginBottom;
 
     // Use provided dimensions or calculated content dimensions
+    // If no custom dimensions provided, always use the calculated content dimensions
     const exportBaseWidth = optionsWidth || contentWidth;
     const exportBaseHeight = optionsHeight || contentHeight;
 
@@ -142,6 +144,53 @@ export class ImageExporter {
     shapes.forEach(shape => {
       shape.render(this.ctx);
     });
+
+    // Render adornments if requested
+    if (options.includeAdornments) {
+      shapes.forEach(shape => {
+        if (shape.selected) {
+          // Render transform handles for selected shapes
+          shape.renderTransformHandles(this.ctx, 1, false); // Use zoom=1 and not touch device
+        }
+        
+        // Render points and segments if the shape has them
+        if (shape.points && shape.points.length > 0) {
+          const allPointIndices = shape.points.map((_, i) => i);
+          const allSegmentIndices = shape.points.length > 1 ? 
+            shape.points.slice(0, -1).map((_, i) => i) : [];
+          
+          shape.renderPoints(this.ctx, allPointIndices, allSegmentIndices, 1);
+        }
+      });
+
+      groups.forEach(group => {
+        if (group.selected) {
+          // Render group transform handles
+          const bounds = group.getBounds();
+          const handleSize = 8;
+          
+          this.ctx.save();
+          this.ctx.fillStyle = '#8B5CF6';
+          this.ctx.strokeStyle = '#FFFFFF';
+          this.ctx.lineWidth = 1;
+          
+          // Corner handles for group
+          const corners = [
+            { x: bounds.x - handleSize/2, y: bounds.y - handleSize/2 },
+            { x: bounds.x + bounds.width - handleSize/2, y: bounds.y - handleSize/2 },
+            { x: bounds.x + bounds.width - handleSize/2, y: bounds.y + bounds.height - handleSize/2 },
+            { x: bounds.x - handleSize/2, y: bounds.y + bounds.height - handleSize/2 }
+          ];
+          
+          corners.forEach(corner => {
+            this.ctx.fillRect(corner.x, corner.y, handleSize, handleSize);
+            this.ctx.strokeRect(corner.x, corner.y, handleSize, handleSize);
+          });
+          
+          this.ctx.restore();
+        }
+      });
+    }
 
     // Restore context state
     this.ctx.restore();

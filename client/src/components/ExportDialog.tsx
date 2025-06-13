@@ -46,6 +46,9 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   const [marginBottom, setMarginBottom] = useState(20);
   const [marginLeft, setMarginLeft] = useState(20);
   
+  // Adornments option
+  const [includeAdornments, setIncludeAdornments] = useState(false);
+  
   // Naming options
   const [includeTypeInName, setIncludeTypeInName] = useState(false);
   const [includeArtboardInName, setIncludeArtboardInName] = useState(false);
@@ -181,10 +184,11 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
         format,
         quality: quality / 100,
         scale,
-        width: useCustomSize ? customWidth : exportWidth,
-        height: useCustomSize ? customHeight : exportHeight,
+        width: useCustomSize ? customWidth : undefined, // Let exporter calculate based on content
+        height: useCustomSize ? customHeight : undefined, // Let exporter calculate based on content
         backgroundColor: includeBackground ? backgroundColor : 'transparent',
         includeBackground,
+        includeAdornments,
         margins: useMargins ? {
           top: marginTop,
           right: uniformMargins ? marginTop : marginRight,
@@ -400,6 +404,22 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
                     max={8000}
                   />
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Shape Adornments */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={includeAdornments}
+                onCheckedChange={setIncludeAdornments}
+              />
+              <Label className="text-sm font-medium text-slate-300">Include Shape Adornments</Label>
+            </div>
+            {includeAdornments && (
+              <div className="text-xs text-slate-400">
+                Includes selection handles, control points, and other shape editing UI elements
               </div>
             )}
           </div>
