@@ -317,34 +317,78 @@ export const useShapeEditor = () => {
           const worldP2 = shape.getWorldPoint(i + 1);
           
           if (worldP1 && worldP2) {
-            // Calculate distance from point to line segment using world coordinates
-            const A = x - worldP1.x;
-            const B = y - worldP1.y;
-            const C = worldP2.x - worldP1.x;
-            const D = worldP2.y - worldP1.y;
-
-            const dot = A * C + B * D;
-            const lenSq = C * C + D * D;
-            let param = -1;
-            if (lenSq !== 0) {
-              param = dot / lenSq;
-            }
-
-            let xx, yy;
-            if (param < 0) {
-              xx = worldP1.x;
-              yy = worldP1.y;
-            } else if (param > 1) {
-              xx = worldP2.x;
-              yy = worldP2.y;
+            let distance = Infinity;
+            
+            // For spline shapes, use cubic Bézier curve distance calculation
+            if (shape.type.startsWith('spline-') && shape.tangentHandles) {
+              // Get world-space tangent handles for this segment
+              const worldTangent1Out = shape.getWorldTangentHandle(i, 'out');
+              const worldTangent2In = shape.getWorldTangentHandle(i + 1, 'in');
+              
+              if (worldTangent1Out && worldTangent2In) {
+                // Sample points along the cubic Bézier curve and find the closest distance
+                const sampleCount = 20;
+                let minDistance = Infinity;
+                
+                for (let t = 0; t <= 1; t += 1 / sampleCount) {
+                  // Cubic Bézier formula: B(t) = (1-t)³P₀ + 3(1-t)²tC₀ + 3(1-t)t²C₁ + t³P₁
+                  const t1 = 1 - t;
+                  const t1_2 = t1 * t1;
+                  const t1_3 = t1_2 * t1;
+                  const t_2 = t * t;
+                  const t_3 = t_2 * t;
+                  
+                  const curveX = t1_3 * worldP1.x + 
+                               3 * t1_2 * t * worldTangent1Out.x + 
+                               3 * t1 * t_2 * worldTangent2In.x + 
+                               t_3 * worldP2.x;
+                  
+                  const curveY = t1_3 * worldP1.y + 
+                               3 * t1_2 * t * worldTangent1Out.y + 
+                               3 * t1 * t_2 * worldTangent2In.y + 
+                               t_3 * worldP2.y;
+                  
+                  const dx = x - curveX;
+                  const dy = y - curveY;
+                  const sampleDistance = Math.sqrt(dx * dx + dy * dy);
+                  
+                  if (sampleDistance < minDistance) {
+                    minDistance = sampleDistance;
+                  }
+                }
+                
+                distance = minDistance;
+              }
             } else {
-              xx = worldP1.x + param * C;
-              yy = worldP1.y + param * D;
-            }
+              // For non-spline shapes, use straight line distance calculation
+              const A = x - worldP1.x;
+              const B = y - worldP1.y;
+              const C = worldP2.x - worldP1.x;
+              const D = worldP2.y - worldP1.y;
 
-            const dx = x - xx;
-            const dy = y - yy;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+              const dot = A * C + B * D;
+              const lenSq = C * C + D * D;
+              let param = -1;
+              if (lenSq !== 0) {
+                param = dot / lenSq;
+              }
+
+              let xx, yy;
+              if (param < 0) {
+                xx = worldP1.x;
+                yy = worldP1.y;
+              } else if (param > 1) {
+                xx = worldP2.x;
+                yy = worldP2.y;
+              } else {
+                xx = worldP1.x + param * C;
+                yy = worldP1.y + param * D;
+              }
+
+              const dx = x - xx;
+              const dy = y - yy;
+              distance = Math.sqrt(dx * dx + dy * dy);
+            }
 
             if (distance <= 8) {
               const segmentId = { shapeId: shape.id, segmentIndex: i };

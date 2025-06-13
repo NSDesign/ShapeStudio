@@ -1,0 +1,41 @@
+The above error occurred in the <ShapeTypesContent> component:
+
+    at ShapeTypesContent (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/Sidebar.tsx:347:209)
+    at div
+    at div
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GVTGVYSA.js?v=f617047c:42:13
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:115:11
+    at Presence (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MKNQX24V.js?v=f617047c:24:11)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:108:13
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:439:13
+    at _c5 (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/ui/accordion.tsx:82:12)
+    at div
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GVTGVYSA.js?v=f617047c:42:13
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:49:7
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:357:13
+    at _c (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/ui/accordion.tsx:23:11)
+    at div
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GVTGVYSA.js?v=f617047c:42:13
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5S42QOQO.js?v=f617047c:79:13
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5S42QOQO.js?v=f617047c:56:13
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UU4GOUAT.js?v=f617047c:39:15
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:261:13
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:228:12
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at CollectionProvider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UU4GOUAT.js?v=f617047c:29:13)
+    at https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=f617047c:187:13
+    at div
+    at div
+    at Sidebar (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/Sidebar.tsx:93:3)
+    at div
+    at div
+    at ShapeEditor (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/ShapeEditor.tsx:85:7)
+    at div
+    at Provider (https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-MAE4WKEQ.js?v=f617047c:38:15)
+    at TooltipProvider…
+Copy is not defined

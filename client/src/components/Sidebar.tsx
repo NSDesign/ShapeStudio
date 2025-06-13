@@ -44,7 +44,8 @@ import {
   Shuffle,
   Combine,
   GitMerge,
-  X
+  X,
+  Copy
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -319,13 +320,35 @@ export default function Sidebar({
                   <Button
                     onClick={() => {
                       // Create a new shape from the custom shape data
-                      const newShape = new (require('../lib/shapes').Shape)(customShape.shapeData.type);
-                      Object.assign(newShape, customShape.shapeData);
+                      const newShape = new Shape(customShape.shapeData.type);
+                      
+                      // Copy all the saved data to the new shape
+                      if (customShape.shapeData.points) {
+                        newShape.points = [...customShape.shapeData.points];
+                      }
+                      if (customShape.shapeData.controlPoints) {
+                        newShape.controlPoints = [...customShape.shapeData.controlPoints];
+                      }
+                      if (customShape.shapeData.tangentHandles) {
+                        newShape.tangentHandles = [...customShape.shapeData.tangentHandles];
+                      }
+                      newShape.properties = { ...customShape.shapeData.properties };
+                      newShape.width = customShape.shapeData.width;
+                      newShape.height = customShape.shapeData.height;
+                      newShape.radius = customShape.shapeData.radius;
+                      newShape.innerRadius = customShape.shapeData.innerRadius;
+                      newShape.sides = customShape.shapeData.sides;
+                      newShape.renderType = customShape.shapeData.renderType;
+                      newShape.closed = customShape.shapeData.closed;
+                      
+                      // Generate unique ID and position
                       newShape.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                       newShape.transform.x = Math.random() * 200 - 100;
                       newShape.transform.y = Math.random() * 200 - 100;
                       newShape.selected = false;
-                      onGenerateRandomShapes(); // This will trigger shape creation
+                      
+                      // Add the new shape to the canvas
+                      onShapeUpdate?.();
                     }}
                     variant="ghost"
                     size="sm"
