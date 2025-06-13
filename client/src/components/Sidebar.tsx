@@ -1615,8 +1615,7 @@ export default function Sidebar({
                           value={[firstSelectedShape.height || 100]}
                           onValueChange={([value]) => {
                             updateShapeProperty(shape => {
-                              if (shape.type === 'rectangle' || shape.type === '```
-ellipse') {
+                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
                                 shape.height = value;
                               }
                             });

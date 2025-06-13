@@ -1,17 +1,6 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, ScatterSettings, ShapeType } from './shapeTypes';
 
-interface ProjectData {
-  version: string;
-  timestamp: string;
-  name: string;
-  canvasSettings: CanvasSettings;
-  scatterSettings: ScatterSettings;
-  enabledShapeTypes: ShapeType[];
-  shapes: any[];
-  groups: any[];
-}
-
 export interface ProjectData {
   version: string;
   timestamp: string;
@@ -23,7 +12,7 @@ export interface ProjectData {
   groups: any[]; // Serialized group data
 }
 
-export export class ProjectManager {
+export class ProjectManager {
   static async saveProject(
     shapes: Shape[],
     groups: ShapeGroupClass[],
