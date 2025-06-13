@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
@@ -2259,20 +2259,23 @@ export default function Sidebar({
   };
 
   const ColorManipulationContent = () => {
-    const applyColorManipulation = () => {
-      const manipulation = {
-        mode: colorMode,
-        hslShift: colorMode === 'shift' ? {
-          hue: hueShift,
-          saturation: saturationShift,
-          lightness: lightnessShift,
-          enabled: true
-        } : undefined,
-        affectFill,
-        affectStroke
-      };
-      onApplyColorManipulation(manipulation);
-    };
+    // Real-time color manipulation using useEffect
+    React.useEffect(() => {
+      if (colorMode === 'shift' && (hueShift !== 0 || saturationShift !== 0 || lightnessShift !== 0)) {
+        const manipulation = {
+          mode: colorMode,
+          hslShift: {
+            hue: hueShift,
+            saturation: saturationShift,
+            lightness: lightnessShift,
+            enabled: true
+          },
+          affectFill,
+          affectStroke
+        };
+        onApplyColorManipulation(manipulation);
+      }
+    }, [hueShift, saturationShift, lightnessShift, affectFill, affectStroke, colorMode]);
 
     return (
       <div className="space-y-4">
@@ -2396,15 +2399,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Apply Button */}
-        <Button
-          onClick={applyColorManipulation}
-          disabled={colorMode === 'shift' && hueShift === 0 && saturationShift === 0 && lightnessShift === 0}
-          className="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs"
-          size="sm"
-        >
-          Apply Color {colorMode === 'shift' ? 'Shift' : 'Remap'}
-        </Button>
+
 
         {/* Reset Button */}
         <Button
@@ -2642,7 +2637,7 @@ export default function Sidebar({
                     : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
-                <Combine className="w-5 h-5" />
+                <GitMerge className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
