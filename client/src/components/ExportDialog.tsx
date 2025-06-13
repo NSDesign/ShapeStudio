@@ -35,7 +35,9 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   const [backgroundColor, setBackgroundColor] = useState('#1e293b');
   
   // Export scope options
-  const [exportScope, setExportScope] = useState<'all' | 'selected' | 'artboard'>('all');
+  const [exportScope, setExportScope] = useState<'all' | 'selected' | 'artboard'>(
+    selectedShapes.length > 0 ? 'selected' : 'all'
+  );
   const [selectedArtboardIds, setSelectedArtboardIds] = useState<string[]>([]);
   
   // Margin options
@@ -60,6 +62,16 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   const [customPrefix, setCustomPrefix] = useState('');
   
   const { toast } = useToast();
+
+  // Auto-update naming options based on export scope
+  useEffect(() => {
+    if (exportScope === 'selected' && selectedShapes.length > 0) {
+      setIncludeTypeInName(true);
+    }
+    if (exportScope === 'artboard' && selectedArtboardIds.length === 1) {
+      setIncludeArtboardInName(true);
+    }
+  }, [exportScope, selectedShapes.length, selectedArtboardIds.length]);
 
   const supportedFormats: { value: ImageFormat; label: string; description: string }[] = [
     { value: 'png' as ImageFormat, label: 'PNG', description: 'Lossless with transparency' },
@@ -284,6 +296,9 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
             <FileImage className="w-5 h-5 mr-2" />
             Export Image
           </DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Export your shapes as high-quality images with customizable options
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
