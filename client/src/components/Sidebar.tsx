@@ -37,7 +37,12 @@ import {
   Trash2,
   FolderOpen,
   Menu,
-  Grid3X3
+  Grid3X3,
+  Plus,
+  Intersect,
+  Scissors,
+  Pipette,
+  Shuffle
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -107,6 +112,8 @@ interface SidebarProps {
   onDeleteArtboard: (artboardId: string) => void;
   onUpdateArtboard: (artboardId: string, updates: Partial<Artboard>) => void;
   onDistributeSelected: () => void;
+  onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
+  onApplyColorManipulation: (manipulation: any) => void;
 }
 
 export default function Sidebar({

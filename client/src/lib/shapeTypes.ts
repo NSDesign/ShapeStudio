@@ -31,6 +31,33 @@ export type BlendMode =
   | 'color' 
   | 'luminosity';
 
+export type BooleanOperation = 
+  | 'union' 
+  | 'subtract' 
+  | 'intersect' 
+  | 'exclude';
+
+export interface HSLShift {
+  hue: number; // -180 to 180 degrees
+  saturation: number; // -100 to 100 percent
+  lightness: number; // -100 to 100 percent
+  enabled: boolean;
+}
+
+export interface ColorRemapping {
+  sourceColor: string;
+  targetColor: string;
+  tolerance: number; // 0-100, how close colors need to be to match
+}
+
+export interface ColorManipulation {
+  mode: 'shift' | 'remap';
+  hslShift?: HSLShift;
+  remappings?: ColorRemapping[];
+  affectFill: boolean;
+  affectStroke: boolean;
+}
+
 export interface ShapeProperties {
   fillColor: string | 'none';
   fillOpacity: number;
@@ -42,6 +69,16 @@ export interface ShapeProperties {
   gradient?: {
     type: 'linear' | 'radial';
     stops: { offset: number; color: string }[];
+  };
+  // Boolean operation properties
+  booleanOperation?: 'union' | 'subtract' | 'intersect' | 'exclude';
+  booleanTarget?: string; // ID of target shape for boolean operation
+  // Color manipulation properties
+  colorShift?: {
+    hue: number;
+    saturation: number;
+    lightness: number;
+    enabled: boolean;
   };
 }
 
