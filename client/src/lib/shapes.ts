@@ -585,6 +585,11 @@ export class Shape {
       case 'ring':
         this.drawPolygon(ctx); // Use points for deformable rings
         break;
+      case 'spline-circle':
+      case 'spline-ellipse':
+      case 'spline-ring':
+        this.drawSplineCubicBezier(ctx);
+        break;
     }
     
     // Only fill shapes that aren't lines and have fill enabled
@@ -792,6 +797,55 @@ export class Shape {
   private drawRing(ctx: CanvasRenderingContext2D): void {
     ctx.arc(0, 0, this.radius!, 0, Math.PI * 2);
     ctx.arc(0, 0, this.innerRadius!, 0, Math.PI * 2, true);
+  }
+
+  private drawSplineCubicBezier(ctx: CanvasRenderingContext2D): void {
+    if (!this.controlPoints || !this.points) return;
+    
+    if (this.type === 'spline-circle' || this.type === 'spline-ellipse') {
+      // Four-segment cubic Bézier curve (circle/ellipse)
+      ctx.moveTo(this.points[0].x, this.points[0].y);
+      
+      // Draw four cubic Bézier segments
+      for (let i = 0; i < 4; i++) {
+        const startPoint = this.points[i];
+        const endPoint = this.points[(i + 1) % 4];
+        const cp1 = this.controlPoints[i * 2];
+        const cp2 = this.controlPoints[i * 2 + 1];
+        
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      
+      if (this.closed) {
+        ctx.closePath();
+      }
+    } else if (this.type === 'spline-ring') {
+      // Outer ring - four cubic Bézier segments
+      ctx.moveTo(this.points[0].x, this.points[0].y);
+      
+      for (let i = 0; i < 4; i++) {
+        const startPoint = this.points[i];
+        const endPoint = this.points[(i + 1) % 4];
+        const cp1 = this.controlPoints[i * 2];
+        const cp2 = this.controlPoints[i * 2 + 1];
+        
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+      
+      // Inner ring - four cubic Bézier segments (reverse order)
+      ctx.moveTo(this.points[4].x, this.points[4].y);
+      
+      for (let i = 0; i < 4; i++) {
+        const startPoint = this.points[4 + i];
+        const endPoint = this.points[4 + ((i + 1) % 4)];
+        const cp1 = this.controlPoints[8 + i * 2];
+        const cp2 = this.controlPoints[8 + i * 2 + 1];
+        
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+    }
   }
 
   private drawSelectionBounds(ctx: CanvasRenderingContext2D): void {
