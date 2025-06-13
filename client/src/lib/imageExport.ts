@@ -17,6 +17,12 @@ export interface ExportOptions {
     bottom: number;
     left: number;
   };
+  artboardBounds?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
 export class ImageExporter {
@@ -37,16 +43,73 @@ export class ImageExporter {
     const {
       format,
       quality = 0.92,
-      width = canvasSettings.width,
-      height = canvasSettings.height,
+      width: optionsWidth,
+      height: optionsHeight,
       scale = 1,
       backgroundColor = 'transparent',
-      includeBackground = true
+      includeBackground = true,
+      margins,
+      artboardBounds
     } = options;
 
-    // Set canvas size
-    const exportWidth = width * scale;
-    const exportHeight = height * scale;
+    // Calculate bounds of all content to export
+    const allContent = [...shapes, ...groups];
+    if (allContent.length === 0) {
+      throw new Error('No content to export');
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    // Use artboard bounds if provided (for artboard exports)
+    if (artboardBounds) {
+      minX = artboardBounds.x;
+      minY = artboardBounds.y;
+      maxX = artboardBounds.x + artboardBounds.width;
+      maxY = artboardBounds.y + artboardBounds.height;
+    } else {
+      // Get bounds of all shapes and groups
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        minX = Math.min(minX, bounds.x);
+        minY = Math.min(minY, bounds.y);
+        maxX = Math.max(maxX, bounds.x + bounds.width);
+        maxY = Math.max(maxY, bounds.y + bounds.height);
+      });
+
+      groups.forEach(group => {
+        const bounds = group.getBounds();
+        minX = Math.min(minX, bounds.x);
+        minY = Math.min(minY, bounds.y);
+        maxX = Math.max(maxX, bounds.x + bounds.width);
+        maxY = Math.max(maxY, bounds.y + bounds.height);
+      });
+
+      // If no valid bounds found, use canvas settings
+      if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+        minX = -canvasSettings.width / 2;
+        minY = -canvasSettings.height / 2;
+        maxX = canvasSettings.width / 2;
+        maxY = canvasSettings.height / 2;
+      }
+    }
+
+    // Apply margins
+    const marginTop = margins?.top || 0;
+    const marginRight = margins?.right || 0;
+    const marginBottom = margins?.bottom || 0;
+    const marginLeft = margins?.left || 0;
+
+    // Calculate content dimensions with margins
+    const contentWidth = maxX - minX + marginLeft + marginRight;
+    const contentHeight = maxY - minY + marginTop + marginBottom;
+
+    // Use provided dimensions or calculated content dimensions
+    const exportBaseWidth = optionsWidth || contentWidth;
+    const exportBaseHeight = optionsHeight || contentHeight;
+
+    // Set canvas size with scale applied
+    const exportWidth = exportBaseWidth * scale;
+    const exportHeight = exportBaseHeight * scale;
     this.canvas.width = exportWidth;
     this.canvas.height = exportHeight;
 
@@ -59,12 +122,16 @@ export class ImageExporter {
       this.ctx.fillRect(0, 0, exportWidth, exportHeight);
     }
 
+    // Save context state
+    this.ctx.save();
+
     // Apply scaling for high-res exports
     this.ctx.scale(scale, scale);
 
-    // Apply canvas zoom and pan settings
-    this.ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
-    this.ctx.translate(canvasSettings.panX, canvasSettings.panY);
+    // Translate to center content in the export area
+    const offsetX = -minX + marginLeft;
+    const offsetY = -minY + marginTop;
+    this.ctx.translate(offsetX, offsetY);
 
     // Render all groups first
     groups.forEach(group => {
@@ -75,6 +142,9 @@ export class ImageExporter {
     shapes.forEach(shape => {
       shape.render(this.ctx);
     });
+
+    // Restore context state
+    this.ctx.restore();
 
     // Export based on format
     switch (format) {

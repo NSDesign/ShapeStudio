@@ -151,12 +151,38 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
     try {
       const exporter = new ImageExporter();
       
+      // Calculate proper dimensions based on export scope
+      let exportWidth = canvasSettings.width;
+      let exportHeight = canvasSettings.height;
+
+      if (exportScope === 'artboard' && selectedArtboardIds.length === 1) {
+        const artboard = artboards.find(a => a.id === selectedArtboardIds[0]);
+        if (artboard) {
+          exportWidth = artboard.width;
+          exportHeight = artboard.height;
+        }
+      }
+
+      // Get artboard bounds for artboard exports
+      let artboardBounds = undefined;
+      if (exportScope === 'artboard' && selectedArtboardIds.length === 1) {
+        const artboard = artboards.find(a => a.id === selectedArtboardIds[0]);
+        if (artboard) {
+          artboardBounds = {
+            x: artboard.x,
+            y: artboard.y,
+            width: artboard.width,
+            height: artboard.height
+          };
+        }
+      }
+
       const options: ExportOptions = {
         format,
         quality: quality / 100,
         scale,
-        width: useCustomSize ? customWidth : canvasSettings.width,
-        height: useCustomSize ? customHeight : canvasSettings.height,
+        width: useCustomSize ? customWidth : exportWidth,
+        height: useCustomSize ? customHeight : exportHeight,
         backgroundColor: includeBackground ? backgroundColor : 'transparent',
         includeBackground,
         margins: useMargins ? {
@@ -164,7 +190,8 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
           right: uniformMargins ? marginTop : marginRight,
           bottom: uniformMargins ? marginTop : marginBottom,
           left: uniformMargins ? marginTop : marginLeft
-        } : undefined
+        } : undefined,
+        artboardBounds
       };
 
       const blob = await exporter.exportImage(exportShapes, exportGroups, canvasSettings, options);
