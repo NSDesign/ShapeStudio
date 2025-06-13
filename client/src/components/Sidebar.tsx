@@ -2819,9 +2819,7 @@ export default function Sidebar({
               <div className="flex items-center space-x-2">
                 <Shapes className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Shape Types</span>
-                <span className="ml-auto text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
-                  {enabledShapeTypes.size} enabled
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -2838,12 +2836,7 @@ export default function Sidebar({
                   editMode === 'points' ? 'text-green-400' : 'text-purple-400'
                 }`} />
                 <span className="text-sm font-semibold uppercase tracking-wide">Edit Mode</span>
-                <span className={`ml-auto text-xs px-2 py-1 rounded-full text-white ${
-                  editMode === 'shapes' ? 'bg-blue-600' :
-                  editMode === 'points' ? 'bg-green-600' : 'bg-purple-600'
-                }`}>
-                  {editMode}
-                </span>
+
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">

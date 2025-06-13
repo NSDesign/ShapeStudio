@@ -1533,6 +1533,26 @@ export class Shape {
             } else {
               ctx.lineTo(p2.x, p2.y);
             }
+          } else if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
+            // Draw cubic Bézier curve segment for spline-based shapes
+            ctx.moveTo(p1.x, p1.y);
+            
+            const segmentIndex = i % 4; // Four segments for circles/ellipses
+            const cp1Index = segmentIndex * 2;
+            const cp2Index = segmentIndex * 2 + 1;
+            
+            if (cp1Index < this.controlPoints.length && cp2Index < this.controlPoints.length) {
+              const cp1 = this.getWorldControlPoint(cp1Index);
+              const cp2 = this.getWorldControlPoint(cp2Index);
+              
+              if (cp1 && cp2) {
+                ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+              } else {
+                ctx.lineTo(p2.x, p2.y);
+              }
+            } else {
+              ctx.lineTo(p2.x, p2.y);
+            }
           } else if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
             // Draw curved segment using actual control points if available
             ctx.moveTo(p1.x, p1.y);
@@ -1594,6 +1614,30 @@ export class Shape {
             const mt = 1 - t;
             midX = mt * mt * p1.x + 2 * mt * t * worldControl.x + t * t * p2.x;
             midY = mt * mt * p1.y + 2 * mt * t * worldControl.y + t * t * p2.y;
+          } else {
+            midX = (p1.x + p2.x) / 2;
+            midY = (p1.y + p2.y) / 2;
+          }
+        } else if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
+          // For spline-based shapes, calculate cubic Bézier curve midpoint
+          const segmentIndex = i % 4; // Four segments for circles/ellipses
+          const cp1Index = segmentIndex * 2;
+          const cp2Index = segmentIndex * 2 + 1;
+          
+          if (cp1Index < this.controlPoints.length && cp2Index < this.controlPoints.length) {
+            const cp1 = this.getWorldControlPoint(cp1Index);
+            const cp2 = this.getWorldControlPoint(cp2Index);
+            
+            if (cp1 && cp2) {
+              // Calculate cubic Bézier curve midpoint at t=0.5
+              const t = 0.5;
+              const mt = 1 - t;
+              midX = mt * mt * mt * p1.x + 3 * mt * mt * t * cp1.x + 3 * mt * t * t * cp2.x + t * t * t * p2.x;
+              midY = mt * mt * mt * p1.y + 3 * mt * mt * t * cp1.y + 3 * mt * t * t * cp2.y + t * t * t * p2.y;
+            } else {
+              midX = (p1.x + p2.x) / 2;
+              midY = (p1.y + p2.y) / 2;
+            }
           } else {
             midX = (p1.x + p2.x) / 2;
             midY = (p1.y + p2.y) / 2;
