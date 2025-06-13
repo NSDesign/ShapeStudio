@@ -306,14 +306,19 @@ export class Shape {
     this.points = [];
     const radius = this.radius!;
     
-    for (let i = 0; i < this.segments; i++) {
-      const angle = (i / this.segments) * Math.PI * 2;
+    // Use fewer points for circles to maintain geometric integrity
+    // but provide smooth curve rendering
+    const numPoints = Math.max(8, Math.min(16, Math.floor(this.segments / 2)));
+    
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
       this.points.push({
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius
       });
     }
     this.closed = true;
+    this.renderType = 'smooth'; // Use smooth rendering for circles
   }
 
   private generateEllipsePoints(): void {

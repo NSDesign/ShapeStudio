@@ -2207,13 +2207,20 @@ export default function Sidebar({
                     <SelectValue placeholder="Select target shape" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-600">
-                    {potentialTargets.map(shape => (
+                    {potentialTargets.map((shape, index) => (
                       <SelectItem 
                         key={shape.id} 
                         value={shape.id}
-                        className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                        className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
                       >
-                        {shape.type} (#{shape.id.slice(-4)})
+                        <div className="flex items-center space-x-2">
+                          <div 
+                            className="w-2 h-2 rounded border border-slate-500"
+                            style={{ backgroundColor: shape.properties.fillColor.includes('hsl') ? '#3B82F6' : shape.properties.fillColor }}
+                          />
+                          <span className="capitalize">{shape.type}</span>
+                          <span className="text-slate-400">Layer {potentialTargets.length - index}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -2235,8 +2242,11 @@ export default function Sidebar({
               Apply {selectedBooleanOp} Operation
             </Button>
 
-            <div className="text-xs text-slate-500">
-              Note: Boolean operations create non-destructive visual effects. Original shapes remain unchanged.
+            <div className="text-xs text-slate-500 bg-slate-800/50 p-2 rounded">
+              💡 {selectedBooleanOp === 'union' ? 'Combines both shapes into one' : 
+                  selectedBooleanOp === 'subtract' ? 'Removes target from source' :
+                  selectedBooleanOp === 'intersect' ? 'Keeps only overlapping area' :
+                  'Removes overlapping area from both shapes'}
             </div>
           </div>
         ) : (
@@ -2735,7 +2745,7 @@ export default function Sidebar({
 
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto">
-        <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms", "artboards", "layers"]} className="w-full">
+        <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms", "boolean", "color", "artboards", "layers"]} className="w-full">
 
           {/* Shape Types Section */}
           <AccordionItem value="shapes" className="border-b border-slate-700">
