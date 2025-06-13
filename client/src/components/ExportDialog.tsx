@@ -49,7 +49,12 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   // Adornments option
   const [includeAdornments, setIncludeAdornments] = useState(false);
   
+  // Grid and artboard options
+  const [includeGrid, setIncludeGrid] = useState(false);
+  const [includeArtboardGeometry, setIncludeArtboardGeometry] = useState(false);
+  
   // Naming options
+  const [filename, setFilename] = useState('');
   const [includeTypeInName, setIncludeTypeInName] = useState(false);
   const [includeArtboardInName, setIncludeArtboardInName] = useState(false);
   const [customPrefix, setCustomPrefix] = useState('');
@@ -85,17 +90,51 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const parts = [];
     
+    // Use custom prefix if provided
     if (customPrefix) parts.push(customPrefix);
-    if (baseName) parts.push(baseName);
+    
+    // Use filename if provided, otherwise generate based on export scope
+    if (filename.trim()) {
+      parts.push(filename.trim());
+    } else if (baseName) {
+      parts.push(baseName);
+    } else {
+      // Auto-generate based on export scope
+      switch(exportScope) {
+        case 'selected':
+          if (selectedShapes.length > 0) {
+            parts.push('selected-shapes');
+          } else {
+            parts.push('selection');
+          }
+          break;
+        case 'artboard':
+          if (selectedArtboardIds.length === 1) {
+            const artboard = artboards.find(a => a.id === selectedArtboardIds[0]);
+            parts.push(artboard ? artboard.name.replace(/\s+/g, '-') : 'artboard');
+          } else {
+            parts.push('artboard');
+          }
+          break;
+        default:
+          parts.push('all-shapes');
+      }
+    }
+    
+    // Add type information if requested
     if (includeTypeInName && exportScope === 'selected' && selectedShapes.length > 0) {
       const types = Array.from(new Set(selectedShapes.map(s => s.type)));
       if (types.length === 1) parts.push(types[0]);
       else if (types.length <= 3) parts.push(types.join('-'));
       else parts.push('mixed');
     }
+    
+    // Add artboard name if requested
     if (includeArtboardInName && exportScope === 'artboard' && selectedArtboardIds.length === 1) {
       const artboard = artboards.find(a => a.id === selectedArtboardIds[0]);
-      if (artboard) parts.push(artboard.name.replace(/\s+/g, '-'));
+      if (artboard && !parts.includes(artboard.name.replace(/\s+/g, '-'))) {
+        parts.push(artboard.name.replace(/\s+/g, '-'));
+      }
     }
     
     const name = parts.length > 0 ? parts.join('_') : 'shape-editor';
@@ -189,6 +228,8 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
         backgroundColor: includeBackground ? backgroundColor : 'transparent',
         includeBackground,
         includeAdornments,
+        includeGrid,
+        includeArtboardGeometry,
         margins: useMargins ? {
           top: marginTop,
           right: uniformMargins ? marginTop : marginRight,

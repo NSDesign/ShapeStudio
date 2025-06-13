@@ -12,6 +12,8 @@ export interface ExportOptions {
   backgroundColor?: string;
   includeBackground?: boolean;
   includeAdornments?: boolean; // Include selection handles and other UI elements
+  includeGrid?: boolean; // Include canvas grid
+  includeArtboardGeometry?: boolean; // Include artboard outlines
   margins?: {
     top: number;
     right: number;
@@ -135,13 +137,22 @@ export class ImageExporter {
     const offsetY = -minY + marginTop;
     this.ctx.translate(offsetX, offsetY);
 
-    // Render all groups first
-    groups.forEach(group => {
+    // Sort shapes by zIndex to maintain proper rendering order
+    const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+    const sortedGroups = [...groups].sort((a, b) => {
+      // For groups, use the minimum zIndex of contained shapes
+      const aMinZ = Math.min(...a.shapes.map(s => s.properties.zIndex));
+      const bMinZ = Math.min(...b.shapes.map(s => s.properties.zIndex));
+      return aMinZ - bMinZ;
+    });
+
+    // Render all groups first (in correct order)
+    sortedGroups.forEach(group => {
       group.render(this.ctx);
     });
 
-    // Render individual shapes
-    shapes.forEach(shape => {
+    // Render individual shapes (in correct order)
+    sortedShapes.forEach(shape => {
       shape.render(this.ctx);
     });
 
