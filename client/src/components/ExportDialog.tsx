@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -239,7 +239,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
         artboardBounds
       };
 
-      const blob = await exporter.exportImage(exportShapes, exportGroups, canvasSettings, options);
+      const blob = await exporter.exportImage(exportShapes, exportGroups, canvasSettings, options, artboards);
       
       const filename = generateFilename();
       
@@ -449,6 +449,21 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
             )}
           </div>
 
+          {/* Filename Input */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-slate-300">Custom Filename</Label>
+            <Input
+              type="text"
+              value={filename}
+              onChange={(e) => setFilename(e.target.value)}
+              placeholder="Leave empty for auto-generated name"
+              className="bg-[var(--surface-light)] border-slate-600 text-white"
+            />
+            <div className="text-xs text-slate-400">
+              Preview: {generateFilename()}
+            </div>
+          </div>
+
           {/* Shape Adornments */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
@@ -461,6 +476,27 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
             {includeAdornments && (
               <div className="text-xs text-slate-400">
                 Includes selection handles, control points, and other shape editing UI elements
+              </div>
+            )}
+          </div>
+
+          {/* Grid and Artboard Options */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={includeGrid}
+                onCheckedChange={setIncludeGrid}
+              />
+              <Label className="text-sm font-medium text-slate-300">Include Grid</Label>
+            </div>
+            
+            {exportScope === 'artboard' && (
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={includeArtboardGeometry}
+                  onCheckedChange={setIncludeArtboardGeometry}
+                />
+                <Label className="text-sm font-medium text-slate-300">Include Artboard Outlines</Label>
               </div>
             )}
           </div>

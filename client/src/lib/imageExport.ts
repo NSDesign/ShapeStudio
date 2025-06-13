@@ -1,5 +1,5 @@
 import { Shape, ShapeGroupClass } from './shapes';
-import { CanvasSettings } from './shapeTypes';
+import { CanvasSettings, Artboard } from './shapeTypes';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'svg' | 'bmp';
 
@@ -41,7 +41,8 @@ export class ImageExporter {
     shapes: Shape[],
     groups: ShapeGroupClass[],
     canvasSettings: CanvasSettings,
-    options: ExportOptions
+    options: ExportOptions,
+    artboards?: Artboard[]
   ): Promise<Blob> {
     const {
       format,
@@ -151,6 +152,16 @@ export class ImageExporter {
       group.render(this.ctx);
     });
 
+    // Render grid if requested
+    if (options.includeGrid) {
+      this.renderGrid(minX, minY, maxX, maxY);
+    }
+
+    // Render artboard geometry if requested
+    if (options.includeArtboardGeometry && artboards) {
+      this.renderArtboards(artboards);
+    }
+
     // Render individual shapes (in correct order)
     sortedShapes.forEach(shape => {
       shape.render(this.ctx);
@@ -223,6 +234,55 @@ export class ImageExporter {
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
+  }
+
+  private renderGrid(minX: number, minY: number, maxX: number, maxY: number) {
+    this.ctx.save();
+    this.ctx.strokeStyle = '#374151';
+    this.ctx.lineWidth = 0.5;
+    this.ctx.globalAlpha = 0.3;
+
+    const gridSize = 20;
+    const startX = Math.floor(minX / gridSize) * gridSize;
+    const startY = Math.floor(minY / gridSize) * gridSize;
+
+    // Draw vertical lines
+    for (let x = startX; x <= maxX; x += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, minY);
+      this.ctx.lineTo(x, maxY);
+      this.ctx.stroke();
+    }
+
+    // Draw horizontal lines
+    for (let y = startY; y <= maxY; y += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(minX, y);
+      this.ctx.lineTo(maxX, y);
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
+  private renderArtboards(artboards: Artboard[]) {
+    this.ctx.save();
+    this.ctx.strokeStyle = '#60A5FA';
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([5, 5]);
+
+    artboards.forEach(artboard => {
+      this.ctx.strokeRect(artboard.x, artboard.y, artboard.width, artboard.height);
+      
+      // Draw artboard name
+      this.ctx.save();
+      this.ctx.fillStyle = '#60A5FA';
+      this.ctx.font = '12px Arial';
+      this.ctx.fillText(artboard.name, artboard.x + 5, artboard.y - 5);
+      this.ctx.restore();
+    });
+
+    this.ctx.restore();
   }
 
   private async exportAsRaster(mimeType: string, quality?: number): Promise<Blob> {
