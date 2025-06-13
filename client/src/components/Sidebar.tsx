@@ -43,7 +43,8 @@ import {
   Pipette,
   Shuffle,
   Combine,
-  GitMerge
+  GitMerge,
+  X
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -179,6 +180,11 @@ export default function Sidebar({
   const [lightnessShift, setLightnessShift] = useState(0);
   const [affectFill, setAffectFill] = useState(true);
   const [affectStroke, setAffectStroke] = useState(true);
+  const [colorRemappings, setColorRemappings] = useState<Array<{
+    sourceColor: string;
+    targetColor: string;
+    tolerance: number;
+  }>>([]);
 
   // Shape properties will be passed from parent component via selectedShapes data
 
@@ -2277,6 +2283,19 @@ export default function Sidebar({
       }
     }, [hueShift, saturationShift, lightnessShift, affectFill, affectStroke, colorMode]);
 
+    // Real-time color remapping using useEffect
+    useEffect(() => {
+      if (colorMode === 'remap' && colorRemappings.length > 0) {
+        const manipulation = {
+          mode: colorMode,
+          remappings: colorRemappings,
+          affectFill,
+          affectStroke
+        };
+        onApplyColorManipulation(manipulation);
+      }
+    }, [colorRemappings, affectFill, affectStroke, colorMode]);
+
     return (
       <div className="space-y-4">
         <div className="text-sm text-slate-400">
@@ -2372,8 +2391,86 @@ export default function Sidebar({
         {/* Color Remap Controls */}
         {colorMode === 'remap' && (
           <div className="space-y-3">
-            <div className="text-xs text-slate-500">
-              Color remapping functionality coming soon
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Color Mappings</Label>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {colorRemappings.map((mapping, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div 
+                      className="w-4 h-4 border border-slate-600 rounded cursor-pointer"
+                      style={{ backgroundColor: mapping.sourceColor }}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'color';
+                        input.value = mapping.sourceColor;
+                        input.onchange = (e) => {
+                          const newMappings = [...colorRemappings];
+                          newMappings[index].sourceColor = (e.target as HTMLInputElement).value;
+                          setColorRemappings(newMappings);
+                        };
+                        input.click();
+                      }}
+                    />
+                    <span className="text-xs text-slate-500">→</span>
+                    <div 
+                      className="w-4 h-4 border border-slate-600 rounded cursor-pointer"
+                      style={{ backgroundColor: mapping.targetColor }}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'color';
+                        input.value = mapping.targetColor;
+                        input.onchange = (e) => {
+                          const newMappings = [...colorRemappings];
+                          newMappings[index].targetColor = (e.target as HTMLInputElement).value;
+                          setColorRemappings(newMappings);
+                        };
+                        input.click();
+                      }}
+                    />
+                    <div className="flex items-center space-x-1 flex-1">
+                      <Slider
+                        value={[mapping.tolerance]}
+                        onValueChange={([value]) => {
+                          const newMappings = [...colorRemappings];
+                          newMappings[index].tolerance = value;
+                          setColorRemappings(newMappings);
+                        }}
+                        min={0}
+                        max={50}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-xs text-slate-400 w-6">{mapping.tolerance}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-1 h-auto text-red-400 hover:text-red-300"
+                      onClick={() => {
+                        const newMappings = colorRemappings.filter((_, i) => i !== index);
+                        setColorRemappings(newMappings);
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => {
+                  setColorRemappings([...colorRemappings, {
+                    sourceColor: '#ff0000',
+                    targetColor: '#0000ff',
+                    tolerance: 15
+                  }]);
+                }}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add Mapping
+              </Button>
             </div>
           </div>
         )}

@@ -93,7 +93,10 @@ export type ShapeType =
   | 'blob' 
   | 'ring'
   | 'bezier'
-  | 'cubic';
+  | 'cubic'
+  | 'spline-circle'
+  | 'spline-ellipse'
+  | 'spline-ring';
 
 export interface BaseShape {
   id: string;
