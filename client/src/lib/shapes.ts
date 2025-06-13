@@ -197,7 +197,7 @@ export class Shape {
     this.smoothPoints = [];
     
     if (this.type === 'cubic') {
-      // Generate cubic bezier curve with 4 points
+      // Generate cubic spline with control points between segments
       this.points = [
         { x: -60, y: 0 },
         { x: -20, y: -40 },
@@ -205,9 +205,32 @@ export class Shape {
         { x: 60, y: 0 }
       ];
       
-      // Generate tangent handles for each point
-      this.points.forEach((point, i) => {
-        const handleLength = 20 + Math.random() * 15;
+      // Generate control points for cubic splines (between segments)
+      for (let i = 0; i < this.points.length - 1; i++) {
+        const p1 = this.points[i];
+        const p2 = this.points[i + 1];
+        
+        // Control point positioned between current and next point with some offset
+        const controlX = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 40;
+        const controlY = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 40;
+        
+        this.controlPoints!.push({
+          x: controlX,
+          y: controlY
+        });
+      }
+      
+    } else {
+      // Generate bezier curve with tangent handles for each point
+      for (let i = 0; i < numPoints; i++) {
+        const point = {
+          x: (i - numPoints/2) * (40 + Math.random() * 30),
+          y: (Math.random() - 0.5) * 100
+        };
+        this.points.push(point);
+        
+        // Generate tangent handles for bezier curves
+        const handleLength = 15 + Math.random() * 10;
         const angle1 = Math.random() * Math.PI * 2;
         const angle2 = angle1 + Math.PI; // Opposite direction for smooth continuity
         
@@ -224,33 +247,6 @@ export class Shape {
         
         // All points start as smooth (continuous tangents)
         this.smoothPoints!.push(true);
-      });
-      
-    } else {
-      // Generate bezier curve with control points (not tangent handles)
-      for (let i = 0; i < numPoints; i++) {
-        const point = {
-          x: (i - numPoints/2) * (40 + Math.random() * 30),
-          y: (Math.random() - 0.5) * 100
-        };
-        this.points.push(point);
-        
-        // Generate control points for quadratic bezier curves
-        if (i < numPoints - 1) {
-          const nextPoint = {
-            x: ((i + 1) - numPoints/2) * (40 + Math.random() * 30),
-            y: (Math.random() - 0.5) * 100
-          };
-          
-          // Control point positioned between current and next point with some offset
-          const controlX = (point.x + nextPoint.x) / 2 + (Math.random() - 0.5) * 40;
-          const controlY = (point.y + nextPoint.y) / 2 + (Math.random() - 0.5) * 40;
-          
-          this.controlPoints!.push({
-            x: controlX,
-            y: controlY
-          });
-        }
       }
     }
     
@@ -562,8 +558,23 @@ export class Shape {
     const renderType = this.renderType || 'polygon';
     
     if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
-      if (this.type === 'cubic' && this.tangentHandles && this.points.length >= 2) {
-        // Draw proper cubic bezier curves using tangent handles
+      if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
+        // Draw cubic splines using control points between segments
+        for (let i = 1; i < this.points.length; i++) {
+          if (i - 1 < this.controlPoints.length) {
+            // Use control points for cubic splines
+            ctx.quadraticCurveTo(
+              this.controlPoints[i - 1].x,
+              this.controlPoints[i - 1].y,
+              this.points[i].x,
+              this.points[i].y
+            );
+          } else {
+            ctx.lineTo(this.points[i].x, this.points[i].y);
+          }
+        }
+      } else if (this.type === 'bezier' && this.tangentHandles && this.points.length >= 2) {
+        // Draw proper bezier curves using tangent handles
         for (let i = 0; i < this.points.length - 1; i++) {
           const p1 = this.points[i];
           const p2 = this.points[i + 1];
@@ -579,29 +590,18 @@ export class Shape {
           }
         }
       } else {
-        // Draw bezier curves between points
+        // Fallback for other curve types
         for (let i = 1; i < this.points.length; i++) {
-          if (this.controlPoints && i - 1 < this.controlPoints.length) {
-            // Use control points for bezier curves
-            ctx.quadraticCurveTo(
-              this.controlPoints[i - 1].x,
-              this.controlPoints[i - 1].y,
-              this.points[i].x,
-              this.points[i].y
-            );
-          } else {
-            // Generate smooth curve without explicit control points
-            const prevPoint = this.points[i - 1];
-            const currentPoint = this.points[i];
-            const nextPoint = this.points[i + 1] || (this.closed ? this.points[0] : currentPoint);
-            
-            // Calculate control point for smooth curve
-            const tension = 0.3;
-            const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
-            const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
-            
-            ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
-          }
+          const prevPoint = this.points[i - 1];
+          const currentPoint = this.points[i];
+          const nextPoint = this.points[i + 1] || (this.closed ? this.points[0] : currentPoint);
+          
+          // Calculate control point for smooth curve
+          const tension = 0.3;
+          const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
+          const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
+          
+          ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
         }
       }
     } else {
@@ -1199,8 +1199,8 @@ export class Shape {
     ctx.save();
     
     // Draw control handles for curve types
-    if (this.type === 'cubic' && this.tangentHandles) {
-      // Draw tangent handles for cubic curves
+    if (this.type === 'bezier' && this.tangentHandles) {
+      // Draw tangent handles for bezier curves
       this.tangentHandles.forEach((tangentHandle, index) => {
         const worldPoint = this.getWorldPoint(index);
         if (!worldPoint) return;
@@ -1220,10 +1220,10 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw 'in' handle (cubic curves use purple color)
+          // Draw 'in' handle (bezier curves use orange color)
           const radius = 4 / canvasZoom;
           const isInSelected = selectedPoints.includes(2000 + index * 2); // Tangent handles start at 2000
-          ctx.fillStyle = isInSelected ? '#EF4444' : '#8B5CF6';
+          ctx.fillStyle = isInSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
@@ -1244,10 +1244,10 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw 'out' handle (cubic curves use purple color)
+          // Draw 'out' handle (bezier curves use orange color)
           const radius = 4 / canvasZoom;
           const isOutSelected = selectedPoints.includes(2000 + index * 2 + 1); // Out handle is +1 from in handle
-          ctx.fillStyle = isOutSelected ? '#EF4444' : '#8B5CF6';
+          ctx.fillStyle = isOutSelected ? '#EF4444' : '#F59E0B';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
@@ -1257,7 +1257,7 @@ export class Shape {
           ctx.stroke();
         }
       });
-    } else if ((this.type === 'bezier' || this.type === 'blob' || this.renderType === 'bezier') && this.controlPoints) {
+    } else if ((this.type === 'cubic' || this.type === 'blob' || this.renderType === 'bezier') && this.controlPoints) {
       // Draw control points for bezier curves and blob shapes
       this.controlPoints.forEach((controlPoint, index) => {
         const worldControl = this.getWorldControlPoint(index);
@@ -1290,10 +1290,10 @@ export class Shape {
           
           ctx.setLineDash([]);
           
-          // Draw control handle (bezier curves use orange color)
+          // Draw control handle (cubic curves use purple color)
           const radius = 4 / canvasZoom;
           const isControlSelected = selectedPoints.includes(index + 1000);
-          ctx.fillStyle = isControlSelected ? '#EF4444' : '#F59E0B';
+          ctx.fillStyle = isControlSelected ? '#EF4444' : '#8B5CF6';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
@@ -1319,14 +1319,23 @@ export class Shape {
           ctx.lineWidth = 4 / canvasZoom;
           ctx.beginPath();
           
-          if (this.type === 'cubic' && this.tangentHandles && i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
-            // Draw cubic bezier curve using tangent handles for cubic curves
+          if (this.type === 'bezier' && this.tangentHandles && i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
+            // Draw bezier curve using tangent handles for bezier curves
             ctx.moveTo(p1.x, p1.y);
             const cp1 = this.getWorldTangentHandle(i, 'out');
             const cp2 = this.getWorldTangentHandle(i + 1, 'in');
             
             if (cp1 && cp2) {
               ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+            } else {
+              ctx.lineTo(p2.x, p2.y);
+            }
+          } else if (this.type === 'cubic' && this.controlPoints && i < this.controlPoints.length) {
+            // Draw cubic spline using control points for cubic curves
+            ctx.moveTo(p1.x, p1.y);
+            const worldControl = this.getWorldControlPoint(i);
+            if (worldControl) {
+              ctx.quadraticCurveTo(worldControl.x, worldControl.y, p2.x, p2.y);
             } else {
               ctx.lineTo(p2.x, p2.y);
             }
