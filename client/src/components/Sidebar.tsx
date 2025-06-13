@@ -1299,6 +1299,24 @@ export default function Sidebar({
                     </div>
                   ))}
                 </div>
+
+                {/* Closed/Open toggle for spline curves */}
+                {(firstSelectedShape.type === 'bezier' || firstSelectedShape.type === 'cubic') && (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+                    <Label className="text-xs text-slate-300">Closed Curve</Label>
+                    <Switch
+                      checked={firstSelectedShape.closed || false}
+                      onCheckedChange={(checked) => {
+                        updateShapeProperty(shape => {
+                          if (shape.type === 'bezier' || shape.type === 'cubic') {
+                            shape.closed = checked;
+                          }
+                        });
+                      }}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
