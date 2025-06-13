@@ -39,10 +39,11 @@ import {
   Menu,
   Grid3X3,
   Plus,
-  Intersect,
   Scissors,
   Pipette,
-  Shuffle
+  Shuffle,
+  Combine,
+  GitMerge
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -152,7 +153,9 @@ export default function Sidebar({
   onSelectArtboard,
   onDeleteArtboard,
   onUpdateArtboard,
-  onDistributeSelected
+  onDistributeSelected,
+  onApplyBooleanOperation,
+  onApplyColorManipulation
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -164,6 +167,18 @@ export default function Sidebar({
   const [rotation, setRotation] = useState(0);
   const [skewX, setSkewX] = useState(0);
   const [skewY, setSkewY] = useState(0);
+  
+  // Boolean operations state
+  const [selectedBooleanOp, setSelectedBooleanOp] = useState<'union' | 'subtract' | 'intersect' | 'exclude'>('union');
+  const [booleanTargetId, setBooleanTargetId] = useState<string>('');
+  
+  // Color manipulation state
+  const [colorMode, setColorMode] = useState<'shift' | 'remap'>('shift');
+  const [hueShift, setHueShift] = useState(0);
+  const [saturationShift, setSaturationShift] = useState(0);
+  const [lightnessShift, setLightnessShift] = useState(0);
+  const [affectFill, setAffectFill] = useState(true);
+  const [affectStroke, setAffectStroke] = useState(true);
 
   // Shape properties will be passed from parent component via selectedShapes data
 
@@ -2111,6 +2126,293 @@ export default function Sidebar({
     );
   };
 
+  const BooleanOperationsContent = () => {
+    const potentialTargets = selectedShapes.length === 1 
+      ? shapes.filter(shape => shape.id !== selectedShapes[0].id)
+      : [];
+
+    return (
+      <div className="space-y-4">
+        {selectedShapes.length === 1 ? (
+          <div className="space-y-3">
+            <div className="text-sm text-slate-400">
+              Apply boolean operation to: <span className="text-white font-medium">{selectedShapes[0].type}</span>
+            </div>
+
+            {/* Operation Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Operation Type</Label>
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  onClick={() => setSelectedBooleanOp('union')}
+                  variant={selectedBooleanOp === 'union' ? 'default' : 'secondary'}
+                  size="sm"
+                  className={`text-xs ${
+                    selectedBooleanOp === 'union'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Union
+                </Button>
+                <Button
+                  onClick={() => setSelectedBooleanOp('subtract')}
+                  variant={selectedBooleanOp === 'subtract' ? 'default' : 'secondary'}
+                  size="sm"
+                  className={`text-xs ${
+                    selectedBooleanOp === 'subtract'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  <MinusIcon className="w-3 h-3 mr-1" />
+                  Subtract
+                </Button>
+                <Button
+                  onClick={() => setSelectedBooleanOp('intersect')}
+                  variant={selectedBooleanOp === 'intersect' ? 'default' : 'secondary'}
+                  size="sm"
+                  className={`text-xs ${
+                    selectedBooleanOp === 'intersect'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  <GitMerge className="w-3 h-3 mr-1" />
+                  Intersect
+                </Button>
+                <Button
+                  onClick={() => setSelectedBooleanOp('exclude')}
+                  variant={selectedBooleanOp === 'exclude' ? 'default' : 'secondary'}
+                  size="sm"
+                  className={`text-xs ${
+                    selectedBooleanOp === 'exclude'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  <Scissors className="w-3 h-3 mr-1" />
+                  Exclude
+                </Button>
+              </div>
+            </div>
+
+            {/* Target Selection */}
+            {potentialTargets.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Target Shape</Label>
+                <Select value={booleanTargetId} onValueChange={setBooleanTargetId}>
+                  <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                    <SelectValue placeholder="Select target shape" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600">
+                    {potentialTargets.map(shape => (
+                      <SelectItem 
+                        key={shape.id} 
+                        value={shape.id}
+                        className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                      >
+                        {shape.type} (#{shape.id.slice(-4)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Apply Button */}
+            <Button
+              onClick={() => {
+                if (booleanTargetId) {
+                  onApplyBooleanOperation(selectedBooleanOp, booleanTargetId);
+                }
+              }}
+              disabled={!booleanTargetId}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+              size="sm"
+            >
+              Apply {selectedBooleanOp} Operation
+            </Button>
+
+            <div className="text-xs text-slate-500">
+              Note: Boolean operations create non-destructive visual effects. Original shapes remain unchanged.
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-slate-500 text-center py-4">
+            Select exactly one shape to apply boolean operations
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const ColorManipulationContent = () => {
+    const applyColorManipulation = () => {
+      const manipulation = {
+        mode: colorMode,
+        hslShift: colorMode === 'shift' ? {
+          hue: hueShift,
+          saturation: saturationShift,
+          lightness: lightnessShift,
+          enabled: true
+        } : undefined,
+        affectFill,
+        affectStroke
+      };
+      onApplyColorManipulation(manipulation);
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-slate-400">
+          {selectedShapes.length > 0 
+            ? `Apply to ${selectedShapes.length} selected shape${selectedShapes.length === 1 ? '' : 's'}`
+            : "Apply to all shapes"
+          }
+        </div>
+
+        {/* Mode Selection */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Mode</Label>
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              onClick={() => setColorMode('shift')}
+              variant={colorMode === 'shift' ? 'default' : 'secondary'}
+              size="sm"
+              className={`text-xs ${
+                colorMode === 'shift'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+              }`}
+            >
+              <Shuffle className="w-3 h-3 mr-1" />
+              HSL Shift
+            </Button>
+            <Button
+              onClick={() => setColorMode('remap')}
+              variant={colorMode === 'remap' ? 'default' : 'secondary'}
+              size="sm"
+              className={`text-xs ${
+                colorMode === 'remap'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+              }`}
+            >
+              <Pipette className="w-3 h-3 mr-1" />
+              Color Remap
+            </Button>
+          </div>
+        </div>
+
+        {/* HSL Shift Controls */}
+        {colorMode === 'shift' && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Hue Shift</Label>
+              <div className="flex items-center space-x-2">
+                <Slider
+                  value={[hueShift]}
+                  onValueChange={([value]) => setHueShift(value)}
+                  min={-180}
+                  max={180}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-xs text-slate-400 w-8">{hueShift}°</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Saturation Shift</Label>
+              <div className="flex items-center space-x-2">
+                <Slider
+                  value={[saturationShift]}
+                  onValueChange={([value]) => setSaturationShift(value)}
+                  min={-100}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-xs text-slate-400 w-8">{saturationShift}%</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Lightness Shift</Label>
+              <div className="flex items-center space-x-2">
+                <Slider
+                  value={[lightnessShift]}
+                  onValueChange={([value]) => setLightnessShift(value)}
+                  min={-100}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-xs text-slate-400 w-8">{lightnessShift}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Color Remap Controls */}
+        {colorMode === 'remap' && (
+          <div className="space-y-3">
+            <div className="text-xs text-slate-500">
+              Color remapping functionality coming soon
+            </div>
+          </div>
+        )}
+
+        {/* Affect Options */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Apply To</Label>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={affectFill}
+                onCheckedChange={setAffectFill}
+              />
+              <Label className="text-xs text-slate-300">Fill</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={affectStroke}
+                onCheckedChange={setAffectStroke}
+              />
+              <Label className="text-xs text-slate-300">Stroke</Label>
+            </div>
+          </div>
+        </div>
+
+        {/* Apply Button */}
+        <Button
+          onClick={applyColorManipulation}
+          disabled={colorMode === 'shift' && hueShift === 0 && saturationShift === 0 && lightnessShift === 0}
+          className="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs"
+          size="sm"
+        >
+          Apply Color {colorMode === 'shift' ? 'Shift' : 'Remap'}
+        </Button>
+
+        {/* Reset Button */}
+        <Button
+          onClick={() => {
+            setHueShift(0);
+            setSaturationShift(0);
+            setLightnessShift(0);
+          }}
+          variant="outline"
+          className="w-full bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 text-xs"
+          size="sm"
+        >
+          Reset Values
+        </Button>
+      </div>
+    );
+  };
+
   if (isCollapsed) {
     return (
       <div className="w-16 bg-[var(--surface)] border-r border-slate-700 flex flex-col">
@@ -2314,6 +2616,68 @@ export default function Sidebar({
                 <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
                   <ArtboardContent />
                 </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Boolean Operations */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'boolean' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'boolean' 
+                    ? 'bg-indigo-500 text-white hover:bg-indigo-600 border-indigo-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Combine className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Combine className="w-4 h-4 mr-2" />
+                  Boolean Operations
+                </h3>
+                <BooleanOperationsContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Color Manipulation */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'color' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'color' 
+                    ? 'bg-amber-500 text-white hover:bg-amber-600 border-amber-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Pipette className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Pipette className="w-4 h-4 mr-2" />
+                  Color Manipulation
+                </h3>
+                <ColorManipulationContent />
               </div>
             </PopoverContent>
           </Popover>
