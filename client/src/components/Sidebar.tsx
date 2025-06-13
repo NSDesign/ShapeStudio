@@ -2260,7 +2260,7 @@ export default function Sidebar({
 
   const ColorManipulationContent = () => {
     // Real-time color manipulation using useEffect
-    React.useEffect(() => {
+    useEffect(() => {
       if (colorMode === 'shift' && (hueShift !== 0 || saturationShift !== 0 || lightnessShift !== 0)) {
         const manipulation = {
           mode: colorMode,
@@ -2505,7 +2505,7 @@ export default function Sidebar({
                 size="sm"
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'transform' 
-                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
+                    ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-400' 
                     : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
@@ -2536,7 +2536,7 @@ export default function Sidebar({
                 size="sm"
                 className={`p-3 h-auto mx-2 transition-colors border ${
                   activePopover === 'composition' 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600 border-blue-400' 
+                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
                     : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
@@ -2555,72 +2555,6 @@ export default function Sidebar({
                   Composition
                 </h3>
                 <CompositionContent />
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Properties */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'properties' 
-                    ? 'bg-pink-500 text-white hover:bg-pink-600 border-pink-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
-              >
-                <Palette className="w-5 h-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent 
-              side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="space-y-2">
-                <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Palette className="w-4 h-4 mr-2" />
-                  Properties
-                </h3>
-                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
-                  <PropertiesContent />
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Artboards */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'artboards' : null)}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'artboards' 
-                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 border-cyan-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
-              >
-                <Square className="w-5 h-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent 
-              side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="space-y-2">
-                <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Square className="w-4 h-4 mr-2" />
-                  Artboards
-                </h3>
-                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
-                  <ArtboardContent />
-                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -2648,7 +2582,7 @@ export default function Sidebar({
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Combine className="w-4 h-4 mr-2" />
+                  <GitMerge className="w-4 h-4 mr-2" />
                   Boolean Operations
                 </h3>
                 <BooleanOperationsContent />
@@ -2687,19 +2621,19 @@ export default function Sidebar({
             </PopoverContent>
           </Popover>
 
-          {/* Layers */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'layers' : null)}>
+          {/* Artboards */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'artboards' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'layers' 
-                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
+                  activePopover === 'artboards' 
+                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 border-cyan-400' 
                     : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
                 }`}
               >
-                <Navigation className="w-5 h-5" />
+                <Square className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
@@ -2710,7 +2644,40 @@ export default function Sidebar({
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Navigation className="w-4 h-4 mr-2" />
+                  <Square className="w-4 h-4 mr-2" />
+                  Artboards
+                </h3>
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <ArtboardContent />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Layers */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'layers' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'layers' 
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Layers className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Layers className="w-4 h-4 mr-2" />
                   Layers
                 </h3>
                 <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
