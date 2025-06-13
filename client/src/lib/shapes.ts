@@ -867,15 +867,23 @@ export class Shape {
   }
 
   private isPointInEllipse(x: number, y: number): boolean {
-    if (!this.width || !this.height) return false;
-    const cx = 0; // Center at origin in local space
-    const cy = 0;
-    const rx = this.width / 2;
-    const ry = this.height / 2;
-    
-    const dx = x - cx;
-    const dy = y - cy;
-    return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
+    // For circles, use radius; for ellipses, use width/height
+    if (this.type === 'circle') {
+      if (!this.radius) return false;
+      const distance = Math.sqrt(x * x + y * y);
+      return distance <= this.radius;
+    } else {
+      // Ellipse case
+      if (!this.width || !this.height) return false;
+      const cx = 0; // Center at origin in local space
+      const cy = 0;
+      const rx = this.width / 2;
+      const ry = this.height / 2;
+      
+      const dx = x - cx;
+      const dy = y - cy;
+      return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1;
+    }
   }
 
   private isPointInRectangle(x: number, y: number): boolean {

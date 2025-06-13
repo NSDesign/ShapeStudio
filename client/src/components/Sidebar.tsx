@@ -2827,6 +2827,38 @@ export default function Sidebar({
             </AccordionContent>
           </AccordionItem>
 
+          {/* Boolean Operations Section */}
+          <AccordionItem value="boolean" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-indigo-300 data-[state=open]:bg-indigo-900/20">
+              <div className="flex items-center space-x-2">
+                <GitMerge className="w-4 h-4 text-indigo-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Boolean Operations</span>
+                <span className="ml-auto text-xs bg-indigo-600 text-white px-2 py-1 rounded-full">
+                  {selectedShapes.length === 1 ? 'Ready' : 'Select 1'}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <BooleanOperationsContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Color Manipulation Section */}
+          <AccordionItem value="color" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-amber-300 data-[state=open]:bg-amber-900/20">
+              <div className="flex items-center space-x-2">
+                <Pipette className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Color Manipulation</span>
+                <span className="ml-auto text-xs bg-amber-600 text-white px-2 py-1 rounded-full">
+                  HSL
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <ColorManipulationContent />
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Layers Section */}
           <AccordionItem value="layers" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-emerald-300 data-[state=open]:bg-emerald-900/20">
