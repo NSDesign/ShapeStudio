@@ -108,6 +108,44 @@ export default function Canvas({
     };
   }, [onWheel]);
 
+  // Dirty layer tracking
+  const dirtyRegions = useRef<Set<string>>(new Set());
+  const lastRenderState = useRef<{
+    shapes: Shape[];
+    selectedShapes: string[];
+    editMode: string;
+  }>({ shapes: [], selectedShapes: [], editMode: 'shapes' });
+
+  // Calculate what needs re-rendering
+  const calculateDirtyRegions = () => {
+    const current = {
+      shapes: shapes,
+      selectedShapes: selectedShapes.map(s => s.id),
+      editMode: editMode
+    };
+    
+    // Check if anything changed
+    const shapesChanged = JSON.stringify(current.shapes.map(s => ({ 
+      id: s.id, 
+      transform: s.transform, 
+      selected: s.selected 
+    }))) !== JSON.stringify(lastRenderState.current.shapes.map(s => ({ 
+      id: s.id, 
+      transform: s.transform, 
+      selected: s.selected 
+    })));
+    
+    const selectionChanged = JSON.stringify(current.selectedShapes) !== JSON.stringify(lastRenderState.current.selectedShapes);
+    const modeChanged = current.editMode !== lastRenderState.current.editMode;
+    
+    if (shapesChanged || selectionChanged || modeChanged) {
+      dirtyRegions.current.add('static');
+      dirtyRegions.current.add('ui');
+    }
+    
+    lastRenderState.current = current;
+  };
+
   // Render loop with proper dependencies
   useEffect(() => {
     const render = () => {
@@ -116,6 +154,8 @@ export default function Canvas({
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      
+      calculateDirtyRegions();
 
       // Set canvas size only if changed
       const rect = canvas.getBoundingClientRect();
