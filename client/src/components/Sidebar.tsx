@@ -60,7 +60,10 @@ const shapeIcons: Record<ShapeType, any> = {
   bezier: Spline,
   cubic: Spline,
   blob: Circle,
-  ring: Circle
+  ring: Circle,
+  'spline-circle': Circle,
+  'spline-ellipse': Circle,
+  'spline-ring': Circle
 };
 
 const shapeNames: Record<ShapeType, string> = {
@@ -74,7 +77,10 @@ const shapeNames: Record<ShapeType, string> = {
   bezier: 'Bezier',
   cubic: 'Cubic',
   blob: 'Blob',
-  ring: 'Ring'
+  ring: 'Ring',
+  'spline-circle': 'Spline Circle',
+  'spline-ellipse': 'Spline Ellipse',
+  'spline-ring': 'Spline Ring'
 };
 
 interface SidebarProps {
@@ -190,7 +196,8 @@ export default function Sidebar({
 
   const allShapeTypes: ShapeType[] = [
     'rectangle', 'square', 'circle', 'ellipse', 'line', 
-    'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic'
+    'polygon', 'star', 'blob', 'ring', 'bezier', 'cubic',
+    'spline-circle', 'spline-ellipse', 'spline-ring'
   ];
 
   const ShapeTypesContent = () => (

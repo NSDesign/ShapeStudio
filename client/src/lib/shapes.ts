@@ -175,6 +175,20 @@ export class Shape {
         this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
         this.generateRingPoints();
         break;
+      case 'spline-circle':
+        this.radius = 25 + Math.random() * 75;
+        this.generateSplineCirclePoints();
+        break;
+      case 'spline-ellipse':
+        this.width = 40 + Math.random() * 120;
+        this.height = 30 + Math.random() * 80;
+        this.generateSplineEllipsePoints();
+        break;
+      case 'spline-ring':
+        this.radius = 30 + Math.random() * 70;
+        this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
+        this.generateSplineRingPoints();
+        break;
     }
   }
 
@@ -395,6 +409,116 @@ export class Shape {
     this.closed = true;
   }
 
+  private generateSplineCirclePoints(): void {
+    const radius = this.radius!;
+    // Four-segment cubic Bézier circle approximation
+    // Control point distance for accurate circle approximation
+    const kappa = 0.5522848; // (4/3) * tan(π/8) - magic number for cubic Bézier circle
+    const cp = kappa * radius; // Control point distance from anchor points
+    
+    // Four anchor points (cardinal directions)
+    this.points = [
+      { x: radius, y: 0 },     // Right
+      { x: 0, y: -radius },    // Top
+      { x: -radius, y: 0 },    // Left  
+      { x: 0, y: radius }      // Bottom
+    ];
+    
+    // Four segments with control points for smooth cubic Bézier curves
+    this.controlPoints = [
+      { x: radius, y: -cp },   // First control point for segment 0→1
+      { x: cp, y: -radius },   // Second control point for segment 0→1
+      { x: -cp, y: -radius },  // First control point for segment 1→2
+      { x: -radius, y: -cp },  // Second control point for segment 1→2
+      { x: -radius, y: cp },   // First control point for segment 2→3
+      { x: -cp, y: radius },   // Second control point for segment 2→3
+      { x: cp, y: radius },    // First control point for segment 3→0
+      { x: radius, y: cp }     // Second control point for segment 3→0
+    ];
+    
+    this.closed = true;
+    this.renderType = 'cubic';
+    this.segments = 4; // Four cubic Bézier segments
+  }
+
+  private generateSplineEllipsePoints(): void {
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    // Control point distances for ellipse approximation
+    const kappaX = 0.5522848 * w;
+    const kappaY = 0.5522848 * h;
+    
+    // Four anchor points
+    this.points = [
+      { x: w, y: 0 },      // Right
+      { x: 0, y: -h },     // Top
+      { x: -w, y: 0 },     // Left
+      { x: 0, y: h }       // Bottom
+    ];
+    
+    // Control points for ellipse segments
+    this.controlPoints = [
+      { x: w, y: -kappaY },     // First control point for segment 0→1
+      { x: kappaX, y: -h },     // Second control point for segment 0→1
+      { x: -kappaX, y: -h },    // First control point for segment 1→2
+      { x: -w, y: -kappaY },    // Second control point for segment 1→2
+      { x: -w, y: kappaY },     // First control point for segment 2→3
+      { x: -kappaX, y: h },     // Second control point for segment 2→3
+      { x: kappaX, y: h },      // First control point for segment 3→0
+      { x: w, y: kappaY }       // Second control point for segment 3→0
+    ];
+    
+    this.closed = true;
+    this.renderType = 'cubic';
+    this.segments = 4;
+  }
+
+  private generateSplineRingPoints(): void {
+    const outerRadius = this.radius!;
+    const innerRadius = this.innerRadius!;
+    const outerKappa = 0.5522848 * outerRadius;
+    const innerKappa = 0.5522848 * innerRadius;
+    
+    // Outer circle points (4 segments)
+    this.points = [
+      { x: outerRadius, y: 0 },     // Outer right
+      { x: 0, y: -outerRadius },    // Outer top
+      { x: -outerRadius, y: 0 },    // Outer left
+      { x: 0, y: outerRadius },     // Outer bottom
+      // Inner circle points (reverse order for proper winding)
+      { x: 0, y: innerRadius },     // Inner bottom
+      { x: -innerRadius, y: 0 },    // Inner left
+      { x: 0, y: -innerRadius },    // Inner top
+      { x: innerRadius, y: 0 }      // Inner right
+    ];
+    
+    // Control points for both outer and inner circles
+    this.controlPoints = [
+      // Outer circle control points
+      { x: outerRadius, y: -outerKappa },
+      { x: outerKappa, y: -outerRadius },
+      { x: -outerKappa, y: -outerRadius },
+      { x: -outerRadius, y: -outerKappa },
+      { x: -outerRadius, y: outerKappa },
+      { x: -outerKappa, y: outerRadius },
+      { x: outerKappa, y: outerRadius },
+      { x: outerRadius, y: outerKappa },
+      // Inner circle control points (reverse order)
+      { x: -innerKappa, y: innerRadius },
+      { x: -innerRadius, y: innerKappa },
+      { x: -innerRadius, y: -innerKappa },
+      { x: -innerKappa, y: -innerRadius },
+      { x: innerKappa, y: -innerRadius },
+      { x: innerRadius, y: -innerKappa },
+      { x: innerRadius, y: innerKappa },
+      { x: innerKappa, y: innerRadius }
+    ];
+    
+    this.closed = true;
+    this.renderType = 'cubic';
+    this.segments = 8; // Four segments for outer + four for inner
+  }
+
   render(ctx: CanvasRenderingContext2D): void {
     if (!this.points || this.points.length === 0) {
       return;
@@ -563,7 +687,10 @@ export class Shape {
     const renderType = this.renderType || 'polygon';
     
     if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
-      if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
+      if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
+        // Draw four-segment cubic Bézier curves for spline-based shapes
+        this.drawSplineCubicBezier(ctx);
+      } else if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
         // Draw cubic splines using control points between segments
         for (let i = 1; i < this.points.length; i++) {
           if (i - 1 < this.controlPoints.length) {
