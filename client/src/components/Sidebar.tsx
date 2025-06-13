@@ -191,6 +191,13 @@ export default function Sidebar({
     targetColor: string;
     tolerance: number;
   }>>([]);
+  
+  // Custom shapes state
+  const [customShapes, setCustomShapes] = useState<Array<{
+    id: string;
+    name: string;
+    shapeData: any;
+  }>>([]);
 
   // Shape properties will be passed from parent component via selectedShapes data
 
@@ -259,6 +266,89 @@ export default function Sidebar({
           All Off
         </Button>
       </div>
+
+      {/* Save Custom Shape Section */}
+      {selectedShapes.length === 1 && (
+        <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-600">
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Save as Custom Shape</Label>
+            <Button
+              onClick={() => {
+                const shape = selectedShapes[0];
+                const customShapeId = `custom_${Date.now()}`;
+                const customShape = {
+                  id: customShapeId,
+                  name: `Custom ${shape.type} ${customShapes.length + 1}`,
+                  shapeData: {
+                    type: shape.type,
+                    points: shape.points,
+                    controlPoints: shape.controlPoints,
+                    tangentHandles: shape.tangentHandles,
+                    properties: { ...shape.properties },
+                    width: shape.width,
+                    height: shape.height,
+                    radius: shape.radius,
+                    innerRadius: shape.innerRadius,
+                    sides: shape.sides,
+                    renderType: shape.renderType,
+                    closed: shape.closed
+                  }
+                };
+                setCustomShapes([...customShapes, customShape]);
+              }}
+              variant="outline"
+              size="sm"
+              className="w-full text-xs bg-blue-900/20 border-blue-500/50 text-blue-300 hover:bg-blue-800/30"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Save Selected Shape
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Shapes List */}
+      {customShapes.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <Label className="text-xs text-slate-400">Custom Shapes</Label>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {customShapes.map((customShape) => (
+              <div key={customShape.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-600">
+                <span className="text-xs text-slate-300">{customShape.name}</span>
+                <div className="flex gap-1">
+                  <Button
+                    onClick={() => {
+                      // Create a new shape from the custom shape data
+                      const newShape = new (require('../lib/shapes').Shape)(customShape.shapeData.type);
+                      Object.assign(newShape, customShape.shapeData);
+                      newShape.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                      newShape.transform.x = Math.random() * 200 - 100;
+                      newShape.transform.y = Math.random() * 200 - 100;
+                      newShape.selected = false;
+                      onGenerateRandomShapes(); // This will trigger shape creation
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto text-blue-400 hover:text-blue-300"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setCustomShapes(customShapes.filter(s => s.id !== customShape.id));
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto text-red-400 hover:text-red-300"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2 mt-4">
         <Label className="text-xs text-slate-400">Shape Count Range</Label>
