@@ -212,7 +212,11 @@ export const useShapeEditor = () => {
                     }
                   }
                 } else {
-                  setSelectedPoints([pointId]);
+                  // Check if clicking on already selected point - if so, maintain selection for dragging
+                  const isAlreadySelected = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (!isAlreadySelected) {
+                    setSelectedPoints([pointId]);
+                  }
                 }
                 return true;
               }
@@ -241,7 +245,11 @@ export const useShapeEditor = () => {
                     }
                   }
                 } else {
-                  setSelectedPoints([pointId]);
+                  // Check if clicking on already selected point - if so, maintain selection for dragging
+                  const isAlreadySelected = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (!isAlreadySelected) {
+                    setSelectedPoints([pointId]);
+                  }
                 }
                 return true;
               }
@@ -352,7 +360,11 @@ export const useShapeEditor = () => {
                   }
                 }
               } else {
-                setSelectedSegments([segmentId]);
+                // Check if clicking on already selected segment - if so, maintain selection for dragging
+                const isAlreadySelected = selectedSegments.some(s => s.shapeId === segmentId.shapeId && s.segmentIndex === segmentId.segmentIndex);
+                if (!isAlreadySelected) {
+                  setSelectedSegments([segmentId]);
+                }
               }
               return true;
             }

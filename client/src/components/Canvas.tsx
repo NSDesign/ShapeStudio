@@ -345,6 +345,14 @@ export default function Canvas({
           <span className="text-sm text-slate-400">
             Selected: <span className="text-white">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
           </span>
+          <div className="h-4 w-px bg-slate-600"></div>
+          <div className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            editMode === 'shapes' ? 'bg-blue-600 text-white' :
+            editMode === 'points' ? 'bg-green-600 text-white' :
+            'bg-purple-600 text-white'
+          }`}>
+            {editMode === 'shapes' ? 'SHAPE' : editMode === 'points' ? 'POINT' : 'SEGMENT'} MODE
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">
