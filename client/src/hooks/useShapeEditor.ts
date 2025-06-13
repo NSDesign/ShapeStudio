@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
+import { BooleanOperations } from '../lib/booleanOperations';
+import { ColorUtils } from '../lib/colorManipulation';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -1551,6 +1553,64 @@ export const useShapeEditor = () => {
     deleteArtboard,
     updateArtboard,
     distributeSelected,
+    
+    // Boolean operations
+    applyBooleanOperation: useCallback((operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => {
+      if (selectedShapes.length !== 1) return;
+      
+      const sourceShape = selectedShapes[0];
+      const targetShape = shapes.find(s => s.id === targetId);
+      
+      if (!targetShape) return;
+      
+      const result = BooleanOperations.applyBooleanOperation(sourceShape, targetShape, operation);
+      
+      if (result) {
+        // Add visual indicator that boolean operation was applied
+        sourceShape.properties.booleanOperation = operation;
+        sourceShape.properties.booleanTarget = targetId;
+        setShapes(prev => [...prev]);
+      }
+    }, [selectedShapes, shapes]),
+    
+    // Color manipulation
+    applyColorManipulation: useCallback((manipulation: ColorManipulation) => {
+      const targetShapes = selectedShapes.length > 0 ? selectedShapes : shapes;
+      
+      if (manipulation.mode === 'shift' && manipulation.hslShift) {
+        targetShapes.forEach(shape => {
+          if (manipulation.affectFill && shape.properties.fillColor !== 'none') {
+            shape.properties.fillColor = ColorUtils.applyHSLShift(
+              shape.properties.fillColor, 
+              manipulation.hslShift!
+            );
+          }
+          if (manipulation.affectStroke && shape.properties.strokeColor !== 'none') {
+            shape.properties.strokeColor = ColorUtils.applyHSLShift(
+              shape.properties.strokeColor, 
+              manipulation.hslShift!
+            );
+          }
+        });
+      } else if (manipulation.mode === 'remap' && manipulation.remappings) {
+        targetShapes.forEach(shape => {
+          if (manipulation.affectFill && shape.properties.fillColor !== 'none') {
+            shape.properties.fillColor = ColorUtils.applyColorRemapping(
+              shape.properties.fillColor, 
+              manipulation.remappings!
+            );
+          }
+          if (manipulation.affectStroke && shape.properties.strokeColor !== 'none') {
+            shape.properties.strokeColor = ColorUtils.applyColorRemapping(
+              shape.properties.strokeColor, 
+              manipulation.remappings!
+            );
+          }
+        });
+      }
+      
+      setShapes(prev => [...prev]);
+    }, [selectedShapes, shapes]),
     
     // Project management
     setGroups,

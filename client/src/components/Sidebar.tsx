@@ -2166,7 +2166,7 @@ export default function Sidebar({
                       : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                   }`}
                 >
-                  <MinusIcon className="w-3 h-3 mr-1" />
+                  <Minus className="w-3 h-3 mr-1" />
                   Subtract
                 </Button>
                 <Button
