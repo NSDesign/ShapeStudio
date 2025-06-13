@@ -2392,34 +2392,42 @@ export default function Sidebar({
   };
 
   const ColorManipulationContent = () => {
-    // Real-time color manipulation using useEffect
+    // Debounced color manipulation to prevent memory issues
     useEffect(() => {
       if (colorMode === 'shift' && (hueShift !== 0 || saturationShift !== 0 || lightnessShift !== 0)) {
-        const manipulation = {
-          mode: colorMode,
-          hslShift: {
-            hue: hueShift,
-            saturation: saturationShift,
-            lightness: lightnessShift,
-            enabled: true
-          },
-          affectFill,
-          affectStroke
-        };
-        onApplyColorManipulation(manipulation);
+        const timeoutId = setTimeout(() => {
+          const manipulation = {
+            mode: colorMode,
+            hslShift: {
+              hue: hueShift,
+              saturation: saturationShift,
+              lightness: lightnessShift,
+              enabled: true
+            },
+            affectFill,
+            affectStroke
+          };
+          onApplyColorManipulation(manipulation);
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
       }
     }, [hueShift, saturationShift, lightnessShift, affectFill, affectStroke, colorMode]);
 
-    // Real-time color remapping using useEffect
+    // Debounced color remapping to prevent memory issues
     useEffect(() => {
       if (colorMode === 'remap' && colorRemappings.length > 0) {
-        const manipulation = {
-          mode: colorMode,
-          remappings: colorRemappings,
-          affectFill,
-          affectStroke
-        };
-        onApplyColorManipulation(manipulation);
+        const timeoutId = setTimeout(() => {
+          const manipulation = {
+            mode: colorMode,
+            remappings: colorRemappings,
+            affectFill,
+            affectStroke
+          };
+          onApplyColorManipulation(manipulation);
+        }, 150);
+
+        return () => clearTimeout(timeoutId);
       }
     }, [colorRemappings, affectFill, affectStroke, colorMode]);
 
@@ -2873,6 +2881,39 @@ export default function Sidebar({
                 </h3>
                 <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
                   <ArtboardContent />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Properties Panel */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`p-3 h-auto mx-2 transition-colors border ${
+                  activePopover === 'properties' 
+                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
+                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </h3>
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
                 </div>
               </div>
             </PopoverContent>
