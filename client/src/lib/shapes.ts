@@ -755,17 +755,9 @@ export class Shape {
       return { x: 0, y: 0, width: 0, height: 0 };
     }
 
-    let allPoints = [...this.points];
-    
-    // For cubic curves, include tangent handles in bounds calculation
-    if (this.type === 'cubic' && this.tangentHandles) {
-      this.tangentHandles.forEach(handles => {
-        allPoints.push(handles.in, handles.out);
-      });
-    }
-    
-    const xs = allPoints.map(p => p.x);
-    const ys = allPoints.map(p => p.y);
+    // Calculate bounds ONLY from actual shape points, not control handles
+    const xs = this.points.map(p => p.x);
+    const ys = this.points.map(p => p.y);
     
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
@@ -1228,10 +1220,10 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw 'in' handle
+          // Draw 'in' handle (cubic curves use purple color)
           const radius = 4 / canvasZoom;
           const isInSelected = selectedPoints.includes(2000 + index * 2); // Tangent handles start at 2000
-          ctx.fillStyle = isInSelected ? '#EF4444' : '#F59E0B';
+          ctx.fillStyle = isInSelected ? '#EF4444' : '#8B5CF6';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
@@ -1252,10 +1244,10 @@ export class Shape {
           ctx.stroke();
           ctx.setLineDash([]);
           
-          // Draw 'out' handle
+          // Draw 'out' handle (cubic curves use purple color)
           const radius = 4 / canvasZoom;
           const isOutSelected = selectedPoints.includes(2000 + index * 2 + 1); // Out handle is +1 from in handle
-          ctx.fillStyle = isOutSelected ? '#EF4444' : '#F59E0B';
+          ctx.fillStyle = isOutSelected ? '#EF4444' : '#8B5CF6';
           ctx.strokeStyle = '#FFFFFF';
           ctx.lineWidth = 1 / canvasZoom;
           
@@ -1298,7 +1290,7 @@ export class Shape {
           
           ctx.setLineDash([]);
           
-          // Draw control handle
+          // Draw control handle (bezier curves use orange color)
           const radius = 4 / canvasZoom;
           const isControlSelected = selectedPoints.includes(index + 1000);
           ctx.fillStyle = isControlSelected ? '#EF4444' : '#F59E0B';
@@ -1327,7 +1319,18 @@ export class Shape {
           ctx.lineWidth = 4 / canvasZoom;
           ctx.beginPath();
           
-          if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
+          if (this.type === 'cubic' && this.tangentHandles && i < this.tangentHandles.length && (i + 1) < this.tangentHandles.length) {
+            // Draw cubic bezier curve using tangent handles for cubic curves
+            ctx.moveTo(p1.x, p1.y);
+            const cp1 = this.getWorldTangentHandle(i, 'out');
+            const cp2 = this.getWorldTangentHandle(i + 1, 'in');
+            
+            if (cp1 && cp2) {
+              ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+            } else {
+              ctx.lineTo(p2.x, p2.y);
+            }
+          } else if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
             // Draw curved segment using actual control points if available
             ctx.moveTo(p1.x, p1.y);
             
