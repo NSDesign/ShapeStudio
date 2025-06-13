@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -51,7 +52,6 @@ export default function ProjectDialog({
     }
 
     setIsLoading(true);
-
     try {
       await ProjectManager.saveProject(
         shapes,
@@ -64,13 +64,12 @@ export default function ProjectDialog({
       
       toast({
         title: "Project saved successfully",
-        description: `Project saved as ${projectName || 'shape-editor project'}.json`,
+        description: "Your project has been downloaded as a JSON file."
       });
       
       setIsOpen(false);
       setProjectName('');
     } catch (error) {
-      console.error('Save failed:', error);
       toast({
         title: "Save failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
@@ -83,20 +82,17 @@ export default function ProjectDialog({
 
   const handleLoadProject = async (file: File) => {
     setIsLoading(true);
-
     try {
       const projectData = await ProjectManager.loadProject(file);
-      
       onLoadProject(projectData);
       
       toast({
         title: "Project loaded successfully",
-        description: `Loaded project: ${projectData.projectName}`,
+        description: `Loaded project: ${projectData.projectName}`
       });
       
       setIsOpen(false);
     } catch (error) {
-      console.error('Load failed:', error);
       toast({
         title: "Load failed",
         description: error instanceof Error ? error.message : "Failed to load project file",
@@ -107,8 +103,8 @@ export default function ProjectDialog({
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       handleLoadProject(file);
     }
@@ -159,65 +155,61 @@ export default function ProjectDialog({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="save" className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-300">Project Name</Label>
-                <Input
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  placeholder="Enter project name (optional)"
-                  className="bg-[var(--surface-light)] border-slate-600 text-white"
-                />
-                <div className="text-xs text-slate-400">
-                  If empty, a timestamp-based name will be used
+            <TabsContent value="save" className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project-name" className="text-slate-300">Project Name (Optional)</Label>
+                  <Input
+                    id="project-name"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="Enter project name..."
+                    className="bg-[var(--surface-light)] border-slate-600 text-white"
+                  />
                 </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(false)}
-                  disabled={isLoading}
-                  className="text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveProject}
-                  disabled={isLoading}
-                  className="bg-[var(--editor-primary)] hover:bg-blue-700 text-white"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Project
-                    </>
-                  )}
-                </Button>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="load" className="space-y-4 mt-6">
-              <div className="text-center space-y-4">
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-8">
-                  <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                  <div className="text-slate-300 mb-2">Load Project File</div>
-                  <div className="text-sm text-slate-500 mb-4">
-                    Select a .json project file to load
+                
+                <div className="flex items-center justify-between pt-4">
+                  <div className="text-sm text-slate-400">
+                    {shapes.length} shapes, {groups.length} groups
                   </div>
-                  <Button
-                    onClick={triggerFileSelect}
+                  <Button 
+                    onClick={handleSaveProject}
                     disabled={isLoading}
-                    className="bg-[var(--editor-accent)] hover:bg-purple-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     {isLoading ? (
                       <>
-                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Download className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Project
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="load" className="space-y-4">
+              <div className="space-y-4">
+                <div className="text-center py-8 border-2 border-dashed border-slate-600 rounded-lg">
+                  <Upload className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+                  <div className="text-slate-300 mb-2">Load Project File</div>
+                  <div className="text-xs text-slate-500 mb-4">
+                    Select a JSON project file to load your shapes and settings
+                  </div>
+                  <Button 
+                    onClick={triggerFileSelect}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Upload className="w-4 h-4 mr-2 animate-spin" />
                         Loading...
                       </>
                     ) : (

@@ -638,7 +638,7 @@ export default function Sidebar({
     const [selectedCategory, setSelectedCategory] = useState<string>('social');
     const [customWidth, setCustomWidth] = useState(1080);
     const [customHeight, setCustomHeight] = useState(1080);
-    
+
     const categorizedPresets = useMemo(() => {
       return ARTBOARD_PRESETS.reduce((acc, preset) => {
         if (!acc[preset.category]) {
@@ -706,7 +706,7 @@ export default function Sidebar({
         {/* Add New Artboard */}
         <div className="space-y-3">
           <Label className="text-xs text-slate-400">Add New Artboard</Label>
-          
+
           {/* Category Selection */}
           <div className="grid grid-cols-2 gap-1">
             {categories.map((category) => (
@@ -1615,7 +1615,8 @@ export default function Sidebar({
                           value={[firstSelectedShape.height || 100]}
                           onValueChange={([value]) => {
                             updateShapeProperty(shape => {
-                              if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                              if (shape.type === 'rectangle' || shape.type === '```
+ellipse') {
                                 shape.height = value;
                               }
                             });
@@ -1767,7 +1768,7 @@ export default function Sidebar({
         {/* Smart Distribution Controls */}
         <div className="space-y-3 mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
           <Label className="text-xs text-blue-200 font-medium">Smart Distribution</Label>
-          
+
           {/* Pattern Selection */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Pattern</Label>
@@ -1809,7 +1810,7 @@ export default function Sidebar({
               />
               <span className="text-xs text-slate-500">{scatterSettings.distribution.spacing}px</span>
             </div>
-            
+
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Randomness</Label>
               <Slider
