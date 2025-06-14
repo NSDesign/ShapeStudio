@@ -281,17 +281,35 @@ export class GeometricIntersection {
   }
 
   /**
-   * Perform geometric union operation for any polygon-based shapes
+   * Perform geometric boolean operation for any polygon-based shapes
    */
-  static performGeometricUnion(shape1: Shape, shape2: Shape): Shape | null {
+  static performGeometricBooleanOperation(shape1: Shape, shape2: Shape, operation: 'union' | 'subtract' | 'intersect' | 'exclude'): Shape | null {
     // Check if both shapes have points (all shapes should have points after initialization)
     if (!shape1.points || !shape2.points || shape1.points.length === 0 || shape2.points.length === 0) {
-      console.warn('Cannot perform union on shapes without points');
+      console.warn(`Cannot perform ${operation} on shapes without points`);
       return null;
     }
     
-    // Use generalized polygon union that works for any point-based shapes
-    return this.performGeneralPolygonUnion(shape1, shape2);
+    // Use generalized polygon operations that work for any point-based shapes
+    switch (operation) {
+      case 'union':
+        return this.performGeneralPolygonUnion(shape1, shape2);
+      case 'subtract':
+        return this.performGeneralPolygonSubtract(shape1, shape2);
+      case 'intersect':
+        return this.performGeneralPolygonIntersect(shape1, shape2);
+      case 'exclude':
+        return this.performGeneralPolygonExclude(shape1, shape2);
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Perform geometric union operation for any polygon-based shapes
+   */
+  static performGeometricUnion(shape1: Shape, shape2: Shape): Shape | null {
+    return this.performGeometricBooleanOperation(shape1, shape2, 'union');
   }
 
   /**
@@ -416,6 +434,210 @@ export class GeometricIntersection {
     }
     
     return inside;
+  }
+
+  /**
+   * Perform generalized subtract operation for any polygon-based shapes
+   */
+  static performGeneralPolygonSubtract(shape1: Shape, shape2: Shape): Shape | null {
+    // Get world-transformed vertices for both shapes
+    const vertices1 = this.getWorldVerticesFromShape(shape1);
+    const vertices2 = this.getWorldVerticesFromShape(shape2);
+    
+    // Find intersection points between the shapes
+    const intersections = this.findShapeIntersections(shape1, shape2);
+    
+    if (intersections.length === 0) {
+      // No intersections - return original shape1
+      return this.createPolygonFromVertices(vertices1, shape1, shape2, 'subtract');
+    }
+    
+    // Build subtract outline
+    const subtractVertices = this.buildGeneralPolygonSubtractOutline(vertices1, vertices2, intersections);
+    return this.createPolygonFromVertices(subtractVertices, shape1, shape2, 'subtract');
+  }
+
+  /**
+   * Perform generalized intersect operation for any polygon-based shapes
+   */
+  static performGeneralPolygonIntersect(shape1: Shape, shape2: Shape): Shape | null {
+    // Get world-transformed vertices for both shapes
+    const vertices1 = this.getWorldVerticesFromShape(shape1);
+    const vertices2 = this.getWorldVerticesFromShape(shape2);
+    
+    // Find intersection points between the shapes
+    const intersections = this.findShapeIntersections(shape1, shape2);
+    
+    if (intersections.length === 0) {
+      // No intersections - no intersection result
+      return null;
+    }
+    
+    // Build intersect outline
+    const intersectVertices = this.buildGeneralPolygonIntersectOutline(vertices1, vertices2, intersections);
+    if (intersectVertices.length < 3) return null;
+    
+    return this.createPolygonFromVertices(intersectVertices, shape1, shape2, 'intersect');
+  }
+
+  /**
+   * Perform generalized exclude operation for any polygon-based shapes
+   */
+  static performGeneralPolygonExclude(shape1: Shape, shape2: Shape): Shape | null {
+    // Get world-transformed vertices for both shapes
+    const vertices1 = this.getWorldVerticesFromShape(shape1);
+    const vertices2 = this.getWorldVerticesFromShape(shape2);
+    
+    // Find intersection points between the shapes
+    const intersections = this.findShapeIntersections(shape1, shape2);
+    
+    if (intersections.length === 0) {
+      // No intersections - return both shapes combined but not overlapping
+      const allVertices = [...vertices1, ...vertices2];
+      const excludeVertices = this.convexHull(allVertices);
+      return this.createPolygonFromVertices(excludeVertices, shape1, shape2, 'exclude');
+    }
+    
+    // Build exclude outline (union minus intersection)
+    const excludeVertices = this.buildGeneralPolygonExcludeOutline(vertices1, vertices2, intersections);
+    return this.createPolygonFromVertices(excludeVertices, shape1, shape2, 'exclude');
+  }
+
+  /**
+   * Build subtract outline for general polygons
+   */
+  private static buildGeneralPolygonSubtractOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return vertices1;
+    }
+
+    // Get all candidate points
+    const allPoints = [...vertices1, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep points that are:
+    // 1. Shape1 vertices that are not strictly inside shape2
+    // 2. Intersection points
+    const subtractPoints = uniquePoints.filter(point => {
+      const strictlyInsideShape2 = this.isPointStrictlyInsidePolygon(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
+      
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      const isShape1Vertex = vertices1.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      
+      if (isShape1Vertex) {
+        return !strictlyInsideShape2;
+      }
+      
+      return false;
+    });
+    
+    // Sort points by angle from centroid
+    const centroid = this.calculateCentroid(subtractPoints);
+    return subtractPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
+  }
+
+  /**
+   * Build intersect outline for general polygons
+   */
+  private static buildGeneralPolygonIntersectOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return [];
+    }
+
+    // Get all candidate points
+    const allPoints = [...vertices1, ...vertices2, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep points that are:
+    // 1. Inside both shapes
+    // 2. Intersection points
+    const intersectPoints = uniquePoints.filter(point => {
+      const insideShape1 = this.isPointStrictlyInsidePolygon(point, vertices1);
+      const insideShape2 = this.isPointStrictlyInsidePolygon(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
+      
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      return insideShape1 && insideShape2;
+    });
+    
+    if (intersectPoints.length < 3) return [];
+    
+    // Sort points by angle from centroid
+    const centroid = this.calculateCentroid(intersectPoints);
+    return intersectPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
+  }
+
+  /**
+   * Build exclude outline for general polygons
+   */
+  private static buildGeneralPolygonExcludeOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return this.convexHull([...vertices1, ...vertices2]);
+    }
+
+    // Get all candidate points
+    const allPoints = [...vertices1, ...vertices2, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep points that are:
+    // 1. Not inside both shapes (exclude intersection)
+    // 2. Intersection points for boundary
+    const excludePoints = uniquePoints.filter(point => {
+      const insideShape1 = this.isPointStrictlyInsidePolygon(point, vertices1);
+      const insideShape2 = this.isPointStrictlyInsidePolygon(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
+      
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      // Keep points that are in one shape but not both (exclude the intersection)
+      return (insideShape1 && !insideShape2) || (!insideShape1 && insideShape2) || 
+             (!insideShape1 && !insideShape2);
+    });
+    
+    // Sort points by angle from centroid
+    const centroid = this.calculateCentroid(excludePoints);
+    return excludePoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
   }
 
   /**

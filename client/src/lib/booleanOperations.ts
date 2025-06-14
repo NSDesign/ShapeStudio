@@ -20,11 +20,11 @@ export class BooleanOperations {
         return null;
       }
       
-      if (operation === 'union' && canUseGeometric) {
-        // Use geometric union for all polygon-based shapes
-        return GeometricIntersection.performGeometricUnion(sourceShape, targetShape);
+      if (canUseGeometric) {
+        // Use geometric operations for all polygon-based shapes
+        return GeometricIntersection.performGeometricBooleanOperation(sourceShape, targetShape, operation);
       } else {
-        // Fallback to canvas-based operations for other operations or unsupported shapes
+        // Fallback to canvas-based operations for unsupported shapes
         return this.performCanvasBooleanOperation(sourceShape, targetShape, operation);
       }
     } catch (error) {
