@@ -11,10 +11,14 @@ export class BooleanOperations {
     operation: 'union' | 'subtract' | 'intersect' | 'exclude'
   ): Shape | null {
     try {
-      // Use geometric intersection method for union, fallback to canvas for others
-      if (operation === 'union') {
+      // Check if shapes have overlapping compatibility for geometric operations
+      const canUseGeometric = this.canPerformGeometricOperation(sourceShape, targetShape);
+      
+      if (operation === 'union' && canUseGeometric) {
+        // Use geometric union for all polygon-based shapes
         return GeometricIntersection.performGeometricUnion(sourceShape, targetShape);
       } else {
+        // Fallback to canvas-based operations for other operations or unsupported shapes
         return this.performCanvasBooleanOperation(sourceShape, targetShape, operation);
       }
     } catch (error) {
@@ -264,6 +268,26 @@ export class BooleanOperations {
       const angleB = Math.atan2(b.y - centerY, b.x - centerX);
       return angleA - angleB;
     });
+  }
+
+  /**
+   * Check if shapes can use geometric operations (have points and are closed polygons)
+   */
+  static canPerformGeometricOperation(shape1: Shape, shape2: Shape): boolean {
+    // Check if both shapes have points
+    if (!shape1.points || !shape2.points || shape1.points.length === 0 || shape2.points.length === 0) {
+      return false;
+    }
+    
+    // Exclude line shapes (they're not closed polygons)
+    if (shape1.type === 'line' || shape2.type === 'line') {
+      return false;
+    }
+    
+    // Support all other polygon-based shapes
+    const supportedTypes = ['rectangle', 'square', 'circle', 'ellipse', 'polygon', 'star', 'ring', 'blob', 'spline-circle', 'spline-ellipse', 'spline-ring', 'bezier', 'cubic'];
+    
+    return supportedTypes.includes(shape1.type) && supportedTypes.includes(shape2.type);
   }
 
   /**

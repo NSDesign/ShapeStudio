@@ -281,23 +281,141 @@ export class GeometricIntersection {
   }
 
   /**
-   * Perform geometric union operation for supported shape types
+   * Perform geometric union operation for any polygon-based shapes
    */
   static performGeometricUnion(shape1: Shape, shape2: Shape): Shape | null {
-    const isRect1 = shape1.type === 'rectangle' || shape1.type === 'square';
-    const isRect2 = shape2.type === 'rectangle' || shape2.type === 'square';
-    const isCircle1 = shape1.type === 'circle';
-    const isCircle2 = shape2.type === 'circle';
-    
-    if (isRect1 && isRect2) {
-      return this.performRectangleUnion(shape1, shape2);
-    } else if (isCircle1 && isCircle2) {
-      return this.performCircleUnion(shape1, shape2);
-    } else if ((isRect1 && isCircle2) || (isCircle1 && isRect2)) {
-      return this.performRectangleCircleUnion(shape1, shape2);
+    // Check if both shapes have points (all shapes should have points after initialization)
+    if (!shape1.points || !shape2.points || shape1.points.length === 0 || shape2.points.length === 0) {
+      console.warn('Cannot perform union on shapes without points');
+      return null;
     }
     
-    return null;
+    // Use generalized polygon union that works for any point-based shapes
+    return this.performGeneralPolygonUnion(shape1, shape2);
+  }
+
+  /**
+   * Perform generalized union operation for any polygon-based shapes
+   */
+  static performGeneralPolygonUnion(shape1: Shape, shape2: Shape): Shape | null {
+    // Get world-transformed vertices for both shapes
+    const vertices1 = this.getWorldVerticesFromShape(shape1);
+    const vertices2 = this.getWorldVerticesFromShape(shape2);
+    
+    // Find intersection points between the shapes
+    const intersections = this.findShapeIntersections(shape1, shape2);
+    
+    if (intersections.length === 0) {
+      // No intersections - shapes don't overlap, return convex hull
+      const allVertices = [...vertices1, ...vertices2];
+      const unionVertices = this.convexHull(allVertices);
+      return this.createPolygonFromVertices(unionVertices, shape1, shape2, 'union');
+    }
+    
+    // Build union outline using general polygon algorithm
+    const unionVertices = this.buildGeneralPolygonUnionOutline(vertices1, vertices2, intersections);
+    return this.createPolygonFromVertices(unionVertices, shape1, shape2, 'union');
+  }
+
+  /**
+   * Get world-transformed vertices from any shape
+   */
+  private static getWorldVerticesFromShape(shape: Shape): Point[] {
+    if (!shape.points) return [];
+    
+    const worldVertices: Point[] = [];
+    for (let i = 0; i < shape.points.length; i++) {
+      const worldPoint = shape.getWorldPoint(i);
+      if (worldPoint) {
+        worldVertices.push(worldPoint);
+      }
+    }
+    return worldVertices;
+  }
+
+  /**
+   * Build union outline for general polygons
+   */
+  private static buildGeneralPolygonUnionOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return this.convexHull([...vertices1, ...vertices2]);
+    }
+
+    // Get all candidate points
+    const allPoints = [...vertices1, ...vertices2, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep only exterior points for union operation
+    const exteriorPoints = uniquePoints.filter(point => {
+      const strictlyInsideShape1 = this.isPointStrictlyInsidePolygon(point, vertices1);
+      const strictlyInsideShape2 = this.isPointStrictlyInsidePolygon(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
+      
+      // For union: keep points that are:
+      // 1. Intersection points (always on boundary)
+      // 2. Shape vertices that are not strictly inside the other shape
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      const isShape1Vertex = vertices1.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      const isShape2Vertex = vertices2.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      
+      if (isShape1Vertex) {
+        return !strictlyInsideShape2;
+      }
+      if (isShape2Vertex) {
+        return !strictlyInsideShape1;
+      }
+      
+      return false;
+    });
+    
+    // Sort points by angle from centroid to create proper outline
+    const centroid = this.calculateCentroid(exteriorPoints);
+    return exteriorPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
+  }
+
+  /**
+   * Check if point is strictly inside a general polygon using ray casting
+   */
+  private static isPointStrictlyInsidePolygon(point: Point, polygonVertices: Point[]): boolean {
+    if (polygonVertices.length < 3) return false;
+    
+    let inside = false;
+    const rayEnd = { x: point.x + 10000, y: point.y };
+    
+    for (let i = 0; i < polygonVertices.length; i++) {
+      const edge = {
+        start: polygonVertices[i],
+        end: polygonVertices[(i + 1) % polygonVertices.length]
+      };
+      
+      const intersection = this.findLineIntersection(
+        { start: point, end: rayEnd },
+        edge
+      );
+      
+      if (intersection) {
+        inside = !inside;
+      }
+    }
+    
+    return inside;
   }
 
   /**
