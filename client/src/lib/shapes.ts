@@ -1055,7 +1055,19 @@ export class Shape {
   private isPointInsideShape(x: number, y: number): boolean {
     if (this.points.length === 0) return false;
     
-    // For different shape types, use appropriate detection algorithms
+    // Check if points have been manually edited by comparing with original geometry
+    const hasEditedPoints = this.hasEditedGeometry();
+    
+    // For shapes with edited points, always use point-based detection
+    if (hasEditedPoints) {
+      if (this.type === 'line') {
+        return this.isPointOnLine(x, y);
+      } else {
+        return this.isPointInPolygon(x, y);
+      }
+    }
+    
+    // For unedited shapes, use optimized detection algorithms
     switch (this.type) {
       case 'circle':
       case 'ellipse':
@@ -1069,7 +1081,7 @@ export class Shape {
       case 'line':
         return this.isPointOnLine(x, y);
       case 'blob':
-        return this.isPointInPolygon(x, y); // Use polygon approximation for complex shapes
+        return this.isPointInPolygon(x, y);
       default:
         return this.isPointInPolygon(x, y);
     }
@@ -1523,9 +1535,10 @@ export class Shape {
     }
     
     // Draw all segment midpoints for visibility
-    for (let i = 0; i < this.points.length - 1; i++) {
+    const numSegments = this.closed ? this.points.length : this.points.length - 1;
+    for (let i = 0; i < numSegments; i++) {
       const p1 = this.getWorldPoint(i);
-      const p2 = this.getWorldPoint(i + 1);
+      const p2 = this.getWorldPoint((i + 1) % this.points.length);
       
       if (p1 && p2) {
         const isSelected = selectedSegments.includes(i);

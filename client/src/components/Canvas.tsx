@@ -368,7 +368,7 @@ export default function Canvas({
 
       ctx.restore();
 
-      // Render debug intersection points only when one shape is selected (for boolean operations)
+      // Render debug intersection points with proper screen coordinates
       if (selectedShapes.length === 1 && showIntersections) {
         const sourceShape = selectedShapes[0];
         let totalIntersections = 0;
@@ -380,32 +380,37 @@ export default function Canvas({
           (s.type === 'rectangle' || s.type === 'square' || s.type === 'circle' || s.type === 'ellipse')
         );
         
+        ctx.save();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // Reset to screen coordinates
+        
         compatibleShapes.forEach(targetShape => {
           try {
             const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, targetShape);
             totalIntersections += intersections.length;
             
             if (intersections.length > 0) {
-              ctx.save();
               ctx.fillStyle = 'rgba(220, 38, 38, 0.7)'; // Semi-transparent red
               ctx.strokeStyle = 'rgba(220, 38, 38, 1.0)'; // Solid red outline
-              ctx.lineWidth = 1.5 / canvasSettings.zoom;
+              ctx.lineWidth = 1.5;
               
               intersections.forEach(point => {
-                // Draw at world coordinates (canvas transform is already applied)
-                const radius = 5 / canvasSettings.zoom; // Scale with zoom
+                // Transform world coordinates to screen coordinates
+                const screenX = rect.width / 2 + (point.x + canvasSettings.panX) * canvasSettings.zoom;
+                const screenY = rect.height / 2 + (point.y + canvasSettings.panY) * canvasSettings.zoom;
+                
+                const radius = 5; // Fixed screen size
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
               });
-              
-              ctx.restore();
             }
           } catch (error) {
             // Silently handle intersection calculation errors
           }
         });
+        
+        ctx.restore();
         
         // Update intersection count
         if (totalIntersections !== intersectionCount) {
