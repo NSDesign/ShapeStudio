@@ -1475,6 +1475,50 @@ export default function Sidebar({
               </div>
             )}
 
+            {/* Segments Control for Circles and Ellipses */}
+            {(firstSelectedShape.type === 'circle' || firstSelectedShape.type === 'ellipse') && (
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Segments</Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    value={[firstSelectedShape.segments || 32]}
+                    onValueChange={([value]) => {
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'circle' || shape.type === 'ellipse') {
+                          shape.segments = value;
+                          shape.regeneratePointsFromSegments();
+                        }
+                      });
+                    }}
+                    min={8}
+                    max={64}
+                    step={4}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="number"
+                    value={firstSelectedShape.segments || 32}
+                    onChange={(e) => {
+                      const value = Math.max(8, Math.min(64, parseInt(e.target.value) || 32));
+                      updateShapeProperty(shape => {
+                        if (shape.type === 'circle' || shape.type === 'ellipse') {
+                          shape.segments = value;
+                          shape.regeneratePointsFromSegments();
+                        }
+                      });
+                    }}
+                    className="h-6 w-12 text-xs bg-slate-800 border-slate-600 text-white"
+                    min={8}
+                    max={64}
+                    step={4}
+                  />
+                </div>
+                <div className="text-xs text-slate-500">
+                  Higher values create smoother curves but may slow performance
+                </div>
+              </div>
+            )}
+
             {/* Shape-specific Properties */}
             {(firstSelectedShape.type === 'polygon' || firstSelectedShape.type === 'star') && (
               <div className="space-y-2">

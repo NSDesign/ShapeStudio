@@ -45,6 +45,33 @@ export class Shape {
     this.segments = this.getDefaultSegments();
     this.renderType = this.getDefaultRenderType();
   }
+  
+  /**
+   * Regenerate points when segments change for circles and ellipses
+   */
+  regeneratePointsFromSegments(): void {
+    if (this.type === 'circle' && this.radius) {
+      this.points = [];
+      for (let i = 0; i < this.segments; i++) {
+        const angle = (i / this.segments) * Math.PI * 2;
+        this.points.push({
+          x: Math.cos(angle) * this.radius,
+          y: Math.sin(angle) * this.radius
+        });
+      }
+    } else if (this.type === 'ellipse' && this.width && this.height) {
+      this.points = [];
+      const w = this.width / 2;
+      const h = this.height / 2;
+      for (let i = 0; i < this.segments; i++) {
+        const angle = (i / this.segments) * Math.PI * 2;
+        this.points.push({
+          x: Math.cos(angle) * w,
+          y: Math.sin(angle) * h
+        });
+      }
+    }
+  }
 
   static create(type: ShapeType, x: number = 0, y: number = 0): Shape {
     return new Shape(type, x, y);
@@ -320,9 +347,8 @@ export class Shape {
     this.points = [];
     const radius = this.radius!;
     
-    // Use fewer points for circles to maintain geometric integrity
-    // but provide smooth curve rendering
-    const numPoints = Math.max(8, Math.min(16, Math.floor(this.segments / 2)));
+    // Use consistent segment count for smooth circles and proper boolean operations
+    const numPoints = this.segments;
     
     for (let i = 0; i < numPoints; i++) {
       const angle = (i / numPoints) * Math.PI * 2;
@@ -336,7 +362,7 @@ export class Shape {
   }
 
   private generateEllipsePoints(): void {
-    const numPoints = 16; // 16 points for smooth ellipse editing
+    const numPoints = this.segments; // Use consistent segment count
     this.points = [];
     const w = this.width! / 2;
     const h = this.height! / 2;
@@ -349,6 +375,7 @@ export class Shape {
       });
     }
     this.closed = true;
+    this.renderType = 'smooth'; // Use smooth rendering for ellipses
   }
 
   private generatePolygonPoints(): void {
