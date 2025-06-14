@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
+import { GeometricIntersection } from '../lib/geometricIntersection';
 import { 
   Square, 
   Circle, 
@@ -2308,6 +2309,17 @@ export default function Sidebar({
       ? shapes.filter(shape => shape.id !== selectedShapes[0].id)
       : [];
 
+    // Helper function to check if shapes intersect
+    const shapesIntersect = (sourceShape: Shape, targetShape: Shape): boolean => {
+      if (!sourceShape || !targetShape) return false;
+      try {
+        const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, targetShape);
+        return intersections.length > 0;
+      } catch (error) {
+        return false;
+      }
+    };
+
     return (
       <div className="space-y-4">
         {selectedShapes.length === 1 ? (
@@ -2384,22 +2396,32 @@ export default function Sidebar({
                     <SelectValue placeholder="Select target shape" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-600">
-                    {potentialTargets.map((shape, index) => (
-                      <SelectItem 
-                        key={shape.id} 
-                        value={shape.id}
-                        className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <div 
-                            className="w-2 h-2 rounded border border-slate-500"
-                            style={{ backgroundColor: shape.properties.fillColor.includes('hsl') ? '#3B82F6' : shape.properties.fillColor }}
-                          />
-                          <span className="capitalize">{shape.type}</span>
-                          <span className="text-slate-400">Layer {potentialTargets.length - index}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {potentialTargets.map((shape, index) => {
+                      const isIntersecting = shapesIntersect(selectedShapes[0], shape);
+                      return (
+                        <SelectItem 
+                          key={shape.id} 
+                          value={shape.id}
+                          className={`text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white ${
+                            isIntersecting ? 'bg-purple-600/30 border-purple-400 border' : ''
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className={`w-2 h-2 rounded border ${
+                                isIntersecting ? 'border-purple-400' : 'border-slate-500'
+                              }`}
+                              style={{ backgroundColor: shape.properties.fillColor.includes('hsl') ? '#3B82F6' : shape.properties.fillColor }}
+                            />
+                            <span className="capitalize">{shape.type}</span>
+                            <span className="text-slate-400">Layer {potentialTargets.length - index}</span>
+                            {isIntersecting && (
+                              <span className="text-purple-400 text-xs">● Intersects</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

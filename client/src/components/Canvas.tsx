@@ -235,42 +235,8 @@ export default function Canvas({
         if (bounds.x < viewportBounds.maxX && bounds.x + bounds.width > viewportBounds.minX &&
             bounds.y < viewportBounds.maxY && bounds.y + bounds.height > viewportBounds.minY) {
           
-          // Check if this shape should be highlighted as a boolean operation target
-          let shouldHighlightAsTarget = false;
-          if (selectedShapes.length === 1 && !shape.selected) {
-            const sourceShape = selectedShapes[0];
-            const isCompatible = isCompatibleShape(sourceShape) && isCompatibleShape(shape);
-            if (isCompatible) {
-              // Check if shapes actually intersect for boolean operations
-              try {
-                const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, shape);
-                shouldHighlightAsTarget = intersections.length > 0;
-              } catch (error) {
-                // Silently handle intersection calculation errors
-                shouldHighlightAsTarget = false;
-              }
-            }
-          }
-          
-          // Render the shape with optional purple highlight
-          if (shouldHighlightAsTarget) {
-            // Save original stroke properties
-            const originalStrokeColor = shape.properties.strokeColor;
-            const originalStrokeWidth = shape.properties.strokeWidth;
-            
-            // Temporarily apply purple highlight
-            shape.properties.strokeColor = '#8B5CF6';  // Purple color
-            shape.properties.strokeWidth = Math.max(3, originalStrokeWidth || 2);
-            
-            shape.render(ctx);
-            
-            // Restore original properties
-            shape.properties.strokeColor = originalStrokeColor;
-            shape.properties.strokeWidth = originalStrokeWidth;
-          } else {
-            // Render normally
-            shape.render(ctx);
-          }
+          // Render the shape normally
+          shape.render(ctx);
           
           // Then render its components immediately after (maintaining z-index order)
           if (shape.points && shape.points.length > 0) {
