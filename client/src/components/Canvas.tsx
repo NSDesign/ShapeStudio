@@ -365,7 +365,42 @@ export default function Canvas({
 
       ctx.restore();
 
-
+      // Render debug intersection points only when one shape is selected (for boolean operations)
+      if (selectedShapes.length === 1) {
+        const sourceShape = selectedShapes[0];
+        
+        // Only show intersections with shapes that can participate in boolean operations
+        const compatibleShapes = shapes.filter(s => 
+          s.id !== sourceShape.id && 
+          !s.selected &&
+          (s.type === 'rectangle' || s.type === 'square' || s.type === 'circle' || s.type === 'ellipse')
+        );
+        
+        compatibleShapes.forEach(targetShape => {
+          try {
+            const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, targetShape);
+            
+            if (intersections.length > 0) {
+              ctx.save();
+              ctx.fillStyle = 'rgba(220, 38, 38, 0.7)'; // Semi-transparent red
+              ctx.strokeStyle = 'rgba(220, 38, 38, 1.0)'; // Solid red outline
+              ctx.lineWidth = 1.5 / canvasSettings.zoom;
+              
+              intersections.forEach(point => {
+                const radius = 5 / canvasSettings.zoom;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+              });
+              
+              ctx.restore();
+            }
+          } catch (error) {
+            // Silently handle intersection calculation errors
+          }
+        });
+      }
 
       // Show multi-touch gesture indicator on touch devices
       if (isTouchDevice && isMultiTouch && selectedCount > 0) {
