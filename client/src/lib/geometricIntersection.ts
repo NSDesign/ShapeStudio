@@ -39,8 +39,16 @@ export class GeometricIntersection {
     
     try {
       const intersections = this.findShapeIntersections(shape1, shape2);
-      // The intersections are already in world coordinates, no additional transform needed
       this.debugIntersections = intersections.map(i => ({ x: i.x, y: i.y }));
+      
+      // Debug logging to identify issues
+      if (intersections.length > 0) {
+        console.log(`Found ${intersections.length} intersections between ${shape1.type} and ${shape2.type}:`, {
+          shape1Pos: { x: shape1.transform.x, y: shape1.transform.y },
+          shape2Pos: { x: shape2.transform.x, y: shape2.transform.y },
+          intersections: intersections.map(i => ({ x: Math.round(i.x), y: Math.round(i.y) }))
+        });
+      }
     } catch (error) {
       console.warn('Error finding intersections:', error);
     }

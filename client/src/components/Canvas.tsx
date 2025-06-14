@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal, Eye, EyeOff } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings, Artboard } from '../lib/shapeTypes';
 import ExportDialog from './ExportDialog';
@@ -96,6 +97,8 @@ export default function Canvas({
   canvasRef
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
+  const [showIntersections, setShowIntersections] = useState(true);
+  const [intersectionCount, setIntersectionCount] = useState(0);
 
   // Add wheel event listener
   useEffect(() => {
@@ -366,8 +369,9 @@ export default function Canvas({
       ctx.restore();
 
       // Render debug intersection points only when one shape is selected (for boolean operations)
-      if (selectedShapes.length === 1) {
+      if (selectedShapes.length === 1 && showIntersections) {
         const sourceShape = selectedShapes[0];
+        let totalIntersections = 0;
         
         // Only show intersections with shapes that can participate in boolean operations
         const compatibleShapes = shapes.filter(s => 
@@ -379,6 +383,7 @@ export default function Canvas({
         compatibleShapes.forEach(targetShape => {
           try {
             const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, targetShape);
+            totalIntersections += intersections.length;
             
             if (intersections.length > 0) {
               ctx.save();
@@ -400,6 +405,13 @@ export default function Canvas({
             // Silently handle intersection calculation errors
           }
         });
+        
+        // Update intersection count
+        if (totalIntersections !== intersectionCount) {
+          setIntersectionCount(totalIntersections);
+        }
+      } else if (selectedShapes.length !== 1 && intersectionCount > 0) {
+        setIntersectionCount(0);
       }
 
       // Show multi-touch gesture indicator on touch devices
@@ -480,10 +492,42 @@ export default function Canvas({
           <span className="text-sm text-slate-400">
             Selected: <span className="text-white">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
           </span>
+          
+          {/* Intersection Debug Info */}
+          {selectedCount === 1 && (
+            <>
+              <div className="h-4 w-px bg-slate-600"></div>
+              <span className="text-sm text-slate-400">
+                Intersections: <span className="text-orange-400">{intersectionCount}</span>
+              </span>
+            </>
+          )}
 
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Intersection Debug Toggle */}
+          {selectedCount === 1 && (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowIntersections(!showIntersections)}
+                    className={`p-2 h-auto ${showIntersections ? 'text-orange-400 hover:text-orange-300' : 'text-slate-500 hover:text-slate-400'}`}
+                  >
+                    {showIntersections ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {showIntersections ? 'Hide intersection indicators' : 'Show intersection indicators'}
+                </TooltipContent>
+              </Tooltip>
+              <div className="h-4 w-px bg-slate-600"></div>
+            </>
+          )}
+          
           <ExportDialog
             shapes={shapes}
             groups={groups}
