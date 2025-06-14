@@ -14,6 +14,12 @@ export class BooleanOperations {
       // Check if shapes have overlapping compatibility for geometric operations
       const canUseGeometric = this.canPerformGeometricOperation(sourceShape, targetShape);
       
+      // Check if shapes actually overlap before proceeding
+      if (!this.shapesOverlap(sourceShape, targetShape)) {
+        console.warn(`Cannot perform ${operation}: shapes do not intersect`);
+        return null;
+      }
+      
       if (operation === 'union' && canUseGeometric) {
         // Use geometric union for all polygon-based shapes
         return GeometricIntersection.performGeometricUnion(sourceShape, targetShape);
