@@ -1610,26 +1610,16 @@ export const useShapeEditor = () => {
       const result = BooleanOperations.applyBooleanOperation(sourceShape, targetShape, operation);
       
       if (result) {
-        // Replace the source shape with the result
-        const newShapes = shapes.map(shape => {
-          if (shape.id === sourceShape.id) {
-            return result;
-          }
-          return shape;
-        });
+        // Remove both original shapes and add the result
+        const newShapes = shapes.filter(shape => 
+          shape.id !== sourceShape.id && shape.id !== targetId
+        );
+        newShapes.push(result);
         
-        // Remove the target shape for destructive operations
-        if (operation === 'subtract' || operation === 'intersect') {
-          const finalShapes = newShapes.filter(shape => shape.id !== targetId);
-          setShapes(finalShapes);
-        } else {
-          setShapes(newShapes);
-        }
+        setShapes(newShapes);
         
         // Update selection to the result shape
         setSelectedShapes([result]);
-        sourceShape.selected = false;
-        targetShape.selected = false;
         result.selected = true;
       }
     }, [selectedShapes, shapes]),

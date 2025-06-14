@@ -227,18 +227,23 @@ export class GeometricIntersection {
   }
 
   /**
-   * Perform geometric union operation for rectangles
+   * Perform geometric union operation for supported shape types
    */
   static performGeometricUnion(shape1: Shape, shape2: Shape): Shape | null {
-    // For now, focus on rectangle-rectangle union
-    if (shape1.type !== 'rectangle' && shape1.type !== 'square') {
-      return null;
-    }
-    if (shape2.type !== 'rectangle' && shape2.type !== 'square') {
-      return null;
+    const isRect1 = shape1.type === 'rectangle' || shape1.type === 'square';
+    const isRect2 = shape2.type === 'rectangle' || shape2.type === 'square';
+    const isCircle1 = shape1.type === 'circle';
+    const isCircle2 = shape2.type === 'circle';
+    
+    if (isRect1 && isRect2) {
+      return this.performRectangleUnion(shape1, shape2);
+    } else if (isCircle1 && isCircle2) {
+      return this.performCircleUnion(shape1, shape2);
+    } else if ((isRect1 && isCircle2) || (isCircle1 && isRect2)) {
+      return this.performRectangleCircleUnion(shape1, shape2);
     }
     
-    return this.performRectangleUnion(shape1, shape2);
+    return null;
   }
 
   /**
@@ -496,6 +501,201 @@ export class GeometricIntersection {
     centroid.y /= vertices.length;
     
     return centroid;
+  }
+
+  /**
+   * Perform union operation for two circles
+   */
+  private static performCircleUnion(circle1: Shape, circle2: Shape): Shape | null {
+    // Get circle vertices (high-resolution polygons)
+    const vertices1 = this.getCircleVertices(circle1);
+    const vertices2 = this.getCircleVertices(circle2);
+    
+    // Find intersection points between circle edges
+    const intersections = this.findCircleIntersections(circle1, circle2);
+    
+    if (intersections.length === 0) {
+      // No intersections - circles don't overlap
+      const allVertices = [...vertices1, ...vertices2];
+      const unionVertices = this.convexHull(allVertices);
+      return this.createPolygonFromVertices(unionVertices, circle1, circle2, 'union');
+    }
+    
+    // Build union outline
+    const unionVertices = this.buildCircleUnionOutline(vertices1, vertices2, intersections);
+    return this.createPolygonFromVertices(unionVertices, circle1, circle2, 'union');
+  }
+
+  /**
+   * Find intersections between two circles
+   */
+  private static findCircleIntersections(circle1: Shape, circle2: Shape): IntersectionPoint[] {
+    const edges1 = this.getCircleEdges(circle1);
+    const edges2 = this.getCircleEdges(circle2);
+    const intersections: IntersectionPoint[] = [];
+
+    // Transform edges to world coordinates
+    const worldEdges1 = this.transformEdges(edges1, circle1);
+    const worldEdges2 = this.transformEdges(edges2, circle2);
+
+    for (const edge1 of worldEdges1) {
+      for (const edge2 of worldEdges2) {
+        const intersection = this.findLineIntersection(edge1, edge2);
+        if (intersection) {
+          intersections.push({
+            ...intersection,
+            onShape1: true,
+            onShape2: true
+          });
+        }
+      }
+    }
+
+    return intersections;
+  }
+
+  /**
+   * Build union outline for circles
+   */
+  private static buildCircleUnionOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return this.convexHull([...vertices1, ...vertices2]);
+    }
+
+    // Get all candidate points
+    const allPoints = [...vertices1, ...vertices2, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep only exterior points
+    const exteriorPoints = uniquePoints.filter(point => {
+      const strictlyInsideCircle1 = this.isPointStrictlyInsideCircle(point, vertices1);
+      const strictlyInsideCircle2 = this.isPointStrictlyInsideCircle(point, vertices2);
+      
+      return !(strictlyInsideCircle1 && strictlyInsideCircle2);
+    });
+    
+    // Sort points by angle from centroid
+    const centroid = this.calculateCentroid(exteriorPoints);
+    return exteriorPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
+  }
+
+  /**
+   * Check if point is strictly inside a circle
+   */
+  private static isPointStrictlyInsideCircle(point: Point, circleVertices: Point[]): boolean {
+    // For circles represented as polygons, use ray casting
+    let crossings = 0;
+    const rayEnd = { x: point.x + 10000, y: point.y };
+    
+    for (let i = 0; i < circleVertices.length; i++) {
+      const edge = {
+        start: circleVertices[i],
+        end: circleVertices[(i + 1) % circleVertices.length]
+      };
+      
+      if (this.lineSegmentsIntersect({ start: point, end: rayEnd }, edge)) {
+        crossings++;
+      }
+    }
+    
+    return crossings % 2 === 1;
+  }
+
+  /**
+   * Perform union operation for rectangle and circle
+   */
+  private static performRectangleCircleUnion(shape1: Shape, shape2: Shape): Shape | null {
+    // Determine which is rectangle and which is circle
+    const isRect1 = shape1.type === 'rectangle' || shape1.type === 'square';
+    const rect = isRect1 ? shape1 : shape2;
+    const circle = isRect1 ? shape2 : shape1;
+    
+    // Get vertices for both shapes
+    const rectVertices = this.getRectangleVertices(rect);
+    const circleVertices = this.getCircleVertices(circle);
+    
+    // Find intersections between rectangle edges and circle edges
+    const intersections = this.findRectangleCircleIntersections(rect, circle);
+    
+    if (intersections.length === 0) {
+      // No intersections - shapes don't overlap
+      const allVertices = [...rectVertices, ...circleVertices];
+      const unionVertices = this.convexHull(allVertices);
+      return this.createPolygonFromVertices(unionVertices, shape1, shape2, 'union');
+    }
+    
+    // Build union outline
+    const unionVertices = this.buildRectangleCircleUnionOutline(rectVertices, circleVertices, intersections);
+    return this.createPolygonFromVertices(unionVertices, shape1, shape2, 'union');
+  }
+
+  /**
+   * Find intersections between rectangle and circle
+   */
+  private static findRectangleCircleIntersections(rect: Shape, circle: Shape): IntersectionPoint[] {
+    const rectEdges = this.getRectangleEdges(rect);
+    const circleEdges = this.getCircleEdges(circle);
+    const intersections: IntersectionPoint[] = [];
+
+    // Transform edges to world coordinates
+    const worldRectEdges = this.transformEdges(rectEdges, rect);
+    const worldCircleEdges = this.transformEdges(circleEdges, circle);
+
+    for (const rectEdge of worldRectEdges) {
+      for (const circleEdge of worldCircleEdges) {
+        const intersection = this.findLineIntersection(rectEdge, circleEdge);
+        if (intersection) {
+          intersections.push({
+            ...intersection,
+            onShape1: true,
+            onShape2: true
+          });
+        }
+      }
+    }
+
+    return intersections;
+  }
+
+  /**
+   * Build union outline for rectangle and circle
+   */
+  private static buildRectangleCircleUnionOutline(
+    rectVertices: Point[],
+    circleVertices: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      return this.convexHull([...rectVertices, ...circleVertices]);
+    }
+
+    // Get all candidate points
+    const allPoints = [...rectVertices, ...circleVertices, ...intersections];
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep only exterior points
+    const exteriorPoints = uniquePoints.filter(point => {
+      const strictlyInsideRect = this.isPointStrictlyInside(point, rectVertices);
+      const strictlyInsideCircle = this.isPointStrictlyInsideCircle(point, circleVertices);
+      
+      return !(strictlyInsideRect && strictlyInsideCircle);
+    });
+    
+    // Sort points by angle from centroid
+    const centroid = this.calculateCentroid(exteriorPoints);
+    return exteriorPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
   }
 
   /**
