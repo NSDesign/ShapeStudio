@@ -1,4 +1,5 @@
 import { Shape } from './shapes';
+import { GeometricIntersection } from './geometricIntersection';
 
 export class BooleanOperations {
   /**
@@ -10,7 +11,12 @@ export class BooleanOperations {
     operation: 'union' | 'subtract' | 'intersect' | 'exclude'
   ): Shape | null {
     try {
-      return this.performCanvasBooleanOperation(sourceShape, targetShape, operation);
+      // Use geometric intersection method for union, fallback to canvas for others
+      if (operation === 'union') {
+        return GeometricIntersection.performGeometricUnion(sourceShape, targetShape);
+      } else {
+        return this.performCanvasBooleanOperation(sourceShape, targetShape, operation);
+      }
     } catch (error) {
       console.warn('Boolean operation failed:', error);
       return null;
