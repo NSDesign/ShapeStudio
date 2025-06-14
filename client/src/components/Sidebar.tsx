@@ -2894,11 +2894,7 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'color' 
-                    ? 'bg-amber-500 text-white hover:bg-amber-600 border-amber-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-amber-400 hover:text-amber-300 hover:bg-amber-500/20 bg-slate-800 border-slate-600"
               >
                 <Pipette className="w-5 h-5" />
               </Button>
@@ -2919,17 +2915,42 @@ export default function Sidebar({
             </PopoverContent>
           </Popover>
 
+          {/* Properties */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto mx-2 transition-colors border text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 bg-slate-800 border-slate-600"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </h3>
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {/* Artboards */}
           <Popover onOpenChange={(open) => setActivePopover(open ? 'artboards' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'artboards' 
-                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 border-cyan-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 bg-slate-800 border-slate-600"
               >
                 <Square className="w-5 h-5" />
               </Button>
@@ -3100,7 +3121,7 @@ export default function Sidebar({
           </AccordionItem>
 
           {/* Artboards Section */}
-          <AccordionItem value="artboards" className="border-b-0">
+          <AccordionItem value="artboards" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-cyan-300 data-[state=open]:bg-cyan-900/20">
               <div className="flex items-center space-x-2">
                 <Square className="w-4 h-4 text-cyan-400" />
