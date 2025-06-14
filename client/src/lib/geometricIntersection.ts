@@ -41,7 +41,22 @@ export class GeometricIntersection {
       const intersections = this.findShapeIntersections(shape1, shape2);
       this.debugIntersections = intersections.map(i => ({ x: i.x, y: i.y }));
       
-
+      // Debug: Log shape transforms to verify coordinate system
+      if (intersections.length > 0) {
+        console.log('Shape transforms:', {
+          shape1: {
+            type: shape1.type,
+            transform: shape1.transform,
+            bounds: shape1.getWorldBounds()
+          },
+          shape2: {
+            type: shape2.type,
+            transform: shape2.transform,
+            bounds: shape2.getWorldBounds()
+          },
+          intersections: intersections.map(i => ({ x: Math.round(i.x * 10) / 10, y: Math.round(i.y * 10) / 10 }))
+        });
+      }
     } catch (error) {
       console.warn('Error finding intersections:', error);
     }
@@ -57,13 +72,10 @@ export class GeometricIntersection {
     const edges2 = this.getShapeEdges(shape2);
     const intersections: IntersectionPoint[] = [];
 
-    // Transform edges to world coordinates
-    const worldEdges1 = this.transformEdges(edges1, shape1);
-    const worldEdges2 = this.transformEdges(edges2, shape2);
-
-    for (let i = 0; i < worldEdges1.length; i++) {
-      for (let j = 0; j < worldEdges2.length; j++) {
-        const intersection = this.findLineIntersection(worldEdges1[i], worldEdges2[j]);
+    // Edges are already in world coordinates from getShapeEdges
+    for (let i = 0; i < edges1.length; i++) {
+      for (let j = 0; j < edges2.length; j++) {
+        const intersection = this.findLineIntersection(edges1[i], edges2[j]);
         if (intersection) {
           intersections.push({
             ...intersection,
@@ -78,31 +90,49 @@ export class GeometricIntersection {
   }
 
   /**
-   * Get edge segments from a shape
+   * Get edge segments from a shape using actual transformed points
    */
   private static getShapeEdges(shape: Shape): LineSegment[] {
     const edges: LineSegment[] = [];
     
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square':
-        edges.push(...this.getRectangleEdges(shape));
-        break;
-      case 'circle':
-        edges.push(...this.getCircleEdges(shape));
-        break;
-      case 'ellipse':
-        edges.push(...this.getEllipseEdges(shape));
-        break;
-      case 'polygon':
-      case 'star':
-        if (shape.points) {
-          edges.push(...this.getPolygonEdges(shape.points));
+    // Use the actual points that represent the visual shape
+    if (shape.points && shape.points.length > 0) {
+      // Get world-transformed points directly
+      const worldPoints: Point[] = [];
+      for (let i = 0; i < shape.points.length; i++) {
+        const worldPoint = shape.getWorldPoint(i);
+        if (worldPoint) {
+          worldPoints.push(worldPoint);
         }
-        break;
+      }
+      
+      // Create edges from consecutive world points
+      const numSegments = shape.closed ? worldPoints.length : worldPoints.length - 1;
+      for (let i = 0; i < numSegments; i++) {
+        const start = worldPoints[i];
+        const end = worldPoints[(i + 1) % worldPoints.length];
+        edges.push({ start, end });
+      }
+    } else {
+      // Fallback to original geometry-based approach for shapes without points
+      switch (shape.type) {
+        case 'rectangle':
+        case 'square':
+          edges.push(...this.getRectangleEdges(shape));
+          break;
+        case 'circle':
+          edges.push(...this.getCircleEdges(shape));
+          break;
+        case 'ellipse':
+          edges.push(...this.getEllipseEdges(shape));
+          break;
+      }
+      
+      // Transform edges to world coordinates
+      return this.transformEdges(edges, shape);
     }
 
-    return this.transformEdges(edges, shape);
+    return edges;
   }
 
   /**
