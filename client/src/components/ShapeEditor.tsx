@@ -2,7 +2,7 @@ import { useShapeEditor } from '../hooks/useShapeEditor';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings, ScatterSettings, ShapeType } from '../lib/shapeTypes';
 import { FolderOpen } from 'lucide-react';
-import Sidebar from './SidebarFixed';
+import Sidebar from './Sidebar';
 import Canvas from './Canvas';
 import ProjectDialog from './ProjectDialog';
 
