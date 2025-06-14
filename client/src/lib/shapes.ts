@@ -69,6 +69,68 @@ export class Shape {
     }
   }
 
+  /**
+   * Check if the shape's geometry has been manually edited
+   */
+  hasEditedGeometry(): boolean {
+    if (this.points.length === 0) return false;
+    
+    // Generate expected points based on shape type and compare
+    switch (this.type) {
+      case 'circle':
+        if (!this.radius || this.points.length !== this.segments) return true;
+        for (let i = 0; i < this.segments; i++) {
+          const angle = (i / this.segments) * Math.PI * 2;
+          const expectedX = Math.cos(angle) * this.radius;
+          const expectedY = Math.sin(angle) * this.radius;
+          const tolerance = 0.1;
+          if (Math.abs(this.points[i].x - expectedX) > tolerance || 
+              Math.abs(this.points[i].y - expectedY) > tolerance) {
+            return true;
+          }
+        }
+        return false;
+        
+      case 'ellipse':
+        if (!this.width || !this.height || this.points.length !== this.segments) return true;
+        const w = this.width / 2;
+        const h = this.height / 2;
+        for (let i = 0; i < this.segments; i++) {
+          const angle = (i / this.segments) * Math.PI * 2;
+          const expectedX = Math.cos(angle) * w;
+          const expectedY = Math.sin(angle) * h;
+          const tolerance = 0.1;
+          if (Math.abs(this.points[i].x - expectedX) > tolerance || 
+              Math.abs(this.points[i].y - expectedY) > tolerance) {
+            return true;
+          }
+        }
+        return false;
+        
+      case 'rectangle':
+      case 'square':
+        if (!this.width || !this.height || this.points.length !== 4) return true;
+        const expectedRect = [
+          { x: -this.width / 2, y: -this.height / 2 },
+          { x: this.width / 2, y: -this.height / 2 },
+          { x: this.width / 2, y: this.height / 2 },
+          { x: -this.width / 2, y: this.height / 2 }
+        ];
+        for (let i = 0; i < 4; i++) {
+          const tolerance = 0.1;
+          if (Math.abs(this.points[i].x - expectedRect[i].x) > tolerance || 
+              Math.abs(this.points[i].y - expectedRect[i].y) > tolerance) {
+            return true;
+          }
+        }
+        return false;
+        
+      default:
+        // For other shape types (line, bezier, blob, etc.), assume they are always "edited"
+        return true;
+    }
+  }
+
   static create(type: ShapeType, x: number = 0, y: number = 0): Shape {
     return new Shape(type, x, y);
   }
