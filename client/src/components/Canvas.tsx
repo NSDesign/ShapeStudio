@@ -5,6 +5,7 @@ import { ZoomIn, ZoomOut, RotateCcw, MoreHorizontal } from "lucide-react";
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { CanvasSettings, Artboard } from '../lib/shapeTypes';
 import ExportDialog from './ExportDialog';
+import { GeometricIntersection } from '../lib/geometricIntersection';
 
 interface CanvasProps {
   shapes: Shape[];
@@ -363,6 +364,39 @@ export default function Canvas({
       }
 
       ctx.restore();
+
+      // Render debug intersection points when boolean operations are being performed
+      if (selectedShapes.length === 1) {
+        const sourceShape = selectedShapes[0];
+        
+        // Find potential target shapes for boolean operations
+        const otherShapes = shapes.filter(s => s.id !== sourceShape.id && !s.selected);
+        
+        otherShapes.forEach(targetShape => {
+          try {
+            const intersections = GeometricIntersection.getIntersectionPoints(sourceShape, targetShape);
+            
+            if (intersections.length > 0) {
+              ctx.save();
+              ctx.fillStyle = 'rgba(220, 38, 38, 0.6)'; // Semi-transparent red
+              ctx.strokeStyle = 'rgba(220, 38, 38, 0.8)';
+              ctx.lineWidth = 2 / canvasSettings.zoom;
+              
+              intersections.forEach(point => {
+                const radius = 4 / canvasSettings.zoom;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+              });
+              
+              ctx.restore();
+            }
+          } catch (error) {
+            // Silently handle intersection calculation errors
+          }
+        });
+      }
 
       // Show multi-touch gesture indicator on touch devices
       if (isTouchDevice && isMultiTouch && selectedCount > 0) {

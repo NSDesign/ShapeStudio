@@ -14,6 +14,39 @@ export interface IntersectionPoint extends Point {
 }
 
 export class GeometricIntersection {
+  // Store intersection points for visual debugging
+  private static debugIntersections: Point[] = [];
+  
+  /**
+   * Get intersection points for visual debugging
+   */
+  static getDebugIntersections(): Point[] {
+    return this.debugIntersections;
+  }
+  
+  /**
+   * Clear debug intersection points
+   */
+  static clearDebugIntersections(): void {
+    this.debugIntersections = [];
+  }
+  
+  /**
+   * Get intersection points between two shapes for debugging
+   */
+  static getIntersectionPoints(shape1: Shape, shape2: Shape): Point[] {
+    this.debugIntersections = [];
+    
+    try {
+      const intersections = this.findShapeIntersections(shape1, shape2);
+      this.debugIntersections = intersections.map(i => ({ x: i.x, y: i.y }));
+    } catch (error) {
+      console.warn('Error finding intersections:', error);
+    }
+    
+    return this.debugIntersections;
+  }
+  
   /**
    * Find all intersection points between two shapes
    */
