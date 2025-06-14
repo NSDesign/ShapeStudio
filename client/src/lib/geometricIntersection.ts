@@ -39,6 +39,7 @@ export class GeometricIntersection {
     
     try {
       const intersections = this.findShapeIntersections(shape1, shape2);
+      // The intersections are already in world coordinates, no additional transform needed
       this.debugIntersections = intersections.map(i => ({ x: i.x, y: i.y }));
     } catch (error) {
       console.warn('Error finding intersections:', error);
@@ -55,9 +56,13 @@ export class GeometricIntersection {
     const edges2 = this.getShapeEdges(shape2);
     const intersections: IntersectionPoint[] = [];
 
-    for (let i = 0; i < edges1.length; i++) {
-      for (let j = 0; j < edges2.length; j++) {
-        const intersection = this.findLineIntersection(edges1[i], edges2[j]);
+    // Transform edges to world coordinates
+    const worldEdges1 = this.transformEdges(edges1, shape1);
+    const worldEdges2 = this.transformEdges(edges2, shape2);
+
+    for (let i = 0; i < worldEdges1.length; i++) {
+      for (let j = 0; j < worldEdges2.length; j++) {
+        const intersection = this.findLineIntersection(worldEdges1[i], worldEdges2[j]);
         if (intersection) {
           intersections.push({
             ...intersection,
