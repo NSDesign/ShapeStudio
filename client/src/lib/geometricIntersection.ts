@@ -460,8 +460,6 @@ export class GeometricIntersection {
     shape2: Shape,
     operation: string
   ): Shape {
-    console.log(`Creating ${operation} polygon with ${vertices.length} vertices:`, vertices);
-    
     const result = new Shape('polygon');
     result.id = `${shape1.id}_${operation}_${shape2.id}`;
     
@@ -480,8 +478,6 @@ export class GeometricIntersection {
     }));
     
     result.properties = { ...shape1.properties };
-    
-    console.log(`Final polygon has ${result.points.length} points relative to centroid (${centroid.x}, ${centroid.y})`);
     
     return result;
   }
