@@ -41,22 +41,7 @@ export class GeometricIntersection {
       const intersections = this.findShapeIntersections(shape1, shape2);
       this.debugIntersections = intersections.map(i => ({ x: i.x, y: i.y }));
       
-      // Debug: Log shape transforms to verify coordinate system
-      if (intersections.length > 0) {
-        console.log('Shape transforms:', {
-          shape1: {
-            type: shape1.type,
-            transform: shape1.transform,
-            bounds: shape1.getWorldBounds()
-          },
-          shape2: {
-            type: shape2.type,
-            transform: shape2.transform,
-            bounds: shape2.getWorldBounds()
-          },
-          intersections: intersections.map(i => ({ x: Math.round(i.x * 10) / 10, y: Math.round(i.y * 10) / 10 }))
-        });
-      }
+
     } catch (error) {
       console.warn('Error finding intersections:', error);
     }
@@ -391,13 +376,36 @@ export class GeometricIntersection {
     // Remove duplicate points
     const uniquePoints = this.removeDuplicatePoints(allPoints);
     
-    // Filter to keep only exterior points
+    // Filter to keep only exterior points for union operation
     const exteriorPoints = uniquePoints.filter(point => {
-      // Point is exterior if it's not strictly inside both rectangles
       const strictlyInsideRect1 = this.isPointStrictlyInside(point, vertices1);
       const strictlyInsideRect2 = this.isPointStrictlyInside(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
       
-      return !(strictlyInsideRect1 && strictlyInsideRect2);
+      // For union: keep points that are:
+      // 1. Intersection points (always on boundary)
+      // 2. Rectangle vertices that are not strictly inside the other rectangle
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      const isRect1Vertex = vertices1.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      const isRect2Vertex = vertices2.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      
+      if (isRect1Vertex) {
+        return !strictlyInsideRect2;
+      }
+      if (isRect2Vertex) {
+        return !strictlyInsideRect1;
+      }
+      
+      return false;
     });
     
     // Sort points by angle from centroid to create proper outline
@@ -635,12 +643,36 @@ export class GeometricIntersection {
     const allPoints = [...vertices1, ...vertices2, ...intersections];
     const uniquePoints = this.removeDuplicatePoints(allPoints);
     
-    // Filter to keep only exterior points
+    // Filter to keep only exterior points for union operation
     const exteriorPoints = uniquePoints.filter(point => {
       const strictlyInsideCircle1 = this.isPointStrictlyInsideCircle(point, vertices1);
       const strictlyInsideCircle2 = this.isPointStrictlyInsideCircle(point, vertices2);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
       
-      return !(strictlyInsideCircle1 && strictlyInsideCircle2);
+      // For union: keep points that are:
+      // 1. Intersection points (always on boundary)
+      // 2. Circle vertices that are not strictly inside the other circle
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      const isCircle1Vertex = vertices1.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      const isCircle2Vertex = vertices2.some(v => 
+        Math.abs(v.x - point.x) < 0.01 && Math.abs(v.y - point.y) < 0.01
+      );
+      
+      if (isCircle1Vertex) {
+        return !strictlyInsideCircle2;
+      }
+      if (isCircle2Vertex) {
+        return !strictlyInsideCircle1;
+      }
+      
+      return false;
     });
     
     // Sort points by angle from centroid
@@ -746,12 +778,37 @@ export class GeometricIntersection {
     const allPoints = [...rectVertices, ...circleVertices, ...intersections];
     const uniquePoints = this.removeDuplicatePoints(allPoints);
     
-    // Filter to keep only exterior points
+    // Filter to keep only exterior points for union operation
     const exteriorPoints = uniquePoints.filter(point => {
       const strictlyInsideRect = this.isPointStrictlyInside(point, rectVertices);
       const strictlyInsideCircle = this.isPointStrictlyInsideCircle(point, circleVertices);
+      const isIntersectionPoint = intersections.some(ip => 
+        Math.abs(ip.x - point.x) < 0.01 && Math.abs(ip.y - point.y) < 0.01
+      );
       
-      return !(strictlyInsideRect && strictlyInsideCircle);
+      // For union: keep points that are:
+      // 1. Intersection points (always on boundary)
+      // 2. Rectangle vertices that are not strictly inside circle
+      // 3. Circle vertices that are not strictly inside rectangle
+      if (isIntersectionPoint) {
+        return true;
+      }
+      
+      const isRectVertex = rectVertices.some(rv => 
+        Math.abs(rv.x - point.x) < 0.01 && Math.abs(rv.y - point.y) < 0.01
+      );
+      const isCircleVertex = circleVertices.some(cv => 
+        Math.abs(cv.x - point.x) < 0.01 && Math.abs(cv.y - point.y) < 0.01
+      );
+      
+      if (isRectVertex) {
+        return !strictlyInsideCircle;
+      }
+      if (isCircleVertex) {
+        return !strictlyInsideRect;
+      }
+      
+      return false;
     });
     
     // Sort points by angle from centroid
