@@ -227,33 +227,275 @@ export class GeometricIntersection {
   }
 
   /**
-   * Perform geometric union operation
+   * Perform geometric union operation for rectangles
    */
   static performGeometricUnion(shape1: Shape, shape2: Shape): Shape | null {
-    // Find all intersection points
-    const intersections = this.findShapeIntersections(shape1, shape2);
-    
-    if (intersections.length === 0) {
-      // No intersections - shapes don't overlap
-      // Return a compound shape or the larger shape
-      return this.createCompoundShape(shape1, shape2, 'union');
+    // For now, focus on rectangle-rectangle union
+    if (shape1.type !== 'rectangle' && shape1.type !== 'square') {
+      return null;
+    }
+    if (shape2.type !== 'rectangle' && shape2.type !== 'square') {
+      return null;
     }
     
-    // Get all vertices from both shapes including intersection points
-    const allVertices = this.collectAllVertices(shape1, shape2, intersections);
+    return this.performRectangleUnion(shape1, shape2);
+  }
+
+  /**
+   * Perform union operation specifically for rectangles
+   */
+  private static performRectangleUnion(rect1: Shape, rect2: Shape): Shape | null {
+    // Get vertices of both rectangles
+    const vertices1 = this.getRectangleVertices(rect1);
+    const vertices2 = this.getRectangleVertices(rect2);
     
-    // Build the union outline by tracing the outer boundary
-    const unionOutline = this.traceUnionBoundary(allVertices, shape1, shape2);
+    // Find intersection points between rectangle edges
+    const intersections = this.findRectangleIntersections(rect1, rect2);
     
-    // Create result shape
-    const result = new Shape('blob');
-    result.id = `${shape1.id}_union_${shape2.id}`;
-    result.points = unionOutline;
-    result.transform.x = shape1.transform.x;
-    result.transform.y = shape1.transform.y;
+    if (intersections.length === 0) {
+      // No intersections - rectangles don't overlap
+      // Return convex hull of both rectangles
+      const allVertices = [...vertices1, ...vertices2];
+      const unionVertices = this.convexHull(allVertices);
+      
+      return this.createPolygonFromVertices(unionVertices, rect1, rect2, 'union');
+    }
+    
+    // Build union outline by combining exterior vertices and intersection points
+    const unionVertices = this.buildRectangleUnionOutline(vertices1, vertices2, intersections);
+    
+    return this.createPolygonFromVertices(unionVertices, rect1, rect2, 'union');
+  }
+
+  /**
+   * Find intersections specifically between two rectangles
+   */
+  private static findRectangleIntersections(rect1: Shape, rect2: Shape): IntersectionPoint[] {
+    const edges1 = this.getRectangleEdges(rect1);
+    const edges2 = this.getRectangleEdges(rect2);
+    const intersections: IntersectionPoint[] = [];
+
+    // Transform edges to world coordinates
+    const worldEdges1 = this.transformEdges(edges1, rect1);
+    const worldEdges2 = this.transformEdges(edges2, rect2);
+
+    for (const edge1 of worldEdges1) {
+      for (const edge2 of worldEdges2) {
+        const intersection = this.findLineIntersection(edge1, edge2);
+        if (intersection) {
+          intersections.push({
+            ...intersection,
+            onShape1: true,
+            onShape2: true
+          });
+        }
+      }
+    }
+
+    return intersections;
+  }
+
+  /**
+   * Build union outline for rectangles using proper boundary tracing
+   */
+  private static buildRectangleUnionOutline(
+    vertices1: Point[],
+    vertices2: Point[],
+    intersections: IntersectionPoint[]
+  ): Point[] {
+    if (intersections.length === 0) {
+      // No intersections - return convex hull
+      return this.convexHull([...vertices1, ...vertices2]);
+    }
+
+    // Build the union outline by tracing the exterior boundary
+    const unionVertices: Point[] = [];
+    
+    // Get all candidate points (vertices + intersections)
+    const allPoints = [...vertices1, ...vertices2, ...intersections];
+    
+    // Remove duplicate points
+    const uniquePoints = this.removeDuplicatePoints(allPoints);
+    
+    // Filter to keep only exterior points
+    const exteriorPoints = uniquePoints.filter(point => {
+      // Point is exterior if it's not strictly inside both rectangles
+      const strictlyInsideRect1 = this.isPointStrictlyInside(point, vertices1);
+      const strictlyInsideRect2 = this.isPointStrictlyInside(point, vertices2);
+      
+      return !(strictlyInsideRect1 && strictlyInsideRect2);
+    });
+    
+    // Sort points by angle from centroid to create proper outline
+    const centroid = this.calculateCentroid(exteriorPoints);
+    const sortedPoints = exteriorPoints.sort((a, b) => {
+      const angleA = Math.atan2(a.y - centroid.y, a.x - centroid.x);
+      const angleB = Math.atan2(b.y - centroid.y, b.x - centroid.x);
+      return angleA - angleB;
+    });
+    
+    return sortedPoints;
+  }
+
+  /**
+   * Remove duplicate points within tolerance
+   */
+  private static removeDuplicatePoints(points: Point[], tolerance = 1e-6): Point[] {
+    const unique: Point[] = [];
+    
+    for (const point of points) {
+      const isDuplicate = unique.some(existing => 
+        this.pointsEqual(point, existing, tolerance)
+      );
+      
+      if (!isDuplicate) {
+        unique.push(point);
+      }
+    }
+    
+    return unique;
+  }
+
+  /**
+   * Check if point is strictly inside rectangle (not on boundary)
+   */
+  private static isPointStrictlyInside(point: Point, rectVertices: Point[]): boolean {
+    if (rectVertices.length !== 4) return false;
+    
+    // Check if point is on any edge first
+    for (let i = 0; i < 4; i++) {
+      const edge = {
+        start: rectVertices[i],
+        end: rectVertices[(i + 1) % 4]
+      };
+      
+      if (this.isPointOnLineSegment(point, edge)) {
+        return false; // On boundary, not strictly inside
+      }
+    }
+    
+    // Use ray casting for interior test
+    let crossings = 0;
+    const rayEnd = { x: point.x + 10000, y: point.y };
+    
+    for (let i = 0; i < 4; i++) {
+      const edge = {
+        start: rectVertices[i],
+        end: rectVertices[(i + 1) % 4]
+      };
+      
+      if (this.lineSegmentsIntersect({ start: point, end: rayEnd }, edge)) {
+        crossings++;
+      }
+    }
+    
+    return crossings % 2 === 1;
+  }
+
+  /**
+   * Check if point lies on a line segment
+   */
+  private static isPointOnLineSegment(point: Point, segment: LineSegment): boolean {
+    const { start, end } = segment;
+    
+    // Check if point is collinear with segment
+    const crossProduct = (point.y - start.y) * (end.x - start.x) - (point.x - start.x) * (end.y - start.y);
+    if (Math.abs(crossProduct) > 1e-6) return false;
+    
+    // Check if point is within segment bounds
+    const dotProduct = (point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y);
+    const squaredLength = (end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y);
+    
+    return dotProduct >= 0 && dotProduct <= squaredLength;
+  }
+
+  /**
+   * Check if two line segments intersect
+   */
+  private static lineSegmentsIntersect(seg1: LineSegment, seg2: LineSegment): boolean {
+    const intersection = this.findLineIntersection(seg1, seg2);
+    return intersection !== null;
+  }
+
+  /**
+   * Check if point is strictly inside a rectangle (not on boundary)
+   */
+  private static isPointInsideRectangle(point: Point, rectVertices: Point[]): boolean {
+    if (rectVertices.length !== 4) return false;
+    
+    // Use ray casting algorithm
+    let inside = false;
+    const rayEnd = { x: point.x + 10000, y: point.y };
+    
+    for (let i = 0; i < 4; i++) {
+      const edge = {
+        start: rectVertices[i],
+        end: rectVertices[(i + 1) % 4]
+      };
+      
+      const intersection = this.findLineIntersection(
+        { start: point, end: rayEnd },
+        edge
+      );
+      
+      if (intersection) {
+        inside = !inside;
+      }
+    }
+    
+    return inside;
+  }
+
+  /**
+   * Create a polygon shape from vertices
+   */
+  private static createPolygonFromVertices(
+    vertices: Point[],
+    shape1: Shape,
+    shape2: Shape,
+    operation: string
+  ): Shape {
+    console.log(`Creating ${operation} polygon with ${vertices.length} vertices:`, vertices);
+    
+    const result = new Shape('polygon');
+    result.id = `${shape1.id}_${operation}_${shape2.id}`;
+    
+    // Use shape1's transform as base but adjust position to centroid
+    const centroid = this.calculateCentroid(vertices);
+    result.transform.x = centroid.x;
+    result.transform.y = centroid.y;
+    result.transform.rotation = 0; // Reset rotation for union result
+    result.transform.scaleX = 1;
+    result.transform.scaleY = 1;
+    
+    // Adjust points to be relative to centroid
+    result.points = vertices.map(v => ({
+      x: v.x - centroid.x,
+      y: v.y - centroid.y
+    }));
+    
     result.properties = { ...shape1.properties };
     
+    console.log(`Final polygon has ${result.points.length} points relative to centroid (${centroid.x}, ${centroid.y})`);
+    
     return result;
+  }
+
+  /**
+   * Calculate centroid of vertices
+   */
+  private static calculateCentroid(vertices: Point[]): Point {
+    const centroid = { x: 0, y: 0 };
+    
+    for (const vertex of vertices) {
+      centroid.x += vertex.x;
+      centroid.y += vertex.y;
+    }
+    
+    centroid.x /= vertices.length;
+    centroid.y /= vertices.length;
+    
+    return centroid;
   }
 
   /**
