@@ -4,7 +4,6 @@ import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard,
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils } from '../lib/colorManipulation';
-import { useToast } from './use-toast';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -1619,19 +1618,9 @@ export const useShapeEditor = () => {
         
         setShapes(newShapes);
         setSelectedShapes([result]);
-        
-        // Show success toast
-        toast({
-          title: "Boolean Operation Applied",
-          description: `${operation.charAt(0).toUpperCase() + operation.slice(1)} operation completed successfully.`,
-        });
+        console.log(`${operation.charAt(0).toUpperCase() + operation.slice(1)} operation completed successfully.`);
       } else {
-        // Show error message when operation fails
-        toast({
-          title: "Boolean Operation Failed",
-          description: `Cannot perform ${operation}: shapes do not intersect or are incompatible.`,
-          variant: "destructive",
-        });
+        console.warn(`Cannot perform ${operation}: shapes do not intersect or are incompatible.`);
       }
     }, [selectedShapes, shapes, setShapes, setSelectedShapes]),
     
