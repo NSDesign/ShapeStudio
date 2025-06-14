@@ -2922,7 +2922,7 @@ export default function Sidebar({
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Group className="w-4 h-4 mr-2" />
+                  <Layers className="w-4 h-4 mr-2" />
                   Composition
                 </h3>
                 <CompositionContent />
@@ -3072,15 +3072,14 @@ export default function Sidebar({
 
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto">
-        <Accordion type="multiple" defaultValue={["shapes", "editmode", "transforms", "boolean", "color", "artboards", "layers"]} className="w-full">
+        <Accordion type="multiple" defaultValue={["shapes", "editmode", "properties", "layers", "transforms", "color", "composition", "boolean", "artboards"]} className="w-full">
 
-          {/* Shape Types Section */}
+          {/* 1. Shape Types */}
           <AccordionItem value="shapes" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-blue-300 data-[state=open]:bg-blue-900/20">
               <div className="flex items-center space-x-2">
                 <Shapes className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Shape Types</span>
-
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -3088,7 +3087,7 @@ export default function Sidebar({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Edit Mode Section - Moved under Create */}
+          {/* 2. Edit Mode */}
           <AccordionItem value="editmode" className="border-b border-slate-700">
             <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-green-300 data-[state=open]:bg-green-900/20">
               <div className="flex items-center space-x-2">
@@ -3105,83 +3104,25 @@ export default function Sidebar({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Transform Tools Section */}
-          <AccordionItem value="transforms" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-orange-300 data-[state=open]:bg-orange-900/20">
+          {/* 3. Properties */}
+          <AccordionItem value="properties" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-pink-300 data-[state=open]:bg-pink-900/20">
               <div className="flex items-center space-x-2">
-                <Move className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Transform Tools</span>
-
+                <Settings className="w-4 h-4 text-pink-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Properties</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
-              <TransformToolsContent />
+              <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
             </AccordionContent>
           </AccordionItem>
 
-          {/* Composition Section */}
-          <AccordionItem value="composition" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-purple-300 data-[state=open]:bg-purple-900/20">
-              <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-purple-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Composition</span>
-
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <CompositionContent />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Artboards Section */}
-          <AccordionItem value="artboards" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-cyan-300 data-[state=open]:bg-cyan-900/20">
-              <div className="flex items-center space-x-2">
-                <Square className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Artboards</span>
-
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <ArtboardContent />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Boolean Operations Section */}
-          <AccordionItem value="boolean" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-indigo-300 data-[state=open]:bg-indigo-900/20">
-              <div className="flex items-center space-x-2">
-                <GitMerge className="w-4 h-4 text-indigo-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Boolean Operations</span>
-
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <BooleanOperationsContent />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Color Manipulation Section */}
-          <AccordionItem value="color" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-amber-300 data-[state=open]:bg-amber-900/20">
-              <div className="flex items-center space-x-2">
-                <Pipette className="w-4 h-4 text-amber-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Color Manipulation</span>
-
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-6">
-              <ColorManipulationContent />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Layers Section */}
+          {/* 4. Layers */}
           <AccordionItem value="layers" className="border-b border-slate-700">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-emerald-300 data-[state=open]:bg-emerald-900/20">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-blue-300 data-[state=open]:bg-blue-900/20">
               <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-emerald-400" />
+                <Layers className="w-4 h-4 text-blue-400" />
                 <span className="text-sm font-semibold uppercase tracking-wide">Layers</span>
-
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
@@ -3189,17 +3130,68 @@ export default function Sidebar({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Properties Section */}
-          <AccordionItem value="properties" className="border-b-0">
-            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-pink-300 data-[state=open]:bg-pink-900/20">
+          {/* 5. Transforms */}
+          <AccordionItem value="transforms" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-orange-300 data-[state=open]:bg-orange-900/20">
               <div className="flex items-center space-x-2">
-                <Palette className="w-4 h-4 text-pink-400" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Properties</span>
-
+                <Move className="w-4 h-4 text-orange-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Transforms</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
-              <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
+              <TransformToolsContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 6. Color Manipulation */}
+          <AccordionItem value="color" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-amber-300 data-[state=open]:bg-amber-900/20">
+              <div className="flex items-center space-x-2">
+                <Pipette className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Color Manipulation</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <ColorManipulationContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 7. Composition */}
+          <AccordionItem value="composition" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-purple-300 data-[state=open]:bg-purple-900/20">
+              <div className="flex items-center space-x-2">
+                <Layers className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Composition</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <CompositionContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 8. Boolean */}
+          <AccordionItem value="boolean" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-indigo-300 data-[state=open]:bg-indigo-900/20">
+              <div className="flex items-center space-x-2">
+                <GitMerge className="w-4 h-4 text-indigo-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Boolean</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <BooleanOperationsContent />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* 9. Artboards */}
+          <AccordionItem value="artboards" className="border-b border-slate-700">
+            <AccordionTrigger className="px-6 py-4 text-slate-300 hover:text-white hover:no-underline data-[state=open]:text-cyan-300 data-[state=open]:bg-cyan-900/20">
+              <div className="flex items-center space-x-2">
+                <Square className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-semibold uppercase tracking-wide">Artboards</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <ArtboardContent />
             </AccordionContent>
           </AccordionItem>
 
