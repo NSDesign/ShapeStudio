@@ -46,7 +46,9 @@ import {
   Combine,
   GitMerge,
   X,
-  Copy
+  Copy,
+  Edit3,
+  Group
 } from "lucide-react";
 import { ShapeType, ScatterSettings, BlendMode, Artboard, ArtboardPreset, ARTBOARD_PRESETS } from "../lib/shapeTypes";
 import { useShapeEditor } from "../hooks/useShapeEditor";
@@ -2770,11 +2772,7 @@ export default function Sidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'edit' 
-                    ? 'bg-green-500 text-white hover:bg-green-600 border-green-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-green-400 hover:text-green-300 hover:bg-green-500/20 bg-slate-800 border-slate-600"
               >
                 <Settings className="w-5 h-5" />
               </Button>
@@ -2795,48 +2793,42 @@ export default function Sidebar({
             </PopoverContent>
           </Popover>
 
-          {/* Transform Tools */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'transform' : null)}>
+          {/* Properties */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'transform' 
-                    ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 bg-slate-800 border-slate-600"
               >
-                <Move className="w-5 h-5" />
+                <Settings className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
               side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700"
+              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
               onOpenAutoFocus={(e) => e.preventDefault()}
               onCloseAutoFocus={(e) => e.preventDefault()}
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Move className="w-4 h-4 mr-2" />
-                  Transform Tools
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
                 </h3>
-                <TransformToolsContent />
+                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
+                  <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
 
-          {/* Composition */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'composition' : null)}>
+          {/* Layers */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'layers' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'composition' 
-                    ? 'bg-purple-500 text-white hover:bg-purple-600 border-purple-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 bg-slate-800 border-slate-600"
               >
                 <Layers className="w-5 h-5" />
               </Button>
@@ -2850,26 +2842,22 @@ export default function Sidebar({
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
                   <Layers className="w-4 h-4 mr-2" />
-                  Composition
+                  Layers
                 </h3>
-                <CompositionContent />
+                <LayersContent />
               </div>
             </PopoverContent>
           </Popover>
 
-          {/* Boolean Operations */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'boolean' : null)}>
+          {/* Transforms */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'transform' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-3 h-auto mx-2 transition-colors border ${
-                  activePopover === 'boolean' 
-                    ? 'bg-indigo-500 text-white hover:bg-indigo-600 border-indigo-400' 
-                    : 'text-white hover:text-white hover:bg-slate-700 bg-slate-800 border-slate-600'
-                }`}
+                className="p-3 h-auto mx-2 transition-colors border text-orange-400 hover:text-orange-300 hover:bg-orange-500/20 bg-slate-800 border-slate-600"
               >
-                <GitMerge className="w-5 h-5" />
+                <Move className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
@@ -2880,10 +2868,10 @@ export default function Sidebar({
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <GitMerge className="w-4 h-4 mr-2" />
-                  Boolean Operations
+                  <Move className="w-4 h-4 mr-2" />
+                  Transforms
                 </h3>
-                <BooleanOperationsContent />
+                <TransformToolsContent />
               </div>
             </PopoverContent>
           </Popover>
@@ -2915,31 +2903,56 @@ export default function Sidebar({
             </PopoverContent>
           </Popover>
 
-          {/* Properties */}
-          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
+          {/* Composition */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'composition' : null)}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-3 h-auto mx-2 transition-colors border text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 bg-slate-800 border-slate-600"
+                className="p-3 h-auto mx-2 transition-colors border text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 bg-slate-800 border-slate-600"
               >
-                <Settings className="w-5 h-5" />
+                <Layers className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent 
               side="right" 
-              className="w-80 bg-[var(--surface)] border-slate-700 max-h-[80vh] overflow-hidden"
+              className="w-80 bg-[var(--surface)] border-slate-700"
               onOpenAutoFocus={(e) => e.preventDefault()}
               onCloseAutoFocus={(e) => e.preventDefault()}
             >
               <div className="space-y-2">
                 <h3 className="font-semibold text-slate-300 flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Properties
+                  <Group className="w-4 h-4 mr-2" />
+                  Composition
                 </h3>
-                <div className="overflow-y-auto max-h-[70vh] pr-2" style={{ scrollBehavior: 'smooth' }}>
-                  <ShapePropertiesPanel selectedShapes={selectedShapes} selectedGroups={selectedGroups} selectedCount={selectedCount} />
-                </div>
+                <CompositionContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Boolean */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'boolean' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto mx-2 transition-colors border text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 bg-slate-800 border-slate-600"
+              >
+                <GitMerge className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <GitMerge className="w-4 h-4 mr-2" />
+                  Boolean
+                </h3>
+                <BooleanOperationsContent />
               </div>
             </PopoverContent>
           </Popover>
