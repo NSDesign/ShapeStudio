@@ -35,15 +35,11 @@ export class Shape {
     this.selected = false;
     this.points = [];
     
-    // Initialize with default values, will be set properly after shape data generation
-    this.segments = 8;
-    this.renderType = 'polygon';
-    
-    this.generateShapeData();
-    
-    // Set proper defaults after shape initialization
+    // Set proper defaults before shape initialization
     this.segments = this.getDefaultSegments();
     this.renderType = this.getDefaultRenderType();
+    
+    this.generateShapeData();
   }
   
   /**

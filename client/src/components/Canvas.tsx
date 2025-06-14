@@ -392,7 +392,8 @@ export default function Canvas({
               ctx.lineWidth = 1.5 / canvasSettings.zoom;
               
               intersections.forEach(point => {
-                const radius = 5 / canvasSettings.zoom;
+                // Draw at world coordinates (canvas transform is already applied)
+                const radius = 5 / canvasSettings.zoom; // Scale with zoom
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
                 ctx.fill();
