@@ -374,10 +374,21 @@ export default function Canvas({
         let totalIntersections = 0;
         
         // Only show intersections with shapes that can participate in boolean operations
+        const isCompatibleShape = (shape: Shape) => {
+          // Check if shape has points and is not a line
+          if (!shape.points || shape.points.length === 0 || shape.type === 'line') {
+            return false;
+          }
+          // Support all polygon-based shapes
+          const supportedTypes = ['rectangle', 'square', 'circle', 'ellipse', 'polygon', 'star', 'ring', 'blob', 'spline-circle', 'spline-ellipse', 'spline-ring', 'bezier', 'cubic'];
+          return supportedTypes.includes(shape.type);
+        };
+        
         const compatibleShapes = shapes.filter(s => 
           s.id !== sourceShape.id && 
           !s.selected &&
-          (s.type === 'rectangle' || s.type === 'square' || s.type === 'circle' || s.type === 'ellipse')
+          isCompatibleShape(sourceShape) &&
+          isCompatibleShape(s)
         );
         
         ctx.save();
