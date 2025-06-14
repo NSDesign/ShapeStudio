@@ -86,7 +86,7 @@ export class GeometricIntersection {
    */
   private static getCircleEdges(shape: Shape): LineSegment[] {
     const radius = shape.radius || 50;
-    const segments = 32; // High resolution for smooth circles
+    const segments = shape.segments || 32; // Use shape's actual segment count
     const edges: LineSegment[] = [];
     
     for (let i = 0; i < segments; i++) {
@@ -114,7 +114,7 @@ export class GeometricIntersection {
   private static getEllipseEdges(shape: Shape): LineSegment[] {
     const rx = (shape.width || 100) / 2;
     const ry = (shape.height || 100) / 2;
-    const segments = 32;
+    const segments = shape.segments || 32; // Use shape's actual segment count
     const edges: LineSegment[] = [];
     
     for (let i = 0; i < segments; i++) {
@@ -756,7 +756,7 @@ export class GeometricIntersection {
    */
   private static getCircleVertices(shape: Shape): Point[] {
     const radius = shape.radius || 50;
-    const segments = 32;
+    const segments = shape.segments || 32; // Use shape's actual segment count
     const vertices: Point[] = [];
     
     for (let i = 0; i < segments; i++) {
@@ -777,7 +777,7 @@ export class GeometricIntersection {
   private static getEllipseVertices(shape: Shape): Point[] {
     const rx = (shape.width || 100) / 2;
     const ry = (shape.height || 100) / 2;
-    const segments = 32;
+    const segments = shape.segments || 32; // Use shape's actual segment count
     const vertices: Point[] = [];
     
     for (let i = 0; i < segments; i++) {
