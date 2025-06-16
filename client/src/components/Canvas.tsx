@@ -614,10 +614,10 @@ export default function Canvas({
       </div>
       
       {/* Canvas */}
-      <div className="flex-1 relative bg-slate-900 overflow-hidden">
+      <div className="flex-1 relative bg-slate-900">
         <canvas
           ref={canvasRef}
-          className="shape-canvas w-full h-full cursor-crosshair"
+          className="shape-canvas absolute inset-0 w-full h-full cursor-crosshair"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}

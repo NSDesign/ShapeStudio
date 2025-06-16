@@ -2460,44 +2460,11 @@ export default function Sidebar({
   };
 
   const ColorManipulationContent = () => {
-    // Debounced color manipulation to prevent memory issues
-    useEffect(() => {
-      if (colorMode === 'shift' && (hueShift !== 0 || saturationShift !== 0 || lightnessShift !== 0)) {
-        const timeoutId = setTimeout(() => {
-          const manipulation = {
-            mode: colorMode,
-            hslShift: {
-              hue: hueShift,
-              saturation: saturationShift,
-              lightness: lightnessShift,
-              enabled: true
-            },
-            affectFill,
-            affectStroke
-          };
-          onApplyColorManipulation(manipulation);
-        }, 100);
-
-        return () => clearTimeout(timeoutId);
-      }
-    }, [hueShift, saturationShift, lightnessShift, affectFill, affectStroke, colorMode]);
-
-    // Debounced color remapping to prevent memory issues
-    useEffect(() => {
-      if (colorMode === 'remap' && colorRemappings.length > 0) {
-        const timeoutId = setTimeout(() => {
-          const manipulation = {
-            mode: colorMode,
-            remappings: colorRemappings,
-            affectFill,
-            affectStroke
-          };
-          onApplyColorManipulation(manipulation);
-        }, 150);
-
-        return () => clearTimeout(timeoutId);
-      }
-    }, [colorRemappings, affectFill, affectStroke, colorMode]);
+    const [hueShift, setHueShift] = useState(0);
+    const [saturationShift, setSaturationShift] = useState(0);
+    const [lightnessShift, setLightnessShift] = useState(0);
+    const [affectFill, setAffectFill] = useState(true);
+    const [affectStroke, setAffectStroke] = useState(false);
 
     return (
       <div className="space-y-4">

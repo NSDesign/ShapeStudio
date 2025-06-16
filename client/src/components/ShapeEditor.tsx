@@ -177,7 +177,7 @@ export default function ShapeEditor() {
           onApplyBooleanOperation={applyBooleanOperation}
           onApplyColorManipulation={applyColorManipulation}
         />
-        <div className="flex-1 flex flex-col min-h-0 relative">
+        <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
           <Canvas
             shapes={shapes}
             groups={groups}
