@@ -2508,212 +2508,121 @@ export default function Sidebar({
           }
         </div>
 
-        {/* Mode Selection */}
+        {/* Apply To Options */}
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Mode</Label>
-          <div className="grid grid-cols-2 gap-1">
+          <Label className="text-xs text-slate-400">Apply To</Label>
+          <div className="flex gap-2">
             <Button
-              onClick={() => setColorMode('shift')}
-              variant={colorMode === 'shift' ? 'default' : 'secondary'}
+              onClick={() => setAffectFill(!affectFill)}
+              variant={affectFill ? 'default' : 'outline'}
               size="sm"
-              className={`text-xs ${
-                colorMode === 'shift'
+              className={`text-xs flex-1 ${
+                affectFill
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
               }`}
             >
-              <Shuffle className="w-3 h-3 mr-1" />
-              HSL Shift
+              Fill
             </Button>
             <Button
-              onClick={() => setColorMode('remap')}
-              variant={colorMode === 'remap' ? 'default' : 'secondary'}
+              onClick={() => setAffectStroke(!affectStroke)}
+              variant={affectStroke ? 'default' : 'outline'}
               size="sm"
-              className={`text-xs ${
-                colorMode === 'remap'
+              className={`text-xs flex-1 ${
+                affectStroke
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
               }`}
             >
-              <Pipette className="w-3 h-3 mr-1" />
-              Color Remap
+              Stroke
             </Button>
           </div>
         </div>
 
         {/* HSL Shift Controls */}
-        {colorMode === 'shift' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Hue Shift</Label>
-              <div className="flex items-center space-x-2">
-                <Slider
-                  value={[hueShift]}
-                  onValueChange={([value]) => setHueShift(value)}
-                  min={-180}
-                  max={180}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-slate-400 w-8">{hueShift}°</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Saturation Shift</Label>
-              <div className="flex items-center space-x-2">
-                <Slider
-                  value={[saturationShift]}
-                  onValueChange={([value]) => setSaturationShift(value)}
-                  min={-100}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-slate-400 w-8">{saturationShift}%</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Lightness Shift</Label>
-              <div className="flex items-center space-x-2">
-                <Slider
-                  value={[lightnessShift]}
-                  onValueChange={([value]) => setLightnessShift(value)}
-                  min={-100}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-slate-400 w-8">{lightnessShift}%</span>
-              </div>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Hue Shift</Label>
+            <div className="flex items-center space-x-2">
+              <Slider
+                value={[hueShift]}
+                onValueChange={([value]) => setHueShift(value)}
+                min={-180}
+                max={180}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-xs text-slate-400 w-8">{hueShift}°</span>
             </div>
           </div>
-        )}
 
-        {/* Color Remap Controls */}
-        {colorMode === 'remap' && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Color Mappings</Label>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {colorRemappings.map((mapping, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <div 
-                      className="w-4 h-4 border border-slate-600 rounded cursor-pointer"
-                      style={{ backgroundColor: mapping.sourceColor }}
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'color';
-                        input.value = mapping.sourceColor;
-                        input.onchange = (e) => {
-                          const newMappings = [...colorRemappings];
-                          newMappings[index].sourceColor = (e.target as HTMLInputElement).value;
-                          setColorRemappings(newMappings);
-                        };
-                        input.click();
-                      }}
-                    />
-                    <span className="text-xs text-slate-500">→</span>
-                    <div 
-                      className="w-4 h-4 border border-slate-600 rounded cursor-pointer"
-                      style={{ backgroundColor: mapping.targetColor }}
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'color';
-                        input.value = mapping.targetColor;
-                        input.onchange = (e) => {
-                          const newMappings = [...colorRemappings];
-                          newMappings[index].targetColor = (e.target as HTMLInputElement).value;
-                          setColorRemappings(newMappings);
-                        };
-                        input.click();
-                      }}
-                    />
-                    <div className="flex items-center space-x-1 flex-1">
-                      <Slider
-                        value={[mapping.tolerance]}
-                        onValueChange={([value]) => {
-                          const newMappings = [...colorRemappings];
-                          newMappings[index].tolerance = value;
-                          setColorRemappings(newMappings);
-                        }}
-                        min={0}
-                        max={50}
-                        step={1}
-                        className="flex-1"
-                      />
-                      <span className="text-xs text-slate-400 w-6">{mapping.tolerance}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="p-1 h-auto text-red-400 hover:text-red-300"
-                      onClick={() => {
-                        const newMappings = colorRemappings.filter((_, i) => i !== index);
-                        setColorRemappings(newMappings);
-                      }}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => {
-                  setColorRemappings([...colorRemappings, {
-                    sourceColor: '#ff0000',
-                    targetColor: '#0000ff',
-                    tolerance: 15
-                  }]);
-                }}
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Add Mapping
-              </Button>
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Saturation Shift</Label>
+            <div className="flex items-center space-x-2">
+              <Slider
+                value={[saturationShift]}
+                onValueChange={([value]) => setSaturationShift(value)}
+                min={-100}
+                max={100}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-xs text-slate-400 w-8">{saturationShift}%</span>
             </div>
           </div>
-        )}
 
-        {/* Affect Options */}
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Apply To</Label>
-          <div className="flex items-center space-x-4">
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Lightness Shift</Label>
             <div className="flex items-center space-x-2">
-              <Switch
-                checked={affectFill}
-                onCheckedChange={setAffectFill}
+              <Slider
+                value={[lightnessShift]}
+                onValueChange={([value]) => setLightnessShift(value)}
+                min={-100}
+                max={100}
+                step={1}
+                className="flex-1"
               />
-              <Label className="text-xs text-slate-300">Fill</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={affectStroke}
-                onCheckedChange={setAffectStroke}
-              />
-              <Label className="text-xs text-slate-300">Stroke</Label>
+              <span className="text-xs text-slate-400 w-8">{lightnessShift}%</span>
             </div>
           </div>
         </div>
 
-
-
-        {/* Reset Button */}
-        <Button
-          onClick={() => {
-            setHueShift(0);
-            setSaturationShift(0);
-            setLightnessShift(0);
-          }}
-          variant="outline"
-          className="w-full bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 text-xs"
-          size="sm"
-        >
-          Reset Values
-        </Button>
+        {/* Apply & Reset Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              const manipulation = {
+                mode: 'shift' as const,
+                hslShift: {
+                  hue: hueShift,
+                  saturation: saturationShift,
+                  lightness: lightnessShift
+                },
+                affectFill,
+                affectStroke
+              };
+              onApplyColorManipulation(manipulation);
+            }}
+            disabled={(!affectFill && !affectStroke) || (hueShift === 0 && saturationShift === 0 && lightnessShift === 0)}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs"
+            size="sm"
+          >
+            <Shuffle className="w-3 h-3 mr-1" />
+            Apply
+          </Button>
+          <Button
+            onClick={() => {
+              setHueShift(0);
+              setSaturationShift(0);
+              setLightnessShift(0);
+            }}
+            variant="outline"
+            className="flex-1 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 text-xs"
+            size="sm"
+          >
+            Reset
+          </Button>
+        </div>
       </div>
     );
   };
