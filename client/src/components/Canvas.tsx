@@ -482,49 +482,14 @@ export default function Canvas({
     };
   }, [shapes, groups, canvasSettings, canvasRef, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, isTouchDevice]);
 
-  // Handle window resize and canvas sizing
+  // Set canvas to infinite size once
   useEffect(() => {
-    const handleResize = () => {
-      if (canvasRef.current) {
-        const canvas = canvasRef.current;
-        const container = canvas.parentElement;
-        if (container) {
-          // Get actual container dimensions
-          const rect = container.getBoundingClientRect();
-          canvas.width = rect.width;
-          canvas.height = rect.height;
-          
-          // Set CSS size to match
-          canvas.style.width = `${rect.width}px`;
-          canvas.style.height = `${rect.height}px`;
-        }
-      }
-      
-      // Trigger re-render on resize
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-
-    // Initial resize with delay to ensure DOM is ready
-    setTimeout(handleResize, 100);
-    
-    // Set up resize observer for better detection
-    const resizeObserver = new ResizeObserver(() => {
-      // Debounce resize calls
-      setTimeout(handleResize, 50);
-    });
-    
-    if (canvasRef.current?.parentElement) {
-      resizeObserver.observe(canvasRef.current.parentElement);
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      // Set large canvas dimensions for infinite workspace
+      canvas.width = 10000;
+      canvas.height = 10000;
     }
-
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      resizeObserver.disconnect();
-    };
   }, []);
 
   return (
@@ -649,7 +614,7 @@ export default function Canvas({
       <div className="flex-1 relative bg-slate-900 overflow-hidden">
         <canvas
           ref={canvasRef}
-          className="shape-canvas block w-full h-full cursor-crosshair"
+          className="shape-canvas absolute inset-0 w-full h-full cursor-crosshair"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
