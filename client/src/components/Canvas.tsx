@@ -81,14 +81,46 @@ export default function Canvas({
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
 
-  // Set canvas to large but reasonable size
+  // Set canvas size to match container with proper pixel density
   useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      // Use large canvas dimensions for infinite workspace
-      canvas.width = 8192;
-      canvas.height = 8192;
+    const resizeCanvas = () => {
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        const container = canvas.parentElement;
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          
+          // Set actual canvas size in memory (accounting for device pixel ratio)
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+          
+          // Set display size via CSS
+          canvas.style.width = rect.width + 'px';
+          canvas.style.height = rect.height + 'px';
+          
+          // Scale the drawing context so everything draws at the correct size
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.scale(dpr, dpr);
+          }
+        }
+      }
+    };
+
+    resizeCanvas();
+    
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    if (canvasRef.current?.parentElement) {
+      resizeObserver.observe(canvasRef.current.parentElement);
     }
+
+    window.addEventListener('resize', resizeCanvas);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', resizeCanvas);
+    };
   }, []);
 
   // Main render loop
@@ -119,7 +151,12 @@ export default function Canvas({
 
       // Apply transformations
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      
+      // Get display dimensions (not pixel dimensions)
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      
+      ctx.translate(displayWidth / 2, displayHeight / 2);
       ctx.scale(effectiveZoom, effectiveZoom);
       ctx.translate(effectivePanX, effectivePanY);
 
@@ -132,8 +169,8 @@ export default function Canvas({
         ctx.lineWidth = 0.5 / effectiveZoom;
         ctx.globalAlpha = 0.3;
 
-        const viewWidth = canvas.width / effectiveZoom;
-        const viewHeight = canvas.height / effectiveZoom;
+        const viewWidth = displayWidth / effectiveZoom;
+        const viewHeight = displayHeight / effectiveZoom;
         const startX = Math.floor((-effectivePanX - viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
         const endX = Math.ceil((-effectivePanX + viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
         const startY = Math.floor((-effectivePanY - viewHeight / 2) / adjustedGridSize) * adjustedGridSize;
@@ -310,11 +347,11 @@ export default function Canvas({
         </div>
       </div>
       
-      {/* Canvas Container - Maximum size */}
+      {/* Canvas Container */}
       <div className="flex-1 relative bg-slate-900">
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full cursor-crosshair"
+          className="absolute inset-0 cursor-crosshair"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
