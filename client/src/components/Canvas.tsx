@@ -159,23 +159,23 @@ export default function Canvas({
         ctx.fillRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
         
         ctx.strokeStyle = '#0066cc';
-        ctx.lineWidth = 2 / canvasSettings.zoom;
+        ctx.lineWidth = 2 / effectiveZoom;
         ctx.strokeRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
         
         ctx.fillStyle = '#0066cc';
-        ctx.font = `${12 / canvasSettings.zoom}px Arial`;
-        ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / canvasSettings.zoom);
+        ctx.font = `${12 / effectiveZoom}px Arial`;
+        ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / effectiveZoom);
       }
 
       // Draw shapes
       shapes.forEach(shape => {
-        renderShape(ctx, shape, canvasSettings.zoom);
+        renderShape(ctx, shape, effectiveZoom);
       });
 
       // Draw group handles
       groups.forEach(group => {
         if (selectedGroups.includes(group)) {
-          renderGroupTransformHandles(ctx, group, canvasSettings.zoom);
+          renderGroupTransformHandles(ctx, group, effectiveZoom);
         }
       });
 
@@ -187,8 +187,8 @@ export default function Canvas({
         const height = Math.abs(marqueeEnd.y - marqueeStart.y);
         
         ctx.strokeStyle = '#007bff';
-        ctx.setLineDash([5 / canvasSettings.zoom, 5 / canvasSettings.zoom]);
-        ctx.lineWidth = 1 / canvasSettings.zoom;
+        ctx.setLineDash([5 / effectiveZoom, 5 / effectiveZoom]);
+        ctx.lineWidth = 1 / effectiveZoom;
         ctx.strokeRect(startX, startY, width, height);
         ctx.setLineDash([]);
       }
@@ -201,10 +201,10 @@ export default function Canvas({
               const isSelected = selectedPoints.some(sp => sp.shapeId === shape.id && sp.pointIndex === index);
               ctx.fillStyle = isSelected ? '#ff6b6b' : '#4dabf7';
               ctx.fillRect(
-                point.x - 4 / canvasSettings.zoom,
-                point.y - 4 / canvasSettings.zoom,
-                8 / canvasSettings.zoom,
-                8 / canvasSettings.zoom
+                point.x - 4 / effectiveZoom,
+                point.y - 4 / effectiveZoom,
+                8 / effectiveZoom,
+                8 / effectiveZoom
               );
             });
           }
@@ -221,7 +221,7 @@ export default function Canvas({
               const isSelected = selectedSegments.some(ss => ss.shapeId === shape.id && ss.segmentIndex === i);
               ctx.fillStyle = isSelected ? '#ff6b6b' : '#51cf66';
               ctx.beginPath();
-              ctx.arc(midX, midY, 4 / canvasSettings.zoom, 0, 2 * Math.PI);
+              ctx.arc(midX, midY, 4 / effectiveZoom, 0, 2 * Math.PI);
               ctx.fill();
             }
           }
@@ -286,7 +286,7 @@ export default function Canvas({
             </Tooltip>
             
             <span className="text-sm text-slate-400 min-w-[60px] text-center">
-              {Math.round(canvasSettings.zoom * 100)}%
+              {Math.round((canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom) * 100)}%
             </span>
             
             <Tooltip>
