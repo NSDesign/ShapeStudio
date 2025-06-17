@@ -105,32 +105,39 @@ export default function Canvas({
       ctx.fillStyle = canvasSettings.backgroundColor || '#1e293b';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Debug: Check if zoom is too small
-      if (canvasSettings.zoom < 0.5) {
-        console.warn('Canvas zoom too small:', canvasSettings.zoom);
+      // Temporarily force zoom to 1.0 if invalid
+      let effectiveZoom = canvasSettings.zoom;
+      let effectivePanX = canvasSettings.panX;
+      let effectivePanY = canvasSettings.panY;
+      
+      if (effectiveZoom < 0.5) {
+        console.warn('Using fallback zoom due to invalid value:', effectiveZoom);
+        effectiveZoom = 1.0;
+        effectivePanX = 0;
+        effectivePanY = 0;
       }
 
       // Apply transformations
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.scale(canvasSettings.zoom, canvasSettings.zoom);
-      ctx.translate(canvasSettings.panX, canvasSettings.panY);
+      ctx.scale(effectiveZoom, effectiveZoom);
+      ctx.translate(effectivePanX, effectivePanY);
 
       // Draw grid
       if (canvasSettings.showGrid) {
         const gridSize = 20;
-        const adjustedGridSize = gridSize / canvasSettings.zoom;
+        const adjustedGridSize = gridSize / effectiveZoom;
         
         ctx.strokeStyle = '#444';
-        ctx.lineWidth = 0.5 / canvasSettings.zoom;
+        ctx.lineWidth = 0.5 / effectiveZoom;
         ctx.globalAlpha = 0.3;
 
-        const viewWidth = canvas.width / canvasSettings.zoom;
-        const viewHeight = canvas.height / canvasSettings.zoom;
-        const startX = Math.floor((-canvasSettings.panX - viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
-        const endX = Math.ceil((-canvasSettings.panX + viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
-        const startY = Math.floor((-canvasSettings.panY - viewHeight / 2) / adjustedGridSize) * adjustedGridSize;
-        const endY = Math.ceil((-canvasSettings.panY + viewHeight / 2) / adjustedGridSize) * adjustedGridSize;
+        const viewWidth = canvas.width / effectiveZoom;
+        const viewHeight = canvas.height / effectiveZoom;
+        const startX = Math.floor((-effectivePanX - viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
+        const endX = Math.ceil((-effectivePanX + viewWidth / 2) / adjustedGridSize) * adjustedGridSize;
+        const startY = Math.floor((-effectivePanY - viewHeight / 2) / adjustedGridSize) * adjustedGridSize;
+        const endY = Math.ceil((-effectivePanY + viewHeight / 2) / adjustedGridSize) * adjustedGridSize;
 
         ctx.beginPath();
         for (let x = startX; x <= endX; x += adjustedGridSize) {

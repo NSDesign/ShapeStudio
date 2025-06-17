@@ -40,6 +40,8 @@ export const useShapeEditor = () => {
     backgroundColor: '#1e293b',
     showGrid: true
   });
+
+
   
   // Artboard state
   const [artboards, setArtboards] = useState<Artboard[]>([
