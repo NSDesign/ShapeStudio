@@ -295,9 +295,9 @@ export const useShapeEditor = () => {
           }
         }
         
-        // If this shape blocks and we found no points, stop searching lower shapes
+        // If this shape blocks access to lower shapes, stop searching
         if (shapeBlocks) {
-          break;
+          return false;
         }
       }
     }
@@ -422,9 +422,9 @@ export const useShapeEditor = () => {
           }
         }
         
-        // If this shape blocks and we found no segments, stop searching lower shapes
+        // If this shape blocks access to lower shapes, stop searching
         if (shapeBlocks) {
-          break;
+          return false;
         }
       }
     }
