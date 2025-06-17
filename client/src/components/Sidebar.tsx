@@ -1898,59 +1898,861 @@ export default function Sidebar({
   }
 
   const CompositionContent = () => (
-    <div className="space-y-3">
-      <Button 
-        onClick={onComposeShapes}
-        disabled={!canComposeShapes}
-        className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Layers className="w-4 h-4 mr-2" />
-        Compose Shapes
-      </Button>
+    <ScrollArea className="h-[400px] w-full">
+      <div className="space-y-3 pr-4">
+        <Button 
+          onClick={onComposeShapes}
+          disabled={!canComposeShapes}
+          className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Layers className="w-4 h-4 mr-2" />
+          Compose Shapes
+        </Button>
 
-      <div className="space-y-3">
-        <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-          scatterSettings.onPoints ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <Navigation className={`w-4 h-4 transition-colors ${
-              scatterSettings.onPoints ? 'text-orange-400' : 'text-slate-400'
-            }`} />
-            <Label className={`text-sm transition-colors ${
-              scatterSettings.onPoints ? 'text-orange-200' : 'text-slate-300'
-            }`}>Scatter on Points</Label>
+        <div className="space-y-3">
+          <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+            scatterSettings.onPoints ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+          }`}>
+            <div className="flex items-center space-x-3">
+              <Navigation className={`w-4 h-4 transition-colors ${
+                scatterSettings.onPoints ? 'text-orange-400' : 'text-slate-400'
+              }`} />
+              <Label className={`text-sm transition-colors ${
+                scatterSettings.onPoints ? 'text-orange-200' : 'text-slate-300'
+              }`}>Scatter on Points</Label>
+            </div>
+            <Switch
+              checked={scatterSettings.onPoints}
+              onCheckedChange={(checked) => onUpdateScatterSettings({ onPoints: checked })}
+              className="data-[state=checked]:bg-orange-600"
+            />
           </div>
-          <Switch
-            checked={scatterSettings.onPoints}
-            onCheckedChange={(checked) => onUpdateScatterSettings({ onPoints: checked })}
-            className="data-[state=checked]:bg-orange-600"
-          />
-        </div>
-        <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-          scatterSettings.insideArea ? 'bg-cyan-900/30 border border-cyan-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <Shapes className={`w-4 h-4 transition-colors ${
-              scatterSettings.insideArea ? 'text-cyan-400' : 'text-slate-400'
-            }`} />
-            <Label className={`text-sm transition-colors ${
-              scatterSettings.insideArea ? 'text-cyan-200' : 'text-slate-300'
-            }`}>Scatter Inside Area</Label>
+          <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+            scatterSettings.insideArea ? 'bg-cyan-900/30 border border-cyan-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+          }`}>
+            <div className="flex items-center space-x-3">
+              <Shapes className={`w-4 h-4 transition-colors ${
+                scatterSettings.insideArea ? 'text-cyan-400' : 'text-slate-400'
+              }`} />
+              <Label className={`text-sm transition-colors ${
+                scatterSettings.insideArea ? 'text-cyan-200' : 'text-slate-300'
+              }`}>Scatter Inside Area</Label>
+            </div>
+            <Switch
+              checked={scatterSettings.insideArea}
+              onCheckedChange={(checked) => onUpdateScatterSettings({ insideArea: checked })}
+              className="data-[state=checked]:bg-cyan-600"
+            />
           </div>
-          <Switch
-            checked={scatterSettings.insideArea}
-            onCheckedChange={(checked) => onUpdateScatterSettings({ insideArea: checked })}
-            className="data-[state=checked]:bg-cyan-600"
-          />
-        </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Shape Count Range</Label>
           <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Shape Count Range</Label>
+            <div className="space-y-2">
+              <Slider
+                value={[scatterSettings.count]}
+                onValueChange={([value]) => onUpdateScatterSettings({ count: value })}
+                min={1}
+                max={50}
+                step={1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{scatterSettings.count} shapes</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Randomness</Label>
+            <div className="space-y-2">
+              <Slider
+                value={[scatterSettings.randomness]}
+                onValueChange={([value]) => onUpdateScatterSettings({ randomness: value })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{Math.round(scatterSettings.randomness * 100)}%</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Distribution Pattern</Label>
+            <Select
+              value={scatterSettings.distribution.pattern}
+              onValueChange={(value: any) => onUpdateScatterSettings({ 
+                distribution: { ...scatterSettings.distribution, pattern: value }
+              })}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="random" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Random</SelectItem>
+                <SelectItem value="grid" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Grid</SelectItem>
+                <SelectItem value="circle" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Circle</SelectItem>
+                <SelectItem value="spiral" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Spiral</SelectItem>
+                <SelectItem value="organic" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Organic</SelectItem>
+                <SelectItem value="physics" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Physics</SelectItem>
+                <SelectItem value="wave" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Wave</SelectItem>
+                <SelectItem value="cluster" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Cluster</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Spacing</Label>
+              <Slider
+                value={[scatterSettings.distribution.spacing]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, spacing: value }
+                })}
+                min={10}
+                max={200}
+                step={5}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{scatterSettings.distribution.spacing}px</span>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Randomness</Label>
+              <Slider
+                value={[scatterSettings.distribution.randomness]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, randomness: value }
+                })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.randomness * 100)}%</span>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Scale</Label>
+              <Slider
+                value={[scatterSettings.distribution.scale]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, scale: value }
+                })}
+                min={0.1}
+                max={3}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{scatterSettings.distribution.scale.toFixed(1)}x</span>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Density</Label>
+              <Slider
+                value={[scatterSettings.distribution.density]}
+                onValueChange={([value]) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, density: value }
+                })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.density * 100)}%</span>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs text-slate-400">Rotation</Label>
             <Slider
-              value={[scatterSettings.minCount, scatterSettings.maxCount]}
-              onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
-              min={1}
+              value={[scatterSettings.distribution.rotation]}
+              onValueChange={([value]) => onUpdateScatterSettings({ 
+                distribution: { ...scatterSettings.distribution, rotation: value }
+              })}
+              min={0}
+              max={Math.PI * 2}
+              step={0.1}
+              className="w-full"
+            />
+            <span className="text-xs text-slate-500">{Math.round(scatterSettings.distribution.rotation * 180 / Math.PI)}°</span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={scatterSettings.distribution.avoidOverlap}
+                onCheckedChange={(checked) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, avoidOverlap: checked === true }
+                })}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Avoid Overlap</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={scatterSettings.distribution.respectBounds}
+                onCheckedChange={(checked) => onUpdateScatterSettings({ 
+                  distribution: { ...scatterSettings.distribution, respectBounds: checked === true }
+                })}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Respect Bounds</Label>
+            </div>
+          </div>
+
+          <Button
+            onClick={onDistributeSelected}
+            disabled={selectedCount < 2}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
+          >
+            <Boxes className="w-4 h-4 mr-2" />
+            Distribute Selected ({selectedCount})
+          </Button>
+        </div>
+      </div>
+    </ScrollArea>
+  );
+
+  const PropertiesContent = () => (
+    <div className="space-y-4">
+      <div className="text-sm text-slate-400">
+        Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
+      </div>
+
+      {/* Shape Properties Panel */}
+      {selectedCount > 0 && (
+        <ShapePropertiesPanel 
+          selectedShapes={selectedShapes}
+          selectedGroups={selectedGroups}
+          selectedCount={selectedCount}
+        />
+      )}
+
+      {selectedCount === 0 && (
+        <div className="text-xs text-slate-500">
+          Select shapes to edit their properties
+        </div>
+      )}
+
+      {(scatterSettings.onPoints || scatterSettings.insideArea) && (
+        <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+          <div className="text-xs text-blue-200 font-medium mb-1">Scatter Mode Active</div>
+          <div className="text-xs text-blue-300">
+            Click on any shape to scatter new shapes {scatterSettings.onPoints ? 'on its points' : ''} 
+            {scatterSettings.onPoints && scatterSettings.insideArea ? ' and ' : ''}
+            {scatterSettings.insideArea ? 'inside its area' : ''}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const LayersContent = () => {
+    const blendModes: BlendMode[] = [
+      'source-over', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
+      'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
+      'exclusion', 'hue', 'saturation', 'color', 'luminosity'
+    ];
+
+    // Get all shapes from props
+    const sortedShapes = useMemo(() => {
+      return (shapes || []).sort((a: Shape, b: Shape) => b.properties.zIndex - a.properties.zIndex);
+    }, [shapes]);
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-slate-400">
+          Layers: <span className="text-white font-medium">{(shapes || []).length}</span> total
+        </div>
+
+        {/* Layer Ordering Controls */}
+        {selectedCount > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Layer Order</Label>
+            <div className="grid grid-cols-2 gap-1">
+              <Button
+                onClick={onBringToFront}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Bring to Front
+              </Button>
+              <Button
+                onClick={onSendToBack}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Send to Back
+              </Button>
+              <Button
+                onClick={onBringForward}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Bring Forward
+              </Button>
+              <Button
+                onClick={onSendBackward}
+                variant="secondary"
+                size="sm"
+                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Send Backward
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Blend Mode Selector */}
+        {selectedCount > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Blend Mode</Label>
+            <Select onValueChange={(value: BlendMode) => onChangeBlendMode(value)}>
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                <SelectValue placeholder="source-over" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                {blendModes.map((mode) => (
+                  <SelectItem 
+                    key={mode} 
+                    value={mode}
+                    className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                  >
+                    {mode.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Clear All Button */}
+        <div className="flex space-x-2">
+          {(shapes || []).length > 0 && onClearAll && (
+            <Button
+              onClick={onClearAll}
+              variant="destructive"
+              size="sm"
+              className="text-xs flex-1"
+            >
+              Clear All
+            </Button>
+          )}
+        </div>
+
+        {/* Shape List */}
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          {sortedShapes.map((shape: any, index: number) => (
+            <div 
+              key={shape.id}
+              className={`flex items-center justify-between p-2 rounded text-xs transition-colors cursor-pointer ${
+                shape.selected ? 'bg-blue-500/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+              }`}
+              onClick={() => {
+                // Toggle selection
+                const updatedShapes = shapes?.map(s => ({
+                  ...s,
+                  selected: s.id === shape.id ? !s.selected : s.selected
+                }));
+                if (updatedShapes && onShapeUpdate) {
+                  onShapeUpdate();
+                }
+              }}
+            >
+              <span className={shape.selected ? 'text-blue-200' : 'text-slate-300'}>
+                {shape.type} (z: {shape.properties.zIndex})
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {sortedShapes.length === 0 && (
+          <div className="text-xs text-slate-500 text-center py-4">
+            No shapes on canvas
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Boolean Operations Content
+  const BooleanOperationsContent = () => {
+    const [selectedBooleanOp, setSelectedBooleanOp] = useState<'union' | 'subtract' | 'intersect' | 'exclude'>('union');
+    const [booleanTargetId, setBooleanTargetId] = useState<string>('');
+
+    // Get potential target shapes (excluding selected shapes)
+    const potentialTargets = selectedShapes.length > 0 
+      ? shapes.filter(shape => !selectedShapes.some(selected => selected.id === shape.id))
+      : [];
+
+    const canPerformBoolean = selectedShapes.length > 0 && booleanTargetId !== '';
+
+    // Check if shapes intersect for better UX
+    const shapesIntersect = (sourceShape: Shape, targetShape: Shape): boolean => {
+      const sourceBounds = sourceShape.getBounds();
+      const targetBounds = targetShape.getBounds();
+      
+      return !(sourceBounds.x + sourceBounds.width < targetBounds.x ||
+               targetBounds.x + targetBounds.width < sourceBounds.x ||
+               sourceBounds.y + sourceBounds.height < targetBounds.y ||
+               targetBounds.y + targetBounds.height < sourceBounds.y);
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-slate-400">
+          Boolean Operations
+        </div>
+
+        {selectedShapes.length === 0 && (
+          <div className="text-xs text-slate-500">
+            Select shapes to perform boolean operations
+          </div>
+        )}
+
+        {selectedShapes.length > 0 && (
+          <div className="space-y-3">
+            {/* Operation Type Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Operation</Label>
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  variant={selectedBooleanOp === 'union' ? 'default' : 'secondary'}
+                  size="sm"
+                  onClick={() => setSelectedBooleanOp('union')}
+                  className="text-xs"
+                >
+                  Union
+                </Button>
+                <Button
+                  variant={selectedBooleanOp === 'subtract' ? 'default' : 'secondary'}
+                  size="sm"
+                  onClick={() => setSelectedBooleanOp('subtract')}
+                  className="text-xs"
+                >
+                  Subtract
+                </Button>
+                <Button
+                  variant={selectedBooleanOp === 'intersect' ? 'default' : 'secondary'}
+                  size="sm"
+                  onClick={() => setSelectedBooleanOp('intersect')}
+                  className="text-xs"
+                >
+                  Intersect
+                </Button>
+                <Button
+                  variant={selectedBooleanOp === 'exclude' ? 'default' : 'secondary'}
+                  size="sm"
+                  onClick={() => setSelectedBooleanOp('exclude')}
+                  className="text-xs"
+                >
+                  Exclude
+                </Button>
+              </div>
+            </div>
+
+            {/* Target Shape Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Target Shape</Label>
+              <Select value={booleanTargetId} onValueChange={setBooleanTargetId}>
+                <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                  <SelectValue placeholder="Select target shape" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  {potentialTargets.map((shape: any, index: number) => {
+                    const intersects = selectedShapes.some(selected => shapesIntersect(selected, shape));
+                    return (
+                      <SelectItem 
+                        key={shape.id} 
+                        value={shape.id}
+                        className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                      >
+                        {shape.type} (z: {shape.properties.zIndex}) {intersects ? '🔗' : ''}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Apply Button */}
+            <Button
+              onClick={() => onApplyBooleanOperation(selectedBooleanOp, booleanTargetId)}
+              disabled={!canPerformBoolean}
+              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
+            >
+              Apply {selectedBooleanOp.charAt(0).toUpperCase() + selectedBooleanOp.slice(1)}
+            </Button>
+
+            {potentialTargets.length === 0 && (
+              <div className="text-xs text-slate-500">
+                Need at least one other shape as target
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Color Manipulation Content 
+  const ColorManipulationContent = () => {
+    const [hueShift, setHueShift] = useState(0);
+    const [saturationShift, setSaturationShift] = useState(0);
+    const [lightnessShift, setLightnessShift] = useState(0);
+
+    const handleApplyColorManipulation = () => {
+      if (selectedShapes.length === 0) return;
+
+      const manipulation = {
+        type: 'hsl_shift' as const,
+        hslShift: {
+          hue: hueShift,
+          saturation: saturationShift,
+          lightness: lightnessShift
+        },
+        remappings: []
+      };
+
+      onApplyColorManipulation(manipulation);
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-slate-400">
+          Color Manipulation
+        </div>
+
+        {selectedShapes.length === 0 && (
+          <div className="text-xs text-slate-500">
+            Select shapes to manipulate colors
+          </div>
+        )}
+
+        {selectedShapes.length > 0 && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Hue Shift</Label>
+              <Slider
+                value={[hueShift]}
+                onValueChange={([value]) => setHueShift(value)}
+                min={-180}
+                max={180}
+                step={1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{hueShift}°</span>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Saturation Shift</Label>
+              <Slider
+                value={[saturationShift]}
+                onValueChange={([value]) => setSaturationShift(value)}
+                min={-100}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{saturationShift}%</span>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Lightness Shift</Label>
+              <Slider
+                value={[lightnessShift]}
+                onValueChange={([value]) => setLightnessShift(value)}
+                min={-100}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+              <span className="text-xs text-slate-500">{lightnessShift}%</span>
+            </div>
+
+            <Button
+              onClick={handleApplyColorManipulation}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Apply Color Changes
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-80'} bg-[var(--surface)] border-r border-slate-700 flex flex-col h-full overflow-hidden`}>
+      {/* Collapse/Expand Button */}
+      <div className="p-2 border-b border-slate-700 flex justify-between items-center">
+        <Button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          variant="ghost"
+          size="sm"
+          className="p-2 hover:bg-slate-700"
+        >
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </Button>
+        {!isCollapsed && (
+          <div className="text-xs text-slate-400 font-medium">TOOLS</div>
+        )}
+      </div>
+
+      {isCollapsed ? (
+        /* Collapsed sidebar with icon-only buttons */
+        <div className="flex flex-col items-center space-y-2 p-2">
+          {/* Shape Types */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'shapes' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto transition-colors border text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 bg-slate-800 border-slate-600"
+              >
+                <Shapes className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Shapes className="w-4 h-4 mr-2" />
+                  Shape Types
+                </h3>
+                <ShapeTypesContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Properties */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'properties' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto transition-colors border text-green-400 hover:text-green-300 hover:bg-green-500/20 bg-slate-800 border-slate-600"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </h3>
+                <PropertiesContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Composition */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'composition' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto mx-2 transition-colors border text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 bg-slate-800 border-slate-600"
+              >
+                <Layers className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Layers className="w-4 h-4 mr-2" />
+                  Composition
+                </h3>
+                <CompositionContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Layers */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'layers' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto transition-colors border text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20 bg-slate-800 border-slate-600"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Menu className="w-4 h-4 mr-2" />
+                  Layers
+                </h3>
+                <LayersContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Color Manipulation */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'color' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto transition-colors border text-pink-400 hover:text-pink-300 hover:bg-pink-500/20 bg-slate-800 border-slate-600"
+              >
+                <Palette className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Color Manipulation
+                </h3>
+                <ColorManipulationContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Boolean Operations */}
+          <Popover onOpenChange={(open) => setActivePopover(open ? 'boolean' : null)}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-3 h-auto transition-colors border text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 bg-slate-800 border-slate-600"
+              >
+                <GitMerge className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="right" 
+              className="w-80 bg-[var(--surface)] border-slate-700"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="space-y-2">
+                <h3 className="font-semibold text-slate-300 flex items-center">
+                  <GitMerge className="w-4 h-4 mr-2" />
+                  Boolean Operations
+                </h3>
+                <BooleanOperationsContent />
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      ) : (
+        /* Expanded sidebar with full content */
+        <div className="flex-1 overflow-y-auto">
+          <Accordion type="multiple" className="w-full px-2 py-1">
+            {/* Shape Types Section */}
+            <AccordionItem value="shapes" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Shapes className="w-4 h-4 mr-2" />
+                  Shape Types
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ShapeTypesContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Properties Section */}
+            <AccordionItem value="properties" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <PropertiesContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Composition Section */}
+            <AccordionItem value="composition" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Layers className="w-4 h-4 mr-2" />
+                  Composition
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <CompositionContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Layers Section */}
+            <AccordionItem value="layers" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Menu className="w-4 h-4 mr-2" />
+                  Layers
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <LayersContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Color Manipulation Section */}
+            <AccordionItem value="color" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Color Manipulation
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ColorManipulationContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Boolean Operations Section */}
+            <AccordionItem value="boolean" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <GitMerge className="w-4 h-4 mr-2" />
+                  Boolean Operations
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <BooleanOperationsContent />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
+    </div>
+  );
+}
               max={50}
               step={1}
               className="w-full"
@@ -2128,7 +2930,7 @@ export default function Sidebar({
           </Button>
         </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 
   const PropertiesContent = () => (
