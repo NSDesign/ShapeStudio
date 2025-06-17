@@ -710,8 +710,8 @@ export const useShapeEditor = () => {
       const shape = new Shape(randomType, position.x, position.y);
       
       // Assign proper z-index for layering
-      const existingMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
-      shape.properties.zIndex = existingMaxZ + index + 1;
+      const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
+      shape.properties.zIndex = existingMaxIndex + index + 1;
       
       // Random properties
       const hue = Math.random() * 360;
