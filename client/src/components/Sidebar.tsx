@@ -326,8 +326,10 @@ export default function Sidebar({
         maxY = Math.max(maxY, bounds.y + bounds.height);
       });
       
-      const width = (maxX - minX) * exportScale;
-      const height = (maxY - minY) * exportScale;
+      // Add padding to the export
+      const padding = 20;
+      const width = (maxX - minX + padding * 2) * exportScale;
+      const height = (maxY - minY + padding * 2) * exportScale;
       
       canvas.width = width;
       canvas.height = height;
@@ -338,9 +340,53 @@ export default function Sidebar({
         ctx.fillRect(0, 0, width, height);
       }
       
-      // Transform context to center shapes
+      // Transform context to center shapes with padding
       ctx.scale(exportScale, exportScale);
-      ctx.translate(-minX, -minY);
+      ctx.translate(-minX + padding, -minY + padding);
+      
+      // Render all shapes to export
+      shapesToExport.forEach(shape => {
+        ctx.save();
+        
+        // Apply shape properties
+        ctx.globalAlpha = shape.properties.fillOpacity;
+        ctx.fillStyle = shape.properties.fillColor;
+        ctx.strokeStyle = shape.properties.strokeColor;
+        ctx.lineWidth = shape.properties.strokeWidth;
+        ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+        
+        // Start the path
+        ctx.beginPath();
+        
+        // Draw the shape based on its points
+        if (shape.points && shape.points.length > 0) {
+          const firstPoint = shape.points[0];
+          ctx.moveTo(firstPoint.x, firstPoint.y);
+          
+          for (let i = 1; i < shape.points.length; i++) {
+            const point = shape.points[i];
+            ctx.lineTo(point.x, point.y);
+          }
+          
+          // Close the path for filled shapes
+          if (shape.type !== 'line' && shape.type !== 'bezier') {
+            ctx.closePath();
+          }
+        }
+        
+        // Fill and stroke the shape
+        if (shape.properties.fillOpacity > 0) {
+          ctx.globalAlpha = shape.properties.fillOpacity;
+          ctx.fill();
+        }
+        
+        if (shape.properties.strokeWidth > 0 && shape.properties.strokeOpacity > 0) {
+          ctx.globalAlpha = shape.properties.strokeOpacity;
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      });
       
       // Download the image
       const link = document.createElement('a');

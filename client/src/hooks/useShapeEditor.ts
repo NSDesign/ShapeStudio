@@ -651,6 +651,10 @@ export const useShapeEditor = () => {
       // Random rotation
       newShape.transform.rotation = Math.random() * 360 * randomness;
       
+      // Assign proper z-index for layering
+      const currentMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
+      newShape.properties.zIndex = currentMaxZ + newShapes.length + 1;
+      
       // Random color variation
       const hue = Math.random() * 360;
       const saturation = 50 + Math.random() * 50;

@@ -207,7 +207,7 @@ export class Shape {
       strokeWidth: 1 + Math.random() * 4,
       strokeOpacity: 0.8 + Math.random() * 0.2,
       blendMode: 'source-over' as BlendMode,
-      zIndex: 0, // Will be set properly when shape is added to canvas
+      zIndex: Date.now(), // Use timestamp for proper ordering
       gradient
     };
   }
