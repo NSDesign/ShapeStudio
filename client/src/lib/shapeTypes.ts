@@ -162,6 +162,8 @@ export interface CanvasSettings {
   zoom: number;
   panX: number;
   panY: number;
+  backgroundColor: string;
+  showGrid: boolean;
 }
 
 export interface Artboard {
@@ -171,6 +173,7 @@ export interface Artboard {
   y: number;
   width: number;
   height: number;
+  backgroundColor?: string;
   preset?: string;
   category?: string;
 }

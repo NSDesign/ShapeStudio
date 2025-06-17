@@ -36,7 +36,9 @@ export const useShapeEditor = () => {
     height: Number.MAX_SAFE_INTEGER,
     zoom: 1,
     panX: 0,
-    panY: 0
+    panY: 0,
+    backgroundColor: '#1e293b',
+    showGrid: true
   });
   
   // Artboard state
@@ -48,6 +50,7 @@ export const useShapeEditor = () => {
       y: -200,
       width: 400,
       height: 400,
+      backgroundColor: '#ffffff',
       preset: 'Basic'
     }
   ]);

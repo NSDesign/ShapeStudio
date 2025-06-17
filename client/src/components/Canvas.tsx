@@ -81,13 +81,13 @@ export default function Canvas({
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
 
-  // Set canvas to maximum possible size once
+  // Set canvas to large but reasonable size
   useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;
-      // Use maximum safe canvas dimensions
-      canvas.width = 32767;
-      canvas.height = 32767;
+      // Use large canvas dimensions for infinite workspace
+      canvas.width = 8192;
+      canvas.height = 8192;
     }
   }, []);
 
@@ -102,8 +102,13 @@ export default function Canvas({
 
       // Clear and fill background
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = canvasSettings.backgroundColor;
+      ctx.fillStyle = canvasSettings.backgroundColor || '#1e293b';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Debug: Check if zoom is too small
+      if (canvasSettings.zoom < 0.5) {
+        console.warn('Canvas zoom too small:', canvasSettings.zoom);
+      }
 
       // Apply transformations
       ctx.save();
