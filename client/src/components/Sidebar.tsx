@@ -1,61 +1,54 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Settings, 
-  Shapes, 
-  Layers, 
-  Palette, 
-  Menu,
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Shapes,
+  Settings,
+  Layers,
+  Palette,
+  Download,
   Wand2,
   Navigation,
+  Shuffle,
+  Layers3,
   Move,
+  RotateCcw,
   Expand,
   FlipHorizontal,
   FlipVertical,
   Trash2,
-  Boxes,
-  Square,
-  Circle,
-  Triangle,
-  Star,
-  Hexagon,
-  Zap,
-  Coffee,
-  CheckSquare,
-  ArrowUpDown,
-  ArrowLeftRight,
-  RotateCw,
-  Blend,
-  Filter,
-  Minimize2,
-  Maximize2,
-  PlusCircle,
-  Grid,
-  Target,
   MousePointer,
   Edit3,
   Activity,
   Monitor,
-  Download,
+  Target,
+  Trash,
+  FileImage,
   Save,
   FolderOpen,
-  FileImage,
-  Clipboard
+  Clipboard,
+  Boxes
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
 import { Shape } from '@/lib/shapes';
@@ -66,12 +59,12 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   square: 'Square',
   circle: 'Circle',
   ellipse: 'Ellipse',
-  line: 'Line',
   polygon: 'Polygon',
   star: 'Star',
-  blob: 'Blob',
-  bezier: 'Bézier',
-  cubic: 'Cubic',
+  line: 'Line',
+  bezier: 'Bézier Curve',
+  cubic: 'Cubic Spline',
+  blob: 'Organic Blob',
   ring: 'Ring',
   'spline-circle': 'Spline Circle',
   'spline-ellipse': 'Spline Ellipse',
@@ -162,7 +155,6 @@ export default function Sidebar({
   onApplyColorManipulation
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activePopover, setActivePopover] = useState<string | null>(null);
   const [moveX, setMoveX] = useState(0);
   const [moveY, setMoveY] = useState(0);
   const [scaleX, setScaleX] = useState(100);
@@ -350,12 +342,6 @@ export default function Sidebar({
       ctx.scale(exportScale, exportScale);
       ctx.translate(-minX, -minY);
       
-      // Render shapes
-      shapesToExport.forEach(shape => {
-        // This would need to use the actual shape rendering logic
-        // For now, just show a basic export functionality
-      });
-      
       // Download the image
       const link = document.createElement('a');
       link.download = `shapes-export-${Date.now()}.${exportFormat}`;
@@ -387,31 +373,6 @@ export default function Sidebar({
       link.click();
       
       URL.revokeObjectURL(url);
-    };
-
-    const handleLoadProject = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const projectData = JSON.parse(e.target?.result as string);
-            // This would need to trigger a callback to load the project data
-            console.log('Project data loaded:', projectData);
-          } catch (error) {
-            console.error('Error loading project:', error);
-          }
-        };
-        reader.readAsText(file);
-      };
-      
-      input.click();
     };
 
     return (
@@ -481,15 +442,6 @@ export default function Sidebar({
           >
             <Save className="w-4 h-4 mr-2" />
             Save Project
-          </Button>
-
-          <Button
-            onClick={handleLoadProject}
-            variant="secondary"
-            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-          >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Load Project
           </Button>
 
           <Button
@@ -636,36 +588,27 @@ export default function Sidebar({
 
   function PropertiesContent() {
     return (
-      <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
-        </div>
-
-        {selectedCount > 0 && (
-          <ShapePropertiesPanel 
-            selectedShapes={selectedShapes}
-            selectedGroups={selectedGroups}
-            selectedCount={selectedCount}
-          />
-        )}
-
-        {selectedCount === 0 && (
-          <div className="text-xs text-slate-500">
-            Select shapes to edit their properties
+      <ScrollArea className="h-[400px] w-full">
+        <div className="space-y-4 pr-4">
+          <div className="text-sm text-slate-400">
+            Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
           </div>
-        )}
 
-        {(scatterSettings.onPoints || scatterSettings.insideArea) && (
-          <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-            <div className="text-xs text-blue-200 font-medium mb-1">Scatter Mode Active</div>
-            <div className="text-xs text-blue-300">
-              Click on any shape to scatter new shapes {scatterSettings.onPoints ? 'on its points' : ''} 
-              {scatterSettings.onPoints && scatterSettings.insideArea ? ' and ' : ''}
-              {scatterSettings.insideArea ? 'inside its area' : ''}
+          {selectedCount > 0 && (
+            <ShapePropertiesPanel 
+              selectedShapes={selectedShapes}
+              selectedGroups={selectedGroups}
+              selectedCount={selectedCount}
+            />
+          )}
+
+          {selectedCount === 0 && (
+            <div className="text-xs text-slate-500">
+              Select shapes to edit their properties
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </ScrollArea>
     );
   }
 
@@ -725,7 +668,7 @@ export default function Sidebar({
         )}
 
         <div className="space-y-1 max-h-48 overflow-y-auto">
-          {sortedShapes.map((shape, index) => (
+          {sortedShapes.map((shape) => (
             <div key={shape.id} className={`flex items-center justify-between p-2 rounded text-xs transition-colors cursor-pointer ${
               shape.selected ? 'bg-blue-500/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
             }`}>
@@ -845,76 +788,81 @@ export default function Sidebar({
     }, [selectedShapes, onShapeUpdate]);
 
     return (
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Move</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Button
-                onClick={() => onMoveBy(-1, 0)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ←
-              </Button>
-              <Input
-                type="number"
-                value={moveX}
-                onChange={(e) => setMoveX(Number(e.target.value))}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="X"
-              />
-              <Button
-                onClick={() => onMoveBy(1, 0)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                →
-              </Button>
+      <div className="space-y-4">
+        {/* Transform Properties */}
+        <div className="space-y-3">
+          <Label className="text-sm text-slate-300 font-medium">Transform</Label>
+          
+          {/* Position */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Position</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-1">
+                <Button
+                  onClick={() => onMoveBy(-1, 0)}
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs p-1 h-6"
+                >
+                  ←
+                </Button>
+                <Input
+                  type="number"
+                  value={moveX}
+                  onChange={(e) => setMoveX(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  placeholder="X"
+                />
+                <Button
+                  onClick={() => onMoveBy(1, 0)}
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs p-1 h-6"
+                >
+                  →
+                </Button>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  onClick={() => onMoveBy(0, -1)}
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs p-1 h-6"
+                >
+                  ↑
+                </Button>
+                <Input
+                  type="number"
+                  value={moveY}
+                  onChange={(e) => setMoveY(Number(e.target.value))}
+                  className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                  placeholder="Y"
+                />
+                <Button
+                  onClick={() => onMoveBy(0, 1)}
+                  variant="secondary"
+                  size="sm"
+                  className="text-xs p-1 h-6"
+                >
+                  ↓
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-1">
-              <Button
-                onClick={() => onMoveBy(0, -1)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ↑
-              </Button>
-              <Input
-                type="number"
-                value={moveY}
-                onChange={(e) => setMoveY(Number(e.target.value))}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Y"
-              />
-              <Button
-                onClick={() => onMoveBy(0, 1)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ↓
-              </Button>
-            </div>
+            <Button
+              onClick={() => onMoveBy(moveX, moveY)}
+              variant="secondary"
+              size="sm"
+              className="w-full text-xs"
+            >
+              <Move className="w-3 h-3 mr-1" />
+              Apply Move
+            </Button>
           </div>
-          <Button
-            onClick={() => onMoveBy(moveX, moveY)}
-            variant="secondary"
-            size="sm"
-            className="w-full text-xs"
-          >
-            <Move className="w-3 h-3 mr-1" />
-            Apply Move
-          </Button>
-        </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Scale (%)</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+          {/* Scale */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Scale (%)</Label>
+            <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
                 value={scaleX}
@@ -928,8 +876,6 @@ export default function Sidebar({
                 className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
                 placeholder="Scale X"
               />
-            </div>
-            <div className="space-y-1">
               <Input
                 type="number"
                 value={scaleY}
@@ -944,46 +890,330 @@ export default function Sidebar({
                 placeholder="Scale Y"
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={lockAspectRatio}
+                onCheckedChange={(checked) => setLockAspectRatio(checked === true)}
+                className="border-slate-600"
+              />
+              <Label className="text-xs text-slate-400">Lock Aspect Ratio</Label>
+            </div>
+            <Button
+              onClick={() => onScaleBy(scaleX / 100, scaleY / 100)}
+              variant="secondary"
+              size="sm"
+              className="w-full text-xs"
+            >
+              <Expand className="w-3 h-3 mr-1" />
+              Apply Scale
+            </Button>
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={lockAspectRatio}
-              onCheckedChange={(checked) => setLockAspectRatio(checked === true)}
-              className="border-slate-600"
-            />
-            <Label className="text-xs text-slate-400">Lock Aspect Ratio</Label>
+
+          {/* Rotation */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Rotation</Label>
+            <div className="grid grid-cols-3 gap-1">
+              <Button
+                onClick={() => onRotateBy(-15)}
+                variant="secondary"
+                size="sm"
+                className="text-xs"
+              >
+                -15°
+              </Button>
+              <Button
+                onClick={() => onRotateBy(-90)}
+                variant="secondary"
+                size="sm"
+                className="text-xs"
+              >
+                -90°
+              </Button>
+              <Button
+                onClick={() => onRotateBy(15)}
+                variant="secondary"
+                size="sm"
+                className="text-xs"
+              >
+                +15°
+              </Button>
+            </div>
           </div>
-          <Button
-            onClick={() => onScaleBy(scaleX / 100, scaleY / 100)}
-            variant="secondary"
-            size="sm"
-            className="w-full text-xs"
-          >
-            <Expand className="w-3 h-3 mr-1" />
-            Apply Scale
-          </Button>
+
+          {/* Flip */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={onFlipHorizontal}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+            >
+              <FlipHorizontal className="w-3 h-3 mr-1" />
+              Flip H
+            </Button>
+            <Button
+              onClick={onFlipVertical}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+            >
+              <FlipVertical className="w-3 h-3 mr-1" />
+              Flip V
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            onClick={onFlipHorizontal}
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-          >
-            <FlipHorizontal className="w-3 h-3 mr-1" />
-            Flip H
-          </Button>
-          <Button
-            onClick={onFlipVertical}
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-          >
-            <FlipVertical className="w-3 h-3 mr-1" />
-            Flip V
-          </Button>
+        {/* Fill & Stroke Properties */}
+        <Separator className="bg-slate-600" />
+        
+        <div className="space-y-3">
+          <Label className="text-sm text-slate-300 font-medium">Fill & Stroke</Label>
+          
+          {/* Fill Color */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Fill Color</Label>
+            <div className="flex items-center space-x-2">
+              <div 
+                className="w-8 h-6 rounded border border-slate-600 cursor-pointer"
+                style={{ backgroundColor: selectedShapes[0]?.properties.fillColor || '#3b82f6' }}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'color';
+                  input.value = selectedShapes[0]?.properties.fillColor || '#3b82f6';
+                  input.onchange = (e) => {
+                    const color = (e.target as HTMLInputElement).value;
+                    updateShapeProperty((shape) => {
+                      shape.properties.fillColor = color;
+                    });
+                  };
+                  input.click();
+                }}
+              />
+              <Input
+                type="text"
+                value={selectedShapes[0]?.properties.fillColor || '#3b82f6'}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  updateShapeProperty((shape) => {
+                    shape.properties.fillColor = color;
+                  });
+                }}
+                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                placeholder="#color"
+              />
+            </div>
+          </div>
+
+          {/* Fill Opacity */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Fill Opacity</Label>
+            <Slider
+              value={[Math.round((selectedShapes[0]?.properties.fillOpacity || 1) * 100)]}
+              onValueChange={([value]) => {
+                updateShapeProperty((shape) => {
+                  shape.properties.fillOpacity = value / 100;
+                });
+              }}
+              min={0}
+              max={100}
+              step={1}
+              className="w-full"
+            />
+            <span className="text-xs text-slate-500">{Math.round((selectedShapes[0]?.properties.fillOpacity || 1) * 100)}%</span>
+          </div>
+
+          {/* Stroke Color */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Stroke Color</Label>
+            <div className="flex items-center space-x-2">
+              <div 
+                className="w-8 h-6 rounded border border-slate-600 cursor-pointer"
+                style={{ backgroundColor: selectedShapes[0]?.properties.strokeColor || '#1e40af' }}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'color';
+                  input.value = selectedShapes[0]?.properties.strokeColor || '#1e40af';
+                  input.onchange = (e) => {
+                    const color = (e.target as HTMLInputElement).value;
+                    updateShapeProperty((shape) => {
+                      shape.properties.strokeColor = color;
+                    });
+                  };
+                  input.click();
+                }}
+              />
+              <Input
+                type="text"
+                value={selectedShapes[0]?.properties.strokeColor || '#1e40af'}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  updateShapeProperty((shape) => {
+                    shape.properties.strokeColor = color;
+                  });
+                }}
+                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                placeholder="#color"
+              />
+            </div>
+          </div>
+
+          {/* Stroke Width & Opacity */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Stroke Width</Label>
+              <Input
+                type="number"
+                value={selectedShapes[0]?.properties.strokeWidth || 2}
+                onChange={(e) => {
+                  const width = Number(e.target.value);
+                  updateShapeProperty((shape) => {
+                    shape.properties.strokeWidth = width;
+                  });
+                }}
+                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                min="0"
+                max="50"
+                step="0.1"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Stroke Opacity</Label>
+              <Input
+                type="number"
+                value={Math.round((selectedShapes[0]?.properties.strokeOpacity || 1) * 100)}
+                onChange={(e) => {
+                  const opacity = Number(e.target.value) / 100;
+                  updateShapeProperty((shape) => {
+                    shape.properties.strokeOpacity = opacity;
+                  });
+                }}
+                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                min="0"
+                max="100"
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Shape-specific Properties */}
+        {selectedShapes.length === 1 && (
+          <>
+            <Separator className="bg-slate-600" />
+            <div className="space-y-3">
+              <Label className="text-sm text-slate-300 font-medium">Shape Properties</Label>
+              
+              {selectedShapes[0].type === 'circle' && selectedShapes[0].radius && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Radius</Label>
+                  <Input
+                    type="number"
+                    value={selectedShapes[0].radius}
+                    onChange={(e) => {
+                      const newRadius = Number(e.target.value);
+                      updateShapeProperty((shape) => {
+                        if (shape.type === 'circle') {
+                          shape.radius = newRadius;
+                          shape.regeneratePointsFromSegments();
+                        }
+                      });
+                    }}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                    min="1"
+                  />
+                </div>
+              )}
+              
+              {(selectedShapes[0].type === 'rectangle' || selectedShapes[0].type === 'ellipse') && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Width</Label>
+                    <Input
+                      type="number"
+                      value={selectedShapes[0].width || 0}
+                      onChange={(e) => {
+                        const newWidth = Number(e.target.value);
+                        updateShapeProperty((shape) => {
+                          if (shape.width !== undefined) {
+                            shape.width = newWidth;
+                            if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                              shape.regeneratePointsFromSegments();
+                            }
+                          }
+                        });
+                      }}
+                      className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                      min="1"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Height</Label>
+                    <Input
+                      type="number"
+                      value={selectedShapes[0].height || 0}
+                      onChange={(e) => {
+                        const newHeight = Number(e.target.value);
+                        updateShapeProperty((shape) => {
+                          if (shape.height !== undefined) {
+                            shape.height = newHeight;
+                            if (shape.type === 'rectangle' || shape.type === 'ellipse') {
+                              shape.regeneratePointsFromSegments();
+                            }
+                          }
+                        });
+                      }}
+                      className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                      min="1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(selectedShapes[0].type === 'polygon' || selectedShapes[0].type === 'star') && selectedShapes[0].sides && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Sides</Label>
+                  <Input
+                    type="number"
+                    value={selectedShapes[0].sides}
+                    onChange={(e) => {
+                      const newSides = Number(e.target.value);
+                      updateShapeProperty((shape) => {
+                        if (shape.sides !== undefined) {
+                          shape.sides = newSides;
+                          shape.regeneratePointsFromSegments();
+                        }
+                      });
+                    }}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                    min="3"
+                    max="20"
+                  />
+                </div>
+              )}
+
+              {(selectedShapes[0].type === 'circle' || selectedShapes[0].type === 'ellipse') && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Segments (Smoothness)</Label>
+                  <Slider
+                    value={[selectedShapes[0].segments]}
+                    onValueChange={([value]) => {
+                      updateShapeProperty((shape) => {
+                        shape.segments = value;
+                        shape.regeneratePointsFromSegments();
+                      });
+                    }}
+                    min={8}
+                    max={64}
+                    step={4}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-slate-500">{selectedShapes[0].segments} segments</span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        <Separator className="bg-slate-600" />
 
         <Button
           onClick={onDeleteSelected}
@@ -1023,8 +1253,36 @@ export default function Sidebar({
           <Button
             variant="ghost"
             size="sm"
+            className="text-slate-400 hover:text-orange-300 hover:bg-slate-800 h-8 w-8 p-0"
+            onClick={() => setIsCollapsed(false)}
+            title="Selection Modes"
+          >
+            <MousePointer className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-slate-400 hover:text-teal-300 hover:bg-slate-800 h-8 w-8 p-0"
+            onClick={() => setIsCollapsed(false)}
+            title="Artboards"
+          >
+            <Monitor className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-slate-400 hover:text-cyan-300 hover:bg-slate-800 h-8 w-8 p-0"
+            onClick={() => setIsCollapsed(false)}
+            title="Export & Save"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="text-slate-400 hover:text-blue-300 hover:bg-slate-800 h-8 w-8 p-0"
             onClick={() => setIsCollapsed(false)}
+            title="Shape Types"
           >
             <Shapes className="h-4 w-4" />
           </Button>
@@ -1033,6 +1291,16 @@ export default function Sidebar({
             size="sm"
             className="text-slate-400 hover:text-green-300 hover:bg-slate-800 h-8 w-8 p-0"
             onClick={() => setIsCollapsed(false)}
+            title="Composition"
+          >
+            <Shuffle className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-slate-400 hover:text-yellow-300 hover:bg-slate-800 h-8 w-8 p-0"
+            onClick={() => setIsCollapsed(false)}
+            title="Properties"
           >
             <Settings className="h-4 w-4" />
           </Button>
@@ -1041,32 +1309,18 @@ export default function Sidebar({
             size="sm"
             className="text-slate-400 hover:text-purple-300 hover:bg-slate-800 h-8 w-8 p-0"
             onClick={() => setIsCollapsed(false)}
+            title="Layers"
           >
-            <Layers className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-yellow-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-          >
-            <Menu className="h-4 w-4" />
+            <Layers3 className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             className="text-slate-400 hover:text-pink-300 hover:bg-slate-800 h-8 w-8 p-0"
             onClick={() => setIsCollapsed(false)}
+            title="Color Manipulation"
           >
             <Palette className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-cyan-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-          >
-            <Download className="h-4 w-4" />
           </Button>
         </div>
       ) : (
@@ -1086,19 +1340,6 @@ export default function Sidebar({
               </AccordionContent>
             </AccordionItem>
 
-            {/* Shape Types Section */}
-            <AccordionItem value="shapes" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Shapes className="w-4 h-4 mr-2" />
-                  Shape Types
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ShapeTypesContent />
-              </AccordionContent>
-            </AccordionItem>
-
             {/* Artboards Section */}
             <AccordionItem value="artboards" className="border-slate-700">
               <AccordionTrigger className="text-sm text-teal-400 hover:text-teal-300 py-3 hover:no-underline">
@@ -1109,58 +1350,6 @@ export default function Sidebar({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <ArtboardsContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Properties Section */}
-            <AccordionItem value="properties" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Properties
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <PropertiesContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Composition Section */}
-            <AccordionItem value="composition" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Layers className="w-4 h-4 mr-2" />
-                  Composition
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <CompositionContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Layers Section */}
-            <AccordionItem value="layers" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Menu className="w-4 h-4 mr-2" />
-                  Layers
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <LayersContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Color Manipulation Section */}
-            <AccordionItem value="color" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Palette className="w-4 h-4 mr-2" />
-                  Color Manipulation
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ColorManipulationContent />
               </AccordionContent>
             </AccordionItem>
 
@@ -1176,861 +1365,74 @@ export default function Sidebar({
                 <ExportSaveContent />
               </AccordionContent>
             </AccordionItem>
+
+            {/* Shape Types Section */}
+            <AccordionItem value="shapes" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Shapes className="w-4 h-4 mr-2" />
+                  Shape Types
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ShapeTypesContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Composition Section */}
+            <AccordionItem value="composition" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Shuffle className="w-4 h-4 mr-2" />
+                  Composition
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <CompositionContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Properties Section */}
+            <AccordionItem value="properties" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <PropertiesContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Layers Section */}
+            <AccordionItem value="layers" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Layers3 className="w-4 h-4 mr-2" />
+                  Layers
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <LayersContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Color Manipulation Section */}
+            <AccordionItem value="colors" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Color Manipulation
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ColorManipulationContent />
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
         </div>
       )}
     </div>
   );
-
-  // Helper functions for content sections
-  function ShapeTypesContent() {
-    return (
-      <div className="space-y-3">
-        {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => (
-          <div key={type} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-            enabledShapeTypes.has(type as ShapeType) ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-          }`}>
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded transition-colors ${
-                enabledShapeTypes.has(type as ShapeType) ? 'bg-blue-400' : 'bg-slate-500'
-              }`} />
-              <Label className={`text-sm transition-colors ${
-                enabledShapeTypes.has(type as ShapeType) ? 'text-blue-200' : 'text-slate-300'
-              }`}>{displayName}</Label>
-            </div>
-            <Switch
-              checked={enabledShapeTypes.has(type as ShapeType)}
-              onCheckedChange={() => onToggleShapeType(type as ShapeType)}
-              className="data-[state=checked]:bg-blue-600"
-            />
-          </div>
-        ))}
-
-        <Separator className="bg-slate-600" />
-
-        <Button 
-          onClick={onGenerateRandomShapes}
-          className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-        >
-          <Wand2 className="w-4 h-4 mr-2" />
-          Generate Random Shapes
-        </Button>
-      </div>
-    );
-  }
-
-  function CompositionContent() {
-    return (
-      <ScrollArea className="h-[400px] w-full">
-        <div className="space-y-3 pr-4">
-          <Button 
-            onClick={onComposeShapes}
-            disabled={!canComposeShapes}
-            className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Layers className="w-4 h-4 mr-2" />
-            Compose Shapes
-          </Button>
-
-          <div className="space-y-3">
-            <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-              scatterSettings.onPoints ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-            }`}>
-              <div className="flex items-center space-x-3">
-                <Navigation className={`w-4 h-4 transition-colors ${
-                  scatterSettings.onPoints ? 'text-orange-400' : 'text-slate-400'
-                }`} />
-                <Label className={`text-sm transition-colors ${
-                  scatterSettings.onPoints ? 'text-orange-200' : 'text-slate-300'
-                }`}>Scatter on Points</Label>
-              </div>
-              <Switch
-                checked={scatterSettings.onPoints}
-                onCheckedChange={(checked) => onUpdateScatterSettings({ onPoints: checked })}
-                className="data-[state=checked]:bg-orange-600"
-              />
-            </div>
-            <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-              scatterSettings.insideArea ? 'bg-cyan-900/30 border border-cyan-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-            }`}>
-              <div className="flex items-center space-x-3">
-                <Shapes className={`w-4 h-4 transition-colors ${
-                  scatterSettings.insideArea ? 'text-cyan-400' : 'text-slate-400'
-                }`} />
-                <Label className={`text-sm transition-colors ${
-                  scatterSettings.insideArea ? 'text-cyan-200' : 'text-slate-300'
-                }`}>Scatter Inside Area</Label>
-              </div>
-              <Switch
-                checked={scatterSettings.insideArea}
-                onCheckedChange={(checked) => onUpdateScatterSettings({ insideArea: checked })}
-                className="data-[state=checked]:bg-cyan-600"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Shape Count Range</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[scatterSettings.count]}
-                  onValueChange={([value]) => onUpdateScatterSettings({ count: value })}
-                  min={1}
-                  max={50}
-                  step={1}
-                  className="w-full"
-                />
-                <span className="text-xs text-slate-500">{scatterSettings.count} shapes</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Randomness</Label>
-              <div className="space-y-2">
-                <Slider
-                  value={[scatterSettings.randomness]}
-                  onValueChange={([value]) => onUpdateScatterSettings({ randomness: value })}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  className="w-full"
-                />
-                <span className="text-xs text-slate-500">{Math.round(scatterSettings.randomness * 100)}%</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Distribution Pattern</Label>
-              <Select
-                value={scatterSettings.distribution.pattern}
-                onValueChange={(value: any) => onUpdateScatterSettings({ 
-                  distribution: { ...scatterSettings.distribution, pattern: value }
-                })}
-              >
-                <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="random" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Random</SelectItem>
-                  <SelectItem value="grid" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Grid</SelectItem>
-                  <SelectItem value="circle" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Circle</SelectItem>
-                  <SelectItem value="spiral" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Spiral</SelectItem>
-                  <SelectItem value="organic" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Organic</SelectItem>
-                  <SelectItem value="physics" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Physics</SelectItem>
-                  <SelectItem value="wave" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Wave</SelectItem>
-                  <SelectItem value="cluster" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Cluster</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              onClick={onDistributeSelected}
-              disabled={selectedCount < 2}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
-            >
-              <Boxes className="w-4 h-4 mr-2" />
-              Distribute Selected ({selectedCount})
-            </Button>
-          </div>
-        </div>
-      </ScrollArea>
-    );
-  }
-
-  function PropertiesContent() {
-    return (
-      <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
-        </div>
-
-        {selectedCount > 0 && (
-          <ShapePropertiesPanel 
-            selectedShapes={selectedShapes}
-            selectedGroups={selectedGroups}
-            selectedCount={selectedCount}
-          />
-        )}
-
-        {selectedCount === 0 && (
-          <div className="text-xs text-slate-500">
-            Select shapes to edit their properties
-          </div>
-        )}
-
-        {(scatterSettings.onPoints || scatterSettings.insideArea) && (
-          <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-            <div className="text-xs text-blue-200 font-medium mb-1">Scatter Mode Active</div>
-            <div className="text-xs text-blue-300">
-              Click on any shape to scatter new shapes {scatterSettings.onPoints ? 'on its points' : ''} 
-              {scatterSettings.onPoints && scatterSettings.insideArea ? ' and ' : ''}
-              {scatterSettings.insideArea ? 'inside its area' : ''}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function LayersContent() {
-    const blendModes = [
-      'source-over', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
-      'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
-      'exclusion', 'hue', 'saturation', 'color', 'luminosity'
-    ];
-
-    const sortedShapes = useMemo(() => {
-      return (shapes || []).sort((a, b) => b.properties.zIndex - a.properties.zIndex);
-    }, [shapes]);
-
-    return (
-      <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Layers: <span className="text-white font-medium">{(shapes || []).length}</span> total
-        </div>
-
-        {selectedCount > 0 && (
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Layer Order</Label>
-            <div className="grid grid-cols-2 gap-1">
-              <Button onClick={onBringToFront} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200">
-                Bring to Front
-              </Button>
-              <Button onClick={onSendToBack} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200">
-                Send to Back
-              </Button>
-              <Button onClick={onBringForward} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200">
-                Bring Forward
-              </Button>
-              <Button onClick={onSendBackward} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200">
-                Send Backward
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {selectedCount > 0 && (
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Blend Mode</Label>
-            <Select onValueChange={(value) => onChangeBlendMode(value as any)}>
-              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
-                <SelectValue placeholder="source-over" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                {blendModes.map((mode) => (
-                  <SelectItem key={mode} value={mode} className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">
-                    {mode.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div className="space-y-1 max-h-48 overflow-y-auto">
-          {sortedShapes.map((shape, index) => (
-            <div key={shape.id} className={`flex items-center justify-between p-2 rounded text-xs transition-colors cursor-pointer ${
-              shape.selected ? 'bg-blue-500/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-            }`}>
-              <span className={shape.selected ? 'text-blue-200' : 'text-slate-300'}>
-                {shape.type} (z: {shape.properties.zIndex})
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {sortedShapes.length === 0 && (
-          <div className="text-xs text-slate-500 text-center py-4">
-            No shapes on canvas
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function ColorManipulationContent() {
-    const [hueShift, setHueShift] = useState(0);
-    const [saturationShift, setSaturationShift] = useState(0);
-    const [lightnessShift, setLightnessShift] = useState(0);
-
-    const handleApplyColorManipulation = () => {
-      if (selectedShapes.length === 0) return;
-
-      const manipulation = {
-        type: 'hsl_shift' as const,
-        hslShift: {
-          hue: hueShift,
-          saturation: saturationShift,
-          lightness: lightnessShift
-        },
-        remappings: []
-      };
-
-      onApplyColorManipulation(manipulation);
-    };
-
-    return (
-      <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Color Manipulation
-        </div>
-
-        {selectedShapes.length === 0 && (
-          <div className="text-xs text-slate-500">
-            Select shapes to manipulate colors
-          </div>
-        )}
-
-        {selectedShapes.length > 0 && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Hue Shift</Label>
-              <Slider
-                value={[hueShift]}
-                onValueChange={([value]) => setHueShift(value)}
-                min={-180}
-                max={180}
-                step={1}
-                className="w-full"
-              />
-              <span className="text-xs text-slate-500">{hueShift}°</span>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Saturation Shift</Label>
-              <Slider
-                value={[saturationShift]}
-                onValueChange={([value]) => setSaturationShift(value)}
-                min={-100}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-              <span className="text-xs text-slate-500">{saturationShift}%</span>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Lightness Shift</Label>
-              <Slider
-                value={[lightnessShift]}
-                onValueChange={([value]) => setLightnessShift(value)}
-                min={-100}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-              <span className="text-xs text-slate-500">{lightnessShift}%</span>
-            </div>
-
-            <Button
-              onClick={handleApplyColorManipulation}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              Apply Color Changes
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function SelectionModesContent() {
-    const editModes = [
-      { id: 'shapes', name: 'Shapes', icon: MousePointer, desc: 'Select and transform entire shapes' },
-      { id: 'points', name: 'Points', icon: Edit3, desc: 'Edit individual points' },
-      { id: 'segments', name: 'Segments', icon: Activity, desc: 'Edit curve segments' }
-    ];
-
-    return (
-      <div className="space-y-3">
-        <div className="text-sm text-slate-400">
-          Current Mode: <span className="text-white font-medium">{editMode}</span>
-        </div>
-
-        {editModes.map((mode) => {
-          const IconComponent = mode.icon;
-          const isActive = editMode === mode.id;
-          
-          return (
-            <div key={mode.id} className={`p-3 rounded-lg transition-colors cursor-pointer ${
-              isActive ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-            }`} onClick={() => onSetEditMode(mode.id as any)}>
-              <div className="flex items-center space-x-3">
-                <IconComponent className={`w-5 h-5 transition-colors ${
-                  isActive ? 'text-orange-400' : 'text-slate-400'
-                }`} />
-                <div>
-                  <div className={`text-sm font-medium transition-colors ${
-                    isActive ? 'text-orange-200' : 'text-slate-300'
-                  }`}>{mode.name}</div>
-                  <div className="text-xs text-slate-500">{mode.desc}</div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {editMode === 'points' && selectedPointsCount > 0 && (
-          <div className="p-2 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-            <div className="text-xs text-blue-200">
-              {selectedPointsCount} point{selectedPointsCount !== 1 ? 's' : ''} selected
-            </div>
-          </div>
-        )}
-
-        {editMode === 'segments' && selectedSegmentsCount > 0 && (
-          <div className="p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-            <div className="text-xs text-green-200">
-              {selectedSegmentsCount} segment{selectedSegmentsCount !== 1 ? 's' : ''} selected
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function ArtboardsContent() {
-    const artboardPresets = [
-      { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
-      { name: 'Instagram Post', width: 1080, height: 1080, category: 'social', description: 'Square 1:1' },
-      { name: 'Instagram Story', width: 1080, height: 1920, category: 'social', description: 'Portrait 9:16' },
-      { name: 'Business Card', width: 1050, height: 600, category: 'print', description: '3.5×2" at 300 DPI' },
-      { name: 'A4 Paper', width: 2480, height: 3508, category: 'print', description: '210×297mm at 300 DPI' },
-      { name: 'iPhone 14 Pro', width: 1179, height: 2556, category: 'mobile', description: 'iPhone screen' }
-    ];
-
-    return (
-      <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Active: <span className="text-white font-medium">{artboards.find(a => a.id === activeArtboard)?.name || 'None'}</span>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Quick Presets</Label>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {artboardPresets.map((preset, index) => (
-              <Button
-                key={index}
-                onClick={() => onAddArtboard(preset as ArtboardPreset)}
-                variant="secondary"
-                size="sm"
-                className="w-full justify-start text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
-              >
-                <Monitor className="w-3 h-3 mr-2" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">{preset.name}</div>
-                  <div className="text-xs text-slate-400">{preset.width}×{preset.height}</div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Existing Artboards</Label>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {artboards.map((artboard) => (
-              <div key={artboard.id} className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
-                artboard.id === activeArtboard ? 'bg-teal-500/30 border border-teal-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-              }`}>
-                <div className="flex-1">
-                  <div className={artboard.id === activeArtboard ? 'text-teal-200' : 'text-slate-300'}>
-                    {artboard.name}
-                  </div>
-                  <div className="text-slate-500">{artboard.width}×{artboard.height}</div>
-                </div>
-                <div className="flex space-x-1">
-                  <Button
-                    onClick={() => onSelectArtboard(artboard.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                  >
-                    <Target className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    onClick={() => onDeleteArtboard(artboard.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          {artboards.length === 0 && (
-            <div className="text-xs text-slate-500 text-center py-4">
-              No artboards created
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  function ExportSaveContent() {
-    const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'svg' | 'pdf'>('png');
-    const [exportQuality, setExportQuality] = useState(90);
-    const [exportScale, setExportScale] = useState(1);
-
-    const handleExportShapes = () => {
-      if (selectedShapes.length === 0 && shapes.length === 0) return;
-      
-      // Export selected shapes or all shapes if none selected
-      const shapesToExport = selectedShapes.length > 0 ? selectedShapes : shapes;
-      
-      // Create a temporary canvas for export
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) return;
-      
-      // Calculate bounds of shapes to export
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      
-      shapesToExport.forEach(shape => {
-        const bounds = shape.getBounds();
-        minX = Math.min(minX, bounds.x);
-        minY = Math.min(minY, bounds.y);
-        maxX = Math.max(maxX, bounds.x + bounds.width);
-        maxY = Math.max(maxY, bounds.y + bounds.height);
-      });
-      
-      const width = (maxX - minX) * exportScale;
-      const height = (maxY - minY) * exportScale;
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Set white background for non-transparent formats
-      if (exportFormat !== 'png') {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
-      }
-      
-      // Transform context to center shapes
-      ctx.scale(exportScale, exportScale);
-      ctx.translate(-minX, -minY);
-      
-      // Render shapes
-      shapesToExport.forEach(shape => {
-        // This would need to use the actual shape rendering logic
-        // For now, just show a basic export functionality
-      });
-      
-      // Download the image
-      const link = document.createElement('a');
-      link.download = `shapes-export-${Date.now()}.${exportFormat}`;
-      
-      if (exportFormat === 'jpg') {
-        link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
-      } else {
-        link.href = canvas.toDataURL('image/png');
-      }
-      
-      link.click();
-    };
-
-    const handleSaveProject = () => {
-      const projectData = {
-        shapes: shapes,
-        groups: selectedGroups,
-        artboards: artboards,
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      };
-      
-      const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `shape-editor-project-${Date.now()}.json`;
-      link.click();
-      
-      URL.revokeObjectURL(url);
-    };
-
-    const handleLoadProject = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const projectData = JSON.parse(e.target?.result as string);
-            // This would need to trigger a callback to load the project data
-            console.log('Project data loaded:', projectData);
-          } catch (error) {
-            console.error('Error loading project:', error);
-          }
-        };
-        reader.readAsText(file);
-      };
-      
-      input.click();
-    };
-
-    return (
-      <div className="space-y-4">
-        <div className="space-y-3">
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Export Format</Label>
-            <Select value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
-              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="png" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG (Transparent)</SelectItem>
-                <SelectItem value="jpg" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG (Compressed)</SelectItem>
-                <SelectItem value="svg" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">SVG (Vector)</SelectItem>
-                <SelectItem value="pdf" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {exportFormat === 'jpg' && (
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Quality</Label>
-              <Slider
-                value={[exportQuality]}
-                onValueChange={([value]) => setExportQuality(value)}
-                min={10}
-                max={100}
-                step={5}
-                className="w-full"
-              />
-              <span className="text-xs text-slate-500">{exportQuality}%</span>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Scale</Label>
-            <Slider
-              value={[exportScale]}
-              onValueChange={([value]) => setExportScale(value)}
-              min={0.5}
-              max={4}
-              step={0.5}
-              className="w-full"
-            />
-            <span className="text-xs text-slate-500">{exportScale}x</span>
-          </div>
-
-          <Button
-            onClick={handleExportShapes}
-            disabled={shapes.length === 0}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
-          >
-            <FileImage className="w-4 h-4 mr-2" />
-            Export {selectedShapes.length > 0 ? 'Selected' : 'All'} Shapes
-          </Button>
-        </div>
-
-        <Separator className="bg-slate-600" />
-
-        <div className="space-y-3">
-          <Label className="text-xs text-slate-400">Project Management</Label>
-          
-          <Button
-            onClick={handleSaveProject}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save Project
-          </Button>
-
-          <Button
-            onClick={handleLoadProject}
-            variant="secondary"
-            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-          >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Load Project
-          </Button>
-
-          <Button
-            onClick={() => navigator.clipboard.writeText(JSON.stringify({ shapes, artboards }))}
-            variant="secondary"
-            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-          >
-            <Clipboard className="w-4 h-4 mr-2" />
-            Copy to Clipboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  function ShapePropertiesPanel({ selectedShapes, selectedGroups, selectedCount }: {
-    selectedShapes: Shape[];
-    selectedGroups: ShapeGroupClass[];
-    selectedCount: number;
-  }) {
-    const updateShapeProperty = useCallback((updater: (shape: Shape) => void) => {
-      selectedShapes.forEach(updater);
-      if (onShapeUpdate) {
-        onShapeUpdate();
-      }
-    }, [selectedShapes, onShapeUpdate]);
-
-    return (
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Move</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Button
-                onClick={() => onMoveBy(-1, 0)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ←
-              </Button>
-              <Input
-                type="number"
-                value={moveX}
-                onChange={(e) => setMoveX(Number(e.target.value))}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="X"
-              />
-              <Button
-                onClick={() => onMoveBy(1, 0)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                →
-              </Button>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Button
-                onClick={() => onMoveBy(0, -1)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ↑
-              </Button>
-              <Input
-                type="number"
-                value={moveY}
-                onChange={(e) => setMoveY(Number(e.target.value))}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Y"
-              />
-              <Button
-                onClick={() => onMoveBy(0, 1)}
-                variant="secondary"
-                size="sm"
-                className="text-xs p-1 h-6"
-              >
-                ↓
-              </Button>
-            </div>
-          </div>
-          <Button
-            onClick={() => onMoveBy(moveX, moveY)}
-            variant="secondary"
-            size="sm"
-            className="w-full text-xs"
-          >
-            <Move className="w-3 h-3 mr-1" />
-            Apply Move
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Scale (%)</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Input
-                type="number"
-                value={scaleX}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setScaleX(value);
-                  if (lockAspectRatio) {
-                    setScaleY(value);
-                  }
-                }}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Scale X"
-              />
-            </div>
-            <div className="space-y-1">
-              <Input
-                type="number"
-                value={scaleY}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setScaleY(value);
-                  if (lockAspectRatio) {
-                    setScaleX(value);
-                  }
-                }}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Scale Y"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              checked={lockAspectRatio}
-              onCheckedChange={(checked) => setLockAspectRatio(checked === true)}
-              className="border-slate-600"
-            />
-            <Label className="text-xs text-slate-400">Lock Aspect Ratio</Label>
-          </div>
-          <Button
-            onClick={() => onScaleBy(scaleX / 100, scaleY / 100)}
-            variant="secondary"
-            size="sm"
-            className="w-full text-xs"
-          >
-            <Expand className="w-3 h-3 mr-1" />
-            Apply Scale
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            onClick={onFlipHorizontal}
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-          >
-            <FlipHorizontal className="w-3 h-3 mr-1" />
-            Flip H
-          </Button>
-          <Button
-            onClick={onFlipVertical}
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-          >
-            <FlipVertical className="w-3 h-3 mr-1" />
-            Flip V
-          </Button>
-        </div>
-
-        <Button
-          onClick={onDeleteSelected}
-          variant="destructive"
-          size="sm"
-          className="w-full text-xs"
-        >
-          <Trash2 className="w-3 h-3 mr-1" />
-          Delete Selected
-        </Button>
-      </div>
-    );
-  }
 }
