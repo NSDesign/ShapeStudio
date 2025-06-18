@@ -307,11 +307,15 @@ export default function Sidebar({
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
-      // Create a temporary clone that won't be selected to avoid selection indicators
-      const tempShape = { ...shape, selected: false };
+      // Temporarily disable selection to avoid selection indicators, but keep the original shape
+      const originalSelected = shape.selected;
+      shape.selected = false;
       
       // Use the exact same renderer as the main canvas but with zoom=1 for export
-      renderShape(ctx, tempShape as Shape, 1);
+      renderShape(ctx, shape, 1);
+      
+      // Restore original selection state
+      shape.selected = originalSelected;
     };
 
     const handleExportShapes = () => {
