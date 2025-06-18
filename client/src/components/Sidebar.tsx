@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
 import { Shape } from '@/lib/shapes';
+import { renderShape } from '@/lib/shapeRenderer';
 
 // Shape display names mapping
 const shapeTypeDisplayNames: Record<ShapeType, string> = {
@@ -305,52 +306,12 @@ export default function Sidebar({
     const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
-    const renderShapeToCanvas = (ctx: CanvasRenderingContext2D, shape: Shape) => {
-      ctx.save();
+    const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
+      // Create a temporary clone that won't be selected to avoid selection indicators
+      const tempShape = { ...shape, selected: false };
       
-      // Apply transform
-      ctx.translate(shape.transform.x, shape.transform.y);
-      ctx.rotate((shape.transform.rotation * Math.PI) / 180);
-      ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
-      
-      // Apply shape properties
-      ctx.globalAlpha = shape.properties.fillOpacity;
-      ctx.fillStyle = shape.properties.fillColor;
-      ctx.strokeStyle = shape.properties.strokeColor;
-      ctx.lineWidth = shape.properties.strokeWidth;
-      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
-      
-      // Start the path
-      ctx.beginPath();
-      
-      // Draw the shape based on its points
-      if (shape.points && shape.points.length > 0) {
-        const firstPoint = shape.points[0];
-        ctx.moveTo(firstPoint.x, firstPoint.y);
-        
-        for (let i = 1; i < shape.points.length; i++) {
-          const point = shape.points[i];
-          ctx.lineTo(point.x, point.y);
-        }
-        
-        // Close the path for filled shapes
-        if (shape.type !== 'line' && shape.type !== 'bezier') {
-          ctx.closePath();
-        }
-      }
-      
-      // Fill and stroke the shape
-      if (shape.properties.fillOpacity > 0) {
-        ctx.globalAlpha = shape.properties.fillOpacity;
-        ctx.fill();
-      }
-      
-      if (shape.properties.strokeWidth > 0 && shape.properties.strokeOpacity > 0) {
-        ctx.globalAlpha = shape.properties.strokeOpacity;
-        ctx.stroke();
-      }
-      
-      ctx.restore();
+      // Use the exact same renderer as the main canvas but with zoom=1 for export
+      renderShape(ctx, tempShape as Shape, 1);
     };
 
     const handleExportShapes = () => {
@@ -450,9 +411,10 @@ export default function Sidebar({
       ctx.scale(exportScale, exportScale);
       ctx.translate(translateX, translateY);
       
-      // Render shapes in z-index order
+      // Sort shapes by z-index and render them directly (no copying to avoid property corruption)
       const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-      sortedShapes.forEach(shape => renderShapeToCanvas(ctx, shape));
+      
+      sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
       
       // Download the image
       const link = document.createElement('a');
