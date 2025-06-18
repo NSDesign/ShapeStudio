@@ -331,16 +331,19 @@ export default function Sidebar({
         const artboard = artboards.find(ab => ab.id === selectedArtboardForExport);
         if (!artboard) return;
         
-        // Filter shapes that are within the artboard bounds
+        // Filter shapes that overlap with the artboard bounds
         shapesToExport = shapes.filter(shape => {
           const bounds = shape.getBounds();
-          const shapeX = shape.transform.x + bounds.x;
-          const shapeY = shape.transform.y + bounds.y;
+          const shapeLeft = shape.transform.x + bounds.x;
+          const shapeTop = shape.transform.y + bounds.y;
+          const shapeRight = shapeLeft + bounds.width;
+          const shapeBottom = shapeTop + bounds.height;
           
-          return shapeX >= artboard.x && 
-                 shapeY >= artboard.y && 
-                 shapeX <= artboard.x + artboard.width && 
-                 shapeY <= artboard.y + artboard.height;
+          // Check if shape overlaps with artboard (not just if top-left corner is inside)
+          return !(shapeRight < artboard.x || 
+                   shapeLeft > artboard.x + artboard.width ||
+                   shapeBottom < artboard.y || 
+                   shapeTop > artboard.y + artboard.height);
         });
         
         canvasWidth = artboard.width * exportScale;
@@ -356,12 +359,43 @@ export default function Sidebar({
         
         shapesToExport.forEach(shape => {
           const bounds = shape.getBounds();
-          const shapeX = shape.transform.x + bounds.x;
-          const shapeY = shape.transform.y + bounds.y;
-          minX = Math.min(minX, shapeX);
-          minY = Math.min(minY, shapeY);
-          maxX = Math.max(maxX, shapeX + bounds.width);
-          maxY = Math.max(maxY, shapeY + bounds.height);
+          
+          // Calculate transformed bounds by checking all four corners
+          const corners = [
+            { x: bounds.x, y: bounds.y },
+            { x: bounds.x + bounds.width, y: bounds.y },
+            { x: bounds.x, y: bounds.y + bounds.height },
+            { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+          ];
+          
+          corners.forEach(corner => {
+            // Apply transformations to each corner
+            let x = corner.x;
+            let y = corner.y;
+            
+            // Apply scale
+            x *= shape.transform.scaleX;
+            y *= shape.transform.scaleY;
+            
+            // Apply rotation
+            if (shape.transform.rotation !== 0) {
+              const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
+              const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
+              const newX = x * cos - y * sin;
+              const newY = x * sin + y * cos;
+              x = newX;
+              y = newY;
+            }
+            
+            // Apply translation
+            x += shape.transform.x;
+            y += shape.transform.y;
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          });
         });
         
         const padding = 20;
@@ -379,12 +413,43 @@ export default function Sidebar({
         
         shapesToExport.forEach(shape => {
           const bounds = shape.getBounds();
-          const shapeX = shape.transform.x + bounds.x;
-          const shapeY = shape.transform.y + bounds.y;
-          minX = Math.min(minX, shapeX);
-          minY = Math.min(minY, shapeY);
-          maxX = Math.max(maxX, shapeX + bounds.width);
-          maxY = Math.max(maxY, shapeY + bounds.height);
+          
+          // Calculate transformed bounds by checking all four corners
+          const corners = [
+            { x: bounds.x, y: bounds.y },
+            { x: bounds.x + bounds.width, y: bounds.y },
+            { x: bounds.x, y: bounds.y + bounds.height },
+            { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+          ];
+          
+          corners.forEach(corner => {
+            // Apply transformations to each corner
+            let x = corner.x;
+            let y = corner.y;
+            
+            // Apply scale
+            x *= shape.transform.scaleX;
+            y *= shape.transform.scaleY;
+            
+            // Apply rotation
+            if (shape.transform.rotation !== 0) {
+              const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
+              const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
+              const newX = x * cos - y * sin;
+              const newY = x * sin + y * cos;
+              x = newX;
+              y = newY;
+            }
+            
+            // Apply translation
+            x += shape.transform.x;
+            y += shape.transform.y;
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          });
         });
         
         const padding = 20;
