@@ -302,95 +302,161 @@ export default function Sidebar({
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'svg' | 'pdf'>('png');
     const [exportQuality, setExportQuality] = useState(90);
     const [exportScale, setExportScale] = useState(1);
+    const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
+    const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
-    const handleExportShapes = () => {
-      if (selectedShapes.length === 0 && shapes.length === 0) return;
+    const renderShapeToCanvas = (ctx: CanvasRenderingContext2D, shape: Shape) => {
+      ctx.save();
       
-      // Export selected shapes or all shapes if none selected
-      const shapesToExport = selectedShapes.length > 0 ? selectedShapes : shapes;
+      // Apply transform
+      ctx.translate(shape.transform.x, shape.transform.y);
+      ctx.rotate((shape.transform.rotation * Math.PI) / 180);
+      ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
       
-      // Create a temporary canvas for export
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      // Apply shape properties
+      ctx.globalAlpha = shape.properties.fillOpacity;
+      ctx.fillStyle = shape.properties.fillColor;
+      ctx.strokeStyle = shape.properties.strokeColor;
+      ctx.lineWidth = shape.properties.strokeWidth;
+      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
       
-      if (!ctx) return;
+      // Start the path
+      ctx.beginPath();
       
-      // Calculate bounds of shapes to export
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      
-      shapesToExport.forEach(shape => {
-        const bounds = shape.getBounds();
-        minX = Math.min(minX, bounds.x);
-        minY = Math.min(minY, bounds.y);
-        maxX = Math.max(maxX, bounds.x + bounds.width);
-        maxY = Math.max(maxY, bounds.y + bounds.height);
-      });
-      
-      // Add padding to the export
-      const padding = 20;
-      const width = (maxX - minX + padding * 2) * exportScale;
-      const height = (maxY - minY + padding * 2) * exportScale;
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Set white background for non-transparent formats
-      if (exportFormat !== 'png') {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
+      // Draw the shape based on its points
+      if (shape.points && shape.points.length > 0) {
+        const firstPoint = shape.points[0];
+        ctx.moveTo(firstPoint.x, firstPoint.y);
+        
+        for (let i = 1; i < shape.points.length; i++) {
+          const point = shape.points[i];
+          ctx.lineTo(point.x, point.y);
+        }
+        
+        // Close the path for filled shapes
+        if (shape.type !== 'line' && shape.type !== 'bezier') {
+          ctx.closePath();
+        }
       }
       
-      // Transform context to center shapes with padding
-      ctx.scale(exportScale, exportScale);
-      ctx.translate(-minX + padding, -minY + padding);
-      
-      // Render all shapes to export
-      shapesToExport.forEach(shape => {
-        ctx.save();
-        
-        // Apply shape properties
+      // Fill and stroke the shape
+      if (shape.properties.fillOpacity > 0) {
         ctx.globalAlpha = shape.properties.fillOpacity;
-        ctx.fillStyle = shape.properties.fillColor;
-        ctx.strokeStyle = shape.properties.strokeColor;
-        ctx.lineWidth = shape.properties.strokeWidth;
-        ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+        ctx.fill();
+      }
+      
+      if (shape.properties.strokeWidth > 0 && shape.properties.strokeOpacity > 0) {
+        ctx.globalAlpha = shape.properties.strokeOpacity;
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    };
+
+    const handleExportShapes = () => {
+      let shapesToExport: Shape[] = [];
+      let canvasWidth: number;
+      let canvasHeight: number;
+      let translateX = 0;
+      let translateY = 0;
+      let filename = '';
+
+      if (exportMode === 'artboard' && selectedArtboardForExport) {
+        // Export specific artboard
+        const artboard = artboards.find(ab => ab.id === selectedArtboardForExport);
+        if (!artboard) return;
         
-        // Start the path
-        ctx.beginPath();
-        
-        // Draw the shape based on its points
-        if (shape.points && shape.points.length > 0) {
-          const firstPoint = shape.points[0];
-          ctx.moveTo(firstPoint.x, firstPoint.y);
+        // Filter shapes that are within the artboard bounds
+        shapesToExport = shapes.filter(shape => {
+          const bounds = shape.getBounds();
+          const shapeX = shape.transform.x + bounds.x;
+          const shapeY = shape.transform.y + bounds.y;
           
-          for (let i = 1; i < shape.points.length; i++) {
-            const point = shape.points[i];
-            ctx.lineTo(point.x, point.y);
-          }
-          
-          // Close the path for filled shapes
-          if (shape.type !== 'line' && shape.type !== 'bezier') {
-            ctx.closePath();
-          }
-        }
+          return shapeX >= artboard.x && 
+                 shapeY >= artboard.y && 
+                 shapeX <= artboard.x + artboard.width && 
+                 shapeY <= artboard.y + artboard.height;
+        });
         
-        // Fill and stroke the shape
-        if (shape.properties.fillOpacity > 0) {
-          ctx.globalAlpha = shape.properties.fillOpacity;
-          ctx.fill();
-        }
+        canvasWidth = artboard.width * exportScale;
+        canvasHeight = artboard.height * exportScale;
+        translateX = -artboard.x;
+        translateY = -artboard.y;
+        filename = `${artboard.name}-export-${Date.now()}.${exportFormat}`;
+      } else if (exportMode === 'selection' && selectedShapes.length > 0) {
+        // Export selected shapes with bounds fitting
+        shapesToExport = selectedShapes;
         
-        if (shape.properties.strokeWidth > 0 && shape.properties.strokeOpacity > 0) {
-          ctx.globalAlpha = shape.properties.strokeOpacity;
-          ctx.stroke();
-        }
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         
-        ctx.restore();
-      });
+        shapesToExport.forEach(shape => {
+          const bounds = shape.getBounds();
+          const shapeX = shape.transform.x + bounds.x;
+          const shapeY = shape.transform.y + bounds.y;
+          minX = Math.min(minX, shapeX);
+          minY = Math.min(minY, shapeY);
+          maxX = Math.max(maxX, shapeX + bounds.width);
+          maxY = Math.max(maxY, shapeY + bounds.height);
+        });
+        
+        const padding = 20;
+        canvasWidth = (maxX - minX + padding * 2) * exportScale;
+        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        translateX = -minX + padding;
+        translateY = -minY + padding;
+        filename = `selection-export-${Date.now()}.${exportFormat}`;
+      } else {
+        // Export all shapes with bounds fitting
+        shapesToExport = shapes;
+        if (shapesToExport.length === 0) return;
+        
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        shapesToExport.forEach(shape => {
+          const bounds = shape.getBounds();
+          const shapeX = shape.transform.x + bounds.x;
+          const shapeY = shape.transform.y + bounds.y;
+          minX = Math.min(minX, shapeX);
+          minY = Math.min(minY, shapeY);
+          maxX = Math.max(maxX, shapeX + bounds.width);
+          maxY = Math.max(maxY, shapeY + bounds.height);
+        });
+        
+        const padding = 20;
+        canvasWidth = (maxX - minX + padding * 2) * exportScale;
+        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        translateX = -minX + padding;
+        translateY = -minY + padding;
+        filename = `all-shapes-export-${Date.now()}.${exportFormat}`;
+      }
+
+      if (shapesToExport.length === 0) return;
+      
+      // Create export canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      
+      // Set background for non-transparent formats
+      if (exportFormat !== 'png') {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
+      
+      // Apply scaling and translation
+      ctx.scale(exportScale, exportScale);
+      ctx.translate(translateX, translateY);
+      
+      // Render shapes in z-index order
+      const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+      sortedShapes.forEach(shape => renderShapeToCanvas(ctx, shape));
       
       // Download the image
       const link = document.createElement('a');
-      link.download = `shapes-export-${Date.now()}.${exportFormat}`;
+      link.download = filename;
       
       if (exportFormat === 'jpg') {
         link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
@@ -424,6 +490,38 @@ export default function Sidebar({
     return (
       <div className="space-y-4">
         <div className="space-y-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Export Mode</Label>
+            <Select value={exportMode} onValueChange={(value: any) => setExportMode(value)}>
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="selection" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Selected Shapes</SelectItem>
+                <SelectItem value="artboard" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Artboard Content</SelectItem>
+                <SelectItem value="all" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">All Shapes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {exportMode === 'artboard' && (
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Select Artboard</Label>
+              <Select value={selectedArtboardForExport} onValueChange={setSelectedArtboardForExport}>
+                <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600">
+                  <SelectValue placeholder="Choose artboard..." />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  {artboards.map((artboard) => (
+                    <SelectItem key={artboard.id} value={artboard.id} className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">
+                      {artboard.name} ({artboard.width}×{artboard.height})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Export Format</Label>
             <Select value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
@@ -469,11 +567,19 @@ export default function Sidebar({
 
           <Button
             onClick={handleExportShapes}
-            disabled={shapes.length === 0}
+            disabled={
+              (exportMode === 'selection' && selectedShapes.length === 0) ||
+              (exportMode === 'artboard' && (!selectedArtboardForExport || artboards.length === 0)) ||
+              (exportMode === 'all' && shapes.length === 0)
+            }
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
           >
             <FileImage className="w-4 h-4 mr-2" />
-            Export {selectedShapes.length > 0 ? 'Selected' : 'All'} Shapes
+            {exportMode === 'selection' && `Export Selected (${selectedShapes.length})`}
+            {exportMode === 'artboard' && selectedArtboardForExport && 
+              `Export ${artboards.find(ab => ab.id === selectedArtboardForExport)?.name || 'Artboard'}`}
+            {exportMode === 'artboard' && !selectedArtboardForExport && 'Select Artboard to Export'}
+            {exportMode === 'all' && `Export All Shapes (${shapes.length})`}
           </Button>
         </div>
 
