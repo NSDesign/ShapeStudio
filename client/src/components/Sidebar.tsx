@@ -1472,83 +1472,72 @@ export default function Sidebar({
         </Button>
       </div>
       
-      {isCollapsed ? (
-        /* Collapsed sidebar with icon buttons */
-        <div className="flex flex-col items-center py-2 space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-orange-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Selection Modes"
-          >
-            <MousePointer className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-teal-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Artboards"
-          >
-            <Monitor className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-cyan-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Export & Save"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-blue-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Shape Types"
-          >
-            <Shapes className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-green-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Composition"
-          >
-            <Shuffle className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-yellow-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Properties"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-purple-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Layers"
-          >
-            <Layers3 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-pink-300 hover:bg-slate-800 h-8 w-8 p-0"
-            onClick={() => setIsCollapsed(false)}
-            title="Color Manipulation"
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
+      {/* Collapsed Content with Tight Popovers */}
+      {isCollapsed && (
+        <div className="flex flex-col w-full">
+          {[
+            { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
+            { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
+            { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent },
+            { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
+            { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
+            { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
+            { id: 'layers', name: 'Layers', icon: Layers3, color: 'purple', content: LayersContent },
+            { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent }
+          ].map(section => (
+            <Popover 
+              key={section.id} 
+              open={activePopover === section.id} 
+              onOpenChange={(open) => setActivePopover(open ? section.id : null)}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={`w-full h-8 p-0 rounded-none border-0 hover:bg-slate-800 ${
+                    activePopover === section.id ? 'bg-slate-800' : ''
+                  } ${
+                    section.color === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' :
+                    section.color === 'orange' ? 'text-orange-400 hover:text-orange-300' :
+                    section.color === 'emerald' ? 'text-emerald-400 hover:text-emerald-300' :
+                    section.color === 'blue' ? 'text-blue-400 hover:text-blue-300' :
+                    section.color === 'green' ? 'text-green-400 hover:text-green-300' :
+                    section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
+                    section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
+                    'text-pink-400 hover:text-pink-300'
+                  }`}
+                  onClick={() => handlePopoverToggle(section.id)}
+                >
+                  <section.icon className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                side="right" 
+                align="start" 
+                className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
+                sideOffset={4}
+              >
+                <div className="space-y-2">
+                  <h3 className={`text-sm font-medium ${
+                    section.color === 'cyan' ? 'text-cyan-400' :
+                    section.color === 'orange' ? 'text-orange-400' :
+                    section.color === 'emerald' ? 'text-emerald-400' :
+                    section.color === 'blue' ? 'text-blue-400' :
+                    section.color === 'green' ? 'text-green-400' :
+                    section.color === 'yellow' ? 'text-yellow-400' :
+                    section.color === 'purple' ? 'text-purple-400' :
+                    'text-pink-400'
+                  }`}>
+                    {section.name}
+                  </h3>
+                  <section.content />
+                </div>
+              </PopoverContent>
+            </Popover>
+          ))}
         </div>
-      ) : (
+      )}
+
+      {!isCollapsed && (
         /* Expanded sidebar with full content */
         <div className="flex-1 overflow-y-auto">
           <Accordion type="multiple" className="w-full px-2 py-1">
@@ -1656,72 +1645,6 @@ export default function Sidebar({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-        </div>
-      )}
-
-      {/* Collapsed Content with Popovers */}
-      {isCollapsed && (
-        <div className="flex flex-col items-center py-2 space-y-2">
-          {[
-            { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
-            { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
-            { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent },
-            { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
-            { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
-            { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
-            { id: 'layers', name: 'Layers', icon: Layers3, color: 'purple', content: LayersContent },
-            { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent }
-          ].map(section => (
-            <Popover 
-              key={section.id} 
-              open={activePopover === section.id} 
-              onOpenChange={(open) => setActivePopover(open ? section.id : null)}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`w-12 h-12 p-0 hover:bg-slate-800 ${
-                    activePopover === section.id ? 'bg-slate-800' : ''
-                  } ${
-                    section.color === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' :
-                    section.color === 'orange' ? 'text-orange-400 hover:text-orange-300' :
-                    section.color === 'emerald' ? 'text-emerald-400 hover:text-emerald-300' :
-                    section.color === 'blue' ? 'text-blue-400 hover:text-blue-300' :
-                    section.color === 'green' ? 'text-green-400 hover:text-green-300' :
-                    section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
-                    section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
-                    'text-pink-400 hover:text-pink-300'
-                  }`}
-                  onClick={() => handlePopoverToggle(section.id)}
-                >
-                  <section.icon className="w-5 h-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                side="right" 
-                align="start" 
-                className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
-                sideOffset={8}
-              >
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${
-                    section.color === 'cyan' ? 'text-cyan-400' :
-                    section.color === 'orange' ? 'text-orange-400' :
-                    section.color === 'emerald' ? 'text-emerald-400' :
-                    section.color === 'blue' ? 'text-blue-400' :
-                    section.color === 'green' ? 'text-green-400' :
-                    section.color === 'yellow' ? 'text-yellow-400' :
-                    section.color === 'purple' ? 'text-purple-400' :
-                    'text-pink-400'
-                  }`}>
-                    {section.name}
-                  </h3>
-                  <section.content />
-                </div>
-              </PopoverContent>
-            </Popover>
-          ))}
         </div>
       )}
     </div>
