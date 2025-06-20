@@ -204,8 +204,9 @@ export default function Canvas({
         ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / effectiveZoom);
       }
 
-      // Draw shapes
-      shapes.forEach(shape => {
+      // Draw shapes in z-index order (lowest z-index first, highest on top)
+      const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+      sortedShapes.forEach(shape => {
         renderShape(ctx, shape, effectiveZoom);
       });
 

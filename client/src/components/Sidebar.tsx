@@ -809,7 +809,7 @@ export default function Sidebar({
     ];
 
     const sortedShapes = useMemo(() => {
-      return (shapes || []).sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+      return (shapes || []).sort((a, b) => a.properties.zIndex - b.properties.zIndex);
     }, [shapes]);
 
     return (
