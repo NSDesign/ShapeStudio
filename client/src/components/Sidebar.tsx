@@ -48,6 +48,11 @@ import {
   Activity,
   Monitor,
   Target,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Grid3X3,
   Trash,
   FileImage,
   Save,
@@ -58,6 +63,7 @@ import {
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
 import { Shape } from '@/lib/shapes';
 import { renderShape } from '@/lib/shapeRenderer';
+import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
 // Shape display names mapping
 const shapeTypeDisplayNames: Record<ShapeType, string> = {
@@ -882,6 +888,275 @@ export default function Sidebar({
     );
   }
 
+  function AlignDistributeContent() {
+    const [distributionPattern, setDistributionPattern] = useState<'grid' | 'circle' | 'line' | 'spiral'>('grid');
+    const [distributionSpacing, setDistributionSpacing] = useState(50);
+    const [alignTarget, setAlignTarget] = useState<'selection' | 'canvas'>('selection');
+
+    const handleAlign = (direction: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
+      if (selectedShapes.length < 2) return;
+
+      const bounds = selectedShapes.map(shape => {
+        // Calculate shape bounds
+        const minX = Math.min(...shape.points.map(p => p.x + shape.transform.x));
+        const maxX = Math.max(...shape.points.map(p => p.x + shape.transform.x));
+        const minY = Math.min(...shape.points.map(p => p.y + shape.transform.y));
+        const maxY = Math.max(...shape.points.map(p => p.y + shape.transform.y));
+        return { shape, minX, maxX, minY, maxY, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2 };
+      });
+
+      let targetValue: number;
+      
+      if (direction === 'left') {
+        targetValue = Math.min(...bounds.map(b => b.minX));
+        bounds.forEach(b => {
+          b.shape.transform.x += targetValue - b.minX;
+        });
+      } else if (direction === 'right') {
+        targetValue = Math.max(...bounds.map(b => b.maxX));
+        bounds.forEach(b => {
+          b.shape.transform.x += targetValue - b.maxX;
+        });
+      } else if (direction === 'center') {
+        targetValue = bounds.reduce((sum, b) => sum + b.centerX, 0) / bounds.length;
+        bounds.forEach(b => {
+          b.shape.transform.x += targetValue - b.centerX;
+        });
+      } else if (direction === 'top') {
+        targetValue = Math.min(...bounds.map(b => b.minY));
+        bounds.forEach(b => {
+          b.shape.transform.y += targetValue - b.minY;
+        });
+      } else if (direction === 'bottom') {
+        targetValue = Math.max(...bounds.map(b => b.maxY));
+        bounds.forEach(b => {
+          b.shape.transform.y += targetValue - b.maxY;
+        });
+      } else if (direction === 'middle') {
+        targetValue = bounds.reduce((sum, b) => sum + b.centerY, 0) / bounds.length;
+        bounds.forEach(b => {
+          b.shape.transform.y += targetValue - b.centerY;
+        });
+      }
+
+      if (onShapeUpdate) onShapeUpdate();
+    };
+
+    const handleDistribute = (direction: 'horizontal' | 'vertical') => {
+      if (selectedShapes.length < 3) return;
+
+      const bounds = selectedShapes.map(shape => {
+        const minX = Math.min(...shape.points.map(p => p.x + shape.transform.x));
+        const maxX = Math.max(...shape.points.map(p => p.x + shape.transform.x));
+        const minY = Math.min(...shape.points.map(p => p.y + shape.transform.y));
+        const maxY = Math.max(...shape.points.map(p => p.y + shape.transform.y));
+        return { shape, minX, maxX, minY, maxY, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2 };
+      });
+
+      if (direction === 'horizontal') {
+        bounds.sort((a, b) => a.centerX - b.centerX);
+        const totalSpace = bounds[bounds.length - 1].centerX - bounds[0].centerX;
+        const spacing = totalSpace / (bounds.length - 1);
+        
+        bounds.forEach((b, index) => {
+          if (index > 0 && index < bounds.length - 1) {
+            const targetX = bounds[0].centerX + spacing * index;
+            b.shape.transform.x += targetX - b.centerX;
+          }
+        });
+      } else {
+        bounds.sort((a, b) => a.centerY - b.centerY);
+        const totalSpace = bounds[bounds.length - 1].centerY - bounds[0].centerY;
+        const spacing = totalSpace / (bounds.length - 1);
+        
+        bounds.forEach((b, index) => {
+          if (index > 0 && index < bounds.length - 1) {
+            const targetY = bounds[0].centerY + spacing * index;
+            b.shape.transform.y += targetY - b.centerY;
+          }
+        });
+      }
+
+      if (onShapeUpdate) onShapeUpdate();
+    };
+
+    const handleSmartDistribution = () => {
+      const targetShapes = alignTarget === 'selection' ? selectedShapes : shapes;
+      if (targetShapes.length < 2) return;
+
+      // Use the distribution algorithm
+      const bounds = { x: 0, y: 0, width: 800, height: 600 };
+      const settings = {
+        pattern: distributionPattern,
+        spacing: distributionSpacing,
+        randomness: 0.1,
+        angle: 0
+      };
+
+      const positions = SmartDistributionAlgorithm.generatePositions(targetShapes.length, bounds, settings);
+      
+      targetShapes.forEach((shape, index) => {
+        if (positions[index]) {
+          shape.transform.x = positions[index].x;
+          shape.transform.y = positions[index].y;
+        }
+      });
+
+      if (onShapeUpdate) onShapeUpdate();
+    };
+
+    return (
+      <div className="space-y-4">
+        {/* Alignment Controls */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Align ({selectedShapes.length} selected)</Label>
+          <div className="grid grid-cols-3 gap-1">
+            <Button
+              onClick={() => handleAlign('left')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignLeft className="w-3 h-3" />
+            </Button>
+            <Button
+              onClick={() => handleAlign('center')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignCenter className="w-3 h-3" />
+            </Button>
+            <Button
+              onClick={() => handleAlign('right')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignRight className="w-3 h-3" />
+            </Button>
+            <Button
+              onClick={() => handleAlign('top')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignJustify className="w-3 h-3 rotate-90" />
+            </Button>
+            <Button
+              onClick={() => handleAlign('middle')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignCenter className="w-3 h-3 rotate-90" />
+            </Button>
+            <Button
+              onClick={() => handleAlign('bottom')}
+              variant="secondary"
+              size="sm"
+              className="text-xs p-1 h-7"
+              disabled={selectedShapes.length < 2}
+            >
+              <AlignJustify className="w-3 h-3 rotate-90" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Distribution Controls */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Distribute</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => handleDistribute('horizontal')}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={selectedShapes.length < 3}
+            >
+              Horizontal
+            </Button>
+            <Button
+              onClick={() => handleDistribute('vertical')}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={selectedShapes.length < 3}
+            >
+              Vertical
+            </Button>
+          </div>
+        </div>
+
+        <Separator className="bg-slate-700" />
+
+        {/* Smart Distribution */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Smart Distribution</Label>
+          
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Target</Label>
+            <Select value={alignTarget} onValueChange={(value: 'selection' | 'canvas') => setAlignTarget(value)}>
+              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="selection" className="text-white hover:bg-slate-700">Selected Shapes</SelectItem>
+                <SelectItem value="canvas" className="text-white hover:bg-slate-700">All Shapes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Pattern</Label>
+            <Select value={distributionPattern} onValueChange={(value: 'grid' | 'circle' | 'line' | 'spiral') => setDistributionPattern(value)}>
+              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="grid" className="text-white hover:bg-slate-700">Grid</SelectItem>
+                <SelectItem value="circle" className="text-white hover:bg-slate-700">Circle</SelectItem>
+                <SelectItem value="line" className="text-white hover:bg-slate-700">Line</SelectItem>
+                <SelectItem value="spiral" className="text-white hover:bg-slate-700">Spiral</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Spacing</span>
+              <span className="text-slate-300">{distributionSpacing}px</span>
+            </div>
+            <Slider
+              value={[distributionSpacing]}
+              onValueChange={([value]) => setDistributionSpacing(value)}
+              min={10}
+              max={200}
+              step={5}
+              className="w-full"
+            />
+          </div>
+
+          <Button
+            onClick={handleSmartDistribution}
+            variant="secondary"
+            size="sm"
+            className="w-full text-xs"
+            disabled={(alignTarget === 'selection' && selectedShapes.length < 2) || (alignTarget === 'canvas' && shapes.length < 2)}
+          >
+            <Grid3X3 className="w-3 h-3 mr-1" />
+            Apply Distribution
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   function ColorManipulationContent() {
     const [hueShift, setHueShift] = useState(0);
     const [saturationShift, setSaturationShift] = useState(0);
@@ -1603,6 +1878,19 @@ export default function Sidebar({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <CompositionContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Align & Distribute Section */}
+            <AccordionItem value="align-distribute" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-indigo-400 hover:text-indigo-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <AlignCenter className="w-4 h-4 mr-2" />
+                  Align & Distribute
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <AlignDistributeContent />
               </AccordionContent>
             </AccordionItem>
 
