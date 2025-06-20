@@ -168,6 +168,11 @@ export default function Sidebar({
   const [scaleY, setScaleY] = useState(100);
   const [lockAspectRatio, setLockAspectRatio] = useState(true);
 
+  // Define handlePopoverToggle function
+  const handlePopoverToggle = (sectionId: string) => {
+    setActivePopover(activePopover === sectionId ? null : sectionId);
+  };
+
   // Helper functions for content sections
   function SelectionModesContent() {
     const editModes = [
@@ -1620,6 +1625,54 @@ export default function Sidebar({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+        </div>
+      )}
+
+      {/* Collapsed Content with Popovers */}
+      {isCollapsed && (
+        <div className="flex flex-col items-center py-2 space-y-2">
+          {[
+            { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
+            { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
+            { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent },
+            { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
+            { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
+            { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
+            { id: 'layers', name: 'Layers', icon: Layers3, color: 'purple', content: LayersContent },
+            { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent }
+          ].map(section => (
+            <Popover 
+              key={section.id} 
+              open={activePopover === section.id} 
+              onOpenChange={(open) => setActivePopover(open ? section.id : null)}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`w-12 h-12 p-0 text-${section.color}-400 hover:text-${section.color}-300 hover:bg-slate-800 ${
+                    activePopover === section.id ? `bg-slate-800 text-${section.color}-300` : ''
+                  }`}
+                  onClick={() => handlePopoverToggle(section.id)}
+                >
+                  <section.icon className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                side="right" 
+                align="start" 
+                className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
+                sideOffset={8}
+              >
+                <div className="space-y-2">
+                  <h3 className={`text-sm font-medium text-${section.color}-400`}>
+                    {section.name}
+                  </h3>
+                  <section.content />
+                </div>
+              </PopoverContent>
+            </Popover>
+          ))}
         </div>
       )}
     </div>
