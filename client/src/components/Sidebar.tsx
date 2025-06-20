@@ -14,6 +14,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -156,6 +161,7 @@ export default function Sidebar({
   onApplyColorManipulation
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activePopover, setActivePopover] = useState<string | null>(null);
   const [moveX, setMoveX] = useState(0);
   const [moveY, setMoveY] = useState(0);
   const [scaleX, setScaleX] = useState(100);
@@ -877,17 +883,16 @@ export default function Sidebar({
     const [lightnessShift, setLightnessShift] = useState(0);
 
     const handleApplyColorManipulation = () => {
-      if (selectedShapes.length === 0) return;
-
       const manipulation = {
-        type: 'hsl_shift' as const,
+        mode: 'shift' as const,
         hslShift: {
           hue: hueShift,
           saturation: saturationShift,
           lightness: lightnessShift,
           enabled: true
         },
-        remappings: []
+        affectFill: true,
+        affectStroke: true
       };
 
       onApplyColorManipulation(manipulation);
@@ -899,13 +904,14 @@ export default function Sidebar({
           Color Manipulation
         </div>
 
-        {selectedShapes.length === 0 && (
-          <div className="text-xs text-slate-500">
-            Select shapes to manipulate colors
-          </div>
-        )}
+        <div className="text-xs text-slate-500 mb-3">
+          {selectedShapes.length === 0 
+            ? "Apply to all shapes on canvas" 
+            : `Apply to ${selectedShapes.length} selected shape${selectedShapes.length > 1 ? 's' : ''}`
+          }
+        </div>
 
-        {selectedShapes.length > 0 && (
+        {(
           <div className="space-y-3">
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Hue Shift</Label>

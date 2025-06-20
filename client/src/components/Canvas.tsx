@@ -237,9 +237,14 @@ export default function Canvas({
             shape.points.forEach((point, index) => {
               const isSelected = selectedPoints.some(sp => sp.shapeId === shape.id && sp.pointIndex === index);
               ctx.fillStyle = isSelected ? '#ff6b6b' : '#4dabf7';
+              
+              // Transform point coordinates to match shape position
+              const transformedX = point.x + shape.transform.x;
+              const transformedY = point.y + shape.transform.y;
+              
               ctx.fillRect(
-                point.x - 4 / effectiveZoom,
-                point.y - 4 / effectiveZoom,
+                transformedX - 4 / effectiveZoom,
+                transformedY - 4 / effectiveZoom,
                 8 / effectiveZoom,
                 8 / effectiveZoom
               );
@@ -252,8 +257,10 @@ export default function Canvas({
             for (let i = 0; i < shape.points.length - 1; i++) {
               const point1 = shape.points[i];
               const point2 = shape.points[i + 1];
-              const midX = (point1.x + point2.x) / 2;
-              const midY = (point1.y + point2.y) / 2;
+              
+              // Transform segment coordinates to match shape position
+              const midX = (point1.x + point2.x) / 2 + shape.transform.x;
+              const midY = (point1.y + point2.y) / 2 + shape.transform.y;
               
               const isSelected = selectedSegments.some(ss => ss.shapeId === shape.id && ss.segmentIndex === i);
               ctx.fillStyle = isSelected ? '#ff6b6b' : '#51cf66';
