@@ -1053,36 +1053,48 @@ export default function Sidebar({
             </Button>
           </div>
 
-          {/* Scale */}
+          {/* Scale with Interactive Sliders */}
           <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Scale (%)</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="number"
-                value={scaleX}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setScaleX(value);
-                  if (lockAspectRatio) {
-                    setScaleY(value);
-                  }
-                }}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Scale X"
-              />
-              <Input
-                type="number"
-                value={scaleY}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setScaleY(value);
-                  if (lockAspectRatio) {
+            <Label className="text-xs text-slate-400">Scale</Label>
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">X Scale</span>
+                  <span className="text-slate-300">{scaleX}%</span>
+                </div>
+                <Slider
+                  value={[scaleX]}
+                  onValueChange={([value]) => {
                     setScaleX(value);
-                  }
-                }}
-                className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                placeholder="Scale Y"
-              />
+                    if (lockAspectRatio) {
+                      setScaleY(value);
+                    }
+                  }}
+                  min={1}
+                  max={500}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Y Scale</span>
+                  <span className="text-slate-300">{scaleY}%</span>
+                </div>
+                <Slider
+                  value={[scaleY]}
+                  onValueChange={([value]) => {
+                    setScaleY(value);
+                    if (lockAspectRatio) {
+                      setScaleX(value);
+                    }
+                  }}
+                  min={1}
+                  max={500}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -1103,9 +1115,28 @@ export default function Sidebar({
             </Button>
           </div>
 
-          {/* Rotation */}
+          {/* Rotation with Slider */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Rotation</Label>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Angle</span>
+                <span className="text-slate-300">{selectedShapes[0]?.transform.rotation || 0}°</span>
+              </div>
+              <Slider
+                value={[selectedShapes[0]?.transform.rotation || 0]}
+                onValueChange={([value]) => {
+                  selectedShapes.forEach(shape => {
+                    shape.transform.rotation = value;
+                  });
+                  if (onShapeUpdate) onShapeUpdate();
+                }}
+                min={-180}
+                max={180}
+                step={1}
+                className="w-full"
+              />
+            </div>
             <div className="grid grid-cols-3 gap-1">
               <Button
                 onClick={() => onRotateBy(-15)}
@@ -1650,8 +1681,17 @@ export default function Sidebar({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`w-12 h-12 p-0 text-${section.color}-400 hover:text-${section.color}-300 hover:bg-slate-800 ${
-                    activePopover === section.id ? `bg-slate-800 text-${section.color}-300` : ''
+                  className={`w-12 h-12 p-0 hover:bg-slate-800 ${
+                    activePopover === section.id ? 'bg-slate-800' : ''
+                  } ${
+                    section.color === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' :
+                    section.color === 'orange' ? 'text-orange-400 hover:text-orange-300' :
+                    section.color === 'emerald' ? 'text-emerald-400 hover:text-emerald-300' :
+                    section.color === 'blue' ? 'text-blue-400 hover:text-blue-300' :
+                    section.color === 'green' ? 'text-green-400 hover:text-green-300' :
+                    section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
+                    section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
+                    'text-pink-400 hover:text-pink-300'
                   }`}
                   onClick={() => handlePopoverToggle(section.id)}
                 >
@@ -1665,7 +1705,16 @@ export default function Sidebar({
                 sideOffset={8}
               >
                 <div className="space-y-2">
-                  <h3 className={`text-sm font-medium text-${section.color}-400`}>
+                  <h3 className={`text-sm font-medium ${
+                    section.color === 'cyan' ? 'text-cyan-400' :
+                    section.color === 'orange' ? 'text-orange-400' :
+                    section.color === 'emerald' ? 'text-emerald-400' :
+                    section.color === 'blue' ? 'text-blue-400' :
+                    section.color === 'green' ? 'text-green-400' :
+                    section.color === 'yellow' ? 'text-yellow-400' :
+                    section.color === 'purple' ? 'text-purple-400' :
+                    'text-pink-400'
+                  }`}>
                     {section.name}
                   </h3>
                   <section.content />
