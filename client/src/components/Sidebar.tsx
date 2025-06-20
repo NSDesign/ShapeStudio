@@ -1476,14 +1476,14 @@ export default function Sidebar({
       {isCollapsed && (
         <div className="flex flex-col w-full">
           {[
-            { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
-            { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
-            { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent },
             { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
-            { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
-            { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
+            { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
             { id: 'layers', name: 'Layers', icon: Layers3, color: 'purple', content: LayersContent },
-            { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent }
+            { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
+            { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
+            { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
+            { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent },
+            { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent }
           ].map(section => (
             <Popover 
               key={section.id} 
