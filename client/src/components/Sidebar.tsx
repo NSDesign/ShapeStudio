@@ -987,10 +987,15 @@ export default function Sidebar({
       // Use the distribution algorithm
       const bounds = { x: 0, y: 0, width: 800, height: 600 };
       const settings = {
-        pattern: distributionPattern,
+        pattern: distributionPattern as any,
         spacing: distributionSpacing,
         randomness: 0.1,
-        angle: 0
+        angle: 0,
+        rotation: 0,
+        scale: 1,
+        density: 1,
+        avoidOverlap: true,
+        respectBounds: true
       };
 
       const positions = SmartDistributionAlgorithm.generatePositions(targetShapes.length, bounds, settings);
@@ -1102,12 +1107,12 @@ export default function Sidebar({
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Target</Label>
             <Select value={alignTarget} onValueChange={(value: 'selection' | 'canvas') => setAlignTarget(value)}>
-              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-white">
-                <SelectValue />
+              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                <SelectValue className="text-slate-200" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="selection" className="text-white hover:bg-slate-700">Selected Shapes</SelectItem>
-                <SelectItem value="canvas" className="text-white hover:bg-slate-700">All Shapes</SelectItem>
+                <SelectItem value="selection" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">Selected Shapes</SelectItem>
+                <SelectItem value="canvas" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">All Shapes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1115,14 +1120,14 @@ export default function Sidebar({
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Pattern</Label>
             <Select value={distributionPattern} onValueChange={(value: 'grid' | 'circle' | 'line' | 'spiral') => setDistributionPattern(value)}>
-              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-white">
-                <SelectValue />
+              <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                <SelectValue className="text-slate-200" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="grid" className="text-white hover:bg-slate-700">Grid</SelectItem>
-                <SelectItem value="circle" className="text-white hover:bg-slate-700">Circle</SelectItem>
-                <SelectItem value="line" className="text-white hover:bg-slate-700">Line</SelectItem>
-                <SelectItem value="spiral" className="text-white hover:bg-slate-700">Spiral</SelectItem>
+                <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">Grid</SelectItem>
+                <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">Circle</SelectItem>
+                <SelectItem value="line" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">Line</SelectItem>
+                <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700 focus:bg-slate-700 focus:text-slate-100">Spiral</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1756,8 +1761,10 @@ export default function Sidebar({
             { id: 'layers', name: 'Layers', icon: Layers3, color: 'purple', content: LayersContent },
             { id: 'properties', name: 'Properties', icon: Settings, color: 'yellow', content: PropertiesContent },
             { id: 'composition', name: 'Composition', icon: Shuffle, color: 'green', content: CompositionContent },
+            { id: 'align-distribute', name: 'Align & Distribute', icon: AlignCenter, color: 'indigo', content: AlignDistributeContent },
             { id: 'artboards', name: 'Artboards', icon: Monitor, color: 'orange', content: ArtboardsContent },
             { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent },
+            { id: 'project', name: 'Project Management', icon: FolderOpen, color: 'violet', content: ProjectManagementContent },
             { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent }
           ].map(section => (
             <Popover 
@@ -1778,6 +1785,8 @@ export default function Sidebar({
                     section.color === 'green' ? 'text-green-400 hover:text-green-300' :
                     section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
                     section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
+                    section.color === 'indigo' ? 'text-indigo-400 hover:text-indigo-300' :
+                    section.color === 'violet' ? 'text-violet-400 hover:text-violet-300' :
                     'text-pink-400 hover:text-pink-300'
                   }`}
                   onClick={() => handlePopoverToggle(section.id)}
@@ -1800,6 +1809,8 @@ export default function Sidebar({
                     section.color === 'green' ? 'text-green-400' :
                     section.color === 'yellow' ? 'text-yellow-400' :
                     section.color === 'purple' ? 'text-purple-400' :
+                    section.color === 'indigo' ? 'text-indigo-400' :
+                    section.color === 'violet' ? 'text-violet-400' :
                     'text-pink-400'
                   }`}>
                     {section.name}
