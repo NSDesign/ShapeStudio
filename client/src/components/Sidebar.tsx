@@ -123,6 +123,13 @@ interface SidebarProps {
   onDistributeSelected: () => void;
   onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
   onApplyColorManipulation: (manipulation: any) => void;
+  onLoadProject?: (data: {
+    shapes: Shape[];
+    groups: ShapeGroupClass[];
+    canvasSettings: CanvasSettings;
+    scatterSettings: ScatterSettings;
+    enabledShapeTypes: Set<ShapeType>;
+  }) => void;
 }
 
 export default function Sidebar({
@@ -1162,6 +1169,121 @@ export default function Sidebar({
     );
   }
 
+  function ProjectManagementContent() {
+    return (
+      <div className="space-y-4">
+        {/* Save/Load Project */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Project Files</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => {
+                const projectData = {
+                  shapes,
+                  selectedGroups,
+                  scatterSettings,
+                  enabledShapeTypes: Array.from(enabledShapeTypes)
+                };
+                const blob = new Blob([JSON.stringify(projectData, null, 2)], {
+                  type: 'application/json'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `shape-editor-project-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+            >
+              <Save className="w-3 h-3 mr-1" />
+              Save
+            </Button>
+            <Button
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      try {
+                        const data = JSON.parse(e.target?.result as string);
+                        console.log('Project loaded:', data);
+                      } catch (error) {
+                        console.error('Failed to load project:', error);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                };
+                input.click();
+              }}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+            >
+              <FolderOpen className="w-3 h-3 mr-1" />
+              Load
+            </Button>
+          </div>
+        </div>
+
+        <Separator className="bg-slate-700" />
+
+        {/* Quick Actions */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Quick Actions</Label>
+          <div className="space-y-2">
+            <Button
+              onClick={() => {
+                const projectData = {
+                  shapes,
+                  selectedGroups,
+                  scatterSettings,
+                  enabledShapeTypes: Array.from(enabledShapeTypes)
+                };
+                navigator.clipboard.writeText(JSON.stringify(projectData, null, 2));
+              }}
+              variant="secondary"
+              size="sm"
+              className="w-full text-xs"
+            >
+              <Clipboard className="w-3 h-3 mr-1" />
+              Copy Project to Clipboard
+            </Button>
+            
+            <Button
+              onClick={() => {
+                if (onClearAll) onClearAll();
+              }}
+              variant="secondary"
+              size="sm"
+              className="w-full text-xs"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              New Project
+            </Button>
+          </div>
+        </div>
+
+        {/* Project Info */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Project Statistics</Label>
+          <div className="text-xs text-slate-400 space-y-1">
+            <div>Shapes: {shapes.length}</div>
+            <div>Groups: {selectedGroups.length}</div>
+            <div>Selected: {selectedCount}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   function ColorManipulationContent() {
     const [hueShift, setHueShift] = useState(0);
     const [saturationShift, setSaturationShift] = useState(0);
@@ -1928,6 +2050,19 @@ export default function Sidebar({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <ColorManipulationContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Project Management Section */}
+            <AccordionItem value="project" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-violet-400 hover:text-violet-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Project Management
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ProjectManagementContent />
               </AccordionContent>
             </AccordionItem>
 
