@@ -1541,45 +1541,6 @@ export default function Sidebar({
         /* Expanded sidebar with full content */
         <div className="flex-1 overflow-y-auto">
           <Accordion type="multiple" className="w-full px-2 py-1">
-            {/* Selection Modes Section */}
-            <AccordionItem value="selection" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-orange-400 hover:text-orange-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <MousePointer className="w-4 h-4 mr-2" />
-                  Selection Modes
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <SelectionModesContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Artboards Section */}
-            <AccordionItem value="artboards" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-teal-400 hover:text-teal-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Monitor className="w-4 h-4 mr-2" />
-                  Artboards
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ArtboardsContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Export & Save Section */}
-            <AccordionItem value="export" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export & Save
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ExportSaveContent />
-              </AccordionContent>
-            </AccordionItem>
-
             {/* Shape Types Section */}
             <AccordionItem value="shapes" className="border-slate-700">
               <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
@@ -1593,29 +1554,16 @@ export default function Sidebar({
               </AccordionContent>
             </AccordionItem>
 
-            {/* Composition Section */}
-            <AccordionItem value="composition" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
+            {/* Selection Modes Section */}
+            <AccordionItem value="selection" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
                 <div className="flex items-center">
-                  <Shuffle className="w-4 h-4 mr-2" />
-                  Composition
+                  <Target className="w-4 h-4 mr-2" />
+                  Selection Modes
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pb-4">
-                <CompositionContent />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Properties Section */}
-            <AccordionItem value="properties" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Properties
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <PropertiesContent />
+                <SelectionModesContent />
               </AccordionContent>
             </AccordionItem>
 
@@ -1632,6 +1580,45 @@ export default function Sidebar({
               </AccordionContent>
             </AccordionItem>
 
+            {/* Properties Section */}
+            <AccordionItem value="properties" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <PropertiesContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Composition Section */}
+            <AccordionItem value="composition" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Shuffle className="w-4 h-4 mr-2" />
+                  Composition
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <CompositionContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Artboards Section */}
+            <AccordionItem value="artboards" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-orange-400 hover:text-orange-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Artboards
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ArtboardsContent />
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Color Manipulation Section */}
             <AccordionItem value="colors" className="border-slate-700">
               <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
@@ -1642,6 +1629,19 @@ export default function Sidebar({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <ColorManipulationContent />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Export & Save Section */}
+            <AccordionItem value="export" className="border-slate-700">
+              <AccordionTrigger className="text-sm text-emerald-400 hover:text-emerald-300 py-3 hover:no-underline">
+                <div className="flex items-center">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export & Save
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <ExportSaveContent />
               </AccordionContent>
             </AccordionItem>
           </Accordion>
