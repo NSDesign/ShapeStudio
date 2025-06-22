@@ -565,18 +565,39 @@ export default function Sidebar({
           // Call generation function once with our exact count
           onGenerateRandomShapes();
           
+          // Wait for shapes to be created using callback pattern
+          const waitForShapesCreated = () => {
+            return new Promise<Shape[]>((resolve) => {
+              let attempts = 0;
+              const maxAttempts = 20; // 2 seconds max wait
+              
+              const checkShapes = () => {
+                attempts++;
+                
+                // Check if we have shapes by calling onShapeUpdate to get fresh state
+                onShapeUpdate?.();
+                
+                if (shapes.length >= randomShapeCount || attempts >= maxAttempts) {
+                  console.log(`Shapes ready: ${shapes.length} shapes after ${attempts * 100}ms`);
+                  resolve(shapes);
+                } else {
+                  setTimeout(checkShapes, 100);
+                }
+              };
+              
+              checkShapes();
+            });
+          };
+          
+          const currentShapes = await waitForShapesCreated();
+          
           // Restore original scatter settings
           onUpdateScatterSettings({ 
             minCount: originalMinCount, 
             maxCount: originalMaxCount 
           });
 
-          // Wait for shapes to be generated and state to update
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          console.log(`Current shapes count: ${shapes.length}`);
-
-          if (shapes.length === 0) {
+          if (currentShapes.length === 0) {
             console.warn(`No shapes generated for export ${i + 1}, skipping`);
             continue;
           }
@@ -584,7 +605,7 @@ export default function Sidebar({
           // Use the same export logic as single export but with better bounds calculation
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-          shapes.forEach(shape => {
+          currentShapes.forEach(shape => {
             const bounds = shape.getBounds();
             // Calculate all four corners with transformations
             const corners = [
@@ -647,7 +668,7 @@ export default function Sidebar({
           ctx.translate(-minX + padding, -minY + padding);
 
           // Sort shapes by z-index and render
-          const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+          const sortedShapes = [...currentShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
 
           sortedShapes.forEach(shape => {
             renderShapeForExport(ctx, shape);
@@ -792,7 +813,7 @@ export default function Sidebar({
           <Button
             onClick={handleExportShapes}
             disabled={
-              batchModeEnabled ||
+              isBatchExporting ||
               (exportMode === 'selection' && selectedShapes.length === 0) ||
               (exportMode === 'artboard' && (!selectedArtboardForExport || artboards.length === 0)) ||
               (exportMode === 'all' && shapes.length === 0)
