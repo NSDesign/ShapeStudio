@@ -47,6 +47,20 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     case 'ellipse':
       drawPolygon(ctx, shape);
       break;
+    case 'triangle':
+    case 'right-triangle':
+    case 'trapezoid':
+    case 'pentagon':
+    case 'hexagon':
+    case 'rhombus':
+    case 'parallelogram':
+    case 'kite':
+    case 'semicircle':
+    case 'heart':
+    case 'arrow':
+    case 'cross':
+      drawPolygon(ctx, shape);
+      break;
     case 'polygon':
       drawPolygon(ctx, shape);
       break;

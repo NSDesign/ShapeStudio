@@ -234,6 +234,62 @@ export class Shape {
         this.height = 30 + Math.random() * 80;
         this.generateEllipsePoints();
         break;
+      case 'triangle':
+        this.radius = 30 + Math.random() * 70;
+        this.generateTrianglePoints();
+        break;
+      case 'right-triangle':
+        this.width = 40 + Math.random() * 100;
+        this.height = 40 + Math.random() * 100;
+        this.generateRightTrianglePoints();
+        break;
+      case 'trapezoid':
+        this.width = 60 + Math.random() * 80;
+        this.height = 40 + Math.random() * 60;
+        this.generateTrapezoidPoints();
+        break;
+      case 'pentagon':
+        this.radius = 30 + Math.random() * 70;
+        this.generatePentagonPoints();
+        break;
+      case 'hexagon':
+        this.radius = 30 + Math.random() * 70;
+        this.generateHexagonPoints();
+        break;
+      case 'rhombus':
+        this.width = 40 + Math.random() * 80;
+        this.height = 40 + Math.random() * 80;
+        this.generateRhombusPoints();
+        break;
+      case 'parallelogram':
+        this.width = 50 + Math.random() * 100;
+        this.height = 40 + Math.random() * 60;
+        this.generateParallelogramPoints();
+        break;
+      case 'kite':
+        this.width = 40 + Math.random() * 80;
+        this.height = 50 + Math.random() * 100;
+        this.generateKitePoints();
+        break;
+      case 'semicircle':
+        this.radius = 30 + Math.random() * 70;
+        this.generateSemicirclePoints();
+        break;
+      case 'heart':
+        this.width = 40 + Math.random() * 80;
+        this.height = 40 + Math.random() * 80;
+        this.generateHeartPoints();
+        break;
+      case 'arrow':
+        this.width = 50 + Math.random() * 100;
+        this.height = 30 + Math.random() * 60;
+        this.generateArrowPoints();
+        break;
+      case 'cross':
+        this.width = 40 + Math.random() * 80;
+        this.height = 40 + Math.random() * 80;
+        this.generateCrossPoints();
+        break;
       case 'polygon':
         this.sides = 3 + Math.floor(Math.random() * 10);
         this.radius = 30 + Math.random() * 70;
@@ -442,6 +498,201 @@ export class Shape {
     
     this.closed = true;
     this.renderType = 'cubic';
+  }
+
+  private generateTrianglePoints(): void {
+    this.points = [];
+    const height = this.radius! * Math.sin(Math.PI / 3); // Equilateral triangle height
+    
+    this.points.push({ x: 0, y: -this.radius! * 2/3 });
+    this.points.push({ x: -this.radius! * Math.cos(Math.PI / 6), y: height - this.radius! * 2/3 });
+    this.points.push({ x: this.radius! * Math.cos(Math.PI / 6), y: height - this.radius! * 2/3 });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateRightTrianglePoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    
+    this.points.push({ x: -w, y: -h });
+    this.points.push({ x: w, y: h });
+    this.points.push({ x: -w, y: h });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateTrapezoidPoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    const topWidth = w * 0.6; // Top is 60% of bottom width
+    
+    this.points.push({ x: -topWidth, y: -h });
+    this.points.push({ x: topWidth, y: -h });
+    this.points.push({ x: w, y: h });
+    this.points.push({ x: -w, y: h });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generatePentagonPoints(): void {
+    this.points = [];
+    const sides = 5;
+    
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+      this.points.push({
+        x: Math.cos(angle) * this.radius!,
+        y: Math.sin(angle) * this.radius!
+      });
+    }
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateHexagonPoints(): void {
+    this.points = [];
+    const sides = 6;
+    
+    for (let i = 0; i < sides; i++) {
+      const angle = (i / sides) * Math.PI * 2;
+      this.points.push({
+        x: Math.cos(angle) * this.radius!,
+        y: Math.sin(angle) * this.radius!
+      });
+    }
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateRhombusPoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    
+    this.points.push({ x: 0, y: -h });
+    this.points.push({ x: w, y: 0 });
+    this.points.push({ x: 0, y: h });
+    this.points.push({ x: -w, y: 0 });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateParallelogramPoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    const skew = w * 0.3; // 30% skew
+    
+    this.points.push({ x: -w + skew, y: -h });
+    this.points.push({ x: w + skew, y: -h });
+    this.points.push({ x: w - skew, y: h });
+    this.points.push({ x: -w - skew, y: h });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateKitePoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    
+    this.points.push({ x: 0, y: -h });
+    this.points.push({ x: w * 0.6, y: -h * 0.3 });
+    this.points.push({ x: 0, y: h });
+    this.points.push({ x: -w * 0.6, y: -h * 0.3 });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateSemicirclePoints(): void {
+    this.points = [];
+    const segments = 16;
+    
+    // Generate semicircle arc
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI;
+      this.points.push({
+        x: Math.cos(angle) * this.radius!,
+        y: Math.sin(angle) * this.radius!
+      });
+    }
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateHeartPoints(): void {
+    this.points = [];
+    const segments = 32;
+    const scale = this.width! / 100; // Scale factor
+    
+    for (let i = 0; i < segments; i++) {
+      const t = (i / segments) * Math.PI * 2;
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+      
+      this.points.push({
+        x: x * scale,
+        y: y * scale
+      });
+    }
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateArrowPoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    const headWidth = w * 0.6;
+    const shaftWidth = h * 0.4;
+    
+    this.points.push({ x: w, y: 0 }); // Arrow tip
+    this.points.push({ x: w * 0.3, y: -headWidth });
+    this.points.push({ x: w * 0.3, y: -shaftWidth });
+    this.points.push({ x: -w, y: -shaftWidth });
+    this.points.push({ x: -w, y: shaftWidth });
+    this.points.push({ x: w * 0.3, y: shaftWidth });
+    this.points.push({ x: w * 0.3, y: headWidth });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
+  }
+
+  private generateCrossPoints(): void {
+    this.points = [];
+    const w = this.width! / 2;
+    const h = this.height! / 2;
+    const thickness = Math.min(w, h) * 0.4;
+    
+    // Cross shape with 12 points
+    this.points.push({ x: -thickness, y: -h });
+    this.points.push({ x: thickness, y: -h });
+    this.points.push({ x: thickness, y: -thickness });
+    this.points.push({ x: w, y: -thickness });
+    this.points.push({ x: w, y: thickness });
+    this.points.push({ x: thickness, y: thickness });
+    this.points.push({ x: thickness, y: h });
+    this.points.push({ x: -thickness, y: h });
+    this.points.push({ x: -thickness, y: thickness });
+    this.points.push({ x: -w, y: thickness });
+    this.points.push({ x: -w, y: -thickness });
+    this.points.push({ x: -thickness, y: -thickness });
+    
+    this.closed = true;
+    this.renderType = 'polygon';
   }
 
   private generateRectanglePoints(): void {
@@ -705,6 +956,20 @@ export class Shape {
         break;
       case 'ellipse':
         this.drawPolygon(ctx); // Use points for deformable ellipses
+        break;
+      case 'triangle':
+      case 'right-triangle':
+      case 'trapezoid':
+      case 'pentagon':
+      case 'hexagon':
+      case 'rhombus':
+      case 'parallelogram':
+      case 'kite':
+      case 'semicircle':
+      case 'heart':
+      case 'arrow':
+      case 'cross':
+        this.drawPolygon(ctx);
         break;
       case 'polygon':
         this.drawPolygon(ctx);

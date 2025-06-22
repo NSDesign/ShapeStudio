@@ -440,7 +440,11 @@ export class ImageExporter {
       }
     }
     
-    if (shapeType === 'chunk' || shapeType === 'blob' || shapeType === 'polygon') {
+    if (shapeType === 'chunk' || shapeType === 'blob' || shapeType === 'polygon' || 
+        shapeType === 'triangle' || shapeType === 'right-triangle' || shapeType === 'trapezoid' ||
+        shapeType === 'pentagon' || shapeType === 'hexagon' || shapeType === 'rhombus' ||
+        shapeType === 'parallelogram' || shapeType === 'kite' || shapeType === 'semicircle' ||
+        shapeType === 'heart' || shapeType === 'arrow' || shapeType === 'cross') {
       path += ' Z';
     }
     
