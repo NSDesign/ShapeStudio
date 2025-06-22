@@ -654,8 +654,8 @@ export default function Sidebar({
           const currentExportShapes: Shape[] = [];
           
           for (let j = 0; j < shapesToGenerate; j++) {
-            // Create a fixed number of shapes per generation
-            const shapeCount = Math.floor(Math.random() * 15) + 5; // 5-20 shapes per generation
+            // Use Random Shape Count Range from Shape Types section
+            const shapeCount = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
             
             for (let k = 0; k < shapeCount; k++) {
               // Use enabled shape types from UI
