@@ -366,6 +366,7 @@ export default function Canvas({
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          onWheel={onWheel}
         />
         
         {/* Overlay Messages */}

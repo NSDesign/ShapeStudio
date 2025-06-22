@@ -1523,7 +1523,7 @@ export const useShapeEditor = () => {
     },
     zoomOut: () => {
       const currentZoom = canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom;
-      updateCanvasSettings({ zoom: Math.max(0.5, currentZoom / 1.2) });
+      updateCanvasSettings({ zoom: Math.max(0.5, currentZoom / 1.14) });
     },
     resetView: () => updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 }),
     
