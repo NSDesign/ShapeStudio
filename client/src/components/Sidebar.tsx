@@ -203,7 +203,7 @@ export default function Sidebar({
         {editModes.map((mode) => {
           const IconComponent = mode.icon;
           const isActive = editMode === mode.id;
-          
+
           return (
             <div key={mode.id} className={`p-3 rounded-lg transition-colors cursor-pointer ${
               isActive ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
@@ -329,7 +329,7 @@ export default function Sidebar({
     const [exportScale, setExportScale] = useState(1);
     const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
-    
+
     // Batch export state
     const [batchShapeCount, setBatchShapeCount] = useState([10, 50]);
     const [batchExportCount, setBatchExportCount] = useState(10);
@@ -342,10 +342,10 @@ export default function Sidebar({
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
       const originalSelected = shape.selected;
       shape.selected = false;
-      
+
       // Use the exact same renderer as the main canvas but with zoom=1 for export
       renderShape(ctx, shape, 1);
-      
+
       // Restore original selection state
       shape.selected = originalSelected;
     };
@@ -362,7 +362,7 @@ export default function Sidebar({
         // Export specific artboard
         const artboard = artboards.find(ab => ab.id === selectedArtboardForExport);
         if (!artboard) return;
-        
+
         // Filter shapes that overlap with the artboard bounds
         shapesToExport = shapes.filter(shape => {
           const bounds = shape.getBounds();
@@ -370,14 +370,14 @@ export default function Sidebar({
           const shapeTop = shape.transform.y + bounds.y;
           const shapeRight = shapeLeft + bounds.width;
           const shapeBottom = shapeTop + bounds.height;
-          
+
           // Check if shape overlaps with artboard (not just if top-left corner is inside)
           return !(shapeRight < artboard.x || 
                    shapeLeft > artboard.x + artboard.width ||
                    shapeBottom < artboard.y || 
                    shapeTop > artboard.y + artboard.height);
         });
-        
+
         canvasWidth = artboard.width * exportScale;
         canvasHeight = artboard.height * exportScale;
         translateX = -artboard.x;
@@ -386,12 +386,12 @@ export default function Sidebar({
       } else if (exportMode === 'selection' && selectedShapes.length > 0) {
         // Export selected shapes with bounds fitting
         shapesToExport = selectedShapes;
-        
+
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        
+
         shapesToExport.forEach(shape => {
           const bounds = shape.getBounds();
-          
+
           // Calculate transformed bounds by checking all four corners
           const corners = [
             { x: bounds.x, y: bounds.y },
@@ -399,16 +399,16 @@ export default function Sidebar({
             { x: bounds.x, y: bounds.y + bounds.height },
             { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
           ];
-          
+
           corners.forEach(corner => {
             // Apply transformations to each corner
             let x = corner.x;
             let y = corner.y;
-            
+
             // Apply scale
             x *= shape.transform.scaleX;
             y *= shape.transform.scaleY;
-            
+
             // Apply rotation
             if (shape.transform.rotation !== 0) {
               const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
@@ -418,18 +418,18 @@ export default function Sidebar({
               x = newX;
               y = newY;
             }
-            
+
             // Apply translation
             x += shape.transform.x;
             y += shape.transform.y;
-            
+
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x);
             maxY = Math.max(maxY, y);
           });
         });
-        
+
         const padding = 20;
         canvasWidth = (maxX - minX + padding * 2) * exportScale;
         canvasHeight = (maxY - minY + padding * 2) * exportScale;
@@ -440,12 +440,12 @@ export default function Sidebar({
         // Export all shapes with bounds fitting
         shapesToExport = shapes;
         if (shapesToExport.length === 0) return;
-        
+
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        
+
         shapesToExport.forEach(shape => {
           const bounds = shape.getBounds();
-          
+
           // Calculate transformed bounds by checking all four corners
           const corners = [
             { x: bounds.x, y: bounds.y },
@@ -453,16 +453,16 @@ export default function Sidebar({
             { x: bounds.x, y: bounds.y + bounds.height },
             { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
           ];
-          
+
           corners.forEach(corner => {
             // Apply transformations to each corner
             let x = corner.x;
             let y = corner.y;
-            
+
             // Apply scale
             x *= shape.transform.scaleX;
             y *= shape.transform.scaleY;
-            
+
             // Apply rotation
             if (shape.transform.rotation !== 0) {
               const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
@@ -472,18 +472,18 @@ export default function Sidebar({
               x = newX;
               y = newY;
             }
-            
+
             // Apply translation
             x += shape.transform.x;
             y += shape.transform.y;
-            
+
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x);
             maxY = Math.max(maxY, y);
           });
         });
-        
+
         const padding = 20;
         canvasWidth = (maxX - minX + padding * 2) * exportScale;
         canvasHeight = (maxY - minY + padding * 2) * exportScale;
@@ -493,82 +493,82 @@ export default function Sidebar({
       }
 
       if (shapesToExport.length === 0) return;
-      
+
       // Create export canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      
+
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
-      
+
       // Set background for non-transparent formats
       if (exportFormat !== 'png') {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
-      
+
       // Apply scaling and translation
       ctx.scale(exportScale, exportScale);
       ctx.translate(translateX, translateY);
-      
+
       // Sort shapes by z-index and render them directly (no copying to avoid property corruption)
       const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-      
+
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
-      
+
       // Download the image
       const link = document.createElement('a');
       link.download = filename;
-      
+
       if (exportFormat === 'jpg') {
         link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
       } else {
         link.href = canvas.toDataURL('image/png');
       }
-      
+
       link.click();
     };
 
     const handleBatchExport = async () => {
-      if (enabledShapeTypes.size === 0) return;
-      
+      if (batchModeEnabled === false) return;
+
       setIsBatchExporting(true);
       setBatchProgress(0);
-      
+
       try {
         for (let i = 0; i < batchExportCount; i++) {
           // Clear existing shapes first
           onClearAll?.();
-          
+
           // Wait for clear to complete
           await new Promise(resolve => setTimeout(resolve, 200));
-          
+
           // Generate random number of shapes within the specified range
           const randomShapeCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
-          
+
           console.log(`Generating ${randomShapeCount} shapes for export ${i + 1}`);
-          
+
           // Call onGenerateRandomShapes() the specified number of times
           for (let j = 0; j < randomShapeCount; j++) {
             onGenerateRandomShapes();
             // Small delay between shape generations
             await new Promise(resolve => setTimeout(resolve, 50));
           }
-          
+
           // Wait for shapes to be generated and state to update
           await new Promise(resolve => setTimeout(resolve, 1000));
-          
+
           console.log(`Current shapes count: ${shapes.length}`);
-          
+
           if (shapes.length === 0) {
             console.warn(`No shapes generated for export ${i + 1}, skipping`);
             continue;
           }
-          
+
           // Use the same export logic as single export but with better bounds calculation
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-          
+
           shapes.forEach(shape => {
             const bounds = shape.getBounds();
             // Calculate all four corners with transformations
@@ -578,15 +578,15 @@ export default function Sidebar({
               { x: bounds.x, y: bounds.y + bounds.height },
               { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
             ];
-            
+
             corners.forEach(corner => {
               let x = corner.x;
               let y = corner.y;
-              
+
               // Apply scale
               x *= shape.transform.scaleX;
               y *= shape.transform.scaleY;
-              
+
               // Apply rotation
               if (shape.transform.rotation !== 0) {
                 const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
@@ -596,73 +596,73 @@ export default function Sidebar({
                 x = newX;
                 y = newY;
               }
-              
+
               // Apply translation
               x += shape.transform.x;
               y += shape.transform.y;
-              
+
               minX = Math.min(minX, x);
               minY = Math.min(minY, y);
               maxX = Math.max(maxX, x);
               maxY = Math.max(maxY, y);
             });
           });
-          
+
           // Calculate canvas dimensions with padding
           const padding = 20;
           const canvasWidth = (maxX - minX + padding * 2) * exportScale;
           const canvasHeight = (maxY - minY + padding * 2) * exportScale;
-          
+
           // Create export canvas
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           if (!ctx) continue;
-          
+
           canvas.width = canvasWidth;
           canvas.height = canvasHeight;
-          
+
           // Set white background for non-PNG formats
           if (exportFormat !== 'png') {
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
           }
-          
+
           // Apply scaling and translation
           ctx.scale(exportScale, exportScale);
           ctx.translate(-minX + padding, -minY + padding);
-          
+
           // Sort shapes by z-index and render
           const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-          
+
           sortedShapes.forEach(shape => {
             renderShapeForExport(ctx, shape);
           });
-          
+
           // Generate filename with timestamp
           const timestamp = Date.now() + Math.random() * 1000;
           const filename = `batch-export-${String(i + 1).padStart(3, '0')}-${Math.floor(timestamp)}.${exportFormat}`;
-          
+
           // Create download
           const dataURL = exportFormat === 'jpg' 
             ? canvas.toDataURL('image/jpeg', exportQuality / 100)
             : canvas.toDataURL('image/png');
-          
+
           // Create download link
           const link = document.createElement('a');
           link.href = dataURL;
           link.download = filename;
           link.style.display = 'none';
-          
+
           // Add to DOM, click, and remove
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          
+
           console.log(`Downloaded: ${filename}`);
-          
+
           // Update progress
           setBatchProgress(i + 1);
-          
+
           // Delay between exports to prevent browser throttling
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -684,15 +684,15 @@ export default function Sidebar({
         timestamp: new Date().toISOString(),
         version: '1.0.0'
       };
-      
+
       const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `shape-editor-project-${Date.now()}.json`;
       link.click();
-      
+
       URL.revokeObjectURL(url);
     };
 
@@ -808,7 +808,7 @@ export default function Sidebar({
               />
             </div>
           </div>
-          
+
           {batchModeEnabled && (
             <>
               <div className="space-y-2">
@@ -877,7 +877,7 @@ export default function Sidebar({
 
         <div className="space-y-3">
           <Label className="text-xs text-slate-400">Project Management</Label>
-          
+
           <Button
             onClick={handleSaveProject}
             className="w-full bg-green-600 hover:bg-green-700 text-white"
@@ -1148,7 +1148,7 @@ export default function Sidebar({
       });
 
       let targetValue: number;
-      
+
       if (direction === 'left') {
         targetValue = Math.min(...bounds.map(b => b.minX));
         bounds.forEach(b => {
@@ -1199,7 +1199,7 @@ export default function Sidebar({
         bounds.sort((a, b) => a.centerX - b.centerX);
         const totalSpace = bounds[bounds.length - 1].centerX - bounds[0].centerX;
         const spacing = totalSpace / (bounds.length - 1);
-        
+
         bounds.forEach((b, index) => {
           if (index > 0 && index < bounds.length - 1) {
             const targetX = bounds[0].centerX + spacing * index;
@@ -1210,7 +1210,7 @@ export default function Sidebar({
         bounds.sort((a, b) => a.centerY - b.centerY);
         const totalSpace = bounds[bounds.length - 1].centerY - bounds[0].centerY;
         const spacing = totalSpace / (bounds.length - 1);
-        
+
         bounds.forEach((b, index) => {
           if (index > 0 && index < bounds.length - 1) {
             const targetY = bounds[0].centerY + spacing * index;
@@ -1241,7 +1241,7 @@ export default function Sidebar({
       };
 
       const positions = SmartDistributionAlgorithm.generatePositions(targetShapes.length, bounds, settings);
-      
+
       targetShapes.forEach((shape, index) => {
         if (positions[index]) {
           shape.transform.x = positions[index].x;
@@ -1345,7 +1345,7 @@ export default function Sidebar({
         {/* Smart Distribution */}
         <div className="space-y-2">
           <Label className="text-xs text-slate-300">Smart Distribution</Label>
-          
+
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Target</Label>
             <Select value={alignTarget} onValueChange={(value: 'selection' | 'canvas') => setAlignTarget(value)}>
@@ -1491,7 +1491,7 @@ export default function Sidebar({
               <Clipboard className="w-3 h-3 mr-1" />
               Copy Project to Clipboard
             </Button>
-            
+
             <Button
               onClick={() => {
                 if (onClearAll) onClearAll();
@@ -1623,7 +1623,7 @@ export default function Sidebar({
         {/* Transform Properties */}
         <div className="space-y-3">
           <Label className="text-sm text-slate-300 font-medium">Transform</Label>
-          
+
           {/* Position */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Position</Label>
@@ -1827,10 +1827,10 @@ export default function Sidebar({
 
         {/* Fill & Stroke Properties */}
         <Separator className="bg-slate-600" />
-        
+
         <div className="space-y-3">
           <Label className="text-sm text-slate-300 font-medium">Fill & Stroke</Label>
-          
+
           {/* Fill Color */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Fill Color</Label>
@@ -1963,7 +1963,7 @@ export default function Sidebar({
             <Separator className="bg-slate-600" />
             <div className="space-y-3">
               <Label className="text-sm text-slate-300 font-medium">Shape Properties</Label>
-              
+
               {selectedShapes[0].type === 'circle' && selectedShapes[0].radius && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Radius</Label>
@@ -1984,7 +1984,7 @@ export default function Sidebar({
                   />
                 </div>
               )}
-              
+
               {(selectedShapes[0].type === 'rectangle' || selectedShapes[0].type === 'ellipse') && (
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
@@ -2108,7 +2108,7 @@ export default function Sidebar({
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
-      
+
       {/* Collapsed Content with Tight Popovers */}
       {isCollapsed && (
         <div className="flex flex-col w-full">
