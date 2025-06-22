@@ -536,9 +536,6 @@ export default function Sidebar({
       setIsBatchExporting(true);
       setBatchProgress(0);
       
-      // Store original scatter settings
-      const originalCount = scatterSettings.count;
-      
       try {
         for (let i = 0; i < batchExportCount; i++) {
           // Clear existing shapes first
@@ -547,17 +544,14 @@ export default function Sidebar({
           // Generate random number of shapes within the specified range
           const randomShapeCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
           
-          // Update scatter settings with the random count
-          onUpdateScatterSettings({ count: randomShapeCount });
-          
-          // Wait a moment for settings to update
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
-          // Generate shapes using the existing generation function
-          onGenerateRandomShapes();
+          // Call onGenerateRandomShapes() the specified number of times
+          // This uses the Shape Types workflow, not scatter workflow
+          for (let j = 0; j < randomShapeCount; j++) {
+            onGenerateRandomShapes();
+          }
           
           // Wait for shapes to be generated
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise(resolve => setTimeout(resolve, 200));
           
           // Create export canvas
           const canvas = document.createElement('canvas');
@@ -606,8 +600,6 @@ export default function Sidebar({
       } catch (error) {
         console.error('Batch export failed:', error);
       } finally {
-        // Restore original scatter settings
-        onUpdateScatterSettings({ count: originalCount });
         setIsBatchExporting(false);
         setBatchProgress(0);
       }
