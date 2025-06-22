@@ -559,15 +559,9 @@ export default function Sidebar({
           // Wait for all shapes to be created
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Get current shapes count
-          const currentShapeCount = shapes.length;
-          console.log(`Total shapes created: ${currentShapeCount} shapes after ${randomCallCount} generate calls`);
+          console.log(`Generation completed for export ${i + 1} after ${randomCallCount} generate calls - proceeding to save`);
 
-          if (currentShapeCount === 0) {
-            console.warn(`No shapes generated for export ${i + 1}, skipping`);
-            continue;
-          }
-
+          // Skip shape detection test - proceed directly to save
           // For batch export, we need to export all generated shapes regardless of current export mode
           // But we should preserve user's selection for artboard exports
           const shouldUseAllMode = exportMode !== 'artboard';
@@ -587,7 +581,7 @@ export default function Sidebar({
             setExportMode(originalExportMode);
           }
 
-          console.log(`Export ${i + 1} completed with ${currentShapeCount} shapes`);
+          console.log(`Export ${i + 1} saved after ${randomCallCount} generate calls`);
 
           // Update progress
           setBatchProgress(i + 1);
