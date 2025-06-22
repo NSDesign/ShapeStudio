@@ -681,13 +681,33 @@ export default function Sidebar({
             // Create and download image directly for batch export
             const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
             
+            // Wait for shapes to render before creating export canvas
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (shapes.length === 0) {
+              console.warn(`No shapes found for export ${i + 1}, skipping`);
+              // Restore export mode before continuing
+              if (shouldUseAllMode) {
+                setExportMode(originalExportMode);
+              }
+              continue;
+            }
+
             // Create export canvas
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            if (ctx && shapes.length > 0) {
-              // Calculate bounds of all shapes to fit canvas properly
-              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            if (!ctx) {
+              console.error(`Canvas context unavailable for export ${i + 1}`);
+              // Restore export mode before continuing
+              if (shouldUseAllMode) {
+                setExportMode(originalExportMode);
+              }
+              continue;
+            }
+
+            // Calculate bounds of all shapes to fit canvas properly
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
               
               shapes.forEach(shape => {
                 const bounds = shape.getBounds();
@@ -745,39 +765,25 @@ export default function Sidebar({
               const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               
-              // Direct download without save dialog using blob approach
+              // Synchronous download without dialog prompts
               try {
-                // Convert canvas to blob synchronously
-                canvas.toBlob((blob) => {
-                  if (blob) {
-                    // Create object URL for blob
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Create temporary download link
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = batchFilename;
-                    link.style.position = 'absolute';
-                    link.style.left = '-9999px';
-                    
-                    // Force download by simulating user click
-                    document.body.appendChild(link);
-                    link.click();
-                    
-                    // Immediate cleanup
-                    setTimeout(() => {
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
-                    }, 100);
-                    
-                    console.log(`✅ Saved: ${batchFilename} (${canvasWidth}x${canvasHeight})`);
-                  } else {
-                    console.error(`❌ Blob creation failed for ${batchFilename}`);
-                  }
-                }, exportFormat === 'jpg' ? 'image/jpeg' : 'image/png', exportQuality / 100);
+                const imageData = exportFormat === 'jpg' 
+                  ? canvas.toDataURL('image/jpeg', exportQuality / 100)
+                  : canvas.toDataURL('image/png');
+                
+                const link = document.createElement('a');
+                link.href = imageData;
+                link.download = batchFilename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log(`Batch saved: ${batchFilename} (${Math.round(canvasWidth)}x${Math.round(canvasHeight)})`);
                 
               } catch (downloadError) {
-                console.error(`❌ Download failed for ${batchFilename}:`, downloadError);
+                console.error(`Download failed for ${batchFilename}:`, downloadError);
               }
             } else {
               console.error(`Failed to create canvas context for export ${i + 1}`);
@@ -800,7 +806,6 @@ export default function Sidebar({
           } catch (exportError) {
             console.error(`Error in export ${i + 1}:`, exportError);
             // Continue with next export even if one fails
-            continue;
           }
         }
         console.log(`Batch export completed successfully: ${batchExportCount} exports finished`);

@@ -1,0 +1,151 @@
+Sidebar.tsx:639 Starting batch export: 5 exports planned
+Sidebar.tsx:643 --- Starting export 1 of 5 ---
+chunk-WERSD76P.js?v=2e7c91fc:18625 [Violation] 'click' handler took 253ms
+Sidebar.tsx:655 Calling generateRandomShapes() 4 times for export 1
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+[Violation] 'message' handler took <N>ms
+Sidebar.tsx:667 Generation completed for export 1 after 4 generate calls - proceeding to save
+Sidebar.tsx:783 Failed to create canvas context for export 1
+overrideMethod @ hook.js:608
+handleBatchExport @ Sidebar.tsx:783
+await in handleBatchExport
+callCallback2 @ chunk-WERSD76P.js?v=2e7c91fc:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=2e7c91fc:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=2e7c91fc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=2e7c91fc:3736
+executeDispatch @ chunk-WERSD76P.js?v=2e7c91fc:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=2e7c91fc:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=2e7c91fc:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=2e7c91fc:7051
+(anonymous) @ chunk-WERSD76P.js?v=2e7c91fc:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=2e7c91fc:18913
+batchedUpdates @ chunk-WERSD76P.js?v=2e7c91fc:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=2e7c91fc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=2e7c91fc:5478
+dispatchEvent @ chunk-WERSD76P.js?v=2e7c91fc:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=2e7c91fc:5449
+Sidebar.tsx:791 Export 1 saved after 4 generate calls
+Sidebar.tsx:799 --- Completed export 1 of 5 ---
+Sidebar.tsx:643 --- Starting export 2 of 5 ---
+Sidebar.tsx:655 Calling generateRandomShapes() 1 times for export 2
+Sidebar.tsx:667 Generation completed for export 2 after 1 generate calls - proceeding to save
+Sidebar.tsx:783 Failed to create canvas context for export 2
+overrideMethod @ hook.js:608
+handleBatchExport @ Sidebar.tsx:783
+await in handleBatchExport
+callCallback2 @ chunk-WERSD76P.js?v=2e7c91fc:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=2e7c91fc:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=2e7c91fc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=2e7c91fc:3736
+executeDispatch @ chunk-WERSD76P.js?v=2e7c91fc:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=2e7c91fc:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=2e7c91fc:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=2e7c91fc:7051
+(anonymous) @ chunk-WERSD76P.js?v=2e7c91fc:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=2e7c91fc:18913
+batchedUpdates @ chunk-WERSD76P.js?v=2e7c91fc:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=2e7c91fc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=2e7c91fc:5478
+dispatchEvent @ chunk-WERSD76P.js?v=2e7c91fc:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=2e7c91fc:5449
+Sidebar.tsx:791 Export 2 saved after 1 generate calls
+Sidebar.tsx:799 --- Completed export 2 of 5 ---
+Sidebar.tsx:643 --- Starting export 3 of 5 ---
+Sidebar.tsx:655 Calling generateRandomShapes() 4 times for export 3
+Sidebar.tsx:667 Generation completed for export 3 after 4 generate calls - proceeding to save
+Sidebar.tsx:783 Failed to create canvas context for export 3
+overrideMethod @ hook.js:608
+handleBatchExport @ Sidebar.tsx:783
+await in handleBatchExport
+callCallback2 @ chunk-WERSD76P.js?v=2e7c91fc:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=2e7c91fc:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=2e7c91fc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=2e7c91fc:3736
+executeDispatch @ chunk-WERSD76P.js?v=2e7c91fc:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=2e7c91fc:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=2e7c91fc:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=2e7c91fc:7051
+(anonymous) @ chunk-WERSD76P.js?v=2e7c91fc:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=2e7c91fc:18913
+batchedUpdates @ chunk-WERSD76P.js?v=2e7c91fc:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=2e7c91fc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=2e7c91fc:5478
+dispatchEvent @ chunk-WERSD76P.js?v=2e7c91fc:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=2e7c91fc:5449
+Sidebar.tsx:791 Export 3 saved after 4 generate calls
+Sidebar.tsx:799 --- Completed export 3 of 5 ---
+Sidebar.tsx:643 --- Starting export 4 of 5 ---
+Sidebar.tsx:655 Calling generateRandomShapes() 7 times for export 4
+Sidebar.tsx:667 Generation completed for export 4 after 7 generate calls - proceeding to save
+Sidebar.tsx:783 Failed to create canvas context for export 4
+overrideMethod @ hook.js:608
+handleBatchExport @ Sidebar.tsx:783
+await in handleBatchExport
+callCallback2 @ chunk-WERSD76P.js?v=2e7c91fc:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=2e7c91fc:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=2e7c91fc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=2e7c91fc:3736
+executeDispatch @ chunk-WERSD76P.js?v=2e7c91fc:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=2e7c91fc:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=2e7c91fc:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=2e7c91fc:7051
+(anonymous) @ chunk-WERSD76P.js?v=2e7c91fc:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=2e7c91fc:18913
+batchedUpdates @ chunk-WERSD76P.js?v=2e7c91fc:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=2e7c91fc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=2e7c91fc:5478
+dispatchEvent @ chunk-WERSD76P.js?v=2e7c91fc:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=2e7c91fc:5449
+Sidebar.tsx:791 Export 4 saved after 7 generate calls
+Sidebar.tsx:799 --- Completed export 4 of 5 ---
+Sidebar.tsx:643 --- Starting export 5 of 5 ---
+Sidebar.tsx:655 Calling generateRandomShapes() 5 times for export 5
+Sidebar.tsx:667 Generation completed for export 5 after 5 generate calls - proceeding to save
+Sidebar.tsx:783 Failed to create canvas context for export 5
+overrideMethod @ hook.js:608
+handleBatchExport @ Sidebar.tsx:783
+await in handleBatchExport
+callCallback2 @ chunk-WERSD76P.js?v=2e7c91fc:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=2e7c91fc:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=2e7c91fc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=2e7c91fc:3736
+executeDispatch @ chunk-WERSD76P.js?v=2e7c91fc:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=2e7c91fc:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=2e7c91fc:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=2e7c91fc:7051
+(anonymous) @ chunk-WERSD76P.js?v=2e7c91fc:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=2e7c91fc:18913
+batchedUpdates @ chunk-WERSD76P.js?v=2e7c91fc:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=2e7c91fc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=2e7c91fc:5478
+dispatchEvent @ chunk-WERSD76P.js?v=2e7c91fc:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=2e7c91fc:5449
+Sidebar.tsx:791 Export 5 saved after 5 generate calls
+Sidebar.tsx:799 --- Completed export 5 of 5 ---
+Sidebar.tsx:806 Batch export completed successfully: 5 exports finished
+chunk-WERSD76P.js?v=2e7c91fc:18625 [Violation] 'mousedown' handler took 328ms
+chunk-WERSD76P.js?v=2e7c91fc:18625 [Violation] 'mouseup' handler took 632ms
