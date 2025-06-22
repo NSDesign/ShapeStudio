@@ -350,7 +350,98 @@ export default function Sidebar({
       shape.selected = originalSelected;
     };
 
-    const handleExportShapes = (customFilename?: string) => {
+    const performBatchExport = (filename: string) => {
+      // Export all shapes for batch mode
+      const shapesToExport = shapes;
+      console.log(`Batch export: Found ${shapesToExport.length} shapes to export as ${filename}`);
+      
+      // Set canvas dimensions based on shapes or default size
+      let canvasWidth = 800 * exportScale;
+      let canvasHeight = 600 * exportScale;
+      let translateX = 0;
+      let translateY = 0;
+
+      if (shapesToExport.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        shapesToExport.forEach(shape => {
+          const bounds = shape.getBounds();
+          const corners = [
+            { x: bounds.x, y: bounds.y },
+            { x: bounds.x + bounds.width, y: bounds.y },
+            { x: bounds.x, y: bounds.y + bounds.height },
+            { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+          ];
+
+          corners.forEach(corner => {
+            let x = corner.x * shape.transform.scaleX;
+            let y = corner.y * shape.transform.scaleY;
+
+            if (shape.transform.rotation !== 0) {
+              const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
+              const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
+              const newX = x * cos - y * sin;
+              const newY = x * sin + y * cos;
+              x = newX;
+              y = newY;
+            }
+
+            x += shape.transform.x;
+            y += shape.transform.y;
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          });
+        });
+
+        const padding = 20;
+        canvasWidth = (maxX - minX + padding * 2) * exportScale;
+        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        translateX = -minX + padding;
+        translateY = -minY + padding;
+      }
+
+      // Create export canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Failed to get canvas context for batch export');
+        return;
+      }
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // Set background
+      ctx.fillStyle = canvasSettings.backgroundColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      // Apply scaling and translation
+      ctx.scale(exportScale, exportScale);
+      ctx.translate(translateX, translateY);
+
+      // Render shapes
+      const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+      sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+
+      // Download the image
+      const link = document.createElement('a');
+      link.download = filename;
+
+      if (exportFormat === 'jpg') {
+        link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
+      } else {
+        link.href = canvas.toDataURL('image/png');
+      }
+
+      link.click();
+      console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+    };
+
+    const handleExportShapes = (customFilenameOrEvent?: string | React.MouseEvent) => {
+      const customFilename = typeof customFilenameOrEvent === 'string' ? customFilenameOrEvent : undefined;
       let shapesToExport: Shape[] = [];
       let canvasWidth: number;
       let canvasHeight: number;
@@ -497,7 +588,7 @@ export default function Sidebar({
           canvasHeight = (maxY - minY + padding * 2) * exportScale;
           translateX = -minX + padding;
           translateY = -minY + padding;
-          filename = `all-shapes-export-${Date.now()}.${exportFormat}`;
+          filename = customFilename || `all-shapes-export-${Date.now()}.${exportFormat}`;
         }
       }
 
@@ -524,6 +615,96 @@ export default function Sidebar({
       // Sort shapes by z-index and render them directly (no copying to avoid property corruption)
       const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
 
+      sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+
+      // Download the image
+      const link = document.createElement('a');
+      link.download = filename;
+
+      if (exportFormat === 'jpg') {
+        link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
+      } else {
+        link.href = canvas.toDataURL('image/png');
+      }
+
+      link.click();
+      console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+    };
+
+    const performBatchExport = (filename: string) => {
+      // Export all shapes for batch mode
+      const shapesToExport = shapes;
+      console.log(`Batch export: Found ${shapesToExport.length} shapes to export as ${filename}`);
+      
+      // Set canvas dimensions based on shapes or default size
+      let canvasWidth = 800 * exportScale;
+      let canvasHeight = 600 * exportScale;
+      let translateX = 0;
+      let translateY = 0;
+
+      if (shapesToExport.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        shapesToExport.forEach(shape => {
+          const bounds = shape.getBounds();
+          const corners = [
+            { x: bounds.x, y: bounds.y },
+            { x: bounds.x + bounds.width, y: bounds.y },
+            { x: bounds.x, y: bounds.y + bounds.height },
+            { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+          ];
+
+          corners.forEach(corner => {
+            let x = corner.x * shape.transform.scaleX;
+            let y = corner.y * shape.transform.scaleY;
+
+            if (shape.transform.rotation !== 0) {
+              const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
+              const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
+              const newX = x * cos - y * sin;
+              const newY = x * sin + y * cos;
+              x = newX;
+              y = newY;
+            }
+
+            x += shape.transform.x;
+            y += shape.transform.y;
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          });
+        });
+
+        const padding = 20;
+        canvasWidth = (maxX - minX + padding * 2) * exportScale;
+        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        translateX = -minX + padding;
+        translateY = -minY + padding;
+      }
+
+      // Create export canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Failed to get canvas context for batch export');
+        return;
+      }
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // Set background
+      ctx.fillStyle = canvasSettings.backgroundColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      // Apply scaling and translation
+      ctx.scale(exportScale, exportScale);
+      ctx.translate(translateX, translateY);
+
+      // Render shapes
+      const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Download the image
@@ -588,11 +769,45 @@ export default function Sidebar({
               await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            // Create a unique filename for batch export
+            // Create and download image directly for batch export
             const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
             
-            // Call handleExportShapes with explicit filename for batch mode
-            handleExportShapes(batchFilename);
+            // Create export canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (ctx) {
+              // Set canvas size (use default size for batch exports)
+              canvas.width = 800 * exportScale;
+              canvas.height = 600 * exportScale;
+              
+              // Set background
+              ctx.fillStyle = '#ffffff'; // White background for batch exports
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              // Apply scaling
+              ctx.scale(exportScale, exportScale);
+              
+              // Render all current shapes
+              const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+              sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+              
+              // Create download link
+              const link = document.createElement('a');
+              link.download = batchFilename;
+              
+              if (exportFormat === 'jpg') {
+                link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
+              } else {
+                link.href = canvas.toDataURL('image/png');
+              }
+              
+              // Trigger download
+              link.click();
+              console.log(`File downloaded: ${batchFilename}`);
+            } else {
+              console.error(`Failed to create canvas context for export ${i + 1}`);
+            }
             
             // Restore original export mode if we changed it
             if (shouldUseAllMode) {
