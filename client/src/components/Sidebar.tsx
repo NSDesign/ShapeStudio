@@ -685,53 +685,97 @@ export default function Sidebar({
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            if (ctx) {
-              // Set canvas size (use default size for batch exports)
-              canvas.width = 800 * exportScale;
-              canvas.height = 600 * exportScale;
+            if (ctx && shapes.length > 0) {
+              // Calculate bounds of all shapes to fit canvas properly
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              
+              shapes.forEach(shape => {
+                const bounds = shape.getBounds();
+                // Account for transforms
+                const corners = [
+                  { x: bounds.x, y: bounds.y },
+                  { x: bounds.x + bounds.width, y: bounds.y },
+                  { x: bounds.x, y: bounds.y + bounds.height },
+                  { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+                ];
+                
+                corners.forEach(corner => {
+                  let x = corner.x * shape.transform.scaleX;
+                  let y = corner.y * shape.transform.scaleY;
+                  
+                  if (shape.transform.rotation !== 0) {
+                    const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
+                    const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
+                    const newX = x * cos - y * sin;
+                    const newY = x * sin + y * cos;
+                    x = newX;
+                    y = newY;
+                  }
+                  
+                  x += shape.transform.x;
+                  y += shape.transform.y;
+                  
+                  minX = Math.min(minX, x);
+                  minY = Math.min(minY, y);
+                  maxX = Math.max(maxX, x);
+                  maxY = Math.max(maxY, y);
+                });
+              });
+              
+              // Add padding and calculate final canvas size
+              const padding = 20;
+              const canvasWidth = (maxX - minX + padding * 2) * exportScale;
+              const canvasHeight = (maxY - minY + padding * 2) * exportScale;
+              
+              // Set proper canvas dimensions
+              canvas.width = canvasWidth;
+              canvas.height = canvasHeight;
+              
+              console.log(`Canvas size: ${canvasWidth}x${canvasHeight} for ${shapes.length} shapes`);
               
               // Set background
-              ctx.fillStyle = '#ffffff'; // White background for batch exports
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvasWidth, canvasHeight);
               
-              // Apply scaling
+              // Apply scaling and translation to center shapes
               ctx.scale(exportScale, exportScale);
+              ctx.translate(-minX + padding, -minY + padding);
               
               // Render all current shapes
               const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               
-              // Synchronous download without browser save dialog
+              // Direct download without save dialog using blob approach
               try {
-                // Get image data immediately while canvas has content
-                const dataURL = exportFormat === 'jpg' 
-                  ? canvas.toDataURL('image/jpeg', exportQuality / 100)
-                  : canvas.toDataURL('image/png');
+                // Convert canvas to blob synchronously
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    // Create object URL for blob
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create temporary download link
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = batchFilename;
+                    link.style.position = 'absolute';
+                    link.style.left = '-9999px';
+                    
+                    // Force download by simulating user click
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // Immediate cleanup
+                    setTimeout(() => {
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(url);
+                    }, 100);
+                    
+                    console.log(`✅ Saved: ${batchFilename} (${canvasWidth}x${canvasHeight})`);
+                  } else {
+                    console.error(`❌ Blob creation failed for ${batchFilename}`);
+                  }
+                }, exportFormat === 'jpg' ? 'image/jpeg' : 'image/png', exportQuality / 100);
                 
-                // Create download link with data URL
-                const link = document.createElement('a');
-                link.href = dataURL;
-                link.download = batchFilename;
-                
-                // Set attributes to force immediate download without dialog
-                link.setAttribute('download', batchFilename);
-                link.style.display = 'none';
-                
-                // Add to DOM, trigger download, and remove immediately
-                document.body.appendChild(link);
-                
-                // Force download without user interaction
-                const clickEvent = new MouseEvent('click', {
-                  view: window,
-                  bubbles: true,
-                  cancelable: false
-                });
-                link.dispatchEvent(clickEvent);
-                
-                // Clean up
-                document.body.removeChild(link);
-                
-                console.log(`✅ Auto-saved: ${batchFilename}`);
               } catch (downloadError) {
                 console.error(`❌ Download failed for ${batchFilename}:`, downloadError);
               }
