@@ -602,18 +602,24 @@ export default function Sidebar({
             continue;
           }
 
-          // Force export mode to 'all' for batch export to ensure we export all generated shapes
+          // For batch export, we need to export all generated shapes regardless of current export mode
+          // But we should preserve user's selection for artboard exports
+          const shouldUseAllMode = exportMode !== 'artboard';
           const originalExportMode = exportMode;
-          setExportMode('all');
           
-          // Wait for export mode to update
-          await new Promise(resolve => setTimeout(resolve, 50));
+          if (shouldUseAllMode) {
+            setExportMode('all');
+            // Wait for export mode to update
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
 
           // Call the existing handleExportShapes function which has all the proper logic
           handleExportShapes();
           
-          // Restore original export mode
-          setExportMode(originalExportMode);
+          // Restore original export mode if we changed it
+          if (shouldUseAllMode) {
+            setExportMode(originalExportMode);
+          }
 
           console.log(`Export ${i + 1} completed with ${currentShapes.length} shapes`);
 
@@ -663,9 +669,9 @@ export default function Sidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="selection" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Selected Shapes</SelectItem>
-                <SelectItem value="artboard" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Artboard Content</SelectItem>
-                <SelectItem value="all" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">All Shapes</SelectItem>
+                <SelectItem value="selection" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Selected Shapes</SelectItem>
+                <SelectItem value="artboard" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Artboard Content</SelectItem>
+                <SelectItem value="all" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">All Shapes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -679,7 +685,7 @@ export default function Sidebar({
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {artboards.map((artboard) => (
-                    <SelectItem key={artboard.id} value={artboard.id} className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">
+                    <SelectItem key={artboard.id} value={artboard.id} className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">
                       {artboard.name} ({artboard.width}×{artboard.height})
                     </SelectItem>
                   ))}
@@ -695,10 +701,10 @@ export default function Sidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="png" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG (Transparent)</SelectItem>
-                <SelectItem value="jpg" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG (Compressed)</SelectItem>
-                <SelectItem value="svg" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">SVG (Vector)</SelectItem>
-                <SelectItem value="pdf" className="text-black data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
+                <SelectItem value="png" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG (Transparent)</SelectItem>
+                <SelectItem value="jpg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG (Compressed)</SelectItem>
+                <SelectItem value="svg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">SVG (Vector)</SelectItem>
+                <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
           </div>
