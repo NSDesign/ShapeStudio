@@ -650,17 +650,41 @@ export default function Sidebar({
           const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
           console.log(`🔢 Will generate ${shapesToGenerate} shape calls for export ${i + 1}`);
 
-          // Collect shapes for this export
+          // Generate shapes directly without using the scatter system
           const currentExportShapes: Shape[] = [];
           
           for (let j = 0; j < shapesToGenerate; j++) {
-            const beforeCount = shapes.length;
-            onGenerateRandomShapes();
-            await new Promise(resolve => setTimeout(resolve, 250));
+            // Create shapes directly
+            const shapeCount = Math.floor(Math.random() * 10) + 5; // 5-15 shapes per generation
             
-            const newShapes = shapes.slice(beforeCount);
-            currentExportShapes.push(...newShapes);
-            console.log(`✨ Generation ${j + 1}: Added ${newShapes.length} shapes (total: ${currentExportShapes.length})`);
+            for (let k = 0; k < shapeCount; k++) {
+              const shapeTypes = ['rectangle', 'circle', 'polygon'];
+              const randomType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)] as ShapeType;
+              
+              // Random position within artboard area
+              const x = (Math.random() - 0.5) * 300;
+              const y = (Math.random() - 0.5) * 300;
+              
+              const newShape = new Shape(randomType, x, y);
+              
+              // Random properties
+              const hue = Math.random() * 360;
+              const saturation = 50 + Math.random() * 50;
+              const lightness = 30 + Math.random() * 40;
+              newShape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+              
+              // Random size
+              const scale = 0.5 + Math.random() * 2;
+              newShape.transform.scaleX = scale;
+              newShape.transform.scaleY = scale;
+              
+              // Random rotation
+              newShape.transform.rotation = Math.random() * 360;
+              
+              currentExportShapes.push(newShape);
+            }
+            
+            console.log(`✨ Generation ${j + 1}: Created ${shapeCount} shapes (total: ${currentExportShapes.length})`);
           }
 
           // Export the collected shapes
