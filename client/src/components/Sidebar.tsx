@@ -350,7 +350,7 @@ export default function Sidebar({
       shape.selected = originalSelected;
     };
 
-    const handleExportShapes = () => {
+    const handleExportShapes = (customFilename?: string) => {
       let shapesToExport: Shape[] = [];
       let canvasWidth: number;
       let canvasHeight: number;
@@ -435,13 +435,21 @@ export default function Sidebar({
         canvasHeight = (maxY - minY + padding * 2) * exportScale;
         translateX = -minX + padding;
         translateY = -minY + padding;
-        filename = `selection-export-${Date.now()}.${exportFormat}`;
+        filename = customFilename || `selection-export-${Date.now()}.${exportFormat}`;
       } else {
         // Export all shapes with bounds fitting
         shapesToExport = shapes;
-        if (shapesToExport.length === 0) return;
-
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        console.log(`Export attempt: Found ${shapesToExport.length} shapes to export`);
+        if (shapesToExport.length === 0) {
+          console.warn('No shapes found for export - creating blank canvas');
+          // Create a blank canvas instead of returning
+          canvasWidth = 800 * exportScale;
+          canvasHeight = 600 * exportScale;
+          translateX = 0;
+          translateY = 0;
+          filename = `all-export-${Date.now()}.${exportFormat}`;
+        } else {
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
         shapesToExport.forEach(shape => {
           const bounds = shape.getBounds();
@@ -484,12 +492,13 @@ export default function Sidebar({
           });
         });
 
-        const padding = 20;
-        canvasWidth = (maxX - minX + padding * 2) * exportScale;
-        canvasHeight = (maxY - minY + padding * 2) * exportScale;
-        translateX = -minX + padding;
-        translateY = -minY + padding;
-        filename = `all-shapes-export-${Date.now()}.${exportFormat}`;
+          const padding = 20;
+          canvasWidth = (maxX - minX + padding * 2) * exportScale;
+          canvasHeight = (maxY - minY + padding * 2) * exportScale;
+          translateX = -minX + padding;
+          translateY = -minY + padding;
+          filename = `all-shapes-export-${Date.now()}.${exportFormat}`;
+        }
       }
 
       if (shapesToExport.length === 0) return;
@@ -579,8 +588,11 @@ export default function Sidebar({
               await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            // Call the existing handleExportShapes function which has all the proper logic
-            handleExportShapes();
+            // Create a unique filename for batch export
+            const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
+            
+            // Call handleExportShapes with explicit filename for batch mode
+            handleExportShapes(batchFilename);
             
             // Restore original export mode if we changed it
             if (shouldUseAllMode) {
