@@ -528,6 +528,7 @@ export default function Sidebar({
       }
 
       link.click();
+      console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
     };
 
     const handleBatchExport = async () => {
