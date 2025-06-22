@@ -336,6 +336,7 @@ export default function Sidebar({
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
+    const [batchModeEnabled, setBatchModeEnabled] = useState(false);
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
@@ -535,21 +536,28 @@ export default function Sidebar({
       setIsBatchExporting(true);
       setBatchProgress(0);
       
+      // Store original scatter settings
+      const originalCount = scatterSettings.count;
+      
       try {
         for (let i = 0; i < batchExportCount; i++) {
+          // Clear existing shapes first
+          onClearAll?.();
+          
           // Generate random number of shapes within the specified range
           const randomShapeCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
           
-          // Clear existing shapes and generate new random shapes
-          const originalShapes = [...shapes];
+          // Update scatter settings with the random count
+          onUpdateScatterSettings({ count: randomShapeCount });
           
-          // Generate random shapes using the existing function
-          for (let j = 0; j < randomShapeCount; j++) {
-            onGenerateRandomShapes();
-          }
+          // Wait a moment for settings to update
+          await new Promise(resolve => setTimeout(resolve, 50));
           
-          // Wait a brief moment for shapes to be generated
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Generate shapes using the existing generation function
+          onGenerateRandomShapes();
+          
+          // Wait for shapes to be generated
+          await new Promise(resolve => setTimeout(resolve, 300));
           
           // Create export canvas
           const canvas = document.createElement('canvas');
@@ -598,6 +606,8 @@ export default function Sidebar({
       } catch (error) {
         console.error('Batch export failed:', error);
       } finally {
+        // Restore original scatter settings
+        onUpdateScatterSettings({ count: originalCount });
         setIsBatchExporting(false);
         setBatchProgress(0);
       }
@@ -704,6 +714,7 @@ export default function Sidebar({
           <Button
             onClick={handleExportShapes}
             disabled={
+              batchModeEnabled ||
               (exportMode === 'selection' && selectedShapes.length === 0) ||
               (exportMode === 'artboard' && (!selectedArtboardForExport || artboards.length === 0)) ||
               (exportMode === 'all' && shapes.length === 0)
@@ -723,88 +734,80 @@ export default function Sidebar({
 
         {/* Batch Export Section */}
         <div className="space-y-3">
-          <Label className="text-xs text-slate-300">Batch Export</Label>
-          
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Random Shape Range</Label>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
-                <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
-              </div>
-              <Slider
-                value={batchShapeCount}
-                onValueChange={(value) => setBatchShapeCount(value)}
-                min={1}
-                max={200}
-                step={1}
-                className="w-full"
-                minStepsBetweenThumbs={5}
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-slate-300">Batch Export</Label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="batch-mode" className="text-xs text-slate-400">Enable</Label>
+              <Switch
+                id="batch-mode"
+                checked={batchModeEnabled}
+                onCheckedChange={setBatchModeEnabled}
               />
             </div>
           </div>
+          
+          {batchModeEnabled && (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Random Shape Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
+                    <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
+                  </div>
+                  <Slider
+                    value={batchShapeCount}
+                    onValueChange={(value) => setBatchShapeCount(value)}
+                    min={1}
+                    max={200}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Number of Exports</span>
-              <span className="text-slate-300">{batchExportCount}</span>
-            </div>
-            <Slider
-              value={[batchExportCount]}
-              onValueChange={([value]) => setBatchExportCount(value)}
-              min={1}
-              max={100}
-              step={1}
-              className="w-full"
-            />
-          </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Number of Exports</span>
+                  <span className="text-slate-300">{batchExportCount}</span>
+                </div>
+                <Slider
+                  value={[batchExportCount]}
+                  onValueChange={([value]) => setBatchExportCount(value)}
+                  min={1}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Export Location</Label>
-            <div className="flex gap-2">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Export Location</Label>
+                <div className="text-xs text-slate-500 bg-slate-800 p-2 rounded border border-slate-600">
+                  Files will be saved to your browser's default Downloads folder
+                </div>
+              </div>
+
               <Button
-                onClick={() => {
-                  // Use the directory picker API if available
-                  if ('showDirectoryPicker' in window) {
-                    (window as any).showDirectoryPicker().then((handle: any) => {
-                      setBatchExportPath(handle.name);
-                    }).catch(() => {
-                      setBatchExportPath('Downloads');
-                    });
-                  } else {
-                    setBatchExportPath('Downloads');
-                  }
-                }}
-                variant="secondary"
-                size="sm"
-                className="text-xs"
+                onClick={handleBatchExport}
+                disabled={isBatchExporting || enabledShapeTypes.size === 0}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
               >
-                <FolderOpen className="w-3 h-3 mr-1" />
-                Choose
+                {isBatchExporting ? (
+                  <>
+                    <div className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Exporting... ({Math.floor((batchProgress / batchExportCount) * 100)}%)
+                  </>
+                ) : (
+                  <>
+                    <Boxes className="w-3 h-3 mr-1" />
+                    Start Batch Export
+                  </>
+                )}
               </Button>
-              <span className="text-xs text-slate-400 flex items-center">
-                {batchExportPath || 'Downloads'}
-              </span>
-            </div>
-          </div>
-
-          <Button
-            onClick={handleBatchExport}
-            disabled={isBatchExporting || enabledShapeTypes.size === 0}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
-          >
-            {isBatchExporting ? (
-              <>
-                <div className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Exporting... ({Math.floor((batchProgress / batchExportCount) * 100)}%)
-              </>
-            ) : (
-              <>
-                <Boxes className="w-3 h-3 mr-1" />
-                Start Batch Export
-              </>
-            )}
-          </Button>
+            </>
+          )}
         </div>
 
         <Separator className="bg-slate-600" />
