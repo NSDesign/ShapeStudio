@@ -332,7 +332,7 @@ export default function Sidebar({
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
     // Batch export state
-    const [batchShapeCount, setBatchShapeCount] = useState([10, 50]);
+    const [batchShapeCount, setBatchShapeCount] = useState([5, 15]);
     const [batchExportCount, setBatchExportCount] = useState(10);
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
@@ -935,7 +935,7 @@ export default function Sidebar({
                     value={batchShapeCount}
                     onValueChange={(value) => setBatchShapeCount(value)}
                     min={1}
-                    max={200}
+                    max={20}
                     step={1}
                     className="w-full"
                     minStepsBetweenThumbs={5}
@@ -1051,7 +1051,7 @@ export default function Sidebar({
               max={50}
               step={1}
               className="w-full"
-              minStepsBetweenThumbs={1}
+              minStepsBetweenThumbs={5}
             />
           </div>
         </div>
