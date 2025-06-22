@@ -544,60 +544,26 @@ export default function Sidebar({
           // Wait for clear to complete
           await new Promise(resolve => setTimeout(resolve, 200));
 
-          // Generate random number of shapes within the specified range
-          const randomShapeCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+          // Generate random number of times to call generateRandomShapes() for this export
+          const randomCallCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
 
-          console.log(`Generating ${randomShapeCount} shapes for export ${i + 1}`);
+          console.log(`Calling generateRandomShapes() ${randomCallCount} times for export ${i + 1}`);
 
-          // Temporarily update scatter settings to generate exact count
-          const originalMinCount = scatterSettings.minCount;
-          const originalMaxCount = scatterSettings.maxCount;
+          // Call generateRandomShapes() multiple times (like clicking the button multiple times)
+          for (let j = 0; j < randomCallCount; j++) {
+            onGenerateRandomShapes();
+            // Small delay between calls to allow state updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
           
-          // Set both min and max to our desired count for precise control
-          onUpdateScatterSettings({ 
-            minCount: randomShapeCount, 
-            maxCount: randomShapeCount 
-          });
+          // Wait for all shapes to be created
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Wait for settings to update
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          // Call generation function once with our exact count
-          onGenerateRandomShapes();
-          
-          // Wait for shapes to be created using callback pattern
-          const waitForShapesCreated = () => {
-            return new Promise<Shape[]>((resolve) => {
-              let attempts = 0;
-              const maxAttempts = 20; // 2 seconds max wait
-              
-              const checkShapes = () => {
-                attempts++;
-                
-                // Check if we have shapes by calling onShapeUpdate to get fresh state
-                onShapeUpdate?.();
-                
-                if (shapes.length >= randomShapeCount || attempts >= maxAttempts) {
-                  console.log(`Shapes ready: ${shapes.length} shapes after ${attempts * 100}ms`);
-                  resolve(shapes);
-                } else {
-                  setTimeout(checkShapes, 100);
-                }
-              };
-              
-              checkShapes();
-            });
-          };
-          
-          const currentShapes = await waitForShapesCreated();
-          
-          // Restore original scatter settings
-          onUpdateScatterSettings({ 
-            minCount: originalMinCount, 
-            maxCount: originalMaxCount 
-          });
+          // Get current shapes count
+          const currentShapeCount = shapes.length;
+          console.log(`Total shapes created: ${currentShapeCount} shapes after ${randomCallCount} generate calls`);
 
-          if (currentShapes.length === 0) {
+          if (currentShapeCount === 0) {
             console.warn(`No shapes generated for export ${i + 1}, skipping`);
             continue;
           }
@@ -621,7 +587,7 @@ export default function Sidebar({
             setExportMode(originalExportMode);
           }
 
-          console.log(`Export ${i + 1} completed with ${currentShapes.length} shapes`);
+          console.log(`Export ${i + 1} completed with ${currentShapeCount} shapes`);
 
           // Update progress
           setBatchProgress(i + 1);
@@ -886,6 +852,25 @@ export default function Sidebar({
         ))}
 
         <Separator className="bg-slate-600" />
+
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Random Shape Count Range</Label>
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Min: {scatterSettings.minCount}</span>
+              <span className="text-slate-400">Max: {scatterSettings.maxCount}</span>
+            </div>
+            <Slider
+              value={[scatterSettings.minCount, scatterSettings.maxCount]}
+              onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+              min={1}
+              max={50}
+              step={1}
+              className="w-full"
+              minStepsBetweenThumbs={1}
+            />
+          </div>
+        </div>
 
         <Button 
           onClick={onGenerateRandomShapes}
