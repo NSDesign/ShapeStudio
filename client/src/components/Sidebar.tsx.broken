@@ -815,21 +815,11 @@ export default function Sidebar({
         setIsBatchExporting(false);
         setBatchProgress(0);
       }
-    }, [
-      batchExportCount,
-      batchShapeCount,
-      exportFormat,
-      exportQuality,
-      exportScale,
-      exportMode,
-      onClearAll,
-      onGenerateRandomShapes,
-      shapes,
-      renderShapeForExport,
-      setExportMode,
-      setBatchProgress,
-      setIsBatchExporting
-    ]);
+    }, []);
+
+  const renderShapeForExport = useCallback((ctx: CanvasRenderingContext2D, shape: Shape) => {
+    // Implementation will be added
+  }, []);
       } finally {
         // Clear shapes after batch export completes
         onClearAll?.();
