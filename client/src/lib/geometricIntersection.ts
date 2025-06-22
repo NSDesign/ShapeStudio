@@ -1484,7 +1484,7 @@ export class GeometricIntersection {
    * Create a compound shape when shapes don't intersect
    */
   private static createCompoundShape(shape1: Shape, shape2: Shape, operation: string): Shape {
-    const result = new Shape('blob');
+    const result = new Shape('chunk');
     result.id = `${shape1.id}_${operation}_${shape2.id}`;
     
     // Use shape1's position and properties

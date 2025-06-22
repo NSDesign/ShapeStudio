@@ -426,8 +426,8 @@ export class ImageExporter {
     let path = `M ${points[0].x} ${points[0].y}`;
     
     for (let i = 1; i < points.length; i++) {
-      if (shapeType === 'blob') {
-        // Use smooth curves for blobs
+      if (shapeType === 'chunk' || shapeType === 'blob') {
+        // Use smooth curves for chunks and blobs
         const current = points[i];
         const next = points[(i + 1) % points.length];
         const cp1x = current.x;
@@ -440,7 +440,7 @@ export class ImageExporter {
       }
     }
     
-    if (shapeType === 'blob' || shapeType === 'polygon') {
+    if (shapeType === 'chunk' || shapeType === 'blob' || shapeType === 'polygon') {
       path += ' Z';
     }
     

@@ -60,6 +60,9 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     case 'cubic':
       drawCurve(ctx, shape);
       break;
+    case 'chunk':
+      drawChunk(ctx, shape);
+      break;
     case 'blob':
       drawBlob(ctx, shape);
       break;
