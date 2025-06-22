@@ -701,31 +701,40 @@ export default function Sidebar({
               const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               
-              // Enhanced download mechanism using blob for better browser compatibility
-              canvas.toBlob((blob) => {
-                if (blob) {
-                  // Create object URL for blob
-                  const url = URL.createObjectURL(blob);
-                  
-                  // Create download link
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.download = batchFilename;
-                  link.style.display = 'none';
-                  
-                  // Add to DOM temporarily for download
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  
-                  // Clean up object URL
-                  setTimeout(() => URL.revokeObjectURL(url), 1000);
-                  
-                  console.log(`✅ File saved to Downloads: ${batchFilename}`);
-                } else {
-                  console.error(`❌ Failed to create blob for ${batchFilename}`);
-                }
-              }, exportFormat === 'jpg' ? 'image/jpeg' : 'image/png', exportQuality / 100);
+              // Synchronous download without browser save dialog
+              try {
+                // Get image data immediately while canvas has content
+                const dataURL = exportFormat === 'jpg' 
+                  ? canvas.toDataURL('image/jpeg', exportQuality / 100)
+                  : canvas.toDataURL('image/png');
+                
+                // Create download link with data URL
+                const link = document.createElement('a');
+                link.href = dataURL;
+                link.download = batchFilename;
+                
+                // Set attributes to force immediate download without dialog
+                link.setAttribute('download', batchFilename);
+                link.style.display = 'none';
+                
+                // Add to DOM, trigger download, and remove immediately
+                document.body.appendChild(link);
+                
+                // Force download without user interaction
+                const clickEvent = new MouseEvent('click', {
+                  view: window,
+                  bubbles: true,
+                  cancelable: false
+                });
+                link.dispatchEvent(clickEvent);
+                
+                // Clean up
+                document.body.removeChild(link);
+                
+                console.log(`✅ Auto-saved: ${batchFilename}`);
+              } catch (downloadError) {
+                console.error(`❌ Download failed for ${batchFilename}:`, downloadError);
+              }
             } else {
               console.error(`Failed to create canvas context for export ${i + 1}`);
             }
