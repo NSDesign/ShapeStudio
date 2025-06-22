@@ -695,16 +695,16 @@ export default function Sidebar({
               await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            // Create and download image directly for batch export
+            // Use exact same export logic as single export for batch
             const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
             
             if (exportShapes.length > 0) {
-              // Calculate canvas bounds exactly like single export
+              // Export canvas creation - exact copy from handleExportShapes
               let canvasWidth = 800;
               let canvasHeight = 600;
               let translateX = 0;
               let translateY = 0;
-              // Calculate bounds exactly like single export
+
               let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
               
               exportShapes.forEach(shape => {
