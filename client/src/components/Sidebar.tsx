@@ -688,27 +688,13 @@ export default function Sidebar({
             // Create and download image directly for batch export
             const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
             
-            // Create export canvas with proper error handling
-            let canvas: HTMLCanvasElement;
-            let ctx: CanvasRenderingContext2D | null = null;
+            // Create export canvas using simple approach
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
             
-            try {
-              canvas = document.createElement('canvas');
-              // Force canvas to be recognized by browser
-              canvas.style.display = 'none';
-              document.body.appendChild(canvas);
-              
-              ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
-              
-              if (!ctx) {
-                throw new Error('Canvas context creation failed');
-              }
-              
-              console.log(`Canvas context created successfully for export ${i + 1}`);
-              
-            } catch (canvasError) {
-              console.error(`Canvas creation failed for export ${i + 1}:`, canvasError);
-              continue; // Skip this export and continue with next
+            if (!ctx) {
+              console.error(`Failed to create canvas context for export ${i + 1}`);
+              continue;
             }
             
             if (ctx && exportShapes.length > 0) {
@@ -804,15 +790,6 @@ export default function Sidebar({
                 
               } catch (downloadError) {
                 console.error(`❌ Download failed for ${batchFilename}:`, downloadError);
-              }
-              
-              // Always clean up canvas from DOM
-              try {
-                if (canvas && canvas.parentNode) {
-                  document.body.removeChild(canvas);
-                }
-              } catch (cleanupError) {
-                console.warn(`Canvas cleanup warning for export ${i + 1}:`, cleanupError);
               }
             } else {
               console.error(`No shapes generated for batch ${i + 1} - created ${exportShapes.length} shapes`);
