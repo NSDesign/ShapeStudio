@@ -701,19 +701,31 @@ export default function Sidebar({
               const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               
-              // Create download link
-              const link = document.createElement('a');
-              link.download = batchFilename;
-              
-              if (exportFormat === 'jpg') {
-                link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
-              } else {
-                link.href = canvas.toDataURL('image/png');
-              }
-              
-              // Trigger download
-              link.click();
-              console.log(`File downloaded: ${batchFilename}`);
+              // Enhanced download mechanism using blob for better browser compatibility
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  // Create object URL for blob
+                  const url = URL.createObjectURL(blob);
+                  
+                  // Create download link
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = batchFilename;
+                  link.style.display = 'none';
+                  
+                  // Add to DOM temporarily for download
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  
+                  // Clean up object URL
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                  
+                  console.log(`✅ File saved to Downloads: ${batchFilename}`);
+                } else {
+                  console.error(`❌ Failed to create blob for ${batchFilename}`);
+                }
+              }, exportFormat === 'jpg' ? 'image/jpeg' : 'image/png', exportQuality / 100);
             } else {
               console.error(`Failed to create canvas context for export ${i + 1}`);
             }
