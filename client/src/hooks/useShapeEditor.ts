@@ -683,7 +683,12 @@ export const useShapeEditor = () => {
     const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
     const enabledTypes = Array.from(enabledShapeTypes);
     
-    if (enabledTypes.length === 0) return;
+    console.log(`🔍 generateRandomShapes: count=${count}, enabledTypes=${enabledTypes.length}, types=${enabledTypes.join(',')}`);
+    
+    if (enabledTypes.length === 0) {
+      console.log(`❌ No enabled shape types, returning early`);
+      return;
+    }
 
     // Use current artboard bounds for shape placement
     const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
@@ -730,6 +735,7 @@ export const useShapeEditor = () => {
       return shape;
     });
 
+    console.log(`✅ Created ${newShapes.length} shapes, adding to existing ${shapes.length} shapes`);
     setShapes(prev => [...prev, ...newShapes]);
   }, [enabledShapeTypes, scatterSettings, canvasSettings]);
 
