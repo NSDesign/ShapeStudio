@@ -65,6 +65,8 @@ export default function Canvas({
   marqueeStart,
   marqueeEnd,
   isMarqueeSelecting,
+  isTouchDevice,
+  isMultiTouch,
   selectedShapes,
   selectedGroups,
   onMouseDown,
@@ -73,6 +75,7 @@ export default function Canvas({
   onTouchStart,
   onTouchMove,
   onTouchEnd,
+  onWheel,
   onToggleMultiSelect,
   onZoomIn,
   onZoomOut,
@@ -366,7 +369,7 @@ export default function Canvas({
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          onWheel={onWheel}
+          onWheel={(e) => onWheel(e.nativeEvent)}
         />
         
         {/* Overlay Messages */}
