@@ -654,12 +654,15 @@ export default function Sidebar({
           const currentExportShapes: Shape[] = [];
           
           for (let j = 0; j < shapesToGenerate; j++) {
-            // Create shapes directly
-            const shapeCount = Math.floor(Math.random() * 10) + 5; // 5-15 shapes per generation
+            // Create shapes using UI random count range
+            const shapeCount = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
             
             for (let k = 0; k < shapeCount; k++) {
-              const shapeTypes = ['rectangle', 'circle', 'polygon'];
-              const randomType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)] as ShapeType;
+              // Use enabled shape types from UI
+              const enabledTypes = Array.from(enabledShapeTypes);
+              if (enabledTypes.length === 0) continue; // Skip if no types enabled
+              
+              const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
               
               // Random position within artboard area
               const x = (Math.random() - 0.5) * 300;
