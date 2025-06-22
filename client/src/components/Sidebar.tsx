@@ -76,6 +76,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   line: 'Line',
   bezier: 'Bézier Curve',
   cubic: 'Cubic Spline',
+  chunk: 'Chunk',
   blob: 'Organic Blob',
   ring: 'Ring',
   'spline-circle': 'Spline Circle',

@@ -193,7 +193,7 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (shape.closed) ctx.closePath();
 }
 
-function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
+function drawChunk(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (shape.points.length < 3) return;
   
   ctx.moveTo(shape.points[0].x, shape.points[0].y);
@@ -218,6 +218,46 @@ function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
       );
     }
   } else {
+    for (let i = 1; i < shape.points.length; i++) {
+      const current = shape.points[i];
+      const next = shape.points[(i + 1) % shape.points.length];
+      const cp1x = current.x;
+      const cp1y = current.y;
+      const cp2x = (current.x + next.x) / 2;
+      const cp2y = (current.y + next.y) / 2;
+      
+      ctx.quadraticCurveTo(cp1x, cp1y, cp2x, cp2y);
+    }
+  }
+  
+  ctx.closePath();
+}
+
+function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
+  if (shape.points.length < 3) return;
+  
+  ctx.moveTo(shape.points[0].x, shape.points[0].y);
+  
+  // Use cubic bezier curves with tangent handles for smooth organic shapes
+  if (shape.tangentHandles && shape.tangentHandles.length === shape.points.length) {
+    for (let i = 0; i < shape.points.length; i++) {
+      const current = shape.points[i];
+      const next = shape.points[(i + 1) % shape.points.length];
+      const currentHandle = shape.tangentHandles[i];
+      const nextHandle = shape.tangentHandles[(i + 1) % shape.tangentHandles.length];
+      
+      // Create smooth cubic bezier curve between points
+      ctx.bezierCurveTo(
+        currentHandle.out.x,
+        currentHandle.out.y,
+        nextHandle.in.x,
+        nextHandle.in.y,
+        next.x,
+        next.y
+      );
+    }
+  } else {
+    // Fallback to generated smooth curves
     for (let i = 1; i < shape.points.length; i++) {
       const current = shape.points[i];
       const next = shape.points[(i + 1) % shape.points.length];

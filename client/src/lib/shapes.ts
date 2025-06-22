@@ -252,6 +252,9 @@ export class Shape {
       case 'cubic':
         this.generateCurvePoints();
         break;
+      case 'chunk':
+        this.generateChunkPoints();
+        break;
       case 'blob':
         this.generateBlobPoints();
         break;
@@ -353,7 +356,7 @@ export class Shape {
     this.renderType = 'bezier';
   }
 
-  private generateBlobPoints(): void {
+  private generateChunkPoints(): void {
     const numPoints = 6 + Math.floor(Math.random() * 6);
     this.points = [];
     this.controlPoints = [];
@@ -387,6 +390,58 @@ export class Shape {
     
     this.closed = true;
     this.renderType = 'bezier';
+  }
+
+  private generateBlobPoints(): void {
+    const numPoints = 6 + Math.floor(Math.random() * 4); // 6-10 points for smoother curves
+    this.points = [];
+    this.tangentHandles = [];
+    const baseRadius = 50 + Math.random() * 50;
+    
+    // Generate points in a circular pattern with radius variation
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      const radiusVariation = 0.8 + Math.random() * 0.4; // Less variation for smoother shape
+      const radius = baseRadius * radiusVariation;
+      
+      this.points.push({
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+      });
+    }
+    
+    // Generate tangent handles for cubic bezier curves
+    for (let i = 0; i < numPoints; i++) {
+      const prevIndex = (i - 1 + numPoints) % numPoints;
+      const nextIndex = (i + 1) % numPoints;
+      
+      const prev = this.points[prevIndex];
+      const current = this.points[i];
+      const next = this.points[nextIndex];
+      
+      // Calculate tangent direction based on neighboring points
+      const tangentX = (next.x - prev.x) * 0.25; // Control handle length
+      const tangentY = (next.y - prev.y) * 0.25;
+      
+      // Add some randomness to the tangent handles for organic variation
+      const randomFactor = 0.3;
+      const randomX = (Math.random() - 0.5) * randomFactor * Math.abs(tangentX);
+      const randomY = (Math.random() - 0.5) * randomFactor * Math.abs(tangentY);
+      
+      this.tangentHandles.push({
+        in: {
+          x: current.x - tangentX + randomX,
+          y: current.y - tangentY + randomY
+        },
+        out: {
+          x: current.x + tangentX + randomX,
+          y: current.y + tangentY + randomY
+        }
+      });
+    }
+    
+    this.closed = true;
+    this.renderType = 'cubic';
   }
 
   private generateRectanglePoints(): void {
@@ -664,6 +719,9 @@ export class Shape {
       case 'cubic':
         this.drawCurve(ctx);
         break;
+      case 'chunk':
+        this.drawChunk(ctx);
+        break;
       case 'blob':
         this.drawBlob(ctx);
         break;
@@ -836,7 +894,7 @@ export class Shape {
     if (this.closed) ctx.closePath();
   }
 
-  private drawBlob(ctx: CanvasRenderingContext2D): void {
+  private drawChunk(ctx: CanvasRenderingContext2D): void {
     if (this.points.length < 3) return;
     
     ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -860,6 +918,46 @@ export class Shape {
           this.controlPoints[lastControlIndex].y,
           this.points[0].x,
           this.points[0].y
+        );
+      }
+    } else {
+      // Fallback to generated smooth curves
+      for (let i = 1; i < this.points.length; i++) {
+        const current = this.points[i];
+        const next = this.points[(i + 1) % this.points.length];
+        const cp1x = current.x;
+        const cp1y = current.y;
+        const cp2x = (current.x + next.x) / 2;
+        const cp2y = (current.y + next.y) / 2;
+        
+        ctx.quadraticCurveTo(cp1x, cp1y, cp2x, cp2y);
+      }
+    }
+    
+    ctx.closePath();
+  }
+
+  private drawBlob(ctx: CanvasRenderingContext2D): void {
+    if (this.points.length < 3) return;
+    
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    
+    // Use cubic bezier curves with tangent handles for smooth organic shapes
+    if (this.tangentHandles && this.tangentHandles.length === this.points.length) {
+      for (let i = 0; i < this.points.length; i++) {
+        const current = this.points[i];
+        const next = this.points[(i + 1) % this.points.length];
+        const currentHandle = this.tangentHandles[i];
+        const nextHandle = this.tangentHandles[(i + 1) % this.tangentHandles.length];
+        
+        // Create smooth cubic bezier curve between points
+        ctx.bezierCurveTo(
+          currentHandle.out.x,
+          currentHandle.out.y,
+          nextHandle.in.x,
+          nextHandle.in.y,
+          next.x,
+          next.y
         );
       }
     } else {
