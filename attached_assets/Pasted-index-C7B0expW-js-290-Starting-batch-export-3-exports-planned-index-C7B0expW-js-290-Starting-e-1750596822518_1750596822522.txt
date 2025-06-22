@@ -1,0 +1,62 @@
+index-C7B0expW.js:290 Starting batch export: 3 exports planned
+index-C7B0expW.js:290 --- Starting export 1 of 3 ---
+index-C7B0expW.js:290 Calling generateRandomShapes() 7 times for export 1
+index-C7B0expW.js:290 Generation completed for export 1 after 7 generate calls - proceeding to save
+index-C7B0expW.js:290 Failed to create canvas context for export 1
+overrideMethod @ hook.js:608
+Xe @ index-C7B0expW.js:290
+await in Xe
+Iw @ index-C7B0expW.js:37
+Ow @ index-C7B0expW.js:37
+_w @ index-C7B0expW.js:37
+Ch @ index-C7B0expW.js:37
+ug @ index-C7B0expW.js:37
+(anonymous) @ index-C7B0expW.js:37
+Qd @ index-C7B0expW.js:40
+Om @ index-C7B0expW.js:37
+wc @ index-C7B0expW.js:37
+kd @ index-C7B0expW.js:37
+Qw @ index-C7B0expW.js:37
+index-C7B0expW.js:290 Export 1 saved after 7 generate calls
+index-C7B0expW.js:290 --- Completed export 1 of 3 ---
+index-C7B0expW.js:290 --- Starting export 2 of 3 ---
+index-C7B0expW.js:290 Calling generateRandomShapes() 4 times for export 2
+index-C7B0expW.js:290 Generation completed for export 2 after 4 generate calls - proceeding to save
+index-C7B0expW.js:290 Failed to create canvas context for export 2
+overrideMethod @ hook.js:608
+Xe @ index-C7B0expW.js:290
+await in Xe
+Iw @ index-C7B0expW.js:37
+Ow @ index-C7B0expW.js:37
+_w @ index-C7B0expW.js:37
+Ch @ index-C7B0expW.js:37
+ug @ index-C7B0expW.js:37
+(anonymous) @ index-C7B0expW.js:37
+Qd @ index-C7B0expW.js:40
+Om @ index-C7B0expW.js:37
+wc @ index-C7B0expW.js:37
+kd @ index-C7B0expW.js:37
+Qw @ index-C7B0expW.js:37
+index-C7B0expW.js:290 Export 2 saved after 4 generate calls
+index-C7B0expW.js:290 --- Completed export 2 of 3 ---
+index-C7B0expW.js:290 --- Starting export 3 of 3 ---
+index-C7B0expW.js:290 Calling generateRandomShapes() 2 times for export 3
+index-C7B0expW.js:290 Generation completed for export 3 after 2 generate calls - proceeding to save
+index-C7B0expW.js:290 Failed to create canvas context for export 3
+overrideMethod @ hook.js:608
+Xe @ index-C7B0expW.js:290
+await in Xe
+Iw @ index-C7B0expW.js:37
+Ow @ index-C7B0expW.js:37
+_w @ index-C7B0expW.js:37
+Ch @ index-C7B0expW.js:37
+ug @ index-C7B0expW.js:37
+(anonymous) @ index-C7B0expW.js:37
+Qd @ index-C7B0expW.js:40
+Om @ index-C7B0expW.js:37
+wc @ index-C7B0expW.js:37
+kd @ index-C7B0expW.js:37
+Qw @ index-C7B0expW.js:37
+index-C7B0expW.js:290 Export 3 saved after 2 generate calls
+index-C7B0expW.js:290 --- Completed export 3 of 3 ---
+index-C7B0expW.js:290 Batch export completed successfully: 3 exports finished

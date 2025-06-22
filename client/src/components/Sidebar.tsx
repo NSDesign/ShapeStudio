@@ -630,148 +630,107 @@ export default function Sidebar({
       console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
     };
 
-    const handleBatchExport = async () => {
-      if (batchModeEnabled === false) return;
+    // NEW BATCH EXPORT - Force cache refresh
+    const handleBatchExportNew = async () => {
+      if (!batchModeEnabled) return;
 
       setIsBatchExporting(true);
       setBatchProgress(0);
-
-      console.log(`Starting batch export: ${batchExportCount} exports planned`);
+      console.log(`🚀 FRESH BATCH EXPORT: Starting ${batchExportCount} exports`);
       
       try {
         for (let i = 0; i < batchExportCount; i++) {
-          console.log(`--- Starting export ${i + 1} of ${batchExportCount} ---`);
+          console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
           
-          try {
-            // Clear existing shapes first
-            onClearAll?.();
+          // Clear canvas and generate fresh shapes
+          onClearAll?.();
+          await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Wait for clear to complete
-            await new Promise(resolve => setTimeout(resolve, 200));
+          // Generate shapes for this export
+          const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+          console.log(`🔢 Will generate ${shapesToGenerate} shape calls for export ${i + 1}`);
 
-            // Generate shapes directly for this export (isolated from global state)
-            const randomCallCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
-            console.log(`Generating ${randomCallCount} calls worth of shapes for export ${i + 1}`);
-
-            // Create isolated shapes array for this export
-            const exportShapes: Shape[] = [];
+          // Collect shapes for this export
+          const currentExportShapes: Shape[] = [];
+          
+          for (let j = 0; j < shapesToGenerate; j++) {
+            const beforeCount = shapes.length;
+            onGenerateRandomShapes();
+            await new Promise(resolve => setTimeout(resolve, 250));
             
-            // Generate shapes multiple times and collect them
-            for (let j = 0; j < randomCallCount; j++) {
-              // Temporarily store initial shape count
-              const initialShapeCount = shapes.length;
-              
-              // Call generation to populate the global state
-              onGenerateRandomShapes();
-              
-              // Wait longer for React state to update
-              await new Promise(resolve => setTimeout(resolve, 300));
-              
-              // Capture only the newly generated shapes (those added after initial count)
-              const newShapes = shapes.slice(initialShapeCount);
-              console.log(`Batch ${i + 1}, Generation ${j + 1}: Generated ${newShapes.length} new shapes (total now: ${shapes.length})`);
-              
-              // Add to our isolated collection
-              exportShapes.push(...newShapes);
-              
-              // Don't clear between generations - let them accumulate
-            }
-            
-            // Clear all shapes after we've collected them
-            onClearAll?.();
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            console.log(`Generated ${exportShapes.length} total shapes for export ${i + 1}`);
+            const newShapes = shapes.slice(beforeCount);
+            currentExportShapes.push(...newShapes);
+            console.log(`✨ Generation ${j + 1}: Added ${newShapes.length} shapes (total: ${currentExportShapes.length})`);
+          }
 
-            // Skip shape detection test - proceed directly to save
-            // For batch export, we need to export all generated shapes regardless of current export mode
-            // But we should preserve user's selection for artboard exports
-            const shouldUseAllMode = exportMode !== 'artboard';
-            const originalExportMode = exportMode;
+          // Export the collected shapes
+          const filename = `fresh-batch-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
+          
+          if (currentExportShapes.length > 0) {
+            console.log(`🖼️ Exporting ${currentExportShapes.length} shapes to ${filename}`);
             
-            if (shouldUseAllMode) {
-              setExportMode('all');
-              // Wait for export mode to update
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-
-            // Use exact same export logic as single export for batch
-            const batchFilename = `batch-export-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
+            // Use handleExportShapes pattern - calculate bounds
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             
-            if (exportShapes.length > 0) {
-              // Export canvas creation - exact copy from handleExportShapes
-              let canvasWidth = 800;
-              let canvasHeight = 600;
-              let translateX = 0;
-              let translateY = 0;
-
-              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            currentExportShapes.forEach(shape => {
+              const bounds = shape.getBounds();
+              const corners = [
+                { x: bounds.x, y: bounds.y },
+                { x: bounds.x + bounds.width, y: bounds.y },
+                { x: bounds.x, y: bounds.y + bounds.height },
+                { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+              ];
               
-              exportShapes.forEach(shape => {
-                const bounds = shape.getBounds();
-                const corners = [
-                  { x: bounds.x, y: bounds.y },
-                  { x: bounds.x + bounds.width, y: bounds.y },
-                  { x: bounds.x, y: bounds.y + bounds.height },
-                  { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
-                ];
+              corners.forEach(corner => {
+                let x = corner.x * shape.transform.scaleX;
+                let y = corner.y * shape.transform.scaleY;
                 
-                corners.forEach(corner => {
-                  let x = corner.x * shape.transform.scaleX;
-                  let y = corner.y * shape.transform.scaleY;
-                  
-                  if (shape.transform.rotation !== 0) {
-                    const angle = (shape.transform.rotation * Math.PI) / 180;
-                    const cos = Math.cos(angle);
-                    const sin = Math.sin(angle);
-                    const rotatedX = x * cos - y * sin;
-                    const rotatedY = x * sin + y * cos;
-                    x = rotatedX;
-                    y = rotatedY;
-                  }
-                  
-                  x += shape.transform.x;
-                  y += shape.transform.y;
+                if (shape.transform.rotation !== 0) {
+                  const angle = (shape.transform.rotation * Math.PI) / 180;
+                  const cos = Math.cos(angle);
+                  const sin = Math.sin(angle);
+                  const rotatedX = x * cos - y * sin;
+                  const rotatedY = x * sin + y * cos;
+                  x = rotatedX;
+                  y = rotatedY;
+                }
+                
+                x += shape.transform.x;
+                y += shape.transform.y;
 
-                  minX = Math.min(minX, x);
-                  minY = Math.min(minY, y);
-                  maxX = Math.max(maxX, x);
-                  maxY = Math.max(maxY, y);
-                });
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
               });
+            });
 
-              const padding = 20;
-              canvasWidth = (maxX - minX + padding * 2) * exportScale;
-              canvasHeight = (maxY - minY + padding * 2) * exportScale;
-              translateX = -minX + padding;
-              translateY = -minY + padding;
+            const padding = 20;
+            const canvasWidth = (maxX - minX + padding * 2) * exportScale;
+            const canvasHeight = (maxY - minY + padding * 2) * exportScale;
+            const translateX = -minX + padding;
+            const translateY = -minY + padding;
 
-              // Create export canvas exactly like single export
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              if (!ctx) {
-                console.error(`Failed to get canvas context for batch export ${i + 1}`);
-                continue;
-              }
-
+            // Create canvas identical to single export
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (ctx) {
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              // Set background
               ctx.fillStyle = '#ffffff';
               ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-              // Apply scaling and translation
               ctx.scale(exportScale, exportScale);
               ctx.translate(translateX, translateY);
 
-              // Render shapes
-              const sortedShapes = [...exportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+              const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
-              
-              // Use exact same download method as single export
+
+              // Download using same method as single export
               const link = document.createElement('a');
-              link.download = batchFilename;
+              link.download = filename;
 
               if (exportFormat === 'jpg') {
                 link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
@@ -780,36 +739,22 @@ export default function Sidebar({
               }
 
               link.click();
-              console.log(`📁 File saved: ${batchFilename} (check your Downloads folder)`);
+              console.log(`📁 SUCCESS: File saved ${filename} (check Downloads)`);
             } else {
-              console.error(`No shapes generated for batch ${i + 1} - created ${exportShapes.length} shapes`);
+              console.error(`❌ Canvas context failed for export ${i + 1}`);
             }
-            
-            // Restore original export mode if we changed it
-            if (shouldUseAllMode) {
-              setExportMode(originalExportMode);
-            }
-
-            console.log(`Export ${i + 1} saved after ${randomCallCount} generate calls`);
-
-            // Update progress
-            setBatchProgress(i + 1);
-
-            // Delay between exports to prevent browser throttling
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            console.log(`--- Completed export ${i + 1} of ${batchExportCount} ---`);
-          } catch (exportError) {
-            console.error(`Error in export ${i + 1}:`, exportError);
-            // Continue with next export even if one fails
-            continue;
+          } else {
+            console.error(`❌ No shapes generated for export ${i + 1}`);
           }
+
+          setBatchProgress(i + 1);
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
-        console.log(`Batch export completed successfully: ${batchExportCount} exports finished`);
+        
+        console.log(`🎉 BATCH COMPLETE: All ${batchExportCount} exports finished`);
       } catch (error) {
-        console.error('Batch export failed:', error);
+        console.error('❌ Batch export error:', error);
       } finally {
-        // Clear shapes after batch export completes
         onClearAll?.();
         setIsBatchExporting(false);
         setBatchProgress(0);
@@ -993,7 +938,7 @@ export default function Sidebar({
               </div>
 
               <Button
-                onClick={handleBatchExport}
+                onClick={handleBatchExportNew}
                 disabled={isBatchExporting || enabledShapeTypes.size === 0}
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
               >
