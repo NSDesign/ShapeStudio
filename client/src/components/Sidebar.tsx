@@ -602,99 +602,20 @@ export default function Sidebar({
             continue;
           }
 
-          // Use the same export logic as single export but with better bounds calculation
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          // Force export mode to 'all' for batch export to ensure we export all generated shapes
+          const originalExportMode = exportMode;
+          setExportMode('all');
+          
+          // Wait for export mode to update
+          await new Promise(resolve => setTimeout(resolve, 50));
 
-          currentShapes.forEach(shape => {
-            const bounds = shape.getBounds();
-            // Calculate all four corners with transformations
-            const corners = [
-              { x: bounds.x, y: bounds.y },
-              { x: bounds.x + bounds.width, y: bounds.y },
-              { x: bounds.x, y: bounds.y + bounds.height },
-              { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
-            ];
+          // Call the existing handleExportShapes function which has all the proper logic
+          handleExportShapes();
+          
+          // Restore original export mode
+          setExportMode(originalExportMode);
 
-            corners.forEach(corner => {
-              let x = corner.x;
-              let y = corner.y;
-
-              // Apply scale
-              x *= shape.transform.scaleX;
-              y *= shape.transform.scaleY;
-
-              // Apply rotation
-              if (shape.transform.rotation !== 0) {
-                const cos = Math.cos(shape.transform.rotation * Math.PI / 180);
-                const sin = Math.sin(shape.transform.rotation * Math.PI / 180);
-                const newX = x * cos - y * sin;
-                const newY = x * sin + y * cos;
-                x = newX;
-                y = newY;
-              }
-
-              // Apply translation
-              x += shape.transform.x;
-              y += shape.transform.y;
-
-              minX = Math.min(minX, x);
-              minY = Math.min(minY, y);
-              maxX = Math.max(maxX, x);
-              maxY = Math.max(maxY, y);
-            });
-          });
-
-          // Calculate canvas dimensions with padding
-          const padding = 20;
-          const canvasWidth = (maxX - minX + padding * 2) * exportScale;
-          const canvasHeight = (maxY - minY + padding * 2) * exportScale;
-
-          // Create export canvas
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          if (!ctx) continue;
-
-          canvas.width = canvasWidth;
-          canvas.height = canvasHeight;
-
-          // Set white background for non-PNG formats
-          if (exportFormat !== 'png') {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-          }
-
-          // Apply scaling and translation
-          ctx.scale(exportScale, exportScale);
-          ctx.translate(-minX + padding, -minY + padding);
-
-          // Sort shapes by z-index and render
-          const sortedShapes = [...currentShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-
-          sortedShapes.forEach(shape => {
-            renderShapeForExport(ctx, shape);
-          });
-
-          // Generate filename with timestamp
-          const timestamp = Date.now() + Math.random() * 1000;
-          const filename = `batch-export-${String(i + 1).padStart(3, '0')}-${Math.floor(timestamp)}.${exportFormat}`;
-
-          // Create download
-          const dataURL = exportFormat === 'jpg' 
-            ? canvas.toDataURL('image/jpeg', exportQuality / 100)
-            : canvas.toDataURL('image/png');
-
-          // Create download link
-          const link = document.createElement('a');
-          link.href = dataURL;
-          link.download = filename;
-          link.style.display = 'none';
-
-          // Add to DOM, click, and remove
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          console.log(`Downloaded: ${filename}`);
+          console.log(`Export ${i + 1} completed with ${currentShapes.length} shapes`);
 
           // Update progress
           setBatchProgress(i + 1);
