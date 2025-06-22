@@ -536,59 +536,72 @@ export default function Sidebar({
       setIsBatchExporting(true);
       setBatchProgress(0);
 
+      console.log(`Starting batch export: ${batchExportCount} exports planned`);
+      
       try {
         for (let i = 0; i < batchExportCount; i++) {
-          // Clear existing shapes first
-          onClearAll?.();
+          console.log(`--- Starting export ${i + 1} of ${batchExportCount} ---`);
+          
+          try {
+            // Clear existing shapes first
+            onClearAll?.();
 
-          // Wait for clear to complete
-          await new Promise(resolve => setTimeout(resolve, 200));
+            // Wait for clear to complete
+            await new Promise(resolve => setTimeout(resolve, 200));
 
-          // Generate random number of times to call generateRandomShapes() for this export
-          const randomCallCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+            // Generate random number of times to call generateRandomShapes() for this export
+            const randomCallCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
 
-          console.log(`Calling generateRandomShapes() ${randomCallCount} times for export ${i + 1}`);
+            console.log(`Calling generateRandomShapes() ${randomCallCount} times for export ${i + 1}`);
 
-          // Call generateRandomShapes() multiple times (like clicking the button multiple times)
-          for (let j = 0; j < randomCallCount; j++) {
-            onGenerateRandomShapes();
-            // Small delay between calls to allow state updates
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Call generateRandomShapes() multiple times (like clicking the button multiple times)
+            for (let j = 0; j < randomCallCount; j++) {
+              onGenerateRandomShapes();
+              // Small delay between calls to allow state updates
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Wait for all shapes to be created
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            console.log(`Generation completed for export ${i + 1} after ${randomCallCount} generate calls - proceeding to save`);
+
+            // Skip shape detection test - proceed directly to save
+            // For batch export, we need to export all generated shapes regardless of current export mode
+            // But we should preserve user's selection for artboard exports
+            const shouldUseAllMode = exportMode !== 'artboard';
+            const originalExportMode = exportMode;
+            
+            if (shouldUseAllMode) {
+              setExportMode('all');
+              // Wait for export mode to update
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            // Call the existing handleExportShapes function which has all the proper logic
+            handleExportShapes();
+            
+            // Restore original export mode if we changed it
+            if (shouldUseAllMode) {
+              setExportMode(originalExportMode);
+            }
+
+            console.log(`Export ${i + 1} saved after ${randomCallCount} generate calls`);
+
+            // Update progress
+            setBatchProgress(i + 1);
+
+            // Delay between exports to prevent browser throttling
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            console.log(`--- Completed export ${i + 1} of ${batchExportCount} ---`);
+          } catch (exportError) {
+            console.error(`Error in export ${i + 1}:`, exportError);
+            // Continue with next export even if one fails
+            continue;
           }
-          
-          // Wait for all shapes to be created
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          console.log(`Generation completed for export ${i + 1} after ${randomCallCount} generate calls - proceeding to save`);
-
-          // Skip shape detection test - proceed directly to save
-          // For batch export, we need to export all generated shapes regardless of current export mode
-          // But we should preserve user's selection for artboard exports
-          const shouldUseAllMode = exportMode !== 'artboard';
-          const originalExportMode = exportMode;
-          
-          if (shouldUseAllMode) {
-            setExportMode('all');
-            // Wait for export mode to update
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-
-          // Call the existing handleExportShapes function which has all the proper logic
-          handleExportShapes();
-          
-          // Restore original export mode if we changed it
-          if (shouldUseAllMode) {
-            setExportMode(originalExportMode);
-          }
-
-          console.log(`Export ${i + 1} saved after ${randomCallCount} generate calls`);
-
-          // Update progress
-          setBatchProgress(i + 1);
-
-          // Delay between exports to prevent browser throttling
-          await new Promise(resolve => setTimeout(resolve, 500));
         }
+        console.log(`Batch export completed successfully: ${batchExportCount} exports finished`);
       } catch (error) {
         console.error('Batch export failed:', error);
       } finally {
