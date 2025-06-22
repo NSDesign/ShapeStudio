@@ -658,18 +658,28 @@ export default function Sidebar({
             
             // Generate shapes multiple times and collect them
             for (let j = 0; j < randomCallCount; j++) {
-              // Call generation to populate the global state temporarily
+              // Temporarily store initial shape count
+              const initialShapeCount = shapes.length;
+              
+              // Call generation to populate the global state
               onGenerateRandomShapes();
-              await new Promise(resolve => setTimeout(resolve, 150));
               
-              // Capture the newly generated shapes
-              const currentShapes = [...shapes];
-              exportShapes.push(...currentShapes);
+              // Wait longer for React state to update
+              await new Promise(resolve => setTimeout(resolve, 300));
               
-              // Clear for next batch (but keep our isolated copy)
-              onClearAll?.();
-              await new Promise(resolve => setTimeout(resolve, 50));
+              // Capture only the newly generated shapes (those added after initial count)
+              const newShapes = shapes.slice(initialShapeCount);
+              console.log(`Batch ${i + 1}, Generation ${j + 1}: Generated ${newShapes.length} new shapes (total now: ${shapes.length})`);
+              
+              // Add to our isolated collection
+              exportShapes.push(...newShapes);
+              
+              // Don't clear between generations - let them accumulate
             }
+            
+            // Clear all shapes after we've collected them
+            onClearAll?.();
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             console.log(`Generated ${exportShapes.length} total shapes for export ${i + 1}`);
 
