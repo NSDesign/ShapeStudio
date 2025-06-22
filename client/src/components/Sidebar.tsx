@@ -549,12 +549,27 @@ export default function Sidebar({
 
           console.log(`Generating ${randomShapeCount} shapes for export ${i + 1}`);
 
-          // Call onGenerateRandomShapes() the specified number of times
-          for (let j = 0; j < randomShapeCount; j++) {
-            onGenerateRandomShapes();
-            // Small delay between shape generations
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
+          // Temporarily update scatter settings to generate exact count
+          const originalMinCount = scatterSettings.minCount;
+          const originalMaxCount = scatterSettings.maxCount;
+          
+          // Set both min and max to our desired count for precise control
+          onUpdateScatterSettings({ 
+            minCount: randomShapeCount, 
+            maxCount: randomShapeCount 
+          });
+          
+          // Wait for settings to update
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Call generation function once with our exact count
+          onGenerateRandomShapes();
+          
+          // Restore original scatter settings
+          onUpdateScatterSettings({ 
+            minCount: originalMinCount, 
+            maxCount: originalMaxCount 
+          });
 
           // Wait for shapes to be generated and state to update
           await new Promise(resolve => setTimeout(resolve, 1000));
