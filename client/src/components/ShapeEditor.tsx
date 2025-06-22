@@ -120,20 +120,7 @@ export default function ShapeEditor() {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden flex-col">
-      {/* Project Header */}
-      <div className="bg-[var(--surface)] border-b border-slate-700 px-4 py-2 flex items-center justify-between">
-        <ProjectDialog
-          shapes={shapes}
-          groups={groups}
-          canvasSettings={canvasSettings}
-          scatterSettings={scatterSettings}
-          enabledShapeTypes={enabledShapeTypes}
-          onLoadProject={handleLoadProject}
-        />
-        <div className="flex-1" />
-      </div>
-      
+    <div className="flex h-screen w-full overflow-hidden">
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">
         <Sidebar

@@ -329,6 +329,13 @@ export default function Sidebar({
     const [exportScale, setExportScale] = useState(1);
     const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
+    
+    // Batch export state
+    const [batchShapeCount, setBatchShapeCount] = useState([10, 50]);
+    const [batchExportCount, setBatchExportCount] = useState(10);
+    const [batchExportPath, setBatchExportPath] = useState<string>('');
+    const [isBatchExporting, setIsBatchExporting] = useState(false);
+    const [batchProgress, setBatchProgress] = useState(0);
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
@@ -522,6 +529,80 @@ export default function Sidebar({
       link.click();
     };
 
+    const handleBatchExport = async () => {
+      if (enabledShapeTypes.size === 0) return;
+      
+      setIsBatchExporting(true);
+      setBatchProgress(0);
+      
+      try {
+        for (let i = 0; i < batchExportCount; i++) {
+          // Generate random number of shapes within the specified range
+          const randomShapeCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+          
+          // Clear existing shapes and generate new random shapes
+          const originalShapes = [...shapes];
+          
+          // Generate random shapes using the existing function
+          for (let j = 0; j < randomShapeCount; j++) {
+            onGenerateRandomShapes();
+          }
+          
+          // Wait a brief moment for shapes to be generated
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Create export canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) continue;
+          
+          canvas.width = 1920;
+          canvas.height = 1080;
+          
+          // Set background
+          if (exportFormat !== 'png') {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
+          
+          // Render all current shapes
+          shapes.forEach(shape => {
+            const originalSelected = shape.selected;
+            shape.selected = false;
+            renderShape(ctx, shape, 1);
+            shape.selected = originalSelected;
+          });
+          
+          // Generate filename
+          const timestamp = Date.now();
+          const filename = `batch-export-${i + 1}-${timestamp}.${exportFormat}`;
+          
+          // Download the image
+          const link = document.createElement('a');
+          link.download = filename;
+          
+          if (exportFormat === 'jpg') {
+            link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
+          } else {
+            link.href = canvas.toDataURL('image/png');
+          }
+          
+          link.click();
+          
+          // Update progress
+          setBatchProgress(i + 1);
+          
+          // Small delay between exports
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (error) {
+        console.error('Batch export failed:', error);
+      } finally {
+        setIsBatchExporting(false);
+        setBatchProgress(0);
+      }
+    };
+
     const handleSaveProject = () => {
       const projectData = {
         shapes: shapes,
@@ -635,6 +716,94 @@ export default function Sidebar({
               `Export ${artboards.find(ab => ab.id === selectedArtboardForExport)?.name || 'Artboard'}`}
             {exportMode === 'artboard' && !selectedArtboardForExport && 'Select Artboard to Export'}
             {exportMode === 'all' && `Export All Shapes (${shapes.length})`}
+          </Button>
+        </div>
+
+        <Separator className="bg-slate-600" />
+
+        {/* Batch Export Section */}
+        <div className="space-y-3">
+          <Label className="text-xs text-slate-300">Batch Export</Label>
+          
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Random Shape Range</Label>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
+                <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
+              </div>
+              <Slider
+                value={batchShapeCount}
+                onValueChange={(value) => setBatchShapeCount(value)}
+                min={1}
+                max={200}
+                step={1}
+                className="w-full"
+                minStepsBetweenThumbs={5}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Number of Exports</span>
+              <span className="text-slate-300">{batchExportCount}</span>
+            </div>
+            <Slider
+              value={[batchExportCount]}
+              onValueChange={([value]) => setBatchExportCount(value)}
+              min={1}
+              max={100}
+              step={1}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Export Location</Label>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  // Use the directory picker API if available
+                  if ('showDirectoryPicker' in window) {
+                    (window as any).showDirectoryPicker().then((handle: any) => {
+                      setBatchExportPath(handle.name);
+                    }).catch(() => {
+                      setBatchExportPath('Downloads');
+                    });
+                  } else {
+                    setBatchExportPath('Downloads');
+                  }
+                }}
+                variant="secondary"
+                size="sm"
+                className="text-xs"
+              >
+                <FolderOpen className="w-3 h-3 mr-1" />
+                Choose
+              </Button>
+              <span className="text-xs text-slate-400 flex items-center">
+                {batchExportPath || 'Downloads'}
+              </span>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleBatchExport}
+            disabled={isBatchExporting || enabledShapeTypes.size === 0}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
+          >
+            {isBatchExporting ? (
+              <>
+                <div className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Exporting... ({Math.floor((batchProgress / batchExportCount) * 100)}%)
+              </>
+            ) : (
+              <>
+                <Boxes className="w-3 h-3 mr-1" />
+                Start Batch Export
+              </>
+            )}
           </Button>
         </div>
 
