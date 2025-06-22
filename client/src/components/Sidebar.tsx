@@ -649,22 +649,29 @@ export default function Sidebar({
             // Wait for clear to complete
             await new Promise(resolve => setTimeout(resolve, 200));
 
-            // Generate random number of times to call generateRandomShapes() for this export
+            // Generate shapes directly for this export (isolated from global state)
             const randomCallCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+            console.log(`Generating ${randomCallCount} calls worth of shapes for export ${i + 1}`);
 
-            console.log(`Calling generateRandomShapes() ${randomCallCount} times for export ${i + 1}`);
-
-            // Call generateRandomShapes() multiple times (like clicking the button multiple times)
+            // Create isolated shapes array for this export
+            const exportShapes: Shape[] = [];
+            
+            // Generate shapes multiple times and collect them
             for (let j = 0; j < randomCallCount; j++) {
+              // Call generation to populate the global state temporarily
               onGenerateRandomShapes();
-              // Small delay between calls to allow state updates
-              await new Promise(resolve => setTimeout(resolve, 100));
+              await new Promise(resolve => setTimeout(resolve, 150));
+              
+              // Capture the newly generated shapes
+              const currentShapes = [...shapes];
+              exportShapes.push(...currentShapes);
+              
+              // Clear for next batch (but keep our isolated copy)
+              onClearAll?.();
+              await new Promise(resolve => setTimeout(resolve, 50));
             }
             
-            // Wait for all shapes to be created
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            console.log(`Generation completed for export ${i + 1} after ${randomCallCount} generate calls - proceeding to save`);
+            console.log(`Generated ${exportShapes.length} total shapes for export ${i + 1}`);
 
             // Skip shape detection test - proceed directly to save
             // For batch export, we need to export all generated shapes regardless of current export mode
@@ -704,11 +711,11 @@ export default function Sidebar({
               continue; // Skip this export and continue with next
             }
             
-            if (ctx && shapes.length > 0) {
+            if (ctx && exportShapes.length > 0) {
               // Calculate bounds of all shapes to fit canvas properly
               let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
               
-              shapes.forEach(shape => {
+              exportShapes.forEach(shape => {
                 const bounds = shape.getBounds();
                 // Account for transforms
                 const corners = [
@@ -750,7 +757,7 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
               
-              console.log(`Canvas size: ${canvasWidth}x${canvasHeight} for ${shapes.length} shapes`);
+              console.log(`Canvas size: ${canvasWidth}x${canvasHeight} for ${exportShapes.length} shapes`);
               
               // Set background
               ctx.fillStyle = '#ffffff';
@@ -760,8 +767,8 @@ export default function Sidebar({
               ctx.scale(exportScale, exportScale);
               ctx.translate(-minX + padding, -minY + padding);
               
-              // Render all current shapes
-              const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+              // Render all isolated shapes for this export
+              const sortedShapes = [...exportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               
               // Direct download without save dialog using blob approach
@@ -808,7 +815,7 @@ export default function Sidebar({
                 console.warn(`Canvas cleanup warning for export ${i + 1}:`, cleanupError);
               }
             } else {
-              console.error(`No shapes to export for batch ${i + 1}`);
+              console.error(`No shapes generated for batch ${i + 1} - created ${exportShapes.length} shapes`);
             }
             
             // Restore original export mode if we changed it
