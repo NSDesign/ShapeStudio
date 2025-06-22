@@ -763,14 +763,14 @@ export const useShapeEditor = () => {
     const mouseX = e.clientX - rect.left - rect.width / 2;
     const mouseY = e.clientY - rect.top - rect.height / 2;
     
-    const currentZoom = canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom;
+    const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
     
     // World coordinates before zoom
     const worldXBefore = (mouseX / currentZoom) - canvasSettings.panX;
     const worldYBefore = (mouseY / currentZoom) - canvasSettings.panY;
     
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const newZoom = Math.max(0.5, Math.min(5, currentZoom * zoomFactor));
+    const newZoom = Math.max(0.05, Math.min(5, currentZoom * zoomFactor));
     
     // World coordinates after zoom
     const worldXAfter = (mouseX / newZoom) - canvasSettings.panX;
@@ -1518,12 +1518,12 @@ export const useShapeEditor = () => {
     
     // Canvas controls
     zoomIn: () => {
-      const currentZoom = canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom;
+      const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
       updateCanvasSettings({ zoom: Math.min(5, currentZoom * 1.2) });
     },
     zoomOut: () => {
-      const currentZoom = canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom;
-      updateCanvasSettings({ zoom: Math.max(0.5, currentZoom / 1.14) });
+      const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
+      updateCanvasSettings({ zoom: Math.max(0.05, currentZoom / 1.2) });
     },
     resetView: () => updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 }),
     

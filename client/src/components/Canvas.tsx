@@ -145,7 +145,7 @@ export default function Canvas({
       let effectivePanX = canvasSettings.panX;
       let effectivePanY = canvasSettings.panY;
       
-      if (effectiveZoom < 0.5) {
+      if (effectiveZoom < 0.05) {
         console.warn('Using fallback zoom due to invalid value:', effectiveZoom);
         effectiveZoom = 1.0;
         effectivePanX = 0;
@@ -334,7 +334,7 @@ export default function Canvas({
             </Tooltip>
             
             <span className="text-sm text-slate-400 min-w-[60px] text-center">
-              {Math.round((canvasSettings.zoom < 0.5 ? 1 : canvasSettings.zoom) * 100)}%
+              {Math.round((canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom) * 100)}%
             </span>
             
             <Tooltip>
