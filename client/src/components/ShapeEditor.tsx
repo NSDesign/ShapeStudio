@@ -14,6 +14,7 @@ export default function ShapeEditor() {
     selectedGroups,
     enabledShapeTypes,
     scatterSettings,
+    batchConfigSettings,
     canvasSettings,
     artboards,
     activeArtboard,
@@ -30,6 +31,7 @@ export default function ShapeEditor() {
     generateRandomShapes,
     toggleShapeType,
     updateScatterSettings,
+    updateBatchConfigSettings,
     distributeSelected,
     composeShapes,
     setEditMode,
@@ -126,6 +128,7 @@ export default function ShapeEditor() {
         <Sidebar
           enabledShapeTypes={enabledShapeTypes}
           scatterSettings={scatterSettings}
+          batchConfigSettings={batchConfigSettings}
           selectedCount={selectedCount}
           selectedPointsCount={selectedPointsCount}
           selectedSegmentsCount={selectedSegmentsCount}
@@ -138,6 +141,7 @@ export default function ShapeEditor() {
           activeArtboard={activeArtboard}
           onToggleShapeType={toggleShapeType}
           onUpdateScatterSettings={updateScatterSettings}
+          onUpdateBatchConfigSettings={updateBatchConfigSettings}
           onGenerateRandomShapes={generateRandomShapes}
           onComposeShapes={composeShapes}
           onSetEditMode={setEditMode}

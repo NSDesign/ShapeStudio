@@ -1588,6 +1588,7 @@ export const useShapeEditor = () => {
     // Actions
     toggleShapeType,
     updateScatterSettings,
+    updateBatchConfigSettings,
     generateRandomShapes,
     scatterOnShape,
     clearSelection,
