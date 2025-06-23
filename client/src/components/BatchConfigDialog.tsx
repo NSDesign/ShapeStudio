@@ -183,6 +183,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
     onSettingsChange(newSettings);
   }, [currentSettings, onSettingsChange]);
 
+  // Prevent dialog from closing on interactions
+  const preventClose = useCallback((e: Event) => {
+    e.stopPropagation();
+  }, []);
+
   const handlePresetChange = useCallback((presetName: string) => {
     const preset = presets[presetName as keyof typeof presets];
     if (preset) {
@@ -213,7 +218,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           <Settings className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200">
+      <DialogContent 
+        className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200"
+        onInteractOutside={(e) => {
+          // Only allow closing when clicking the actual close button or outside the dialog
+          if (!e.target || !(e.target as Element).closest('[data-dialog-close]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-slate-200">Batch Configuration</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -226,10 +239,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           <div className="space-y-2">
             <Label className="text-slate-300">Presets</Label>
             <Select onValueChange={handlePresetChange}>
-              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+              <SelectTrigger 
+                className="bg-slate-800 border-slate-600 text-slate-200"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <SelectValue placeholder="Select a preset..." />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
+              <SelectContent 
+                className="bg-slate-800 border-slate-600"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
                 <SelectItem value="current" className="text-slate-200 hover:bg-slate-700">Current</SelectItem>
                 <SelectItem value="organic" className="text-slate-200 hover:bg-slate-700">Organic</SelectItem>
                 <SelectItem value="geometric" className="text-slate-200 hover:bg-slate-700">Geometric</SelectItem>
@@ -330,10 +349,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                         handleSettingsUpdate({ noiseAlgorithm: value as any })
                       }
                     >
-                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                      <SelectTrigger 
+                        className="bg-slate-800 border-slate-600 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectContent 
+                        className="bg-slate-800 border-slate-600"
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                      >
                         <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
                         <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
                         <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>
@@ -509,10 +534,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                         handleSettingsUpdate({ harmonyType: value as any })
                       }
                     >
-                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                      <SelectTrigger 
+                        className="bg-slate-800 border-slate-600 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectContent 
+                        className="bg-slate-800 border-slate-600"
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                      >
                         <SelectItem value="monochromatic" className="text-slate-200 hover:bg-slate-700">Monochromatic</SelectItem>
                         <SelectItem value="analogous" className="text-slate-200 hover:bg-slate-700">Analogous</SelectItem>
                         <SelectItem value="complementary" className="text-slate-200 hover:bg-slate-700">Complementary</SelectItem>
@@ -577,10 +608,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                       handleSettingsUpdate({ physicsType: value as any })
                     }
                   >
-                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                    <SelectTrigger 
+                      className="bg-slate-800 border-slate-600 text-slate-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectContent 
+                      className="bg-slate-800 border-slate-600"
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                    >
                       <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
                       <SelectItem value="gravity" className="text-slate-200 hover:bg-slate-700">Gravity</SelectItem>
                       <SelectItem value="magnetic" className="text-slate-200 hover:bg-slate-700">Magnetic</SelectItem>

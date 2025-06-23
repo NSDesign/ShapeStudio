@@ -1200,7 +1200,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-4">
           <Button 
             onClick={onGenerateRandomShapes}
             className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
