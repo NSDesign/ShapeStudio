@@ -219,7 +219,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[450px] max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200 shadow-2xl"
+        className="w-[90vw] max-w-[500px] h-[85vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200 shadow-2xl"
         side="top"
         align="center"
         sideOffset={20}
