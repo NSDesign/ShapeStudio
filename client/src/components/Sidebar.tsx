@@ -707,8 +707,9 @@ export default function Sidebar({
             console.log(`✨ Generation ${j + 1}: Created ${shapeCount} shapes (total: ${currentExportShapes.length})`);
           }
 
-          // Create image data for ZIP
-          const filename = `batch-${String(i + 1).padStart(3, '0')}.${exportFormat}`;
+          // Create image data for ZIP with timestamp
+          const imageTimestamp = Date.now() + i; // Unique timestamp for each image
+          const filename = `batch-${String(i + 1).padStart(3, '0')}-${imageTimestamp}.${exportFormat}`;
           
           if (currentExportShapes.length > 0) {
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
