@@ -257,6 +257,10 @@ export default function Sidebar({
   }
 
   function ArtboardsContent() {
+    const [customWidth, setCustomWidth] = useState(1920);
+    const [customHeight, setCustomHeight] = useState(1080);
+    const [customName, setCustomName] = useState('Custom Artboard');
+    
     const artboardPresets = [
       { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
       { name: 'Instagram Post', width: 1080, height: 1080, category: 'social', description: 'Square 1:1' },
@@ -266,10 +270,67 @@ export default function Sidebar({
       { name: 'iPhone 14 Pro', width: 1179, height: 2556, category: 'mobile', description: 'iPhone screen' }
     ];
 
+    const handleCreateCustomArtboard = () => {
+      const customPreset = {
+        name: customName,
+        width: customWidth,
+        height: customHeight,
+        category: 'custom' as const,
+        description: `${customWidth}×${customHeight} Custom`
+      };
+      onAddArtboard(customPreset);
+    };
+
     return (
       <div className="space-y-4">
         <div className="text-sm text-slate-400">
           Active: <span className="text-white font-medium">{artboards.find(a => a.id === activeArtboard)?.name || 'None'}</span>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Custom Dimensions</Label>
+          <div className="space-y-2 p-3 bg-slate-800/50 rounded-lg border border-slate-600">
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Name</Label>
+              <Input
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Custom Artboard"
+                className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400">Width</Label>
+                <Input
+                  type="number"
+                  value={customWidth}
+                  onChange={(e) => setCustomWidth(parseInt(e.target.value) || 1920)}
+                  min="1"
+                  max="10000"
+                  className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400">Height</Label>
+                <Input
+                  type="number"
+                  value={customHeight}
+                  onChange={(e) => setCustomHeight(parseInt(e.target.value) || 1080)}
+                  min="1"
+                  max="10000"
+                  className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={handleCreateCustomArtboard}
+              className="w-full h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Create Custom Artboard
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
