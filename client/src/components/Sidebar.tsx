@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -643,21 +644,24 @@ export default function Sidebar({
       console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
     };
 
-    // NEW BATCH EXPORT - Force cache refresh
+    // NEW BATCH EXPORT WITH ZIP PACKAGING
     const handleBatchExportNew = async () => {
       if (!batchModeEnabled) return;
 
       setIsBatchExporting(true);
       setBatchProgress(0);
-      console.log(`🚀 FRESH BATCH EXPORT: Starting ${batchExportCount} exports`);
+      console.log(`🚀 ZIP BATCH EXPORT: Starting ${batchExportCount} exports`);
       
       try {
+        const zip = new JSZip();
+        const timestamp = Date.now();
+        
         for (let i = 0; i < batchExportCount; i++) {
           console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50)); // Reduced delay
 
           // Generate shapes for this export
           const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
@@ -703,13 +707,13 @@ export default function Sidebar({
             console.log(`✨ Generation ${j + 1}: Created ${shapeCount} shapes (total: ${currentExportShapes.length})`);
           }
 
-          // Export the collected shapes
-          const filename = `fresh-batch-${String(i + 1).padStart(3, '0')}-${Date.now()}.${exportFormat}`;
+          // Create image data for ZIP
+          const filename = `batch-${String(i + 1).padStart(3, '0')}.${exportFormat}`;
           
           if (currentExportShapes.length > 0) {
-            console.log(`🖼️ Exporting ${currentExportShapes.length} shapes to ${filename}`);
+            console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
-            // Use handleExportShapes pattern - calculate bounds
+            // Calculate bounds - same as before
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             
             currentExportShapes.forEach(shape => {
@@ -751,7 +755,7 @@ export default function Sidebar({
             const translateX = -minX + padding;
             const translateY = -minY + padding;
 
-            // Create canvas identical to single export
+            // Create canvas and render
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
@@ -768,18 +772,16 @@ export default function Sidebar({
               const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
-              // Download using same method as single export
-              const link = document.createElement('a');
-              link.download = filename;
-
-              if (exportFormat === 'jpg') {
-                link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
-              } else {
-                link.href = canvas.toDataURL('image/png');
-              }
-
-              link.click();
-              console.log(`📁 SUCCESS: File saved ${filename} (check Downloads)`);
+              // Convert canvas to blob and add to ZIP
+              const dataURL = exportFormat === 'jpg' 
+                ? canvas.toDataURL('image/jpeg', exportQuality / 100)
+                : canvas.toDataURL('image/png');
+              
+              // Extract base64 data from data URL
+              const base64Data = dataURL.split(',')[1];
+              zip.file(filename, base64Data, { base64: true });
+              
+              console.log(`📦 Added ${filename} to ZIP`);
             } else {
               console.error(`❌ Canvas context failed for export ${i + 1}`);
             }
@@ -788,10 +790,19 @@ export default function Sidebar({
           }
 
           setBatchProgress(i + 1);
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise(resolve => setTimeout(resolve, 100)); // Reduced delay
         }
         
-        console.log(`🎉 BATCH COMPLETE: All ${batchExportCount} exports finished`);
+        // Generate and download ZIP file
+        console.log(`📦 Creating ZIP file with ${batchExportCount} images`);
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `batch-export-${timestamp}.zip`;
+        link.click();
+        
+        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip`);
       } catch (error) {
         console.error('❌ Batch export error:', error);
       } finally {
@@ -971,9 +982,9 @@ export default function Sidebar({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Export Location</Label>
+                <Label className="text-xs text-slate-400">Export Format</Label>
                 <div className="text-xs text-slate-500 bg-slate-800 p-2 rounded border border-slate-600">
-                  Files will be saved to your browser's default Downloads folder
+                  All images will be packaged into a single ZIP file for easy download
                 </div>
               </div>
 
