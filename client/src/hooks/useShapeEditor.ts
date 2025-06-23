@@ -4,6 +4,7 @@ import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard,
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils } from '../lib/colorManipulation';
+import { BatchConfigSettings } from '../components/BatchConfigDialog';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -57,6 +58,61 @@ export const useShapeEditor = () => {
     }
   ]);
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
+  
+  // Batch Configuration Settings
+  const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>({
+    blendModeEnabled: false,
+    enabledBlendModes: { 'source-over': 100 },
+    
+    noiseEnabled: false,
+    noiseAlgorithm: 'perlin',
+    noiseScale: 1,
+    noiseOctaves: 1,
+    noiseAmplitude: 50,
+    noiseSeed: Math.floor(Math.random() * 10000),
+    noiseTargets: {
+      position: true,
+      rotation: false,
+      scale: false,
+      color: false,
+      opacity: false
+    },
+    
+    propertyConstraintsEnabled: false,
+    opacityRange: [20, 100],
+    rotationRange: [0, 360],
+    scaleRange: [50, 200],
+    positionDrift: 0,
+    distributionCurve: 'linear',
+    
+    colorHarmonyEnabled: false,
+    harmonyType: 'complementary',
+    baseColor: '#3b82f6',
+    hueVariance: 15,
+    saturationRange: [50, 100],
+    lightnessRange: [30, 70],
+    
+    physicsEnabled: false,
+    physicsType: 'none',
+    gravityDirection: 270,
+    gravityStrength: 50,
+    magneticType: 'attraction',
+    magneticStrength: 50,
+    collisionDistance: 20,
+    collisionBounce: 0.5,
+    simulationSteps: 100,
+    
+    temporalEnabled: false,
+    evolutionMode: 'linear',
+    seedIncrement: 1,
+    evolutionTargets: {
+      position: true,
+      rotation: true,
+      scale: false,
+      color: false,
+      opacity: false
+    }
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
@@ -1489,6 +1545,10 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
+  const updateBatchConfigSettings = useCallback((settings: BatchConfigSettings) => {
+    setBatchConfigSettings(settings);
+  }, []);
+
   return {
     // State
     shapes,
@@ -1498,6 +1558,7 @@ export const useShapeEditor = () => {
     selectedGroups,
     enabledShapeTypes,
     scatterSettings,
+    batchConfigSettings,
     canvasSettings,
     artboards,
     activeArtboard,

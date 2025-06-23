@@ -1200,13 +1200,19 @@ export default function Sidebar({
           </div>
         </div>
 
-        <Button 
-          onClick={onGenerateRandomShapes}
-          className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-        >
-          <Wand2 className="w-4 h-4 mr-2" />
-          Generate Random Shapes
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onGenerateRandomShapes}
+            className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            Generate Random Shapes
+          </Button>
+          <BatchConfigDialog
+            settings={batchConfigSettings}
+            onSettingsChange={onUpdateBatchConfigSettings}
+          />
+        </div>
       </div>
     );
   }
