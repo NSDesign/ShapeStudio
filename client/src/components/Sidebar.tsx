@@ -1063,7 +1063,7 @@ export default function Sidebar({
               max={50}
               step={1}
               className="w-full"
-              minStepsBetweenThumbs={5}
+              minStepsBetweenThumbs={1}
             />
           </div>
         </div>
