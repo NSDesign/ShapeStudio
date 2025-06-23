@@ -205,14 +205,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
         </Button>
       </DialogTrigger>
       <DialogContent 
-        className="w-[90vw] max-w-[500px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0"
+        className="w-[90vw] max-w-[500px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
         onInteractOutside={(e) => {
-          // Only close on backdrop clicks, not on Select interactions
-          const target = e.target as Element;
-          if (target === e.currentTarget) {
-            // Clicked on backdrop
-            return;
-          }
+          // Prevent dialog from closing on checkbox/input interactions
           e.preventDefault();
         }}
       >
@@ -313,6 +308,189 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-slate-300">Scale</Label>
+                      <Slider
+                        value={[currentSettings.noiseScale]}
+                        onValueChange={([value]) => handleSettingsUpdate({ noiseScale: value })}
+                        min={0.01}
+                        max={1}
+                        step={0.01}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-slate-400">{currentSettings.noiseScale.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-slate-600" />
+
+            {/* Property Constraints */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={currentSettings.propertyConstraintsEnabled}
+                  onCheckedChange={(checked) => 
+                    handleSettingsUpdate({ propertyConstraintsEnabled: checked as boolean })
+                  }
+                  className="border-slate-600"
+                />
+                <Label className="text-slate-300 font-medium">Property Constraints</Label>
+              </div>
+              
+              {currentSettings.propertyConstraintsEnabled && (
+                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-300">Opacity Range</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={currentSettings.opacityRange[0]}
+                        onChange={(e) => handleSettingsUpdate({ 
+                          opacityRange: [parseFloat(e.target.value), currentSettings.opacityRange[1]] 
+                        })}
+                        className="bg-slate-800 border-slate-600 text-slate-200"
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={currentSettings.opacityRange[1]}
+                        onChange={(e) => handleSettingsUpdate({ 
+                          opacityRange: [currentSettings.opacityRange[0], parseFloat(e.target.value)] 
+                        })}
+                        className="bg-slate-800 border-slate-600 text-slate-200"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-slate-600" />
+
+            {/* Color Harmony */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={currentSettings.colorHarmonyEnabled}
+                  onCheckedChange={(checked) => 
+                    handleSettingsUpdate({ colorHarmonyEnabled: checked as boolean })
+                  }
+                  className="border-slate-600"
+                />
+                <Label className="text-slate-300 font-medium">Color Harmony</Label>
+              </div>
+              
+              {currentSettings.colorHarmonyEnabled && (
+                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-300">Harmony Type</Label>
+                    <Select 
+                      value={currentSettings.harmonyType}
+                      onValueChange={(value) => 
+                        handleSettingsUpdate({ harmonyType: value as any })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="monochromatic" className="text-slate-200 hover:bg-slate-700">Monochromatic</SelectItem>
+                        <SelectItem value="analogous" className="text-slate-200 hover:bg-slate-700">Analogous</SelectItem>
+                        <SelectItem value="complementary" className="text-slate-200 hover:bg-slate-700">Complementary</SelectItem>
+                        <SelectItem value="triadic" className="text-slate-200 hover:bg-slate-700">Triadic</SelectItem>
+                        <SelectItem value="split-complementary" className="text-slate-200 hover:bg-slate-700">Split Complementary</SelectItem>
+                        <SelectItem value="tetradic" className="text-slate-200 hover:bg-slate-700">Tetradic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-slate-600" />
+
+            {/* Physics Simulation */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={currentSettings.physicsEnabled}
+                  onCheckedChange={(checked) => 
+                    handleSettingsUpdate({ physicsEnabled: checked as boolean })
+                  }
+                  className="border-slate-600"
+                />
+                <Label className="text-slate-300 font-medium">Physics Simulation</Label>
+              </div>
+              
+              {currentSettings.physicsEnabled && (
+                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-300">Physics Type</Label>
+                    <Select 
+                      value={currentSettings.physicsType}
+                      onValueChange={(value) => 
+                        handleSettingsUpdate({ physicsType: value as any })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
+                        <SelectItem value="gravity" className="text-slate-200 hover:bg-slate-700">Gravity</SelectItem>
+                        <SelectItem value="magnetic" className="text-slate-200 hover:bg-slate-700">Magnetic</SelectItem>
+                        <SelectItem value="collision" className="text-slate-200 hover:bg-slate-700">Collision</SelectItem>
+                        <SelectItem value="flocking" className="text-slate-200 hover:bg-slate-700">Flocking</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-slate-600" />
+
+            {/* Temporal Variation */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  checked={currentSettings.temporalEnabled}
+                  onCheckedChange={(checked) => 
+                    handleSettingsUpdate({ temporalEnabled: checked as boolean })
+                  }
+                  className="border-slate-600"
+                />
+                <Label className="text-slate-300 font-medium">Temporal Variation</Label>
+              </div>
+              
+              {currentSettings.temporalEnabled && (
+                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-slate-300">Evolution Mode</Label>
+                    <Select 
+                      value={currentSettings.evolutionMode}
+                      onValueChange={(value) => 
+                        handleSettingsUpdate({ evolutionMode: value as any })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
+                        <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear</SelectItem>
+                        <SelectItem value="oscillation" className="text-slate-200 hover:bg-slate-700">Oscillation</SelectItem>
+                        <SelectItem value="chaos" className="text-slate-200 hover:bg-slate-700">Chaos</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}
