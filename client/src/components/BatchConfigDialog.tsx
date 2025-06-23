@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Settings, RotateCcw, Save } from 'lucide-react';
+import { Settings, RotateCcw, X } from 'lucide-react';
 import { BlendMode } from '@/lib/shapeTypes';
 
 export interface BatchConfigSettings {
@@ -208,7 +208,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
   ];
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
@@ -220,15 +220,25 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       </PopoverTrigger>
       <PopoverContent 
         className="w-[600px] max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200"
-        side="left"
+        side="right"
         align="start"
         sideOffset={8}
       >
-        <div className="space-y-2 mb-4">
-          <h3 className="text-lg font-semibold text-slate-200">Batch Configuration</h3>
-          <p className="text-sm text-slate-400">
-            Configure advanced settings for batch shape generation
-          </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-200">Batch Configuration</h3>
+            <p className="text-sm text-slate-400">
+              Configure advanced settings for batch shape generation
+            </p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setIsOpen(false)}
+            className="h-6 w-6 p-0 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
         
         <div className="space-y-4">
@@ -724,9 +734,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               onClick={() => setIsOpen(false)} 
               variant="outline"
               className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
-              data-dialog-close
             >
-              <Save className="w-4 h-4 mr-2" />
               Close
             </Button>
           </div>
