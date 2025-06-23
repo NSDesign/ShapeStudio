@@ -652,6 +652,25 @@ export default function Sidebar({
       setBatchProgress(0);
       console.log(`🚀 ZIP BATCH EXPORT: Starting ${batchExportCount} exports`);
       
+      // Get the target artboard for shape generation
+      const targetArtboard = exportMode === 'artboard' && selectedArtboardForExport 
+        ? artboards.find(ab => ab.id === selectedArtboardForExport)
+        : artboards.find(ab => ab.id === activeArtboard);
+      
+      const generationBounds = targetArtboard ? {
+        x: targetArtboard.x,
+        y: targetArtboard.y,
+        width: targetArtboard.width,
+        height: targetArtboard.height
+      } : {
+        x: -200,
+        y: -200,
+        width: 400,
+        height: 400
+      };
+      
+      console.log(`📐 Using bounds: ${generationBounds.width}x${generationBounds.height} at (${generationBounds.x}, ${generationBounds.y})`);
+      
       try {
         const zip = new JSZip();
         const timestamp = Date.now();
@@ -681,9 +700,9 @@ export default function Sidebar({
               
               const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
               
-              // Random position within artboard area
-              const x = (Math.random() - 0.5) * 300;
-              const y = (Math.random() - 0.5) * 300;
+              // Random position within the target artboard bounds
+              const x = generationBounds.x + (Math.random() - 0.5) * (generationBounds.width * 0.8);
+              const y = generationBounds.y + (Math.random() - 0.5) * (generationBounds.height * 0.8);
               
               const newShape = new Shape(randomType, x, y);
               
@@ -714,47 +733,60 @@ export default function Sidebar({
           if (currentExportShapes.length > 0) {
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
-            // Calculate bounds - same as before
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            // Use artboard bounds for export dimensions when in artboard mode
+            let canvasWidth, canvasHeight, translateX, translateY;
             
-            currentExportShapes.forEach(shape => {
-              const bounds = shape.getBounds();
-              const corners = [
-                { x: bounds.x, y: bounds.y },
-                { x: bounds.x + bounds.width, y: bounds.y },
-                { x: bounds.x, y: bounds.y + bounds.height },
-                { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
-              ];
+            if (exportMode === 'artboard' && targetArtboard) {
+              // Use exact artboard dimensions
+              canvasWidth = targetArtboard.width * exportScale;
+              canvasHeight = targetArtboard.height * exportScale;
+              translateX = -targetArtboard.x;
+              translateY = -targetArtboard.y;
+              console.log(`📐 Using artboard bounds: ${targetArtboard.width}x${targetArtboard.height}`);
+            } else {
+              // Calculate dynamic bounds based on shapes
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
               
-              corners.forEach(corner => {
-                let x = corner.x * shape.transform.scaleX;
-                let y = corner.y * shape.transform.scaleY;
+              currentExportShapes.forEach(shape => {
+                const bounds = shape.getBounds();
+                const corners = [
+                  { x: bounds.x, y: bounds.y },
+                  { x: bounds.x + bounds.width, y: bounds.y },
+                  { x: bounds.x, y: bounds.y + bounds.height },
+                  { x: bounds.x + bounds.width, y: bounds.y + bounds.height }
+                ];
                 
-                if (shape.transform.rotation !== 0) {
-                  const angle = (shape.transform.rotation * Math.PI) / 180;
-                  const cos = Math.cos(angle);
-                  const sin = Math.sin(angle);
-                  const rotatedX = x * cos - y * sin;
-                  const rotatedY = x * sin + y * cos;
-                  x = rotatedX;
-                  y = rotatedY;
-                }
-                
-                x += shape.transform.x;
-                y += shape.transform.y;
+                corners.forEach(corner => {
+                  let x = corner.x * shape.transform.scaleX;
+                  let y = corner.y * shape.transform.scaleY;
+                  
+                  if (shape.transform.rotation !== 0) {
+                    const angle = (shape.transform.rotation * Math.PI) / 180;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    const rotatedX = x * cos - y * sin;
+                    const rotatedY = x * sin + y * cos;
+                    x = rotatedX;
+                    y = rotatedY;
+                  }
+                  
+                  x += shape.transform.x;
+                  y += shape.transform.y;
 
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, y);
+                  minX = Math.min(minX, x);
+                  minY = Math.min(minY, y);
+                  maxX = Math.max(maxX, x);
+                  maxY = Math.max(maxY, y);
+                });
               });
-            });
 
-            const padding = 20;
-            const canvasWidth = (maxX - minX + padding * 2) * exportScale;
-            const canvasHeight = (maxY - minY + padding * 2) * exportScale;
-            const translateX = -minX + padding;
-            const translateY = -minY + padding;
+              const padding = 20;
+              canvasWidth = (maxX - minX + padding * 2) * exportScale;
+              canvasHeight = (maxY - minY + padding * 2) * exportScale;
+              translateX = -minX + padding;
+              translateY = -minY + padding;
+              console.log(`📐 Using dynamic bounds: ${canvasWidth/exportScale}x${canvasHeight/exportScale}`);
+            }
 
             // Create canvas and render
             const canvas = document.createElement('canvas');
