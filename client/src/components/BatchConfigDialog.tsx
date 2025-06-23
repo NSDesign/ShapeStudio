@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -216,6 +216,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200">
         <DialogHeader>
           <DialogTitle className="text-slate-200">Batch Configuration</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Configure advanced settings for batch shape generation
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
