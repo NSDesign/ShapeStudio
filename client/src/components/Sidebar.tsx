@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
+import BatchConfigDialog, { BatchConfigSettings } from './BatchConfigDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -102,6 +103,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
 interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
+  batchConfigSettings: BatchConfigSettings;
   selectedCount: number;
   selectedPointsCount: number;
   selectedSegmentsCount: number;
@@ -139,6 +141,7 @@ interface SidebarProps {
   onDistributeSelected: () => void;
   onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
   onApplyColorManipulation: (manipulation: any) => void;
+  onUpdateBatchConfigSettings: (settings: BatchConfigSettings) => void;
   onLoadProject?: (data: {
     shapes: Shape[];
     groups: ShapeGroupClass[];
@@ -151,6 +154,7 @@ interface SidebarProps {
 export default function Sidebar({
   enabledShapeTypes,
   scatterSettings,
+  batchConfigSettings,
   selectedCount,
   selectedPointsCount,
   selectedSegmentsCount,
@@ -163,6 +167,7 @@ export default function Sidebar({
   activeArtboard,
   onToggleShapeType,
   onUpdateScatterSettings,
+  onUpdateBatchConfigSettings,
   onGenerateRandomShapes,
   onComposeShapes,
   onSetEditMode,
