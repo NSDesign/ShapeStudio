@@ -220,12 +220,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       </DialogTrigger>
       <DialogContent 
         className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200"
-        onInteractOutside={(e) => {
-          // Only allow closing when clicking the actual close button or outside the dialog
-          if (!e.target || !(e.target as Element).closest('[data-dialog-close]')) {
-            e.preventDefault();
-          }
-        }}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle className="text-slate-200">Batch Configuration</DialogTitle>
@@ -234,7 +231,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div 
+          className="space-y-4"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {/* Presets */}
           <div className="space-y-2">
             <Label className="text-slate-300">Presets</Label>
