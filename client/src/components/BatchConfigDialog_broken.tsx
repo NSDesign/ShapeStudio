@@ -148,10 +148,10 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           noiseAlgorithm: 'perlin',
           noiseScale: 0.05,
           noiseTargets: { position: true, rotation: true, scale: true, color: false, opacity: false },
-          propertyConstraintsEnabled: true,
-          distributionCurve: 'normal',
           colorHarmonyEnabled: true,
           harmonyType: 'analogous',
+          physicsEnabled: false,
+          temporalEnabled: false,
         };
         break;
       case 'geometric':
@@ -161,6 +161,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           distributionCurve: 'linear',
           colorHarmonyEnabled: true,
           harmonyType: 'complementary',
+          physicsEnabled: false,
+          temporalEnabled: false,
         };
         break;
       case 'chaotic':
@@ -169,12 +171,12 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           noiseAlgorithm: 'turbulence',
           noiseScale: 0.2,
           noiseTargets: { position: true, rotation: true, scale: true, color: true, opacity: true },
-          propertyConstraintsEnabled: true,
-          distributionCurve: 'exponential',
-          colorHarmonyEnabled: false,
+          physicsEnabled: true,
+          physicsType: 'collision',
+          temporalEnabled: true,
+          evolutionMode: 'chaos',
         };
         break;
-      case 'current':
       default:
         return;
     }
