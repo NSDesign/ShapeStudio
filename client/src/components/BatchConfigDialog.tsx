@@ -205,34 +205,37 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Settings className="w-4 h-4 mr-2" />
-          Batch Config
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="h-10 w-10 p-0 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600"
+        >
+          <Settings className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200">
         <DialogHeader>
-          <DialogTitle>Batch Configuration</DialogTitle>
+          <DialogTitle className="text-slate-200">Batch Configuration</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           {/* Presets */}
           <div className="space-y-2">
-            <Label>Presets</Label>
+            <Label className="text-slate-300">Presets</Label>
             <Select onValueChange={handlePresetChange}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                 <SelectValue placeholder="Select a preset..." />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="current">Current</SelectItem>
-                <SelectItem value="organic">Organic</SelectItem>
-                <SelectItem value="geometric">Geometric</SelectItem>
-                <SelectItem value="chaotic">Chaotic</SelectItem>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="current" className="text-slate-200 hover:bg-slate-700">Current</SelectItem>
+                <SelectItem value="organic" className="text-slate-200 hover:bg-slate-700">Organic</SelectItem>
+                <SelectItem value="geometric" className="text-slate-200 hover:bg-slate-700">Geometric</SelectItem>
+                <SelectItem value="chaotic" className="text-slate-200 hover:bg-slate-700">Chaotic</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Blend Mode Control */}
           <div className="space-y-3">
@@ -243,15 +246,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ blendModeEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="blend-mode-enabled" className="font-medium">
+              <Label htmlFor="blend-mode-enabled" className="font-medium text-slate-200">
                 Blend Mode Control
               </Label>
             </div>
             
             {currentSettings.blendModeEnabled && (
-              <div className="ml-6 space-y-2 border-l-2 border-gray-200 pl-4">
-                <Label className="text-sm text-gray-600">Select blend modes and their weights:</Label>
+              <div className="ml-6 space-y-2 border-l-2 border-slate-600 pl-4">
+                <Label className="text-sm text-slate-400">Select blend modes and their weights:</Label>
                 <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
                   {blendModes.map((mode) => (
                     <div key={mode} className="flex items-center space-x-2">
@@ -267,8 +271,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                           }
                           handleSettingsUpdate({ enabledBlendModes: newBlendModes });
                         }}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
-                      <Label htmlFor={`blend-${mode}`} className="text-xs capitalize">
+                      <Label htmlFor={`blend-${mode}`} className="text-xs capitalize text-slate-300">
                         {mode.replace('-', ' ')}
                       </Label>
                       {currentSettings.enabledBlendModes[mode] !== undefined && (
@@ -293,7 +298,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Advanced Noise */}
           <div className="space-y-3">
@@ -304,75 +309,79 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ noiseEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="noise-enabled" className="font-medium">
+              <Label htmlFor="noise-enabled" className="font-medium text-slate-200">
                 Advanced Noise
               </Label>
             </div>
             
             {currentSettings.noiseEnabled && (
-              <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Algorithm</Label>
+                    <Label className="text-sm text-slate-300">Algorithm</Label>
                     <Select 
                       value={currentSettings.noiseAlgorithm}
                       onValueChange={(value) => 
                         handleSettingsUpdate({ noiseAlgorithm: value as any })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="perlin">Perlin</SelectItem>
-                        <SelectItem value="simplex">Simplex</SelectItem>
-                        <SelectItem value="fractal">Fractal</SelectItem>
-                        <SelectItem value="worley">Worley</SelectItem>
-                        <SelectItem value="ridge">Ridge</SelectItem>
-                        <SelectItem value="turbulence">Turbulence</SelectItem>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
+                        <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
+                        <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>
+                        <SelectItem value="worley" className="text-slate-200 hover:bg-slate-700">Worley</SelectItem>
+                        <SelectItem value="ridge" className="text-slate-200 hover:bg-slate-700">Ridge</SelectItem>
+                        <SelectItem value="turbulence" className="text-slate-200 hover:bg-slate-700">Turbulence</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-sm">Scale: {currentSettings.noiseScale}x</Label>
+                    <Label className="text-sm text-slate-300">Scale: {currentSettings.noiseScale}x</Label>
                     <Slider
                       value={[currentSettings.noiseScale]}
                       onValueChange={([value]) => handleSettingsUpdate({ noiseScale: value })}
                       min={0.1}
                       max={10}
                       step={0.1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Octaves: {currentSettings.noiseOctaves}</Label>
+                    <Label className="text-sm text-slate-300">Octaves: {currentSettings.noiseOctaves}</Label>
                     <Slider
                       value={[currentSettings.noiseOctaves]}
                       onValueChange={([value]) => handleSettingsUpdate({ noiseOctaves: value })}
                       min={1}
                       max={8}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-sm">Amplitude: {currentSettings.noiseAmplitude}%</Label>
+                    <Label className="text-sm text-slate-300">Amplitude: {currentSettings.noiseAmplitude}%</Label>
                     <Slider
                       value={[currentSettings.noiseAmplitude]}
                       onValueChange={([value]) => handleSettingsUpdate({ noiseAmplitude: value })}
                       min={0}
                       max={100}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">Target Properties</Label>
+                  <Label className="text-sm text-slate-300">Target Properties</Label>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(currentSettings.noiseTargets).map(([key, value]) => (
                       <div key={key} className="flex items-center space-x-1">
@@ -384,8 +393,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                             newTargets[key as keyof typeof newTargets] = checked as boolean;
                             handleSettingsUpdate({ noiseTargets: newTargets });
                           }}
+                          className="border-slate-500 data-[state=checked]:bg-blue-600"
                         />
-                        <Label htmlFor={`noise-${key}`} className="text-xs capitalize">
+                        <Label htmlFor={`noise-${key}`} className="text-xs capitalize text-slate-300">
                           {key}
                         </Label>
                       </div>
@@ -396,7 +406,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Property Constraints */}
           <div className="space-y-3">
@@ -407,16 +417,17 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ propertyConstraintsEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="property-constraints-enabled" className="font-medium">
+              <Label htmlFor="property-constraints-enabled" className="font-medium text-slate-200">
                 Property Constraints
               </Label>
             </div>
             
             {currentSettings.propertyConstraintsEnabled && (
-              <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
                 <div className="space-y-2">
-                  <Label className="text-sm">
+                  <Label className="text-sm text-slate-300">
                     Opacity Range: {currentSettings.opacityRange[0]}% - {currentSettings.opacityRange[1]}%
                   </Label>
                   <div className="px-2">
@@ -426,12 +437,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                       min={0}
                       max={100}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">
+                  <Label className="text-sm text-slate-300">
                     Rotation Range: {currentSettings.rotationRange[0]}° - {currentSettings.rotationRange[1]}°
                   </Label>
                   <div className="px-2">
@@ -441,12 +453,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                       min={0}
                       max={360}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">
+                  <Label className="text-sm text-slate-300">
                     Scale Range: {currentSettings.scaleRange[0]}% - {currentSettings.scaleRange[1]}%
                   </Label>
                   <div className="px-2">
@@ -456,6 +469,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                       min={10}
                       max={500}
                       step={5}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 </div>
@@ -463,7 +477,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Color Harmony */}
           <div className="space-y-3">
@@ -474,63 +488,65 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ colorHarmonyEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="color-harmony-enabled" className="font-medium">
+              <Label htmlFor="color-harmony-enabled" className="font-medium text-slate-200">
                 Color Harmony
               </Label>
             </div>
             
             {currentSettings.colorHarmonyEnabled && (
-              <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Harmony Type</Label>
+                    <Label className="text-sm text-slate-300">Harmony Type</Label>
                     <Select 
                       value={currentSettings.harmonyType}
                       onValueChange={(value) => 
                         handleSettingsUpdate({ harmonyType: value as any })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="monochromatic">Monochromatic</SelectItem>
-                        <SelectItem value="analogous">Analogous</SelectItem>
-                        <SelectItem value="complementary">Complementary</SelectItem>
-                        <SelectItem value="triadic">Triadic</SelectItem>
-                        <SelectItem value="split-complementary">Split-Complementary</SelectItem>
-                        <SelectItem value="tetradic">Tetradic</SelectItem>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="monochromatic" className="text-slate-200 hover:bg-slate-700">Monochromatic</SelectItem>
+                        <SelectItem value="analogous" className="text-slate-200 hover:bg-slate-700">Analogous</SelectItem>
+                        <SelectItem value="complementary" className="text-slate-200 hover:bg-slate-700">Complementary</SelectItem>
+                        <SelectItem value="triadic" className="text-slate-200 hover:bg-slate-700">Triadic</SelectItem>
+                        <SelectItem value="split-complementary" className="text-slate-200 hover:bg-slate-700">Split-Complementary</SelectItem>
+                        <SelectItem value="tetradic" className="text-slate-200 hover:bg-slate-700">Tetradic</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-sm">Base Color</Label>
+                    <Label className="text-sm text-slate-300">Base Color</Label>
                     <Input
                       type="color"
                       value={currentSettings.baseColor}
                       onChange={(e) => handleSettingsUpdate({ baseColor: e.target.value })}
-                      className="w-full h-10"
+                      className="w-full h-10 bg-slate-800 border-slate-600"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">Hue Variance: ±{currentSettings.hueVariance}°</Label>
+                  <Label className="text-sm text-slate-300">Hue Variance: ±{currentSettings.hueVariance}°</Label>
                   <Slider
                     value={[currentSettings.hueVariance]}
                     onValueChange={([value]) => handleSettingsUpdate({ hueVariance: value })}
                     min={0}
                     max={30}
                     step={1}
+                    className="[&_[role=slider]]:bg-blue-600"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Physics Simulation */}
           <div className="space-y-3">
@@ -541,57 +557,60 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ physicsEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="physics-enabled" className="font-medium">
+              <Label htmlFor="physics-enabled" className="font-medium text-slate-200">
                 Physics Simulation
               </Label>
             </div>
             
             {currentSettings.physicsEnabled && (
-              <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
                 <div className="space-y-2">
-                  <Label className="text-sm">Physics Type</Label>
+                  <Label className="text-sm text-slate-300">Physics Type</Label>
                   <Select 
                     value={currentSettings.physicsType}
                     onValueChange={(value) => 
                       handleSettingsUpdate({ physicsType: value as any })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="gravity">Gravity</SelectItem>
-                      <SelectItem value="magnetic">Magnetic</SelectItem>
-                      <SelectItem value="collision">Collision Avoidance</SelectItem>
-                      <SelectItem value="flocking">Flocking</SelectItem>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
+                      <SelectItem value="gravity" className="text-slate-200 hover:bg-slate-700">Gravity</SelectItem>
+                      <SelectItem value="magnetic" className="text-slate-200 hover:bg-slate-700">Magnetic</SelectItem>
+                      <SelectItem value="collision" className="text-slate-200 hover:bg-slate-700">Collision Avoidance</SelectItem>
+                      <SelectItem value="flocking" className="text-slate-200 hover:bg-slate-700">Flocking</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 {currentSettings.physicsType === 'gravity' && (
                   <div className="space-y-2">
-                    <Label className="text-sm">Gravity Strength: {currentSettings.gravityStrength}%</Label>
+                    <Label className="text-sm text-slate-300">Gravity Strength: {currentSettings.gravityStrength}%</Label>
                     <Slider
                       value={[currentSettings.gravityStrength]}
                       onValueChange={([value]) => handleSettingsUpdate({ gravityStrength: value })}
                       min={0}
                       max={100}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 )}
                 
                 {currentSettings.physicsType === 'collision' && (
                   <div className="space-y-2">
-                    <Label className="text-sm">Collision Distance: {currentSettings.collisionDistance}px</Label>
+                    <Label className="text-sm text-slate-300">Collision Distance: {currentSettings.collisionDistance}px</Label>
                     <Slider
                       value={[currentSettings.collisionDistance]}
                       onValueChange={([value]) => handleSettingsUpdate({ collisionDistance: value })}
                       min={5}
                       max={100}
                       step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
                     />
                   </div>
                 )}
@@ -599,7 +618,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-slate-600" />
 
           {/* Temporal Variation */}
           <div className="space-y-3">
@@ -610,42 +629,44 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 onCheckedChange={(checked) => 
                   handleSettingsUpdate({ temporalEnabled: checked as boolean })
                 }
+                className="border-slate-500 data-[state=checked]:bg-blue-600"
               />
-              <Label htmlFor="temporal-enabled" className="font-medium">
+              <Label htmlFor="temporal-enabled" className="font-medium text-slate-200">
                 Temporal Variation
               </Label>
             </div>
             
             {currentSettings.temporalEnabled && (
-              <div className="ml-6 space-y-3 border-l-2 border-gray-200 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
                 <div className="space-y-2">
-                  <Label className="text-sm">Evolution Mode</Label>
+                  <Label className="text-sm text-slate-300">Evolution Mode</Label>
                   <Select 
                     value={currentSettings.evolutionMode}
                     onValueChange={(value) => 
                       handleSettingsUpdate({ evolutionMode: value as any })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="linear">Linear Progression</SelectItem>
-                      <SelectItem value="oscillation">Oscillation</SelectItem>
-                      <SelectItem value="chaos">Chaos</SelectItem>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
+                      <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear Progression</SelectItem>
+                      <SelectItem value="oscillation" className="text-slate-200 hover:bg-slate-700">Oscillation</SelectItem>
+                      <SelectItem value="chaos" className="text-slate-200 hover:bg-slate-700">Chaos</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">Seed Increment: {currentSettings.seedIncrement}</Label>
+                  <Label className="text-sm text-slate-300">Seed Increment: {currentSettings.seedIncrement}</Label>
                   <Slider
                     value={[currentSettings.seedIncrement]}
                     onValueChange={([value]) => handleSettingsUpdate({ seedIncrement: value })}
                     min={1}
                     max={100}
                     step={1}
+                    className="[&_[role=slider]]:bg-blue-600"
                   />
                 </div>
               </div>
@@ -654,13 +675,21 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-4">
-            <Button onClick={handleReset} variant="outline">
+            <Button 
+              onClick={handleReset} 
+              variant="outline"
+              className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+            >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset to Defaults
             </Button>
-            <Button onClick={() => setIsOpen(false)} variant="outline">
+            <Button 
+              onClick={() => setIsOpen(false)} 
+              variant="outline"
+              className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+            >
               <Save className="w-4 h-4 mr-2" />
-              Save Configuration
+              Close
             </Button>
           </div>
         </div>
