@@ -1431,18 +1431,27 @@ export const useShapeEditor = () => {
 
   // Artboard management
   const addArtboard = useCallback((preset: any) => {
+    // Center the artboard on the canvas
+    const centerX = -preset.width / 2;
+    const centerY = -preset.height / 2;
+    
+    // If multiple artboards exist, offset them to avoid overlap
+    const offsetMultiplier = artboards.length;
+    const offsetX = offsetMultiplier * 50; // 50px spacing between artboards
+    const offsetY = offsetMultiplier * 50;
+    
     const newArtboard: Artboard = {
       id: `artboard_${Date.now()}`,
       name: `${preset.name}`,
-      x: 0,
-      y: 0,
+      x: centerX + offsetX,
+      y: centerY + offsetY,
       width: preset.width,
       height: preset.height,
       preset: preset.name,
       category: preset.category
     };
     setArtboards(prev => [...prev, newArtboard]);
-  }, []);
+  }, [artboards.length]);
 
   const selectArtboard = useCallback((artboardId: string) => {
     setActiveArtboard(artboardId);
