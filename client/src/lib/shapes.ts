@@ -324,6 +324,9 @@ export class Shape {
       case 'cubic':
         this.generateCurvePoints();
         break;
+      case 'smooth-spline':
+        this.generateSmoothSplinePoints();
+        break;
       case 'chunk':
         this.generateChunkPoints();
         break;
@@ -926,6 +929,89 @@ export class Shape {
     this.segments = 8; // Four segments for outer + four for inner
   }
 
+  private generateSmoothSplinePoints(): void {
+    const numPoints = 4 + Math.floor(Math.random() * 6); // 4-10 points for variety
+    this.points = [];
+    this.controlPoints = [];
+    
+    // Determine if this spline should be open or closed (70% chance closed)
+    this.closed = Math.random() > 0.3;
+    
+    const baseRadius = 50 + Math.random() * 80;
+    const variation = 0.4 + Math.random() * 0.4; // Control point variation
+    
+    if (this.closed) {
+      // Generate points in a circular pattern for closed splines
+      for (let i = 0; i < numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const radiusVar = 0.7 + Math.random() * 0.6;
+        const radius = baseRadius * radiusVar;
+        
+        this.points.push({
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius
+        });
+      }
+    } else {
+      // Generate points in a wave-like pattern for open splines
+      const width = baseRadius * 2;
+      for (let i = 0; i < numPoints; i++) {
+        const t = i / (numPoints - 1);
+        const x = (t - 0.5) * width;
+        const y = Math.sin(t * Math.PI * 2) * baseRadius * (0.3 + Math.random() * 0.4);
+        
+        this.points.push({ x, y });
+      }
+    }
+    
+    // Generate smooth control points for cubic Bézier curves
+    const totalSegments = this.closed ? numPoints : numPoints - 1;
+    this.controlPoints = [];
+    
+    for (let i = 0; i < totalSegments; i++) {
+      const current = this.points[i];
+      const next = this.points[(i + 1) % this.points.length];
+      
+      // Calculate smooth tangent vectors
+      const prevIndex = this.closed ? (i - 1 + numPoints) % numPoints : Math.max(0, i - 1);
+      const nextNextIndex = this.closed ? (i + 2) % numPoints : Math.min(numPoints - 1, i + 2);
+      
+      const prev = this.points[prevIndex];
+      const nextNext = this.points[nextNextIndex];
+      
+      // Smooth tangent calculation for continuity
+      const tangentLength = Math.sqrt(
+        Math.pow(next.x - current.x, 2) + Math.pow(next.y - current.y, 2)
+      ) * 0.3;
+      
+      // Direction from previous to next point
+      const tangentX = (next.x - prev.x) * tangentLength / 
+        Math.sqrt(Math.pow(next.x - prev.x, 2) + Math.pow(next.y - prev.y, 2));
+      const tangentY = (next.y - prev.y) * tangentLength / 
+        Math.sqrt(Math.pow(next.x - prev.x, 2) + Math.pow(next.y - prev.y, 2));
+      
+      // Add some controlled randomness for organic feel
+      const randomFactor = variation * 0.3;
+      const randomX = (Math.random() - 0.5) * randomFactor * tangentLength;
+      const randomY = (Math.random() - 0.5) * randomFactor * tangentLength;
+      
+      // First control point (outgoing from current)
+      this.controlPoints.push({
+        x: current.x + (tangentX + randomX) * 0.5,
+        y: current.y + (tangentY + randomY) * 0.5
+      });
+      
+      // Second control point (incoming to next)
+      this.controlPoints.push({
+        x: next.x - (tangentX + randomX) * 0.5,
+        y: next.y - (tangentY + randomY) * 0.5
+      });
+    }
+    
+    this.renderType = 'cubic';
+    this.segments = totalSegments;
+  }
+
   render(ctx: CanvasRenderingContext2D): void {
     if (!this.points || this.points.length === 0) {
       return;
@@ -999,6 +1085,9 @@ export class Shape {
       case 'bezier':
       case 'cubic':
         this.drawCurve(ctx);
+        break;
+      case 'smooth-spline':
+        this.drawSmoothSpline(ctx);
         break;
       case 'chunk':
         this.drawChunk(ctx);
@@ -1308,6 +1397,37 @@ export class Shape {
         
         ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
       }
+      ctx.closePath();
+    }
+  }
+
+  private drawSmoothSpline(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 2) return;
+    if (!this.controlPoints || this.controlPoints.length === 0) return;
+
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+
+    // Draw cubic Bézier segments using control points
+    const numSegments = this.closed ? this.points.length : this.points.length - 1;
+    
+    for (let i = 0; i < numSegments; i++) {
+      const currentPoint = this.points[i];
+      const nextPoint = this.points[(i + 1) % this.points.length];
+      
+      // Each segment uses two control points
+      const cp1 = this.controlPoints[i * 2];
+      const cp2 = this.controlPoints[i * 2 + 1];
+      
+      if (cp1 && cp2) {
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
+      } else {
+        // Fallback to linear if control points missing
+        ctx.lineTo(nextPoint.x, nextPoint.y);
+      }
+    }
+
+    // Close the path only if this is a closed spline
+    if (this.closed) {
       ctx.closePath();
     }
   }
