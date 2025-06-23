@@ -686,10 +686,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                       handleSettingsUpdate({ evolutionMode: value as any })
                     }
                   >
-                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                    <SelectTrigger 
+                      className="bg-slate-800 border-slate-600 text-slate-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectContent 
+                      className="bg-slate-800 border-slate-600"
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                    >
                       <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
                       <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear Progression</SelectItem>
                       <SelectItem value="oscillation" className="text-slate-200 hover:bg-slate-700">Oscillation</SelectItem>
@@ -727,6 +733,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               onClick={() => setIsOpen(false)} 
               variant="outline"
               className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+              data-dialog-close
             >
               <Save className="w-4 h-4 mr-2" />
               Close
