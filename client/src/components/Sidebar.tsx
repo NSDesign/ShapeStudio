@@ -59,7 +59,8 @@ import {
   Save,
   FolderOpen,
   Clipboard,
-  Boxes
+  Boxes,
+  Plus
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
 import { Shape } from '@/lib/shapes';
@@ -89,6 +90,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   line: 'Line',
   bezier: 'Bézier Curve',
   cubic: 'Cubic Spline',
+  'smooth-spline': 'Smooth Spline',
   chunk: 'Chunk',
   blob: 'Organic Blob',
   ring: 'Ring',
@@ -260,6 +262,7 @@ export default function Sidebar({
     const [customWidth, setCustomWidth] = useState(1920);
     const [customHeight, setCustomHeight] = useState(1080);
     const [customName, setCustomName] = useState('Custom Artboard');
+    const [customBackgroundColor, setCustomBackgroundColor] = useState('#ffffff');
     
     const artboardPresets = [
       { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
@@ -275,6 +278,7 @@ export default function Sidebar({
         name: customName,
         width: customWidth,
         height: customHeight,
+        backgroundColor: customBackgroundColor,
         category: 'custom' as const,
         description: `${customWidth}×${customHeight} Custom`
       };
@@ -320,6 +324,24 @@ export default function Sidebar({
                   min="1"
                   max="10000"
                   className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Background Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  value={customBackgroundColor}
+                  onChange={(e) => setCustomBackgroundColor(e.target.value)}
+                  className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                />
+                <Input
+                  type="text"
+                  value={customBackgroundColor}
+                  onChange={(e) => setCustomBackgroundColor(e.target.value)}
+                  placeholder="#ffffff"
+                  className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 />
               </div>
             </div>

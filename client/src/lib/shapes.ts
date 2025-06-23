@@ -175,8 +175,24 @@ export class Shape {
     const saturation = 50 + Math.random() * 50;
     const lightness = 40 + Math.random() * 40;
     
-    // 50% chance for gradient fill
-    const useGradient = Math.random() > 0.5;
+    // Determine fill/stroke combination (ensure at least one is visible)
+    const fillChance = Math.random();
+    const strokeChance = Math.random();
+    
+    let hasFill = fillChance > 0.3; // 70% chance for fill
+    let hasStroke = strokeChance > 0.5; // 50% chance for stroke
+    
+    // Ensure at least one is visible
+    if (!hasFill && !hasStroke) {
+      if (Math.random() > 0.5) {
+        hasFill = true;
+      } else {
+        hasStroke = true;
+      }
+    }
+    
+    // 50% chance for gradient fill (only if has fill)
+    const useGradient = hasFill && Math.random() > 0.5;
     let gradient = undefined;
     
     if (useGradient) {
@@ -201,14 +217,14 @@ export class Shape {
     }
     
     return {
-      fillColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-      fillOpacity: 0.7 + Math.random() * 0.3,
-      strokeColor: `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)`,
-      strokeWidth: 1 + Math.random() * 4,
-      strokeOpacity: 0.8 + Math.random() * 0.2,
+      fillColor: hasFill ? `hsl(${hue}, ${saturation}%, ${lightness}%)` : 'transparent',
+      fillOpacity: hasFill ? 0.7 + Math.random() * 0.3 : 0,
+      strokeColor: hasStroke ? `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)` : 'transparent',
+      strokeWidth: hasStroke ? 1 + Math.random() * 4 : 0,
+      strokeOpacity: hasStroke ? 0.8 + Math.random() * 0.2 : 0,
       blendMode: 'source-over' as BlendMode,
       zIndex: Date.now(), // Use timestamp for proper ordering
-      gradient
+      gradient: hasFill ? gradient : undefined
     };
   }
 

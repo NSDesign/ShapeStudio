@@ -107,6 +107,7 @@ export type ShapeType =
   | 'ring'
   | 'bezier'
   | 'cubic'
+  | 'smooth-spline'
   | 'spline-circle'
   | 'spline-ellipse'
   | 'spline-ring';
