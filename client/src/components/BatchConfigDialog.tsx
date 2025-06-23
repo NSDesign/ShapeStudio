@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -208,8 +208,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm"
@@ -217,39 +217,29 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
         >
           <Settings className="w-4 h-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent 
-        className="max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onClick={(e) => e.stopPropagation()}
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-[600px] max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 text-slate-200"
+        side="left"
+        align="start"
+        sideOffset={8}
       >
-        <DialogHeader>
-          <DialogTitle className="text-slate-200">Batch Configuration</DialogTitle>
-          <DialogDescription className="text-slate-400">
+        <div className="space-y-2 mb-4">
+          <h3 className="text-lg font-semibold text-slate-200">Batch Configuration</h3>
+          <p className="text-sm text-slate-400">
             Configure advanced settings for batch shape generation
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
         
-        <div 
-          className="space-y-4"
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+        <div className="space-y-4">
           {/* Presets */}
           <div className="space-y-2">
             <Label className="text-slate-300">Presets</Label>
             <Select onValueChange={handlePresetChange}>
-              <SelectTrigger 
-                className="bg-slate-800 border-slate-600 text-slate-200"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
                 <SelectValue placeholder="Select a preset..." />
               </SelectTrigger>
-              <SelectContent 
-                className="bg-slate-800 border-slate-600"
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
+              <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="current" className="text-slate-200 hover:bg-slate-700">Current</SelectItem>
                 <SelectItem value="organic" className="text-slate-200 hover:bg-slate-700">Organic</SelectItem>
                 <SelectItem value="geometric" className="text-slate-200 hover:bg-slate-700">Geometric</SelectItem>
@@ -352,13 +342,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                     >
                       <SelectTrigger 
                         className="bg-slate-800 border-slate-600 text-slate-200"
-                        onClick={(e) => e.stopPropagation()}
+                        
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent 
                         className="bg-slate-800 border-slate-600"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        
                       >
                         <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
                         <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
@@ -537,13 +527,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                     >
                       <SelectTrigger 
                         className="bg-slate-800 border-slate-600 text-slate-200"
-                        onClick={(e) => e.stopPropagation()}
+                        
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent 
                         className="bg-slate-800 border-slate-600"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        
                       >
                         <SelectItem value="monochromatic" className="text-slate-200 hover:bg-slate-700">Monochromatic</SelectItem>
                         <SelectItem value="analogous" className="text-slate-200 hover:bg-slate-700">Analogous</SelectItem>
@@ -611,13 +601,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                   >
                     <SelectTrigger 
                       className="bg-slate-800 border-slate-600 text-slate-200"
-                      onClick={(e) => e.stopPropagation()}
+                      
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent 
                       className="bg-slate-800 border-slate-600"
-                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      
                     >
                       <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
                       <SelectItem value="gravity" className="text-slate-200 hover:bg-slate-700">Gravity</SelectItem>
@@ -689,13 +679,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                   >
                     <SelectTrigger 
                       className="bg-slate-800 border-slate-600 text-slate-200"
-                      onClick={(e) => e.stopPropagation()}
+                      
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent 
                       className="bg-slate-800 border-slate-600"
-                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      
                     >
                       <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
                       <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear Progression</SelectItem>
@@ -741,7 +731,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }
