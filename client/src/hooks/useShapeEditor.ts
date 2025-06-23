@@ -1248,7 +1248,7 @@ export const useShapeEditor = () => {
       );
       
       const scale = currentDistance / gestureDataRef.current.initialDistance;
-      const newZoom = Math.max(0.5, Math.min(5, gestureDataRef.current.initialScale * scale));
+      const newZoom = Math.max(0.05, Math.min(5, gestureDataRef.current.initialScale * scale));
       
       // Get center point for zoom
       const centerX = (touch1.clientX + touch2.clientX) / 2;
@@ -1316,24 +1316,38 @@ export const useShapeEditor = () => {
       return;
     }
     
-    // Handle shape/point/segment dragging
+    // Handle shape/point/segment dragging or canvas panning
     if (isDragging && Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+      let handledDrag = false;
+      
       switch (editMode) {
         case 'points':
           if (selectedPoints.length > 0) {
             moveSelectedPoints(deltaX, deltaY);
+            handledDrag = true;
           }
           break;
         case 'segments':
           if (selectedSegments.length > 0) {
             moveSelectedSegments(deltaX, deltaY);
+            handledDrag = true;
           }
           break;
         default:
           if (selectedShapes.length > 0 || selectedGroups.length > 0) {
             moveSelected(deltaX, deltaY);
+            handledDrag = true;
           }
           break;
+      }
+      
+      // If no shapes/points/segments were moved, pan the canvas
+      if (!handledDrag) {
+        setCanvasSettings(prev => ({
+          ...prev,
+          panX: prev.panX + deltaX,
+          panY: prev.panY + deltaY
+        }));
       }
       
       setDragState(prev => prev ? {
@@ -1525,7 +1539,19 @@ export const useShapeEditor = () => {
       const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
       updateCanvasSettings({ zoom: Math.max(0.05, currentZoom / 1.2) });
     },
-    resetView: () => updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 }),
+    resetView: () => {
+      // Find the active artboard and center on it
+      const artboard = artboards.find(ab => ab.id === activeArtboard);
+      if (artboard) {
+        // Center the view on the artboard
+        const centerX = -(artboard.x + artboard.width / 2);
+        const centerY = -(artboard.y + artboard.height / 2);
+        updateCanvasSettings({ zoom: 1, panX: centerX, panY: centerY });
+      } else {
+        // Default reset if no artboard is active
+        updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 });
+      }
+    },
     
     // Transform operations
     moveBy: (x: number, y: number) => moveSelected(x, y),
