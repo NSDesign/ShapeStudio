@@ -1179,9 +1179,7 @@ export default function Sidebar({
           </div>
         ))}
 
-        <Separator className="bg-slate-600" />
-
-        <div className="space-y-2">
+        <div className="space-y-2 pb-6">
           <Label className="text-xs text-slate-400">Random Shape Count Range</Label>
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
@@ -1200,20 +1198,18 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div className="mt-6 pt-2 border-t border-slate-700">
-          <div className="flex gap-2">
-            <Button 
-              onClick={onGenerateRandomShapes}
-              className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-            >
-              <Wand2 className="w-4 h-4 mr-2" />
-              Generate Random Shapes
-            </Button>
-            <BatchConfigDialog
-              settings={batchConfigSettings}
-              onSettingsChange={onUpdateBatchConfigSettings}
-            />
-          </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onGenerateRandomShapes}
+            className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            Generate Random Shapes
+          </Button>
+          <BatchConfigDialog
+            settings={batchConfigSettings}
+            onSettingsChange={onUpdateBatchConfigSettings}
+          />
         </div>
       </div>
     );
