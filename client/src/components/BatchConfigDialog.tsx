@@ -197,11 +197,17 @@ const defaultSettings: BatchConfigSettings = {
 interface BatchConfigDialogProps {
   settings: BatchConfigSettings;
   onSettingsChange: (settings: BatchConfigSettings) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function BatchConfigDialog({ settings, onSettingsChange }: BatchConfigDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange }: BatchConfigDialogProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(() => ({ ...defaultSettings, ...settings }));
+  
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalIsOpen;
 
   // Component lifecycle logging
   useEffect(() => {
@@ -228,13 +234,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       timestamp: new Date().toISOString()
     });
     
-    const newSettings = { ...currentSettings, ...updates };
-    setCurrentSettings(newSettings);
-    
-    console.log('[BatchConfigDialog] About to call parent onSettingsChange');
-    onSettingsChange(newSettings);
-    console.log('[BatchConfigDialog] Parent onSettingsChange completed');
-  }, [currentSettings, onSettingsChange, isOpen]);
+    setCurrentSettings(prevSettings => {
+      const newSettings = { ...prevSettings, ...updates };
+      
+      // Use setTimeout to defer the parent callback to avoid immediate remount
+      setTimeout(() => {
+        console.log('[BatchConfigDialog] Calling parent onSettingsChange (deferred)');
+        onSettingsChange(newSettings);
+        console.log('[BatchConfigDialog] Parent onSettingsChange completed (deferred)');
+      }, 0);
+      
+      return newSettings;
+    });
+  }, [onSettingsChange, isOpen]);
 
   const handlePresetChange = useCallback((preset: string) => {
     let newSettings: Partial<BatchConfigSettings>;
