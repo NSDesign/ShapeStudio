@@ -32,11 +32,48 @@ export interface BatchConfigSettings {
   
   // Property Constraints
   propertyConstraintsEnabled: boolean;
-  opacityRange: [number, number];
-  rotationRange: [number, number];
-  scaleRange: [number, number];
+  
+  // Fill Properties
+  fillEnabled: boolean;
+  fillProbability: number; // 0-100%
+  fillColorRange: [string, string]; // color range
+  fillGradientEnabled: boolean;
+  fillGradientStops: number;
+  fillOpacityRange: [number, number];
+  
+  // Stroke Properties  
+  strokeEnabled: boolean;
+  strokeProbability: number; // 0-100%
+  strokeColorRange: [string, string];
+  strokeGradientEnabled: boolean;
+  strokeGradientStops: number;
+  strokeOpacityRange: [number, number];
+  strokeWidthRange: [number, number];
+  
+  // Shape Properties
+  pointCountRange: [number, number];
+  segmentCountRange: [number, number];
+  splineCurvesEnabled: boolean;
+  closedShapeProbability: number;
+  
+  // Transform Properties
   positionDrift: number;
+  translateXRange: [number, number];
+  translateYRange: [number, number];
+  scaleUniform: boolean;
+  scaleRange: [number, number];
+  scaleXRange: [number, number];
+  scaleYRange: [number, number];
+  rotationRange: [number, number];
+  skewXRange: [number, number];
+  skewYRange: [number, number];
+  
+  // General Properties
+  opacityRange: [number, number];
   distributionCurve: 'linear' | 'normal' | 'exponential';
+  
+  // Safety Constraints
+  preventInvisibleShapes: boolean; // ensures fill OR stroke is always present
   
   // Color Harmony
   colorHarmonyEnabled: boolean;
@@ -87,11 +124,49 @@ const defaultSettings: BatchConfigSettings = {
     opacity: false,
   },
   propertyConstraintsEnabled: false,
-  opacityRange: [0.1, 1.0],
-  rotationRange: [0, 360],
-  scaleRange: [0.5, 2.0],
+  
+  // Fill Properties
+  fillEnabled: true,
+  fillProbability: 80,
+  fillColorRange: ['#3b82f6', '#8b5cf6'],
+  fillGradientEnabled: false,
+  fillGradientStops: 3,
+  fillOpacityRange: [0.7, 1.0],
+  
+  // Stroke Properties
+  strokeEnabled: true,
+  strokeProbability: 60,
+  strokeColorRange: ['#1e293b', '#64748b'],
+  strokeGradientEnabled: false,
+  strokeGradientStops: 2,
+  strokeOpacityRange: [0.8, 1.0],
+  strokeWidthRange: [1, 4],
+  
+  // Shape Properties
+  pointCountRange: [3, 8],
+  segmentCountRange: [3, 12],
+  splineCurvesEnabled: false,
+  closedShapeProbability: 85,
+  
+  // Transform Properties
   positionDrift: 50,
+  translateXRange: [-100, 100],
+  translateYRange: [-100, 100],
+  scaleUniform: true,
+  scaleRange: [0.5, 2.0],
+  scaleXRange: [0.5, 2.0],
+  scaleYRange: [0.5, 2.0],
+  rotationRange: [0, 360],
+  skewXRange: [-15, 15],
+  skewYRange: [-15, 15],
+  
+  // General Properties
+  opacityRange: [0.1, 1.0],
   distributionCurve: 'linear',
+  
+  // Safety Constraints
+  preventInvisibleShapes: true,
+  
   colorHarmonyEnabled: false,
   harmonyType: 'complementary',
   baseColor: '#3b82f6',
@@ -126,10 +201,12 @@ interface BatchConfigDialogProps {
 
 export default function BatchConfigDialog({ settings, onSettingsChange }: BatchConfigDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(settings);
+  const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(() => ({ ...defaultSettings, ...settings }));
 
   useEffect(() => {
-    setCurrentSettings(settings);
+    // Merge incoming settings with defaults to ensure all properties exist
+    const mergedSettings = { ...defaultSettings, ...settings };
+    setCurrentSettings(mergedSettings);
   }, [settings]);
 
   const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings>) => {
@@ -205,9 +282,21 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
         </Button>
       </DialogTrigger>
       <DialogContent 
-        className="w-[90vw] max-w-[500px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
+        className="w-[90vw] max-w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
+        onEscapeKeyDown={(e) => {
+          // Only close on explicit escape key
+        }}
+        onPointerDownOutside={(e) => {
+          // Only close when clicking outside the dialog
+          const target = e.target as Element;
+          if (!target.closest('[data-radix-popper-content-wrapper]')) {
+            // Allow closing only if not clicking on select content
+          } else {
+            e.preventDefault();
+          }
+        }}
         onInteractOutside={(e) => {
-          // Prevent dialog from closing on checkbox/input interactions
+          // Prevent all other interaction-based closing
           e.preventDefault();
         }}
       >
@@ -267,6 +356,53 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                 />
                 <Label className="text-slate-300 font-medium">Blend Mode Control</Label>
               </div>
+              
+              {currentSettings.blendModeEnabled && (
+                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                  <Label className="text-sm text-slate-300">Enabled Blend Modes & Weights</Label>
+                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                    {blendModes.map(mode => (
+                      <div key={mode} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={!!currentSettings.enabledBlendModes[mode]}
+                          onCheckedChange={(checked) => {
+                            const newBlendModes = { ...currentSettings.enabledBlendModes };
+                            if (checked) {
+                              newBlendModes[mode] = 50; // default weight
+                            } else {
+                              delete newBlendModes[mode];
+                            }
+                            handleSettingsUpdate({ enabledBlendModes: newBlendModes });
+                          }}
+                          className="border-slate-600"
+                        />
+                        <Label className="text-xs text-slate-300 flex-1 capitalize">
+                          {mode.replace('-', ' ')}
+                        </Label>
+                        {currentSettings.enabledBlendModes[mode] && (
+                          <div className="flex items-center space-x-1">
+                            <Slider
+                              value={[currentSettings.enabledBlendModes[mode] || 50]}
+                              onValueChange={([value]) => {
+                                const newBlendModes = { ...currentSettings.enabledBlendModes };
+                                newBlendModes[mode] = value;
+                                handleSettingsUpdate({ enabledBlendModes: newBlendModes });
+                              }}
+                              min={1}
+                              max={100}
+                              step={1}
+                              className="w-16"
+                            />
+                            <span className="text-xs text-slate-400 w-8">
+                              {currentSettings.enabledBlendModes[mode]}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator className="bg-slate-600" />
@@ -341,32 +477,550 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.propertyConstraintsEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-6 space-y-4 border-l-2 border-slate-600 pl-4 max-h-64 overflow-y-auto">
+                  
+                  {/* Safety Constraint */}
                   <div className="space-y-2">
-                    <Label className="text-sm text-slate-300">Opacity Range</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={currentSettings.opacityRange[0]}
-                        onChange={(e) => handleSettingsUpdate({ 
-                          opacityRange: [parseFloat(e.target.value), currentSettings.opacityRange[1]] 
-                        })}
-                        className="bg-slate-800 border-slate-600 text-slate-200"
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={currentSettings.preventInvisibleShapes}
+                        onCheckedChange={(checked) => 
+                          handleSettingsUpdate({ preventInvisibleShapes: checked as boolean })
+                        }
+                        className="border-slate-600"
                       />
-                      <Input
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={currentSettings.opacityRange[1]}
-                        onChange={(e) => handleSettingsUpdate({ 
-                          opacityRange: [currentSettings.opacityRange[0], parseFloat(e.target.value)] 
-                        })}
-                        className="bg-slate-800 border-slate-600 text-slate-200"
+                      <Label className="text-sm text-slate-300">Prevent Invisible Shapes</Label>
+                    </div>
+                    <p className="text-xs text-slate-400 ml-6">Ensures at least fill OR stroke is always present</p>
+                  </div>
+
+                  <Separator className="bg-slate-600" />
+
+                  {/* Fill Properties */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={currentSettings.fillEnabled}
+                        onCheckedChange={(checked) => 
+                          handleSettingsUpdate({ fillEnabled: checked as boolean })
+                        }
+                        className="border-slate-600"
                       />
+                      <Label className="text-sm text-slate-300 font-medium">Fill Properties</Label>
+                    </div>
+                    
+                    {currentSettings.fillEnabled && (
+                      <div className="ml-6 space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Fill Probability (%)</Label>
+                          <Slider
+                            value={[currentSettings.fillProbability]}
+                            onValueChange={([value]) => handleSettingsUpdate({ fillProbability: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            className="w-full"
+                          />
+                          <span className="text-xs text-slate-400">{currentSettings.fillProbability}%</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-300">Fill Color Start</Label>
+                            <Input
+                              type="color"
+                              value={currentSettings.fillColorRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                fillColorRange: [e.target.value, currentSettings.fillColorRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 h-8"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-300">Fill Color End</Label>
+                            <Input
+                              type="color"
+                              value={currentSettings.fillColorRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                fillColorRange: [currentSettings.fillColorRange[0], e.target.value] 
+                              })}
+                              className="bg-slate-800 border-slate-600 h-8"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            checked={currentSettings.fillGradientEnabled}
+                            onCheckedChange={(checked) => 
+                              handleSettingsUpdate({ fillGradientEnabled: checked as boolean })
+                            }
+                            className="border-slate-600"
+                          />
+                          <Label className="text-xs text-slate-300">Enable Fill Gradients</Label>
+                        </div>
+
+                        {currentSettings.fillGradientEnabled && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Gradient Stops</Label>
+                            <Slider
+                              value={[currentSettings.fillGradientStops]}
+                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientStops: value })}
+                              min={2}
+                              max={8}
+                              step={1}
+                              className="w-full"
+                            />
+                            <span className="text-xs text-slate-400">{currentSettings.fillGradientStops} stops</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Fill Opacity Range</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={currentSettings.fillOpacityRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                fillOpacityRange: [parseFloat(e.target.value), currentSettings.fillOpacityRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={currentSettings.fillOpacityRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                fillOpacityRange: [currentSettings.fillOpacityRange[0], parseFloat(e.target.value)] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator className="bg-slate-600" />
+
+                  {/* Stroke Properties */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={currentSettings.strokeEnabled}
+                        onCheckedChange={(checked) => 
+                          handleSettingsUpdate({ strokeEnabled: checked as boolean })
+                        }
+                        className="border-slate-600"
+                      />
+                      <Label className="text-sm text-slate-300 font-medium">Stroke Properties</Label>
+                    </div>
+                    
+                    {currentSettings.strokeEnabled && (
+                      <div className="ml-6 space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Stroke Probability (%)</Label>
+                          <Slider
+                            value={[currentSettings.strokeProbability]}
+                            onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            className="w-full"
+                          />
+                          <span className="text-xs text-slate-400">{currentSettings.strokeProbability}%</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Stroke Width Range</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="number"
+                              min="0.5"
+                              max="20"
+                              step="0.5"
+                              value={currentSettings.strokeWidthRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                strokeWidthRange: [parseFloat(e.target.value), currentSettings.strokeWidthRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                            <Input
+                              type="number"
+                              min="0.5"
+                              max="20"
+                              step="0.5"
+                              value={currentSettings.strokeWidthRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                strokeWidthRange: [currentSettings.strokeWidthRange[0], parseFloat(e.target.value)] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-300">Stroke Color Start</Label>
+                            <Input
+                              type="color"
+                              value={currentSettings.strokeColorRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                strokeColorRange: [e.target.value, currentSettings.strokeColorRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 h-8"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-300">Stroke Color End</Label>
+                            <Input
+                              type="color"
+                              value={currentSettings.strokeColorRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                strokeColorRange: [currentSettings.strokeColorRange[0], e.target.value] 
+                              })}
+                              className="bg-slate-800 border-slate-600 h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator className="bg-slate-600" />
+
+                  {/* Shape Properties */}
+                  <div className="space-y-3">
+                    <Label className="text-sm text-slate-300 font-medium">Shape Properties</Label>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Point Count Range</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="3"
+                          max="20"
+                          step="1"
+                          value={currentSettings.pointCountRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            pointCountRange: [parseInt(e.target.value), currentSettings.pointCountRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="3"
+                          max="20"
+                          step="1"
+                          value={currentSettings.pointCountRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            pointCountRange: [currentSettings.pointCountRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={currentSettings.splineCurvesEnabled}
+                        onCheckedChange={(checked) => 
+                          handleSettingsUpdate({ splineCurvesEnabled: checked as boolean })
+                        }
+                        className="border-slate-600"
+                      />
+                      <Label className="text-xs text-slate-300">Enable Spline Curves</Label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Closed Shape Probability (%)</Label>
+                      <Slider
+                        value={[currentSettings.closedShapeProbability]}
+                        onValueChange={([value]) => handleSettingsUpdate({ closedShapeProbability: value })}
+                        min={0}
+                        max={100}
+                        step={5}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-slate-400">{currentSettings.closedShapeProbability}%</span>
+                    </div>
+                  </div>
+
+                  <Separator className="bg-slate-600" />
+
+                  {/* Transform Properties */}
+                  <div className="space-y-3">
+                    <Label className="text-sm text-slate-300 font-medium">Transform Properties</Label>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Translation X Range</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="10"
+                          value={currentSettings.translateXRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            translateXRange: [parseInt(e.target.value), currentSettings.translateXRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="10"
+                          value={currentSettings.translateXRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            translateXRange: [currentSettings.translateXRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Translation Y Range</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="10"
+                          value={currentSettings.translateYRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            translateYRange: [parseInt(e.target.value), currentSettings.translateYRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="-500"
+                          max="500"
+                          step="10"
+                          value={currentSettings.translateYRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            translateYRange: [currentSettings.translateYRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={currentSettings.scaleUniform}
+                        onCheckedChange={(checked) => 
+                          handleSettingsUpdate({ scaleUniform: checked as boolean })
+                        }
+                        className="border-slate-600"
+                      />
+                      <Label className="text-xs text-slate-300">Uniform Scaling</Label>
+                    </div>
+
+                    {currentSettings.scaleUniform ? (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-300">Scale Range (Uniform)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="number"
+                            min="0.1"
+                            max="5"
+                            step="0.1"
+                            value={currentSettings.scaleRange[0]}
+                            onChange={(e) => handleSettingsUpdate({ 
+                              scaleRange: [parseFloat(e.target.value), currentSettings.scaleRange[1]] 
+                            })}
+                            className="bg-slate-800 border-slate-600 text-slate-200"
+                          />
+                          <Input
+                            type="number"
+                            min="0.1"
+                            max="5"
+                            step="0.1"
+                            value={currentSettings.scaleRange[1]}
+                            onChange={(e) => handleSettingsUpdate({ 
+                              scaleRange: [currentSettings.scaleRange[0], parseFloat(e.target.value)] 
+                            })}
+                            className="bg-slate-800 border-slate-600 text-slate-200"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Scale X Range</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="number"
+                              min="0.1"
+                              max="5"
+                              step="0.1"
+                              value={currentSettings.scaleXRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                scaleXRange: [parseFloat(e.target.value), currentSettings.scaleXRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                            <Input
+                              type="number"
+                              min="0.1"
+                              max="5"
+                              step="0.1"
+                              value={currentSettings.scaleXRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                scaleXRange: [currentSettings.scaleXRange[0], parseFloat(e.target.value)] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Scale Y Range</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="number"
+                              min="0.1"
+                              max="5"
+                              step="0.1"
+                              value={currentSettings.scaleYRange[0]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                scaleYRange: [parseFloat(e.target.value), currentSettings.scaleYRange[1]] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                            <Input
+                              type="number"
+                              min="0.1"
+                              max="5"
+                              step="0.1"
+                              value={currentSettings.scaleYRange[1]}
+                              onChange={(e) => handleSettingsUpdate({ 
+                                scaleYRange: [currentSettings.scaleYRange[0], parseFloat(e.target.value)] 
+                              })}
+                              className="bg-slate-800 border-slate-600 text-slate-200"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Rotation Range (degrees)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="360"
+                          step="15"
+                          value={currentSettings.rotationRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            rotationRange: [parseInt(e.target.value), currentSettings.rotationRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          max="360"
+                          step="15"
+                          value={currentSettings.rotationRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            rotationRange: [currentSettings.rotationRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Skew X Range (degrees)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="-45"
+                          max="45"
+                          step="5"
+                          value={currentSettings.skewXRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            skewXRange: [parseInt(e.target.value), currentSettings.skewXRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="-45"
+                          max="45"
+                          step="5"
+                          value={currentSettings.skewXRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            skewXRange: [currentSettings.skewXRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Skew Y Range (degrees)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="-45"
+                          max="45"
+                          step="5"
+                          value={currentSettings.skewYRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            skewYRange: [parseInt(e.target.value), currentSettings.skewYRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="-45"
+                          max="45"
+                          step="5"
+                          value={currentSettings.skewYRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            skewYRange: [currentSettings.skewYRange[0], parseInt(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Overall Opacity Range</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={currentSettings.opacityRange[0]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            opacityRange: [parseFloat(e.target.value), currentSettings.opacityRange[1]] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={currentSettings.opacityRange[1]}
+                          onChange={(e) => handleSettingsUpdate({ 
+                            opacityRange: [currentSettings.opacityRange[0], parseFloat(e.target.value)] 
+                          })}
+                          className="bg-slate-800 border-slate-600 text-slate-200"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
