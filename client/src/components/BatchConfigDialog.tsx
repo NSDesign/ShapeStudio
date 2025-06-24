@@ -203,6 +203,18 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
   const [isOpen, setIsOpen] = useState(false);
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(() => ({ ...defaultSettings, ...settings }));
 
+  // Component lifecycle logging
+  useEffect(() => {
+    console.log('[BatchConfigDialog] Component mounted');
+    return () => {
+      console.log('[BatchConfigDialog] Component unmounting');
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('[BatchConfigDialog] Dialog state changed:', { isOpen });
+  }, [isOpen]);
+
   useEffect(() => {
     // Merge incoming settings with defaults to ensure all properties exist
     const mergedSettings = { ...defaultSettings, ...settings };
@@ -210,10 +222,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
   }, [settings]);
 
   const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings>) => {
+    console.log('[BatchConfigDialog] Settings update triggered:', {
+      updates,
+      currentDialogOpen: isOpen,
+      timestamp: new Date().toISOString()
+    });
+    
     const newSettings = { ...currentSettings, ...updates };
     setCurrentSettings(newSettings);
+    
+    console.log('[BatchConfigDialog] About to call parent onSettingsChange');
     onSettingsChange(newSettings);
-  }, [currentSettings, onSettingsChange]);
+    console.log('[BatchConfigDialog] Parent onSettingsChange completed');
+  }, [currentSettings, onSettingsChange, isOpen]);
 
   const handlePresetChange = useCallback((preset: string) => {
     let newSettings: Partial<BatchConfigSettings>;
