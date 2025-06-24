@@ -270,8 +270,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
     'difference', 'exclusion'
   ];
 
+  // Add comprehensive logging for dialog behavior
+  const handleOpenChange = (open: boolean) => {
+    console.log('[BatchConfigDialog] Open change:', { 
+      from: isOpen, 
+      to: open, 
+      timestamp: new Date().toISOString(),
+      stack: new Error().stack?.split('\n').slice(1, 5)
+    });
+    setIsOpen(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button 
           variant="ghost" 
@@ -283,21 +294,41 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       </DialogTrigger>
       <DialogContent 
         className="w-[90vw] max-w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
-        onEscapeKeyDown={(e) => {
-          // Allow escape key to close
-          setIsOpen(false);
-        }}
         onPointerDownOutside={(e) => {
-          // Prevent closing on any pointer interactions
+          console.log('[BatchConfigDialog] PointerDownOutside triggered:', {
+            target: e.target,
+            currentTarget: e.currentTarget,
+            defaultPrevented: e.defaultPrevented,
+            timestamp: new Date().toISOString()
+          });
           e.preventDefault();
         }}
         onInteractOutside={(e) => {
-          // Prevent all interaction-based closing
+          console.log('[BatchConfigDialog] InteractOutside triggered:', {
+            target: e.target,
+            currentTarget: e.currentTarget,
+            defaultPrevented: e.defaultPrevented,
+            timestamp: new Date().toISOString()
+          });
           e.preventDefault();
         }}
         onFocusOutside={(e) => {
-          // Prevent closing on focus changes
+          console.log('[BatchConfigDialog] FocusOutside triggered:', {
+            target: e.target,
+            currentTarget: e.currentTarget,
+            defaultPrevented: e.defaultPrevented,
+            timestamp: new Date().toISOString()
+          });
           e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          console.log('[BatchConfigDialog] EscapeKeyDown triggered:', {
+            key: e.key,
+            defaultPrevented: e.defaultPrevented,
+            timestamp: new Date().toISOString()
+          });
+          // Allow escape key to close
+          setIsOpen(false);
         }}
       >
         <DialogTitle className="sr-only">Batch Configuration</DialogTitle>
@@ -316,7 +347,14 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              console.log('[BatchConfigDialog] Custom close button clicked:', {
+                target: e.target,
+                currentTarget: e.currentTarget,
+                timestamp: new Date().toISOString()
+              });
+              setIsOpen(false);
+            }}
             className="h-6 w-6 p-0 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
           >
             <X className="w-4 h-4" />
