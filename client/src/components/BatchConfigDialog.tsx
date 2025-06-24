@@ -284,19 +284,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
       <DialogContent 
         className="w-[90vw] max-w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
         onEscapeKeyDown={(e) => {
-          // Only close on explicit escape key
+          // Allow escape key to close
+          setIsOpen(false);
         }}
         onPointerDownOutside={(e) => {
-          // Only close when clicking outside the dialog
-          const target = e.target as Element;
-          if (!target.closest('[data-radix-popper-content-wrapper]')) {
-            // Allow closing only if not clicking on select content
-          } else {
-            e.preventDefault();
-          }
+          // Prevent closing on any pointer interactions
+          e.preventDefault();
         }}
         onInteractOutside={(e) => {
-          // Prevent all other interaction-based closing
+          // Prevent all interaction-based closing
+          e.preventDefault();
+        }}
+        onFocusOutside={(e) => {
+          // Prevent closing on focus changes
           e.preventDefault();
         }}
       >
@@ -358,7 +358,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.blendModeEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-3 space-y-3">
                   <Label className="text-sm text-slate-300">Enabled Blend Modes & Weights</Label>
                   <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
                     {blendModes.map(mode => (
@@ -421,7 +421,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.noiseEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-3 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm text-slate-300">Algorithm</Label>
@@ -477,7 +477,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.propertyConstraintsEnabled && (
-                <div className="ml-6 space-y-4 border-l-2 border-slate-600 pl-4 max-h-64 overflow-y-auto">
+                <div className="ml-3 space-y-4 max-h-64 overflow-y-auto">
                   
                   {/* Safety Constraint */}
                   <div className="space-y-2">
@@ -510,7 +510,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                     </div>
                     
                     {currentSettings.fillEnabled && (
-                      <div className="ml-6 space-y-3">
+                      <div className="ml-3 space-y-3">
                         <div className="space-y-2">
                           <Label className="text-xs text-slate-300">Fill Probability (%)</Label>
                           <Slider
@@ -622,7 +622,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
                     </div>
                     
                     {currentSettings.strokeEnabled && (
-                      <div className="ml-6 space-y-3">
+                      <div className="ml-3 space-y-3">
                         <div className="space-y-2">
                           <Label className="text-xs text-slate-300">Stroke Probability (%)</Label>
                           <Slider
@@ -1043,7 +1043,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.colorHarmonyEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-3 space-y-3">
                   <div className="space-y-2">
                     <Label className="text-sm text-slate-300">Harmony Type</Label>
                     <Select 
@@ -1085,7 +1085,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.physicsEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-3 space-y-3">
                   <div className="space-y-2">
                     <Label className="text-sm text-slate-300">Physics Type</Label>
                     <Select 
@@ -1126,7 +1126,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange }: BatchC
               </div>
               
               {currentSettings.temporalEnabled && (
-                <div className="ml-6 space-y-3 border-l-2 border-slate-600 pl-4">
+                <div className="ml-3 space-y-3">
                   <div className="space-y-2">
                     <Label className="text-sm text-slate-300">Evolution Mode</Label>
                     <Select 
