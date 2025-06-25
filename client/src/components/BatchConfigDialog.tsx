@@ -323,9 +323,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
       <PopoverContent 
         container={document.body}
         side="bottom" 
-        align="end"
-        className="w-[90vw] max-w-[600px] bg-slate-900 border-slate-700 overflow-hidden p-0 max-h-[80vh] overflow-y-auto z-50"
-        sideOffset={8}
+        align="center"
+        className="w-[90vw] max-w-[600px] bg-slate-900 border-slate-700 overflow-hidden p-0 max-h-[80vh] overflow-y-auto z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        sideOffset={0}
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
