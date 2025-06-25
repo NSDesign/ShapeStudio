@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -315,8 +315,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm"
@@ -324,51 +324,12 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
         >
           <Settings className="w-4 h-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent 
-        className="w-[90vw] max-w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0 [&>button]:hidden"
-        onPointerDownOutside={(e) => {
-          console.log('[BatchConfigDialog] PointerDownOutside triggered:', {
-            target: e.target,
-            currentTarget: e.currentTarget,
-            defaultPrevented: e.defaultPrevented,
-            timestamp: new Date().toISOString()
-          });
-          e.preventDefault();
-        }}
-        onInteractOutside={(e) => {
-          console.log('[BatchConfigDialog] InteractOutside triggered:', {
-            target: e.target,
-            currentTarget: e.currentTarget,
-            defaultPrevented: e.defaultPrevented,
-            timestamp: new Date().toISOString()
-          });
-          e.preventDefault();
-        }}
-        onFocusOutside={(e) => {
-          console.log('[BatchConfigDialog] FocusOutside triggered:', {
-            target: e.target,
-            currentTarget: e.currentTarget,
-            defaultPrevented: e.defaultPrevented,
-            timestamp: new Date().toISOString()
-          });
-          e.preventDefault();
-        }}
-        onEscapeKeyDown={(e) => {
-          console.log('[BatchConfigDialog] EscapeKeyDown triggered:', {
-            key: e.key,
-            defaultPrevented: e.defaultPrevented,
-            timestamp: new Date().toISOString()
-          });
-          // Allow escape key to close
-          setIsOpen(false);
-        }}
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0"
+        side="left"
+        align="start"
       >
-        <DialogTitle className="sr-only">Batch Configuration</DialogTitle>
-        <DialogDescription className="sr-only">
-          Configure advanced settings for batch shape generation
-        </DialogDescription>
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div>
@@ -1241,7 +1202,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
             Close
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }
