@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -315,8 +315,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm"
@@ -324,12 +324,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
         >
           <Settings className="w-4 h-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[600px] h-[85vh] bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden p-0"
-        side="left"
-        align="start"
+      </SheetTrigger>
+      <SheetContent 
+        className="w-[90vw] max-w-[600px] bg-slate-900 border-slate-700 overflow-hidden p-0 [&>button]:hidden"
+        side="right"
       >
+        <SheetTitle className="sr-only">Batch Configuration</SheetTitle>
+        <SheetDescription className="sr-only">
+          Configure advanced settings for batch shape generation
+        </SheetDescription>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div>
@@ -1202,7 +1205,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
             Close
           </Button>
         </div>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }
