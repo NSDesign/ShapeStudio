@@ -108,6 +108,12 @@ Changelog:
   - Added detailed blend mode controls with probability weights
   - Implemented extensive property constraints including fill, stroke, shape, and transform options
   - Added safety constraint to prevent invisible shapes
+- June 25, 2025. Resolved batch configuration dialog stability and functionality issues
+  - Fixed portal-based positioning for centered modal independent of trigger button
+  - Implemented proper z-index stacking (10002) for dropdown functionality within portal
+  - Restored comprehensive settings after refactoring (11 major setting categories)
+  - Updated button layout: Reset | Apply | Cancel with simplified labels
+  - Applied deferred update pattern to prevent parent component remounting
 ```
 
 ## User Preferences
