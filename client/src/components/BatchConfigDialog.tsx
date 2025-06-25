@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -310,31 +310,29 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="h-10 w-10 p-0 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600"
-        >
-          <Settings className="w-4 h-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        container={document.body}
-        side="bottom" 
-        align="center"
-        className="w-[90vw] max-w-[600px] bg-slate-900 border-slate-700 overflow-hidden p-0 max-h-[80vh] overflow-y-auto z-50"
-        sideOffset={0}
-        avoidCollisions={false}
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 9999
-        }}
+    <>
+      <Button 
+        variant="ghost" 
+        size="sm"
+        className="h-10 w-10 p-0 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600"
+        onClick={() => setIsOpen(true)}
       >
+        <Settings className="w-4 h-4" />
+      </Button>
+      
+      {isOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsOpen(false);
+            }
+          }}
+        >
+          <div
+            className="w-[90vw] max-w-[600px] bg-slate-900 border-slate-700 border rounded-lg overflow-hidden max-h-[80vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div>
@@ -1214,8 +1212,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
               Apply Settings
             </Button>
           </div>
+          </div>
         </div>
-      </PopoverContent>
-    </Popover>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
