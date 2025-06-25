@@ -234,19 +234,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
       timestamp: new Date().toISOString()
     });
     
-    setCurrentSettings(prevSettings => {
-      const newSettings = { ...prevSettings, ...updates };
-      
-      // Use setTimeout to defer the parent callback to avoid immediate remount
-      setTimeout(() => {
-        console.log('[BatchConfigDialog] Calling parent onSettingsChange (deferred)');
-        onSettingsChange(newSettings);
-        console.log('[BatchConfigDialog] Parent onSettingsChange completed (deferred)');
-      }, 0);
-      
-      return newSettings;
-    });
-  }, [onSettingsChange, isOpen]);
+    // Only update internal state, don't call parent callback immediately
+    setCurrentSettings(prevSettings => ({ ...prevSettings, ...updates }));
+  }, [isOpen]);
 
   const handlePresetChange = useCallback((preset: string) => {
     let newSettings: Partial<BatchConfigSettings>;
@@ -294,8 +284,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
   const resetToDefaults = useCallback(() => {
     setCurrentSettings(defaultSettings);
-    onSettingsChange(defaultSettings);
-  }, [onSettingsChange]);
+  }, []);
+
+  const applySettings = useCallback(() => {
+    console.log('[BatchConfigDialog] Applying settings to parent');
+    onSettingsChange(currentSettings);
+    setIsOpen(false);
+  }, [currentSettings, onSettingsChange, setIsOpen]);
 
   const blendModes: BlendMode[] = [
     'source-over', 'multiply', 'screen', 'overlay', 'soft-light', 
@@ -1197,13 +1192,21 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset to Defaults
           </Button>
-          <Button 
-            onClick={() => setIsOpen(false)} 
-            variant="outline"
-            className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
-          >
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setIsOpen(false)} 
+              variant="outline"
+              className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={applySettings}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Apply Settings
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
