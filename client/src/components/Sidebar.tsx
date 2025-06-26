@@ -30,6 +30,7 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Shapes,
   Settings,
   Layers,
@@ -1157,27 +1158,370 @@ export default function Sidebar({
   }
 
   function ShapeTypesContent() {
+    const [expandedShapes, setExpandedShapes] = useState<Set<string>>(new Set());
+
+    const toggleShapeExpansion = (shapeType: string) => {
+      const newExpanded = new Set(expandedShapes);
+      if (newExpanded.has(shapeType)) {
+        newExpanded.delete(shapeType);
+      } else {
+        newExpanded.add(shapeType);
+      }
+      setExpandedShapes(newExpanded);
+    };
+
+    const getShapeProperties = (shapeType: string) => {
+      switch (shapeType) {
+        case 'polygon':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Edge Count Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 3</span>
+                    <span className="text-slate-400">Max: 20</span>
+                  </div>
+                  <Slider
+                    value={[3, 20]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update polygon edge count range
+                      console.log(`Polygon edge count: ${min}-${max}`);
+                    }}
+                    min={3}
+                    max={20}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        
+        case 'circle':
+        case 'ellipse':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 8</span>
+                    <span className="text-slate-400">Max: 64</span>
+                  </div>
+                  <Slider
+                    value={[16, 32]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update circle/ellipse segment count range
+                      console.log(`${shapeType} segments: ${min}-${max}`);
+                    }}
+                    min={8}
+                    max={64}
+                    step={4}
+                    className="w-full"
+                    minStepsBetweenThumbs={4}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        
+        case 'bezier':
+        case 'cubic':
+        case 'smooth-spline':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Point Count Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 3</span>
+                    <span className="text-slate-400">Max: 10</span>
+                  </div>
+                  <Slider
+                    value={[3, 6]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update curve point count range
+                      console.log(`${shapeType} points: ${min}-${max}`);
+                    }}
+                    min={3}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Open: 50%</span>
+                    <span className="text-slate-400">Closed: 50%</span>
+                  </div>
+                  <Slider
+                    value={[50]}
+                    onValueChange={([value]) => {
+                      // TODO: Update curve open/closed probability
+                      console.log(`${shapeType} open probability: ${value}%`);
+                    }}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Style</Label>
+                <div className="grid grid-cols-3 gap-1 text-xs">
+                  {['round', 'square', 'butt'].map((cap) => (
+                    <div key={cap} className="flex items-center space-x-1">
+                      <Checkbox
+                        defaultChecked={cap === 'round'}
+                        onCheckedChange={(checked) => {
+                          // TODO: Update stroke cap probability
+                          console.log(`${cap} cap: ${checked}`);
+                        }}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                      />
+                      <Label className="text-xs text-slate-300 capitalize">{cap}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'star':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Point Count Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 5</span>
+                    <span className="text-slate-400">Max: 12</span>
+                  </div>
+                  <Slider
+                    value={[5, 8]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update star point count range
+                      console.log(`Star points: ${min}-${max}`);
+                    }}
+                    min={5}
+                    max={12}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 30%</span>
+                    <span className="text-slate-400">Max: 70%</span>
+                  </div>
+                  <Slider
+                    value={[30, 70]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update star inner radius range
+                      console.log(`Star inner radius: ${min}%-${max}%`);
+                    }}
+                    min={10}
+                    max={90}
+                    step={5}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'ring':
+        case 'spline-ring':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 20%</span>
+                    <span className="text-slate-400">Max: 80%</span>
+                  </div>
+                  <Slider
+                    value={[20, 80]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update ring inner radius range
+                      console.log(`${shapeType} inner radius: ${min}%-${max}%`);
+                    }}
+                    min={10}
+                    max={90}
+                    step={5}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
+              {shapeType.includes('spline') && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">Min: 12</span>
+                      <span className="text-slate-400">Max: 48</span>
+                    </div>
+                    <Slider
+                      value={[16, 32]}
+                      onValueChange={([min, max]) => {
+                        // TODO: Update spline ring segment count
+                        console.log(`${shapeType} segments: ${min}-${max}`);
+                      }}
+                      min={12}
+                      max={48}
+                      step={4}
+                      className="w-full"
+                      minStepsBetweenThumbs={4}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+
+        case 'line':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Point Count Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 2</span>
+                    <span className="text-slate-400">Max: 8</span>
+                  </div>
+                  <Slider
+                    value={[2, 4]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update line point count range
+                      console.log(`Line points: ${min}-${max}`);
+                    }}
+                    min={2}
+                    max={8}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Style</Label>
+                <div className="grid grid-cols-3 gap-1 text-xs">
+                  {['round', 'square', 'butt'].map((cap) => (
+                    <div key={cap} className="flex items-center space-x-1">
+                      <Checkbox
+                        defaultChecked={cap === 'round'}
+                        onCheckedChange={(checked) => {
+                          // TODO: Update line stroke cap probability
+                          console.log(`Line ${cap} cap: ${checked}`);
+                        }}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                      />
+                      <Label className="text-xs text-slate-300 capitalize">{cap}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'rectangle':
+        case 'square':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 0px</span>
+                    <span className="text-slate-400">Max: 50px</span>
+                  </div>
+                  <Slider
+                    value={[0, 10]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update rectangle corner radius range
+                      console.log(`${shapeType} corner radius: ${min}px-${max}px`);
+                    }}
+                    min={0}
+                    max={50}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={0}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    };
+
     return (
       <div className="space-y-3">
-        {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => (
-          <div key={type} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-            enabledShapeTypes.has(type as ShapeType) ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-          }`}>
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded transition-colors ${
-                enabledShapeTypes.has(type as ShapeType) ? 'bg-blue-400' : 'bg-slate-500'
-              }`} />
-              <Label className={`text-sm transition-colors ${
-                enabledShapeTypes.has(type as ShapeType) ? 'text-blue-200' : 'text-slate-300'
-              }`}>{displayName}</Label>
+        {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
+          const isEnabled = enabledShapeTypes.has(type as ShapeType);
+          const isExpanded = expandedShapes.has(type);
+          const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rectangle', 'square'].includes(type);
+
+          return (
+            <div key={type} className="space-y-2">
+              {/* Shape Toggle Row */}
+              <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+              }`}>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded transition-colors ${
+                    isEnabled ? 'bg-blue-400' : 'bg-slate-500'
+                  }`} />
+                  <Label className={`text-sm transition-colors ${
+                    isEnabled ? 'text-blue-200' : 'text-slate-300'
+                  }`}>{displayName}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {isEnabled && hasProperties && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleShapeExpansion(type)}
+                      className="p-1 h-6 w-6 hover:bg-slate-700"
+                    >
+                      <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
+                        isExpanded ? 'rotate-180' : ''
+                      }`} />
+                    </Button>
+                  )}
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={() => onToggleShapeType(type as ShapeType)}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+              </div>
+              
+              {/* Shape Properties (Accordion Content) */}
+              {isEnabled && isExpanded && hasProperties && (
+                <div className="ml-4">
+                  {getShapeProperties(type)}
+                </div>
+              )}
             </div>
-            <Switch
-              checked={enabledShapeTypes.has(type as ShapeType)}
-              onCheckedChange={() => onToggleShapeType(type as ShapeType)}
-              className="data-[state=checked]:bg-blue-600"
-            />
-          </div>
-        ))}
+          );
+        })}
 
         <div className="space-y-2 pb-6">
           <Label className="text-xs text-slate-400">Random Shape Count Range</Label>
