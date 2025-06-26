@@ -22,35 +22,28 @@ export interface BatchConfigSettings {
   noiseAmplitude: number;
   noiseSeed: number;
   noiseTargets: {
-    // Shape Properties
-    width: boolean;
-    height: boolean;
-    xPosition: boolean;
-    yPosition: boolean;
-    // Fill Properties
-    fillProbability: boolean;
-    fillColor: boolean;
-    fillOpacity: boolean;
-    // Stroke Properties
-    strokeProbability: boolean;
-    strokeColor: boolean;
-    strokeOpacity: boolean;
-    strokeWidth: boolean;
-    // Shape-specific Properties
-    segments: boolean;
-    points: boolean;
-    pointPosition: boolean;
-    controlPoints: boolean;
-    // Transform Properties
-    translateX: boolean;
-    translateY: boolean;
-    scaleX: boolean;
-    scaleY: boolean;
-    scaleUniform: boolean;
+    // Core 5 Properties (as requested)
+    position: boolean;
     rotation: boolean;
-    skewX: boolean;
-    skewY: boolean;
+    scale: boolean;
+    color: boolean;
+    opacity: boolean;
   };
+  
+  // Algorithm-specific settings
+  // Fractal specific
+  noiseLacunarity: number;
+  noiseGain: number;
+  
+  // Worley specific
+  noiseDistanceFunction: 'euclidean' | 'manhattan' | 'chebyshev';
+  noiseFeaturePoints: number;
+  
+  // Ridge specific
+  noiseRidgeOffset: number;
+  
+  // Turbulence specific
+  noiseTurbulencePower: number;
   
   // Blend Mode Control
   blendModeEnabled: boolean;
@@ -160,35 +153,21 @@ const defaultSettings: BatchConfigSettings = {
   noiseAmplitude: 50,
   noiseSeed: Math.floor(Math.random() * 10000),
   noiseTargets: {
-    // Shape Properties
-    width: true,
-    height: true,
-    xPosition: true,
-    yPosition: true,
-    // Fill Properties
-    fillProbability: false,
-    fillColor: false,
-    fillOpacity: false,
-    // Stroke Properties
-    strokeProbability: false,
-    strokeColor: false,
-    strokeOpacity: false,
-    strokeWidth: false,
-    // Shape-specific Properties
-    segments: false,
-    points: false,
-    pointPosition: false,
-    controlPoints: false,
-    // Transform Properties
-    translateX: false,
-    translateY: false,
-    scaleX: false,
-    scaleY: false,
-    scaleUniform: false,
+    // Core 5 Properties (as requested)
+    position: true,
     rotation: false,
-    skewX: false,
-    skewY: false
+    scale: false,
+    color: false,
+    opacity: false
   },
+  
+  // Algorithm-specific settings
+  noiseLacunarity: 2.0,
+  noiseGain: 0.5,
+  noiseDistanceFunction: 'euclidean',
+  noiseFeaturePoints: 1,
+  noiseRidgeOffset: 1.0,
+  noiseTurbulencePower: 1.0,
   
   blendModeEnabled: false,
   enabledBlendModes: { 'source-over': 100 },
@@ -400,6 +379,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ zIndex: 10001 }}>
+              {/* System Behavior Explanation */}
+              <div className="p-4 bg-slate-800 rounded border border-slate-600">
+                <Label className="text-sm font-medium text-slate-200 block mb-2">Advanced Noise System Behavior:</Label>
+                <div className="space-y-2 text-xs text-slate-400">
+                  <p><strong>Untargeted Properties:</strong> Properties not checked in Targets use Randomise (standard setting) fallback with probability distributions from Properties section.</p>
+                  <p><strong>Algorithm-Specific Settings:</strong> Each noise type has unique parameters (Fractal: lacunarity/gain, Worley: distance functions, etc.)</p>
+                  <p><strong>Blend Mode Variation:</strong> When Advanced Noise is enabled AND Opacity is targeted, noise adds variation to blend mode probability weights.</p>
+                  <p><strong>Missing Properties:</strong> Shape-specific properties (polygon segments, line points, star radius) need separate targeting implementation.</p>
+                </div>
+              </div>
+
+              <Separator className="bg-slate-600" />
+
               {/* Presets Dropdown */}
               <div className="space-y-3">
                 <Label className="font-medium text-slate-200">Configuration Preset</Label>
@@ -498,7 +490,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
                     <div className="space-y-2">
                       <Label className="text-sm text-slate-300">Targets</Label>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
+                      <p className="text-xs text-slate-400">Properties not checked use Randomise (standard setting) fallback</p>
+                      <div className="grid grid-cols-5 gap-2 text-xs">
                         {Object.entries(currentSettings.noiseTargets).map(([target, enabled]) => (
                           <div key={target} className="flex items-center space-x-2">
                             <Checkbox
@@ -509,12 +502,106 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
                             />
                             <Label className="text-xs text-slate-300 capitalize">
-                              {target.replace(/([A-Z])/g, ' $1').trim()}
+                              {target}
                             </Label>
                           </div>
                         ))}
                       </div>
                     </div>
+
+                    {/* Algorithm-specific settings */}
+                    {currentSettings.noiseAlgorithm === 'fractal' && (
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700">
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Lacunarity: {currentSettings.noiseLacunarity}</Label>
+                          <Slider
+                            value={[currentSettings.noiseLacunarity]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseLacunarity: value })}
+                            min={1.0}
+                            max={4.0}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Gain: {currentSettings.noiseGain}</Label>
+                          <Slider
+                            value={[currentSettings.noiseGain]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseGain: value })}
+                            min={0.1}
+                            max={1.0}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.noiseAlgorithm === 'worley' && (
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700">
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Distance Function</Label>
+                          <Select 
+                            value={currentSettings.noiseDistanceFunction}
+                            onValueChange={(value) => handleSettingsUpdate({ noiseDistanceFunction: value as any })}
+                          >
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="euclidean" className="text-slate-200 hover:bg-slate-700">Euclidean</SelectItem>
+                              <SelectItem value="manhattan" className="text-slate-200 hover:bg-slate-700">Manhattan</SelectItem>
+                              <SelectItem value="chebyshev" className="text-slate-200 hover:bg-slate-700">Chebyshev</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Feature Points: {currentSettings.noiseFeaturePoints}</Label>
+                          <Slider
+                            value={[currentSettings.noiseFeaturePoints]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseFeaturePoints: value })}
+                            min={1}
+                            max={4}
+                            step={1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.noiseAlgorithm === 'ridge' && (
+                      <div className="space-y-2 pt-2 border-t border-slate-700">
+                        <Label className="text-sm text-slate-300">Ridge Offset: {currentSettings.noiseRidgeOffset}</Label>
+                        <Slider
+                          value={[currentSettings.noiseRidgeOffset]}
+                          onValueChange={([value]) => handleSettingsUpdate({ noiseRidgeOffset: value })}
+                          min={0.5}
+                          max={2.0}
+                          step={0.1}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </div>
+                    )}
+
+                    {currentSettings.noiseAlgorithm === 'turbulence' && (
+                      <div className="space-y-2 pt-2 border-t border-slate-700">
+                        <Label className="text-sm text-slate-300">Turbulence Power: {currentSettings.noiseTurbulencePower}</Label>
+                        <Slider
+                          value={[currentSettings.noiseTurbulencePower]}
+                          onValueChange={([value]) => handleSettingsUpdate({ noiseTurbulencePower: value })}
+                          min={0.5}
+                          max={3.0}
+                          step={0.1}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </div>
+                    )}
+
+                    {currentSettings.noiseAlgorithm === 'randomise' && (
+                      <div className="space-y-2 pt-2 border-t border-slate-700">
+                        <Label className="text-xs text-slate-400">Standard randomization - uses probability distributions and property constraints defined in Properties section</Label>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -534,6 +621,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 
                 {currentSettings.blendModeEnabled && (
                   <div className="ml-6 space-y-3">
+                    <div className="p-3 bg-slate-800 rounded border-l-4 border-blue-500">
+                      <Label className="text-xs text-slate-300 block mb-1">Blend Mode Behavior:</Label>
+                      <p className="text-xs text-slate-400">
+                        Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
+                        {currentSettings.noiseEnabled && currentSettings.noiseTargets.opacity && 
+                          " Advanced Noise adds variation to these probability values when Opacity is targeted."
+                        }
+                      </p>
+                    </div>
+                    
                     <Label className="text-sm text-slate-300">Active Blend Modes</Label>
                     <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
                       {blendModes.map((mode) => (

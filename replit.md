@@ -114,6 +114,13 @@ Changelog:
   - Restored comprehensive settings after refactoring (11 major setting categories)
   - Updated button layout: Reset | Apply | Cancel with simplified labels
   - Applied deferred update pattern to prevent parent component remounting
+- June 26, 2025. Advanced Noise System Technical Architecture Refinement
+  - Clarified algorithm-specific settings for each noise type (Fractal, Worley, Ridge, Turbulence)
+  - Simplified targeting to core 5 properties: Position, Rotation, Scale, Color, Opacity
+  - Implemented fallback behavior: untargeted properties use Randomise (standard setting)
+  - Added explicit blend mode probability mechanics with noise variation when Opacity targeted
+  - Documented missing shape-specific properties requiring separate implementation
+  - Added comprehensive system behavior explanation panel in dialog
 ```
 
 ## User Preferences
