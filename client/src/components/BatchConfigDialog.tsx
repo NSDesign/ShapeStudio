@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Settings, RotateCcw, X } from 'lucide-react';
+import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { BlendMode } from '@/lib/shapeTypes';
 
 export interface BatchConfigSettings {
@@ -22,12 +22,43 @@ export interface BatchConfigSettings {
   noiseAmplitude: number;
   noiseSeed: number;
   noiseTargets: {
-    // Core 5 Properties (as requested)
+    // Core Transform Properties
     position: boolean;
     rotation: boolean;
     scale: boolean;
     color: boolean;
     opacity: boolean;
+    
+    // Shape Properties
+    width: boolean;
+    height: boolean;
+    
+    // Fill Properties
+    fillProbability: boolean;
+    fillColor: boolean;
+    fillOpacity: boolean;
+    
+    // Stroke Properties
+    strokeProbability: boolean;
+    strokeColor: boolean;
+    strokeOpacity: boolean;
+    strokeWidth: boolean;
+    
+    // Shape-Specific Properties
+    polygonSegments: boolean;
+    linePoints: boolean;
+    curvePoints: boolean;
+    starInnerRadius: boolean;
+    starOuterRadius: boolean;
+    ringInnerRadius: boolean;
+    ringOuterRadius: boolean;
+    
+    // Visual Effects
+    blendMode: boolean;
+    
+    // Advanced Transforms
+    skewX: boolean;
+    skewY: boolean;
   };
   
   // Algorithm-specific settings
@@ -153,12 +184,43 @@ const defaultSettings: BatchConfigSettings = {
   noiseAmplitude: 50,
   noiseSeed: Math.floor(Math.random() * 10000),
   noiseTargets: {
-    // Core 5 Properties (as requested)
+    // Core Transform Properties
     position: true,
     rotation: false,
     scale: false,
     color: false,
-    opacity: false
+    opacity: false,
+    
+    // Shape Properties
+    width: false,
+    height: false,
+    
+    // Fill Properties
+    fillProbability: false,
+    fillColor: false,
+    fillOpacity: false,
+    
+    // Stroke Properties
+    strokeProbability: false,
+    strokeColor: false,
+    strokeOpacity: false,
+    strokeWidth: false,
+    
+    // Shape-Specific Properties
+    polygonSegments: false,
+    linePoints: false,
+    curvePoints: false,
+    starInnerRadius: false,
+    starOuterRadius: false,
+    ringInnerRadius: false,
+    ringOuterRadius: false,
+    
+    // Visual Effects
+    blendMode: false,
+    
+    // Advanced Transforms
+    skewX: false,
+    skewY: false
   },
   
   // Algorithm-specific settings
@@ -379,15 +441,26 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ zIndex: 10001 }}>
-              {/* System Behavior Explanation */}
-              <div className="p-4 bg-slate-800 rounded border border-slate-600">
-                <Label className="text-sm font-medium text-slate-200 block mb-2">Advanced Noise System Behavior:</Label>
-                <div className="space-y-2 text-xs text-slate-400">
-                  <p><strong>Untargeted Properties:</strong> Properties not checked in Targets use Randomise (standard setting) fallback with probability distributions from Properties section.</p>
-                  <p><strong>Algorithm-Specific Settings:</strong> Each noise type has unique parameters (Fractal: lacunarity/gain, Worley: distance functions, etc.)</p>
-                  <p><strong>Blend Mode Variation:</strong> When Advanced Noise is enabled AND Opacity is targeted, noise adds variation to blend mode probability weights.</p>
-                  <p><strong>Missing Properties:</strong> Shape-specific properties (polygon segments, line points, star radius) need separate targeting implementation.</p>
-                </div>
+              {/* Collapsible System Behavior Explanation */}
+              <div className="border border-slate-600 rounded">
+                <Button
+                  variant="ghost"
+                  className="flex items-center justify-between w-full p-3 bg-slate-800 rounded hover:bg-slate-700 text-left"
+                  onClick={() => setShowExplanation(!showExplanation)}
+                >
+                  <Label className="text-sm font-medium text-slate-200">Advanced Noise System Behavior</Label>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${showExplanation ? 'rotate-180' : ''}`} />
+                </Button>
+                {showExplanation && (
+                  <div className="p-3 bg-slate-800 border-t border-slate-600">
+                    <div className="space-y-2 text-xs text-slate-400">
+                      <p><strong>Untargeted Properties:</strong> Properties not checked in Targets use Randomise (standard setting) fallback with probability distributions from Properties section.</p>
+                      <p><strong>Algorithm-Specific Settings:</strong> Each noise type has unique parameters (Fractal: lacunarity/gain, Worley: distance functions, etc.)</p>
+                      <p><strong>Blend Mode Variation:</strong> When Advanced Noise is enabled AND Blend Mode is targeted, noise adds variation to blend mode probability weights.</p>
+                      <p><strong>Comprehensive Targeting:</strong> All shape properties, transforms, fill/stroke properties, and visual effects can be individually targeted.</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Separator className="bg-slate-600" />
