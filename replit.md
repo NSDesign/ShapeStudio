@@ -121,6 +121,12 @@ Changelog:
   - Added explicit blend mode probability mechanics with noise variation when Opacity targeted
   - Documented missing shape-specific properties requiring separate implementation
   - Added comprehensive system behavior explanation panel in dialog
+- June 26, 2025. Simplified Targeting System - Property Section Enablement
+  - Removed separate "Targets" section to eliminate UI duplication
+  - Property section enablement (Shape Properties, Fill Properties, etc.) now serves as targeting mechanism
+  - Enabled sections make their properties targetable by selected noise algorithm
+  - Disabled sections use Randomise (standard setting) fallback with probability distributions
+  - Updated explanations to reflect simplified approach and better user experience
 ```
 
 ## User Preferences
