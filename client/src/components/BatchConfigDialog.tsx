@@ -332,6 +332,8 @@ interface BatchConfigDialogProps {
 export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
 
   // Sync with external control
   useEffect(() => {
@@ -561,24 +563,122 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label className="text-sm text-slate-300">Targets</Label>
                       <p className="text-xs text-slate-400">Properties not checked use Randomise (standard setting) fallback</p>
-                      <div className="grid grid-cols-5 gap-2 text-xs">
-                        {Object.entries(currentSettings.noiseTargets).map(([target, enabled]) => (
-                          <div key={target} className="flex items-center space-x-2">
-                            <Checkbox
-                              checked={enabled}
-                              onCheckedChange={(checked) => handleSettingsUpdate({
-                                noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
-                            />
-                            <Label className="text-xs text-slate-300 capitalize">
-                              {target}
-                            </Label>
-                          </div>
-                        ))}
+                      
+                      {/* Core Transform Properties */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Core Transform Properties</Label>
+                        <div className="grid grid-cols-5 gap-2 text-xs">
+                          {['position', 'rotation', 'scale', 'color', 'opacity'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300 capitalize">{target}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Shape Properties */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Shape Properties</Label>
+                        <div className="grid grid-cols-4 gap-2 text-xs">
+                          {['width', 'height'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300 capitalize">{target}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Fill Properties */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Fill Properties</Label>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          {['fillProbability', 'fillColor', 'fillOpacity'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300">{target.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stroke Properties */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Stroke Properties</Label>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {['strokeProbability', 'strokeColor', 'strokeOpacity', 'strokeWidth'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300">{target.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Shape-Specific Properties */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Shape-Specific Properties</Label>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {['polygonSegments', 'linePoints', 'curvePoints', 'starInnerRadius', 'starOuterRadius', 'ringInnerRadius', 'ringOuterRadius'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300">{target.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Visual Effects & Advanced Transforms */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-slate-300">Visual Effects & Advanced Transforms</Label>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          {['blendMode', 'skewX', 'skewY'].map((target) => (
+                            <div key={target} className="flex items-center space-x-1">
+                              <Checkbox
+                                checked={currentSettings.noiseTargets[target as keyof typeof currentSettings.noiseTargets] || false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({
+                                  noiseTargets: { ...currentSettings.noiseTargets, [target]: checked as boolean }
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                              />
+                              <Label className="text-xs text-slate-300">{target.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -694,14 +794,25 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 
                 {currentSettings.blendModeEnabled && (
                   <div className="ml-6 space-y-3">
-                    <div className="p-3 bg-slate-800 rounded border-l-4 border-blue-500">
-                      <Label className="text-xs text-slate-300 block mb-1">Blend Mode Behavior:</Label>
-                      <p className="text-xs text-slate-400">
-                        Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
-                        {currentSettings.noiseEnabled && currentSettings.noiseTargets.opacity && 
-                          " Advanced Noise adds variation to these probability values when Opacity is targeted."
-                        }
-                      </p>
+                    <div className="border border-slate-600 rounded">
+                      <Button
+                        variant="ghost"
+                        className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
+                        onClick={() => setShowBlendModeExplanation(!showBlendModeExplanation)}
+                      >
+                        <Label className="text-xs text-slate-300">Blend Mode Behavior</Label>
+                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showBlendModeExplanation ? 'rotate-180' : ''}`} />
+                      </Button>
+                      {showBlendModeExplanation && (
+                        <div className="p-2 bg-slate-800 border-t border-slate-600">
+                          <p className="text-xs text-slate-400">
+                            Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
+                            {currentSettings.noiseEnabled && currentSettings.noiseTargets.blendMode && 
+                              " Advanced Noise adds variation to these probability values when Blend Mode is targeted."
+                            }
+                          </p>
+                        </div>
+                      )}
                     </div>
                     
                     <Label className="text-sm text-slate-300">Active Blend Modes</Label>
