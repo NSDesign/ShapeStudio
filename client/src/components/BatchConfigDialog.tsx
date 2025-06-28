@@ -111,6 +111,33 @@ export interface BatchConfigSettings {
   saturationRange: [number, number];
   lightnessRange: [number, number];
   
+  // Harmony-specific settings
+  monochromaticSettings: {
+    lightnessSteps: number;
+    saturationSteps: number;
+    includeNeutrals: boolean;
+  };
+  analogousSettings: {
+    hueRange: number;
+    colorCount: number;
+  };
+  complementarySettings: {
+    includeNearComplements: boolean;
+    complementOffset: number;
+  };
+  triadicSettings: {
+    rotationOffset: number;
+    useEqualSpacing: boolean;
+  };
+  splitComplementarySettings: {
+    splitAngle: number;
+    balanceWeights: boolean;
+  };
+  tetradicSettings: {
+    squareHarmony: boolean;
+    rectangleRatio: number;
+  };
+  
   // Physics Simulation
   physicsEnabled: boolean;
   physicsType: 'none' | 'gravity' | 'magnetic' | 'collision' | 'flocking';

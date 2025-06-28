@@ -1157,18 +1157,22 @@ export default function Sidebar({
     );
   }
 
-  function ShapeTypesContent() {
-    const [expandedShapes, setExpandedShapes] = useState<Set<string>>(new Set());
+  // Move expanded shapes state outside of function to prevent reset on re-renders
+  const [expandedShapes, setExpandedShapes] = useState<Set<string>>(new Set());
 
-    const toggleShapeExpansion = (shapeType: string) => {
-      const newExpanded = new Set(expandedShapes);
+  const toggleShapeExpansion = useCallback((shapeType: string) => {
+    setExpandedShapes(prev => {
+      const newExpanded = new Set(prev);
       if (newExpanded.has(shapeType)) {
         newExpanded.delete(shapeType);
       } else {
         newExpanded.add(shapeType);
       }
-      setExpandedShapes(newExpanded);
-    };
+      return newExpanded;
+    });
+  }, []);
+
+  function ShapeTypesContent() {
 
     const getShapeProperties = (shapeType: string) => {
       switch (shapeType) {
@@ -1179,14 +1183,18 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Edge Count Range</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: 3</span>
-                    <span className="text-slate-400">Max: 20</span>
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.polygon?.edgeCountRange?.[0] || 3}</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.polygon?.edgeCountRange?.[1] || 20}</span>
                   </div>
                   <Slider
-                    value={[3, 20]}
+                    value={scatterSettings.shapeSpecific.polygon?.edgeCountRange || [3, 20]}
                     onValueChange={([min, max]) => {
-                      // TODO: Update polygon edge count range
-                      console.log(`Polygon edge count: ${min}-${max}`);
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          polygon: { edgeCountRange: [min, max] }
+                        }
+                      });
                     }}
                     min={3}
                     max={20}
@@ -1207,14 +1215,21 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: 8</span>
-                    <span className="text-slate-400">Max: 64</span>
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange?.[0] || 8}</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange?.[1] || 64}</span>
                   </div>
                   <Slider
-                    value={[16, 32]}
+                    value={scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange || [16, 32]}
                     onValueChange={([min, max]) => {
-                      // TODO: Update circle/ellipse segment count range
-                      console.log(`${shapeType} segments: ${min}-${max}`);
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          [shapeType]: { 
+                            ...scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific],
+                            segmentCountRange: [min, max] 
+                          }
+                        }
+                      });
                     }}
                     min={8}
                     max={64}

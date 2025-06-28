@@ -160,6 +160,54 @@ export interface DistributionSettings {
   respectBounds: boolean;
 }
 
+export interface ShapeSpecificSettings {
+  polygon: {
+    edgeCountRange: [number, number];
+  };
+  circle: {
+    segmentCountRange: [number, number];
+  };
+  ellipse: {
+    segmentCountRange: [number, number];
+  };
+  bezier: {
+    pointCountRange: [number, number];
+    openProbability: number;
+    strokeCapProbabilities: { round: number; square: number; butt: number };
+  };
+  cubic: {
+    pointCountRange: [number, number];
+    openProbability: number;
+    strokeCapProbabilities: { round: number; square: number; butt: number };
+  };
+  'smooth-spline': {
+    pointCountRange: [number, number];
+    openProbability: number;
+    strokeCapProbabilities: { round: number; square: number; butt: number };
+  };
+  star: {
+    pointCountRange: [number, number];
+    innerRadiusRange: [number, number];
+  };
+  ring: {
+    innerRadiusRange: [number, number];
+  };
+  'spline-ring': {
+    innerRadiusRange: [number, number];
+    segmentCountRange: [number, number];
+  };
+  line: {
+    pointCountRange: [number, number];
+    strokeCapProbabilities: { round: number; square: number; butt: number };
+  };
+  rectangle: {
+    cornerRadiusRange: [number, number];
+  };
+  square: {
+    cornerRadiusRange: [number, number];
+  };
+}
+
 export interface ScatterSettings {
   onPoints: boolean;
   insideArea: boolean;
@@ -168,6 +216,7 @@ export interface ScatterSettings {
   maxCount: number;
   randomness: number;
   distribution: DistributionSettings;
+  shapeSpecific: Partial<ShapeSpecificSettings>;
 }
 
 export interface CanvasSettings {

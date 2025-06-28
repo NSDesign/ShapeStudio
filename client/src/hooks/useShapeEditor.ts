@@ -30,6 +30,35 @@ export const useShapeEditor = () => {
       density: 0.5,
       avoidOverlap: false,
       respectBounds: true
+    },
+    shapeSpecific: {
+      polygon: { edgeCountRange: [3, 20] },
+      circle: { segmentCountRange: [16, 32] },
+      ellipse: { segmentCountRange: [16, 32] },
+      bezier: { 
+        pointCountRange: [3, 6], 
+        openProbability: 50,
+        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+      },
+      cubic: { 
+        pointCountRange: [3, 6], 
+        openProbability: 50,
+        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+      },
+      'smooth-spline': { 
+        pointCountRange: [3, 6], 
+        openProbability: 50,
+        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+      },
+      star: { pointCountRange: [5, 8], innerRadiusRange: [30, 70] },
+      ring: { innerRadiusRange: [20, 80] },
+      'spline-ring': { innerRadiusRange: [20, 80], segmentCountRange: [16, 32] },
+      line: { 
+        pointCountRange: [2, 4],
+        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+      },
+      rectangle: { cornerRadiusRange: [0, 10] },
+      square: { cornerRadiusRange: [0, 10] }
     }
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
