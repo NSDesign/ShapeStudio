@@ -99,6 +99,7 @@ export const useShapeEditor = () => {
     noiseOctaves: 1,
     noiseAmplitude: 50,
     noiseSeed: Math.floor(Math.random() * 10000),
+    noiseScaleToCanvas: true,
     noiseLacunarity: 2.0,
     noiseGain: 0.5,
     noiseDistanceFunction: 'euclidean',

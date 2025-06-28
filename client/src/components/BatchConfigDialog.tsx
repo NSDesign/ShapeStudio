@@ -21,6 +21,7 @@ export interface BatchConfigSettings {
   noiseOctaves: number;
   noiseAmplitude: number;
   noiseSeed: number;
+  noiseScaleToCanvas: boolean;
   
   // Algorithm-specific settings
   // Fractal specific
@@ -182,6 +183,7 @@ const defaultSettings: BatchConfigSettings = {
   noiseOctaves: 1,
   noiseAmplitude: 50,
   noiseSeed: Math.floor(Math.random() * 10000),
+  noiseScaleToCanvas: true,
   
   // Algorithm-specific settings
   noiseLacunarity: 2.0,
@@ -575,6 +577,21 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                         className="[&_[role=slider]]:bg-blue-600"
                       />
                     </div>
+
+                    {/* Scale to Canvas Toggle */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={currentSettings.noiseScaleToCanvas}
+                        onCheckedChange={(checked) => handleSettingsUpdate({ noiseScaleToCanvas: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                      />
+                      <Label className="text-sm text-slate-300">Scale to Fit Canvas</Label>
+                    </div>
+                    {currentSettings.noiseScaleToCanvas && (
+                      <div className="ml-6">
+                        <Label className="text-xs text-slate-400">Position values will be constrained to keep shapes within the visible canvas area</Label>
+                      </div>
+                    )}
 
 
 

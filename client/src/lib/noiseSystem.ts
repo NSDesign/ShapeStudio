@@ -112,18 +112,19 @@ export class NoiseSystem {
    * Standard randomization (baseline)
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
-    const seededRandom = this.seededRandom(options.seed + shapeIndex);
+    // Generate independent random values for each property using different offsets
+    const baseRandom = this.seededRandom(options.seed + shapeIndex * 1000);
     
     return {
-      x: (seededRandom() - 0.5) * options.amplitude * 100,
-      y: (seededRandom() - 0.5) * options.amplitude * 100,
-      rotation: (seededRandom() - 0.5) * options.amplitude * 360,
-      scaleX: 1 + (seededRandom() - 0.5) * options.amplitude * 0.5,
-      scaleY: 1 + (seededRandom() - 0.5) * options.amplitude * 0.5,
-      opacity: Math.max(0.1, Math.min(1, 1 + (seededRandom() - 0.5) * options.amplitude * 0.3)),
-      hue: (seededRandom() - 0.5) * options.amplitude * 60,
-      saturation: (seededRandom() - 0.5) * options.amplitude * 40,
-      lightness: (seededRandom() - 0.5) * options.amplitude * 30
+      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * 200,
+      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * 200,
+      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 360,
+      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.5,
+      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.5,
+      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.3)),
+      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 60,
+      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 40,
+      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 30
     };
   }
 
@@ -132,24 +133,33 @@ export class NoiseSystem {
    */
   private static generatePerlinNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     let amplitude = options.amplitude;
-    let frequency = 1;
+    let frequency = 1 / options.scale;
     let result = {
       x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
       opacity: 1, hue: 0, saturation: 0, lightness: 0
     };
 
     for (let i = 0; i < options.octaves; i++) {
-      const noiseValue = this.perlin3D(x * frequency, y * frequency, z * frequency, options.seed);
+      // Generate independent noise values for each property using different coordinates
+      const noiseX = this.perlin3D(x * frequency + 100, y * frequency, z * frequency, options.seed + 1);
+      const noiseY = this.perlin3D(x * frequency, y * frequency + 100, z * frequency, options.seed + 2);
+      const noiseRot = this.perlin3D(x * frequency + 200, y * frequency + 200, z * frequency, options.seed + 3);
+      const noiseScaleX = this.perlin3D(x * frequency + 300, y * frequency, z * frequency, options.seed + 4);
+      const noiseScaleY = this.perlin3D(x * frequency, y * frequency + 300, z * frequency, options.seed + 5);
+      const noiseOpacity = this.perlin3D(x * frequency + 400, y * frequency + 400, z * frequency, options.seed + 6);
+      const noiseHue = this.perlin3D(x * frequency + 500, y * frequency, z * frequency, options.seed + 7);
+      const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
+      const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      result.x += noiseValue * amplitude * 50;
-      result.y += noiseValue * amplitude * 50;
-      result.rotation += noiseValue * amplitude * 180;
-      result.scaleX += noiseValue * amplitude * 0.2;
-      result.scaleY += noiseValue * amplitude * 0.2;
-      result.opacity += noiseValue * amplitude * 0.1;
-      result.hue += noiseValue * amplitude * 30;
-      result.saturation += noiseValue * amplitude * 20;
-      result.lightness += noiseValue * amplitude * 15;
+      result.x += noiseX * amplitude * 100;
+      result.y += noiseY * amplitude * 100;
+      result.rotation += noiseRot * amplitude * 180;
+      result.scaleX += noiseScaleX * amplitude * 0.2;
+      result.scaleY += noiseScaleY * amplitude * 0.2;
+      result.opacity += noiseOpacity * amplitude * 0.1;
+      result.hue += noiseHue * amplitude * 30;
+      result.saturation += noiseSat * amplitude * 20;
+      result.lightness += noiseLght * amplitude * 15;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
@@ -167,21 +177,29 @@ export class NoiseSystem {
    * Simplex noise implementation (simplified)
    */
   private static generateSimplexNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
-    // Simplified simplex noise using gradient-based approach
-    const noise1 = this.gradientNoise(x, y, options.seed);
-    const noise2 = this.gradientNoise(x + 100, y + 100, options.seed + 1);
-    const noise3 = this.gradientNoise(x + 200, y + 200, options.seed + 2);
+    // Generate independent noise values for each property using different coordinates
+    const frequency = 1 / options.scale;
+    
+    const noiseX = this.gradientNoise(x * frequency + 100, y * frequency, options.seed + 1);
+    const noiseY = this.gradientNoise(x * frequency, y * frequency + 100, options.seed + 2);
+    const noiseRot = this.gradientNoise(x * frequency + 200, y * frequency + 200, options.seed + 3);
+    const noiseScaleX = this.gradientNoise(x * frequency + 300, y * frequency, options.seed + 4);
+    const noiseScaleY = this.gradientNoise(x * frequency, y * frequency + 300, options.seed + 5);
+    const noiseOpacity = this.gradientNoise(x * frequency + 400, y * frequency + 400, options.seed + 6);
+    const noiseHue = this.gradientNoise(x * frequency + 500, y * frequency, options.seed + 7);
+    const noiseSat = this.gradientNoise(x * frequency, y * frequency + 500, options.seed + 8);
+    const noiseLght = this.gradientNoise(x * frequency + 600, y * frequency + 600, options.seed + 9);
 
     return {
-      x: noise1 * options.amplitude * 60,
-      y: noise2 * options.amplitude * 60,
-      rotation: noise3 * options.amplitude * 270,
-      scaleX: 1 + noise1 * options.amplitude * 0.3,
-      scaleY: 1 + noise2 * options.amplitude * 0.3,
-      opacity: Math.max(0.1, Math.min(1, 1 + noise3 * options.amplitude * 0.2)),
-      hue: noise1 * options.amplitude * 40,
-      saturation: noise2 * options.amplitude * 25,
-      lightness: noise3 * options.amplitude * 20
+      x: noiseX * options.amplitude * 120,
+      y: noiseY * options.amplitude * 120,
+      rotation: noiseRot * options.amplitude * 270,
+      scaleX: 1 + noiseScaleX * options.amplitude * 0.3,
+      scaleY: 1 + noiseScaleY * options.amplitude * 0.3,
+      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.2)),
+      hue: noiseHue * options.amplitude * 40,
+      saturation: noiseSat * options.amplitude * 25,
+      lightness: noiseLght * options.amplitude * 20
     };
   }
 
