@@ -497,42 +497,59 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 
                 {currentSettings.noiseEnabled && (
                   <div className="ml-6 space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Algorithm</Label>
-                        <Select 
-                          value={currentSettings.noiseAlgorithm}
-                          onValueChange={(value) => handleSettingsUpdate({ noiseAlgorithm: value as any })}
-                        >
-                          <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                            <SelectItem value="randomise" className="text-slate-200 hover:bg-slate-700">Randomise (standard setting)</SelectItem>
-                            <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
-                            <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
-                            <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>
-                            <SelectItem value="worley" className="text-slate-200 hover:bg-slate-700">Worley</SelectItem>
-                            <SelectItem value="ridge" className="text-slate-200 hover:bg-slate-700">Ridge</SelectItem>
-                            <SelectItem value="turbulence" className="text-slate-200 hover:bg-slate-700">Turbulence</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Scale: {currentSettings.noiseScale}x</Label>
-                        <Slider
-                          value={[currentSettings.noiseScale]}
-                          onValueChange={([value]) => handleSettingsUpdate({ noiseScale: value })}
-                          min={0.1}
-                          max={10}
-                          step={0.1}
-                          className="[&_[role=slider]]:bg-blue-600"
-                        />
-                      </div>
+                    {/* Algorithm Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-slate-300">Algorithm</Label>
+                      <Select 
+                        value={currentSettings.noiseAlgorithm}
+                        onValueChange={(value) => handleSettingsUpdate({ noiseAlgorithm: value as any })}
+                      >
+                        <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                          <SelectItem value="randomise" className="text-slate-200 hover:bg-slate-700">Randomise (standard setting)</SelectItem>
+                          <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
+                          <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
+                          <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>
+                          <SelectItem value="worley" className="text-slate-200 hover:bg-slate-700">Worley</SelectItem>
+                          <SelectItem value="ridge" className="text-slate-200 hover:bg-slate-700">Ridge</SelectItem>
+                          <SelectItem value="turbulence" className="text-slate-200 hover:bg-slate-700">Turbulence</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
+
+                    {/* Common settings for most algorithms (not randomise) */}
+                    {currentSettings.noiseAlgorithm !== 'randomise' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Scale: {currentSettings.noiseScale}x</Label>
+                          <Slider
+                            value={[currentSettings.noiseScale]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseScale: value })}
+                            min={0.1}
+                            max={10}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Amplitude: {currentSettings.noiseAmplitude}%</Label>
+                          <Slider
+                            value={[currentSettings.noiseAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseAmplitude: value })}
+                            min={1}
+                            max={100}
+                            step={1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Octaves for multi-layered algorithms */}
+                    {(['perlin', 'fractal', 'ridge', 'turbulence'].includes(currentSettings.noiseAlgorithm)) && (
                       <div className="space-y-2">
                         <Label className="text-sm text-slate-300">Octaves: {currentSettings.noiseOctaves}</Label>
                         <Slider
@@ -544,18 +561,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           className="[&_[role=slider]]:bg-blue-600"
                         />
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Amplitude: {currentSettings.noiseAmplitude}%</Label>
-                        <Slider
-                          value={[currentSettings.noiseAmplitude]}
-                          onValueChange={([value]) => handleSettingsUpdate({ noiseAmplitude: value })}
-                          min={1}
-                          max={100}
-                          step={1}
-                          className="[&_[role=slider]]:bg-blue-600"
-                        />
-                      </div>
+                    )}
+
+                    {/* Seed for all algorithms */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-slate-300">Seed: {currentSettings.noiseSeed}</Label>
+                      <Slider
+                        value={[currentSettings.noiseSeed]}
+                        onValueChange={([value]) => handleSettingsUpdate({ noiseSeed: value })}
+                        min={0}
+                        max={9999}
+                        step={1}
+                        className="[&_[role=slider]]:bg-blue-600"
+                      />
                     </div>
 
 
@@ -648,9 +666,10 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       </div>
                     )}
 
+                    {/* Algorithm-specific explanations */}
                     {currentSettings.noiseAlgorithm === 'randomise' && (
                       <div className="space-y-2 pt-2 border-t border-slate-700">
-                        <Label className="text-xs text-slate-400">Standard randomization - uses probability distributions and property constraints defined in Properties section</Label>
+                        <Label className="text-xs text-slate-400">Standard randomization - uses probability distributions and property constraints defined in Properties section. Only seed value affects output.</Label>
                       </div>
                     )}
                   </div>
