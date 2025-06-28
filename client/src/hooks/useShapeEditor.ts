@@ -918,7 +918,7 @@ export const useShapeEditor = () => {
         
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
       } else {
-        // Fallback to current randomization
+        // Original randomization behavior (before noise system)
         const hue = Math.random() * 360;
         const saturation = 50 + Math.random() * 50;
         const lightness = 30 + Math.random() * 40;
@@ -931,7 +931,7 @@ export const useShapeEditor = () => {
         shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
       }
       
-      // Apply noise variations if enabled
+      // Apply noise variations ONLY if enabled - this fixes the disabled state issue
       if (batchConfigSettings.noiseEnabled) {
         // Get current artboard dimensions
         const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
@@ -981,11 +981,15 @@ export const useShapeEditor = () => {
         
         console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
       } else {
-        // Fallback to current randomization when noise is disabled
+        // Original randomization behavior when noise is disabled
         const scale = 0.5 + Math.random() * 2;
         shape.transform.scaleX = scale;
         shape.transform.scaleY = scale;
         shape.transform.rotation = Math.random() * 360;
+        
+        // Ensure original opacity values
+        shape.properties.fillOpacity = 0.8 + Math.random() * 0.2;
+        shape.properties.strokeOpacity = 0.9 + Math.random() * 0.1;
       }
       
       return shape;

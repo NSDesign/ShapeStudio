@@ -61,7 +61,9 @@ export class NoiseSystem {
     shapeIndex: number, 
     settings: BatchConfigSettings,
     baseX: number = 0,
-    baseY: number = 0
+    baseY: number = 0,
+    artboardWidth: number = 400,
+    artboardHeight: number = 400
   ): NoiseResult {
     const { noiseEnabled, noiseAlgorithm, noiseScale, noiseOctaves, noiseAmplitude, noiseSeed } = settings;
     
@@ -78,6 +80,9 @@ export class NoiseSystem {
       octaves: noiseOctaves,
       amplitude: noiseAmplitude,
       seed: noiseSeed,
+      scaleToCanvas: settings.noiseScaleToCanvas,
+      artboardWidth: artboardWidth,
+      artboardHeight: artboardHeight,
       lacunarity: settings.noiseLacunarity,
       gain: settings.noiseGain,
       distanceFunction: settings.noiseDistanceFunction,
@@ -131,9 +136,9 @@ export class NoiseSystem {
       scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.01,
       scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.01,
       opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.006)),
-      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 0.6,
-      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 0.4,
-      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 0.3
+      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * 60, // ±30 degrees max
+      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * 40, // ±20% max
+      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * 30 // ±15% max
     };
   }
 
@@ -174,9 +179,9 @@ export class NoiseSystem {
       result.scaleX += noiseScaleX * amplitude * 0.002;
       result.scaleY += noiseScaleY * amplitude * 0.002;
       result.opacity += noiseOpacity * amplitude * 0.001;
-      result.hue += noiseHue * amplitude * 0.3;
-      result.saturation += noiseSat * amplitude * 0.2;
-      result.lightness += noiseLght * amplitude * 0.15;
+      result.hue += noiseHue * 30; // ±30 degrees max per octave
+      result.saturation += noiseSat * 20; // ±20% max per octave  
+      result.lightness += noiseLght * 15; // ±15% max per octave
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
