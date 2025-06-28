@@ -342,17 +342,17 @@ export function sortShapesForGrid(shapes: any[], sortBy: string): any[] {
   return [...shapes].sort((a, b) => {
     switch (sortBy) {
       case 'layer':
-        return (a.zIndex || 0) - (b.zIndex || 0);
+        return (a.properties?.zIndex || 0) - (b.properties?.zIndex || 0);
       case 'id':
         return a.id.localeCompare(b.id);
       case 'shape-type':
         return a.type.localeCompare(b.type);
       case 'fill-color':
-        const aFill = a.fill || '#000000';
-        const bFill = b.fill || '#000000';
+        const aFill = a.properties?.fillColor || '#000000';
+        const bFill = b.properties?.fillColor || '#000000';
         return aFill.localeCompare(bFill);
       case 'opacity':
-        return (a.opacity || 1) - (b.opacity || 1);
+        return (a.properties?.opacity || 1) - (b.properties?.opacity || 1);
       default:
         return 0;
     }

@@ -139,6 +139,14 @@ Changelog:
     * Tetradic: Four-color rectangle/square harmonies with ratio controls
   - Each harmony type includes contextual explanations and specific configuration options
   - Connected accordion controls to ScatterSettings with proper type safety
+- June 28, 2025. Distribution Layout System - Grid Positioning with Additive Noise
+  - Implemented comprehensive Distribution Layout section in batch configuration
+  - Added grid pattern positioning with rows, columns, row/column offsets
+  - Grid sorting options: layer, id, shape type, fill color, opacity, or none
+  - Grid positioning works additively with noise system: grid provides base layout, noise adds variation
+  - Future patterns ready: line, circle, spiral (marked as "coming soon")
+  - Connected grid distribution to shape generation pipeline with proper sorting and positioning
+  - Added utility functions for grid calculation and shape sorting in shapeTypes.ts
 ```
 
 ## User Preferences

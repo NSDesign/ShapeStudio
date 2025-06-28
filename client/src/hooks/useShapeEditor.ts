@@ -920,7 +920,7 @@ export const useShapeEditor = () => {
 
     console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
     setShapes(prev => [...prev, ...finalShapes]);
-  }, [enabledShapeTypes, scatterSettings, canvasSettings]);
+  }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
