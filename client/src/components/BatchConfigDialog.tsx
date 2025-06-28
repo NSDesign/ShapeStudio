@@ -1444,7 +1444,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           value={currentSettings.saturationRange || [50, 100]}
                           onValueChange={(value) => handleSettingsUpdate({ saturationRange: value as [number, number] })}
                           max={100}
-                          step={5}
+                          step={1}
                           className="[&_[role=slider]]:bg-blue-600"
                         />
                       </div>
@@ -1454,7 +1454,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           value={currentSettings.lightnessRange || [30, 70]}
                           onValueChange={(value) => handleSettingsUpdate({ lightnessRange: value as [number, number] })}
                           max={100}
-                          step={5}
+                          step={1}
                           className="[&_[role=slider]]:bg-blue-600"
                         />
                       </div>

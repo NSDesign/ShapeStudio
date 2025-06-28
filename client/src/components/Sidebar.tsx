@@ -766,6 +766,11 @@ export default function Sidebar({
         
         for (let i = 0; i < batchExportCount; i++) {
           console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
+          console.log(`📊 BATCH PROCESSING: ${i + 1} of ${batchExportCount} exports`);
+          
+          // Update progress
+          const progress = Math.floor((i / batchExportCount) * 100);
+          setBatchProgress(progress);
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();

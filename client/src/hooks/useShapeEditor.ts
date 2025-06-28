@@ -900,14 +900,33 @@ export const useShapeEditor = () => {
           tetradicSettings: batchConfigSettings.tetradicSettings
         };
         
+        // Apply harmony to fill color
         shape.properties.fillColor = ColorUtils.generateHarmonyColor(colorHarmonySettings);
-        console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony color: ${shape.properties.fillColor}`);
+        
+        // Apply harmony to stroke color (related but slightly different)
+        shape.properties.strokeColor = ColorUtils.generateHarmonyColor(colorHarmonySettings);
+        
+        // Apply harmony to gradients if they exist
+        if (shape.properties.gradient) {
+          shape.properties.gradient.stops = shape.properties.gradient.stops.map(stop => ({
+            ...stop,
+            color: ColorUtils.generateHarmonyColor(colorHarmonySettings)
+          }));
+        }
+        
+        console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
       } else {
         // Fallback to current randomization
         const hue = Math.random() * 360;
         const saturation = 50 + Math.random() * 50;
         const lightness = 30 + Math.random() * 40;
         shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        
+        // Random stroke color
+        const strokeHue = Math.random() * 360;
+        const strokeSaturation = 60 + Math.random() * 40;
+        const strokeLightness = 20 + Math.random() * 60;
+        shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
       }
       
       // Random size
