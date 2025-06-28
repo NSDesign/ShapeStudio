@@ -1439,9 +1439,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                     {/* Common Harmony Controls */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-300">Saturation: {currentSettings.saturationRange?.[0] || 50}% - {currentSettings.saturationRange?.[1] || 100}%</Label>
+                        <Label className="text-xs text-slate-300">Saturation: {currentSettings.saturationRange?.[0] || 0}% - {currentSettings.saturationRange?.[1] || 100}%</Label>
                         <Slider
-                          value={currentSettings.saturationRange || [50, 100]}
+                          value={currentSettings.saturationRange || [0, 100]}
                           onValueChange={(value) => handleSettingsUpdate({ saturationRange: value as [number, number] })}
                           max={100}
                           step={1}
@@ -1449,9 +1449,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-300">Lightness: {currentSettings.lightnessRange?.[0] || 30}% - {currentSettings.lightnessRange?.[1] || 70}%</Label>
+                        <Label className="text-xs text-slate-300">Lightness: {currentSettings.lightnessRange?.[0] || 0}% - {currentSettings.lightnessRange?.[1] || 100}%</Label>
                         <Slider
-                          value={currentSettings.lightnessRange || [30, 70]}
+                          value={currentSettings.lightnessRange || [0, 100]}
                           onValueChange={(value) => handleSettingsUpdate({ lightnessRange: value as [number, number] })}
                           max={100}
                           step={1}

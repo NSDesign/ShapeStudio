@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MousePointer, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
@@ -36,6 +36,7 @@ interface CanvasProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
+  onClearAll: () => void;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
@@ -80,6 +81,7 @@ export default function Canvas({
   onZoomIn,
   onZoomOut,
   onResetView,
+  onClearAll,
   canvasRef,
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
@@ -299,6 +301,22 @@ export default function Canvas({
       <div className="bg-slate-800 border-b border-slate-700 p-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearAll}
+                  className="text-slate-300 hover:text-red-400 hover:bg-red-900/20"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Clear all shapes</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

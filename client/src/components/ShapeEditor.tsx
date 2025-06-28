@@ -198,6 +198,7 @@ export default function ShapeEditor() {
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
             onResetView={resetView}
+            onClearAll={clearAllShapes}
             canvasRef={canvasRef}
           />
         </div>
