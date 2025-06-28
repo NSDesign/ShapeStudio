@@ -158,8 +158,8 @@ export class NoiseSystem {
     
     // Position constraints based on artboard size when scaling to artboard
     const positionScale = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.4, artboardHeight * 0.4) : // Keep within 40% of artboard dimensions
-      1; // Standard noise distribution
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
+      80; // Standard wide distribution when not constrained
 
     for (let i = 0; i < options.octaves; i++) {
       // Generate independent noise values for each property using different coordinates
@@ -173,8 +173,8 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      result.x += noiseX * amplitude * positionScale;
-      result.y += noiseY * amplitude * positionScale;
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
       result.rotation += noiseRot * amplitude * 1.8;
       result.scaleX += noiseScaleX * amplitude * 0.002;
       result.scaleY += noiseScaleY * amplitude * 0.002;
@@ -202,6 +202,14 @@ export class NoiseSystem {
     // Generate independent noise values for each property using different coordinates
     const frequency = 1 / options.scale;
     
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
+    
+    // Position constraints based on artboard size when scaling to artboard
+    const positionScale = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
+      80; // Standard wide distribution when not constrained
+    
     const noiseX = this.gradientNoise(x * frequency + 100, y * frequency, options.seed + 1);
     const noiseY = this.gradientNoise(x * frequency, y * frequency + 100, options.seed + 2);
     const noiseRot = this.gradientNoise(x * frequency + 200, y * frequency + 200, options.seed + 3);
@@ -213,8 +221,8 @@ export class NoiseSystem {
     const noiseLght = this.gradientNoise(x * frequency + 600, y * frequency + 600, options.seed + 9);
 
     return {
-      x: noiseX * options.amplitude * 120,
-      y: noiseY * options.amplitude * 120,
+      x: noiseX * (options.scaleToCanvas ? positionScale * 0.01 : positionScale),
+      y: noiseY * (options.scaleToCanvas ? positionScale * 0.01 : positionScale),
       rotation: noiseRot * options.amplitude * 270,
       scaleX: 1 + noiseScaleX * options.amplitude * 0.3,
       scaleY: 1 + noiseScaleY * options.amplitude * 0.3,
@@ -234,6 +242,14 @@ export class NoiseSystem {
       opacity: 1, hue: 0, saturation: 0, lightness: 0
     };
 
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
+    
+    // Position constraints based on artboard size when scaling to artboard
+    const positionScale = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
+      60; // Standard distribution when not constrained
+
     let amplitude = options.amplitude;
     let frequency = 1;
     const lacunarity = options.lacunarity || 2.0;
@@ -244,8 +260,8 @@ export class NoiseSystem {
       const noiseY = this.perlin3D(x * frequency + 1000, y * frequency + 1000, z * frequency, options.seed);
       const noiseZ = this.perlin3D(x * frequency + 2000, y * frequency + 2000, z * frequency, options.seed);
 
-      result.x += noiseX * amplitude * 40;
-      result.y += noiseY * amplitude * 40;
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
       result.rotation += noiseZ * amplitude * 120;
       result.scaleX += noiseX * amplitude * 0.15;
       result.scaleY += noiseY * amplitude * 0.15;
