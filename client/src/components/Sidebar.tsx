@@ -1215,17 +1215,16 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange?.[0] || 8}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange?.[1] || 64}</span>
+                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange?.[0] || 8}</span>
+                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange?.[1] || 64}</span>
                   </div>
                   <Slider
-                    value={scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific]?.segmentCountRange || [16, 32]}
+                    value={(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange || [16, 32]}
                     onValueChange={([min, max]) => {
                       onUpdateScatterSettings({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           [shapeType]: { 
-                            ...scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific],
                             segmentCountRange: [min, max] 
                           }
                         }

@@ -127,6 +127,18 @@ Changelog:
   - Enabled sections make their properties targetable by selected noise algorithm
   - Disabled sections use Randomise (standard setting) fallback with probability distributions
   - Updated explanations to reflect simplified approach and better user experience
+- June 28, 2025. Enhanced Shape-Specific Accordion System & Comprehensive Color Harmony
+  - Fixed accordion closing issue by moving state outside component function scope
+  - Implemented comprehensive shape-specific property controls with accordion UI
+  - Added detailed Color Harmony system with explanations for all harmony types:
+    * Monochromatic: Single hue variations with lightness/saturation steps
+    * Analogous: Adjacent colors with configurable hue range and color count
+    * Complementary: Opposite colors with near-complement options
+    * Triadic: Three evenly spaced colors with rotation offset controls
+    * Split-Complementary: Base + adjacent complement colors with split angle
+    * Tetradic: Four-color rectangle/square harmonies with ratio controls
+  - Each harmony type includes contextual explanations and specific configuration options
+  - Connected accordion controls to ScatterSettings with proper type safety
 ```
 
 ## User Preferences

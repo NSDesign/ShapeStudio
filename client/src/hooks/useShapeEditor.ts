@@ -88,31 +88,77 @@ export const useShapeEditor = () => {
   ]);
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
   
-  // Batch Configuration Settings
+  // Batch Configuration Settings - using defaults from BatchConfigDialog
   const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>({
-    blendModeEnabled: false,
-    enabledBlendModes: { 'source-over': 100 },
+    selectedPreset: 'custom',
     
     noiseEnabled: false,
-    noiseAlgorithm: 'perlin',
+    noiseAlgorithm: 'randomise',
     noiseScale: 1,
     noiseOctaves: 1,
     noiseAmplitude: 50,
     noiseSeed: Math.floor(Math.random() * 10000),
-    noiseTargets: {
-      position: true,
-      rotation: false,
-      scale: false,
-      color: false,
-      opacity: false
-    },
+    noiseLacunarity: 2.0,
+    noiseGain: 0.5,
+    noiseDistanceFunction: 'euclidean',
+    noiseFeaturePoints: 1,
+    noiseRidgeOffset: 1.0,
+    noiseTurbulencePower: 1.0,
     
-    propertyConstraintsEnabled: false,
-    opacityRange: [20, 100],
-    rotationRange: [0, 360],
+    blendModeEnabled: false,
+    enabledBlendModes: { 'source-over': 100 },
+    
+    propertiesEnabled: false,
+    preventInvisibleShapes: true,
+    
+    shapePropertiesEnabled: false,
+    widthRange: [50, 200],
+    heightRange: [50, 200],
+    xPositionRange: [-100, 100],
+    yPositionRange: [-100, 100],
+    
+    fillEnabled: true,
+    fillProbability: 80,
+    fillColorProbability: 70,
+    fillGradientProbability: 20,
+    fillGradientTypeProbability: 50,
+    fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
+    fillGradientStopsRange: [2, 4],
+    fillOpacityRange: [20, 100],
+    
+    strokeEnabled: true,
+    strokeProbability: 60,
+    strokeColorProbability: 80,
+    strokeColorRange: ['#ef4444', '#f59e0b'],
+    strokeGradientProbability: 15,
+    strokeGradientTypeProbability: 50,
+    strokeGradientColorRange: ['#ef4444', '#f59e0b'],
+    strokeGradientStopsRange: [2, 3],
+    strokeOpacityRange: [40, 100],
+    strokeWidthRange: [1, 5],
+    
+    polygonPropertiesEnabled: false,
+    segmentCountRange: [3, 12],
+    
+    linePropertiesEnabled: false,
+    pointCountRange: [2, 8],
+    pointPositionRange: [10, 200],
+    
+    splinePropertiesEnabled: false,
+    splinePointCountRange: [3, 8],
+    splinePointPositionRange: [10, 200],
+    splineControlPointRange: [5, 50],
+    
+    transformsEnabled: false,
+    translateXRange: [-50, 50],
+    translateYRange: [-50, 50],
+    scaleUniform: true,
     scaleRange: [50, 200],
-    positionDrift: 0,
-    distributionCurve: 'linear',
+    scaleXRange: [50, 200],
+    scaleYRange: [50, 200],
+    rotationRange: [0, 360],
+    skewXRange: [0, 0],
+    skewYRange: [0, 0],
     
     colorHarmonyEnabled: false,
     harmonyType: 'complementary',
@@ -120,6 +166,32 @@ export const useShapeEditor = () => {
     hueVariance: 15,
     saturationRange: [50, 100],
     lightnessRange: [30, 70],
+    
+    monochromaticSettings: {
+      lightnessSteps: 5,
+      saturationSteps: 3,
+      includeNeutrals: true,
+    },
+    analogousSettings: {
+      hueRange: 60,
+      colorCount: 3,
+    },
+    complementarySettings: {
+      includeNearComplements: false,
+      complementOffset: 0,
+    },
+    triadicSettings: {
+      rotationOffset: 0,
+      useEqualSpacing: true,
+    },
+    splitComplementarySettings: {
+      splitAngle: 30,
+      balanceWeights: true,
+    },
+    tetradicSettings: {
+      squareHarmony: true,
+      rectangleRatio: 60,
+    },
     
     physicsEnabled: false,
     physicsType: 'none',

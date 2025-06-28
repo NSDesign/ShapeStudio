@@ -249,6 +249,33 @@ const defaultSettings: BatchConfigSettings = {
   saturationRange: [50, 100],
   lightnessRange: [30, 70],
   
+  // Harmony-specific defaults
+  monochromaticSettings: {
+    lightnessSteps: 5,
+    saturationSteps: 3,
+    includeNeutrals: true,
+  },
+  analogousSettings: {
+    hueRange: 60,
+    colorCount: 3,
+  },
+  complementarySettings: {
+    includeNearComplements: false,
+    complementOffset: 0,
+  },
+  triadicSettings: {
+    rotationOffset: 0,
+    useEqualSpacing: true,
+  },
+  splitComplementarySettings: {
+    splitAngle: 30,
+    balanceWeights: true,
+  },
+  tetradicSettings: {
+    squareHarmony: true,
+    rectangleRatio: 60,
+  },
+  
   physicsEnabled: false,
   physicsType: 'none',
   gravityDirection: 270,
@@ -1007,7 +1034,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 </div>
                 
                 {currentSettings.colorHarmonyEnabled && (
-                  <div className="ml-6 space-y-3">
+                  <div className="ml-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm text-slate-300">Harmony Type</Label>
@@ -1036,6 +1063,263 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           value={currentSettings.baseColor}
                           onChange={(e) => handleSettingsUpdate({ baseColor: e.target.value })}
                           className="w-full h-8 p-1 bg-slate-800 border-slate-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Color Harmony Explanation */}
+                    <div className="p-3 bg-slate-800/50 rounded border border-slate-600">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-blue-300">
+                          {currentSettings.harmonyType === 'monochromatic' && 'Monochromatic Harmony'}
+                          {currentSettings.harmonyType === 'analogous' && 'Analogous Harmony'}
+                          {currentSettings.harmonyType === 'complementary' && 'Complementary Harmony'}
+                          {currentSettings.harmonyType === 'triadic' && 'Triadic Harmony'}
+                          {currentSettings.harmonyType === 'split-complementary' && 'Split Complementary Harmony'}
+                          {currentSettings.harmonyType === 'tetradic' && 'Tetradic Harmony'}
+                        </Label>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          {currentSettings.harmonyType === 'monochromatic' && 
+                            'Uses variations of a single hue by adjusting lightness and saturation. Creates cohesive, calming color schemes with subtle tonal variations from your base color.'
+                          }
+                          {currentSettings.harmonyType === 'analogous' && 
+                            'Uses colors adjacent to your base color on the color wheel (±30°). Creates harmonious, natural-feeling color schemes like sunset or forest themes.'
+                          }
+                          {currentSettings.harmonyType === 'complementary' && 
+                            'Uses your base color plus its opposite (180° away) on the color wheel. Creates high contrast and vibrant, eye-catching combinations.'
+                          }
+                          {currentSettings.harmonyType === 'triadic' && 
+                            'Uses three colors evenly spaced around the color wheel (120° apart). Creates balanced, vibrant schemes while maintaining harmony.'
+                          }
+                          {currentSettings.harmonyType === 'split-complementary' && 
+                            'Uses your base color plus the two colors adjacent to its complement. Offers strong contrast like complementary but with more nuanced color relationships.'
+                          }
+                          {currentSettings.harmonyType === 'tetradic' && 
+                            'Uses four colors forming a rectangle on the color wheel. Creates rich, complex color schemes with two complementary pairs.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Harmony-specific Controls */}
+                    {currentSettings.harmonyType === 'monochromatic' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Lightness Steps: {currentSettings.monochromaticSettings?.lightnessSteps || 5}</Label>
+                            <Slider
+                              value={[currentSettings.monochromaticSettings?.lightnessSteps || 5]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                monochromaticSettings: { ...currentSettings.monochromaticSettings, lightnessSteps: value }
+                              })}
+                              min={3}
+                              max={10}
+                              step={1}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Saturation Steps: {currentSettings.monochromaticSettings?.saturationSteps || 3}</Label>
+                            <Slider
+                              value={[currentSettings.monochromaticSettings?.saturationSteps || 3]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                monochromaticSettings: { ...currentSettings.monochromaticSettings, saturationSteps: value }
+                              })}
+                              min={2}
+                              max={7}
+                              step={1}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={currentSettings.monochromaticSettings?.includeNeutrals || false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({
+                              monochromaticSettings: { ...currentSettings.monochromaticSettings, includeNeutrals: checked as boolean }
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                          />
+                          <Label className="text-xs text-slate-300">Include Neutral Grays</Label>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.harmonyType === 'analogous' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Hue Range: ±{currentSettings.analogousSettings?.hueRange || 60}°</Label>
+                            <Slider
+                              value={[currentSettings.analogousSettings?.hueRange || 60]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                analogousSettings: { ...currentSettings.analogousSettings, hueRange: value }
+                              })}
+                              min={30}
+                              max={90}
+                              step={15}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Color Count: {currentSettings.analogousSettings?.colorCount || 3}</Label>
+                            <Slider
+                              value={[currentSettings.analogousSettings?.colorCount || 3]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                analogousSettings: { ...currentSettings.analogousSettings, colorCount: value }
+                              })}
+                              min={2}
+                              max={5}
+                              step={1}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.harmonyType === 'complementary' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={currentSettings.complementarySettings?.includeNearComplements || false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({
+                                complementarySettings: { ...currentSettings.complementarySettings, includeNearComplements: checked as boolean }
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                            />
+                            <Label className="text-xs text-slate-300">Include Near-Complements</Label>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Complement Offset: {currentSettings.complementarySettings?.complementOffset || 0}°</Label>
+                            <Slider
+                              value={[currentSettings.complementarySettings?.complementOffset || 0]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                complementarySettings: { ...currentSettings.complementarySettings, complementOffset: value }
+                              })}
+                              min={-30}
+                              max={30}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.harmonyType === 'triadic' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Rotation Offset: {currentSettings.triadicSettings?.rotationOffset || 0}°</Label>
+                            <Slider
+                              value={[currentSettings.triadicSettings?.rotationOffset || 0]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                triadicSettings: { ...currentSettings.triadicSettings, rotationOffset: value }
+                              })}
+                              min={-60}
+                              max={60}
+                              step={10}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={currentSettings.triadicSettings?.useEqualSpacing || true}
+                              onCheckedChange={(checked) => handleSettingsUpdate({
+                                triadicSettings: { ...currentSettings.triadicSettings, useEqualSpacing: checked as boolean }
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                            />
+                            <Label className="text-xs text-slate-300">Equal 120° Spacing</Label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.harmonyType === 'split-complementary' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Split Angle: ±{currentSettings.splitComplementarySettings?.splitAngle || 30}°</Label>
+                            <Slider
+                              value={[currentSettings.splitComplementarySettings?.splitAngle || 30]}
+                              onValueChange={([value]) => handleSettingsUpdate({
+                                splitComplementarySettings: { ...currentSettings.splitComplementarySettings, splitAngle: value }
+                              })}
+                              min={15}
+                              max={60}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={currentSettings.splitComplementarySettings?.balanceWeights || true}
+                              onCheckedChange={(checked) => handleSettingsUpdate({
+                                splitComplementarySettings: { ...currentSettings.splitComplementarySettings, balanceWeights: checked as boolean }
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                            />
+                            <Label className="text-xs text-slate-300">Balance Color Weights</Label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentSettings.harmonyType === 'tetradic' && (
+                      <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={currentSettings.tetradicSettings?.squareHarmony || true}
+                              onCheckedChange={(checked) => handleSettingsUpdate({
+                                tetradicSettings: { ...currentSettings.tetradicSettings, squareHarmony: checked as boolean }
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                            />
+                            <Label className="text-xs text-slate-300">Square Harmony (90°)</Label>
+                          </div>
+                          {!currentSettings.tetradicSettings?.squareHarmony && (
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Rectangle Ratio: {currentSettings.tetradicSettings?.rectangleRatio || 60}°</Label>
+                              <Slider
+                                value={[currentSettings.tetradicSettings?.rectangleRatio || 60]}
+                                onValueChange={([value]) => handleSettingsUpdate({
+                                  tetradicSettings: { ...currentSettings.tetradicSettings, rectangleRatio: value }
+                                })}
+                                min={30}
+                                max={90}
+                                step={10}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Common Harmony Controls */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-300">Saturation: {currentSettings.saturationRange?.[0] || 50}% - {currentSettings.saturationRange?.[1] || 100}%</Label>
+                        <Slider
+                          value={currentSettings.saturationRange || [50, 100]}
+                          onValueChange={(value) => handleSettingsUpdate({ saturationRange: value as [number, number] })}
+                          max={100}
+                          step={5}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-300">Lightness: {currentSettings.lightnessRange?.[0] || 30}% - {currentSettings.lightnessRange?.[1] || 70}%</Label>
+                        <Slider
+                          value={currentSettings.lightnessRange || [30, 70]}
+                          onValueChange={(value) => handleSettingsUpdate({ lightnessRange: value as [number, number] })}
+                          max={100}
+                          step={5}
+                          className="[&_[role=slider]]:bg-blue-600"
                         />
                       </div>
                     </div>
