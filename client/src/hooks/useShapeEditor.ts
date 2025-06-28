@@ -4,6 +4,7 @@ import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard,
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
+import { NoiseSystem } from '../lib/noiseSystem';
 import { BatchConfigSettings } from '../components/BatchConfigDialog';
 
 export const useShapeEditor = () => {
@@ -929,13 +930,55 @@ export const useShapeEditor = () => {
         shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
       }
       
-      // Random size
-      const scale = 0.5 + Math.random() * 2;
-      shape.transform.scaleX = scale;
-      shape.transform.scaleY = scale;
-      
-      // Random rotation
-      shape.transform.rotation = Math.random() * 360;
+      // Apply noise variations if enabled
+      if (batchConfigSettings.noiseEnabled) {
+        const noiseResult = NoiseSystem.generateNoiseVariation(
+          index, 
+          batchConfigSettings, 
+          position.x, 
+          position.y
+        );
+        
+        // Apply noise to position (additive to grid layout)
+        shape.transform.x += noiseResult.x;
+        shape.transform.y += noiseResult.y;
+        
+        // Apply noise to rotation
+        shape.transform.rotation = noiseResult.rotation;
+        
+        // Apply noise to scale
+        shape.transform.scaleX = noiseResult.scaleX;
+        shape.transform.scaleY = noiseResult.scaleY;
+        
+        // Apply noise to opacity
+        shape.properties.fillOpacity = noiseResult.opacity;
+        shape.properties.strokeOpacity = noiseResult.opacity;
+        
+        // Apply noise to colors if color harmony is not enabled
+        if (!batchConfigSettings.colorHarmonyEnabled) {
+          const baseHue = Math.random() * 360;
+          const baseSaturation = 50;
+          const baseLightness = 50;
+          
+          const finalHue = (baseHue + noiseResult.hue + 360) % 360;
+          const finalSaturation = Math.max(0, Math.min(100, baseSaturation + noiseResult.saturation));
+          const finalLightness = Math.max(0, Math.min(100, baseLightness + noiseResult.lightness));
+          
+          shape.properties.fillColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
+          
+          // Apply noise to stroke color with slight variation
+          const strokeHue = (finalHue + 30 + noiseResult.hue * 0.5) % 360;
+          shape.properties.strokeColor = `hsl(${strokeHue}, ${finalSaturation}%, ${finalLightness}%)`;
+        }
+        
+        console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
+      } else {
+        // Fallback to current randomization when noise is disabled
+        const scale = 0.5 + Math.random() * 2;
+        shape.transform.scaleX = scale;
+        shape.transform.scaleY = scale;
+        shape.transform.rotation = Math.random() * 360;
+      }
       
       return shape;
     });

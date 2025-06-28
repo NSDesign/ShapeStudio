@@ -147,6 +147,15 @@ Changelog:
   - Future patterns ready: line, circle, spiral (marked as "coming soon")
   - Connected grid distribution to shape generation pipeline with proper sorting and positioning
   - Added utility functions for grid calculation and shape sorting in shapeTypes.ts
+- June 28, 2025. Complete Noise System Implementation & UI Enhancements
+  - Fixed persistent slider default value bug: saturation/lightness now properly start at 0% instead of 50%/30%
+  - Added trash bin icon in top bar for clearing all shapes from canvas
+  - Implemented comprehensive Noise System with 7 algorithms: Randomise, Perlin, Simplex, Fractal, Worley, Ridge, Turbulence
+  - Each noise algorithm applies to 9 properties: position (x,y), rotation, scale (x,y), opacity, color (hue, saturation, lightness)
+  - Noise works additively with grid distribution: grid provides base positioning, noise adds variation
+  - Algorithm-specific settings implemented: lacunarity/gain for fractal, distance functions for Worley, ridge offset, turbulence power
+  - Comprehensive seeded random generation ensures reproducible results across all noise algorithms
+  - Noise applies to colors only when color harmony is disabled, maintaining harmony priority when enabled
 ```
 
 ## User Preferences
