@@ -105,6 +105,14 @@ export const useShapeEditor = () => {
     noiseRidgeOffset: 1.0,
     noiseTurbulencePower: 1.0,
     
+    distributionLayoutEnabled: false,
+    distributionPattern: 'grid',
+    gridRows: 3,
+    gridColumns: 3,
+    gridRowOffset: 120,
+    gridColumnOffset: 120,
+    gridSortBy: 'none',
+    
     blendModeEnabled: false,
     enabledBlendModes: { 'source-over': 100 },
     

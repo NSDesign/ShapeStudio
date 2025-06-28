@@ -37,6 +37,17 @@ export interface BatchConfigSettings {
   // Turbulence specific
   noiseTurbulencePower: number;
   
+  // Distribution Layout
+  distributionLayoutEnabled: boolean;
+  distributionPattern: 'grid' | 'line' | 'circle' | 'spiral';
+  
+  // Grid Layout Settings
+  gridRows: number;
+  gridColumns: number;
+  gridRowOffset: number;
+  gridColumnOffset: number;
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+  
   // Blend Mode Control
   blendModeEnabled: boolean;
   enabledBlendModes: { [key in BlendMode]?: number }; // weight 0-100
@@ -179,6 +190,14 @@ const defaultSettings: BatchConfigSettings = {
   noiseFeaturePoints: 1,
   noiseRidgeOffset: 1.0,
   noiseTurbulencePower: 1.0,
+  
+  distributionLayoutEnabled: false,
+  distributionPattern: 'grid',
+  gridRows: 3,
+  gridColumns: 3,
+  gridRowOffset: 120,
+  gridColumnOffset: 120,
+  gridSortBy: 'none',
   
   blendModeEnabled: false,
   enabledBlendModes: { 'source-over': 100 },
@@ -632,6 +651,123 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                     {currentSettings.noiseAlgorithm === 'randomise' && (
                       <div className="space-y-2 pt-2 border-t border-slate-700">
                         <Label className="text-xs text-slate-400">Standard randomization - uses probability distributions and property constraints defined in Properties section</Label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              {/* Distribution Layout */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={currentSettings.distributionLayoutEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ distributionLayoutEnabled: checked as boolean })}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="font-medium text-slate-200">Distribution Layout</Label>
+                </div>
+                
+                {currentSettings.distributionLayoutEnabled && (
+                  <div className="ml-6 space-y-4">
+                    <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                      <p className="text-xs text-slate-400">
+                        <strong>Grid positioning works additively with noise:</strong> Grid provides base layout, noise adds variation on top.
+                        When grid is active, consider zeroing transform position properties to avoid conflicts.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm text-slate-300">Pattern Type</Label>
+                      <Select 
+                        value={currentSettings.distributionPattern}
+                        onValueChange={(value) => handleSettingsUpdate({ distributionPattern: value as any })}
+                      >
+                        <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                          <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
+                          <SelectItem value="line" className="text-slate-200 hover:bg-slate-700">Line (coming soon)</SelectItem>
+                          <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle (coming soon)</SelectItem>
+                          <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral (coming soon)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {currentSettings.distributionPattern === 'grid' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Rows: {currentSettings.gridRows}</Label>
+                            <Slider
+                              value={[currentSettings.gridRows]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridRows: value })}
+                              min={1}
+                              max={10}
+                              step={1}
+                              className="[&_[role=slider]]:bg-green-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Columns: {currentSettings.gridColumns}</Label>
+                            <Slider
+                              value={[currentSettings.gridColumns]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridColumns: value })}
+                              min={1}
+                              max={10}
+                              step={1}
+                              className="[&_[role=slider]]:bg-green-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Row Offset: {currentSettings.gridRowOffset}px</Label>
+                            <Slider
+                              value={[currentSettings.gridRowOffset]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridRowOffset: value })}
+                              min={50}
+                              max={300}
+                              step={10}
+                              className="[&_[role=slider]]:bg-green-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Column Offset: {currentSettings.gridColumnOffset}px</Label>
+                            <Slider
+                              value={[currentSettings.gridColumnOffset]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridColumnOffset: value })}
+                              min={50}
+                              max={300}
+                              step={10}
+                              className="[&_[role=slider]]:bg-green-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Sort Grid By</Label>
+                          <Select 
+                            value={currentSettings.gridSortBy}
+                            onValueChange={(value) => handleSettingsUpdate({ gridSortBy: value as any })}
+                          >
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None (generation order)</SelectItem>
+                              <SelectItem value="layer" className="text-slate-200 hover:bg-slate-700">Layer Order</SelectItem>
+                              <SelectItem value="id" className="text-slate-200 hover:bg-slate-700">Shape ID</SelectItem>
+                              <SelectItem value="shape-type" className="text-slate-200 hover:bg-slate-700">Shape Type</SelectItem>
+                              <SelectItem value="fill-color" className="text-slate-200 hover:bg-slate-700">Fill Color</SelectItem>
+                              <SelectItem value="opacity" className="text-slate-200 hover:bg-slate-700">Opacity</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     )}
                   </div>
