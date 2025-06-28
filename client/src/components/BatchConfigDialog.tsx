@@ -265,8 +265,8 @@ const defaultSettings: BatchConfigSettings = {
   harmonyType: 'complementary',
   baseColor: '#3b82f6',
   hueVariance: 15,
-  saturationRange: [50, 100],
-  lightnessRange: [30, 70],
+  saturationRange: [0, 100],
+  lightnessRange: [0, 100],
   
   // Harmony-specific defaults
   monochromaticSettings: {

@@ -149,12 +149,19 @@ export class ColorUtils {
   private static generateAnalogousColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
     const { analogousSettings, saturationRange, lightnessRange, hueVariance } = settings;
     
-    // Generate hue within analogous range
-    const hueOffset = (Math.random() - 0.5) * analogousSettings.hueRange;
-    let hue = (baseHSL.h + hueOffset + 360) % 360;
+    // Create distinct analogous positions for more visible hue differences
+    const analogousPositions = [
+      0,  // Base color
+      analogousSettings.hueRange / 2,  // Positive direction
+      -analogousSettings.hueRange / 2  // Negative direction
+    ];
     
-    // Apply additional hue variance
-    hue += (Math.random() - 0.5) * hueVariance;
+    // Randomly select one of the analogous positions
+    const selectedPosition = analogousPositions[Math.floor(Math.random() * analogousPositions.length)];
+    let hue = (baseHSL.h + selectedPosition + 360) % 360;
+    
+    // Apply smaller hue variance to maintain analogous relationship
+    hue += (Math.random() - 0.5) * Math.min(hueVariance, 10); // Limit variance to 10 degrees
     hue = (hue + 360) % 360;
     
     const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
