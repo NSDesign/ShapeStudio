@@ -964,19 +964,22 @@ export const useShapeEditor = () => {
         
         // Apply noise to colors if color harmony is not enabled
         if (!batchConfigSettings.colorHarmonyEnabled) {
+          // Use more controlled base values for better color range
           const baseHue = Math.random() * 360;
-          const baseSaturation = 50;
-          const baseLightness = 50;
+          const baseSaturation = 60 + Math.random() * 30; // 60-90% base saturation
+          const baseLightness = 40 + Math.random() * 30; // 40-70% base lightness
           
           const finalHue = (baseHue + noiseResult.hue + 360) % 360;
-          const finalSaturation = Math.max(0, Math.min(100, baseSaturation + noiseResult.saturation));
-          const finalLightness = Math.max(0, Math.min(100, baseLightness + noiseResult.lightness));
+          const finalSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation));
+          const finalLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness));
           
           shape.properties.fillColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
           
           // Apply noise to stroke color with slight variation
-          const strokeHue = (finalHue + 30 + noiseResult.hue * 0.5) % 360;
-          shape.properties.strokeColor = `hsl(${strokeHue}, ${finalSaturation}%, ${finalLightness}%)`;
+          const strokeHue = (finalHue + 30 + noiseResult.hue * 0.3) % 360;
+          const strokeSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation * 0.8));
+          const strokeLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness * 0.7));
+          shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
         }
         
         console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);

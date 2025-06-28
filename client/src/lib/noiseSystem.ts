@@ -91,10 +91,10 @@ export class NoiseSystem {
       turbulencePower: settings.noiseTurbulencePower
     };
 
-    // Generate noise coordinates based on shape index and base position
-    const noiseX = (shapeIndex * 0.1 + baseX * 0.001) * options.scale;
-    const noiseY = (shapeIndex * 0.1 + baseY * 0.001) * options.scale;
-    const noiseZ = shapeIndex * 0.05; // Z dimension for 3D noise
+    // Generate noise coordinates with independent spacing to prevent diagonal patterns
+    const noiseX = (shapeIndex * 0.137 + baseX * 0.001) * options.scale; // Use prime-like spacing
+    const noiseY = (shapeIndex * 0.211 + baseY * 0.001) * options.scale; // Different prime-like spacing 
+    const noiseZ = shapeIndex * 0.083; // Independent Z dimension spacing
 
     switch (options.algorithm) {
       case 'randomise':
@@ -219,9 +219,9 @@ export class NoiseSystem {
       scaleX: 1 + noiseScaleX * options.amplitude * 0.3,
       scaleY: 1 + noiseScaleY * options.amplitude * 0.3,
       opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.2)),
-      hue: noiseHue * options.amplitude * 40,
-      saturation: noiseSat * options.amplitude * 25,
-      lightness: noiseLght * options.amplitude * 20
+      hue: noiseHue * 30, // ±30 degrees max
+      saturation: noiseSat * 20, // ±20% max
+      lightness: noiseLght * 15 // ±15% max
     };
   }
 
@@ -250,9 +250,9 @@ export class NoiseSystem {
       result.scaleX += noiseX * amplitude * 0.15;
       result.scaleY += noiseY * amplitude * 0.15;
       result.opacity += noiseZ * amplitude * 0.08;
-      result.hue += noiseX * amplitude * 25;
-      result.saturation += noiseY * amplitude * 15;
-      result.lightness += noiseZ * amplitude * 12;
+      result.hue += noiseX * 20; // ±20 degrees max per octave
+      result.saturation += noiseY * 15; // ±15% max per octave
+      result.lightness += noiseZ * 10; // ±10% max per octave
 
       amplitude *= gain;
       frequency *= lacunarity;
