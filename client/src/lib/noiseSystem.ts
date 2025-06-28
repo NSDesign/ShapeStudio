@@ -11,6 +11,9 @@ export interface NoiseOptions {
   octaves: number;
   amplitude: number;
   seed: number;
+  scaleToCanvas?: boolean;
+  canvasWidth?: number;
+  canvasHeight?: number;
   
   // Algorithm-specific options
   lacunarity?: number;
@@ -113,18 +116,24 @@ export class NoiseSystem {
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
     // Generate independent random values for each property using different offsets
-    const baseRandom = this.seededRandom(options.seed + shapeIndex * 1000);
+    const canvasWidth = options.canvasWidth || 800;
+    const canvasHeight = options.canvasHeight || 600;
+    
+    // Position constraints based on canvas size when scaling to canvas
+    const positionScale = options.scaleToCanvas ? 
+      Math.min(canvasWidth * 0.3, canvasHeight * 0.3) : // Keep within 30% of canvas dimensions
+      options.amplitude * 2; // Standard wide distribution
     
     return {
-      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * 200,
-      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * 200,
+      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * positionScale,
+      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * positionScale,
       rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 360,
-      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.5,
-      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.5,
-      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.3)),
-      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 60,
-      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 40,
-      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 30
+      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.01,
+      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.01,
+      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.006)),
+      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 0.6,
+      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 0.4,
+      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 0.3
     };
   }
 
@@ -139,6 +148,14 @@ export class NoiseSystem {
       opacity: 1, hue: 0, saturation: 0, lightness: 0
     };
 
+    const canvasWidth = options.canvasWidth || 800;
+    const canvasHeight = options.canvasHeight || 600;
+    
+    // Position constraints based on canvas size when scaling to canvas
+    const positionScale = options.scaleToCanvas ? 
+      Math.min(canvasWidth * 0.4, canvasHeight * 0.4) : // Keep within 40% of canvas dimensions
+      1; // Standard noise distribution
+
     for (let i = 0; i < options.octaves; i++) {
       // Generate independent noise values for each property using different coordinates
       const noiseX = this.perlin3D(x * frequency + 100, y * frequency, z * frequency, options.seed + 1);
@@ -151,15 +168,15 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      result.x += noiseX * amplitude * 100;
-      result.y += noiseY * amplitude * 100;
-      result.rotation += noiseRot * amplitude * 180;
-      result.scaleX += noiseScaleX * amplitude * 0.2;
-      result.scaleY += noiseScaleY * amplitude * 0.2;
-      result.opacity += noiseOpacity * amplitude * 0.1;
-      result.hue += noiseHue * amplitude * 30;
-      result.saturation += noiseSat * amplitude * 20;
-      result.lightness += noiseLght * amplitude * 15;
+      result.x += noiseX * amplitude * positionScale;
+      result.y += noiseY * amplitude * positionScale;
+      result.rotation += noiseRot * amplitude * 1.8;
+      result.scaleX += noiseScaleX * amplitude * 0.002;
+      result.scaleY += noiseScaleY * amplitude * 0.002;
+      result.opacity += noiseOpacity * amplitude * 0.001;
+      result.hue += noiseHue * amplitude * 0.3;
+      result.saturation += noiseSat * amplitude * 0.2;
+      result.lightness += noiseLght * amplitude * 0.15;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
