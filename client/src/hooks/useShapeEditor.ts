@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils } from '../lib/colorManipulation';
@@ -900,8 +900,26 @@ export const useShapeEditor = () => {
       return shape;
     });
 
-    console.log(`✅ Created ${newShapes.length} shapes, adding to existing ${shapes.length} shapes`);
-    setShapes(prev => [...prev, ...newShapes]);
+    // Apply grid distribution if enabled
+    let finalShapes = newShapes;
+    if (batchConfigSettings.distributionLayoutEnabled) {
+      const distributionConfig: DistributionConfig = {
+        enabled: batchConfigSettings.distributionLayoutEnabled,
+        pattern: batchConfigSettings.distributionPattern,
+        gridRows: batchConfigSettings.gridRows,
+        gridColumns: batchConfigSettings.gridColumns,
+        gridRowOffset: batchConfigSettings.gridRowOffset,
+        gridColumnOffset: batchConfigSettings.gridColumnOffset,
+        gridSortBy: batchConfigSettings.gridSortBy
+      };
+      
+      // Apply grid positioning additively with existing positions
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 });
+      console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy}`);
+    }
+
+    console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
+    setShapes(prev => [...prev, ...finalShapes]);
   }, [enabledShapeTypes, scatterSettings, canvasSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {

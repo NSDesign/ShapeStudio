@@ -3,6 +3,23 @@ export interface Point {
   y: number;
 }
 
+export interface GridPosition {
+  x: number;
+  y: number;
+  row: number;
+  column: number;
+}
+
+export interface DistributionConfig {
+  enabled: boolean;
+  pattern: 'grid' | 'line' | 'circle' | 'spiral';
+  gridRows: number;
+  gridColumns: number;
+  gridRowOffset: number;
+  gridColumnOffset: number;
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+}
+
 export interface Transform {
   x: number;
   y: number;
@@ -292,3 +309,85 @@ export const ARTBOARD_PRESETS: ArtboardPreset[] = [
   { name: 'Android Phone', width: 1080, height: 1920, category: 'mobile', description: 'Common Android resolution' },
   { name: 'Mobile Banner', width: 320, height: 50, category: 'mobile', description: 'Mobile web banner' },
 ];
+
+// Grid positioning utilities
+export function calculateGridPosition(
+  index: number, 
+  rows: number, 
+  columns: number, 
+  rowOffset: number, 
+  columnOffset: number,
+  centerX = 0,
+  centerY = 0
+): GridPosition {
+  const totalPositions = rows * columns;
+  const adjustedIndex = index % totalPositions;
+  
+  const row = Math.floor(adjustedIndex / columns);
+  const column = adjustedIndex % columns;
+  
+  // Calculate grid position from center
+  const startX = centerX - ((columns - 1) * columnOffset) / 2;
+  const startY = centerY - ((rows - 1) * rowOffset) / 2;
+  
+  const x = startX + (column * columnOffset);
+  const y = startY + (row * rowOffset);
+  
+  return { x, y, row, column };
+}
+
+export function sortShapesForGrid(shapes: any[], sortBy: string): any[] {
+  if (sortBy === 'none') return shapes;
+  
+  return [...shapes].sort((a, b) => {
+    switch (sortBy) {
+      case 'layer':
+        return (a.zIndex || 0) - (b.zIndex || 0);
+      case 'id':
+        return a.id.localeCompare(b.id);
+      case 'shape-type':
+        return a.type.localeCompare(b.type);
+      case 'fill-color':
+        const aFill = a.fill || '#000000';
+        const bFill = b.fill || '#000000';
+        return aFill.localeCompare(bFill);
+      case 'opacity':
+        return (a.opacity || 1) - (b.opacity || 1);
+      default:
+        return 0;
+    }
+  });
+}
+
+export function applyGridDistribution(
+  shapes: any[], 
+  config: DistributionConfig,
+  canvasCenter = { x: 0, y: 0 }
+): any[] {
+  if (!config.enabled || config.pattern !== 'grid') return shapes;
+  
+  const sortedShapes = sortShapesForGrid(shapes, config.gridSortBy);
+  
+  return sortedShapes.map((shape, index) => {
+    const gridPos = calculateGridPosition(
+      index,
+      config.gridRows,
+      config.gridColumns,
+      config.gridRowOffset,
+      config.gridColumnOffset,
+      canvasCenter.x,
+      canvasCenter.y
+    );
+    
+    // Apply grid position additively with existing position
+    // Grid provides base position, existing transform adds variation
+    return {
+      ...shape,
+      transform: {
+        ...shape.transform,
+        x: gridPos.x + (shape.transform?.x || 0),
+        y: gridPos.y + (shape.transform?.y || 0),
+      }
+    };
+  });
+}
