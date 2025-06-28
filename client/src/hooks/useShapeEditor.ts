@@ -3,7 +3,7 @@ import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
-import { ColorUtils } from '../lib/colorManipulation';
+import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { BatchConfigSettings } from '../components/BatchConfigDialog';
 
 export const useShapeEditor = () => {
@@ -883,11 +883,32 @@ export const useShapeEditor = () => {
       const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       shape.properties.zIndex = existingMaxIndex + index + 1;
       
-      // Random properties
-      const hue = Math.random() * 360;
-      const saturation = 50 + Math.random() * 50;
-      const lightness = 30 + Math.random() * 40;
-      shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      // Apply color harmony if enabled
+      if (batchConfigSettings.colorHarmonyEnabled) {
+        const colorHarmonySettings: ColorHarmonySettings = {
+          enabled: batchConfigSettings.colorHarmonyEnabled,
+          harmonyType: batchConfigSettings.harmonyType,
+          baseColor: batchConfigSettings.baseColor,
+          hueVariance: batchConfigSettings.hueVariance,
+          saturationRange: batchConfigSettings.saturationRange,
+          lightnessRange: batchConfigSettings.lightnessRange,
+          monochromaticSettings: batchConfigSettings.monochromaticSettings,
+          analogousSettings: batchConfigSettings.analogousSettings,
+          complementarySettings: batchConfigSettings.complementarySettings,
+          triadicSettings: batchConfigSettings.triadicSettings,
+          splitComplementarySettings: batchConfigSettings.splitComplementarySettings,
+          tetradicSettings: batchConfigSettings.tetradicSettings
+        };
+        
+        shape.properties.fillColor = ColorUtils.generateHarmonyColor(colorHarmonySettings);
+        console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony color: ${shape.properties.fillColor}`);
+      } else {
+        // Fallback to current randomization
+        const hue = Math.random() * 360;
+        const saturation = 50 + Math.random() * 50;
+        const lightness = 30 + Math.random() * 40;
+        shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      }
       
       // Random size
       const scale = 0.5 + Math.random() * 2;

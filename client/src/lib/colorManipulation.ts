@@ -1,6 +1,43 @@
 import { Shape } from './shapes';
 import { ColorManipulation, HSLShift, ColorRemapping } from './shapeTypes';
 
+// Color Harmony Types
+export interface ColorHarmonySettings {
+  enabled: boolean;
+  harmonyType: 'monochromatic' | 'analogous' | 'complementary' | 'triadic' | 'split-complementary' | 'tetradic';
+  baseColor: string;
+  hueVariance: number;
+  saturationRange: [number, number];
+  lightnessRange: [number, number];
+  
+  // Harmony-specific settings
+  monochromaticSettings: {
+    lightnessSteps: number;
+    saturationSteps: number;
+    includeNeutrals: boolean;
+  };
+  analogousSettings: {
+    hueRange: number;
+    colorCount: number;
+  };
+  complementarySettings: {
+    includeNearComplements: boolean;
+    complementOffset: number;
+  };
+  triadicSettings: {
+    rotationOffset: number;
+    useEqualSpacing: boolean;
+  };
+  splitComplementarySettings: {
+    splitAngle: number;
+    balanceWeights: boolean;
+  };
+  tetradicSettings: {
+    squareHarmony: boolean;
+    rectangleRatio: number;
+  };
+}
+
 export class ColorUtils {
   /**
    * Convert hex color to HSL values
@@ -37,6 +74,203 @@ export class ColorUtils {
       s: s * 100,
       l: l * 100
     };
+  }
+
+  /**
+   * Generate color using harmony settings
+   */
+  static generateHarmonyColor(settings: ColorHarmonySettings): string {
+    if (!settings.enabled) {
+      // Fallback to current randomization
+      const hue = Math.random() * 360;
+      const saturation = 50 + Math.random() * 50;
+      const lightness = 30 + Math.random() * 40;
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    const baseHSL = this.hexToHSL(settings.baseColor);
+    
+    switch (settings.harmonyType) {
+      case 'monochromatic':
+        return this.generateMonochromaticColor(baseHSL, settings);
+      case 'analogous':
+        return this.generateAnalogousColor(baseHSL, settings);
+      case 'complementary':
+        return this.generateComplementaryColor(baseHSL, settings);
+      case 'triadic':
+        return this.generateTriadicColor(baseHSL, settings);
+      case 'split-complementary':
+        return this.generateSplitComplementaryColor(baseHSL, settings);
+      case 'tetradic':
+        return this.generateTetradicColor(baseHSL, settings);
+      default:
+        return settings.baseColor;
+    }
+  }
+
+  /**
+   * Generate monochromatic color variation
+   */
+  private static generateMonochromaticColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { monochromaticSettings, saturationRange, lightnessRange } = settings;
+    
+    let saturation = baseHSL.s;
+    let lightness = baseHSL.l;
+    
+    // Apply saturation steps
+    if (monochromaticSettings.saturationSteps > 1) {
+      const satStep = (saturationRange[1] - saturationRange[0]) / (monochromaticSettings.saturationSteps - 1);
+      const stepIndex = Math.floor(Math.random() * monochromaticSettings.saturationSteps);
+      saturation = saturationRange[0] + (stepIndex * satStep);
+    } else {
+      saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    }
+    
+    // Apply lightness steps
+    if (monochromaticSettings.lightnessSteps > 1) {
+      const lightStep = (lightnessRange[1] - lightnessRange[0]) / (monochromaticSettings.lightnessSteps - 1);
+      const stepIndex = Math.floor(Math.random() * monochromaticSettings.lightnessSteps);
+      lightness = lightnessRange[0] + (stepIndex * lightStep);
+    } else {
+      lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    }
+    
+    // Include neutrals option
+    if (monochromaticSettings.includeNeutrals && Math.random() < 0.2) {
+      saturation = Math.random() * 15; // Very low saturation for neutrals
+    }
+    
+    return `hsl(${baseHSL.h}, ${saturation}%, ${lightness}%)`;
+  }
+
+  /**
+   * Generate analogous color variation
+   */
+  private static generateAnalogousColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { analogousSettings, saturationRange, lightnessRange, hueVariance } = settings;
+    
+    // Generate hue within analogous range
+    const hueOffset = (Math.random() - 0.5) * analogousSettings.hueRange;
+    let hue = (baseHSL.h + hueOffset + 360) % 360;
+    
+    // Apply additional hue variance
+    hue += (Math.random() - 0.5) * hueVariance;
+    hue = (hue + 360) % 360;
+    
+    const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    const lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  }
+
+  /**
+   * Generate complementary color variation
+   */
+  private static generateComplementaryColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { complementarySettings, saturationRange, lightnessRange, hueVariance } = settings;
+    
+    let hue = baseHSL.h;
+    
+    // 50% chance to use complement
+    if (Math.random() < 0.5) {
+      hue = (baseHSL.h + 180) % 360;
+      
+      // Include near complements
+      if (complementarySettings.includeNearComplements) {
+        hue += (Math.random() - 0.5) * complementarySettings.complementOffset * 2;
+      }
+    }
+    
+    // Apply hue variance
+    hue += (Math.random() - 0.5) * hueVariance;
+    hue = (hue + 360) % 360;
+    
+    const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    const lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  }
+
+  /**
+   * Generate triadic color variation
+   */
+  private static generateTriadicColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { triadicSettings, saturationRange, lightnessRange, hueVariance } = settings;
+    
+    const triadicPositions = [0, 120, 240];
+    if (!triadicSettings.useEqualSpacing) {
+      triadicPositions[1] += triadicSettings.rotationOffset;
+      triadicPositions[2] += triadicSettings.rotationOffset;
+    }
+    
+    const selectedPosition = triadicPositions[Math.floor(Math.random() * 3)];
+    let hue = (baseHSL.h + selectedPosition) % 360;
+    
+    // Apply hue variance
+    hue += (Math.random() - 0.5) * hueVariance;
+    hue = (hue + 360) % 360;
+    
+    const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    const lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  }
+
+  /**
+   * Generate split-complementary color variation
+   */
+  private static generateSplitComplementaryColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { splitComplementarySettings, saturationRange, lightnessRange, hueVariance } = settings;
+    
+    const complementHue = (baseHSL.h + 180) % 360;
+    const splitPositions = [
+      baseHSL.h,
+      (complementHue - splitComplementarySettings.splitAngle + 360) % 360,
+      (complementHue + splitComplementarySettings.splitAngle) % 360
+    ];
+    
+    let selectedHue = splitPositions[Math.floor(Math.random() * 3)];
+    
+    // Apply hue variance
+    selectedHue += (Math.random() - 0.5) * hueVariance;
+    selectedHue = (selectedHue + 360) % 360;
+    
+    const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    const lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    
+    return `hsl(${selectedHue}, ${saturation}%, ${lightness}%)`;
+  }
+
+  /**
+   * Generate tetradic color variation
+   */
+  private static generateTetradicColor(baseHSL: { h: number; s: number; l: number }, settings: ColorHarmonySettings): string {
+    const { tetradicSettings, saturationRange, lightnessRange, hueVariance } = settings;
+    
+    let tetradicPositions: number[];
+    
+    if (tetradicSettings.squareHarmony) {
+      // Square harmony: 90° spacing
+      tetradicPositions = [0, 90, 180, 270];
+    } else {
+      // Rectangle harmony: adjustable ratio
+      const angle1 = 180 * tetradicSettings.rectangleRatio;
+      const angle2 = 180;
+      const angle3 = 180 + angle1;
+      tetradicPositions = [0, angle1, angle2, angle3];
+    }
+    
+    const selectedPosition = tetradicPositions[Math.floor(Math.random() * 4)];
+    let hue = (baseHSL.h + selectedPosition) % 360;
+    
+    // Apply hue variance
+    hue += (Math.random() - 0.5) * hueVariance;
+    hue = (hue + 360) % 360;
+    
+    const saturation = saturationRange[0] + Math.random() * (saturationRange[1] - saturationRange[0]);
+    const lightness = lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
 
   /**
