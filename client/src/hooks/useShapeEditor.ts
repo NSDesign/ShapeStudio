@@ -933,11 +933,18 @@ export const useShapeEditor = () => {
       
       // Apply noise variations if enabled
       if (batchConfigSettings.noiseEnabled) {
+        // Get current artboard dimensions
+        const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+        const artboardWidth = currentArtboard?.width || 400;
+        const artboardHeight = currentArtboard?.height || 400;
+        
         const noiseResult = NoiseSystem.generateNoiseVariation(
           index, 
           batchConfigSettings, 
           position.x, 
-          position.y
+          position.y,
+          artboardWidth,
+          artboardHeight
         );
         
         // Apply noise to position (additive to grid layout)

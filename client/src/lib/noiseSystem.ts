@@ -12,8 +12,8 @@ export interface NoiseOptions {
   amplitude: number;
   seed: number;
   scaleToCanvas?: boolean;
-  canvasWidth?: number;
-  canvasHeight?: number;
+  artboardWidth?: number;
+  artboardHeight?: number;
   
   // Algorithm-specific options
   lacunarity?: number;
@@ -116,12 +116,12 @@ export class NoiseSystem {
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
     // Generate independent random values for each property using different offsets
-    const canvasWidth = options.canvasWidth || 800;
-    const canvasHeight = options.canvasHeight || 600;
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
     
-    // Position constraints based on canvas size when scaling to canvas
+    // Position constraints based on artboard size when scaling to artboard
     const positionScale = options.scaleToCanvas ? 
-      Math.min(canvasWidth * 0.3, canvasHeight * 0.3) : // Keep within 30% of canvas dimensions
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
       options.amplitude * 2; // Standard wide distribution
     
     return {
@@ -148,12 +148,12 @@ export class NoiseSystem {
       opacity: 1, hue: 0, saturation: 0, lightness: 0
     };
 
-    const canvasWidth = options.canvasWidth || 800;
-    const canvasHeight = options.canvasHeight || 600;
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
     
-    // Position constraints based on canvas size when scaling to canvas
+    // Position constraints based on artboard size when scaling to artboard
     const positionScale = options.scaleToCanvas ? 
-      Math.min(canvasWidth * 0.4, canvasHeight * 0.4) : // Keep within 40% of canvas dimensions
+      Math.min(artboardWidth * 0.4, artboardHeight * 0.4) : // Keep within 40% of artboard dimensions
       1; // Standard noise distribution
 
     for (let i = 0; i < options.octaves; i++) {

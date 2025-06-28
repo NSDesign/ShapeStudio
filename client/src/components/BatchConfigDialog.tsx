@@ -585,11 +585,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                         onCheckedChange={(checked) => handleSettingsUpdate({ noiseScaleToCanvas: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
-                      <Label className="text-sm text-slate-300">Scale to Fit Canvas</Label>
+                      <Label className="text-sm text-slate-300">Scale to Fit Artboard</Label>
                     </div>
                     {currentSettings.noiseScaleToCanvas && (
                       <div className="ml-6">
-                        <Label className="text-xs text-slate-400">Position values will be constrained to keep shapes within the visible canvas area</Label>
+                        <Label className="text-xs text-slate-400">Position values will be constrained to keep shapes within the current artboard bounds</Label>
                       </div>
                     )}
 
