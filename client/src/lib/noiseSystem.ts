@@ -391,15 +391,15 @@ export class NoiseSystem {
       noiseY = Math.pow(Math.abs(noiseY), turbulencePower);
       noiseZ = Math.pow(Math.abs(noiseZ), turbulencePower);
 
-      result.x += noiseX * amplitude * 55;
-      result.y += noiseY * amplitude * 55;
-      result.rotation += noiseZ * amplitude * 250;
-      result.scaleX += noiseX * amplitude * 0.3;
-      result.scaleY += noiseY * amplitude * 0.3;
-      result.opacity += noiseZ * amplitude * 0.15;
-      result.hue += noiseX * amplitude * 40;
-      result.saturation += noiseY * amplitude * 28;
-      result.lightness += noiseZ * amplitude * 22;
+      result.x += noiseX * amplitude * 18;
+      result.y += noiseY * amplitude * 18;
+      result.rotation += noiseZ * amplitude * 40;
+      result.scaleX += noiseX * amplitude * 0.12;
+      result.scaleY += noiseY * amplitude * 0.12;
+      result.opacity += noiseZ * amplitude * 0.06;
+      result.hue += noiseX * amplitude * 18;
+      result.saturation += noiseY * amplitude * 9;
+      result.lightness += noiseZ * amplitude * 7;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
