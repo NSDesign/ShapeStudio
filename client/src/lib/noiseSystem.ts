@@ -130,15 +130,15 @@ export class NoiseSystem {
       options.amplitude * 2; // Standard wide distribution
     
     return {
-      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * positionScale,
-      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * positionScale,
-      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 360,
-      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.01,
-      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.01,
-      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.006)),
-      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * 60, // ±30 degrees max
-      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * 40, // ±20% max
-      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * 30 // ±15% max
+      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
+      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
+      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 180, // ±180 degrees max
+      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.5, // ±50% scale variation
+      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.5,
+      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.3)), // ±30% opacity variation
+      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 60, // ±60 degrees hue variation
+      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 30, // ±30% saturation variation
+      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 25 // ±25% lightness variation
     };
   }
 
@@ -173,15 +173,16 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
-      result.rotation += noiseRot * amplitude * 1.8;
-      result.scaleX += noiseScaleX * amplitude * 0.002;
-      result.scaleY += noiseScaleY * amplitude * 0.002;
-      result.opacity += noiseOpacity * amplitude * 0.001;
-      result.hue += noiseHue * 30; // ±30 degrees max per octave
-      result.saturation += noiseSat * 20; // ±20% max per octave  
-      result.lightness += noiseLght * 15; // ±15% max per octave
+      // Apply noise values directly with reasonable scaling (noise is already -1 to 1)
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
+      result.rotation += noiseRot * amplitude * 180; // ±180 degrees max
+      result.scaleX += noiseScaleX * amplitude * 0.5; // ±50% scale variation
+      result.scaleY += noiseScaleY * amplitude * 0.5;
+      result.opacity += noiseOpacity * amplitude * 0.3; // ±30% opacity variation
+      result.hue += noiseHue * amplitude * 60; // ±60 degrees hue variation
+      result.saturation += noiseSat * amplitude * 30; // ±30% saturation variation
+      result.lightness += noiseLght * amplitude * 25; // ±25% lightness variation
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
@@ -221,15 +222,15 @@ export class NoiseSystem {
     const noiseLght = this.gradientNoise(x * frequency + 600, y * frequency + 600, options.seed + 9);
 
     return {
-      x: noiseX * (options.scaleToCanvas ? positionScale * 0.01 : positionScale),
-      y: noiseY * (options.scaleToCanvas ? positionScale * 0.01 : positionScale),
-      rotation: noiseRot * options.amplitude * 270,
-      scaleX: 1 + noiseScaleX * options.amplitude * 0.3,
-      scaleY: 1 + noiseScaleY * options.amplitude * 0.3,
-      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.2)),
-      hue: noiseHue * 30, // ±30 degrees max
-      saturation: noiseSat * 20, // ±20% max
-      lightness: noiseLght * 15 // ±15% max
+      x: noiseX * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
+      y: noiseY * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
+      rotation: noiseRot * options.amplitude * 180, // ±180 degrees max
+      scaleX: 1 + noiseScaleX * options.amplitude * 0.5, // ±50% scale variation
+      scaleY: 1 + noiseScaleY * options.amplitude * 0.5,
+      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.3)), // ±30% opacity variation
+      hue: noiseHue * options.amplitude * 60, // ±60 degrees hue variation
+      saturation: noiseSat * options.amplitude * 30, // ±30% saturation variation
+      lightness: noiseLght * options.amplitude * 25 // ±25% lightness variation
     };
   }
 
@@ -260,15 +261,16 @@ export class NoiseSystem {
       const noiseY = this.perlin3D(x * frequency + 1000, y * frequency + 1000, z * frequency, options.seed);
       const noiseZ = this.perlin3D(x * frequency + 2000, y * frequency + 2000, z * frequency, options.seed);
 
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? positionScale * 0.01 : positionScale);
-      result.rotation += noiseZ * amplitude * 120;
-      result.scaleX += noiseX * amplitude * 0.15;
-      result.scaleY += noiseY * amplitude * 0.15;
-      result.opacity += noiseZ * amplitude * 0.08;
-      result.hue += noiseX * 20; // ±20 degrees max per octave
-      result.saturation += noiseY * 15; // ±15% max per octave
-      result.lightness += noiseZ * 10; // ±10% max per octave
+      // Apply noise values directly (noise is already -1 to 1)
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
+      result.rotation += noiseZ * amplitude * 180; // ±180 degrees max
+      result.scaleX += noiseX * amplitude * 0.5; // ±50% scale variation
+      result.scaleY += noiseY * amplitude * 0.5;
+      result.opacity += noiseZ * amplitude * 0.3; // ±30% opacity variation
+      result.hue += noiseX * amplitude * 60; // ±60 degrees hue variation
+      result.saturation += noiseY * amplitude * 30; // ±30% saturation variation
+      result.lightness += noiseZ * amplitude * 25; // ±25% lightness variation
 
       amplitude *= gain;
       frequency *= lacunarity;

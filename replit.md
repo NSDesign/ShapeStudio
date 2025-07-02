@@ -156,6 +156,13 @@ Changelog:
   - Algorithm-specific settings implemented: lacunarity/gain for fractal, distance functions for Worley, ridge offset, turbulence power
   - Comprehensive seeded random generation ensures reproducible results across all noise algorithms
   - Noise applies to colors only when color harmony is disabled, maintaining harmony priority when enabled
+- July 2, 2025. Critical Noise System Fixes & Value Range Normalization
+  - Fixed extreme value scaling bug: noise functions now properly respect -1 to 1 input ranges
+  - Corrected artboard constraint logic: "Scale to Fit Artboard" now actually constrains shapes within artboard bounds
+  - Normalized all noise algorithm multipliers to reasonable ranges (±180° rotation, ±50% scale, ±30% opacity)
+  - Fixed color calculation extremes that were causing black/white shapes: limited to ±60° hue, ±30% saturation, ±25% lightness
+  - Eliminated diagonal positioning patterns by using independent coordinate spacing for X/Y values
+  - Restored original randomization behavior when all config options are disabled
 ```
 
 ## User Preferences
