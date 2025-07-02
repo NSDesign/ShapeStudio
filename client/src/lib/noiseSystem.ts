@@ -177,16 +177,16 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      // Apply noise values directly with reasonable scaling (noise is already -1 to 1)
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
-      result.rotation += noiseRot * amplitude * 180; // ±180 degrees max
-      result.scaleX += noiseScaleX * amplitude * 0.5; // ±50% scale variation
-      result.scaleY += noiseScaleY * amplitude * 0.5;
-      result.opacity += noiseOpacity * amplitude * 0.3; // ±30% opacity variation
-      result.hue += noiseHue * amplitude * 60; // ±60 degrees hue variation
-      result.saturation += noiseSat * amplitude * 30; // ±30% saturation variation
-      result.lightness += noiseLght * amplitude * 25; // ±25% lightness variation
+      // Apply noise values with proper scaling (noise is -1 to 1, amplitude is typically 1)
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
+      result.rotation += noiseRot * amplitude * 45; // ±45 degrees max per octave
+      result.scaleX += noiseScaleX * amplitude * 0.15; // ±15% scale variation per octave
+      result.scaleY += noiseScaleY * amplitude * 0.15;
+      result.opacity += noiseOpacity * amplitude * 0.1; // ±10% opacity variation per octave
+      result.hue += noiseHue * amplitude * 20; // ±20 degrees hue variation per octave
+      result.saturation += noiseSat * amplitude * 10; // ±10% saturation variation per octave
+      result.lightness += noiseLght * amplitude * 8; // ±8% lightness variation per octave
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
@@ -226,15 +226,15 @@ export class NoiseSystem {
     const noiseLght = this.gradientNoise(x * frequency + 600, y * frequency + 600, options.seed + 9);
 
     return {
-      x: noiseX * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
-      y: noiseY * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
-      rotation: noiseRot * options.amplitude * 180, // ±180 degrees max
-      scaleX: 1 + noiseScaleX * options.amplitude * 0.5, // ±50% scale variation
-      scaleY: 1 + noiseScaleY * options.amplitude * 0.5,
-      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.3)), // ±30% opacity variation
-      hue: noiseHue * options.amplitude * 60, // ±60 degrees hue variation
-      saturation: noiseSat * options.amplitude * 30, // ±30% saturation variation
-      lightness: noiseLght * options.amplitude * 25 // ±25% lightness variation
+      x: noiseX * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20),
+      y: noiseY * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20),
+      rotation: noiseRot * options.amplitude * 45, // ±45 degrees max
+      scaleX: 1 + noiseScaleX * options.amplitude * 0.15, // ±15% scale variation
+      scaleY: 1 + noiseScaleY * options.amplitude * 0.15,
+      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.1)), // ±10% opacity variation
+      hue: noiseHue * options.amplitude * 20, // ±20 degrees hue variation
+      saturation: noiseSat * options.amplitude * 10, // ±10% saturation variation
+      lightness: noiseLght * options.amplitude * 8 // ±8% lightness variation
     };
   }
 
@@ -265,16 +265,16 @@ export class NoiseSystem {
       const noiseY = this.perlin3D(x * frequency + 1000, y * frequency + 1000, z * frequency, options.seed);
       const noiseZ = this.perlin3D(x * frequency + 2000, y * frequency + 2000, z * frequency, options.seed);
 
-      // Apply noise values directly (noise is already -1 to 1)
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100);
-      result.rotation += noiseZ * amplitude * 180; // ±180 degrees max
-      result.scaleX += noiseX * amplitude * 0.5; // ±50% scale variation
-      result.scaleY += noiseY * amplitude * 0.5;
-      result.opacity += noiseZ * amplitude * 0.3; // ±30% opacity variation
-      result.hue += noiseX * amplitude * 60; // ±60 degrees hue variation
-      result.saturation += noiseY * amplitude * 30; // ±30% saturation variation
-      result.lightness += noiseZ * amplitude * 25; // ±25% lightness variation
+      // Apply noise values with proper scaling per octave
+      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
+      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
+      result.rotation += noiseZ * amplitude * 45; // ±45 degrees max per octave
+      result.scaleX += noiseX * amplitude * 0.15; // ±15% scale variation per octave
+      result.scaleY += noiseY * amplitude * 0.15;
+      result.opacity += noiseZ * amplitude * 0.1; // ±10% opacity variation per octave
+      result.hue += noiseX * amplitude * 20; // ±20 degrees hue variation per octave
+      result.saturation += noiseY * amplitude * 10; // ±10% saturation variation per octave
+      result.lightness += noiseZ * amplitude * 8; // ±8% lightness variation per octave
 
       amplitude *= gain;
       frequency *= lacunarity;
@@ -317,15 +317,15 @@ export class NoiseSystem {
     const edgeValue = secondMinDistance - minDistance;
 
     return {
-      x: cellValue * options.amplitude * 30,
-      y: edgeValue * options.amplitude * 30,
-      rotation: (cellValue + edgeValue) * options.amplitude * 180,
-      scaleX: 1 + cellValue * options.amplitude * 0.2,
-      scaleY: 1 + edgeValue * options.amplitude * 0.2,
-      opacity: Math.max(0.1, Math.min(1, 1 - cellValue * options.amplitude * 0.3)),
-      hue: cellValue * options.amplitude * 50,
-      saturation: edgeValue * options.amplitude * 30,
-      lightness: (cellValue + edgeValue) * options.amplitude * 20
+      x: cellValue * options.amplitude * 20,
+      y: edgeValue * options.amplitude * 20,
+      rotation: (cellValue + edgeValue) * options.amplitude * 45,
+      scaleX: 1 + cellValue * options.amplitude * 0.15,
+      scaleY: 1 + edgeValue * options.amplitude * 0.15,
+      opacity: Math.max(0.1, Math.min(1, 1 - cellValue * options.amplitude * 0.1)),
+      hue: cellValue * options.amplitude * 20,
+      saturation: edgeValue * options.amplitude * 10,
+      lightness: (cellValue + edgeValue) * options.amplitude * 8
     };
   }
 
@@ -347,15 +347,15 @@ export class NoiseSystem {
       noise = ridgeOffset - Math.abs(noise); // Create ridge effect
       noise = noise * noise; // Square for sharper ridges
 
-      result.x += noise * amplitude * 45;
-      result.y += noise * amplitude * 45;
-      result.rotation += noise * amplitude * 200;
-      result.scaleX += noise * amplitude * 0.25;
-      result.scaleY += noise * amplitude * 0.25;
-      result.opacity += noise * amplitude * 0.12;
-      result.hue += noise * amplitude * 35;
-      result.saturation += noise * amplitude * 22;
-      result.lightness += noise * amplitude * 18;
+      result.x += noise * amplitude * 15;
+      result.y += noise * amplitude * 15;
+      result.rotation += noise * amplitude * 30;
+      result.scaleX += noise * amplitude * 0.1;
+      result.scaleY += noise * amplitude * 0.1;
+      result.opacity += noise * amplitude * 0.05;
+      result.hue += noise * amplitude * 15;
+      result.saturation += noise * amplitude * 8;
+      result.lightness += noise * amplitude * 6;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
