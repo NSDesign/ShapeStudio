@@ -129,20 +129,20 @@ export class NoiseSystem {
       x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
       y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
       
-      // Rotation: Return variation amount (original sets absolute 0-360°)
-      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 360, // ±180° variation
+      // Rotation: Return value to map to 0-360° range (original range)
+      rotation: this.seededRandom(options.seed + shapeIndex * 1000 + 3)() * options.amplitude * 360, // 0-360° range
       
-      // Scale: Return scale multiplier variation (original sets absolute 0.5-2.5x)
-      scaleX: (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 2, // ±1x variation
-      scaleY: (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 2,
+      // Scale: Return values to map to 0.5-2.5 range (original range)
+      scaleX: this.seededRandom(options.seed + shapeIndex * 1000 + 4)() * options.amplitude, // 0-1 range for mapping
+      scaleY: this.seededRandom(options.seed + shapeIndex * 1000 + 5)() * options.amplitude,
       
-      // Opacity: Small variation (original uses fixed range)
-      opacity: (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.2, // ±10% variation
+      // Opacity: Return value for mapping to original ranges (fill 0.8-1.0, stroke 0.9-1.0)
+      opacity: this.seededRandom(options.seed + shapeIndex * 1000 + 6)() * options.amplitude, // 0-1 range for mapping
       
-      // Colors: Return variation amounts (original sets absolute values)
-      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 360, // Full hue range variation
-      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 50, // ±25% variation  
-      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 40 // ±20% variation
+      // Colors: Return values for mapping to original absolute ranges
+      hue: this.seededRandom(options.seed + shapeIndex * 1000 + 7)() * options.amplitude * 360, // 0-360° range
+      saturation: this.seededRandom(options.seed + shapeIndex * 1000 + 8)() * options.amplitude, // 0-1 range for mapping
+      lightness: this.seededRandom(options.seed + shapeIndex * 1000 + 9)() * options.amplitude // 0-1 range for mapping
     };
   }
 

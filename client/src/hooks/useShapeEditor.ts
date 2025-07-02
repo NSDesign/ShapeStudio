@@ -953,14 +953,14 @@ export const useShapeEditor = () => {
         
         // Apply noise to rotation (additive for noise algorithms, absolute for randomize)
         if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          shape.transform.rotation = Math.abs(noiseResult.rotation) % 360; // Use as absolute value like original
+          shape.transform.rotation = noiseResult.rotation; // Use as absolute 0-360° value like original
         } else {
           shape.transform.rotation += noiseResult.rotation; // Additive for other noise types
         }
         
         // Apply noise to scale (additive for noise algorithms, absolute for randomize)
         if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          const scale = 0.5 + Math.abs(noiseResult.scaleX) * 0.5; // Map to 0.5-2.5 range like original
+          const scale = 0.5 + noiseResult.scaleX * 2; // Map 0-1 noise to 0.5-2.5 range like original
           shape.transform.scaleX = scale;
           shape.transform.scaleY = scale;
         } else {
@@ -970,8 +970,8 @@ export const useShapeEditor = () => {
         
         // Apply noise to opacity (additive for all)
         if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          shape.properties.fillOpacity = 0.8 + Math.abs(noiseResult.opacity) * 0.2; // Map to 0.8-1.0 like original
-          shape.properties.strokeOpacity = 0.9 + Math.abs(noiseResult.opacity) * 0.1;
+          shape.properties.fillOpacity = 0.8 + noiseResult.opacity * 0.2; // Map 0-1 noise to 0.8-1.0 like original
+          shape.properties.strokeOpacity = 0.9 + noiseResult.opacity * 0.1; // Map 0-1 noise to 0.9-1.0 like original
         } else {
           shape.properties.fillOpacity = Math.max(0.1, Math.min(1, shape.properties.fillOpacity + noiseResult.opacity));
           shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, shape.properties.strokeOpacity + noiseResult.opacity));
@@ -981,16 +981,16 @@ export const useShapeEditor = () => {
         if (!batchConfigSettings.colorHarmonyEnabled) {
           if (batchConfigSettings.noiseAlgorithm === 'randomise') {
             // Match EXACT original randomization behavior
-            const hue = Math.abs(noiseResult.hue) % 360; // Use noise as absolute hue value
-            const saturation = 50 + Math.abs(noiseResult.saturation) % 50; // Map to 50-100% like original
-            const lightness = 30 + Math.abs(noiseResult.lightness) % 40; // Map to 30-70% like original
+            const hue = noiseResult.hue; // Direct 0-360° value
+            const saturation = 50 + noiseResult.saturation * 50; // Map 0-1 to 50-100%
+            const lightness = 30 + noiseResult.lightness * 40; // Map 0-1 to 30-70%
             
             shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             
-            // Random stroke color (original behavior)
-            const strokeHue = Math.abs(noiseResult.hue + 100) % 360; // Offset hue
-            const strokeSaturation = 60 + Math.abs(noiseResult.saturation + 20) % 40; // Map to 60-100%
-            const strokeLightness = 20 + Math.abs(noiseResult.lightness + 30) % 60; // Map to 20-80%
+            // Random stroke color (original behavior - use different seed offset)
+            const strokeHue = (hue + 180) % 360; // Complementary hue
+            const strokeSaturation = 60 + (noiseResult.saturation * 0.8) * 40; // Map to 60-100%
+            const strokeLightness = 20 + (noiseResult.lightness * 0.7) * 60; // Map to 20-80%
             shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
           } else {
             // Other noise algorithms use additive variation
