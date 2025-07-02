@@ -120,25 +120,29 @@ export class NoiseSystem {
    * Standard randomization (baseline)
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
-    // Generate independent random values for each property using different offsets
+    // Match the EXACT original randomization behavior - return only small variations, not absolute values
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
     
-    // Position constraints based on artboard size when scaling to artboard
-    const positionScale = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
-      options.amplitude * 2; // Standard wide distribution
-    
     return {
-      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
-      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 100),
-      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 180, // ±180 degrees max
-      scaleX: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 0.5, // ±50% scale variation
-      scaleY: 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 0.5,
-      opacity: Math.max(0.1, Math.min(1, 1 + (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.3)), // ±30% opacity variation
-      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 60, // ±60 degrees hue variation
-      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 30, // ±30% saturation variation
-      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 25 // ±25% lightness variation
+      // Position: Small random offsets (original has no position randomization)
+      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
+      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
+      
+      // Rotation: Return variation amount (original sets absolute 0-360°)
+      rotation: (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * options.amplitude * 360, // ±180° variation
+      
+      // Scale: Return scale multiplier variation (original sets absolute 0.5-2.5x)
+      scaleX: (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * options.amplitude * 2, // ±1x variation
+      scaleY: (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * options.amplitude * 2,
+      
+      // Opacity: Small variation (original uses fixed range)
+      opacity: (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * options.amplitude * 0.2, // ±10% variation
+      
+      // Colors: Return variation amounts (original sets absolute values)
+      hue: (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * options.amplitude * 360, // Full hue range variation
+      saturation: (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * options.amplitude * 50, // ±25% variation  
+      lightness: (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * options.amplitude * 40 // ±20% variation
     };
   }
 
