@@ -891,7 +891,20 @@ export const useShapeEditor = () => {
 
     const newShapes = positions.map((position, index) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
-      const shape = new Shape(randomType, position.x, position.y);
+      
+      // Apply position from batch config if properties are enabled
+      let shapeX = position.x;
+      let shapeY = position.y;
+      
+      if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+        // Use X/Y position ranges instead of the generated position
+        const [minX, maxX] = batchConfigSettings.xPositionRange;
+        const [minY, maxY] = batchConfigSettings.yPositionRange;
+        shapeX = minX + Math.random() * (maxX - minX);
+        shapeY = minY + Math.random() * (maxY - minY);
+      }
+      
+      const shape = new Shape(randomType, shapeX, shapeY);
       
       // Apply width/height from batch config if properties are enabled
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
@@ -1088,6 +1101,171 @@ export const useShapeEditor = () => {
         const strokeSaturation = 60 + Math.random() * 40;
         const strokeLightness = 20 + Math.random() * 60;
         shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+      }
+      
+      // Apply fill and stroke probabilities from batch config
+      if (batchConfigSettings.propertiesEnabled) {
+        // Handle fill probability
+        if (batchConfigSettings.fillEnabled) {
+          const shouldHaveFill = Math.random() * 100 < batchConfigSettings.fillProbability;
+          if (!shouldHaveFill) {
+            shape.properties.fillColor = 'transparent';
+            shape.properties.fillOpacity = 0;
+          } else {
+            // Apply fill opacity range
+            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
+            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            
+            // Handle gradient probability
+            if (Math.random() * 100 < batchConfigSettings.fillGradientProbability) {
+              // Create gradient
+              const gradientType = Math.random() * 100 < batchConfigSettings.fillGradientTypeProbability ? 'linear' : 'radial';
+              const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
+              const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+              
+              const gradientStops = [];
+              for (let i = 0; i < stopCount; i++) {
+                const t = i / (stopCount - 1);
+                const [color1, color2] = batchConfigSettings.fillGradientColorRange;
+                
+                // Interpolate between gradient colors
+                const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
+                  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                  return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                  } : {r: 0, g: 0, b: 0};
+                };
+                
+                const rgb1 = hex2rgb(color1);
+                const rgb2 = hex2rgb(color2);
+                const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
+                const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
+                const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+                
+                gradientStops.push({
+                  offset: t,
+                  color: `rgb(${r}, ${g}, ${b})`
+                });
+              }
+              
+              shape.properties.gradient = {
+                type: gradientType,
+                stops: gradientStops
+              };
+            }
+          }
+        }
+        
+        // Handle stroke probability
+        if (batchConfigSettings.strokeEnabled) {
+          const shouldHaveStroke = Math.random() * 100 < batchConfigSettings.strokeProbability;
+          if (!shouldHaveStroke) {
+            shape.properties.strokeColor = 'transparent';
+            shape.properties.strokeOpacity = 0;
+            shape.properties.strokeWidth = 0;
+          } else {
+            // Apply stroke width range
+            const [minWidth, maxWidth] = batchConfigSettings.strokeWidthRange;
+            shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
+            
+            // Apply stroke opacity range
+            const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
+            shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            
+            // Apply stroke color range if color probability is set
+            if (Math.random() * 100 < batchConfigSettings.strokeColorProbability) {
+              const [color1, color2] = batchConfigSettings.strokeColorRange;
+              const t = Math.random();
+              
+              // Interpolate between stroke colors
+              const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16)
+                } : {r: 0, g: 0, b: 0};
+              };
+              
+              const rgb1 = hex2rgb(color1);
+              const rgb2 = hex2rgb(color2);
+              const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
+              const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
+              const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+              
+              // Convert to HSL for consistency
+              const r_norm = r / 255;
+              const g_norm = g / 255;
+              const b_norm = b / 255;
+              const max = Math.max(r_norm, g_norm, b_norm);
+              const min = Math.min(r_norm, g_norm, b_norm);
+              const l = (max + min) / 2;
+              let h = 0, s = 0;
+              
+              if (max !== min) {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                  case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
+                  case g_norm: h = (b_norm - r_norm) / d + 2; break;
+                  case b_norm: h = (r_norm - g_norm) / d + 4; break;
+                }
+                h /= 6;
+              }
+              
+              shape.properties.strokeColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
+            }
+          }
+        }
+        
+        // Prevent invisible shapes if enabled
+        if (batchConfigSettings.preventInvisibleShapes) {
+          const hasFill = shape.properties.fillColor !== 'transparent' && shape.properties.fillOpacity > 0;
+          const hasStroke = shape.properties.strokeColor !== 'transparent' && shape.properties.strokeOpacity > 0 && shape.properties.strokeWidth > 0;
+          
+          if (!hasFill && !hasStroke) {
+            // Force at least a fill
+            shape.properties.fillColor = shape.properties.fillColor === 'transparent' ? 
+              `hsl(${Math.random() * 360}, 75%, 50%)` : shape.properties.fillColor;
+            shape.properties.fillOpacity = 0.7;
+          }
+        }
+        
+        // Apply shape transforms if enabled
+        if (batchConfigSettings.transformsEnabled) {
+          // Apply translation
+          const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
+          const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
+          shape.transform.x += minTransX + Math.random() * (maxTransX - minTransX);
+          shape.transform.y += minTransY + Math.random() * (maxTransY - minTransY);
+          
+          // Apply scale
+          if (batchConfigSettings.scaleUniform) {
+            const [minScale, maxScale] = batchConfigSettings.scaleRange;
+            const scale = minScale + Math.random() * (maxScale - minScale);
+            shape.transform.scaleX = scale;
+            shape.transform.scaleY = scale;
+          } else {
+            const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
+            const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
+            shape.transform.scaleX = minScaleX + Math.random() * (maxScaleX - minScaleX);
+            shape.transform.scaleY = minScaleY + Math.random() * (maxScaleY - minScaleY);
+          }
+          
+          // Apply rotation
+          const [minRot, maxRot] = batchConfigSettings.rotationRange;
+          shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
+          
+          // Apply skew if configured
+          if (batchConfigSettings.skewXRange && batchConfigSettings.skewYRange) {
+            const [minSkewX, maxSkewX] = batchConfigSettings.skewXRange;
+            const [minSkewY, maxSkewY] = batchConfigSettings.skewYRange;
+            shape.transform.skewX = minSkewX + Math.random() * (maxSkewX - minSkewX);
+            shape.transform.skewY = minSkewY + Math.random() * (maxSkewY - minSkewY);
+          }
+        }
       }
       
       // Apply noise variations ONLY if enabled - this fixes the disabled state issue

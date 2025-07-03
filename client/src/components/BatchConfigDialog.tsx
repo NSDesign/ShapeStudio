@@ -1206,6 +1206,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
                             </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Stroke Color Probability: {currentSettings.strokeColorProbability}%</Label>
+                              <Slider
+                                value={[currentSettings.strokeColorProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ strokeColorProbability: value })}
+                                max={100}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
                           </div>
                           
                           <div className="space-y-2">
@@ -1228,6 +1238,18 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                               />
                             </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Stroke Opacity: {currentSettings.strokeOpacityRange?.[0] || 40}% - {currentSettings.strokeOpacityRange?.[1] || 100}%</Label>
+                            <Slider
+                              value={currentSettings.strokeOpacityRange || [40, 100]}
+                              onValueChange={(value) => handleSettingsUpdate({ strokeOpacityRange: value as [number, number] })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
                           </div>
                         </div>
                       )}
