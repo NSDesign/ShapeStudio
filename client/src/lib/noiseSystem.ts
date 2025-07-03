@@ -124,25 +124,33 @@ export class NoiseSystem {
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
     
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
+    
+    // Generate random variations in [-1, 1] range
+    const randX = (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * 2;
+    const randY = (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * 2;
+    const randRot = (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * 2;
+    const randScaleX = (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * 2;
+    const randScaleY = (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * 2;
+    const randOpacity = (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * 2;
+    const randHue = (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * 2;
+    const randSat = (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * 2;
+    const randLght = (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * 2;
+    
+    // Apply controlled ranges like other noise algorithms
     return {
-      // Position: Small random offsets (original has no position randomization)
-      x: (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
-      y: (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.1, artboardHeight * 0.1) : 20),
-      
-      // Rotation: Return value to map to 0-360° range (original range)
-      rotation: this.seededRandom(options.seed + shapeIndex * 1000 + 3)() * options.amplitude * 360, // 0-360° range
-      
-      // Scale: Return values to map to 0.5-2.5 range (original range)
-      scaleX: this.seededRandom(options.seed + shapeIndex * 1000 + 4)() * options.amplitude, // 0-1 range for mapping
-      scaleY: this.seededRandom(options.seed + shapeIndex * 1000 + 5)() * options.amplitude,
-      
-      // Opacity: Return value for mapping to original ranges (fill 0.8-1.0, stroke 0.9-1.0)
-      opacity: this.seededRandom(options.seed + shapeIndex * 1000 + 6)() * options.amplitude, // 0-1 range for mapping
-      
-      // Colors: Return values for mapping to original absolute ranges
-      hue: this.seededRandom(options.seed + shapeIndex * 1000 + 7)() * options.amplitude * 360, // 0-360° range
-      saturation: this.seededRandom(options.seed + shapeIndex * 1000 + 8)() * options.amplitude, // 0-1 range for mapping
-      lightness: this.seededRandom(options.seed + shapeIndex * 1000 + 9)() * options.amplitude // 0-1 range for mapping
+      x: randX * options.amplitude * maxPosOffset * 0.5, // ±50px max
+      y: randY * options.amplitude * maxPosOffset * 0.5,
+      rotation: randRot * options.amplitude * 90, // ±90 degrees max
+      scaleX: 1 + randScaleX * options.amplitude * 0.25, // 0.75-1.25 range
+      scaleY: 1 + randScaleY * options.amplitude * 0.25,
+      opacity: Math.max(0.7, Math.min(1, 1 + randOpacity * options.amplitude * 0.15)), // 0.7-1.0 range
+      hue: randHue * options.amplitude * 25, // ±25 degrees variation
+      saturation: randSat * options.amplitude * 10, // ±10% variation
+      lightness: randLght * options.amplitude * 8 // ±8% variation
     };
   }
 
@@ -222,215 +230,368 @@ export class NoiseSystem {
   }
 
   /**
-   * Simplex noise implementation (simplified)
+   * Simplex noise implementation with improved coordinate independence
    */
   private static generateSimplexNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
-    // Generate independent noise values for each property using different coordinates
-    const frequency = 1 / options.scale;
+    let positionX = 0, positionY = 0, rotation = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0;
+    let hue = 0, saturation = 0, lightness = 0;
     
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
     
-    // Position constraints based on artboard size when scaling to artboard
-    const positionScale = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
-      80; // Standard wide distribution when not constrained
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
     
-    const noiseX = this.gradientNoise(x * frequency + 100, y * frequency, options.seed + 1);
-    const noiseY = this.gradientNoise(x * frequency, y * frequency + 100, options.seed + 2);
-    const noiseRot = this.gradientNoise(x * frequency + 200, y * frequency + 200, options.seed + 3);
-    const noiseScaleX = this.gradientNoise(x * frequency + 300, y * frequency, options.seed + 4);
-    const noiseScaleY = this.gradientNoise(x * frequency, y * frequency + 300, options.seed + 5);
-    const noiseOpacity = this.gradientNoise(x * frequency + 400, y * frequency + 400, options.seed + 6);
-    const noiseHue = this.gradientNoise(x * frequency + 500, y * frequency, options.seed + 7);
-    const noiseSat = this.gradientNoise(x * frequency, y * frequency + 500, options.seed + 8);
-    const noiseLght = this.gradientNoise(x * frequency + 600, y * frequency + 600, options.seed + 9);
-
+    const positionScale = maxPosOffset / options.octaves; // Distribute across octaves
+    
+    let amplitude = options.amplitude;
+    let frequency = 1 / options.scale;
+    
+    // Accumulate noise across octaves with proper control
+    for (let i = 0; i < options.octaves; i++) {
+      const octaveAmplitude = amplitude;
+      
+      // Use large prime numbers for coordinate independence
+      const noiseX = this.gradientNoise(x * frequency + 1423 * i, y * frequency + 2347 * i, options.seed + 1);
+      const noiseY = this.gradientNoise(x * frequency + 3449 * i, y * frequency + 4547 * i, options.seed + 2);
+      const noiseRot = this.gradientNoise(x * frequency + 5647 * i, y * frequency + 6749 * i, options.seed + 3);
+      const noiseScaleX = this.gradientNoise(x * frequency + 7853 * i, y * frequency + 8951 * i, options.seed + 4);
+      const noiseScaleY = this.gradientNoise(x * frequency + 9049 * i, y * frequency + 10151 * i, options.seed + 5);
+      const noiseOpacity = this.gradientNoise(x * frequency + 11251 * i, y * frequency + 12347 * i, options.seed + 6);
+      const noiseHue = this.gradientNoise(x * frequency + 13441 * i, y * frequency + 14549 * i, options.seed + 7);
+      const noiseSat = this.gradientNoise(x * frequency + 15643 * i, y * frequency + 16747 * i, options.seed + 8);
+      const noiseLght = this.gradientNoise(x * frequency + 17851 * i, y * frequency + 18947 * i, options.seed + 9);
+      
+      // Apply noise with controlled ranges per octave
+      positionX += noiseX * octaveAmplitude * positionScale * 0.25;
+      positionY += noiseY * octaveAmplitude * positionScale * 0.25;
+      rotation += noiseRot * octaveAmplitude * 20; // Max ±20 degrees per octave
+      scaleX += noiseScaleX * octaveAmplitude * 0.06;
+      scaleY += noiseScaleY * octaveAmplitude * 0.06;
+      opacity += noiseOpacity * octaveAmplitude * 0.02;
+      hue += noiseHue * octaveAmplitude * 10;
+      saturation += noiseSat * octaveAmplitude * 3;
+      lightness += noiseLght * octaveAmplitude * 2.5;
+      
+      amplitude *= 0.5; // Reduce amplitude for next octave
+      frequency *= 2; // Increase frequency for next octave
+    }
+    
+    // Final clamping to ensure reasonable ranges
     return {
-      x: noiseX * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20),
-      y: noiseY * options.amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20),
-      rotation: noiseRot * options.amplitude * 45, // ±45 degrees max
-      scaleX: 1 + noiseScaleX * options.amplitude * 0.15, // ±15% scale variation
-      scaleY: 1 + noiseScaleY * options.amplitude * 0.15,
-      opacity: Math.max(0.1, Math.min(1, 1 + noiseOpacity * options.amplitude * 0.1)), // ±10% opacity variation
-      hue: noiseHue * options.amplitude * 20, // ±20 degrees hue variation
-      saturation: noiseSat * options.amplitude * 10, // ±10% saturation variation
-      lightness: noiseLght * options.amplitude * 8 // ±8% lightness variation
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-90, Math.min(90, rotation)),
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      hue: Math.max(-25, Math.min(25, hue)),
+      saturation: Math.max(-10, Math.min(10, saturation)),
+      lightness: Math.max(-8, Math.min(8, lightness))
     };
   }
 
   /**
-   * Fractal noise implementation
+   * Fractal noise implementation with improved coordinate independence
    */
   private static generateFractalNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
-    let result = {
-      x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
-      opacity: 1, hue: 0, saturation: 0, lightness: 0
-    };
+    let positionX = 0, positionY = 0, rotation = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0;
+    let hue = 0, saturation = 0, lightness = 0;
 
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
     
-    // Position constraints based on artboard size when scaling to artboard
-    const positionScale = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
-      60; // Standard distribution when not constrained
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
+    
+    const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
-    let frequency = 1;
+    let frequency = 1 / options.scale;
     const lacunarity = options.lacunarity || 2.0;
     const gain = options.gain || 0.5;
 
     for (let i = 0; i < options.octaves; i++) {
-      const noiseX = this.perlin3D(x * frequency, y * frequency, z * frequency, options.seed);
-      const noiseY = this.perlin3D(x * frequency + 1000, y * frequency + 1000, z * frequency, options.seed);
-      const noiseZ = this.perlin3D(x * frequency + 2000, y * frequency + 2000, z * frequency, options.seed);
+      const octaveAmplitude = amplitude;
+      
+      // Use large prime numbers for coordinate independence
+      const noiseX = this.perlin3D(x * frequency + 2003 * i, y * frequency + 3011 * i, z * frequency + 4021 * i, options.seed);
+      const noiseY = this.perlin3D(x * frequency + 5023 * i, y * frequency + 6037 * i, z * frequency + 7043 * i, options.seed);
+      const noiseRot = this.perlin3D(x * frequency + 8053 * i, y * frequency + 9059 * i, z * frequency + 10067 * i, options.seed);
+      const noiseScaleX = this.perlin3D(x * frequency + 11071 * i, y * frequency + 12073 * i, z * frequency + 13103 * i, options.seed);
+      const noiseScaleY = this.perlin3D(x * frequency + 14107 * i, y * frequency + 15131 * i, z * frequency + 16139 * i, options.seed);
+      const noiseOpacity = this.perlin3D(x * frequency + 17159 * i, y * frequency + 18169 * i, z * frequency + 19181 * i, options.seed);
+      const noiseHue = this.perlin3D(x * frequency + 20201 * i, y * frequency + 21211 * i, z * frequency + 22229 * i, options.seed);
+      const noiseSat = this.perlin3D(x * frequency + 23227 * i, y * frequency + 24229 * i, z * frequency + 25237 * i, options.seed);
+      const noiseLght = this.perlin3D(x * frequency + 26249 * i, y * frequency + 27253 * i, z * frequency + 28277 * i, options.seed);
 
-      // Apply noise values with proper scaling per octave
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
-      result.rotation += noiseZ * amplitude * 45; // ±45 degrees max per octave
-      result.scaleX += noiseX * amplitude * 0.15; // ±15% scale variation per octave
-      result.scaleY += noiseY * amplitude * 0.15;
-      result.opacity += noiseZ * amplitude * 0.1; // ±10% opacity variation per octave
-      result.hue += noiseX * amplitude * 20; // ±20 degrees hue variation per octave
-      result.saturation += noiseY * amplitude * 10; // ±10% saturation variation per octave
-      result.lightness += noiseZ * amplitude * 8; // ±8% lightness variation per octave
+      // Apply noise with controlled ranges per octave
+      positionX += noiseX * octaveAmplitude * positionScale * 0.25;
+      positionY += noiseY * octaveAmplitude * positionScale * 0.25;
+      rotation += noiseRot * octaveAmplitude * 20; // Max ±20 degrees per octave
+      scaleX += noiseScaleX * octaveAmplitude * 0.06;
+      scaleY += noiseScaleY * octaveAmplitude * 0.06;
+      opacity += noiseOpacity * octaveAmplitude * 0.02;
+      hue += noiseHue * octaveAmplitude * 10;
+      saturation += noiseSat * octaveAmplitude * 3;
+      lightness += noiseLght * octaveAmplitude * 2.5;
 
       amplitude *= gain;
       frequency *= lacunarity;
     }
 
-    // Apply fractal-specific clamping
-    result.opacity = Math.max(0.1, Math.min(1, result.opacity));
-    result.scaleX = Math.max(0.2, Math.min(2.5, result.scaleX));
-    result.scaleY = Math.max(0.2, Math.min(2.5, result.scaleY));
-
-    return result;
+    // Final clamping to ensure reasonable ranges
+    return {
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-90, Math.min(90, rotation)),
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      hue: Math.max(-25, Math.min(25, hue)),
+      saturation: Math.max(-10, Math.min(10, saturation)),
+      lightness: Math.max(-8, Math.min(8, lightness))
+    };
   }
 
   /**
-   * Worley noise (cellular/Voronoi) implementation
+   * Worley noise (cellular/Voronoi) implementation with improved value control
    */
   private static generateWorleyNoise(x: number, y: number, options: NoiseOptions): NoiseResult {
     const featurePoints = options.featurePoints || 4;
     const distanceFunction = options.distanceFunction || 'euclidean';
     
-    let minDistance = Infinity;
-    let secondMinDistance = Infinity;
-
-    // Generate feature points based on seed
-    for (let i = 0; i < featurePoints; i++) {
-      const fx = this.seededRandom(options.seed + i * 2)() * 10 - 5;
-      const fy = this.seededRandom(options.seed + i * 2 + 1)() * 10 - 5;
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
+    
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
+    
+    let positionX = 0, positionY = 0, rotation = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0;
+    let hue = 0, saturation = 0, lightness = 0;
+    
+    // Accumulate noise across octaves
+    let amplitude = options.amplitude;
+    let frequency = 1 / options.scale;
+    
+    for (let octave = 0; octave < options.octaves; octave++) {
+      let minDistance = Infinity;
+      let secondMinDistance = Infinity;
       
-      const distance = this.calculateDistance(x, y, fx, fy, distanceFunction);
-      
-      if (distance < minDistance) {
-        secondMinDistance = minDistance;
-        minDistance = distance;
-      } else if (distance < secondMinDistance) {
-        secondMinDistance = distance;
+      // Generate feature points with coordinate independence
+      for (let i = 0; i < featurePoints; i++) {
+        // Use large prime numbers for coordinate independence
+        const fx = this.seededRandom(options.seed + i * 1109 + octave * 2113)() * 10 - 5;
+        const fy = this.seededRandom(options.seed + i * 3119 + octave * 4129)() * 10 - 5;
+        
+        const distance = this.calculateDistance(
+          x * frequency, 
+          y * frequency, 
+          fx, 
+          fy, 
+          distanceFunction
+        );
+        
+        if (distance < minDistance) {
+          secondMinDistance = minDistance;
+          minDistance = distance;
+        } else if (distance < secondMinDistance) {
+          secondMinDistance = distance;
+        }
       }
+      
+      // Normalize cell and edge values to [-1, 1] range
+      const cellValue = (minDistance - 2.5) / 2.5; // Normalize from typical [0, 5] to [-1, 1]
+      const edgeValue = ((secondMinDistance - minDistance) - 1) / 1; // Normalize edge difference
+      
+      // Apply controlled ranges per octave
+      positionX += cellValue * amplitude * maxPosOffset * 0.2;
+      positionY += edgeValue * amplitude * maxPosOffset * 0.2;
+      rotation += (cellValue + edgeValue) * amplitude * 15;
+      scaleX += cellValue * amplitude * 0.05;
+      scaleY += edgeValue * amplitude * 0.05;
+      opacity += cellValue * amplitude * 0.015;
+      hue += cellValue * amplitude * 8;
+      saturation += edgeValue * amplitude * 3;
+      lightness += (cellValue + edgeValue) * amplitude * 2;
+      
+      amplitude *= 0.5;
+      frequency *= 2;
     }
 
-    const cellValue = minDistance;
-    const edgeValue = secondMinDistance - minDistance;
-
+    // Final clamping to ensure reasonable ranges
     return {
-      x: cellValue * options.amplitude * 20,
-      y: edgeValue * options.amplitude * 20,
-      rotation: (cellValue + edgeValue) * options.amplitude * 45,
-      scaleX: 1 + cellValue * options.amplitude * 0.15,
-      scaleY: 1 + edgeValue * options.amplitude * 0.15,
-      opacity: Math.max(0.1, Math.min(1, 1 - cellValue * options.amplitude * 0.1)),
-      hue: cellValue * options.amplitude * 20,
-      saturation: edgeValue * options.amplitude * 10,
-      lightness: (cellValue + edgeValue) * options.amplitude * 8
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-90, Math.min(90, rotation)),
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      hue: Math.max(-25, Math.min(25, hue)),
+      saturation: Math.max(-10, Math.min(10, saturation)),
+      lightness: Math.max(-8, Math.min(8, lightness))
     };
   }
 
   /**
-   * Ridge noise implementation
+   * Ridge noise implementation with improved coordinate independence
    */
   private static generateRidgeNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     const ridgeOffset = options.ridgeOffset || 1.0;
-    let result = {
-      x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
-      opacity: 1, hue: 0, saturation: 0, lightness: 0
-    };
+    let positionX = 0, positionY = 0, rotation = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0;
+    let hue = 0, saturation = 0, lightness = 0;
+
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
+    
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
+    
+    const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
-    let frequency = 1;
+    let frequency = 1 / options.scale;
 
     for (let i = 0; i < options.octaves; i++) {
-      let noise = this.perlin3D(x * frequency, y * frequency, z * frequency, options.seed);
-      noise = ridgeOffset - Math.abs(noise); // Create ridge effect
-      noise = noise * noise; // Square for sharper ridges
+      const octaveAmplitude = amplitude;
+      
+      // Use large prime numbers for coordinate independence
+      const noiseX = this.perlin3D(x * frequency + 1283 * i, y * frequency + 2287 * i, z * frequency + 3299 * i, options.seed);
+      const noiseY = this.perlin3D(x * frequency + 4297 * i, y * frequency + 5303 * i, z * frequency + 6311 * i, options.seed);
+      const noiseRot = this.perlin3D(x * frequency + 7307 * i, y * frequency + 8317 * i, z * frequency + 9319 * i, options.seed);
+      const noiseScaleX = this.perlin3D(x * frequency + 10331 * i, y * frequency + 11329 * i, z * frequency + 12343 * i, options.seed);
+      const noiseScaleY = this.perlin3D(x * frequency + 13337 * i, y * frequency + 14341 * i, z * frequency + 15349 * i, options.seed);
+      const noiseOpacity = this.perlin3D(x * frequency + 16361 * i, y * frequency + 17377 * i, z * frequency + 18379 * i, options.seed);
+      const noiseHue = this.perlin3D(x * frequency + 19381 * i, y * frequency + 20389 * i, z * frequency + 21391 * i, options.seed);
+      const noiseSat = this.perlin3D(x * frequency + 22397 * i, y * frequency + 23399 * i, z * frequency + 24407 * i, options.seed);
+      const noiseLght = this.perlin3D(x * frequency + 25409 * i, y * frequency + 26417 * i, z * frequency + 27427 * i, options.seed);
+      
+      // Apply ridge effect to each noise value
+      const ridgeX = ridgeOffset - Math.abs(noiseX);
+      const ridgeY = ridgeOffset - Math.abs(noiseY);
+      const ridgeRot = ridgeOffset - Math.abs(noiseRot);
+      const ridgeScaleX = ridgeOffset - Math.abs(noiseScaleX);
+      const ridgeScaleY = ridgeOffset - Math.abs(noiseScaleY);
+      const ridgeOpacity = ridgeOffset - Math.abs(noiseOpacity);
+      const ridgeHue = ridgeOffset - Math.abs(noiseHue);
+      const ridgeSat = ridgeOffset - Math.abs(noiseSat);
+      const ridgeLght = ridgeOffset - Math.abs(noiseLght);
 
-      result.x += noise * amplitude * 15;
-      result.y += noise * amplitude * 15;
-      result.rotation += noise * amplitude * 30;
-      result.scaleX += noise * amplitude * 0.1;
-      result.scaleY += noise * amplitude * 0.1;
-      result.opacity += noise * amplitude * 0.05;
-      result.hue += noise * amplitude * 15;
-      result.saturation += noise * amplitude * 8;
-      result.lightness += noise * amplitude * 6;
+      // Apply noise with controlled ranges per octave
+      positionX += ridgeX * ridgeX * octaveAmplitude * positionScale * 0.25;
+      positionY += ridgeY * ridgeY * octaveAmplitude * positionScale * 0.25;
+      rotation += ridgeRot * ridgeRot * octaveAmplitude * 20;
+      scaleX += ridgeScaleX * ridgeScaleX * octaveAmplitude * 0.06;
+      scaleY += ridgeScaleY * ridgeScaleY * octaveAmplitude * 0.06;
+      opacity += ridgeOpacity * ridgeOpacity * octaveAmplitude * 0.02;
+      hue += ridgeHue * ridgeHue * octaveAmplitude * 10;
+      saturation += ridgeSat * ridgeSat * octaveAmplitude * 3;
+      lightness += ridgeLght * ridgeLght * octaveAmplitude * 2.5;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
     }
 
-    result.opacity = Math.max(0.1, Math.min(1, result.opacity));
-    result.scaleX = Math.max(0.1, Math.min(3, result.scaleX));
-    result.scaleY = Math.max(0.1, Math.min(3, result.scaleY));
-
-    return result;
+    // Final clamping to ensure reasonable ranges
+    return {
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-90, Math.min(90, rotation)),
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      hue: Math.max(-25, Math.min(25, hue)),
+      saturation: Math.max(-10, Math.min(10, saturation)),
+      lightness: Math.max(-8, Math.min(8, lightness))
+    };
   }
 
   /**
-   * Turbulence noise implementation
+   * Turbulence noise implementation with improved coordinate independence
    */
   private static generateTurbulenceNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     const turbulencePower = options.turbulencePower || 1.0;
-    let result = {
-      x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
-      opacity: 1, hue: 0, saturation: 0, lightness: 0
-    };
+    let positionX = 0, positionY = 0, rotation = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0;
+    let hue = 0, saturation = 0, lightness = 0;
+
+    const artboardWidth = options.artboardWidth || 400;
+    const artboardHeight = options.artboardHeight || 400;
+    
+    // Max allowed offset: 50px unconstrained or 30% of artboard
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
+      50;
+    
+    const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
-    let frequency = 1;
+    let frequency = 1 / options.scale;
 
     for (let i = 0; i < options.octaves; i++) {
-      let noiseX = this.perlin3D(x * frequency, y * frequency, z * frequency, options.seed);
-      let noiseY = this.perlin3D(x * frequency + 100, y * frequency + 100, z * frequency, options.seed);
-      let noiseZ = this.perlin3D(x * frequency + 200, y * frequency + 200, z * frequency, options.seed);
+      const octaveAmplitude = amplitude;
+      
+      // Use large prime numbers for coordinate independence
+      const noiseX = this.perlin3D(x * frequency + 1607 * i, y * frequency + 2609 * i, z * frequency + 3613 * i, options.seed);
+      const noiseY = this.perlin3D(x * frequency + 4621 * i, y * frequency + 5623 * i, z * frequency + 6637 * i, options.seed);
+      const noiseRot = this.perlin3D(x * frequency + 7639 * i, y * frequency + 8641 * i, z * frequency + 9643 * i, options.seed);
+      const noiseScaleX = this.perlin3D(x * frequency + 10651 * i, y * frequency + 11657 * i, z * frequency + 12659 * i, options.seed);
+      const noiseScaleY = this.perlin3D(x * frequency + 13669 * i, y * frequency + 14683 * i, z * frequency + 15683 * i, options.seed);
+      const noiseOpacity = this.perlin3D(x * frequency + 16691 * i, y * frequency + 17707 * i, z * frequency + 18713 * i, options.seed);
+      const noiseHue = this.perlin3D(x * frequency + 19717 * i, y * frequency + 20719 * i, z * frequency + 21727 * i, options.seed);
+      const noiseSat = this.perlin3D(x * frequency + 22739 * i, y * frequency + 23741 * i, z * frequency + 24749 * i, options.seed);
+      const noiseLght = this.perlin3D(x * frequency + 25759 * i, y * frequency + 26777 * i, z * frequency + 27779 * i, options.seed);
 
       // Apply turbulence by taking absolute value and applying power
-      noiseX = Math.pow(Math.abs(noiseX), turbulencePower);
-      noiseY = Math.pow(Math.abs(noiseY), turbulencePower);
-      noiseZ = Math.pow(Math.abs(noiseZ), turbulencePower);
+      const turbX = Math.pow(Math.abs(noiseX), turbulencePower) * Math.sign(noiseX);
+      const turbY = Math.pow(Math.abs(noiseY), turbulencePower) * Math.sign(noiseY);
+      const turbRot = Math.pow(Math.abs(noiseRot), turbulencePower) * Math.sign(noiseRot);
+      const turbScaleX = Math.pow(Math.abs(noiseScaleX), turbulencePower) * Math.sign(noiseScaleX);
+      const turbScaleY = Math.pow(Math.abs(noiseScaleY), turbulencePower) * Math.sign(noiseScaleY);
+      const turbOpacity = Math.pow(Math.abs(noiseOpacity), turbulencePower) * Math.sign(noiseOpacity);
+      const turbHue = Math.pow(Math.abs(noiseHue), turbulencePower) * Math.sign(noiseHue);
+      const turbSat = Math.pow(Math.abs(noiseSat), turbulencePower) * Math.sign(noiseSat);
+      const turbLght = Math.pow(Math.abs(noiseLght), turbulencePower) * Math.sign(noiseLght);
 
-      result.x += noiseX * amplitude * 18;
-      result.y += noiseY * amplitude * 18;
-      result.rotation += noiseZ * amplitude * 40;
-      result.scaleX += noiseX * amplitude * 0.12;
-      result.scaleY += noiseY * amplitude * 0.12;
-      result.opacity += noiseZ * amplitude * 0.06;
-      result.hue += noiseX * amplitude * 18;
-      result.saturation += noiseY * amplitude * 9;
-      result.lightness += noiseZ * amplitude * 7;
+      // Apply noise with controlled ranges per octave
+      positionX += turbX * octaveAmplitude * positionScale * 0.25;
+      positionY += turbY * octaveAmplitude * positionScale * 0.25;
+      rotation += turbRot * octaveAmplitude * 20;
+      scaleX += turbScaleX * octaveAmplitude * 0.06;
+      scaleY += turbScaleY * octaveAmplitude * 0.06;
+      opacity += turbOpacity * octaveAmplitude * 0.02;
+      hue += turbHue * octaveAmplitude * 10;
+      saturation += turbSat * octaveAmplitude * 3;
+      lightness += turbLght * octaveAmplitude * 2.5;
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
     }
 
-    result.opacity = Math.max(0.1, Math.min(1, result.opacity));
-    result.scaleX = Math.max(0.1, Math.min(4, result.scaleX));
-    result.scaleY = Math.max(0.1, Math.min(4, result.scaleY));
-
-    return result;
+    // Final clamping to ensure reasonable ranges
+    return {
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-90, Math.min(90, rotation)),
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      hue: Math.max(-25, Math.min(25, hue)),
+      saturation: Math.max(-10, Math.min(10, saturation)),
+      lightness: Math.max(-8, Math.min(8, lightness))
+    };
   }
 
   /**
