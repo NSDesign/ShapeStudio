@@ -173,56 +173,51 @@ export class NoiseSystem {
       20; // Reduced from 80 to prevent extreme offsets
 
     for (let i = 0; i < options.octaves; i++) {
-      // Generate independent noise values for each property using different coordinates
-      const noiseX = this.perlin3D(x * frequency + 100, y * frequency, z * frequency, options.seed + 1);
-      const noiseY = this.perlin3D(x * frequency, y * frequency + 100, z * frequency, options.seed + 2);
-      const noiseRot = this.perlin3D(x * frequency + 200, y * frequency + 200, z * frequency, options.seed + 3);
-      const noiseScaleX = this.perlin3D(x * frequency + 300, y * frequency, z * frequency, options.seed + 4);
-      const noiseScaleY = this.perlin3D(x * frequency, y * frequency + 300, z * frequency, options.seed + 5);
-      const noiseOpacity = this.perlin3D(x * frequency + 400, y * frequency + 400, z * frequency, options.seed + 6);
-      const noiseHue = this.perlin3D(x * frequency + 500, y * frequency, z * frequency, options.seed + 7);
-      const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
-      const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
+      // Generate independent noise values using prime number offsets to prevent correlation
+      // Use large primes to ensure coordinate independence
+      const noiseX = this.perlin3D(x * frequency + 1117, y * frequency + 2221, z * frequency + 3331, options.seed + 1);
+      const noiseY = this.perlin3D(x * frequency + 4441, y * frequency + 5557, z * frequency + 6661, options.seed + 2);
+      const noiseRot = this.perlin3D(x * frequency + 7771, y * frequency + 8887, z * frequency + 9997, options.seed + 3);
+      const noiseScaleX = this.perlin3D(x * frequency + 10007, y * frequency + 11117, z * frequency + 12227, options.seed + 4);
+      const noiseScaleY = this.perlin3D(x * frequency + 13337, y * frequency + 14447, z * frequency + 15557, options.seed + 5);
+      const noiseOpacity = this.perlin3D(x * frequency + 16667, y * frequency + 17777, z * frequency + 18887, options.seed + 6);
+      const noiseHue = this.perlin3D(x * frequency + 19997, y * frequency + 21107, z * frequency + 22217, options.seed + 7);
+      const noiseSat = this.perlin3D(x * frequency + 23327, y * frequency + 24437, z * frequency + 25547, options.seed + 8);
+      const noiseLght = this.perlin3D(x * frequency + 26657, y * frequency + 27767, z * frequency + 28877, options.seed + 9);
       
-      // Apply bipolar noise: normalize to 0-1, then subtract 0.5 to center around 0
-      // This ensures truly centered variations around zero
-      const bipolarX = (noiseX + 1) * 0.5 - 0.5; // Convert -1,1 to -0.5,0.5
-      const bipolarY = (noiseY + 1) * 0.5 - 0.5;
-      const bipolarRot = (noiseRot + 1) * 0.5 - 0.5;
-      const bipolarScaleX = (noiseScaleX + 1) * 0.5 - 0.5;
-      const bipolarScaleY = (noiseScaleY + 1) * 0.5 - 0.5;
-      const bipolarOpacity = (noiseOpacity + 1) * 0.5 - 0.5;
-      const bipolarHue = (noiseHue + 1) * 0.5 - 0.5;
-      const bipolarSat = (noiseSat + 1) * 0.5 - 0.5;
-      const bipolarLght = (noiseLght + 1) * 0.5 - 0.5;
+      // Use noise values directly (already zero-centered from perlin3D)
+      // Apply proper octave-specific amplitude decay to prevent extreme accumulation
+      const octaveAmplitude = amplitude;
       
-      // Accumulate octaves with bipolar values (still using += for octave layering)
-      positionX += bipolarX * amplitude * positionScale;
-      positionY += bipolarY * amplitude * positionScale;
-      rotation += bipolarRot * amplitude * 45; // ±22.5 degrees max per octave
-      scaleX += bipolarScaleX * amplitude * 0.15; // ±7.5% scale variation per octave
-      scaleY += bipolarScaleY * amplitude * 0.15;
-      opacity += bipolarOpacity * amplitude * 0.1; // ±5% opacity variation per octave
-      hue += bipolarHue * amplitude * 20; // ±10 degrees hue variation per octave
-      saturation += bipolarSat * amplitude * 10; // ±5% saturation variation per octave
-      lightness += bipolarLght * amplitude * 8; // ±4% lightness variation per octave
+      // Apply noise with tightly controlled ranges per octave
+      positionX += noiseX * octaveAmplitude * positionScale * 0.25; // Max ±5% of artboard
+      positionY += noiseY * octaveAmplitude * positionScale * 0.25;
+      rotation += noiseRot * octaveAmplitude * 15; // Max ±15 degrees per octave
+      scaleX += noiseScaleX * octaveAmplitude * 0.06; // Max ±6% scale per octave
+      scaleY += noiseScaleY * octaveAmplitude * 0.06;
+      opacity += noiseOpacity * octaveAmplitude * 0.02; // Max ±2% opacity per octave
+      hue += noiseHue * octaveAmplitude * 10; // Max ±10 degrees hue per octave
+      saturation += noiseSat * octaveAmplitude * 3; // Max ±3% saturation per octave
+      lightness += noiseLght * octaveAmplitude * 2; // Max ±2% lightness per octave
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
     }
 
-    // Return bipolar variations centered around neutral values
-    // These will be applied as direct variations, not accumulated onto existing values
+    // Apply final normalization and clamping for safety
+    const maxPosOffset = options.scaleToCanvas ? 
+      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 50;
+    
     return {
-      x: positionX, // Direct variation amount (not additive to grid position)
-      y: positionY,
-      rotation: rotation, // Direct variation amount
-      scaleX: 1 + scaleX, // Centered around 1.0 with variation
-      scaleY: 1 + scaleY,
-      opacity: Math.max(0.1, Math.min(1, 1 + opacity)), // Centered around 1.0 with variation, clamped
-      hue: hue, // Direct variation amount
-      saturation: saturation, // Direct variation amount  
-      lightness: lightness // Direct variation amount
+      x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
+      y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
+      rotation: Math.max(-45, Math.min(45, rotation)), // ±45 degrees max total
+      scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)), // 0.75-1.25 scale range
+      scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
+      opacity: Math.max(0.7, Math.min(1, 1 + opacity)), // 0.7-1.0 opacity range
+      hue: Math.max(-25, Math.min(25, hue)), // ±25 degrees hue max
+      saturation: Math.max(-10, Math.min(10, saturation)), // ±10% saturation max
+      lightness: Math.max(-8, Math.min(8, lightness)) // ±8% lightness max
     };
   }
 
@@ -439,7 +434,7 @@ export class NoiseSystem {
   }
 
   /**
-   * 3D Perlin noise implementation
+   * 3D Perlin noise implementation with proper centering
    */
   private static perlin3D(x: number, y: number, z: number, seed: number): number {
     // Seed the permutation table
@@ -468,7 +463,8 @@ export class NoiseSystem {
     const BA = perm[B] + Z;
     const BB = perm[B + 1] + Z;
 
-    return this.lerp(w,
+    // Calculate the raw noise value
+    const noise = this.lerp(w,
       this.lerp(v,
         this.lerp(u, this.grad(perm[AA], x, y, z), this.grad(perm[BA], x - 1, y, z)),
         this.lerp(u, this.grad(perm[AB], x, y - 1, z), this.grad(perm[BB], x - 1, y - 1, z))
@@ -478,6 +474,11 @@ export class NoiseSystem {
         this.lerp(u, this.grad(perm[AB + 1], x, y - 1, z - 1), this.grad(perm[BB + 1], x - 1, y - 1, z - 1))
       )
     );
+    
+    // Ensure proper zero-centering and [-1, 1] range
+    // The theoretical range of Perlin noise is approximately [-√(n/2), √(n/2)] where n is dimensions
+    // For 3D, this is approximately [-0.866, 0.866], so we normalize to [-1, 1]
+    return Math.max(-1, Math.min(1, noise / 0.866));
   }
 
   /**

@@ -1,0 +1,52 @@
+Based on your analysis of the Perlin noise issues, here are my recommendations to achieve properly centered, zero-based noise values with reasonable ranges:
+
+Core Issues to Address:
+1. Fix Perlin Noise Centering:
+
+The current bipolar conversion (noise + 1) * 0.5 - 0.5 isn't achieving true zero-centering
+Need to verify the base perlin3D function is actually returning proper [-1, 1] range
+Consider using direct subtraction of the noise mean to ensure zero-centering
+2. Eliminate Coordinate Bias:
+
+The diagonal distribution in X values suggests coordinate generation bias
+Current spacing (0.137, 0.211, 0.083) may not be providing sufficient independence
+Need better coordinate separation strategy to prevent correlation between X/Y values
+3. Normalize Value Ranges:
+
+Current extreme values (6000+ positions, 4000+ rotations, 16+ scales) are unusable
+Need consistent scaling factors across all noise algorithms
+Position values should respect artboard constraints when enabled
+Scale values should center around 1.0 with reasonable variation (±30% max)
+4. Octave Accumulation Control:
+
+Multiple octaves with += are compounding to extreme values
+Consider capping total amplitude after all octaves
+Implement proper amplitude decay to prevent runaway values
+Recommended Approach:
+Phase 1: Fix Core Perlin Function
+
+Verify perlin3D base implementation returns true [-1, 1]
+Implement proper zero-centering without range conversion artifacts
+Test with single octave first to isolate base function issues
+Phase 2: Coordinate Independence
+
+Use larger prime-number spacing for X/Y coordinates
+Add independent random offsets per property type
+Test that X/Y distributions are truly independent
+Phase 3: Value Range Normalization
+
+Establish maximum reasonable ranges for each property
+Apply consistent scaling multipliers across all algorithms
+Implement value clamping as safety net
+Phase 4: Octave System Refinement
+
+Add amplitude limiting after octave accumulation
+Implement gain/lacunarity controls that prevent extreme buildup
+Consider using RMS normalization for multi-octave results
+Priority Order:
+
+Fix zero-centering (most critical for usability)
+Normalize value ranges (essential for visual coherence)
+Eliminate coordinate bias (improves distribution quality)
+Refine octave system (enhances algorithm sophistication)
+This approach should give you properly centered noise that produces visually useful variations rather than extreme outliers

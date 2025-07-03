@@ -163,6 +163,12 @@ Changelog:
   - Fixed color calculation extremes that were causing black/white shapes: limited to ±60° hue, ±30% saturation, ±25% lightness
   - Eliminated diagonal positioning patterns by using independent coordinate spacing for X/Y values
   - Restored original randomization behavior when all config options are disabled
+- July 2, 2025. Advanced Perlin Noise System Overhaul (Based on User Analysis)
+  - Fixed Perlin noise zero-centering: removed faulty bipolar conversion, normalized perlin3D output to true [-1, 1]
+  - Eliminated coordinate bias: replaced small offsets (100, 200) with large prime numbers (1117, 2221, etc.) for true independence
+  - Implemented strict value range control: position ±50px/30% artboard, rotation ±45°, scale 0.75-1.25x
+  - Added octave accumulation control: proper amplitude decay, final value clamping as safety net
+  - Result: Perlin noise now produces centered, reasonable variations instead of extreme outliers (was 6000+ positions, now ±50px)
 ```
 
 ## User Preferences
