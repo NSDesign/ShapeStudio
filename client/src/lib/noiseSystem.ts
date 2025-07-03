@@ -91,10 +91,10 @@ export class NoiseSystem {
       turbulencePower: settings.noiseTurbulencePower
     };
 
-    // Generate noise coordinates with independent spacing to prevent diagonal patterns
-    const noiseX = (shapeIndex * 0.137 + baseX * 0.001) * options.scale; // Use prime-like spacing
-    const noiseY = (shapeIndex * 0.211 + baseY * 0.001) * options.scale; // Different prime-like spacing 
-    const noiseZ = shapeIndex * 0.083; // Independent Z dimension spacing
+    // Generate noise coordinates with larger spacing for better per-shape variation
+    const noiseX = (shapeIndex * 1.37 + baseX * 0.01) * options.scale; // Increased spacing 10x
+    const noiseY = (shapeIndex * 2.11 + baseY * 0.01) * options.scale; // Different prime spacing
+    const noiseZ = shapeIndex * 0.83; // Increased Z spacing 10x
 
     switch (options.algorithm) {
       case 'randomise':
@@ -192,7 +192,7 @@ export class NoiseSystem {
       // Apply noise with tightly controlled ranges per octave
       positionX += noiseX * octaveAmplitude * positionScale * 0.25; // Max ±5% of artboard
       positionY += noiseY * octaveAmplitude * positionScale * 0.25;
-      rotation += noiseRot * octaveAmplitude * 15; // Max ±15 degrees per octave
+      rotation += noiseRot * octaveAmplitude * 20; // Max ±20 degrees per octave
       scaleX += noiseScaleX * octaveAmplitude * 0.06; // Max ±6% scale per octave
       scaleY += noiseScaleY * octaveAmplitude * 0.06;
       opacity += noiseOpacity * octaveAmplitude * 0.02; // Max ±2% opacity per octave
@@ -211,7 +211,7 @@ export class NoiseSystem {
     return {
       x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
       y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
-      rotation: Math.max(-45, Math.min(45, rotation)), // ±45 degrees max total
+      rotation: Math.max(-90, Math.min(90, rotation)), // ±90 degrees max total
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)), // 0.75-1.25 scale range
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)), // 0.7-1.0 opacity range
