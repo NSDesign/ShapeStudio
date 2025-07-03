@@ -196,6 +196,13 @@ Changelog:
   - Scale ranges: Uses scaleRange (uniform) or scaleXRange/scaleYRange from Transform Properties
   - Opacity range: Uses fillOpacityRange from Fill Properties
   - This enables fine-grained control over noise variation ranges through the UI
+- July 3, 2025. Fill Color Range & Shape Size Implementation
+  - Added missing fillColorRange property to BatchConfigSettings interface for solid color interpolation
+  - Implemented color interpolation between two selected colors when Properties and Fill are enabled
+  - Fixed shape size generation to use widthRange/heightRange from Shape Properties when enabled
+  - Shapes now properly apply configured sizes: rectangles use width/height, circles/polygons use width as diameter
+  - Lines use width/height to determine endpoint positioning with random angle
+  - Both color and size ranges now work correctly with the batch configuration system
 ```
 
 ## User Preferences

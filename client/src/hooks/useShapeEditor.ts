@@ -141,6 +141,7 @@ export const useShapeEditor = () => {
     fillEnabled: true,
     fillProbability: 80,
     fillColorProbability: 70,
+    fillColorRange: ['#3b82f6', '#8b5cf6'],
     fillGradientProbability: 20,
     fillGradientTypeProbability: 50,
     fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
@@ -892,6 +893,38 @@ export const useShapeEditor = () => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
       const shape = new Shape(randomType, position.x, position.y);
       
+      // Apply width/height from batch config if properties are enabled
+      if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+        // Apply width and height from the ranges
+        const width = batchConfigSettings.widthRange[0] + Math.random() * (batchConfigSettings.widthRange[1] - batchConfigSettings.widthRange[0]);
+        const height = batchConfigSettings.heightRange[0] + Math.random() * (batchConfigSettings.heightRange[1] - batchConfigSettings.heightRange[0]);
+        
+        // Apply the size based on shape type
+        switch (shape.type) {
+          case 'rectangle':
+          case 'square':
+            shape.width = width;
+            shape.height = shape.type === 'square' ? width : height; // Square uses width for both dimensions
+            break;
+          case 'circle':
+            shape.radius = width / 2; // Use width as diameter
+            break;
+          case 'polygon':
+            shape.radius = width / 2; // Use width as diameter
+            break;
+          case 'line':
+            // For lines, width represents the length
+            if (shape.points.length >= 2) {
+              const angle = Math.random() * Math.PI * 2;
+              shape.points[1] = {
+                x: shape.points[0].x + Math.cos(angle) * width,
+                y: shape.points[0].y + Math.sin(angle) * height
+              };
+            }
+            break;
+        }
+      }
+      
       // Assign proper z-index for layering
       const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       shape.properties.zIndex = existingMaxIndex + index + 1;
@@ -928,6 +961,121 @@ export const useShapeEditor = () => {
         }
         
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
+      } else if (batchConfigSettings.propertiesEnabled && batchConfigSettings.fillEnabled && batchConfigSettings.fillColorProbability > 0) {
+        // Use fill color range from properties if enabled
+        const useFillColor = Math.random() * 100 < batchConfigSettings.fillColorProbability;
+        
+        if (useFillColor && batchConfigSettings.fillGradientColorRange) {
+          // Interpolate between the two colors in fillGradientColorRange
+          const [color1, color2] = batchConfigSettings.fillGradientColorRange;
+          const t = Math.random(); // Interpolation factor between 0 and 1
+          
+          // Convert hex colors to RGB for interpolation
+          const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16)
+            } : {r: 0, g: 0, b: 0};
+          };
+          
+          const rgb1 = hex2rgb(color1);
+          const rgb2 = hex2rgb(color2);
+          
+          // Interpolate between colors
+          const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
+          const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
+          const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+          
+          // Convert to HSL for consistency
+          const r_norm = r / 255;
+          const g_norm = g / 255;
+          const b_norm = b / 255;
+          const max = Math.max(r_norm, g_norm, b_norm);
+          const min = Math.min(r_norm, g_norm, b_norm);
+          const l = (max + min) / 2;
+          let h = 0, s = 0;
+          
+          if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+              case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
+              case g_norm: h = (b_norm - r_norm) / d + 2; break;
+              case b_norm: h = (r_norm - g_norm) / d + 4; break;
+            }
+            h /= 6;
+          }
+          
+          shape.properties.fillColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
+        } else {
+          // Use original random behavior
+          const hue = Math.random() * 360;
+          const saturation = 50 + Math.random() * 50;
+          const lightness = 30 + Math.random() * 40;
+          shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+        
+        // Handle stroke color
+        if (batchConfigSettings.strokeEnabled && batchConfigSettings.strokeColorProbability > 0) {
+          const useStrokeColor = Math.random() * 100 < batchConfigSettings.strokeColorProbability;
+          
+          if (useStrokeColor && batchConfigSettings.strokeColorRange) {
+            // Similar interpolation for stroke colors
+            const [color1, color2] = batchConfigSettings.strokeColorRange;
+            const t = Math.random();
+            
+            const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
+              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+              } : {r: 0, g: 0, b: 0};
+            };
+            
+            const rgb1 = hex2rgb(color1);
+            const rgb2 = hex2rgb(color2);
+            
+            const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
+            const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
+            const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+            
+            const r_norm = r / 255;
+            const g_norm = g / 255;
+            const b_norm = b / 255;
+            const max = Math.max(r_norm, g_norm, b_norm);
+            const min = Math.min(r_norm, g_norm, b_norm);
+            const l = (max + min) / 2;
+            let h = 0, s = 0;
+            
+            if (max !== min) {
+              const d = max - min;
+              s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+              switch (max) {
+                case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
+                case g_norm: h = (b_norm - r_norm) / d + 2; break;
+                case b_norm: h = (r_norm - g_norm) / d + 4; break;
+              }
+              h /= 6;
+            }
+            
+            shape.properties.strokeColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
+          } else {
+            // Random stroke color
+            const strokeHue = Math.random() * 360;
+            const strokeSaturation = 60 + Math.random() * 40;
+            const strokeLightness = 20 + Math.random() * 60;
+            shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+          }
+        } else {
+          // Random stroke color
+          const strokeHue = Math.random() * 360;
+          const strokeSaturation = 60 + Math.random() * 40;
+          const strokeLightness = 20 + Math.random() * 60;
+          shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+        }
       } else {
         // Original randomization behavior (before noise system)
         const hue = Math.random() * 360;

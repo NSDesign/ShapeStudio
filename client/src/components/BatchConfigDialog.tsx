@@ -80,6 +80,7 @@ export interface BatchConfigSettings {
   fillEnabled: boolean;
   fillProbability: number; // 0-100%
   fillColorProbability: number; // 0-100%
+  fillColorRange: [string, string]; // Regular fill color range
   fillGradientProbability: number; // 0-100%
   fillGradientTypeProbability: number; // 0-100%
   fillGradientColorRange: [string, string];
@@ -238,6 +239,7 @@ const defaultSettings: BatchConfigSettings = {
   fillEnabled: true,
   fillProbability: 80,
   fillColorProbability: 70,
+  fillColorRange: ['#3b82f6', '#8b5cf6'],
   fillGradientProbability: 20,
   fillGradientTypeProbability: 50,
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
@@ -1097,6 +1099,27 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 step={5}
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Fill Color Range</Label>
+                              <div className="flex space-x-2">
+                                <Input
+                                  type="color"
+                                  value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
+                                  onChange={(e) => handleSettingsUpdate({
+                                    fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
+                                  })}
+                                  className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                />
+                                <Input
+                                  type="color"
+                                  value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
+                                  onChange={(e) => handleSettingsUpdate({
+                                    fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
+                                  })}
+                                  className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                />
+                              </div>
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-300">Fill Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
