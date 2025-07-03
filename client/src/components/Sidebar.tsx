@@ -1196,15 +1196,18 @@ export default function Sidebar({
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`polygon edges: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          polygon: { 
-                            ...(scatterSettings.shapeSpecific.polygon || {}),
-                            edgeCountRange: [min, max] 
+                      // Use setTimeout to avoid React batching issues with sliders
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            polygon: { 
+                              ...(scatterSettings.shapeSpecific.polygon || {}),
+                              edgeCountRange: [min, max] 
+                            }
                           }
-                        }
-                      });
+                        });
+                      }, 0);
                     }}
                     min={3}
                     max={20}
@@ -1489,23 +1492,26 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: 20%</span>
-                    <span className="text-slate-400">Max: 80%</span>
+                    <span className="text-slate-400">Min: {Math.round((scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[0] || 0.2) * 100)}%</span>
+                    <span className="text-slate-400">Max: {Math.round((scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[1] || 0.8) * 100)}%</span>
                   </div>
                   <Slider
                     value={[(scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[1] || 0.8) * 100]}
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`${shapeType} inner radius: ${min}%-${max}%`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          'spline-ring': { 
-                            ...(scatterSettings.shapeSpecific['spline-ring'] || {}),
-                            innerRadiusRange: [min / 100, max / 100] 
+                      // Use setTimeout to avoid React batching issues with sliders
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            'spline-ring': { 
+                              ...(scatterSettings.shapeSpecific['spline-ring'] || {}),
+                              innerRadiusRange: [min / 100, max / 100] 
+                            }
                           }
-                        }
-                      });
+                        });
+                      }, 0);
                     }}
                     min={10}
                     max={90}
