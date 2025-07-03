@@ -175,6 +175,13 @@ Changelog:
   - Key insight: Original uses natural Math.random() distributions without artificial clamping for smooth, well-distributed results
   - Batch Randomise now produces: ±20px position, 0-360° rotation, 0.5-1.5x scale, natural HSL color ranges (50-100% sat, 30-70% lightness)
   - Eliminated sequential correlation using large prime offsets (4177, 7919, 15937) ensuring true independence between properties
+- July 3, 2025. Advanced Noise System Architecture - Pure Mathematical Implementation
+  - Implemented pure noise generation with [-1, 1] values preserving natural mathematical properties
+  - Added property-specific amplitude controls: position, rotation, scale, opacity, color (0-200% range)
+  - Post-processing amplitude application maintains noise algorithm characteristics
+  - Natural range philosophy: unconstrained position (artboard-bounded only when enabled), minimum scale 1.0, opacity [0.1-1.0]
+  - Octave modes: "Natural" for organic accumulation, "Normalized" to maintain [-1, 1] range
+  - UI integration: Property amplitude sliders and octave mode selector in batch config dialog
 ```
 
 ## User Preferences

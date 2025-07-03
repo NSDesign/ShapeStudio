@@ -23,6 +23,16 @@ export interface BatchConfigSettings {
   noiseSeed: number;
   noiseScaleToCanvas: boolean;
   
+  // Property-specific amplitude multipliers
+  noisePositionAmplitude: number;
+  noiseRotationAmplitude: number;
+  noiseScaleAmplitude: number;
+  noiseOpacityAmplitude: number;
+  noiseColorAmplitude: number;
+  
+  // Octave handling mode
+  noiseOctaveMode: 'natural' | 'normalized';
+  
   // Algorithm-specific settings
   // Fractal specific
   noiseLacunarity: number;
@@ -184,6 +194,16 @@ const defaultSettings: BatchConfigSettings = {
   noiseAmplitude: 50,
   noiseSeed: Math.floor(Math.random() * 10000),
   noiseScaleToCanvas: true,
+  
+  // Property-specific amplitude multipliers
+  noisePositionAmplitude: 1.0,
+  noiseRotationAmplitude: 1.0,
+  noiseScaleAmplitude: 1.0,
+  noiseOpacityAmplitude: 1.0,
+  noiseColorAmplitude: 1.0,
+  
+  // Octave handling mode
+  noiseOctaveMode: 'natural' as const,
   
   // Algorithm-specific settings
   noiseLacunarity: 2.0,
@@ -592,6 +612,94 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                         <Label className="text-xs text-slate-400">Position values will be constrained to keep shapes within the current artboard bounds</Label>
                       </div>
                     )}
+                    
+                    {/* Property-specific Amplitude Controls */}
+                    <div className="space-y-3 pt-3 border-t border-slate-700">
+                      <Label className="text-sm font-medium text-slate-200">Property Amplitudes</Label>
+                      
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Position: {(currentSettings.noisePositionAmplitude * 100).toFixed(0)}%</Label>
+                          <Slider
+                            value={[currentSettings.noisePositionAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noisePositionAmplitude: value })}
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Rotation: {(currentSettings.noiseRotationAmplitude * 100).toFixed(0)}%</Label>
+                          <Slider
+                            value={[currentSettings.noiseRotationAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseRotationAmplitude: value })}
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Scale: {(currentSettings.noiseScaleAmplitude * 100).toFixed(0)}%</Label>
+                          <Slider
+                            value={[currentSettings.noiseScaleAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseScaleAmplitude: value })}
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Opacity: {(currentSettings.noiseOpacityAmplitude * 100).toFixed(0)}%</Label>
+                          <Slider
+                            value={[currentSettings.noiseOpacityAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseOpacityAmplitude: value })}
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Color: {(currentSettings.noiseColorAmplitude * 100).toFixed(0)}%</Label>
+                          <Slider
+                            value={[currentSettings.noiseColorAmplitude]}
+                            onValueChange={([value]) => handleSettingsUpdate({ noiseColorAmplitude: value })}
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-slate-300">Octave Mode</Label>
+                          <Select 
+                            value={currentSettings.noiseOctaveMode}
+                            onValueChange={(value) => handleSettingsUpdate({ noiseOctaveMode: value as 'natural' | 'normalized' })}
+                          >
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200 h-7">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="natural" className="text-slate-200 hover:bg-slate-700">Natural</SelectItem>
+                              <SelectItem value="normalized" className="text-slate-200 hover:bg-slate-700">Normalized</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-slate-400 mt-2">
+                        Property amplitudes multiply the base amplitude for fine-grained control. 
+                        Natural octaves accumulate organically, normalized maintains [-1,1] range.
+                      </p>
+                    </div>
 
 
 

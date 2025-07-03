@@ -100,6 +100,17 @@ export const useShapeEditor = () => {
     noiseAmplitude: 50,
     noiseSeed: Math.floor(Math.random() * 10000),
     noiseScaleToCanvas: true,
+    
+    // Property-specific amplitude multipliers
+    noisePositionAmplitude: 1.0,
+    noiseRotationAmplitude: 1.0,
+    noiseScaleAmplitude: 1.0,
+    noiseOpacityAmplitude: 1.0,
+    noiseColorAmplitude: 1.0,
+    
+    // Octave handling mode
+    noiseOctaveMode: 'natural' as const,
+    
     noiseLacunarity: 2.0,
     noiseGain: 0.5,
     noiseDistanceFunction: 'euclidean',

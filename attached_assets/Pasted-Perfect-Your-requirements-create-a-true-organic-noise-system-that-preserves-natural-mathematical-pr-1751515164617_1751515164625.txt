@@ -1,0 +1,75 @@
+Perfect! Your requirements create a true organic noise system that preserves natural mathematical properties while providing fine-grained control. Here's my analysis and implementation plan:
+
+Understanding Your Requirements
+Amplitude Application Strategy
+Different scaling per property - This allows realistic control (e.g., subtle position changes, dramatic rotation effects)
+Post-calculation application - Preserves the pure [-1, 1] noise mathematics
+Coordinate Independence
+Completely independent values - Eliminates the correlation patterns you've observed
+Different coordinate offsets - Each property samples from different "regions" of noise space
+Natural Range Philosophy
+Position: Unconstrained by default, canvas-bounded only when "fit to artboard" enabled
+Scale: Minimum 1.0 (no shape flipping), amplitude scales upward naturally
+Opacity: Practical range [0.1, 1.0] (prevents invisible shapes)
+Rotation: Pure 0-360° range (no artificial clamping)
+Octave Handling Flexibility
+Natural accumulation for organic layering
+Optional normalization toggle per noise type for different artistic effects
+Implementation Plan
+Phase 1: Core Pure Noise Generation
+Refactor all noise functions to return pure [-1, 1] values
+Remove all intermediate clamping - let mathematics be natural
+Implement coordinate independence using large prime offsets per property
+Create property-specific amplitude multipliers
+Phase 2: Flexible Amplitude System
+Add amplitude controls for each property type:
+
+positionAmplitude - Controls position variation intensity
+rotationAmplitude - Controls rotation variation intensity
+scaleAmplitude - Controls scale variation intensity
+opacityAmplitude - Controls opacity variation intensity
+colorAmplitude - Controls color variation intensity
+Post-calculation application:
+
+finalPosition = basePosition + (pureNoise * positionAmplitude * maxPositionRange)
+finalRotation = baseRotation + (pureNoise * rotationAmplitude * 360)
+finalScale = Math.max(1.0, baseScale + (pureNoise * scaleAmplitude * maxScaleRange))
+Phase 3: Smart Range Management
+Position handling:
+Default: Unconstrained (pure noise * amplitude)
+"Fit to artboard" enabled: Constrain to canvas bounds
+Scale handling:
+Base scale: 1.0 (no flipping)
+Applied scale: 1.0 + (noise * scaleAmplitude)
+Natural minimum: 1.0
+Opacity handling:
+Range: [0.1, 1.0] (prevents invisible shapes)
+Applied: clamp(baseOpacity + (noise * opacityAmplitude), 0.1, 1.0)
+Phase 4: Octave Control System
+Add octave handling option to noise settings:
+octaveMode: 'natural' | 'normalized'
+Natural mode: Direct accumulation (current behavior)
+Normalized mode: Each octave normalized before accumulation
+Phase 5: UI Integration
+Expand noise controls to include property-specific amplitude sliders
+Add octave mode toggle for each noise algorithm
+Update "Scale to Canvas" to "Fit to Artboard" for clarity
+Technical Benefits
+Mathematical Purity
+Pure [-1, 1] noise preserves algorithm characteristics
+No artificial boundaries destroying natural variation
+Amplitude as intended - a post-processing multiplier
+Organic Distribution
+Independent coordinates eliminate correlation patterns
+Natural accumulation creates realistic layering effects
+Property-specific scaling allows nuanced control
+Predictable Behavior
+Rotation: 0-360° without clamping
+Scale: 1.0+ minimum prevents shape flipping
+Position: Canvas-aware when needed, unconstrained when creative freedom desired
+Key Insights
+The current system's problems stem from fighting against mathematics - clamping, constraining, and artificially limiting what should be natural noise behavior. Your approach embraces the mathematical beauty of noise algorithms while providing practical artistic control.
+
+This will transform the noise system from a constrained, boundary-hitting mess into a true organic variation tool that behaves predictably and produces natural, beautiful results.
+
+Would you like me to proceed with implementing this pure noise system based on these specifications?
