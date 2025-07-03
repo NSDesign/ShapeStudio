@@ -510,7 +510,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                          <SelectItem value="randomise" className="text-slate-200 hover:bg-slate-700">Randomise (standard setting)</SelectItem>
+                          <SelectItem value="randomise" className="text-slate-200 hover:bg-slate-700">Randomise</SelectItem>
                           <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
                           <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
                           <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>

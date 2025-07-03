@@ -947,9 +947,9 @@ export const useShapeEditor = () => {
           artboardHeight
         );
         
-        // Apply noise to position - use direct assignment for Perlin to prevent diagonal bias
-        if (batchConfigSettings.noiseAlgorithm === 'perlin') {
-          // For Perlin: use grid position + centered variation (no accumulation)
+        // Apply noise to position - use direct assignment for Perlin and Randomise
+        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
+          // For Perlin/Randomise: use grid position + centered variation (no accumulation)
           shape.transform.x = position.x + noiseResult.x;
           shape.transform.y = position.y + noiseResult.y;
         } else {
@@ -958,22 +958,16 @@ export const useShapeEditor = () => {
           shape.transform.y += noiseResult.y;
         }
         
-        // Apply noise to rotation
-        if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          shape.transform.rotation = noiseResult.rotation; // Use as absolute 0-360° value like original
-        } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
-          shape.transform.rotation = noiseResult.rotation; // Direct assignment for Perlin (already centered)
+        // Apply noise to rotation - direct assignment for Perlin and Randomise
+        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
+          shape.transform.rotation = noiseResult.rotation; // Direct assignment (already properly ranged)
         } else {
           shape.transform.rotation += noiseResult.rotation; // Additive for other noise types
         }
         
-        // Apply noise to scale
-        if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          const scale = 0.5 + noiseResult.scaleX * 2; // Map 0-1 noise to 0.5-2.5 range like original
-          shape.transform.scaleX = scale;
-          shape.transform.scaleY = scale;
-        } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
-          // Direct assignment for Perlin (values already centered around 1.0)
+        // Apply noise to scale - direct assignment for Perlin and Randomise
+        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
+          // Direct assignment (values already centered around 1.0)
           shape.transform.scaleX = noiseResult.scaleX;
           shape.transform.scaleY = noiseResult.scaleY;
         } else {
@@ -981,22 +975,26 @@ export const useShapeEditor = () => {
           shape.transform.scaleY += noiseResult.scaleY;
         }
         
-        // Apply noise to opacity (additive for all)
-        if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-          shape.properties.fillOpacity = 0.8 + noiseResult.opacity * 0.2; // Map 0-1 noise to 0.8-1.0 like original
-          shape.properties.strokeOpacity = 0.9 + noiseResult.opacity * 0.1; // Map 0-1 noise to 0.9-1.0 like original
-        } else {
-          shape.properties.fillOpacity = Math.max(0.1, Math.min(1, shape.properties.fillOpacity + noiseResult.opacity));
-          shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, shape.properties.strokeOpacity + noiseResult.opacity));
-        }
+        // Apply noise to opacity - direct assignment for all
+        shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
+        shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
         
         // Apply noise to colors if color harmony is not enabled
         if (!batchConfigSettings.colorHarmonyEnabled) {
-          if (batchConfigSettings.noiseAlgorithm === 'randomise') {
-            // Match EXACT original randomization behavior
-            const hue = noiseResult.hue; // Direct 0-360° value
-            const saturation = 50 + noiseResult.saturation * 50; // Map 0-1 to 50-100%
-            const lightness = 30 + noiseResult.lightness * 40; // Map 0-1 to 30-70%
+          if (batchConfigSettings.noiseAlgorithm === 'randomise' || batchConfigSettings.noiseAlgorithm === 'perlin') {
+            // Extract existing HSL values
+            let hue = 0, saturation = 50, lightness = 50;
+            const hslMatch = shape.properties.fillColor?.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
+            if (hslMatch) {
+              hue = parseFloat(hslMatch[1]);
+              saturation = parseFloat(hslMatch[2]);
+              lightness = parseFloat(hslMatch[3]);
+            }
+            
+            // Apply variations
+            hue = (hue + noiseResult.hue + 360) % 360; // Add variation and wrap
+            saturation = Math.max(0, Math.min(100, saturation + noiseResult.saturation));
+            lightness = Math.max(0, Math.min(100, lightness + noiseResult.lightness));
             
             shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             
