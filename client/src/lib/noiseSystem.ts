@@ -147,23 +147,30 @@ export class NoiseSystem {
   }
 
   /**
-   * Perlin noise implementation
+   * Perlin noise implementation with bipolar application and fixed accumulation
    */
   private static generatePerlinNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     let amplitude = options.amplitude;
     let frequency = 1 / options.scale;
-    let result = {
-      x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
-      opacity: 1, hue: 0, saturation: 0, lightness: 0
-    };
+    
+    // Initialize with neutral values for accumulation
+    let positionX = 0;
+    let positionY = 0;
+    let rotation = 0;
+    let scaleX = 0; // Start at 0 for bipolar variation around 1.0
+    let scaleY = 0;
+    let opacity = 0; // Start at 0 for bipolar variation around 1.0
+    let hue = 0;
+    let saturation = 0;
+    let lightness = 0;
 
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
     
     // Position constraints based on artboard size when scaling to artboard
     const positionScale = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : // Keep within 30% of artboard dimensions
-      80; // Standard wide distribution when not constrained
+      Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : // Keep within 20% of artboard dimensions
+      20; // Reduced from 80 to prevent extreme offsets
 
     for (let i = 0; i < options.octaves; i++) {
       // Generate independent noise values for each property using different coordinates
@@ -177,27 +184,46 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency, y * frequency + 500, z * frequency, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 600, y * frequency + 600, z * frequency, options.seed + 9);
       
-      // Apply noise values with proper scaling (noise is -1 to 1, amplitude is typically 1)
-      result.x += noiseX * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
-      result.y += noiseY * amplitude * (options.scaleToCanvas ? Math.min(artboardWidth * 0.2, artboardHeight * 0.2) : 20);
-      result.rotation += noiseRot * amplitude * 45; // ±45 degrees max per octave
-      result.scaleX += noiseScaleX * amplitude * 0.15; // ±15% scale variation per octave
-      result.scaleY += noiseScaleY * amplitude * 0.15;
-      result.opacity += noiseOpacity * amplitude * 0.1; // ±10% opacity variation per octave
-      result.hue += noiseHue * amplitude * 20; // ±20 degrees hue variation per octave
-      result.saturation += noiseSat * amplitude * 10; // ±10% saturation variation per octave
-      result.lightness += noiseLght * amplitude * 8; // ±8% lightness variation per octave
+      // Apply bipolar noise: normalize to 0-1, then subtract 0.5 to center around 0
+      // This ensures truly centered variations around zero
+      const bipolarX = (noiseX + 1) * 0.5 - 0.5; // Convert -1,1 to -0.5,0.5
+      const bipolarY = (noiseY + 1) * 0.5 - 0.5;
+      const bipolarRot = (noiseRot + 1) * 0.5 - 0.5;
+      const bipolarScaleX = (noiseScaleX + 1) * 0.5 - 0.5;
+      const bipolarScaleY = (noiseScaleY + 1) * 0.5 - 0.5;
+      const bipolarOpacity = (noiseOpacity + 1) * 0.5 - 0.5;
+      const bipolarHue = (noiseHue + 1) * 0.5 - 0.5;
+      const bipolarSat = (noiseSat + 1) * 0.5 - 0.5;
+      const bipolarLght = (noiseLght + 1) * 0.5 - 0.5;
+      
+      // Accumulate octaves with bipolar values (still using += for octave layering)
+      positionX += bipolarX * amplitude * positionScale;
+      positionY += bipolarY * amplitude * positionScale;
+      rotation += bipolarRot * amplitude * 45; // ±22.5 degrees max per octave
+      scaleX += bipolarScaleX * amplitude * 0.15; // ±7.5% scale variation per octave
+      scaleY += bipolarScaleY * amplitude * 0.15;
+      opacity += bipolarOpacity * amplitude * 0.1; // ±5% opacity variation per octave
+      hue += bipolarHue * amplitude * 20; // ±10 degrees hue variation per octave
+      saturation += bipolarSat * amplitude * 10; // ±5% saturation variation per octave
+      lightness += bipolarLght * amplitude * 8; // ±4% lightness variation per octave
 
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
     }
 
-    // Clamp values to reasonable ranges
-    result.opacity = Math.max(0.1, Math.min(1, result.opacity));
-    result.scaleX = Math.max(0.1, Math.min(3, result.scaleX));
-    result.scaleY = Math.max(0.1, Math.min(3, result.scaleY));
-
-    return result;
+    // Return bipolar variations centered around neutral values
+    // These will be applied as direct variations, not accumulated onto existing values
+    return {
+      x: positionX, // Direct variation amount (not additive to grid position)
+      y: positionY,
+      rotation: rotation, // Direct variation amount
+      scaleX: 1 + scaleX, // Centered around 1.0 with variation
+      scaleY: 1 + scaleY,
+      opacity: Math.max(0.1, Math.min(1, 1 + opacity)), // Centered around 1.0 with variation, clamped
+      hue: hue, // Direct variation amount
+      saturation: saturation, // Direct variation amount  
+      lightness: lightness // Direct variation amount
+    };
   }
 
   /**

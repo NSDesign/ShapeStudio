@@ -947,22 +947,35 @@ export const useShapeEditor = () => {
           artboardHeight
         );
         
-        // Apply noise to position (additive to grid layout)
-        shape.transform.x += noiseResult.x;
-        shape.transform.y += noiseResult.y;
+        // Apply noise to position - use direct assignment for Perlin to prevent diagonal bias
+        if (batchConfigSettings.noiseAlgorithm === 'perlin') {
+          // For Perlin: use grid position + centered variation (no accumulation)
+          shape.transform.x = position.x + noiseResult.x;
+          shape.transform.y = position.y + noiseResult.y;
+        } else {
+          // For other algorithms: keep additive behavior
+          shape.transform.x += noiseResult.x;
+          shape.transform.y += noiseResult.y;
+        }
         
-        // Apply noise to rotation (additive for noise algorithms, absolute for randomize)
+        // Apply noise to rotation
         if (batchConfigSettings.noiseAlgorithm === 'randomise') {
           shape.transform.rotation = noiseResult.rotation; // Use as absolute 0-360° value like original
+        } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
+          shape.transform.rotation = noiseResult.rotation; // Direct assignment for Perlin (already centered)
         } else {
           shape.transform.rotation += noiseResult.rotation; // Additive for other noise types
         }
         
-        // Apply noise to scale (additive for noise algorithms, absolute for randomize)
+        // Apply noise to scale
         if (batchConfigSettings.noiseAlgorithm === 'randomise') {
           const scale = 0.5 + noiseResult.scaleX * 2; // Map 0-1 noise to 0.5-2.5 range like original
           shape.transform.scaleX = scale;
           shape.transform.scaleY = scale;
+        } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
+          // Direct assignment for Perlin (values already centered around 1.0)
+          shape.transform.scaleX = noiseResult.scaleX;
+          shape.transform.scaleY = noiseResult.scaleY;
         } else {
           shape.transform.scaleX += noiseResult.scaleX;
           shape.transform.scaleY += noiseResult.scaleY;
