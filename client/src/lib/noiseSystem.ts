@@ -117,40 +117,45 @@ export class NoiseSystem {
   }
 
   /**
-   * Standard randomization (baseline)
+   * Standard randomization matching original non-batch behavior
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
-    // Match the EXACT original randomization behavior - return only small variations, not absolute values
-    const artboardWidth = options.artboardWidth || 400;
-    const artboardHeight = options.artboardHeight || 400;
+    // Use large prime offsets to eliminate sequential correlation and diagonal patterns
+    const baseOffset = shapeIndex * 4177; // Large prime for true independence
     
-    // Max allowed offset: 50px unconstrained or 30% of artboard
-    const maxPosOffset = options.scaleToCanvas ? 
-      Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
-      50;
+    // Generate independent random values using well-spaced seeds
+    const randX = this.seededRandom(options.seed + baseOffset + 7919)(); // Independent X
+    const randY = this.seededRandom(options.seed + baseOffset + 15937)(); // Independent Y  
+    const randRot = this.seededRandom(options.seed + baseOffset + 24077)(); // Independent rotation
+    const randScaleBase = this.seededRandom(options.seed + baseOffset + 32143)(); // Single scale base
+    const randOpacity = this.seededRandom(options.seed + baseOffset + 40213)(); // Independent opacity
+    const randHue = this.seededRandom(options.seed + baseOffset + 48299)(); // Independent hue
+    const randSat = this.seededRandom(options.seed + baseOffset + 56377)(); // Independent saturation
+    const randLght = this.seededRandom(options.seed + baseOffset + 64439)(); // Independent lightness
     
-    // Generate random variations in [-1, 1] range
-    const randX = (this.seededRandom(options.seed + shapeIndex * 1000 + 1)() - 0.5) * 2;
-    const randY = (this.seededRandom(options.seed + shapeIndex * 1000 + 2)() - 0.5) * 2;
-    const randRot = (this.seededRandom(options.seed + shapeIndex * 1000 + 3)() - 0.5) * 2;
-    const randScaleX = (this.seededRandom(options.seed + shapeIndex * 1000 + 4)() - 0.5) * 2;
-    const randScaleY = (this.seededRandom(options.seed + shapeIndex * 1000 + 5)() - 0.5) * 2;
-    const randOpacity = (this.seededRandom(options.seed + shapeIndex * 1000 + 6)() - 0.5) * 2;
-    const randHue = (this.seededRandom(options.seed + shapeIndex * 1000 + 7)() - 0.5) * 2;
-    const randSat = (this.seededRandom(options.seed + shapeIndex * 1000 + 8)() - 0.5) * 2;
-    const randLght = (this.seededRandom(options.seed + shapeIndex * 1000 + 9)() - 0.5) * 2;
+    // Match original natural ranges without artificial clamping
+    const positionRandomness = 20 * options.amplitude; // Original uses ±20px base
+    const scaleRandomness = 0.5 + randScaleBase * options.amplitude; // Original: 0.5 + random * amplitude
     
-    // Apply controlled ranges like other noise algorithms
     return {
-      x: randX * options.amplitude * maxPosOffset * 0.5, // ±50px max
-      y: randY * options.amplitude * maxPosOffset * 0.5,
-      rotation: randRot * options.amplitude * 90, // ±90 degrees max
-      scaleX: 1 + randScaleX * options.amplitude * 0.25, // 0.75-1.25 range
-      scaleY: 1 + randScaleY * options.amplitude * 0.25,
-      opacity: Math.max(0.7, Math.min(1, 1 + randOpacity * options.amplitude * 0.15)), // 0.7-1.0 range
-      hue: randHue * options.amplitude * 25, // ±25 degrees variation
-      saturation: randSat * options.amplitude * 10, // ±10% variation
-      lightness: randLght * options.amplitude * 8 // ±8% variation
+      // Position: Natural ±20px distribution like original
+      x: (randX - 0.5) * positionRandomness,
+      y: (randY - 0.5) * positionRandomness,
+      
+      // Rotation: Full 0-360° range like original (return absolute value for direct assignment)
+      rotation: randRot * 360 * options.amplitude,
+      
+      // Scale: Natural multiplicative range like original (0.5-1.5 typical range)
+      scaleX: scaleRandomness,
+      scaleY: scaleRandomness, // Same scale for both axes like original
+      
+      // Opacity: Natural range like original (0.7-1.0 for fills)
+      opacity: 0.7 + randOpacity * 0.3 * options.amplitude,
+      
+      // Colors: Match original natural ranges
+      hue: randHue * 360, // Full 0-360° range like original
+      saturation: 50 + randSat * 50, // 50-100% like original
+      lightness: 30 + randLght * 40 // 30-70% like original
     };
   }
 

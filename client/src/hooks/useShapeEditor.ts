@@ -981,8 +981,15 @@ export const useShapeEditor = () => {
         
         // Apply noise to colors if color harmony is not enabled
         if (!batchConfigSettings.colorHarmonyEnabled) {
-          if (batchConfigSettings.noiseAlgorithm === 'randomise' || batchConfigSettings.noiseAlgorithm === 'perlin') {
-            // Extract existing HSL values
+          if (batchConfigSettings.noiseAlgorithm === 'randomise') {
+            // Randomise uses absolute values like original
+            const hue = noiseResult.hue; // Direct 0-360° value
+            const saturation = noiseResult.saturation; // Direct 50-100% value  
+            const lightness = noiseResult.lightness; // Direct 30-70% value
+            
+            shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
+            // Extract existing HSL values for variation-based algorithms
             let hue = 0, saturation = 50, lightness = 50;
             const hslMatch = shape.properties.fillColor?.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
             if (hslMatch) {

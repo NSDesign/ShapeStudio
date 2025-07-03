@@ -169,6 +169,12 @@ Changelog:
   - Implemented strict value range control: position ±50px/30% artboard, rotation ±45°, scale 0.75-1.25x
   - Added octave accumulation control: proper amplitude decay, final value clamping as safety net
   - Result: Perlin noise now produces centered, reasonable variations instead of extreme outliers (was 6000+ positions, now ±50px)
+- July 3, 2025. Complete Noise System Standardization & Batch Config Randomise Overhaul
+  - Applied Perlin improvements to all noise algorithms: Simplex, Fractal, Worley, Ridge, Turbulence with coordinate independence
+  - Fixed batch config Randomise algorithm to match original non-batch behavior: eliminated diagonal patterns, boundary clustering, scale capping
+  - Key insight: Original uses natural Math.random() distributions without artificial clamping for smooth, well-distributed results
+  - Batch Randomise now produces: ±20px position, 0-360° rotation, 0.5-1.5x scale, natural HSL color ranges (50-100% sat, 30-70% lightness)
+  - Eliminated sequential correlation using large prime offsets (4177, 7919, 15937) ensuring true independence between properties
 ```
 
 ## User Preferences
