@@ -1407,15 +1407,18 @@ export default function Sidebar({
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`Star inner radius: ${min}%-${max}%`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          star: { 
-                            pointCountRange: scatterSettings.shapeSpecific.star?.pointCountRange || [5, 8],
-                            innerRadiusRange: [min / 100, max / 100] 
+                      // Use setTimeout to avoid React batching issues with sliders
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            star: { 
+                              pointCountRange: scatterSettings.shapeSpecific.star?.pointCountRange || [5, 8],
+                              innerRadiusRange: [min / 100, max / 100] 
+                            }
                           }
-                        }
-                      });
+                        });
+                      }, 0);
                     }}
                     min={10}
                     max={90}
@@ -1435,23 +1438,25 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: 20%</span>
-                    <span className="text-slate-400">Max: 80%</span>
+                    <span className="text-slate-400">Min: {Math.round((scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[0] || 0.2) * 100)}%</span>
+                    <span className="text-slate-400">Max: {Math.round((scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[1] || 0.8) * 100)}%</span>
                   </div>
                   <Slider
                     value={[(scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[1] || 0.8) * 100]}
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`${shapeType} inner radius: ${min}%-${max}%`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          ring: { 
-                            ...(scatterSettings.shapeSpecific.ring || {}),
-                            innerRadiusRange: [min / 100, max / 100] 
+                      // Use setTimeout to avoid React batching issues with sliders
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            ring: { 
+                              innerRadiusRange: [min / 100, max / 100] 
+                            }
                           }
-                        }
-                      });
+                        });
+                      }, 0);
                     }}
                     min={10}
                     max={90}
@@ -1506,8 +1511,8 @@ export default function Sidebar({
                           shapeSpecific: {
                             ...scatterSettings.shapeSpecific,
                             'spline-ring': { 
-                              ...(scatterSettings.shapeSpecific['spline-ring'] || {}),
-                              innerRadiusRange: [min / 100, max / 100] 
+                              innerRadiusRange: [min / 100, max / 100],
+                              segmentCountRange: scatterSettings.shapeSpecific['spline-ring']?.segmentCountRange || [12, 48] as [number, number]
                             }
                           }
                         });
@@ -1543,8 +1548,8 @@ export default function Sidebar({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           line: { 
-                            ...(scatterSettings.shapeSpecific.line || {}),
-                            pointCountRange: [min, max] 
+                            pointCountRange: [min, max],
+                            strokeCapProbabilities: scatterSettings.shapeSpecific.line?.strokeCapProbabilities || { round: 0, square: 0, butt: 0 } as { round: number; square: number; butt: number }
                           }
                         }
                       });
@@ -1558,19 +1563,39 @@ export default function Sidebar({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Stroke Cap Style</Label>
-                <div className="grid grid-cols-3 gap-1 text-xs">
+                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+                <div className="space-y-2">
                   {['round', 'square', 'butt'].map((cap) => (
-                    <div key={cap} className="flex items-center space-x-1">
-                      <Checkbox
-                        defaultChecked={cap === 'round'}
-                        onCheckedChange={(checked) => {
-                          // TODO: Update line stroke cap probability
-                          console.log(`Line ${cap} cap: ${checked}`);
+                    <div key={cap} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-300 capitalize">{cap}</span>
+                        <span className="text-slate-400">{scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.[cap as keyof typeof scatterSettings.shapeSpecific.line.strokeCapProbabilities] || 0}%</span>
+                      </div>
+                      <Slider
+                        value={[scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.[cap as keyof typeof scatterSettings.shapeSpecific.line.strokeCapProbabilities] || 0]}
+                        onValueChange={(value) => {
+                          const probability = value[0];
+                          setTimeout(() => {
+                            onUpdateScatterSettings({
+                              shapeSpecific: {
+                                ...scatterSettings.shapeSpecific,
+                                line: { 
+                                  pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
+                                  strokeCapProbabilities: {
+                                    round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
+                                    square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
+                                    butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
+                                  }
+                                }
+                              }
+                            });
+                          }, 0);
                         }}
-                        className="border-slate-500 data-[state=checked]:bg-blue-600 scale-75"
+                        min={0}
+                        max={50}
+                        step={1}
+                        className="w-full"
                       />
-                      <Label className="text-xs text-slate-300 capitalize">{cap}</Label>
                     </div>
                   ))}
                 </div>
