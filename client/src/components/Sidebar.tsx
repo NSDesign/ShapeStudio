@@ -1193,11 +1193,16 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={scatterSettings.shapeSpecific.polygon?.edgeCountRange || [3, 20]}
-                    onValueChange={([min, max]) => {
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      console.log(`polygon edges: ${min}-${max}`);
                       onUpdateScatterSettings({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
-                          polygon: { edgeCountRange: [min, max] }
+                          polygon: { 
+                            ...(scatterSettings.shapeSpecific.polygon || {}),
+                            edgeCountRange: [min, max] 
+                          }
                         }
                       });
                     }}
@@ -1225,11 +1230,14 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange || [16, 32]}
-                    onValueChange={([min, max]) => {
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      console.log(`${shapeType} segments: ${min}-${max}`);
                       onUpdateScatterSettings({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           [shapeType]: { 
+                            ...(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] || {}),
                             segmentCountRange: [min, max] 
                           }
                         }
@@ -1260,8 +1268,8 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={[3, 6]}
-                    onValueChange={([min, max]) => {
-                      // TODO: Update curve point count range
+                    onValueChange={(value) => {
+                      const [min, max] = value;
                       console.log(`${shapeType} points: ${min}-${max}`);
                     }}
                     min={3}
@@ -1325,8 +1333,8 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={[5, 8]}
-                    onValueChange={([min, max]) => {
-                      // TODO: Update star point count range
+                    onValueChange={(value) => {
+                      const [min, max] = value;
                       console.log(`Star points: ${min}-${max}`);
                     }}
                     min={5}
@@ -1346,8 +1354,8 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={[30, 70]}
-                    onValueChange={([min, max]) => {
-                      // TODO: Update star inner radius range
+                    onValueChange={(value) => {
+                      const [min, max] = value;
                       console.log(`Star inner radius: ${min}%-${max}%`);
                     }}
                     min={10}
@@ -1373,8 +1381,8 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={[20, 80]}
-                    onValueChange={([min, max]) => {
-                      // TODO: Update ring inner radius range
+                    onValueChange={(value) => {
+                      const [min, max] = value;
                       console.log(`${shapeType} inner radius: ${min}%-${max}%`);
                     }}
                     min={10}
@@ -1394,8 +1402,8 @@ export default function Sidebar({
                   </div>
                   <Slider
                     value={[16, 32]}
-                    onValueChange={([min, max]) => {
-                      // TODO: Update ring segment count
+                    onValueChange={(value) => {
+                      const [min, max] = value;
                       console.log(`${shapeType} segments: ${min}-${max}`);
                     }}
                     min={12}
