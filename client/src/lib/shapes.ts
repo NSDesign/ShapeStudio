@@ -289,7 +289,13 @@ export class Shape {
         const { width: squareSize } = getWidthHeight();
         this.width = squareSize;
         this.height = squareSize;
-        this.generateRectanglePoints();
+        // Apply corner radius from batch config if available
+        let squareCornerRadius = 0;
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
+          const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
+          squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        }
+        this.generateRectanglePoints(squareCornerRadius);
         break;
       case 'circle':
         this.radius = getRadius();
@@ -387,10 +393,10 @@ export class Shape {
         break;
       case 'bezier':
       case 'cubic':
-        this.generateCurvePoints(getSplinePointCount(3, 6));
+        this.generateCurvePoints(getSplinePointCount(3, 6), batchConfig);
         break;
       case 'smooth-spline':
-        this.generateSmoothSplinePoints(getSplinePointCount(3, 8));
+        this.generateSmoothSplinePoints(getSplinePointCount(3, 8), batchConfig);
         break;
       case 'chunk':
         this.generateChunkPoints();
@@ -430,6 +436,7 @@ export class Shape {
         this.innerRadius = this.radius * splineRingInnerRadiusRatio;
         this.generateSplineRingPoints();
         break;
+
     }
   }
 
@@ -444,7 +451,7 @@ export class Shape {
     }
   }
 
-  private generateCurvePoints(numPoints?: number): void {
+  private generateCurvePoints(numPoints?: number, batchConfig?: any): void {
     const pointCount = numPoints || (this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3));
     this.points = [];
     this.controlPoints = [];
@@ -453,12 +460,17 @@ export class Shape {
     
     if (this.type === 'cubic') {
       // Generate cubic spline with control points between segments
-      this.points = [
-        { x: -60, y: 0 },
-        { x: -20, y: -40 },
-        { x: 20, y: 40 },
-        { x: 60, y: 0 }
-      ];
+      this.points = [];
+      const width = 120;
+      const height = 80;
+      
+      // Generate points with some randomness
+      for (let i = 0; i < pointCount; i++) {
+        const t = i / (pointCount - 1);
+        const x = (t - 0.5) * width + (Math.random() - 0.5) * 20;
+        const y = (Math.random() - 0.5) * height;
+        this.points.push({ x, y });
+      }
       
       // Generate control points for cubic splines (between segments)
       for (let i = 0; i < this.points.length - 1; i++) {
@@ -505,7 +517,13 @@ export class Shape {
       }
     }
     
-    this.closed = this.type === 'cubic' ? false : Math.random() > 0.5;
+    // Use batch config settings for open/closed probability if available
+    let openProbability = 50; // Default 50% open
+    if (batchConfig?.scatterSettings?.shapeSpecific?.[this.type]?.openProbability !== undefined) {
+      openProbability = batchConfig.scatterSettings.shapeSpecific[this.type].openProbability;
+    }
+    
+    this.closed = Math.random() * 100 > openProbability;
     this.renderType = 'bezier';
   }
 
@@ -1047,13 +1065,18 @@ export class Shape {
     this.segments = 8; // Four segments for outer + four for inner
   }
 
-  private generateSmoothSplinePoints(numPoints?: number): void {
+  private generateSmoothSplinePoints(numPoints?: number, batchConfig?: any): void {
     const pointCount = numPoints || 4 + Math.floor(Math.random() * 6); // 4-10 points for variety
     this.points = [];
     this.controlPoints = [];
     
-    // Determine if this spline should be open or closed (70% chance closed)
-    this.closed = Math.random() > 0.3;
+    // Use batch config settings for open/closed probability if available
+    let openProbability = 30; // Default 30% open (70% closed)
+    if (batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']?.openProbability !== undefined) {
+      openProbability = batchConfig.scatterSettings.shapeSpecific['smooth-spline'].openProbability;
+    }
+    
+    this.closed = Math.random() * 100 > openProbability;
     
     const baseRadius = 50 + Math.random() * 80;
     const variation = 0.4 + Math.random() * 0.4; // Control point variation
