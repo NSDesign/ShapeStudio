@@ -51,9 +51,9 @@ export const useShapeEditor = () => {
         openProbability: 50,
         strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
       },
-      star: { pointCountRange: [5, 8], innerRadiusRange: [30, 70] },
-      ring: { innerRadiusRange: [20, 80] },
-      'spline-ring': { innerRadiusRange: [20, 80], segmentCountRange: [16, 32] },
+      star: { pointCountRange: [5, 8], innerRadiusRange: [0.3, 0.7] },
+      ring: { innerRadiusRange: [0.2, 0.8] },
+      'spline-ring': { innerRadiusRange: [0.2, 0.8], segmentCountRange: [16, 32] },
       line: { 
         pointCountRange: [2, 4],
         strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
