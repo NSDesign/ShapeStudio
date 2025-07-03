@@ -212,6 +212,14 @@ Changelog:
   - **Stroke UI**: Added missing stroke color probability and opacity range sliders
   - **Shape Transforms**: X/Y translate, scale (uniform/non-uniform), rotation all functional
   - All properties now work independently or together, providing complete control over shape generation
+- July 3, 2025. Shape-Specific Properties Integration
+  - **Rectangle Corner Radius**: Configurable corner radius range (0-20px) applied to rectangle generation
+  - **Star Inner Radius**: Configurable inner radius ratio (0.3-0.7) for star shape generation
+  - **Ring Inner Radius**: Configurable inner radius ratio (0.4-0.8) for ring and spline-ring shapes
+  - **Complete Integration**: Shape constructor now accepts batch configuration parameters
+  - **Width/Height/Segments**: All shape-specific dimensions now use configured ranges instead of hardcoded values
+  - **Point Counts**: Line, bezier, and spline point counts now respect UI configuration settings
+  - Shape generation algorithm completely overhauled to use batch configuration when Properties sections are enabled
 ```
 
 ## User Preferences

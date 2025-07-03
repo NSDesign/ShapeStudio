@@ -138,6 +138,15 @@ export const useShapeEditor = () => {
     xPositionRange: [-100, 100],
     yPositionRange: [-100, 100],
     
+    // Rectangle-specific Properties
+    rectangleCornerRadiusRange: [0, 20],
+    
+    // Star-specific Properties
+    starInnerRadiusRange: [0.3, 0.7],
+    
+    // Ring-specific Properties
+    ringInnerRadiusRange: [0.4, 0.8],
+    
     fillEnabled: true,
     fillProbability: 80,
     fillColorProbability: 70,
@@ -904,7 +913,7 @@ export const useShapeEditor = () => {
         shapeY = minY + Math.random() * (maxY - minY);
       }
       
-      const shape = new Shape(randomType, shapeX, shapeY);
+      const shape = new Shape(randomType, shapeX, shapeY, batchConfigSettings);
       
       // Apply width/height from batch config if properties are enabled
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {

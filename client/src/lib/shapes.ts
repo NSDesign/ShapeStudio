@@ -19,7 +19,7 @@ export class Shape {
   segments: number;
   renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth';
 
-  constructor(type: ShapeType, x: number = 0, y: number = 0) {
+  constructor(type: ShapeType, x: number = 0, y: number = 0, batchConfig?: any) {
     this.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.type = type;
     this.transform = {
@@ -39,7 +39,7 @@ export class Shape {
     this.segments = this.getDefaultSegments();
     this.renderType = this.getDefaultRenderType();
     
-    this.generateShapeData();
+    this.generateShapeData(batchConfig);
   }
   
   /**
@@ -228,104 +228,169 @@ export class Shape {
     };
   }
 
-  private generateShapeData(): void {
+  private generateShapeData(batchConfig?: any): void {
+    // Helper function to get values from batch config or use defaults
+    const getRange = (configRange: [number, number] | undefined, defaultMin: number, defaultMax: number): number => {
+      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && configRange) {
+        return configRange[0] + Math.random() * (configRange[1] - configRange[0]);
+      }
+      return defaultMin + Math.random() * (defaultMax - defaultMin);
+    };
+    
+    const getWidthHeight = (): { width: number; height: number } => {
+      const width = getRange(batchConfig?.widthRange, 40, 150);
+      const height = getRange(batchConfig?.heightRange, 30, 120);
+      return { width, height };
+    };
+    
+    const getRadius = (defaultMin: number = 25, defaultMax: number = 75): number => {
+      const { width } = getWidthHeight();
+      return width / 2; // Use width to determine radius
+    };
+    
+    const getSegmentCount = (defaultMin: number, defaultMax: number): number => {
+      if (batchConfig?.propertiesEnabled && batchConfig?.polygonPropertiesEnabled && batchConfig?.segmentCountRange) {
+        const [min, max] = batchConfig.segmentCountRange;
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
+    };
+    
+    const getPointCount = (defaultMin: number, defaultMax: number): number => {
+      if (batchConfig?.propertiesEnabled && batchConfig?.linePropertiesEnabled && batchConfig?.pointCountRange) {
+        const [min, max] = batchConfig.pointCountRange;
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
+    };
+    
+    const getSplinePointCount = (defaultMin: number, defaultMax: number): number => {
+      if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled && batchConfig?.splinePointCountRange) {
+        const [min, max] = batchConfig.splinePointCountRange;
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
+    };
+
     switch (this.type) {
       case 'rectangle':
-        this.width = 50 + Math.random() * 150;
-        this.height = 30 + Math.random() * 120;
-        this.generateRectanglePoints();
+        const rectDims = getWidthHeight();
+        this.width = rectDims.width;
+        this.height = rectDims.height;
+        // Apply corner radius from batch config if available
+        let cornerRadius = 0;
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
+          const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
+          cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        }
+        this.generateRectanglePoints(cornerRadius);
         break;
       case 'square':
-        const size = 40 + Math.random() * 100;
-        this.width = size;
-        this.height = size;
+        const { width: squareSize } = getWidthHeight();
+        this.width = squareSize;
+        this.height = squareSize;
         this.generateRectanglePoints();
         break;
       case 'circle':
-        this.radius = 25 + Math.random() * 75;
+        this.radius = getRadius();
         this.generateCirclePoints();
         break;
       case 'ellipse':
-        this.width = 40 + Math.random() * 120;
-        this.height = 30 + Math.random() * 80;
+        const ellipseDims = getWidthHeight();
+        this.width = ellipseDims.width;
+        this.height = ellipseDims.height;
         this.generateEllipsePoints();
         break;
       case 'triangle':
-        this.radius = 30 + Math.random() * 70;
+        this.radius = getRadius(30, 70);
         this.generateTrianglePoints();
         break;
       case 'right-triangle':
-        this.width = 40 + Math.random() * 100;
-        this.height = 40 + Math.random() * 100;
+        const rightTriDims = getWidthHeight();
+        this.width = rightTriDims.width;
+        this.height = rightTriDims.height;
         this.generateRightTrianglePoints();
         break;
       case 'trapezoid':
-        this.width = 60 + Math.random() * 80;
-        this.height = 40 + Math.random() * 60;
+        const trapDims = getWidthHeight();
+        this.width = trapDims.width;
+        this.height = trapDims.height;
         this.generateTrapezoidPoints();
         break;
       case 'pentagon':
-        this.radius = 30 + Math.random() * 70;
+        this.radius = getRadius(30, 70);
         this.generatePentagonPoints();
         break;
       case 'hexagon':
-        this.radius = 30 + Math.random() * 70;
+        this.radius = getRadius(30, 70);
         this.generateHexagonPoints();
         break;
       case 'rhombus':
-        this.width = 40 + Math.random() * 80;
-        this.height = 40 + Math.random() * 80;
+        const rhombusDims = getWidthHeight();
+        this.width = rhombusDims.width;
+        this.height = rhombusDims.height;
         this.generateRhombusPoints();
         break;
       case 'parallelogram':
-        this.width = 50 + Math.random() * 100;
-        this.height = 40 + Math.random() * 60;
+        const paraDims = getWidthHeight();
+        this.width = paraDims.width;
+        this.height = paraDims.height;
         this.generateParallelogramPoints();
         break;
       case 'kite':
-        this.width = 40 + Math.random() * 80;
-        this.height = 50 + Math.random() * 100;
+        const kiteDims = getWidthHeight();
+        this.width = kiteDims.width;
+        this.height = kiteDims.height;
         this.generateKitePoints();
         break;
       case 'semicircle':
-        this.radius = 30 + Math.random() * 70;
+        this.radius = getRadius(30, 70);
         this.generateSemicirclePoints();
         break;
       case 'heart':
-        this.width = 40 + Math.random() * 80;
-        this.height = 40 + Math.random() * 80;
+        const heartDims = getWidthHeight();
+        this.width = heartDims.width;
+        this.height = heartDims.height;
         this.generateHeartPoints();
         break;
       case 'arrow':
-        this.width = 50 + Math.random() * 100;
-        this.height = 30 + Math.random() * 60;
+        const arrowDims = getWidthHeight();
+        this.width = arrowDims.width;
+        this.height = arrowDims.height;
         this.generateArrowPoints();
         break;
       case 'cross':
-        this.width = 40 + Math.random() * 80;
-        this.height = 40 + Math.random() * 80;
+        const crossDims = getWidthHeight();
+        this.width = crossDims.width;
+        this.height = crossDims.height;
         this.generateCrossPoints();
         break;
       case 'polygon':
-        this.sides = 3 + Math.floor(Math.random() * 10);
-        this.radius = 30 + Math.random() * 70;
+        this.sides = getSegmentCount(3, 12);
+        this.radius = getRadius(30, 70);
         this.generatePolygonPoints();
         break;
       case 'star':
-        this.sides = 5 + Math.floor(Math.random() * 7);
-        this.radius = 30 + Math.random() * 70;
-        this.innerRadius = this.radius * (0.3 + Math.random() * 0.4);
+        this.sides = getSegmentCount(5, 12);
+        this.radius = getRadius(30, 70);
+        // Apply inner radius ratio from batch config if available
+        let innerRadiusRatio = 0.3 + Math.random() * 0.4;
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.starInnerRadiusRange) {
+          const [minRatio, maxRatio] = batchConfig.starInnerRadiusRange;
+          innerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        }
+        this.innerRadius = this.radius * innerRadiusRatio;
         this.generateStarPoints();
         break;
       case 'line':
-        this.generateLinePoints();
+        this.generateLinePoints(getPointCount(2, 8));
         break;
       case 'bezier':
       case 'cubic':
-        this.generateCurvePoints();
+        this.generateCurvePoints(getSplinePointCount(3, 6));
         break;
       case 'smooth-spline':
-        this.generateSmoothSplinePoints();
+        this.generateSmoothSplinePoints(getSplinePointCount(3, 8));
         break;
       case 'chunk':
         this.generateChunkPoints();
@@ -334,31 +399,44 @@ export class Shape {
         this.generateBlobPoints();
         break;
       case 'ring':
-        this.radius = 30 + Math.random() * 70;
-        this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
+        this.radius = getRadius(30, 70);
+        // Apply inner radius ratio from batch config if available
+        let ringInnerRadiusRatio = 0.4 + Math.random() * 0.4;
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
+          const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
+          ringInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        }
+        this.innerRadius = this.radius * ringInnerRadiusRatio;
         this.generateRingPoints();
         break;
       case 'spline-circle':
-        this.radius = 25 + Math.random() * 75;
+        this.radius = getRadius(25, 75);
         this.generateSplineCirclePoints();
         break;
       case 'spline-ellipse':
-        this.width = 40 + Math.random() * 120;
-        this.height = 30 + Math.random() * 80;
+        const splineEllipseDims = getWidthHeight();
+        this.width = splineEllipseDims.width;
+        this.height = splineEllipseDims.height;
         this.generateSplineEllipsePoints();
         break;
       case 'spline-ring':
-        this.radius = 30 + Math.random() * 70;
-        this.innerRadius = this.radius * (0.4 + Math.random() * 0.4);
+        this.radius = getRadius(30, 70);
+        // Apply inner radius ratio from batch config if available (same as ring)
+        let splineRingInnerRadiusRatio = 0.4 + Math.random() * 0.4;
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
+          const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
+          splineRingInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        }
+        this.innerRadius = this.radius * splineRingInnerRadiusRatio;
         this.generateSplineRingPoints();
         break;
     }
   }
 
-  private generateLinePoints(): void {
-    const numPoints = 2 + Math.floor(Math.random() * 6);
+  private generateLinePoints(numPoints?: number): void {
+    const pointCount = numPoints || 2 + Math.floor(Math.random() * 6);
     this.points = [];
-    for (let i = 0; i < numPoints; i++) {
+    for (let i = 0; i < pointCount; i++) {
       this.points.push({
         x: i * (20 + Math.random() * 40),
         y: (Math.random() - 0.5) * 100
@@ -366,8 +444,8 @@ export class Shape {
     }
   }
 
-  private generateCurvePoints(): void {
-    const numPoints = this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3);
+  private generateCurvePoints(numPoints?: number): void {
+    const pointCount = numPoints || (this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3));
     this.points = [];
     this.controlPoints = [];
     this.tangentHandles = [];
@@ -399,9 +477,9 @@ export class Shape {
       
     } else {
       // Generate bezier curve with tangent handles for each point
-      for (let i = 0; i < numPoints; i++) {
+      for (let i = 0; i < pointCount; i++) {
         const point = {
-          x: (i - numPoints/2) * (40 + Math.random() * 30),
+          x: (i - pointCount/2) * (40 + Math.random() * 30),
           y: (Math.random() - 0.5) * 100
         };
         this.points.push(point);
@@ -714,15 +792,55 @@ export class Shape {
     this.renderType = 'polygon';
   }
 
-  private generateRectanglePoints(): void {
+  private generateRectanglePoints(cornerRadius?: number): void {
     const w = this.width! / 2;
     const h = this.height! / 2;
-    this.points = [
-      { x: -w, y: -h },  // Top-left
-      { x: w, y: -h },   // Top-right
-      { x: w, y: h },    // Bottom-right
-      { x: -w, y: h }    // Bottom-left
-    ];
+    const radius = cornerRadius || 0;
+    
+    if (radius > 0 && radius < Math.min(w, h)) {
+      // Generate rounded rectangle points
+      this.points = [
+        // Top edge (left to right)
+        { x: -w + radius, y: -h },
+        { x: w - radius, y: -h },
+        
+        // Top-right corner (approximated with extra points for curve)
+        { x: w - radius * 0.6, y: -h + radius * 0.3 },
+        { x: w - radius * 0.3, y: -h + radius * 0.6 },
+        { x: w, y: -h + radius },
+        
+        // Right edge (top to bottom)
+        { x: w, y: h - radius },
+        
+        // Bottom-right corner
+        { x: w - radius * 0.3, y: h - radius * 0.6 },
+        { x: w - radius * 0.6, y: h - radius * 0.3 },
+        { x: w - radius, y: h },
+        
+        // Bottom edge (right to left)
+        { x: -w + radius, y: h },
+        
+        // Bottom-left corner
+        { x: -w + radius * 0.3, y: h - radius * 0.6 },
+        { x: -w + radius * 0.6, y: h - radius * 0.3 },
+        { x: -w, y: h - radius },
+        
+        // Left edge (bottom to top)
+        { x: -w, y: -h + radius },
+        
+        // Top-left corner
+        { x: -w + radius * 0.3, y: -h + radius * 0.6 },
+        { x: -w + radius * 0.6, y: -h + radius * 0.3 }
+      ];
+    } else {
+      // Standard rectangle
+      this.points = [
+        { x: -w, y: -h },  // Top-left
+        { x: w, y: -h },   // Top-right
+        { x: w, y: h },    // Bottom-right
+        { x: -w, y: h }    // Bottom-left
+      ];
+    }
     this.closed = true;
   }
 
@@ -929,8 +1047,8 @@ export class Shape {
     this.segments = 8; // Four segments for outer + four for inner
   }
 
-  private generateSmoothSplinePoints(): void {
-    const numPoints = 4 + Math.floor(Math.random() * 6); // 4-10 points for variety
+  private generateSmoothSplinePoints(numPoints?: number): void {
+    const pointCount = numPoints || 4 + Math.floor(Math.random() * 6); // 4-10 points for variety
     this.points = [];
     this.controlPoints = [];
     
@@ -942,8 +1060,8 @@ export class Shape {
     
     if (this.closed) {
       // Generate points in a circular pattern for closed splines
-      for (let i = 0; i < numPoints; i++) {
-        const angle = (i / numPoints) * Math.PI * 2;
+      for (let i = 0; i < pointCount; i++) {
+        const angle = (i / pointCount) * Math.PI * 2;
         const radiusVar = 0.7 + Math.random() * 0.6;
         const radius = baseRadius * radiusVar;
         
@@ -955,8 +1073,8 @@ export class Shape {
     } else {
       // Generate points in a wave-like pattern for open splines
       const width = baseRadius * 2;
-      for (let i = 0; i < numPoints; i++) {
-        const t = i / (numPoints - 1);
+      for (let i = 0; i < pointCount; i++) {
+        const t = i / (pointCount - 1);
         const x = (t - 0.5) * width;
         const y = Math.sin(t * Math.PI * 2) * baseRadius * (0.3 + Math.random() * 0.4);
         
@@ -965,7 +1083,7 @@ export class Shape {
     }
     
     // Generate smooth control points for cubic Bézier curves
-    const totalSegments = this.closed ? numPoints : numPoints - 1;
+    const totalSegments = this.closed ? pointCount : pointCount - 1;
     this.controlPoints = [];
     
     for (let i = 0; i < totalSegments; i++) {
@@ -973,8 +1091,8 @@ export class Shape {
       const next = this.points[(i + 1) % this.points.length];
       
       // Calculate smooth tangent vectors
-      const prevIndex = this.closed ? (i - 1 + numPoints) % numPoints : Math.max(0, i - 1);
-      const nextNextIndex = this.closed ? (i + 2) % numPoints : Math.min(numPoints - 1, i + 2);
+      const prevIndex = this.closed ? (i - 1 + pointCount) % pointCount : Math.max(0, i - 1);
+      const nextNextIndex = this.closed ? (i + 2) % pointCount : Math.min(pointCount - 1, i + 2);
       
       const prev = this.points[prevIndex];
       const nextNext = this.points[nextNextIndex];

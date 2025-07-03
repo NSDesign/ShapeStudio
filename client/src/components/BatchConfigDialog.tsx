@@ -76,6 +76,15 @@ export interface BatchConfigSettings {
   xPositionRange: [number, number];
   yPositionRange: [number, number];
   
+  // Rectangle-specific Properties
+  rectangleCornerRadiusRange: [number, number];
+  
+  // Star-specific Properties
+  starInnerRadiusRange: [number, number];
+  
+  // Ring-specific Properties
+  ringInnerRadiusRange: [number, number];
+  
   // Fill Properties
   fillEnabled: boolean;
   fillProbability: number; // 0-100%
@@ -234,6 +243,15 @@ const defaultSettings: BatchConfigSettings = {
   heightRange: [50, 200],
   xPositionRange: [-100, 100],
   yPositionRange: [-100, 100],
+  
+  // Rectangle-specific Properties
+  rectangleCornerRadiusRange: [0, 20],
+  
+  // Star-specific Properties
+  starInnerRadiusRange: [0.3, 0.7],
+  
+  // Ring-specific Properties
+  ringInnerRadiusRange: [0.4, 0.8],
   
   // Fill Properties
   fillEnabled: true,
