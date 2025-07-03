@@ -182,6 +182,11 @@ Changelog:
   - Natural range philosophy: unconstrained position (artboard-bounded only when enabled), minimum scale 1.0, opacity [0.1-1.0]
   - Octave modes: "Natural" for organic accumulation, "Normalized" to maintain [-1, 1] range
   - UI integration: Property amplitude sliders and octave mode selector in batch config dialog
+- July 3, 2025. Noise System UI Refinements
+  - Removed color and opacity amplitude controls per user request
+  - Changed amplitude increments to whole numbers (1-10) instead of percentages
+  - Renamed "Scale to Fit Artboard" to "Position inside Artboard" for clarity
+  - Confirmed "Position inside Artboard" only affects x,y position values, not scale/size/opacity/color
 ```
 
 ## User Preferences

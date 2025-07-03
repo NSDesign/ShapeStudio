@@ -598,14 +598,14 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       />
                     </div>
 
-                    {/* Scale to Canvas Toggle */}
+                    {/* Position Inside Artboard Toggle */}
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         checked={currentSettings.noiseScaleToCanvas}
                         onCheckedChange={(checked) => handleSettingsUpdate({ noiseScaleToCanvas: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
-                      <Label className="text-sm text-slate-300">Scale to Fit Artboard</Label>
+                      <Label className="text-sm text-slate-300">Position inside Artboard</Label>
                     </div>
                     {currentSettings.noiseScaleToCanvas && (
                       <div className="ml-6">
@@ -619,61 +619,37 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="space-y-1">
-                          <Label className="text-slate-300">Position: {(currentSettings.noisePositionAmplitude * 100).toFixed(0)}%</Label>
+                          <Label className="text-slate-300">Position: {currentSettings.noisePositionAmplitude}</Label>
                           <Slider
                             value={[currentSettings.noisePositionAmplitude]}
                             onValueChange={([value]) => handleSettingsUpdate({ noisePositionAmplitude: value })}
                             min={0}
-                            max={2}
-                            step={0.1}
+                            max={10}
+                            step={1}
                             className="[&_[role=slider]]:bg-blue-600"
                           />
                         </div>
                         
                         <div className="space-y-1">
-                          <Label className="text-slate-300">Rotation: {(currentSettings.noiseRotationAmplitude * 100).toFixed(0)}%</Label>
+                          <Label className="text-slate-300">Rotation: {currentSettings.noiseRotationAmplitude}</Label>
                           <Slider
                             value={[currentSettings.noiseRotationAmplitude]}
                             onValueChange={([value]) => handleSettingsUpdate({ noiseRotationAmplitude: value })}
                             min={0}
-                            max={2}
-                            step={0.1}
+                            max={10}
+                            step={1}
                             className="[&_[role=slider]]:bg-blue-600"
                           />
                         </div>
                         
                         <div className="space-y-1">
-                          <Label className="text-slate-300">Scale: {(currentSettings.noiseScaleAmplitude * 100).toFixed(0)}%</Label>
+                          <Label className="text-slate-300">Scale: {currentSettings.noiseScaleAmplitude}</Label>
                           <Slider
                             value={[currentSettings.noiseScaleAmplitude]}
                             onValueChange={([value]) => handleSettingsUpdate({ noiseScaleAmplitude: value })}
                             min={0}
-                            max={2}
-                            step={0.1}
-                            className="[&_[role=slider]]:bg-blue-600"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <Label className="text-slate-300">Opacity: {(currentSettings.noiseOpacityAmplitude * 100).toFixed(0)}%</Label>
-                          <Slider
-                            value={[currentSettings.noiseOpacityAmplitude]}
-                            onValueChange={([value]) => handleSettingsUpdate({ noiseOpacityAmplitude: value })}
-                            min={0}
-                            max={2}
-                            step={0.1}
-                            className="[&_[role=slider]]:bg-blue-600"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <Label className="text-slate-300">Color: {(currentSettings.noiseColorAmplitude * 100).toFixed(0)}%</Label>
-                          <Slider
-                            value={[currentSettings.noiseColorAmplitude]}
-                            onValueChange={([value]) => handleSettingsUpdate({ noiseColorAmplitude: value })}
-                            min={0}
-                            max={2}
-                            step={0.1}
+                            max={10}
+                            step={1}
                             className="[&_[role=slider]]:bg-blue-600"
                           />
                         </div>
