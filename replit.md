@@ -220,6 +220,12 @@ Changelog:
   - **Width/Height/Segments**: All shape-specific dimensions now use configured ranges instead of hardcoded values
   - **Point Counts**: Line, bezier, and spline point counts now respect UI configuration settings
   - Shape generation algorithm completely overhauled to use batch configuration when Properties sections are enabled
+- July 3, 2025. Critical Shape Properties Bug Fixes
+  - **Fixed Missing smooth-spline Generation**: Added missing smooth-spline case to Shape constructor
+  - **Fixed Sidebar Properties Integration**: Shape constructor now receives combined batchConfig + scatterSettings
+  - **Rectangle/Square Corner Radius**: Now properly uses sidebar corner radius settings when batch config is disabled
+  - **Spline Curve Properties**: Point counts, open/closed probability now correctly use sidebar settings
+  - **Property Integration**: Resolved disconnect between batch config and sidebar shape-specific properties
 ```
 
 ## User Preferences

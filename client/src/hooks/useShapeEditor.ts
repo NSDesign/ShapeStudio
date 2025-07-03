@@ -913,7 +913,12 @@ export const useShapeEditor = () => {
         shapeY = minY + Math.random() * (maxY - minY);
       }
       
-      const shape = new Shape(randomType, shapeX, shapeY, batchConfigSettings);
+      // Combine batch config with scatter settings for complete configuration
+      const combinedConfig = { 
+        ...batchConfigSettings, 
+        scatterSettings: scatterSettings 
+      };
+      const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
       
       // Apply width/height from batch config if properties are enabled
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {

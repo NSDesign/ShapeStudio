@@ -277,10 +277,13 @@ export class Shape {
         const rectDims = getWidthHeight();
         this.width = rectDims.width;
         this.height = rectDims.height;
-        // Apply corner radius from batch config if available
+        // Apply corner radius from batch config or scatter settings if available
         let cornerRadius = 0;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
+          cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.rectangle?.cornerRadiusRange) {
+          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific.rectangle.cornerRadiusRange;
           cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
         }
         this.generateRectanglePoints(cornerRadius);
@@ -289,10 +292,13 @@ export class Shape {
         const { width: squareSize } = getWidthHeight();
         this.width = squareSize;
         this.height = squareSize;
-        // Apply corner radius from batch config if available
+        // Apply corner radius from batch config or scatter settings if available
         let squareCornerRadius = 0;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
+          squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.square?.cornerRadiusRange) {
+          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific.square.cornerRadiusRange;
           squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
         }
         this.generateRectanglePoints(squareCornerRadius);
