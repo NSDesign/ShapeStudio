@@ -187,6 +187,15 @@ Changelog:
   - Changed amplitude increments to whole numbers (1-10) instead of percentages
   - Renamed "Scale to Fit Artboard" to "Position inside Artboard" for clarity
   - Confirmed "Position inside Artboard" only affects x,y position values, not scale/size/opacity/color
+- July 3, 2025. Properties Section Integration with Noise System
+  - Fixed critical missing implementation: Properties sections now actually control noise ranges
+  - When Properties sections are enabled, noise uses configured ranges (position, rotation, scale, opacity)
+  - When disabled, noise falls back to hardcoded default values
+  - Position ranges: Uses xPositionRange/yPositionRange from Shape Properties
+  - Rotation range: Uses rotationRange from Transform Properties
+  - Scale ranges: Uses scaleRange (uniform) or scaleXRange/scaleYRange from Transform Properties
+  - Opacity range: Uses fillOpacityRange from Fill Properties
+  - This enables fine-grained control over noise variation ranges through the UI
 ```
 
 ## User Preferences

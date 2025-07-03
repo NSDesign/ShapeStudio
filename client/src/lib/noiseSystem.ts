@@ -157,7 +157,7 @@ export class NoiseSystem {
     }
     
     // Apply property-specific amplitudes to pure noise
-    return this.applyAmplitudes(pureNoise, options);
+    return this.applyAmplitudes(pureNoise, options, settings);
   }
 
   /**
@@ -193,7 +193,7 @@ export class NoiseSystem {
   /**
    * Apply property-specific amplitudes to pure noise values
    */
-  private static applyAmplitudes(pureNoise: PureNoiseResult, options: NoiseOptions): NoiseResult {
+  private static applyAmplitudes(pureNoise: PureNoiseResult, options: NoiseOptions, settings?: BatchConfigSettings): NoiseResult {
     // Get property-specific amplitudes with defaults
     const posAmp = (options.positionAmplitude ?? 1.0) * options.amplitude;
     const rotAmp = (options.rotationAmplitude ?? 1.0) * options.amplitude;
@@ -201,27 +201,67 @@ export class NoiseSystem {
     const opacityAmp = (options.opacityAmplitude ?? 1.0) * options.amplitude;
     const colorAmp = (options.colorAmplitude ?? 1.0) * options.amplitude;
     
-    // Position handling - unconstrained by default
-    const basePositionRange = 20; // Base 20px range
-    const positionRange = options.scaleToCanvas && options.artboardWidth && options.artboardHeight ?
-      Math.min(options.artboardWidth * 0.3, options.artboardHeight * 0.3) : basePositionRange;
+    // Use Properties section ranges when enabled, otherwise use defaults
+    const usePropertyRanges = settings?.propertiesEnabled && settings?.shapePropertiesEnabled;
+    
+    // Position handling
+    let positionRangeX = 20; // Default 20px range
+    let positionRangeY = 20;
+    
+    if (usePropertyRanges && settings.xPositionRange && settings.yPositionRange) {
+      // Use the Properties section position ranges
+      const [minX, maxX] = settings.xPositionRange;
+      const [minY, maxY] = settings.yPositionRange;
+      positionRangeX = (maxX - minX) / 2; // Half the range for noise variation
+      positionRangeY = (maxY - minY) / 2;
+    } else if (options.scaleToCanvas && options.artboardWidth && options.artboardHeight) {
+      // Use artboard-based constraints
+      positionRangeX = Math.min(options.artboardWidth * 0.3, options.artboardHeight * 0.3);
+      positionRangeY = positionRangeX;
+    }
+    
+    // Rotation range
+    const rotationRange = usePropertyRanges && settings.transformsEnabled && settings.rotationRange ?
+      settings.rotationRange[1] - settings.rotationRange[0] : 360;
+    
+    // Scale range
+    let scaleMinX = 1.0, scaleMaxX = 1.5;
+    let scaleMinY = 1.0, scaleMaxY = 1.5;
+    
+    if (usePropertyRanges && settings.transformsEnabled) {
+      if (settings.scaleUniform && settings.scaleRange) {
+        const [min, max] = settings.scaleRange;
+        scaleMinX = scaleMinY = min;
+        scaleMaxX = scaleMaxY = max;
+      } else if (settings.scaleXRange && settings.scaleYRange) {
+        [scaleMinX, scaleMaxX] = settings.scaleXRange;
+        [scaleMinY, scaleMaxY] = settings.scaleYRange;
+      }
+    }
+    
+    // Opacity range
+    let opacityMin = 0.1, opacityMax = 1.0;
+    if (usePropertyRanges && settings.fillEnabled && settings.fillOpacityRange) {
+      [opacityMin, opacityMax] = settings.fillOpacityRange.map(v => v / 100); // Convert from percentage
+    }
     
     return {
       // Position: pure noise * amplitude * range
-      x: pureNoise.x * posAmp * positionRange,
-      y: pureNoise.y * posAmp * positionRange,
+      x: pureNoise.x * posAmp * positionRangeX,
+      y: pureNoise.y * posAmp * positionRangeY,
       
-      // Rotation: convert [-1, 1] to absolute 0-360°
-      rotation: ((pureNoise.rotation + 1) / 2) * 360 * rotAmp,
+      // Rotation: use range from Properties section
+      rotation: ((pureNoise.rotation + 1) / 2) * rotationRange * rotAmp,
       
-      // Scale: minimum 1.0, amplitude scales upward only
-      scaleX: Math.max(1.0, 1.0 + pureNoise.scale * scaleAmp * 0.5),
-      scaleY: Math.max(1.0, 1.0 + pureNoise.scale * scaleAmp * 0.5),
+      // Scale: use ranges from Properties section
+      scaleX: scaleMinX + (pureNoise.scale + 1) / 2 * (scaleMaxX - scaleMinX) * scaleAmp,
+      scaleY: scaleMinY + (pureNoise.scale + 1) / 2 * (scaleMaxY - scaleMinY) * scaleAmp,
       
-      // Opacity: practical range [0.1, 1.0]
-      opacity: Math.max(0.1, Math.min(1.0, 0.7 + pureNoise.opacity * opacityAmp * 0.3)),
+      // Opacity: use range from Properties section
+      opacity: Math.max(opacityMin, Math.min(opacityMax, 
+        opacityMin + (pureNoise.opacity + 1) / 2 * (opacityMax - opacityMin) * opacityAmp)),
       
-      // Colors: absolute values
+      // Colors: absolute values (still using hardcoded for now)
       hue: ((pureNoise.hue + 1) / 2) * 360 * colorAmp,
       saturation: 75 + pureNoise.saturation * 25 * colorAmp, // Center at 75%
       lightness: 50 + pureNoise.lightness * 20 * colorAmp    // Center at 50%
@@ -233,7 +273,7 @@ export class NoiseSystem {
    */
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
     const pureNoise = this.generateRandomNoisePure(shapeIndex, options);
-    return this.applyAmplitudes(pureNoise, options);
+    return this.applyAmplitudes(pureNoise, options, undefined);
   }
 
   /**
@@ -317,7 +357,7 @@ export class NoiseSystem {
     // Convert to shape index for pure noise generation
     const shapeIndex = Math.floor(x + y + z);
     const pureNoise = this.generatePerlinNoisePure(shapeIndex, options);
-    return this.applyAmplitudes(pureNoise, options);
+    return this.applyAmplitudes(pureNoise, options, undefined);
   }
 
   /**
