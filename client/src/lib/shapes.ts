@@ -249,7 +249,7 @@ export class Shape {
     };
     
     const getSegmentCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.polygonPropertiesEnabled && batchConfig?.segmentCountRange) {
+      if (batchConfig?.propertiesEnabled && batchConfig?.segmentCountRange) {
         const [min, max] = batchConfig.segmentCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
       }
@@ -257,7 +257,7 @@ export class Shape {
     };
     
     const getPointCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.linePropertiesEnabled && batchConfig?.pointCountRange) {
+      if (batchConfig?.propertiesEnabled && batchConfig?.pointCountRange) {
         const [min, max] = batchConfig.pointCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
       }
@@ -265,7 +265,7 @@ export class Shape {
     };
     
     const getSplinePointCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled && batchConfig?.splinePointCountRange) {
+      if (batchConfig?.propertiesEnabled && batchConfig?.splinePointCountRange) {
         const [min, max] = batchConfig.splinePointCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
       }
