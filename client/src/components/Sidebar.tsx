@@ -1362,7 +1362,6 @@ export default function Sidebar({
           );
 
         case 'ring':
-        case 'spline-ring':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
               <div className="space-y-2">
@@ -1386,29 +1385,54 @@ export default function Sidebar({
                   />
                 </div>
               </div>
-              {shapeType.includes('spline') && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Min: 12</span>
-                      <span className="text-slate-400">Max: 48</span>
-                    </div>
-                    <Slider
-                      value={[16, 32]}
-                      onValueChange={([min, max]) => {
-                        // TODO: Update spline ring segment count
-                        console.log(`${shapeType} segments: ${min}-${max}`);
-                      }}
-                      min={12}
-                      max={48}
-                      step={4}
-                      className="w-full"
-                      minStepsBetweenThumbs={4}
-                    />
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 12</span>
+                    <span className="text-slate-400">Max: 48</span>
                   </div>
+                  <Slider
+                    value={[16, 32]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update ring segment count
+                      console.log(`${shapeType} segments: ${min}-${max}`);
+                    }}
+                    min={12}
+                    max={48}
+                    step={4}
+                    className="w-full"
+                    minStepsBetweenThumbs={4}
+                  />
                 </div>
-              )}
+              </div>
+            </div>
+          );
+
+        case 'spline-ring':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: 20%</span>
+                    <span className="text-slate-400">Max: 80%</span>
+                  </div>
+                  <Slider
+                    value={[20, 80]}
+                    onValueChange={([min, max]) => {
+                      // TODO: Update spline ring inner radius range
+                      console.log(`${shapeType} inner radius: ${min}%-${max}%`);
+                    }}
+                    min={10}
+                    max={90}
+                    step={5}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
             </div>
           );
 
