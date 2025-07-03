@@ -135,7 +135,7 @@ export class NoiseSystem {
     
     // Match original natural ranges without artificial clamping
     const positionRandomness = 20 * options.amplitude; // Original uses ±20px base
-    const scaleRandomness = 0.5 + randScaleBase * options.amplitude; // Original: 0.5 + random * amplitude
+    const scaleRandomness = 0.5 + randScaleBase * 0.5; // Original: 0.5 + random * 0.5 (typical randomness)
     
     return {
       // Position: Natural ±20px distribution like original
