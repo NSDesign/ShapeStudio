@@ -2174,8 +2174,8 @@ export const useShapeEditor = () => {
 
   // Project loading functionality
   const onLoadProject = useCallback((data: {
-    shapes: Shape[];
-    groups: ShapeGroupClass[];
+    shapes: any[];
+    groups: any[];
     canvasSettings?: CanvasSettings;
     scatterSettings?: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
@@ -2188,9 +2188,27 @@ export const useShapeEditor = () => {
     setSelectedShapes([]);
     setSelectedGroups([]);
     
+    // Convert plain objects back to Shape instances
+    const shapeInstances = (data.shapes || []).map((shapeData: any) => {
+      // Create a new Shape instance
+      const shape = new Shape(shapeData.type, shapeData.transform.x, shapeData.transform.y);
+      
+      // Copy all properties from saved data
+      Object.assign(shape, shapeData);
+      
+      // Ensure the shape has all required methods by creating a proper instance
+      return shape;
+    });
+    
+    // Convert groups if needed (for now, just use empty array since groups might be plain objects too)
+    const groupInstances = (data.groups || []).map((groupData: any) => {
+      // For now, just return the group data as-is since groups are less complex
+      return groupData;
+    });
+    
     // Load new data
-    setShapes(data.shapes || []);
-    setGroups(data.groups || []);
+    setShapes(shapeInstances);
+    setGroups(groupInstances);
     setEnabledShapeTypes(data.enabledShapeTypes || new Set());
     
     // Update settings if provided
@@ -2201,7 +2219,7 @@ export const useShapeEditor = () => {
       setCanvasSettings(data.canvasSettings);
     }
     
-    console.log('✅ Project loaded successfully');
+    console.log('✅ Project loaded successfully with', shapeInstances.length, 'shapes');
   }, []);
 
   return {

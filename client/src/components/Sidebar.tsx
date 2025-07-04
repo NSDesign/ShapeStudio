@@ -144,8 +144,8 @@ interface SidebarProps {
   onApplyColorManipulation: (manipulation: any) => void;
   onUpdateBatchConfigSettings: (settings: BatchConfigSettings) => void;
   onLoadProject: (data: {
-    shapes: Shape[];
-    groups: ShapeGroupClass[];
+    shapes: any[];
+    groups: any[];
     canvasSettings?: CanvasSettings;
     scatterSettings?: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
@@ -2307,7 +2307,7 @@ export default function Sidebar({
                           const canvasSettings = data.canvasSettings || {};
                           const scatterSettings = data.scatterSettings || {};
                           const enabledShapeTypes = data.enabledShapeTypes ? 
-                            new Set(data.enabledShapeTypes) : new Set();
+                            new Set(data.enabledShapeTypes as ShapeType[]) : new Set<ShapeType>();
                           
                           onLoadProject({
                             shapes,
