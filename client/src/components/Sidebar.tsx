@@ -143,11 +143,11 @@ interface SidebarProps {
   onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
   onApplyColorManipulation: (manipulation: any) => void;
   onUpdateBatchConfigSettings: (settings: BatchConfigSettings) => void;
-  onLoadProject?: (data: {
+  onLoadProject: (data: {
     shapes: Shape[];
     groups: ShapeGroupClass[];
-    canvasSettings: CanvasSettings;
-    scatterSettings: ScatterSettings;
+    canvasSettings?: CanvasSettings;
+    scatterSettings?: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
   }) => void;
 }
@@ -193,7 +193,8 @@ export default function Sidebar({
   onUpdateArtboard,
   onDistributeSelected,
   onApplyBooleanOperation,
-  onApplyColorManipulation
+  onApplyColorManipulation,
+  onLoadProject
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -2297,8 +2298,31 @@ export default function Sidebar({
                       try {
                         const data = JSON.parse(e.target?.result as string);
                         console.log('Project loaded:', data);
+                        
+                        // Load project data into the app if onLoadProject is available
+                        if (onLoadProject) {
+                          // Convert shapes array back to Shape objects if needed
+                          const shapes = data.shapes || [];
+                          const groups = data.groups || [];
+                          const canvasSettings = data.canvasSettings || {};
+                          const scatterSettings = data.scatterSettings || {};
+                          const enabledShapeTypes = data.enabledShapeTypes ? 
+                            new Set(data.enabledShapeTypes) : new Set();
+                          
+                          onLoadProject({
+                            shapes,
+                            groups,
+                            canvasSettings,
+                            scatterSettings,
+                            enabledShapeTypes
+                          });
+                          
+                          console.log('✅ Project loaded successfully!');
+                        } else {
+                          console.warn('⚠️ onLoadProject callback not available');
+                        }
                       } catch (error) {
-                        console.error('Failed to load project:', error);
+                        console.error('❌ Failed to load project:', error);
                       }
                     };
                     reader.readAsText(file);

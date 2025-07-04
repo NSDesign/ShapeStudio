@@ -2172,6 +2172,38 @@ export const useShapeEditor = () => {
     setBatchConfigSettings(settings);
   }, []);
 
+  // Project loading functionality
+  const onLoadProject = useCallback((data: {
+    shapes: Shape[];
+    groups: ShapeGroupClass[];
+    canvasSettings?: CanvasSettings;
+    scatterSettings?: ScatterSettings;
+    enabledShapeTypes: Set<ShapeType>;
+  }) => {
+    console.log('🔄 Loading project with data:', data);
+    
+    // Clear current state
+    setShapes([]);
+    setGroups([]);
+    setSelectedShapes([]);
+    setSelectedGroups([]);
+    
+    // Load new data
+    setShapes(data.shapes || []);
+    setGroups(data.groups || []);
+    setEnabledShapeTypes(data.enabledShapeTypes || new Set());
+    
+    // Update settings if provided
+    if (data.scatterSettings) {
+      setScatterSettings(data.scatterSettings);
+    }
+    if (data.canvasSettings) {
+      setCanvasSettings(data.canvasSettings);
+    }
+    
+    console.log('✅ Project loaded successfully');
+  }, []);
+
   return {
     // State
     shapes,
@@ -2402,6 +2434,7 @@ export const useShapeEditor = () => {
     }, [selectedShapes, shapes]),
     
     // Project management
+    onLoadProject,
     setGroups,
     setCanvasSettings,
     setScatterSettings,

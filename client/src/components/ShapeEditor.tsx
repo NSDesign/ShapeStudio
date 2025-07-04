@@ -69,7 +69,8 @@ export default function ShapeEditor() {
     deleteArtboard,
     updateArtboard,
     applyBooleanOperation,
-    applyColorManipulation
+    applyColorManipulation,
+    onLoadProject
   } = useShapeEditor();
 
   // Transform handlers with precise control
@@ -167,6 +168,7 @@ export default function ShapeEditor() {
           onDistributeSelected={distributeSelected}
           onApplyBooleanOperation={applyBooleanOperation}
           onApplyColorManipulation={applyColorManipulation}
+          onLoadProject={onLoadProject}
         />
         <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
           <Canvas
