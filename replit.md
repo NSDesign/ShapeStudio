@@ -226,6 +226,13 @@ Changelog:
   - **Rectangle/Square Corner Radius**: Now properly uses sidebar corner radius settings when batch config is disabled
   - **Spline Curve Properties**: Point counts, open/closed probability now correctly use sidebar settings
   - **Property Integration**: Resolved disconnect between batch config and sidebar shape-specific properties
+- July 4, 2025. Batch Export with Project File Saving
+  - **Save Project Files Toggle**: Added optional project file saving in batch export section
+  - **Comprehensive Project Data**: Each project file contains shapes, artboards, enabled shape types, and metadata
+  - **Export Correlation**: Project files are linked to corresponding images with metadata including export index
+  - **ZIP Package Integration**: Project files (.json) are included alongside images in the batch export ZIP
+  - **Reload Capability**: Users can reload specific batched images with their exact shape configurations
+  - **Metadata Tracking**: Includes generation bounds, timestamps, export mode, and shape counts for each batch
 ```
 
 ## User Preferences

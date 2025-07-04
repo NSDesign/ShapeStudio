@@ -440,6 +440,7 @@ export default function Sidebar({
     const [isBatchExporting, setIsBatchExporting] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchModeEnabled, setBatchModeEnabled] = useState(false);
+    const [batchSaveProjectFiles, setBatchSaveProjectFiles] = useState(false);
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
@@ -909,6 +910,33 @@ export default function Sidebar({
               zip.file(filename, base64Data, { base64: true });
               
               console.log(`📦 Added ${filename} to ZIP`);
+
+              // Save project file if enabled
+              if (batchSaveProjectFiles) {
+                const projectFilename = filename.replace(/\.(png|jpg)$/, '.json');
+                const projectData = {
+                  shapes: currentExportShapes,
+                  groups: [], // Empty for batch exports
+                  enabledShapeTypes: Array.from(enabledShapeTypes),
+                  artboards: targetArtboard ? [targetArtboard] : [],
+                  metadata: {
+                    exportIndex: i + 1,
+                    totalExports: batchExportCount,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0.0',
+                    exportMode: exportMode,
+                    generationBounds: generationBounds,
+                    imageFilename: filename,
+                    shapeCount: currentExportShapes.length,
+                    description: `Batch export ${i + 1} of ${batchExportCount} - Generated ${currentExportShapes.length} shapes`
+                  }
+                };
+                
+                const projectJson = JSON.stringify(projectData, null, 2);
+                zip.file(projectFilename, projectJson);
+                
+                console.log(`💾 Added project file ${projectFilename} to ZIP`);
+              }
             } else {
               console.error(`❌ Canvas context failed for export ${i + 1}`);
             }
@@ -921,7 +949,8 @@ export default function Sidebar({
         }
         
         // Generate and download ZIP file
-        console.log(`📦 Creating ZIP file with ${batchExportCount} images`);
+        const projectFilesText = batchSaveProjectFiles ? ` and ${batchExportCount} project files` : '';
+        console.log(`📦 Creating ZIP file with ${batchExportCount} images${projectFilesText}`);
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         
         const link = document.createElement('a');
@@ -929,7 +958,7 @@ export default function Sidebar({
         link.download = `batch-export-${timestamp}.zip`;
         link.click();
         
-        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip`);
+        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${batchExportCount} images${projectFilesText}`);
       } catch (error) {
         console.error('❌ Batch export error:', error);
       } finally {
@@ -1107,6 +1136,27 @@ export default function Sidebar({
                   className="w-full"
                 />
               </div>
+
+              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
+                <div className="flex items-center space-x-2">
+                  <Save className="w-3 h-3 text-slate-400" />
+                  <Label className="text-xs text-slate-300">Save Project Files</Label>
+                </div>
+                <Switch
+                  checked={batchSaveProjectFiles}
+                  onCheckedChange={setBatchSaveProjectFiles}
+                />
+              </div>
+
+              {batchSaveProjectFiles && (
+                <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
+                  <div className="flex items-center space-x-1 mb-1">
+                    <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                    <span className="text-blue-300 font-medium">Project Files Enabled</span>
+                  </div>
+                  Each exported image will include a corresponding project file (.json) containing all shapes and settings. You can reload these files later to continue editing specific batched images.
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Export Format</Label>
