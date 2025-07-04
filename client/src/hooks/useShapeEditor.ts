@@ -2211,15 +2211,48 @@ export const useShapeEditor = () => {
     setGroups(groupInstances);
     setEnabledShapeTypes(data.enabledShapeTypes || new Set());
     
-    // Update settings if provided
+    // Update settings if provided with proper defaults
     if (data.scatterSettings) {
       setScatterSettings(data.scatterSettings);
     }
     if (data.canvasSettings) {
-      setCanvasSettings(data.canvasSettings);
+      // Ensure canvas settings have valid values
+      const validCanvasSettings = {
+        width: data.canvasSettings.width || Number.MAX_SAFE_INTEGER,
+        height: data.canvasSettings.height || Number.MAX_SAFE_INTEGER,
+        zoom: data.canvasSettings.zoom && data.canvasSettings.zoom > 0 ? data.canvasSettings.zoom : 1,
+        panX: data.canvasSettings.panX || 0,
+        panY: data.canvasSettings.panY || 0,
+        backgroundColor: data.canvasSettings.backgroundColor || '#1e293b',
+        showGrid: data.canvasSettings.showGrid !== undefined ? data.canvasSettings.showGrid : true
+      };
+      setCanvasSettings(validCanvasSettings);
+      console.log('📐 Applied canvas settings:', validCanvasSettings);
+    } else {
+      // Reset to defaults if no canvas settings provided
+      setCanvasSettings({
+        width: Number.MAX_SAFE_INTEGER,
+        height: Number.MAX_SAFE_INTEGER,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        backgroundColor: '#1e293b',
+        showGrid: true
+      });
+      console.log('📐 Reset to default canvas settings');
     }
     
     console.log('✅ Project loaded successfully with', shapeInstances.length, 'shapes');
+    
+    // Log shape positions for debugging
+    if (shapeInstances.length > 0) {
+      console.log('📍 First few shape positions:', shapeInstances.slice(0, 3).map(s => ({
+        id: s.id,
+        type: s.type,
+        x: s.transform.x,
+        y: s.transform.y
+      })));
+    }
   }, []);
 
   return {

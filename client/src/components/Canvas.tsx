@@ -352,7 +352,7 @@ export default function Canvas({
             </Tooltip>
             
             <span className="text-sm text-slate-400 min-w-[60px] text-center">
-              {Math.round((canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom) * 100)}%
+              {Math.round((canvasSettings.zoom && canvasSettings.zoom > 0.05 ? canvasSettings.zoom : 1) * 100)}%
             </span>
             
             <Tooltip>
