@@ -240,6 +240,11 @@ Changelog:
   - **Type Safety**: Updated all interfaces to handle project loading data types correctly
   - **State Management**: Project loading now properly updates shapes, groups, settings, and enabled shape types
   - **Error Resolution**: Fixed "getBounds is not a function" error by recreating proper Shape instances with all methods
+- July 4, 2025. Distribution Layout getBounds Error Fix
+  - **Fixed Grid Distribution**: Modified applyGridDistribution to preserve Shape class instances instead of creating plain objects
+  - **Method Preservation**: Grid distribution now modifies shapes in-place to maintain getBounds() and other class methods
+  - **Batch Configuration**: Distribution layout now works correctly with batch configuration without breaking shape functionality
+  - **Error Resolution**: Eliminated "getBounds is not a function" error when using distribution layout in batch configuration
 ```
 
 ## User Preferences

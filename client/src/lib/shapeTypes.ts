@@ -381,13 +381,10 @@ export function applyGridDistribution(
     
     // Apply grid position additively with existing position
     // Grid provides base position, existing transform adds variation
-    return {
-      ...shape,
-      transform: {
-        ...shape.transform,
-        x: gridPos.x + (shape.transform?.x || 0),
-        y: gridPos.y + (shape.transform?.y || 0),
-      }
-    };
+    // Modify the shape in-place to preserve class methods
+    shape.transform.x = gridPos.x + (shape.transform?.x || 0);
+    shape.transform.y = gridPos.y + (shape.transform?.y || 0);
+    
+    return shape;
   });
 }
