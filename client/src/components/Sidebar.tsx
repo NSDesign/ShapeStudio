@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import JSZip from 'jszip';
+import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog, { BatchConfigSettings } from './BatchConfigDialog';
 import { Input } from '@/components/ui/input';
@@ -455,6 +456,49 @@ export default function Sidebar({
       shape.selected = originalSelected;
     };
 
+    const exportCanvasAsFormat = (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number) => {
+      switch (format) {
+        case 'pdf':
+          // Convert canvas to PDF
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+            unit: 'pt',
+            format: [canvas.width / scale, canvas.height / scale]
+          });
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width / scale, canvas.height / scale);
+          pdf.save(filename);
+          console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+          break;
+        default:
+          // Handle raster formats
+          const link = document.createElement('a');
+          link.download = filename;
+          
+          switch (format) {
+            case 'jpg':
+              link.href = canvas.toDataURL('image/jpeg', quality / 100);
+              break;
+            case 'webp':
+              link.href = canvas.toDataURL('image/webp', quality / 100);
+              break;
+            case 'avif':
+              link.href = canvas.toDataURL('image/avif', quality / 100);
+              break;
+            case 'bmp':
+              link.href = canvas.toDataURL('image/bmp');
+              break;
+            case 'png':
+            default:
+              link.href = canvas.toDataURL('image/png');
+              break;
+          }
+
+          link.click();
+          console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+          break;
+      }
+    };
+
     const handleExportShapes = () => {
       let shapesToExport: Shape[] = [];
       let canvasWidth: number;
@@ -617,7 +661,7 @@ export default function Sidebar({
       canvas.height = canvasHeight;
 
       // Set background for non-transparent formats
-      if (exportFormat !== 'png') {
+      if (!['png', 'webp', 'avif'].includes(exportFormat)) {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
@@ -631,18 +675,8 @@ export default function Sidebar({
 
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
-      // Download the image
-      const link = document.createElement('a');
-      link.download = filename;
-
-      if (exportFormat === 'jpg') {
-        link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
-      } else {
-        link.href = canvas.toDataURL('image/png');
-      }
-
-      link.click();
-      console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+      // Export using helper function that handles all formats including PDF
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale);
     };
 
     const performBatchExport = (filename: string) => {
@@ -721,18 +755,8 @@ export default function Sidebar({
       const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
-      // Download the image
-      const link = document.createElement('a');
-      link.download = filename;
-
-      if (exportFormat === 'jpg') {
-        link.href = canvas.toDataURL('image/jpeg', exportQuality / 100);
-      } else {
-        link.href = canvas.toDataURL('image/png');
-      }
-
-      link.click();
-      console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+      // Export using helper function that handles all formats including PDF
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale);
     };
 
     // NEW BATCH EXPORT WITH ZIP PACKAGING
@@ -902,19 +926,48 @@ export default function Sidebar({
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
               // Convert canvas to blob and add to ZIP
-              const dataURL = exportFormat === 'jpg' 
-                ? canvas.toDataURL('image/jpeg', exportQuality / 100)
-                : canvas.toDataURL('image/png');
-              
-              // Extract base64 data from data URL
-              const base64Data = dataURL.split(',')[1];
-              zip.file(filename, base64Data, { base64: true });
+              if (exportFormat === 'pdf') {
+                // Handle PDF separately for ZIP exports
+                const pdf = new jsPDF({
+                  orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
+                  unit: 'pt',
+                  format: [canvasWidth / exportScale, canvasHeight / exportScale]
+                });
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvasWidth / exportScale, canvasHeight / exportScale);
+                const pdfBlob = pdf.output('blob');
+                zip.file(filename, pdfBlob);
+              } else {
+                // Handle raster formats
+                let dataURL: string;
+                switch (exportFormat) {
+                  case 'jpg':
+                    dataURL = canvas.toDataURL('image/jpeg', exportQuality / 100);
+                    break;
+                  case 'webp':
+                    dataURL = canvas.toDataURL('image/webp', exportQuality / 100);
+                    break;
+                  case 'avif':
+                    dataURL = canvas.toDataURL('image/avif', exportQuality / 100);
+                    break;
+                  case 'bmp':
+                    dataURL = canvas.toDataURL('image/bmp');
+                    break;
+                  case 'png':
+                  default:
+                    dataURL = canvas.toDataURL('image/png');
+                    break;
+                }
+                
+                // Extract base64 data from data URL
+                const base64Data = dataURL.split(',')[1];
+                zip.file(filename, base64Data, { base64: true });
+              }
               
               console.log(`📦 Added ${filename} to ZIP`);
 
               // Save project file if enabled
               if (batchSaveProjectFiles) {
-                const projectFilename = filename.replace(/\.(png|jpg)$/, '.json');
+                const projectFilename = filename.replace(/\.(png|jpg|webp|avif|bmp|pdf)$/, '.json');
                 const projectData = {
                   shapes: currentExportShapes,
                   groups: [], // Empty for batch exports

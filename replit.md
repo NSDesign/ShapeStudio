@@ -245,6 +245,14 @@ Changelog:
   - **Method Preservation**: Grid distribution now modifies shapes in-place to maintain getBounds() and other class methods
   - **Batch Configuration**: Distribution layout now works correctly with batch configuration without breaking shape functionality
   - **Error Resolution**: Eliminated "getBounds is not a function" error when using distribution layout in batch configuration
+- July 5, 2025. Complete Export Format Implementation - WebP, AVIF, BMP, and PDF
+  - **Added Missing Formats**: Implemented WebP, AVIF, and BMP export formats in sidebar export functionality
+  - **PDF Export Integration**: Added jsPDF library and implemented proper PDF export with orientation detection
+  - **Quality Control**: Extended quality settings to support WebP and AVIF lossy compression
+  - **Transparency Support**: Updated background handling to preserve transparency for WebP and AVIF formats
+  - **Batch Export Support**: All new formats work in single export, batch export, and ZIP batch export modes
+  - **Format Detection**: Updated file extension patterns and MIME type handling for all new formats
+  - **Helper Function**: Created unified exportCanvasAsFormat function to handle all export formats consistently
 ```
 
 ## User Preferences
