@@ -1243,28 +1243,7 @@ export default function Sidebar({
           )}
         </div>
 
-        <Separator className="bg-slate-600" />
 
-        <div className="space-y-3">
-          <Label className="text-xs text-slate-400">Project Management</Label>
-
-          <Button
-            onClick={handleSaveProject}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save Project
-          </Button>
-
-          <Button
-            onClick={() => navigator.clipboard.writeText(JSON.stringify({ shapes, artboards }))}
-            variant="secondary"
-            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200"
-          >
-            <Clipboard className="w-4 h-4 mr-2" />
-            Copy to Clipboard
-          </Button>
-        </div>
       </div>
     );
   }
