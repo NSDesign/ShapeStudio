@@ -428,7 +428,7 @@ export default function Sidebar({
   }
 
   function ExportSaveContent() {
-    const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'svg' | 'pdf'>('png');
+    const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
     const [exportQuality, setExportQuality] = useState(90);
     const [exportScale, setExportScale] = useState(1);
     const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
@@ -1033,13 +1033,16 @@ export default function Sidebar({
               <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="png" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG (Transparent)</SelectItem>
                 <SelectItem value="jpg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG (Compressed)</SelectItem>
+                <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP (Modern)</SelectItem>
+                <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF (Next-gen)</SelectItem>
+                <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP (Uncompressed)</SelectItem>
                 <SelectItem value="svg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">SVG (Vector)</SelectItem>
                 <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {exportFormat === 'jpg' && (
+          {['jpg', 'webp', 'avif'].includes(exportFormat) && (
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Quality</Label>
               <Slider
