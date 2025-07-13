@@ -16,9 +16,24 @@ export default function Landing() {
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Shape Editor Pro
           </h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-12">
             Create stunning geometric designs with advanced noise algorithms and procedural generation
           </p>
+          
+          {/* Call to Action - moved up */}
+          <div className="bg-slate-800 rounded-lg p-8 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold mb-4 text-white">Get Started</h2>
+            <p className="text-slate-300 mb-6">
+              Sign in to access the full Shape Editor Pro experience
+            </p>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              onClick={() => window.location.href = '/api/login'}
+            >
+              Sign In
+            </Button>
+          </div>
         </div>
 
         {/* Features */}
@@ -60,22 +75,7 @@ export default function Landing() {
           </Card>
         </div>
 
-        {/* Call to Action */}
-        <div className="text-center">
-          <div className="bg-slate-800 rounded-lg p-8 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-white">Get Started</h2>
-            <p className="text-slate-300 mb-6">
-              Sign in to access the full Shape Editor Pro experience
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-              onClick={() => window.location.href = '/api/login'}
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
+
       </div>
     </div>
   );
