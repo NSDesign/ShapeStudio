@@ -1,0 +1,91 @@
+Different property types should have different configuration options that make sense for their specific characteristics. Let me update the plan to reflect property-type-specific options:
+Enhanced Property Configuration System Plan
+Property-Type-Specific Options
+
+X/Y Position Properties (spatial, artboard-relative)
+Define Value: Fixed coordinate relative to artboard center
+Define Range: Min/max coordinate range (current behavior)
+Artboard Percentage: Position as percentage of artboard dimensions (0% = left/top edge, 100% = right/bottom edge)
+Artboard Edge Offset: Distance from specific artboard edges (top, right, bottom, left)
+Directional: Outward from center, edge. Angle based direction
+Incremental: Stepped position (e.g., slider and input value define increments)
+
+Width/Height Properties (positive values, size-based)
+Define Value: Fixed size in pixels
+Define Range: Min/max size range (current behavior)
+Artboard Percentage: Size as percentage of artboard dimensions
+Aspect Ratio Lock: Maintain specific width:height ratios
+Relative to Other: Size relative to other generated shapes (e.g., 80-120% of average)
+
+Fill/Stroke Color Properties (color-specific)
+Single Color: Fixed color value
+Color Range: Interpolation between two colors (current behavior)
+Palette Selection: Choose from predefined color sets
+HSL Variation: Base color with hue/saturation/lightness ranges
+Harmony Based: Use color harmony rules (complementary, triadic, etc.)
+Opacity Properties (percentage-based, 0-100%)
+Define Value: Fixed opacity percentage
+Define Range: Min/max opacity range (current behavior)
+Fade Pattern: Linear/exponential fade across generation order
+Layer Based: Opacity based on z-index or layer position
+
+Rotation Properties (angular, 0-360°)
+Define Value: Fixed rotation angle
+Define Range: Min/max rotation range (current behavior)
+Directional: Point toward center, edge, or other shapes
+Incremental: Stepped rotation (e.g., 45° increments)
+
+Scale Properties (multiplicative, >0)
+Define Value: Fixed scale multiplier
+Define Range: Min/max scale range (current behavior)
+Progressive: Scale based on generation order or position
+Uniform vs Non-uniform: Separate X/Y scale controls
+
+Stroke Width Properties (positive pixels)
+Define Value: Fixed width in pixels
+Define Range: Min/max width range (current behavior)
+Relative to Size: Width as percentage of shape size
+Stepped Values: Discrete width options (1px, 2px, 5px, etc.)
+
+Implementation Structure
+Enhanced Property Configuration Interface:
+
+interface PropertyMode {
+ type: 'value' | 'range' | 'percentage' | 'relative' | 'pattern' | 'harmony';
+ // Mode-specific configuration options
+}
+interface PositionPropertyConfig extends PropertyMode {
+ // Position-specific options
+ artboardRelative?: boolean;
+ edgeOffset?: { edge: 'top' | 'right' | 'bottom' | 'left'; distance: number };
+}
+interface ColorPropertyConfig extends PropertyMode {
+ // Color-specific options
+ harmonyType?: 'complementary' | 'triadic' | 'analogous';
+ palette?: string[];
+ hslVariation?: { hue: number; saturation: number; lightness: number };
+}
+interface SizePropertyConfig extends PropertyMode {
+ // Size-specific options
+ aspectRatio?: number;
+ relativeToAverage?: boolean;
+ minSize?: number; // Enforce minimum readable size
+}
+
+UI Organization by Property Type:
+Spatial Properties (X/Y Position): Artboard-aware controls, edge snapping, percentage positioning
+Size Properties (Width/Height): Aspect ratio locks, minimum size constraints, artboard percentage
+Color Properties: Color pickers, harmony selectors, palette grids, HSL sliders
+Numeric Properties (Opacity, Rotation, Stroke Width): Value/range inputs, pattern selectors
+Transform Properties: Combined controls for scale, rotation, skew with lock options
+
+Benefits of Property-Type-Specific Approach:
+
+Intuitive Interface: Each property gets controls that make sense for its nature
+Artboard Integration: Position and size properties automatically adapt to artboard dimensions
+Creative Flexibility: Color properties get sophisticated harmony and palette options
+Constraint Awareness: Each property type respects its natural limitations and relationships
+Contextual Options: Properties show relevant options based on their mathematical nature
+
+This approach recognizes that a color property needs entirely different configuration options than a position property, and the interface should reflect these fundamental differences while maintaining the powerful range-based system as the default fallback.
+
