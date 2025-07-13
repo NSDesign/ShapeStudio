@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog, { BatchConfigSettings } from './BatchConfigDialog';
+import AuthHeader from './AuthHeader';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -3001,6 +3002,11 @@ export default function Sidebar({
     <div className={`flex flex-col h-full bg-slate-900/95 border-r border-slate-700 transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-80'
     }`}>
+      {/* Auth Header */}
+      <div className="border-b border-slate-700">
+        <AuthHeader isCollapsed={isCollapsed} />
+      </div>
+      
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-slate-700">
         {!isCollapsed && (
