@@ -54,6 +54,14 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
+async function checkUserAccess(
+  claims: any,
+): Promise<boolean> {
+  // Check if user exists in database
+  const existingUser = await storage.getUser(claims["sub"]);
+  return existingUser !== undefined;
+}
+
 async function upsertUser(
   claims: any,
 ) {
@@ -78,9 +86,19 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    const claims = tokens.claims();
+    
+    // Check if user has access before proceeding
+    const hasAccess = await checkUserAccess(claims);
+    
+    if (!hasAccess) {
+      // User is not authorized - reject authentication
+      return verified(new Error("Access denied: User not authorized"), false);
+    }
+    
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    await upsertUser(claims);
     verified(null, user);
   };
 
@@ -111,7 +129,7 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+      failureRedirect: "/access-denied",
     })(req, res, next);
   });
 

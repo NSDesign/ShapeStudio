@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
+import AccessDenied from "@/pages/AccessDenied";
+import { Route, Switch } from "wouter";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,7 +22,14 @@ function Router() {
     );
   }
 
-  return isAuthenticated ? <Home /> : <Landing />;
+  return (
+    <Switch>
+      <Route path="/access-denied" component={AccessDenied} />
+      <Route path="*">
+        {isAuthenticated ? <Home /> : <Landing />}
+      </Route>
+    </Switch>
+  );
 }
 
 function App() {

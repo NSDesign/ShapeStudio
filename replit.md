@@ -111,6 +111,15 @@ Changelog:
   - Integrated user profile display with logout functionality
   - Database-backed session storage with automatic token refresh
   - Complete authentication flow: login, callback, logout, and protected routes
+- July 13, 2025. Database-Level Access Control Implementation
+  - Added database-level user authorization checking in authentication flow
+  - Modified verify function to check user existence before allowing access
+  - Created /access-denied page for unauthorized users with proper error messaging
+  - Implemented checkUserAccess function to validate users against database
+  - Updated callback route to redirect unauthorized users to access denied page
+  - Created user management scripts for adding/removing authorized users
+  - Added comprehensive access control documentation and demo scripts
+  - Only pre-approved users in database can now access the application
 - June 24, 2025. Enhanced batch configuration dialog with comprehensive property controls
   - Fixed dialog accessibility and positioning issues
   - Added detailed blend mode controls with probability weights
