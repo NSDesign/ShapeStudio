@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import AccessDenied from "@/pages/AccessDenied";
-import { AuthInterface } from "@/components/AuthInterface";
 import { Route, Switch } from "wouter";
 
 function Router() {
@@ -26,13 +25,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/access-denied" component={AccessDenied} />
-      <Route path="/admin">
-        {isAuthenticated ? (
-          <div className="h-screen w-screen bg-slate-900 text-slate-50 p-4">
-            <AuthInterface />
-          </div>
-        ) : <Landing />}
-      </Route>
       <Route path="*">
         {isAuthenticated ? <Home /> : <Landing />}
       </Route>
