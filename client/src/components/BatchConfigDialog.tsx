@@ -1112,16 +1112,14 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             <div className="flex items-center space-x-2">
                               <Label className="text-sm font-medium text-slate-200">X Position</Label>
                               <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs">
+                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="range">Range</SelectItem>
-                                  <SelectItem value="value">Fixed Value</SelectItem>
-                                  <SelectItem value="percentage">Percentage</SelectItem>
-                                  <SelectItem value="edge-offset">Edge Offset</SelectItem>
-                                  <SelectItem value="directional">Directional</SelectItem>
-                                  <SelectItem value="incremental">Incremental</SelectItem>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
+                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
+                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -1154,47 +1152,66 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
                             
-                            {currentSettings.xPositionMode === 'percentage' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Artboard Percentage: {currentSettings.xPositionPercentage}%</Label>
-                                <Slider
-                                  value={[currentSettings.xPositionPercentage]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionPercentage: value })}
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = left edge, 50% = center, 100% = right edge</p>
-                              </div>
-                            )}
-                            
-                            {currentSettings.xPositionMode === 'edge-offset' && (
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Edge:</Label>
-                                  <Select value={currentSettings.xPositionEdge} onValueChange={(value) => handleSettingsUpdate({ xPositionEdge: value as any })}>
-                                    <SelectTrigger className="h-6 w-20 text-xs">
+                            {currentSettings.xPositionMode === 'directional' && (
+                              <div className="space-y-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
+                                  <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
+                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="left">Left</SelectItem>
-                                      <SelectItem value="center">Center</SelectItem>
-                                      <SelectItem value="right">Right</SelectItem>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
+                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
+                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">Offset: {currentSettings.xPositionEdgeOffset}px</Label>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
                                   <Slider
-                                    value={[currentSettings.xPositionEdgeOffset]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ xPositionEdgeOffset: value })}
-                                    min={-200}
+                                    value={[currentSettings.positionDirectionalDistance]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                    min={10}
                                     max={200}
                                     step={5}
                                     className="[&_[role=slider]]:bg-blue-600"
                                   />
                                 </div>
+                                {currentSettings.positionDirectionalMode === 'angle-based' && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
+                                    <Slider
+                                      value={[currentSettings.positionDirectionalAngle]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                      min={0}
+                                      max={360}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.directionalEvenDistribution}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Even 360° Distribution</Label>
+                                </div>
+                                {!currentSettings.directionalEvenDistribution && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.directionalClusterAngle}°</Label>
+                                    <Slider
+                                      value={[currentSettings.directionalClusterAngle]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                      min={10}
+                                      max={180}
+                                      step={5}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                             
@@ -1210,6 +1227,14 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
                                 <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.incrementalResetPerBatch}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1219,16 +1244,14 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             <div className="flex items-center space-x-2">
                               <Label className="text-sm font-medium text-slate-200">Y Position</Label>
                               <Select value={currentSettings.yPositionMode} onValueChange={(value) => handleSettingsUpdate({ yPositionMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs">
+                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="range">Range</SelectItem>
-                                  <SelectItem value="value">Fixed Value</SelectItem>
-                                  <SelectItem value="percentage">Percentage</SelectItem>
-                                  <SelectItem value="edge-offset">Edge Offset</SelectItem>
-                                  <SelectItem value="directional">Directional</SelectItem>
-                                  <SelectItem value="incremental">Incremental</SelectItem>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
+                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
+                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -1261,47 +1284,66 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
                             
-                            {currentSettings.yPositionMode === 'percentage' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Artboard Percentage: {currentSettings.yPositionPercentage}%</Label>
-                                <Slider
-                                  value={[currentSettings.yPositionPercentage]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionPercentage: value })}
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = top edge, 50% = center, 100% = bottom edge</p>
-                              </div>
-                            )}
-                            
-                            {currentSettings.yPositionMode === 'edge-offset' && (
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Edge:</Label>
-                                  <Select value={currentSettings.yPositionEdge} onValueChange={(value) => handleSettingsUpdate({ yPositionEdge: value as any })}>
-                                    <SelectTrigger className="h-6 w-20 text-xs">
+                            {currentSettings.yPositionMode === 'directional' && (
+                              <div className="space-y-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
+                                  <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
+                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="top">Top</SelectItem>
-                                      <SelectItem value="center">Center</SelectItem>
-                                      <SelectItem value="bottom">Bottom</SelectItem>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
+                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
+                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">Offset: {currentSettings.yPositionEdgeOffset}px</Label>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
                                   <Slider
-                                    value={[currentSettings.yPositionEdgeOffset]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ yPositionEdgeOffset: value })}
-                                    min={-200}
+                                    value={[currentSettings.positionDirectionalDistance]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                    min={10}
                                     max={200}
                                     step={5}
                                     className="[&_[role=slider]]:bg-blue-600"
                                   />
                                 </div>
+                                {currentSettings.positionDirectionalMode === 'angle-based' && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
+                                    <Slider
+                                      value={[currentSettings.positionDirectionalAngle]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                      min={0}
+                                      max={360}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.directionalEvenDistribution}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Even 360° Distribution</Label>
+                                </div>
+                                {!currentSettings.directionalEvenDistribution && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.directionalClusterAngle}°</Label>
+                                    <Slider
+                                      value={[currentSettings.directionalClusterAngle]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                      min={10}
+                                      max={180}
+                                      step={5}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                             
@@ -1317,58 +1359,53 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
                                 <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.incrementalResetPerBatch}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
+                                </div>
                               </div>
                             )}
                           </div>
                           
-                          {/* Directional Controls (shown when either axis is set to directional) */}
-                          {(currentSettings.xPositionMode === 'directional' || currentSettings.yPositionMode === 'directional') && (
-                            <div className="space-y-3 p-3 bg-slate-800 rounded border-2 border-orange-500/30">
-                              <Label className="text-sm font-medium text-orange-200">Directional Positioning</Label>
-                              
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Mode</Label>
-                                <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
-                                  <SelectTrigger className="h-7 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="outward-center">Outward from Center</SelectItem>
-                                    <SelectItem value="outward-edge">Outward from Edge</SelectItem>
-                                    <SelectItem value="angle-based">Angle Based</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {currentSettings.positionDirectionalMode === 'angle-based' && (
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
-                                  <Slider
-                                    value={[currentSettings.positionDirectionalAngle]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                    min={0}
-                                    max={360}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-orange-600"
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
-                                <Slider
-                                  value={[currentSettings.positionDirectionalDistance]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                  min={10}
-                                  max={300}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
-                              
-                              <p className="text-xs text-slate-400">Affects both X and Y positioning when either axis is set to directional</p>
+                          {/* Noise Integration Toggles */}
+                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
+                            <Label className="text-sm font-medium text-slate-200">Noise Integration</Label>
+                            
+                            {/* Range Noise Mode */}
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentSettings.rangeNoiseWithinRange}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ rangeNoiseWithinRange: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600"
+                              />
+                              <Label className="text-xs text-slate-300">Range noise within range</Label>
                             </div>
-                          )}
+                            <p className="text-xs text-slate-400 ml-6">
+                              When enabled: noise defines values within the specified range. 
+                              When disabled: noise adds to the range values.
+                            </p>
+                            
+                            {/* Noise Mode */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Noise Mode</Label>
+                              <Select value={currentSettings.noiseMode} onValueChange={(value) => handleSettingsUpdate({ noiseMode: value as any })}>
+                                <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="additive" className="text-slate-200 hover:bg-slate-700">Additive (default)</SelectItem>
+                                  <SelectItem value="multiplicative" className="text-slate-200 hover:bg-slate-700">Multiplicative</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-slate-400">
+                                Additive: noise value is added to property. Multiplicative: property is multiplied by noise value.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
