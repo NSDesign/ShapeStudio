@@ -34,16 +34,16 @@ export interface NoiseOptions {
   octaveMode?: 'natural' | 'normalized';
 }
 
-// Pure noise values in [-1, 1] range
+// Pure noise values in [0, 1] range (like Math.random())
 export interface PureNoiseResult {
-  x: number;      // [-1, 1]
-  y: number;      // [-1, 1]
-  rotation: number; // [-1, 1]
-  scale: number;    // [-1, 1]
-  opacity: number;  // [-1, 1]
-  hue: number;      // [-1, 1]
-  saturation: number; // [-1, 1]
-  lightness: number;  // [-1, 1]
+  x: number;      // [0, 1]
+  y: number;      // [0, 1]
+  rotation: number; // [0, 1]
+  scale: number;    // [0, 1]
+  opacity: number;  // [0, 1]
+  hue: number;      // [0, 1]
+  saturation: number; // [0, 1]
+  lightness: number;  // [0, 1]
 }
 
 // Final processed noise values with property-specific ranges
@@ -161,7 +161,7 @@ export class NoiseSystem {
   }
 
   /**
-   * Pure random noise generation returning [-1, 1] values
+   * Random noise generation returning [0, 1] values (like Math.random())
    */
   private static generateRandomNoisePure(shapeIndex: number, options: NoiseOptions): PureNoiseResult {
     // Use large prime offsets to eliminate sequential correlation
@@ -177,16 +177,16 @@ export class NoiseSystem {
     const randSat = this.seededRandom(options.seed + baseOffset + 56377)();
     const randLght = this.seededRandom(options.seed + baseOffset + 64439)();
     
-    // Convert to pure [-1, 1] range
+    // Return in [0, 1] range (like Math.random())
     return {
-      x: (randX - 0.5) * 2,
-      y: (randY - 0.5) * 2,
-      rotation: (randRot - 0.5) * 2,
-      scale: (randScale - 0.5) * 2,
-      opacity: (randOpacity - 0.5) * 2,
-      hue: (randHue - 0.5) * 2,
-      saturation: (randSat - 0.5) * 2,
-      lightness: (randLght - 0.5) * 2
+      x: randX,
+      y: randY,
+      rotation: randRot,
+      scale: randScale,
+      opacity: randOpacity,
+      hue: randHue,
+      saturation: randSat,
+      lightness: randLght
     };
   }
   
@@ -246,25 +246,25 @@ export class NoiseSystem {
     }
     
     return {
-      // Position: pure noise * amplitude * range
-      x: pureNoise.x * posAmp * positionRangeX,
-      y: pureNoise.y * posAmp * positionRangeY,
+      // Position: pure noise [0,1] converted to centered range [-range/2, +range/2]
+      x: (pureNoise.x - 0.5) * 2 * posAmp * positionRangeX,
+      y: (pureNoise.y - 0.5) * 2 * posAmp * positionRangeY,
       
       // Rotation: use range from Properties section
-      rotation: ((pureNoise.rotation + 1) / 2) * rotationRange * rotAmp,
+      rotation: pureNoise.rotation * rotationRange * rotAmp,
       
       // Scale: use ranges from Properties section
-      scaleX: scaleMinX + (pureNoise.scale + 1) / 2 * (scaleMaxX - scaleMinX) * scaleAmp,
-      scaleY: scaleMinY + (pureNoise.scale + 1) / 2 * (scaleMaxY - scaleMinY) * scaleAmp,
+      scaleX: scaleMinX + pureNoise.scale * (scaleMaxX - scaleMinX) * scaleAmp,
+      scaleY: scaleMinY + pureNoise.scale * (scaleMaxY - scaleMinY) * scaleAmp,
       
       // Opacity: use range from Properties section
       opacity: Math.max(opacityMin, Math.min(opacityMax, 
-        opacityMin + (pureNoise.opacity + 1) / 2 * (opacityMax - opacityMin) * opacityAmp)),
+        opacityMin + pureNoise.opacity * (opacityMax - opacityMin) * opacityAmp)),
       
       // Colors: absolute values (still using hardcoded for now)
-      hue: ((pureNoise.hue + 1) / 2) * 360 * colorAmp,
-      saturation: 75 + pureNoise.saturation * 25 * colorAmp, // Center at 75%
-      lightness: 50 + pureNoise.lightness * 20 * colorAmp    // Center at 50%
+      hue: pureNoise.hue * 360 * colorAmp,
+      saturation: 75 + (pureNoise.saturation - 0.5) * 50 * colorAmp, // Center at 75%
+      lightness: 50 + (pureNoise.lightness - 0.5) * 40 * colorAmp    // Center at 50%
     };
   }
   
@@ -277,10 +277,7 @@ export class NoiseSystem {
   }
 
   /**
-   * Perlin noise implementation with bipolar application and fixed accumulation
-   */
-  /**
-   * Pure Perlin noise generation returning [-1, 1] values
+   * Perlin noise generation returning [0, 1] values (like Math.random())
    */
   private static generatePerlinNoisePure(shapeIndex: number, options: NoiseOptions): PureNoiseResult {
     // Generate base coordinates from shape index
@@ -338,15 +335,16 @@ export class NoiseSystem {
       noiseLght *= norm;
     }
     
+    // Convert from [-1, 1] to [0, 1] range (like Math.random())
     return {
-      x: noiseX,
-      y: noiseY,
-      rotation: noiseRot,
-      scale: noiseScale,
-      opacity: noiseOpacity,
-      hue: noiseHue,
-      saturation: noiseSat,
-      lightness: noiseLght
+      x: (noiseX + 1) / 2,
+      y: (noiseY + 1) / 2,
+      rotation: (noiseRot + 1) / 2,
+      scale: (noiseScale + 1) / 2,
+      opacity: (noiseOpacity + 1) / 2,
+      hue: (noiseHue + 1) / 2,
+      saturation: (noiseSat + 1) / 2,
+      lightness: (noiseLght + 1) / 2
     };
   }
   

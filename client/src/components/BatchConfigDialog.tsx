@@ -76,6 +76,33 @@ export interface BatchConfigSettings {
   xPositionRange: [number, number];
   yPositionRange: [number, number];
   
+  // Enhanced Position Properties
+  xPositionMode: 'range' | 'value' | 'percentage' | 'edge-offset' | 'directional' | 'incremental';
+  yPositionMode: 'range' | 'value' | 'percentage' | 'edge-offset' | 'directional' | 'incremental';
+  
+  // Position Value Mode
+  xPositionValue: number;
+  yPositionValue: number;
+  
+  // Position Percentage Mode (0-100%)
+  xPositionPercentage: number;
+  yPositionPercentage: number;
+  
+  // Position Edge Offset Mode
+  xPositionEdge: 'left' | 'right' | 'center';
+  yPositionEdge: 'top' | 'bottom' | 'center';
+  xPositionEdgeOffset: number;
+  yPositionEdgeOffset: number;
+  
+  // Position Directional Mode
+  positionDirectionalMode: 'outward-center' | 'outward-edge' | 'angle-based';
+  positionDirectionalAngle: number; // 0-360 degrees
+  positionDirectionalDistance: number;
+  
+  // Position Incremental Mode
+  xPositionIncrement: number;
+  yPositionIncrement: number;
+  
   // Rectangle-specific Properties
   rectangleCornerRadiusRange: [number, number];
   
@@ -243,6 +270,33 @@ const defaultSettings: BatchConfigSettings = {
   heightRange: [50, 200],
   xPositionRange: [-100, 100],
   yPositionRange: [-100, 100],
+  
+  // Enhanced Position Properties
+  xPositionMode: 'range' as const,
+  yPositionMode: 'range' as const,
+  
+  // Position Value Mode
+  xPositionValue: 0,
+  yPositionValue: 0,
+  
+  // Position Percentage Mode (0-100%)
+  xPositionPercentage: 50,
+  yPositionPercentage: 50,
+  
+  // Position Edge Offset Mode
+  xPositionEdge: 'center' as const,
+  yPositionEdge: 'center' as const,
+  xPositionEdgeOffset: 0,
+  yPositionEdgeOffset: 0,
+  
+  // Position Directional Mode
+  positionDirectionalMode: 'outward-center' as const,
+  positionDirectionalAngle: 0,
+  positionDirectionalDistance: 100,
+  
+  // Position Incremental Mode
+  xPositionIncrement: 50,
+  yPositionIncrement: 50,
   
   // Rectangle-specific Properties
   rectangleCornerRadiusRange: [0, 20],
@@ -1056,28 +1110,268 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               className="[&_[role=slider]]:bg-blue-600"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">X Position: {currentSettings.xPositionRange?.[0] || -100} - {currentSettings.xPositionRange?.[1] || 100}</Label>
-                            <Slider
-                              value={currentSettings.xPositionRange || [-100, 100]}
-                              onValueChange={(value) => handleSettingsUpdate({ xPositionRange: value as [number, number] })}
-                              min={-500}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
+                          {/* Enhanced X Position Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">X Position</Label>
+                              <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
+                                <SelectTrigger className="h-7 w-32 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="range">Range</SelectItem>
+                                  <SelectItem value="value">Fixed Value</SelectItem>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="edge-offset">Edge Offset</SelectItem>
+                                  <SelectItem value="directional">Directional</SelectItem>
+                                  <SelectItem value="incremental">Incremental</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {currentSettings.xPositionMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Range: {currentSettings.xPositionRange?.[0] || -100} - {currentSettings.xPositionRange?.[1] || 100}</Label>
+                                <Slider
+                                  value={currentSettings.xPositionRange || [-100, 100]}
+                                  onValueChange={(value) => handleSettingsUpdate({ xPositionRange: value as [number, number] })}
+                                  min={-500}
+                                  max={500}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.xPositionMode === 'value' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.xPositionValue}</Label>
+                                <Slider
+                                  value={[currentSettings.xPositionValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionValue: value })}
+                                  min={-400}
+                                  max={400}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.xPositionMode === 'percentage' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Artboard Percentage: {currentSettings.xPositionPercentage}%</Label>
+                                <Slider
+                                  value={[currentSettings.xPositionPercentage]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionPercentage: value })}
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = left edge, 50% = center, 100% = right edge</p>
+                              </div>
+                            )}
+                            
+                            {currentSettings.xPositionMode === 'edge-offset' && (
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Label className="text-xs text-slate-300">Edge:</Label>
+                                  <Select value={currentSettings.xPositionEdge} onValueChange={(value) => handleSettingsUpdate({ xPositionEdge: value as any })}>
+                                    <SelectTrigger className="h-6 w-20 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="left">Left</SelectItem>
+                                      <SelectItem value="center">Center</SelectItem>
+                                      <SelectItem value="right">Right</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-300">Offset: {currentSettings.xPositionEdgeOffset}px</Label>
+                                  <Slider
+                                    value={[currentSettings.xPositionEdgeOffset]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ xPositionEdgeOffset: value })}
+                                    min={-200}
+                                    max={200}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            {currentSettings.xPositionMode === 'incremental' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Increment: {currentSettings.xPositionIncrement}px</Label>
+                                <Slider
+                                  value={[currentSettings.xPositionIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionIncrement: value })}
+                                  min={1}
+                                  max={100}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                                <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
+                              </div>
+                            )}
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Y Position: {currentSettings.yPositionRange?.[0] || -100} - {currentSettings.yPositionRange?.[1] || 100}</Label>
-                            <Slider
-                              value={currentSettings.yPositionRange || [-100, 100]}
-                              onValueChange={(value) => handleSettingsUpdate({ yPositionRange: value as [number, number] })}
-                              min={-500}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
+                          
+                          {/* Enhanced Y Position Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Y Position</Label>
+                              <Select value={currentSettings.yPositionMode} onValueChange={(value) => handleSettingsUpdate({ yPositionMode: value as any })}>
+                                <SelectTrigger className="h-7 w-32 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="range">Range</SelectItem>
+                                  <SelectItem value="value">Fixed Value</SelectItem>
+                                  <SelectItem value="percentage">Percentage</SelectItem>
+                                  <SelectItem value="edge-offset">Edge Offset</SelectItem>
+                                  <SelectItem value="directional">Directional</SelectItem>
+                                  <SelectItem value="incremental">Incremental</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {currentSettings.yPositionMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Range: {currentSettings.yPositionRange?.[0] || -100} - {currentSettings.yPositionRange?.[1] || 100}</Label>
+                                <Slider
+                                  value={currentSettings.yPositionRange || [-100, 100]}
+                                  onValueChange={(value) => handleSettingsUpdate({ yPositionRange: value as [number, number] })}
+                                  min={-500}
+                                  max={500}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.yPositionMode === 'value' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.yPositionValue}</Label>
+                                <Slider
+                                  value={[currentSettings.yPositionValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionValue: value })}
+                                  min={-400}
+                                  max={400}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.yPositionMode === 'percentage' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Artboard Percentage: {currentSettings.yPositionPercentage}%</Label>
+                                <Slider
+                                  value={[currentSettings.yPositionPercentage]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionPercentage: value })}
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = top edge, 50% = center, 100% = bottom edge</p>
+                              </div>
+                            )}
+                            
+                            {currentSettings.yPositionMode === 'edge-offset' && (
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Label className="text-xs text-slate-300">Edge:</Label>
+                                  <Select value={currentSettings.yPositionEdge} onValueChange={(value) => handleSettingsUpdate({ yPositionEdge: value as any })}>
+                                    <SelectTrigger className="h-6 w-20 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="top">Top</SelectItem>
+                                      <SelectItem value="center">Center</SelectItem>
+                                      <SelectItem value="bottom">Bottom</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-300">Offset: {currentSettings.yPositionEdgeOffset}px</Label>
+                                  <Slider
+                                    value={[currentSettings.yPositionEdgeOffset]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ yPositionEdgeOffset: value })}
+                                    min={-200}
+                                    max={200}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            {currentSettings.yPositionMode === 'incremental' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Increment: {currentSettings.yPositionIncrement}px</Label>
+                                <Slider
+                                  value={[currentSettings.yPositionIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionIncrement: value })}
+                                  min={1}
+                                  max={100}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                                <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
+                              </div>
+                            )}
                           </div>
+                          
+                          {/* Directional Controls (shown when either axis is set to directional) */}
+                          {(currentSettings.xPositionMode === 'directional' || currentSettings.yPositionMode === 'directional') && (
+                            <div className="space-y-3 p-3 bg-slate-800 rounded border-2 border-orange-500/30">
+                              <Label className="text-sm font-medium text-orange-200">Directional Positioning</Label>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Mode</Label>
+                                <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="outward-center">Outward from Center</SelectItem>
+                                    <SelectItem value="outward-edge">Outward from Edge</SelectItem>
+                                    <SelectItem value="angle-based">Angle Based</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {currentSettings.positionDirectionalMode === 'angle-based' && (
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
+                                  <Slider
+                                    value={[currentSettings.positionDirectionalAngle]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                    min={0}
+                                    max={360}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-orange-600"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
+                                <Slider
+                                  value={[currentSettings.positionDirectionalDistance]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                  min={10}
+                                  max={300}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-orange-600"
+                                />
+                              </div>
+                              
+                              <p className="text-xs text-slate-400">Affects both X and Y positioning when either axis is set to directional</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

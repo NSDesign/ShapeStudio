@@ -867,6 +867,111 @@ export const useShapeEditor = () => {
     });
   }, []);
 
+  // Helper functions for enhanced position calculation
+  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number): number => {
+    switch (settings.xPositionMode) {
+      case 'range':
+        const [minX, maxX] = settings.xPositionRange;
+        return minX + Math.random() * (maxX - minX);
+      
+      case 'value':
+        return settings.xPositionValue;
+      
+      case 'percentage':
+        return (settings.xPositionPercentage / 100) * artboardWidth - (artboardWidth / 2);
+      
+      case 'edge-offset':
+        let baseX = 0;
+        switch (settings.xPositionEdge) {
+          case 'left':
+            baseX = -artboardWidth / 2;
+            break;
+          case 'center':
+            baseX = 0;
+            break;
+          case 'right':
+            baseX = artboardWidth / 2;
+            break;
+        }
+        return baseX + settings.xPositionEdgeOffset;
+      
+      case 'directional':
+        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight).x;
+      
+      case 'incremental':
+        return shapeIndex * settings.xPositionIncrement;
+      
+      default:
+        return 0;
+    }
+  };
+
+  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardHeight: number): number => {
+    switch (settings.yPositionMode) {
+      case 'range':
+        const [minY, maxY] = settings.yPositionRange;
+        return minY + Math.random() * (maxY - minY);
+      
+      case 'value':
+        return settings.yPositionValue;
+      
+      case 'percentage':
+        return (settings.yPositionPercentage / 100) * artboardHeight - (artboardHeight / 2);
+      
+      case 'edge-offset':
+        let baseY = 0;
+        switch (settings.yPositionEdge) {
+          case 'top':
+            baseY = -artboardHeight / 2;
+            break;
+          case 'center':
+            baseY = 0;
+            break;
+          case 'bottom':
+            baseY = artboardHeight / 2;
+            break;
+        }
+        return baseY + settings.yPositionEdgeOffset;
+      
+      case 'directional':
+        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight).y;
+      
+      case 'incremental':
+        return shapeIndex * settings.yPositionIncrement;
+      
+      default:
+        return 0;
+    }
+  };
+
+  const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number): { x: number, y: number } => {
+    let angle = 0;
+    let distance = settings.positionDirectionalDistance;
+    
+    switch (settings.positionDirectionalMode) {
+      case 'outward-center':
+        // Distribute shapes in a circle around center
+        angle = (shapeIndex * 360 / Math.max(1, 10)) * (Math.PI / 180); // Use 10 as default count
+        break;
+      
+      case 'outward-edge':
+        // Distribute shapes outward from nearest edge
+        const edgeAngle = Math.atan2(artboardHeight, artboardWidth);
+        angle = (shapeIndex * 2 * Math.PI / Math.max(1, 10)) + edgeAngle;
+        break;
+      
+      case 'angle-based':
+        // All shapes at the same angle
+        angle = settings.positionDirectionalAngle * (Math.PI / 180);
+        break;
+    }
+    
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance
+    };
+  };
+
   const generateRandomShapes = useCallback(() => {
     const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
     const enabledTypes = Array.from(enabledShapeTypes);
@@ -906,11 +1011,9 @@ export const useShapeEditor = () => {
       let shapeY = position.y;
       
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
-        // Use X/Y position ranges instead of the generated position
-        const [minX, maxX] = batchConfigSettings.xPositionRange;
-        const [minY, maxY] = batchConfigSettings.yPositionRange;
-        shapeX = minX + Math.random() * (maxX - minX);
-        shapeY = minY + Math.random() * (maxY - minY);
+        // Enhanced position calculation based on mode
+        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width);
+        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.height);
       }
       
       // Combine batch config with scatter settings for complete configuration
