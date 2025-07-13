@@ -1087,28 +1087,31 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       </div>
                       
                       {currentSettings.shapePropertiesEnabled && (
-                        <div className="ml-6 grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Width: {currentSettings.widthRange?.[0] || 50} - {currentSettings.widthRange?.[1] || 200}</Label>
-                            <Slider
-                              value={currentSettings.widthRange || [50, 200]}
-                              onValueChange={(value) => handleSettingsUpdate({ widthRange: value as [number, number] })}
-                              min={10}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Height: {currentSettings.heightRange?.[0] || 50} - {currentSettings.heightRange?.[1] || 200}</Label>
-                            <Slider
-                              value={currentSettings.heightRange || [50, 200]}
-                              onValueChange={(value) => handleSettingsUpdate({ heightRange: value as [number, number] })}
-                              min={10}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
+                        <div className="ml-6 space-y-4">
+                          {/* Width and Height Controls */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Width: {currentSettings.widthRange?.[0] || 50} - {currentSettings.widthRange?.[1] || 200}</Label>
+                              <Slider
+                                value={currentSettings.widthRange || [50, 200]}
+                                onValueChange={(value) => handleSettingsUpdate({ widthRange: value as [number, number] })}
+                                min={10}
+                                max={500}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Height: {currentSettings.heightRange?.[0] || 50} - {currentSettings.heightRange?.[1] || 200}</Label>
+                              <Slider
+                                value={currentSettings.heightRange || [50, 200]}
+                                onValueChange={(value) => handleSettingsUpdate({ heightRange: value as [number, number] })}
+                                min={10}
+                                max={500}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
                           </div>
                           {/* Enhanced X Position Controls */}
                           <div className="space-y-3 p-3 bg-slate-800 rounded">
