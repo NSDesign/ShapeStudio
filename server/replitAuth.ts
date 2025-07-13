@@ -152,6 +152,19 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
+  // Check if user still has database-level authorization
+  const userId = user.claims?.sub;
+  if (userId) {
+    const hasAccess = await checkUserAccess(user.claims);
+    if (!hasAccess) {
+      // User no longer has access - force logout
+      req.logout(() => {
+        res.status(401).json({ message: "Access revoked" });
+      });
+      return;
+    }
+  }
+
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
     return next();
