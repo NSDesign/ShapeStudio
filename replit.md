@@ -261,6 +261,13 @@ Changelog:
   - **Batch Export Support**: All new formats work in single export, batch export, and ZIP batch export modes
   - **Format Detection**: Updated file extension patterns and MIME type handling for all new formats
   - **Helper Function**: Created unified exportCanvasAsFormat function to handle all export formats consistently
+- July 13, 2025. Sidebar Authentication Integration - Removing Floating Overlays
+  - **Removed Floating Authentication**: Eliminated absolute positioned AuthHeader overlay that was covering critical UI functions
+  - **Integrated Into Sidebar**: Moved authentication to top of sidebar in document flow with proper responsive behavior
+  - **Responsive Design**: Avatar shows icon only when sidebar collapsed, icon + username when expanded
+  - **Dropdown Positioning**: Fixed dropdown menu positioning to adapt to sidebar state (right-aligned when collapsed, left-aligned when expanded)
+  - **Clean Document Flow**: Authentication now seamlessly integrated into sidebar structure without interfering with canvas functionality
+  - **Preserved Functionality**: All authentication features (login, logout, user info) maintained with improved UX
 ```
 
 ## User Preferences
