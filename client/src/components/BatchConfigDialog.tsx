@@ -76,23 +76,20 @@ export interface BatchConfigSettings {
   xPositionRange: [number, number];
   yPositionRange: [number, number];
   
-  // Enhanced Position Properties
-  xPositionMode: 'range' | 'value' | 'percentage' | 'edge-offset' | 'directional' | 'incremental';
-  yPositionMode: 'range' | 'value' | 'percentage' | 'edge-offset' | 'directional' | 'incremental';
+  // Enhanced Position Properties (removed percentage and edge-offset modes)
+  xPositionMode: 'range' | 'value' | 'directional' | 'incremental';
+  yPositionMode: 'range' | 'value' | 'directional' | 'incremental';
+  
+  // Position Mode Toggles
+  rangeNoiseWithinRange: boolean; // true: noise defines values within range, false: noise adds to range
+  incrementalResetPerBatch: boolean; // true: reset count per batch, false: continuous increment
+  directionalEvenDistribution: boolean; // true: even 360° distribution, false: clustering
+  directionalClusterAngle: number; // degrees for clustering mode
+  noiseMode: 'additive' | 'multiplicative'; // how noise affects properties
   
   // Position Value Mode
   xPositionValue: number;
   yPositionValue: number;
-  
-  // Position Percentage Mode (0-100%)
-  xPositionPercentage: number;
-  yPositionPercentage: number;
-  
-  // Position Edge Offset Mode
-  xPositionEdge: 'left' | 'right' | 'center';
-  yPositionEdge: 'top' | 'bottom' | 'center';
-  xPositionEdgeOffset: number;
-  yPositionEdgeOffset: number;
   
   // Position Directional Mode
   positionDirectionalMode: 'outward-center' | 'outward-edge' | 'angle-based';
@@ -208,9 +205,9 @@ export interface BatchConfigSettings {
   collisionBounce: number;
   simulationSteps: number;
   
-  // Temporal Variation
-  temporalEnabled: boolean;
-  evolutionMode: 'none' | 'linear' | 'oscillation' | 'chaos';
+  // Temporal Variation (DISABLED - Future Feature)
+  temporalEnabled: false; // Always disabled for now
+  evolutionMode: 'none'; // Always none for now
   seedIncrement: number;
   evolutionTargets: {
     position: boolean;
@@ -275,19 +272,16 @@ const defaultSettings: BatchConfigSettings = {
   xPositionMode: 'range' as const,
   yPositionMode: 'range' as const,
   
+  // Position Mode Toggles
+  rangeNoiseWithinRange: false, // Default: noise adds to range
+  incrementalResetPerBatch: true, // Default: reset count per batch
+  directionalEvenDistribution: true, // Default: even 360° distribution
+  directionalClusterAngle: 30, // Default clustering angle
+  noiseMode: 'additive' as const, // Default: additive noise
+  
   // Position Value Mode
   xPositionValue: 0,
   yPositionValue: 0,
-  
-  // Position Percentage Mode (0-100%)
-  xPositionPercentage: 50,
-  yPositionPercentage: 50,
-  
-  // Position Edge Offset Mode
-  xPositionEdge: 'center' as const,
-  yPositionEdge: 'center' as const,
-  xPositionEdgeOffset: 0,
-  yPositionEdgeOffset: 0,
   
   // Position Directional Mode
   positionDirectionalMode: 'outward-center' as const,
@@ -401,12 +395,12 @@ const defaultSettings: BatchConfigSettings = {
   collisionBounce: 0.5,
   simulationSteps: 100,
   
-  temporalEnabled: false,
-  evolutionMode: 'linear',
+  temporalEnabled: false, // Always false (disabled)
+  evolutionMode: 'none', // Always none (disabled)
   seedIncrement: 1,
   evolutionTargets: {
-    position: true,
-    rotation: true,
+    position: false,
+    rotation: false,
     scale: false,
     color: false,
     opacity: false

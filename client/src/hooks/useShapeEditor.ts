@@ -263,6 +263,9 @@ export const useShapeEditor = () => {
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
   
+  // Track incremental index for continuous incremental positioning
+  const [lastIncrementalIndex, setLastIncrementalIndex] = useState(0);
+  
   // Multi-touch gesture state
   const [isMultiTouch, setIsMultiTouch] = useState(false);
   
@@ -868,7 +871,12 @@ export const useShapeEditor = () => {
   }, []);
 
   // Helper functions for enhanced position calculation
-  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number): number => {
+  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, batchSize: number): number => {
+    // If properties are disabled, use fallback to sidebar settings
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+      return (Math.random() - 0.5) * artboardWidth * 0.8; // Fallback to random position
+    }
+    
     switch (settings.xPositionMode) {
       case 'range':
         const [minX, maxX] = settings.xPositionRange;
@@ -877,36 +885,25 @@ export const useShapeEditor = () => {
       case 'value':
         return settings.xPositionValue;
       
-      case 'percentage':
-        return (settings.xPositionPercentage / 100) * artboardWidth - (artboardWidth / 2);
-      
-      case 'edge-offset':
-        let baseX = 0;
-        switch (settings.xPositionEdge) {
-          case 'left':
-            baseX = -artboardWidth / 2;
-            break;
-          case 'center':
-            baseX = 0;
-            break;
-          case 'right':
-            baseX = artboardWidth / 2;
-            break;
-        }
-        return baseX + settings.xPositionEdgeOffset;
-      
       case 'directional':
-        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight).x;
+        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).x;
       
       case 'incremental':
-        return shapeIndex * settings.xPositionIncrement;
+        // Use actual shape index, with optional reset per batch
+        const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
+        return effectiveIndex * settings.xPositionIncrement;
       
       default:
         return 0;
     }
   };
 
-  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardHeight: number): number => {
+  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardHeight: number, batchSize: number): number => {
+    // If properties are disabled, use fallback to sidebar settings
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+      return (Math.random() - 0.5) * artboardHeight * 0.8; // Fallback to random position
+    }
+    
     switch (settings.yPositionMode) {
       case 'range':
         const [minY, maxY] = settings.yPositionRange;
@@ -915,54 +912,56 @@ export const useShapeEditor = () => {
       case 'value':
         return settings.yPositionValue;
       
-      case 'percentage':
-        return (settings.yPositionPercentage / 100) * artboardHeight - (artboardHeight / 2);
-      
-      case 'edge-offset':
-        let baseY = 0;
-        switch (settings.yPositionEdge) {
-          case 'top':
-            baseY = -artboardHeight / 2;
-            break;
-          case 'center':
-            baseY = 0;
-            break;
-          case 'bottom':
-            baseY = artboardHeight / 2;
-            break;
-        }
-        return baseY + settings.yPositionEdgeOffset;
-      
       case 'directional':
-        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight).y;
+        return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).y;
       
       case 'incremental':
-        return shapeIndex * settings.yPositionIncrement;
+        // Use actual shape index, with optional reset per batch
+        const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
+        return effectiveIndex * settings.yPositionIncrement;
       
       default:
         return 0;
     }
   };
 
-  const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number): { x: number, y: number } => {
+  const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
     
     switch (settings.positionDirectionalMode) {
       case 'outward-center':
-        // Distribute shapes in a circle around center
-        angle = (shapeIndex * 360 / Math.max(1, 10)) * (Math.PI / 180); // Use 10 as default count
+        if (settings.directionalEvenDistribution) {
+          // Even distribution around 360°
+          angle = (shapeIndex * 360 / Math.max(1, batchSize)) * (Math.PI / 180);
+        } else {
+          // Cluster within specified angle range
+          const clusterRange = settings.directionalClusterAngle * (Math.PI / 180);
+          angle = (shapeIndex * clusterRange / Math.max(1, batchSize - 1)) - (clusterRange / 2);
+        }
         break;
       
       case 'outward-edge':
         // Distribute shapes outward from nearest edge
         const edgeAngle = Math.atan2(artboardHeight, artboardWidth);
-        angle = (shapeIndex * 2 * Math.PI / Math.max(1, 10)) + edgeAngle;
+        if (settings.directionalEvenDistribution) {
+          angle = (shapeIndex * 2 * Math.PI / Math.max(1, batchSize)) + edgeAngle;
+        } else {
+          const clusterRange = settings.directionalClusterAngle * (Math.PI / 180);
+          angle = (shapeIndex * clusterRange / Math.max(1, batchSize - 1)) - (clusterRange / 2) + edgeAngle;
+        }
         break;
       
       case 'angle-based':
-        // All shapes at the same angle
-        angle = settings.positionDirectionalAngle * (Math.PI / 180);
+        // All shapes at the same angle, but can be spread along the angle
+        const baseAngle = settings.positionDirectionalAngle * (Math.PI / 180);
+        if (settings.directionalEvenDistribution) {
+          angle = baseAngle; // All at same angle
+        } else {
+          // Spread within cluster angle
+          const clusterRange = settings.directionalClusterAngle * (Math.PI / 180);
+          angle = baseAngle + (shapeIndex * clusterRange / Math.max(1, batchSize - 1)) - (clusterRange / 2);
+        }
         break;
     }
     
@@ -1012,8 +1011,8 @@ export const useShapeEditor = () => {
       
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
         // Enhanced position calculation based on mode
-        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width);
-        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.height);
+        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, positions.length);
+        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.height, positions.length);
       }
       
       // Combine batch config with scatter settings for complete configuration
@@ -1401,32 +1400,59 @@ export const useShapeEditor = () => {
           artboardHeight
         );
         
-        // Apply noise to position - use direct assignment for Perlin and Randomise
-        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
-          // For Perlin/Randomise: use grid position + centered variation (no accumulation)
-          shape.transform.x = position.x + noiseResult.x;
-          shape.transform.y = position.y + noiseResult.y;
+        // Apply noise to position based on position mode and noise mode
+        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+          // For enhanced position modes, handle noise differently
+          if (batchConfigSettings.xPositionMode === 'range' && batchConfigSettings.rangeNoiseWithinRange) {
+            // Noise defines values within the range
+            const [minX, maxX] = batchConfigSettings.xPositionRange;
+            const normalizedNoiseX = (noiseResult.x + 1) / 2; // Convert [-1,1] to [0,1]
+            shape.transform.x = minX + normalizedNoiseX * (maxX - minX);
+          } else if (batchConfigSettings.noiseMode === 'additive') {
+            // Additive noise to current position
+            shape.transform.x += noiseResult.x;
+          } else {
+            // Multiplicative noise
+            shape.transform.x *= (1 + noiseResult.x * 0.1);
+          }
+          
+          if (batchConfigSettings.yPositionMode === 'range' && batchConfigSettings.rangeNoiseWithinRange) {
+            // Noise defines values within the range
+            const [minY, maxY] = batchConfigSettings.yPositionRange;
+            const normalizedNoiseY = (noiseResult.y + 1) / 2; // Convert [-1,1] to [0,1]
+            shape.transform.y = minY + normalizedNoiseY * (maxY - minY);
+          } else if (batchConfigSettings.noiseMode === 'additive') {
+            // Additive noise to current position
+            shape.transform.y += noiseResult.y;
+          } else {
+            // Multiplicative noise
+            shape.transform.y *= (1 + noiseResult.y * 0.1);
+          }
         } else {
-          // For other algorithms: keep additive behavior
-          shape.transform.x += noiseResult.x;
-          shape.transform.y += noiseResult.y;
+          // Legacy behavior for non-enhanced position modes
+          if (batchConfigSettings.noiseMode === 'additive') {
+            shape.transform.x += noiseResult.x;
+            shape.transform.y += noiseResult.y;
+          } else {
+            shape.transform.x *= (1 + noiseResult.x * 0.1);
+            shape.transform.y *= (1 + noiseResult.y * 0.1);
+          }
         }
         
-        // Apply noise to rotation - direct assignment for Perlin and Randomise
-        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
-          shape.transform.rotation = noiseResult.rotation; // Direct assignment (already properly ranged)
+        // Apply noise to rotation based on noise mode
+        if (batchConfigSettings.noiseMode === 'additive') {
+          shape.transform.rotation += noiseResult.rotation;
         } else {
-          shape.transform.rotation += noiseResult.rotation; // Additive for other noise types
+          shape.transform.rotation *= (1 + noiseResult.rotation * 0.001); // Small multiplicative effect
         }
         
-        // Apply noise to scale - direct assignment for Perlin and Randomise
-        if (batchConfigSettings.noiseAlgorithm === 'perlin' || batchConfigSettings.noiseAlgorithm === 'randomise') {
-          // Direct assignment (values already centered around 1.0)
-          shape.transform.scaleX = noiseResult.scaleX;
-          shape.transform.scaleY = noiseResult.scaleY;
+        // Apply noise to scale based on noise mode
+        if (batchConfigSettings.noiseMode === 'additive') {
+          shape.transform.scaleX += noiseResult.scaleX * 0.1;
+          shape.transform.scaleY += noiseResult.scaleY * 0.1;
         } else {
-          shape.transform.scaleX += noiseResult.scaleX;
-          shape.transform.scaleY += noiseResult.scaleY;
+          shape.transform.scaleX *= noiseResult.scaleX;
+          shape.transform.scaleY *= noiseResult.scaleY;
         }
         
         // Apply noise to opacity - direct assignment for all
@@ -1519,6 +1545,12 @@ export const useShapeEditor = () => {
 
     console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
     setShapes(prev => [...prev, ...finalShapes]);
+    
+    // Update incremental index if not resetting per batch
+    if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled && 
+        !batchConfigSettings.incrementalResetPerBatch) {
+      setLastIncrementalIndex(prev => prev + finalShapes.length);
+    }
   }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {

@@ -277,6 +277,14 @@ Changelog:
   - **Dropdown Positioning**: Fixed dropdown menu positioning to adapt to sidebar state (right-aligned when collapsed, left-aligned when expanded)
   - **Clean Document Flow**: Authentication now seamlessly integrated into sidebar structure without interfering with canvas functionality
   - **Preserved Functionality**: All authentication features (login, logout, user info) maintained with improved UX
+- July 13, 2025. Enhanced Position Properties & Noise Integration System
+  - **Enhanced Position Properties**: Implemented 6 position modes - range, value, directional, incremental (removed percentage and edge-offset per user request)
+  - **Noise Integration Toggles**: Added rangeNoiseWithinRange (noise defines values within range vs additive), noiseMode (additive vs multiplicative)
+  - **Incremental Position Control**: Added incrementalResetPerBatch toggle for continuous vs per-batch incremental positioning
+  - **Directional Distribution**: Added directionalEvenDistribution toggle for even 360° distribution vs clustering with configurable angle
+  - **Sidebar Settings Fallback**: Disabled properties now fallback to sidebar settings instead of hardcoded defaults
+  - **Batch Size Integration**: Position calculations now use actual batch size for proper directional distribution
+  - **Temporal Variation Disabled**: Marked temporal variation system as future feature and disabled in current implementation
 ```
 
 ## User Preferences
