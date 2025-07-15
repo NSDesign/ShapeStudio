@@ -871,7 +871,7 @@ export const useShapeEditor = () => {
   }, []);
 
   // Helper functions for enhanced position calculation
-  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, batchSize: number): number => {
+  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
     // If properties are disabled, use fallback to sidebar settings
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return (Math.random() - 0.5) * artboardWidth * 0.8; // Fallback to random position
@@ -898,7 +898,7 @@ export const useShapeEditor = () => {
     }
   };
 
-  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardHeight: number, batchSize: number): number => {
+  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
     // If properties are disabled, use fallback to sidebar settings
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return (Math.random() - 0.5) * artboardHeight * 0.8; // Fallback to random position
@@ -1011,8 +1011,8 @@ export const useShapeEditor = () => {
       
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
         // Enhanced position calculation based on mode
-        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, positions.length);
-        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.height, positions.length);
+        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
       }
       
       // Combine batch config with scatter settings for complete configuration
