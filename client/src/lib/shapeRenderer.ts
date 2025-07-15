@@ -74,6 +74,9 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     case 'cubic':
       drawCurve(ctx, shape);
       break;
+    case 'smooth-spline':
+      drawSmoothSpline(ctx, shape);
+      break;
     case 'chunk':
       drawChunk(ctx, shape);
       break;
@@ -288,6 +291,37 @@ function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
   }
   
   ctx.closePath();
+}
+
+function drawSmoothSpline(ctx: CanvasRenderingContext2D, shape: Shape): void {
+  if (!shape.points || shape.points.length < 2) return;
+  if (!shape.controlPoints || shape.controlPoints.length === 0) return;
+
+  ctx.moveTo(shape.points[0].x, shape.points[0].y);
+
+  // Draw cubic Bézier segments using control points
+  const numSegments = shape.closed ? shape.points.length : shape.points.length - 1;
+  
+  for (let i = 0; i < numSegments; i++) {
+    const currentPoint = shape.points[i];
+    const nextPoint = shape.points[(i + 1) % shape.points.length];
+    
+    // Each segment uses two control points
+    const cp1 = shape.controlPoints[i * 2];
+    const cp2 = shape.controlPoints[i * 2 + 1];
+    
+    if (cp1 && cp2) {
+      ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
+    } else {
+      // Fallback to linear if control points missing
+      ctx.lineTo(nextPoint.x, nextPoint.y);
+    }
+  }
+
+  // Close the path only if this is a closed spline
+  if (shape.closed) {
+    ctx.closePath();
+  }
 }
 
 function drawSplineCubicBezier(ctx: CanvasRenderingContext2D, shape: Shape): void {

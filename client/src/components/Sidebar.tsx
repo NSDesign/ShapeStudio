@@ -68,7 +68,7 @@ import {
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
 import { Shape } from '@/lib/shapes';
-import { renderShape } from '@/lib/shapeRenderer';
+
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
 // Shape display names mapping
@@ -450,8 +450,8 @@ export default function Sidebar({
       const originalSelected = shape.selected;
       shape.selected = false;
 
-      // Use the exact same renderer as the main canvas but with zoom=1 for export
-      renderShape(ctx, shape, 1);
+      // Use the Shape class's render method with zoom=1 for export
+      shape.render(ctx, 1);
 
       // Restore original selection state
       shape.selected = originalSelected;

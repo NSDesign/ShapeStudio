@@ -5,7 +5,7 @@ import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
-import { renderShape } from '@/lib/shapeRenderer';
+
 
 interface CanvasProps {
   shapes: Shape[];
@@ -212,7 +212,7 @@ export default function Canvas({
       // Draw shapes in z-index order (lowest z-index first, highest on top)
       const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
       sortedShapes.forEach(shape => {
-        renderShape(ctx, shape, effectiveZoom);
+        shape.render(ctx, effectiveZoom);
       });
 
       // Draw group handles
