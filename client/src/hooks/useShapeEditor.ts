@@ -898,6 +898,121 @@ export const useShapeEditor = () => {
     }
   };
 
+  // Helper functions for enhanced width/height calculation
+  const calculateWidth = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+    // If properties are disabled, use fallback to sidebar settings
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+      return 50 + Math.random() * 150; // Fallback to random size
+    }
+    
+    let baseWidth = 0;
+    
+    switch (settings.widthMode) {
+      case 'range':
+        const [minW, maxW] = settings.widthRange;
+        baseWidth = minW + Math.random() * (maxW - minW);
+        break;
+      
+      case 'value':
+        baseWidth = settings.widthValue;
+        break;
+      
+      case 'directional':
+        baseWidth = calculateDirectionalSize(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).width;
+        break;
+      
+      case 'incremental':
+        // Use actual shape index, with optional reset per batch
+        const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
+        baseWidth = settings.sizeIncrementalStartValue + (effectiveIndex * settings.widthIncrement);
+        break;
+      
+      default:
+        baseWidth = 100;
+    }
+    
+    // Apply size constraints
+    return Math.max(settings.minimumSize, Math.min(settings.maximumSize, baseWidth));
+  };
+
+  const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+    // If properties are disabled, use fallback to sidebar settings
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+      return 50 + Math.random() * 150; // Fallback to random size
+    }
+    
+    let baseHeight = 0;
+    
+    switch (settings.heightMode) {
+      case 'range':
+        const [minH, maxH] = settings.heightRange;
+        baseHeight = minH + Math.random() * (maxH - minH);
+        break;
+      
+      case 'value':
+        baseHeight = settings.heightValue;
+        break;
+      
+      case 'directional':
+        baseHeight = calculateDirectionalSize(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).height;
+        break;
+      
+      case 'incremental':
+        // Use actual shape index, with optional reset per batch
+        const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
+        baseHeight = settings.sizeIncrementalStartValue + (effectiveIndex * settings.heightIncrement);
+        break;
+      
+      default:
+        baseHeight = 100;
+    }
+    
+    // Apply size constraints
+    return Math.max(settings.minimumSize, Math.min(settings.maximumSize, baseHeight));
+  };
+
+  const calculateDirectionalSize = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { width: number, height: number } => {
+    let scaleFactor = 1;
+    const baseSize = 100; // Base size for directional scaling
+    
+    switch (settings.sizeDirectionalMode) {
+      case 'outward-center':
+        if (settings.sizeDirectionalEvenDistribution) {
+          // Even distribution with size scaling based on distance from center
+          const angle = (shapeIndex * 360 / Math.max(1, batchSize)) * (Math.PI / 180);
+          const distance = settings.sizeDirectionalDistance;
+          scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
+            (1 + distance / 100) : Math.pow(1 + distance / 100, 2);
+        } else {
+          // Cluster-based scaling
+          scaleFactor = 1 + (shapeIndex / Math.max(1, batchSize - 1)) * (settings.sizeDirectionalDistance / 100);
+        }
+        break;
+      
+      case 'outward-edge':
+        // Scale based on distance from edge
+        const edgeDistance = Math.min(artboardWidth, artboardHeight) / 2;
+        scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
+          (1 + settings.sizeDirectionalDistance / edgeDistance) : 
+          Math.pow(1 + settings.sizeDirectionalDistance / edgeDistance, 2);
+        break;
+      
+      case 'angle-based':
+        // Scale based on angle position
+        const angleRad = settings.sizeDirectionalAngle * (Math.PI / 180);
+        const angleInfluence = (Math.cos(angleRad) + 1) / 2; // Normalize to 0-1
+        scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
+          (1 + angleInfluence * settings.sizeDirectionalDistance / 100) : 
+          Math.pow(1 + angleInfluence * settings.sizeDirectionalDistance / 100, 2);
+        break;
+    }
+    
+    const width = baseSize * scaleFactor;
+    const height = baseSize * scaleFactor;
+    
+    return { width, height };
+  };
+
   const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
     // If properties are disabled, use fallback to sidebar settings
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
@@ -1024,25 +1139,49 @@ export const useShapeEditor = () => {
       
       // Apply width/height from batch config if properties are enabled
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
-        // Apply width and height from the ranges
-        const width = batchConfigSettings.widthRange[0] + Math.random() * (batchConfigSettings.widthRange[1] - batchConfigSettings.widthRange[0]);
-        const height = batchConfigSettings.heightRange[0] + Math.random() * (batchConfigSettings.heightRange[1] - batchConfigSettings.heightRange[0]);
+        // Enhanced width and height calculation based on mode
+        let width = calculateWidth(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        let height = calculateHeight(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         
-        // Apply the size based on shape type
+        // Apply aspect ratio constraint if enabled
+        if (batchConfigSettings.maintainAspectRatio) {
+          // For shapes that need 1:1 aspect ratio, use width as the primary dimension
+          if (shape.type === 'circle' || shape.type === 'polygon' || shape.type === 'star' || shape.type === 'ring') {
+            height = width;
+          }
+        }
+        
+        // Apply the size based on shape type with proper constraints
         switch (shape.type) {
           case 'rectangle':
-          case 'square':
             shape.width = width;
-            shape.height = shape.type === 'square' ? width : height; // Square uses width for both dimensions
+            shape.height = height;
+            break;
+          case 'square':
+            // Square always maintains 1:1 aspect ratio
+            shape.width = width;
+            shape.height = width;
             break;
           case 'circle':
-            shape.radius = width / 2; // Use width as diameter
+            // Circle uses width as diameter, constrained by aspect ratio
+            shape.radius = width / 2;
             break;
           case 'polygon':
-            shape.radius = width / 2; // Use width as diameter
+            // Polygon uses width as diameter, constrained by aspect ratio
+            shape.radius = width / 2;
+            break;
+          case 'star':
+            // Star uses width/height as outer radius, inner radius comes from shape-specific properties
+            shape.radius = width / 2;
+            // Inner radius is controlled by starInnerRadiusRange from shape type properties
+            break;
+          case 'ring':
+            // Ring uses width/height as outer radius, inner radius comes from shape-specific properties
+            shape.radius = width / 2;
+            // Inner radius is controlled by ringInnerRadiusRange from shape type properties
             break;
           case 'line':
-            // For lines, width represents the length
+            // For lines, width controls length, height controls endpoint spread
             if (shape.points.length >= 2) {
               const angle = Math.random() * Math.PI * 2;
               shape.points[1] = {
