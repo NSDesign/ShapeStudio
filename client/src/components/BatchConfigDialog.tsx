@@ -77,25 +77,24 @@ export interface BatchConfigSettings {
   yPositionRange: [number, number];
   
   // Enhanced Width and Height Properties
-  widthMode: 'range' | 'value' | 'directional' | 'incremental';
-  heightMode: 'range' | 'value' | 'directional' | 'incremental';
+  widthMode: 'range' | 'value' | 'incremental';
+  heightMode: 'range' | 'value' | 'incremental';
   
   // Width/Height Mode Toggles
   sizeNoiseWithinRange: boolean; // true: noise defines values within range, false: noise adds to range
   sizeIncrementalResetPerBatch: boolean; // true: reset count per batch, false: continuous increment
-  sizeDirectionalEvenDistribution: boolean; // true: even distribution, false: clustering
-  sizeDirectionalClusterAngle: number; // degrees for clustering mode
   sizeNoiseMode: 'additive' | 'multiplicative'; // how noise affects size properties
+  
+  // Shape Constraint Value Selection (replaces separate constraint ranges)
+  useMinWidthHeight: boolean; // Use minimum of width/height for circular shapes
+  useMaxWidthHeight: boolean; // Use maximum of width/height for circular shapes  
+  useAvgWidthHeight: boolean; // Use average of width/height for circular shapes
   
   // Width/Height Value Mode
   widthValue: number;
   heightValue: number;
   
-  // Width/Height Directional Mode
-  sizeDirectionalMode: 'outward-center' | 'outward-edge' | 'angle-based';
-  sizeDirectionalAngle: number; // 0-360 degrees
-  sizeDirectionalDistance: number;
-  sizeDirectionalScaling: 'linear' | 'exponential';
+
   
   // Width/Height Incremental Mode
   widthIncrement: number;
@@ -306,19 +305,18 @@ const defaultSettings: BatchConfigSettings = {
   // Width/Height Mode Toggles
   sizeNoiseWithinRange: false, // Default: noise adds to range
   sizeIncrementalResetPerBatch: true, // Default: reset count per batch
-  sizeDirectionalEvenDistribution: true, // Default: even distribution
-  sizeDirectionalClusterAngle: 30, // Default clustering angle
   sizeNoiseMode: 'additive' as const, // Default: additive noise
+  
+  // Shape Constraint Value Selection (replaces separate constraint ranges)
+  useMinWidthHeight: false, // Use minimum of width/height for circular shapes
+  useMaxWidthHeight: true, // Use maximum of width/height for circular shapes (default)
+  useAvgWidthHeight: false, // Use average of width/height for circular shapes
   
   // Width/Height Value Mode
   widthValue: 100,
   heightValue: 100,
   
-  // Width/Height Directional Mode
-  sizeDirectionalMode: 'outward-center' as const,
-  sizeDirectionalAngle: 0,
-  sizeDirectionalDistance: 100,
-  sizeDirectionalScaling: 'linear' as const,
+
   
   // Width/Height Incremental Mode
   widthIncrement: 10,
@@ -1155,7 +1153,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                   <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                   <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
                                   <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -1189,80 +1186,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
                             
-                            {currentSettings.widthMode === 'directional' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
-                                  <Select value={currentSettings.sizeDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ sizeDirectionalMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
-                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
-                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.sizeDirectionalDistance}px</Label>
-                                  <Slider
-                                    value={[currentSettings.sizeDirectionalDistance]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalDistance: value })}
-                                    min={10}
-                                    max={200}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                {currentSettings.sizeDirectionalMode === 'angle-based' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.sizeDirectionalAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.sizeDirectionalAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalAngle: value })}
-                                      min={0}
-                                      max={360}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Scaling Method</Label>
-                                  <Select value={currentSettings.sizeDirectionalScaling} onValueChange={(value) => handleSettingsUpdate({ sizeDirectionalScaling: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear</SelectItem>
-                                      <SelectItem value="exponential" className="text-slate-200 hover:bg-slate-700">Exponential</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.sizeDirectionalEvenDistribution}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ sizeDirectionalEvenDistribution: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Even Distribution</Label>
-                                </div>
-                                {!currentSettings.sizeDirectionalEvenDistribution && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.sizeDirectionalClusterAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.sizeDirectionalClusterAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalClusterAngle: value })}
-                                      min={10}
-                                      max={180}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
+
                             
                             {currentSettings.widthMode === 'incremental' && (
                               <div className="space-y-2">
@@ -1308,7 +1232,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                   <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                   <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
                                   <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -1342,80 +1265,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
                             
-                            {currentSettings.heightMode === 'directional' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
-                                  <Select value={currentSettings.sizeDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ sizeDirectionalMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
-                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
-                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.sizeDirectionalDistance}px</Label>
-                                  <Slider
-                                    value={[currentSettings.sizeDirectionalDistance]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalDistance: value })}
-                                    min={10}
-                                    max={200}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                {currentSettings.sizeDirectionalMode === 'angle-based' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.sizeDirectionalAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.sizeDirectionalAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalAngle: value })}
-                                      min={0}
-                                      max={360}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Scaling Method</Label>
-                                  <Select value={currentSettings.sizeDirectionalScaling} onValueChange={(value) => handleSettingsUpdate({ sizeDirectionalScaling: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear</SelectItem>
-                                      <SelectItem value="exponential" className="text-slate-200 hover:bg-slate-700">Exponential</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.sizeDirectionalEvenDistribution}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ sizeDirectionalEvenDistribution: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Even Distribution</Label>
-                                </div>
-                                {!currentSettings.sizeDirectionalEvenDistribution && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.sizeDirectionalClusterAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.sizeDirectionalClusterAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ sizeDirectionalClusterAngle: value })}
-                                      min={10}
-                                      max={180}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
+
                             
                             {currentSettings.heightMode === 'incremental' && (
                               <div className="space-y-2">
@@ -1450,41 +1300,54 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             )}
                           </div>
                           
-                          {/* Size Constraints */}
+                          {/* Size Constraints for Circular Shapes */}
                           <div className="space-y-3 p-3 bg-slate-700 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Size Constraints</Label>
+                            <Label className="text-sm font-medium text-slate-200">Circular Shape Constraints</Label>
+                            <p className="text-xs text-slate-400">When width and height differ, which value should be used for circles, stars, and rings?</p>
                             <div className="space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.useMinWidthHeight}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                    useMinWidthHeight: checked as boolean,
+                                    useMaxWidthHeight: checked ? false : currentSettings.useMaxWidthHeight,
+                                    useAvgWidthHeight: checked ? false : currentSettings.useAvgWidthHeight
+                                  })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Use minimum value</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.useMaxWidthHeight}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                    useMaxWidthHeight: checked as boolean,
+                                    useMinWidthHeight: checked ? false : currentSettings.useMinWidthHeight,
+                                    useAvgWidthHeight: checked ? false : currentSettings.useAvgWidthHeight
+                                  })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Use maximum value (default)</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.useAvgWidthHeight}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                    useAvgWidthHeight: checked as boolean,
+                                    useMinWidthHeight: checked ? false : currentSettings.useMinWidthHeight,
+                                    useMaxWidthHeight: checked ? false : currentSettings.useMaxWidthHeight
+                                  })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Use average value</Label>
+                              </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   checked={currentSettings.maintainAspectRatio}
                                   onCheckedChange={(checked) => handleSettingsUpdate({ maintainAspectRatio: checked as boolean })}
                                   className="border-slate-500 data-[state=checked]:bg-blue-600"
                                 />
-                                <Label className="text-xs text-slate-300">Maintain Aspect Ratio (1:1 for circles/stars/rings)</Label>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Min Size: {currentSettings.minimumSize}px</Label>
-                                  <Slider
-                                    value={[currentSettings.minimumSize]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ minimumSize: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Max Size: {currentSettings.maximumSize}px</Label>
-                                  <Slider
-                                    value={[currentSettings.maximumSize]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ maximumSize: value })}
-                                    min={100}
-                                    max={1000}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
+                                <Label className="text-xs text-slate-300">Force 1:1 aspect ratio for all shapes</Label>
                               </div>
                             </div>
                           </div>

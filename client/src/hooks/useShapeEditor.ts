@@ -917,10 +917,6 @@ export const useShapeEditor = () => {
         baseWidth = settings.widthValue;
         break;
       
-      case 'directional':
-        baseWidth = calculateDirectionalSize(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).width;
-        break;
-      
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
@@ -931,8 +927,8 @@ export const useShapeEditor = () => {
         baseWidth = 100;
     }
     
-    // Apply size constraints
-    return Math.max(settings.minimumSize, Math.min(settings.maximumSize, baseWidth));
+    // Apply basic size constraints (10px minimum, 1000px maximum)
+    return Math.max(10, Math.min(1000, baseWidth));
   };
 
   const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
@@ -953,10 +949,6 @@ export const useShapeEditor = () => {
         baseHeight = settings.heightValue;
         break;
       
-      case 'directional':
-        baseHeight = calculateDirectionalSize(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).height;
-        break;
-      
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
@@ -967,51 +959,36 @@ export const useShapeEditor = () => {
         baseHeight = 100;
     }
     
-    // Apply size constraints
-    return Math.max(settings.minimumSize, Math.min(settings.maximumSize, baseHeight));
+    // Apply basic size constraints (10px minimum, 1000px maximum)
+    return Math.max(10, Math.min(1000, baseHeight));
   };
 
-  const calculateDirectionalSize = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { width: number, height: number } => {
-    let scaleFactor = 1;
-    const baseSize = 100; // Base size for directional scaling
-    
-    switch (settings.sizeDirectionalMode) {
-      case 'outward-center':
-        if (settings.sizeDirectionalEvenDistribution) {
-          // Even distribution with size scaling based on distance from center
-          const angle = (shapeIndex * 360 / Math.max(1, batchSize)) * (Math.PI / 180);
-          const distance = settings.sizeDirectionalDistance;
-          scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
-            (1 + distance / 100) : Math.pow(1 + distance / 100, 2);
-        } else {
-          // Cluster-based scaling
-          scaleFactor = 1 + (shapeIndex / Math.max(1, batchSize - 1)) * (settings.sizeDirectionalDistance / 100);
-        }
-        break;
-      
-      case 'outward-edge':
-        // Scale based on distance from edge
-        const edgeDistance = Math.min(artboardWidth, artboardHeight) / 2;
-        scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
-          (1 + settings.sizeDirectionalDistance / edgeDistance) : 
-          Math.pow(1 + settings.sizeDirectionalDistance / edgeDistance, 2);
-        break;
-      
-      case 'angle-based':
-        // Scale based on angle position
-        const angleRad = settings.sizeDirectionalAngle * (Math.PI / 180);
-        const angleInfluence = (Math.cos(angleRad) + 1) / 2; // Normalize to 0-1
-        scaleFactor = settings.sizeDirectionalScaling === 'linear' ? 
-          (1 + angleInfluence * settings.sizeDirectionalDistance / 100) : 
-          Math.pow(1 + angleInfluence * settings.sizeDirectionalDistance / 100, 2);
-        break;
+  // Helper function to determine final size for circular shapes based on width/height constraint preferences
+  const calculateConstrainedSize = (settings: BatchConfigSettings, width: number, height: number, shapeType: string): number => {
+    // Only apply constraints to circular shapes (circle, star, ring, etc.)
+    if (!['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(shapeType)) {
+      return width; // For non-circular shapes, use width as-is
     }
     
-    const width = baseSize * scaleFactor;
-    const height = baseSize * scaleFactor;
+    // If aspect ratio is enforced, use width
+    if (settings.maintainAspectRatio) {
+      return width;
+    }
     
-    return { width, height };
+    // Apply constraint preferences
+    if (settings.useMinWidthHeight) {
+      return Math.min(width, height);
+    }
+    
+    if (settings.useAvgWidthHeight) {
+      return (width + height) / 2;
+    }
+    
+    // Default: use maximum value (useMaxWidthHeight is default)
+    return Math.max(width, height);
   };
+
+
 
   const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
     // If properties are disabled, use fallback to sidebar settings
@@ -1143,15 +1120,7 @@ export const useShapeEditor = () => {
         let width = calculateWidth(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         
-        // Apply aspect ratio constraint if enabled
-        if (batchConfigSettings.maintainAspectRatio) {
-          // For shapes that need 1:1 aspect ratio, use width as the primary dimension
-          if (shape.type === 'circle' || shape.type === 'polygon' || shape.type === 'star' || shape.type === 'ring') {
-            height = width;
-          }
-        }
-        
-        // Apply the size based on shape type with proper constraints
+        // Apply the size based on shape type with new constraint system
         switch (shape.type) {
           case 'rectangle':
             shape.width = width;
@@ -1163,22 +1132,26 @@ export const useShapeEditor = () => {
             shape.height = width;
             break;
           case 'circle':
-            // Circle uses width as diameter, constrained by aspect ratio
-            shape.radius = width / 2;
+          case 'spline-circle':
+            // Circular shapes use constraint system to determine final radius
+            const circleSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            shape.radius = circleSize / 2;
             break;
           case 'polygon':
-            // Polygon uses width as diameter, constrained by aspect ratio
-            shape.radius = width / 2;
+            // Polygon uses constraint system for radius
+            const polygonSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            shape.radius = polygonSize / 2;
             break;
           case 'star':
-            // Star uses width/height as outer radius, inner radius comes from shape-specific properties
-            shape.radius = width / 2;
-            // Inner radius is controlled by starInnerRadiusRange from shape type properties
+            // Star uses constraint system for outer radius
+            const starSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            shape.radius = starSize / 2;
             break;
           case 'ring':
-            // Ring uses width/height as outer radius, inner radius comes from shape-specific properties
-            shape.radius = width / 2;
-            // Inner radius is controlled by ringInnerRadiusRange from shape type properties
+          case 'spline-ring':
+            // Ring uses constraint system for outer radius
+            const ringSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            shape.radius = ringSize / 2;
             break;
           case 'line':
             // For lines, width controls length, height controls endpoint spread
