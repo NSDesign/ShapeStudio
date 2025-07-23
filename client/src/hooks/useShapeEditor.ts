@@ -6,6 +6,7 @@ import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
 import { BatchConfigSettings } from '../components/BatchConfigDialog';
+import { generateColor, generateGradientColors } from '../lib/hslColor';
 
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
@@ -1202,54 +1203,29 @@ export const useShapeEditor = () => {
         }
         
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
-      } else if (batchConfigSettings.propertiesEnabled && batchConfigSettings.fillEnabled && batchConfigSettings.fillColorProbability > 0) {
-        // Use fill color range from properties if enabled
-        const useFillColor = Math.random() * 100 < batchConfigSettings.fillColorProbability;
+      } else if (batchConfigSettings.propertiesEnabled && batchConfigSettings.fillEnabled) {
+        // Apply fill color based on mode
+        const useFillColor = Math.random() * 100 < batchConfigSettings.fillProbability;
         
-        if (useFillColor && batchConfigSettings.fillGradientColorRange) {
-          // Interpolate between the two colors in fillGradientColorRange
-          const [color1, color2] = batchConfigSettings.fillGradientColorRange;
-          const t = Math.random(); // Interpolation factor between 0 and 1
+        if (useFillColor) {
+          // Generate fill color using new HSL system
+          const fillColor = generateColor(
+            batchConfigSettings.fillColorMode,
+            batchConfigSettings.fillColorRange,
+            batchConfigSettings.fillColorPalette,
+            batchConfigSettings.fillColorDefine,
+            index // Use shape index for palette cycling
+          );
           
-          // Convert hex colors to RGB for interpolation
-          const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-              r: parseInt(result[1], 16),
-              g: parseInt(result[2], 16),
-              b: parseInt(result[3], 16)
-            } : {r: 0, g: 0, b: 0};
-          };
+          shape.properties.fillColor = fillColor;
           
-          const rgb1 = hex2rgb(color1);
-          const rgb2 = hex2rgb(color2);
-          
-          // Interpolate between colors
-          const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
-          const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
-          const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
-          
-          // Convert to HSL for consistency
-          const r_norm = r / 255;
-          const g_norm = g / 255;
-          const b_norm = b / 255;
-          const max = Math.max(r_norm, g_norm, b_norm);
-          const min = Math.min(r_norm, g_norm, b_norm);
-          const l = (max + min) / 2;
-          let h = 0, s = 0;
-          
-          if (max !== min) {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-              case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
-              case g_norm: h = (b_norm - r_norm) / d + 2; break;
-              case b_norm: h = (r_norm - g_norm) / d + 4; break;
-            }
-            h /= 6;
+          // Apply fill opacity based on mode
+          if (batchConfigSettings.fillOpacityMode === 'range') {
+            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
+            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+          } else if (batchConfigSettings.fillOpacityMode === 'define') {
+            shape.properties.fillOpacity = batchConfigSettings.fillOpacityDefine / 100;
           }
-          
-          shape.properties.fillColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
         } else {
           // Use original random behavior
           const hue = Math.random() * 360;
@@ -1259,52 +1235,30 @@ export const useShapeEditor = () => {
         }
         
         // Handle stroke color
-        if (batchConfigSettings.strokeEnabled && batchConfigSettings.strokeColorProbability > 0) {
-          const useStrokeColor = Math.random() * 100 < batchConfigSettings.strokeColorProbability;
+        if (batchConfigSettings.strokeEnabled) {
+          const useStrokeColor = Math.random() * 100 < batchConfigSettings.strokeProbability;
           
-          if (useStrokeColor && batchConfigSettings.strokeColorRange) {
-            // Similar interpolation for stroke colors
-            const [color1, color2] = batchConfigSettings.strokeColorRange;
-            const t = Math.random();
+          if (useStrokeColor) {
+            // Generate stroke color using new HSL system
+            const strokeColor = generateColor(
+              batchConfigSettings.strokeColorMode,
+              batchConfigSettings.strokeColorRange,
+              batchConfigSettings.strokeColorPalette,
+              batchConfigSettings.strokeColorDefine,
+              index // Use shape index for palette cycling
+            );
             
-            const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
-              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-              return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-              } : {r: 0, g: 0, b: 0};
-            };
+            shape.properties.strokeColor = strokeColor;
             
-            const rgb1 = hex2rgb(color1);
-            const rgb2 = hex2rgb(color2);
-            
-            const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
-            const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
-            const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
-            
-            const r_norm = r / 255;
-            const g_norm = g / 255;
-            const b_norm = b / 255;
-            const max = Math.max(r_norm, g_norm, b_norm);
-            const min = Math.min(r_norm, g_norm, b_norm);
-            const l = (max + min) / 2;
-            let h = 0, s = 0;
-            
-            if (max !== min) {
-              const d = max - min;
-              s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-              switch (max) {
-                case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
-                case g_norm: h = (b_norm - r_norm) / d + 2; break;
-                case b_norm: h = (r_norm - g_norm) / d + 4; break;
-              }
-              h /= 6;
+            // Apply stroke opacity based on mode
+            if (batchConfigSettings.strokeOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
+              shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            } else if (batchConfigSettings.strokeOpacityMode === 'define') {
+              shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
             }
-            
-            shape.properties.strokeColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
           } else {
-            // Random stroke color
+            // Random stroke color fallback
             const strokeHue = Math.random() * 360;
             const strokeSaturation = 60 + Math.random() * 40;
             const strokeLightness = 20 + Math.random() * 60;
@@ -1347,34 +1301,23 @@ export const useShapeEditor = () => {
             // Handle gradient probability
             if (Math.random() * 100 < batchConfigSettings.fillGradientProbability) {
               // Create gradient
-              const gradientType = Math.random() * 100 < batchConfigSettings.fillGradientTypeProbability ? 'linear' : 'radial';
+              const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
               const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
               const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
               
               const gradientStops = [];
               for (let i = 0; i < stopCount; i++) {
-                const t = i / (stopCount - 1);
-                const [color1, color2] = batchConfigSettings.fillGradientColorRange;
-                
-                // Interpolate between gradient colors
-                const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
-                  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                  return result ? {
-                    r: parseInt(result[1], 16),
-                    g: parseInt(result[2], 16),
-                    b: parseInt(result[3], 16)
-                  } : {r: 0, g: 0, b: 0};
-                };
-                
-                const rgb1 = hex2rgb(color1);
-                const rgb2 = hex2rgb(color2);
-                const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
-                const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
-                const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
+                const stopColor = generateColor(
+                  batchConfigSettings.fillGradientColorMode,
+                  batchConfigSettings.fillGradientColorRange,
+                  batchConfigSettings.fillGradientColorPalette,
+                  batchConfigSettings.fillGradientColorDefine,
+                  index + i // Use shape index + stop index for variation
+                );
                 
                 gradientStops.push({
-                  offset: t,
-                  color: `rgb(${r}, ${g}, ${b})`
+                  offset: i / (stopCount - 1),
+                  color: stopColor
                 });
               }
               
@@ -1402,49 +1345,15 @@ export const useShapeEditor = () => {
             const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
             shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
             
-            // Apply stroke color range if color probability is set
-            if (Math.random() * 100 < batchConfigSettings.strokeColorProbability) {
-              const [color1, color2] = batchConfigSettings.strokeColorRange;
-              const t = Math.random();
-              
-              // Interpolate between stroke colors
-              const hex2rgb = (hex: string): {r: number, g: number, b: number} => {
-                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                  r: parseInt(result[1], 16),
-                  g: parseInt(result[2], 16),
-                  b: parseInt(result[3], 16)
-                } : {r: 0, g: 0, b: 0};
-              };
-              
-              const rgb1 = hex2rgb(color1);
-              const rgb2 = hex2rgb(color2);
-              const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * t);
-              const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * t);
-              const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * t);
-              
-              // Convert to HSL for consistency
-              const r_norm = r / 255;
-              const g_norm = g / 255;
-              const b_norm = b / 255;
-              const max = Math.max(r_norm, g_norm, b_norm);
-              const min = Math.min(r_norm, g_norm, b_norm);
-              const l = (max + min) / 2;
-              let h = 0, s = 0;
-              
-              if (max !== min) {
-                const d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                  case r_norm: h = (g_norm - b_norm) / d + (g_norm < b_norm ? 6 : 0); break;
-                  case g_norm: h = (b_norm - r_norm) / d + 2; break;
-                  case b_norm: h = (r_norm - g_norm) / d + 4; break;
-                }
-                h /= 6;
-              }
-              
-              shape.properties.strokeColor = `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
-            }
+            // Apply stroke color using new HSL system
+            const strokeColor = generateColor(
+              batchConfigSettings.strokeColorMode,
+              batchConfigSettings.strokeColorRange,
+              batchConfigSettings.strokeColorPalette,
+              batchConfigSettings.strokeColorDefine,
+              index
+            );
+            shape.properties.strokeColor = strokeColor;
           }
         }
         

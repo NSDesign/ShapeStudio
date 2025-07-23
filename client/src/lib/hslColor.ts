@@ -1,0 +1,208 @@
+// HSL Color utility functions for proper hue interpolation
+
+export interface HSL {
+  h: number; // 0-360
+  s: number; // 0-100
+  l: number; // 0-100
+}
+
+export interface RGB {
+  r: number; // 0-255
+  g: number; // 0-255
+  b: number; // 0-255
+}
+
+/**
+ * Convert hex color to HSL
+ */
+export function hexToHSL(hex: string): HSL {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Convert to RGB first
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100)
+  };
+}
+
+/**
+ * Convert HSL to hex color
+ */
+export function hslToHex(hsl: HSL): string {
+  const h = hsl.h / 360;
+  const s = hsl.s / 100;
+  const l = hsl.l / 100;
+  
+  const hue2rgb = (p: number, q: number, t: number): number => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  
+  let r, g, b;
+  
+  if (s === 0) {
+    r = g = b = l; // achromatic
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  
+  const toHex = (c: number): string => {
+    const hex = Math.round(c * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/**
+ * Calculate the shortest path between two hues on the color wheel
+ */
+function getHueDistance(h1: number, h2: number): { distance: number, direction: number } {
+  const direct = h2 - h1;
+  const wrap = direct > 0 ? direct - 360 : direct + 360;
+  
+  if (Math.abs(direct) <= Math.abs(wrap)) {
+    return { distance: Math.abs(direct), direction: Math.sign(direct) };
+  } else {
+    return { distance: Math.abs(wrap), direction: Math.sign(wrap) };
+  }
+}
+
+/**
+ * Interpolate between two HSL colors with proper hue handling
+ */
+export function interpolateHSL(color1: string, color2: string, t: number): string {
+  const hsl1 = hexToHSL(color1);
+  const hsl2 = hexToHSL(color2);
+  
+  // Handle hue interpolation with wraparound
+  const hueInfo = getHueDistance(hsl1.h, hsl2.h);
+  let newHue = hsl1.h + (hueInfo.direction * hueInfo.distance * t);
+  
+  // Normalize hue to 0-360
+  if (newHue < 0) newHue += 360;
+  if (newHue >= 360) newHue -= 360;
+  
+  // Linear interpolation for saturation and lightness
+  const newHSL: HSL = {
+    h: Math.round(newHue),
+    s: Math.round(hsl1.s + (hsl2.s - hsl1.s) * t),
+    l: Math.round(hsl1.l + (hsl2.l - hsl1.l) * t)
+  };
+  
+  return hslToHex(newHSL);
+}
+
+/**
+ * Generate color based on mode (range, palette, define)
+ */
+export function generateColor(
+  mode: 'range' | 'palette' | 'define',
+  range?: [string, string],
+  palette?: string[],
+  define?: string,
+  shapeIndex?: number
+): string {
+  switch (mode) {
+    case 'range':
+      if (!range || range.length !== 2) return '#3b82f6';
+      return interpolateHSL(range[0], range[1], Math.random());
+      
+    case 'palette':
+      if (!palette || palette.length === 0) return '#3b82f6';
+      if (shapeIndex !== undefined) {
+        // Cycle through palette based on shape index
+        return palette[shapeIndex % palette.length];
+      } else {
+        // Random selection from palette
+        return palette[Math.floor(Math.random() * palette.length)];
+      }
+      
+    case 'define':
+      return define || '#3b82f6';
+      
+    default:
+      return '#3b82f6';
+  }
+}
+
+/**
+ * Generate array of colors for gradients
+ */
+export function generateGradientColors(
+  mode: 'range' | 'palette' | 'define',
+  stopCount: number,
+  range?: [string, string],
+  palette?: string[],
+  define?: string[],
+  shapeIndex?: number
+): string[] {
+  switch (mode) {
+    case 'range':
+      if (!range || range.length !== 2) return ['#3b82f6', '#8b5cf6'];
+      const colors: string[] = [];
+      for (let i = 0; i < stopCount; i++) {
+        const t = stopCount === 1 ? 0 : i / (stopCount - 1);
+        colors.push(interpolateHSL(range[0], range[1], t));
+      }
+      return colors;
+      
+    case 'palette':
+      if (!palette || palette.length === 0) return ['#3b82f6', '#8b5cf6'];
+      const paletteColors: string[] = [];
+      for (let i = 0; i < stopCount; i++) {
+        if (shapeIndex !== undefined) {
+          // Deterministic selection based on shape index and stop
+          paletteColors.push(palette[(shapeIndex + i) % palette.length]);
+        } else {
+          // Random selection
+          paletteColors.push(palette[Math.floor(Math.random() * palette.length)]);
+        }
+      }
+      return paletteColors;
+      
+    case 'define':
+      if (!define || define.length === 0) return ['#3b82f6', '#8b5cf6'];
+      // Use defined colors, repeat if needed
+      const defineColors: string[] = [];
+      for (let i = 0; i < stopCount; i++) {
+        defineColors.push(define[i % define.length]);
+      }
+      return defineColors;
+      
+    default:
+      return ['#3b82f6', '#8b5cf6'];
+  }
+}

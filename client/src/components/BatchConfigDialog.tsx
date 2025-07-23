@@ -142,24 +142,40 @@ export interface BatchConfigSettings {
   // Fill Properties
   fillEnabled: boolean;
   fillProbability: number; // 0-100%
-  fillColorProbability: number; // 0-100%
-  fillColorRange: [string, string]; // Regular fill color range
+  
+  // Fill Color Settings
+  fillColorMode: 'range' | 'palette' | 'define';
+  fillColorRange: [string, string]; // For range mode (HSL interpolation)
+  fillColorPalette: string[]; // For palette mode
+  fillColorDefine: string; // For define mode
+  
+  // Fill Gradient Settings
   fillGradientProbability: number; // 0-100%
-  fillGradientTypeProbability: number; // 0-100%
-  fillGradientColorRange: [string, string];
+  fillGradientColorMode: 'range' | 'palette' | 'define';
+  fillGradientColorRange: [string, string]; // For range mode (HSL interpolation)
+  fillGradientColorPalette: string[]; // For palette mode
+  fillGradientColorDefine: string[]; // For define mode - array based on max stops
   fillGradientStopsRange: [number, number]; // RGBA gradient stops
-  fillOpacityRange: [number, number];
+  
+  // Fill Opacity Settings
+  fillOpacityMode: 'range' | 'define';
+  fillOpacityRange: [number, number]; // For range mode
+  fillOpacityDefine: number; // For define mode
   
   // Stroke Properties  
   strokeEnabled: boolean;
   strokeProbability: number; // 0-100%
-  strokeColorProbability: number; // 0-100%
-  strokeColorRange: [string, string];
-  strokeGradientProbability: number; // 0-100%
-  strokeGradientTypeProbability: number; // 0-100%
-  strokeGradientColorRange: [string, string];
-  strokeGradientStopsRange: [number, number]; // RGBA gradient stops
-  strokeOpacityRange: [number, number];
+  
+  // Stroke Color Settings
+  strokeColorMode: 'range' | 'palette' | 'define';
+  strokeColorRange: [string, string]; // For range mode (HSL interpolation)
+  strokeColorPalette: string[]; // For palette mode
+  strokeColorDefine: string; // For define mode
+  
+  // Stroke Opacity Settings
+  strokeOpacityMode: 'range' | 'define';
+  strokeOpacityRange: [number, number]; // For range mode
+  strokeOpacityDefine: number; // For define mode
   strokeWidthRange: [number, number];
   
   // Polygon Shape Properties
@@ -364,24 +380,40 @@ const defaultSettings: BatchConfigSettings = {
   // Fill Properties
   fillEnabled: true,
   fillProbability: 80,
-  fillColorProbability: 70,
+  
+  // Fill Color Settings
+  fillColorMode: 'range' as const,
   fillColorRange: ['#3b82f6', '#8b5cf6'],
+  fillColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
+  fillColorDefine: '#3b82f6',
+  
+  // Fill Gradient Settings
   fillGradientProbability: 20,
-  fillGradientTypeProbability: 50,
+  fillGradientColorMode: 'range' as const,
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
+  fillGradientColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
+  fillGradientColorDefine: ['#3b82f6', '#8b5cf6', '#ef4444'],
   fillGradientStopsRange: [2, 4],
+  
+  // Fill Opacity Settings
+  fillOpacityMode: 'range' as const,
   fillOpacityRange: [20, 100],
+  fillOpacityDefine: 80,
   
   // Stroke Properties
   strokeEnabled: true,
   strokeProbability: 60,
-  strokeColorProbability: 80,
+  
+  // Stroke Color Settings
+  strokeColorMode: 'range' as const,
   strokeColorRange: ['#ef4444', '#f59e0b'],
-  strokeGradientProbability: 15,
-  strokeGradientTypeProbability: 50,
-  strokeGradientColorRange: ['#ef4444', '#f59e0b'],
-  strokeGradientStopsRange: [2, 3],
+  strokeColorPalette: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981', '#3b82f6'],
+  strokeColorDefine: '#ef4444',
+  
+  // Stroke Opacity Settings
+  strokeOpacityMode: 'range' as const,
   strokeOpacityRange: [40, 100],
+  strokeOpacityDefine: 80,
   strokeWidthRange: [1, 5],
   
   // Polygon Shape Properties
@@ -1701,49 +1733,149 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       </div>
                       
                       {currentSettings.fillEnabled && (
-                        <div className="ml-6 space-y-3">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Fill Probability: {currentSettings.fillProbability}%</Label>
-                              <Slider
-                                value={[currentSettings.fillProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ fillProbability: value })}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
+                        <div className="ml-6 space-y-4">
+                          {/* Fill Probability */}
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Fill Probability: {currentSettings.fillProbability}%</Label>
+                            <Slider
+                              value={[currentSettings.fillProbability]}
+                              onValueChange={([value]) => handleSettingsUpdate({ fillProbability: value })}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+
+                          {/* Fill Color Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Fill Color</Label>
+                              <Select value={currentSettings.fillColorMode} onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as any })}>
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Fill Color Probability: {currentSettings.fillColorProbability}%</Label>
-                              <Slider
-                                value={[currentSettings.fillColorProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ fillColorProbability: value })}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Fill Color Range</Label>
-                              <div className="flex space-x-2">
+
+                            {currentSettings.fillColorMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">HSL Color Range</Label>
+                                <div className="flex space-x-2">
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                </div>
+                                <p className="text-xs text-slate-400">Colors interpolated in HSL space for smooth hue transitions</p>
+                              </div>
+                            )}
+
+                            {currentSettings.fillColorMode === 'palette' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Color Palette</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {currentSettings.fillColorPalette?.map((color, index) => (
+                                    <Input
+                                      key={index}
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newPalette = [...(currentSettings.fillColorPalette || [])];
+                                        newPalette[index] = e.target.value;
+                                        handleSettingsUpdate({ fillColorPalette: newPalette });
+                                      }}
+                                      className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                  ))}
+                                  <button
+                                    onClick={() => {
+                                      const newPalette = [...(currentSettings.fillColorPalette || []), '#ffffff'];
+                                      handleSettingsUpdate({ fillColorPalette: newPalette });
+                                    }}
+                                    className="w-12 h-8 bg-slate-700 border border-slate-600 rounded text-slate-300 text-xs hover:bg-slate-600"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <p className="text-xs text-slate-400">Shapes cycle through palette colors</p>
+                              </div>
+                            )}
+
+                            {currentSettings.fillColorMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Defined Color</Label>
                                 <Input
                                   type="color"
-                                  value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
-                                  onChange={(e) => handleSettingsUpdate({
-                                    fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
-                                  })}
+                                  value={currentSettings.fillColorDefine || '#3b82f6'}
+                                  onChange={(e) => handleSettingsUpdate({ fillColorDefine: e.target.value })}
                                   className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                 />
-                                <Input
-                                  type="color"
-                                  value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
-                                  onChange={(e) => handleSettingsUpdate({
-                                    fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
-                                  })}
-                                  className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                <p className="text-xs text-slate-400">All shapes use this exact color</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Fill Opacity Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
+                              <Select value={currentSettings.fillOpacityMode} onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as any })}>
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {currentSettings.fillOpacityMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] || 20}% - {currentSettings.fillOpacityRange?.[1] || 100}%</Label>
+                                <Slider
+                                  value={currentSettings.fillOpacityRange || [20, 100]}
+                                  onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
                                 />
                               </div>
-                            </div>
+                            )}
+
+                            {currentSettings.fillOpacityMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity: {currentSettings.fillOpacityDefine || 80}%</Label>
+                                <Slider
+                                  value={[currentSettings.fillOpacityDefine || 80]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Fill Gradient Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-300">Fill Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
                               <Slider
@@ -1754,6 +1886,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
                             </div>
+
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-300">Gradient Stops: {currentSettings.fillGradientStopsRange?.[0] || 2} - {currentSettings.fillGradientStopsRange?.[1] || 4}</Label>
                               <Slider
@@ -1765,28 +1898,105 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
                             </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Fill Gradient Color Range</Label>
-                            <div className="flex space-x-2">
-                              <Input
-                                type="color"
-                                value={currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}
-                                onChange={(e) => handleSettingsUpdate({
-                                  fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
-                                })}
-                                className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                              />
-                              <Input
-                                type="color"
-                                value={currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'}
-                                onChange={(e) => handleSettingsUpdate({
-                                  fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
-                                })}
-                                className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                              />
+
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Gradient Colors</Label>
+                              <Select value={currentSettings.fillGradientColorMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientColorMode: value as any })}>
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
+
+                            {currentSettings.fillGradientColorMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">HSL Gradient Range</Label>
+                                <div className="flex space-x-2">
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {currentSettings.fillGradientColorMode === 'palette' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Gradient Palette</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {currentSettings.fillGradientColorPalette?.map((color, index) => (
+                                    <Input
+                                      key={index}
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newPalette = [...(currentSettings.fillGradientColorPalette || [])];
+                                        newPalette[index] = e.target.value;
+                                        handleSettingsUpdate({ fillGradientColorPalette: newPalette });
+                                      }}
+                                      className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                  ))}
+                                  <button
+                                    onClick={() => {
+                                      const newPalette = [...(currentSettings.fillGradientColorPalette || []), '#ffffff'];
+                                      handleSettingsUpdate({ fillGradientColorPalette: newPalette });
+                                    }}
+                                    className="w-12 h-8 bg-slate-700 border border-slate-600 rounded text-slate-300 text-xs hover:bg-slate-600"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {currentSettings.fillGradientColorMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Gradient Colors</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {currentSettings.fillGradientColorDefine?.map((color, index) => (
+                                    <Input
+                                      key={index}
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newColors = [...(currentSettings.fillGradientColorDefine || [])];
+                                        newColors[index] = e.target.value;
+                                        handleSettingsUpdate({ fillGradientColorDefine: newColors });
+                                      }}
+                                      className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                  ))}
+                                  <button
+                                    onClick={() => {
+                                      const newColors = [...(currentSettings.fillGradientColorDefine || []), '#ffffff'];
+                                      handleSettingsUpdate({ fillGradientColorDefine: newColors });
+                                    }}
+                                    className="w-12 h-8 bg-slate-700 border border-slate-600 rounded text-slate-300 text-xs hover:bg-slate-600"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <p className="text-xs text-slate-400">Colors used in order for gradient stops</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1806,7 +2016,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       </div>
                       
                       {currentSettings.strokeEnabled && (
-                        <div className="ml-6 space-y-3">
+                        <div className="ml-6 space-y-4">
+                          {/* Stroke Probability and Width */}
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-300">Stroke Probability: {currentSettings.strokeProbability}%</Label>
@@ -1829,50 +2040,134 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Stroke Color Probability: {currentSettings.strokeColorProbability}%</Label>
-                              <Slider
-                                value={[currentSettings.strokeColorProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ strokeColorProbability: value })}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
                           </div>
-                          
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Stroke Color Range</Label>
-                            <div className="flex space-x-2">
-                              <Input
-                                type="color"
-                                value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
-                                onChange={(e) => handleSettingsUpdate({
-                                  strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
-                                })}
-                                className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                              />
-                              <Input
-                                type="color"
-                                value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
-                                onChange={(e) => handleSettingsUpdate({
-                                  strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
-                                })}
-                                className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                              />
+
+                          {/* Stroke Color Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Stroke Color</Label>
+                              <Select value={currentSettings.strokeColorMode} onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as any })}>
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
+
+                            {currentSettings.strokeColorMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">HSL Color Range</Label>
+                                <div className="flex space-x-2">
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
+                                    })}
+                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                  />
+                                </div>
+                                <p className="text-xs text-slate-400">Colors interpolated in HSL space for smooth hue transitions</p>
+                              </div>
+                            )}
+
+                            {currentSettings.strokeColorMode === 'palette' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Color Palette</Label>
+                                <div className="flex flex-wrap gap-2">
+                                  {currentSettings.strokeColorPalette?.map((color, index) => (
+                                    <Input
+                                      key={index}
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newPalette = [...(currentSettings.strokeColorPalette || [])];
+                                        newPalette[index] = e.target.value;
+                                        handleSettingsUpdate({ strokeColorPalette: newPalette });
+                                      }}
+                                      className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                  ))}
+                                  <button
+                                    onClick={() => {
+                                      const newPalette = [...(currentSettings.strokeColorPalette || []), '#ffffff'];
+                                      handleSettingsUpdate({ strokeColorPalette: newPalette });
+                                    }}
+                                    className="w-12 h-8 bg-slate-700 border border-slate-600 rounded text-slate-300 text-xs hover:bg-slate-600"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <p className="text-xs text-slate-400">Shapes cycle through palette colors</p>
+                              </div>
+                            )}
+
+                            {currentSettings.strokeColorMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Defined Color</Label>
+                                <Input
+                                  type="color"
+                                  value={currentSettings.strokeColorDefine || '#ef4444'}
+                                  onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
+                                  className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                />
+                                <p className="text-xs text-slate-400">All shapes use this exact color</p>
+                              </div>
+                            )}
                           </div>
-                          
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Stroke Opacity: {currentSettings.strokeOpacityRange?.[0] || 40}% - {currentSettings.strokeOpacityRange?.[1] || 100}%</Label>
-                            <Slider
-                              value={currentSettings.strokeOpacityRange || [40, 100]}
-                              onValueChange={(value) => handleSettingsUpdate({ strokeOpacityRange: value as [number, number] })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
+
+                          {/* Stroke Opacity Controls */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Stroke Opacity</Label>
+                              <Select value={currentSettings.strokeOpacityMode} onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as any })}>
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {currentSettings.strokeOpacityMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.strokeOpacityRange?.[0] || 40}% - {currentSettings.strokeOpacityRange?.[1] || 100}%</Label>
+                                <Slider
+                                  value={currentSettings.strokeOpacityRange || [40, 100]}
+                                  onValueChange={(value) => handleSettingsUpdate({ strokeOpacityRange: value as [number, number] })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+
+                            {currentSettings.strokeOpacityMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity: {currentSettings.strokeOpacityDefine || 80}%</Label>
+                                <Slider
+                                  value={[currentSettings.strokeOpacityDefine || 80]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityDefine: value })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
