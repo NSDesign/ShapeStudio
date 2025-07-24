@@ -205,6 +205,12 @@ export default function Sidebar({
   const [scaleX, setScaleX] = useState(100);
   const [scaleY, setScaleY] = useState(100);
   const [lockAspectRatio, setLockAspectRatio] = useState(true);
+  
+  // Loading states for save/load/export operations
+  const [isSavingProject, setIsSavingProject] = useState(false);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -500,7 +506,9 @@ export default function Sidebar({
       }
     };
 
-    const handleExportShapes = () => {
+    const handleExportShapes = async () => {
+      setIsExporting(true);
+      try {
       let shapesToExport: Shape[] = [];
       let canvasWidth: number;
       let canvasHeight: number;
@@ -678,6 +686,14 @@ export default function Sidebar({
 
       // Export using helper function that handles all formats including PDF
       exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale);
+      
+      // Add a small delay to show the loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error('❌ Export failed:', error);
+      } finally {
+        setIsExporting(false);
+      }
     };
 
     const performBatchExport = (filename: string) => {
@@ -1127,6 +1143,7 @@ export default function Sidebar({
           <Button
             onClick={handleExportShapes}
             disabled={
+              isExporting ||
               isBatchExporting ||
               (exportMode === 'selection' && selectedShapes.length === 0) ||
               (exportMode === 'artboard' && (!selectedArtboardForExport || artboards.length === 0)) ||
@@ -1134,12 +1151,21 @@ export default function Sidebar({
             }
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
           >
-            <FileImage className="w-4 h-4 mr-2" />
-            {exportMode === 'selection' && `Export Selected (${selectedShapes.length})`}
-            {exportMode === 'artboard' && selectedArtboardForExport && 
-              `Export ${artboards.find(ab => ab.id === selectedArtboardForExport)?.name || 'Artboard'}`}
-            {exportMode === 'artboard' && !selectedArtboardForExport && 'Select Artboard to Export'}
-            {exportMode === 'all' && `Export All Shapes (${shapes.length})`}
+            {isExporting ? (
+              <>
+                <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FileImage className="w-4 h-4 mr-2" />
+                {exportMode === 'selection' && `Export Selected (${selectedShapes.length})`}
+                {exportMode === 'artboard' && selectedArtboardForExport && 
+                  `Export ${artboards.find(ab => ab.id === selectedArtboardForExport)?.name || 'Artboard'}`}
+                {exportMode === 'artboard' && !selectedArtboardForExport && 'Select Artboard to Export'}
+                {exportMode === 'all' && `Export All Shapes (${shapes.length})`}
+              </>
+            )}
           </Button>
         </div>
 
@@ -2329,71 +2355,99 @@ export default function Sidebar({
           <Label className="text-xs text-slate-300">Project Files</Label>
           <div className="grid grid-cols-2 gap-2">
             <Button
-              onClick={() => {
-                const projectData = {
-                  shapes,
-                  selectedGroups,
-                  scatterSettings,
-                  enabledShapeTypes: Array.from(enabledShapeTypes)
-                };
-                const blob = new Blob([JSON.stringify(projectData, null, 2)], {
-                  type: 'application/json'
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `shape-editor-project-${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
+              onClick={async () => {
+                setIsSavingProject(true);
+                try {
+                  const projectData = {
+                    shapes,
+                    selectedGroups,
+                    scatterSettings,
+                    enabledShapeTypes: Array.from(enabledShapeTypes)
+                  };
+                  const blob = new Blob([JSON.stringify(projectData, null, 2)], {
+                    type: 'application/json'
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `shape-editor-project-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  
+                  // Add a small delay to show the loading state
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                } finally {
+                  setIsSavingProject(false);
+                }
               }}
               variant="secondary"
               size="sm"
               className="text-xs"
+              disabled={isSavingProject}
             >
-              <Save className="w-3 h-3 mr-1" />
-              Save
+              {isSavingProject ? (
+                <>
+                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-3 h-3 mr-1" />
+                  Save
+                </>
+              )}
             </Button>
             <Button
               onClick={() => {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = '.json';
-                input.onchange = (e) => {
+                input.onchange = async (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      try {
-                        const data = JSON.parse(e.target?.result as string);
-                        console.log('Project loaded:', data);
-                        
-                        // Load project data into the app if onLoadProject is available
-                        if (onLoadProject) {
-                          // Convert shapes array back to Shape objects if needed
-                          const shapes = data.shapes || [];
-                          const groups = data.groups || [];
-                          const canvasSettings = data.canvasSettings || {};
-                          const scatterSettings = data.scatterSettings || {};
-                          const enabledShapeTypes = data.enabledShapeTypes ? 
-                            new Set(data.enabledShapeTypes as ShapeType[]) : new Set<ShapeType>();
+                    setIsLoadingProject(true);
+                    try {
+                      const reader = new FileReader();
+                      reader.onload = async (e) => {
+                        try {
+                          const data = JSON.parse(e.target?.result as string);
+                          console.log('Project loaded:', data);
                           
-                          onLoadProject({
-                            shapes,
-                            groups,
-                            canvasSettings,
-                            scatterSettings,
-                            enabledShapeTypes
-                          });
-                          
-                          console.log('✅ Project loaded successfully!');
-                        } else {
-                          console.warn('⚠️ onLoadProject callback not available');
+                          // Load project data into the app if onLoadProject is available
+                          if (onLoadProject) {
+                            // Convert shapes array back to Shape objects if needed
+                            const shapes = data.shapes || [];
+                            const groups = data.groups || [];
+                            const canvasSettings = data.canvasSettings || {};
+                            const scatterSettings = data.scatterSettings || {};
+                            const enabledShapeTypes = data.enabledShapeTypes ? 
+                              new Set(data.enabledShapeTypes as ShapeType[]) : new Set<ShapeType>();
+                            
+                            onLoadProject({
+                              shapes,
+                              groups,
+                              canvasSettings,
+                              scatterSettings,
+                              enabledShapeTypes
+                            });
+                            
+                            console.log('✅ Project loaded successfully!');
+                          } else {
+                            console.warn('⚠️ onLoadProject callback not available');
+                          }
+                        } catch (error) {
+                          console.error('❌ Failed to load project:', error);
+                        } finally {
+                          // Add a small delay to show the loading state
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          setIsLoadingProject(false);
                         }
-                      } catch (error) {
-                        console.error('❌ Failed to load project:', error);
-                      }
-                    };
-                    reader.readAsText(file);
+                      };
+                      reader.readAsText(file);
+                    } catch (error) {
+                      console.error('❌ Failed to load project:', error);
+                      setIsLoadingProject(false);
+                    }
                   }
                 };
                 input.click();
@@ -2401,9 +2455,19 @@ export default function Sidebar({
               variant="secondary"
               size="sm"
               className="text-xs"
+              disabled={isLoadingProject}
             >
-              <FolderOpen className="w-3 h-3 mr-1" />
-              Load
+              {isLoadingProject ? (
+                <>
+                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FolderOpen className="w-3 h-3 mr-1" />
+                  Load
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -2415,21 +2479,41 @@ export default function Sidebar({
           <Label className="text-xs text-slate-300">Quick Actions</Label>
           <div className="space-y-2">
             <Button
-              onClick={() => {
-                const projectData = {
-                  shapes,
-                  selectedGroups,
-                  scatterSettings,
-                  enabledShapeTypes: Array.from(enabledShapeTypes)
-                };
-                navigator.clipboard.writeText(JSON.stringify(projectData, null, 2));
+              onClick={async () => {
+                setIsCopying(true);
+                try {
+                  const projectData = {
+                    shapes,
+                    selectedGroups,
+                    scatterSettings,
+                    enabledShapeTypes: Array.from(enabledShapeTypes)
+                  };
+                  await navigator.clipboard.writeText(JSON.stringify(projectData, null, 2));
+                  
+                  // Add a small delay to show the loading state
+                  await new Promise(resolve => setTimeout(resolve, 300));
+                } catch (error) {
+                  console.error('❌ Failed to copy to clipboard:', error);
+                } finally {
+                  setIsCopying(false);
+                }
               }}
               variant="secondary"
               size="sm"
               className="w-full text-xs"
+              disabled={isCopying}
             >
-              <Clipboard className="w-3 h-3 mr-1" />
-              Copy Project to Clipboard
+              {isCopying ? (
+                <>
+                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
+                  Copying...
+                </>
+              ) : (
+                <>
+                  <Clipboard className="w-3 h-3 mr-1" />
+                  Copy Project to Clipboard
+                </>
+              )}
             </Button>
 
             <Button
