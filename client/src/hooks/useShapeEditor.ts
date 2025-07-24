@@ -1098,6 +1098,10 @@ export const useShapeEditor = () => {
       scatterSettings.distribution
     );
 
+    // Calculate base z-index once before the loop to avoid stale state issues
+    const baseZIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
+    console.log(`🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=${shapes.length}, baseZIndex=${baseZIndex}`);
+
     const newShapes = positions.map((position, index) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
 
@@ -1170,18 +1174,10 @@ export const useShapeEditor = () => {
         }
       }
 
-      // Log existing shapes z-indices before assignment
-      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Current shapes count: ${shapes.length}`);
-      if (shapes.length > 0) {
-        const allZIndices = shapes.map(s => s.properties.zIndex);
-        console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Existing z-indices: [${allZIndices.join(', ')}]`);
-      }
-
-      // Assign proper z-index for layering
-      const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
-      shape.properties.zIndex = existingMaxIndex + index + 1;
+      // Assign proper z-index for layering using running counter
+      shape.properties.zIndex = baseZIndex + index + 1;
       
-      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: existingMaxIndex=${existingMaxIndex}, assigned z-index=${shape.properties.zIndex}`);
+      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: baseZIndex=${baseZIndex}, assigned z-index=${shape.properties.zIndex}`);
       console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Shape ID=${shape.id}, Type=${shape.type}`)
 
       // Apply color harmony if enabled
