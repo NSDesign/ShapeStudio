@@ -67,9 +67,6 @@ export interface BatchConfigSettings {
   // Properties Section
   propertiesEnabled: boolean;
   
-  // Safety Constraints
-  preventInvisibleShapes: boolean; // ensures fill OR stroke is always present
-  
   // Shape Properties
   shapePropertiesEnabled: boolean;
   widthRange: [number, number];
@@ -307,7 +304,6 @@ const defaultSettings: BatchConfigSettings = {
   enabledBlendModes: { 'source-over': 100 },
   
   propertiesEnabled: false,
-  preventInvisibleShapes: true,
   
   // Shape Properties
   shapePropertiesEnabled: false,
@@ -1709,21 +1705,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           </div>
                         </div>
                       )}
-                    </div>
-
-                    <Separator className="bg-slate-700" />
-
-                    {/* Prevent Invisible Shapes */}
-                    <div className="space-y-2 p-3 bg-slate-800 rounded">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={currentSettings.preventInvisibleShapes}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ preventInvisibleShapes: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-sm text-slate-200">Prevent Invisible Shapes</Label>
-                      </div>
-                      <p className="text-xs text-slate-400 ml-6">Ensures fill OR stroke is always present</p>
                     </div>
 
                     <Separator className="bg-slate-700" />

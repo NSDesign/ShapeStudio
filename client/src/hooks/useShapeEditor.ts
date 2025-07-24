@@ -131,7 +131,7 @@ export const useShapeEditor = () => {
     enabledBlendModes: { 'source-over': 100 },
 
     propertiesEnabled: false,
-    preventInvisibleShapes: true,
+
 
     shapePropertiesEnabled: false,
     widthRange: [50, 200],
@@ -1360,20 +1360,7 @@ export const useShapeEditor = () => {
           shape.properties.strokeWidth = 0;
         }
 
-        // Prevent invisible shapes if enabled
-        if (batchConfigSettings.preventInvisibleShapes) {
-          const hasFill = (shape.properties.fillColor !== 'transparent' && shape.properties.fillOpacity > 0) || 
-                         (shape.properties.gradient && shape.properties.fillOpacity > 0);
-          const hasStroke = shape.properties.strokeColor !== 'transparent' && shape.properties.strokeOpacity > 0 && shape.properties.strokeWidth > 0;
 
-          if (!hasFill && !hasStroke) {
-            // Force at least a fill
-            shape.properties.fillColor = shape.properties.fillColor === 'transparent' ? 
-              `hsl(${Math.random() * 360}, 75%, 50%)` : shape.properties.fillColor;
-            shape.properties.fillOpacity = 0.7;
-            console.log(`⚠️ [INVISIBLE PREVENTION] Shape ${index}: Forced fill color to prevent invisible shape`);
-          }
-        }
 
         // Apply shape transforms if enabled
         if (batchConfigSettings.transformsEnabled) {
