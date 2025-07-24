@@ -821,9 +821,17 @@ export default function Sidebar({
           
           // STEP 1: Shape Generation
           setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
-          setBatchProgress(currentStep++);
-          console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
-          await new Promise(resolve => setTimeout(resolve, 500)); // Longer delay to see progress
+          setBatchProgress(currentStep);
+          console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
+          currentStep++;
+          
+          // Force UI update with longer delay
+          await new Promise(resolve => {
+            setTimeout(() => {
+              console.log(`⏳ Shape generation delay completed for artwork ${i + 1}`);
+              resolve(undefined);
+            }, 1000);
+          });
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
@@ -880,9 +888,17 @@ export default function Sidebar({
           if (currentExportShapes.length > 0) {
             // STEP 2: Image Creation and Export
             setBatchStatus(`Creating image for artwork ${i + 1}...`);
-            setBatchProgress(currentStep++);
-            console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Creating image for artwork ${i + 1}`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Longer delay to see progress
+            setBatchProgress(currentStep);
+            console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating image for artwork ${i + 1}`);
+            currentStep++;
+            
+            // Force UI update with longer delay
+            await new Promise(resolve => {
+              setTimeout(() => {
+                console.log(`⏳ Image creation delay completed for artwork ${i + 1}`);
+                resolve(undefined);
+              }, 1000);
+            });
             
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
@@ -1036,18 +1052,34 @@ export default function Sidebar({
         
         // FINAL STEP: ZIP Creation and Download
         setBatchStatus('Creating ZIP file...');
-        setBatchProgress(currentStep++);
-        console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Creating ZIP file`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Much longer delay for ZIP creation
+        setBatchProgress(currentStep);
+        console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
+        currentStep++;
+        
+        // Force UI update with much longer delay for ZIP creation
+        await new Promise(resolve => {
+          setTimeout(() => {
+            console.log(`⏳ ZIP creation delay completed`);
+            resolve(undefined);
+          }, 2000);
+        });
         
         const projectFilesText = batchSaveProjectFiles ? ` and ${batchExportCount} project files` : '';
         console.log(`📦 Creating ZIP file with ${batchExportCount} images${projectFilesText}`);
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         
         setBatchStatus('Downloading ZIP file...');
-        setBatchProgress(currentStep++);
-        console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Downloading ZIP file`);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        setBatchProgress(currentStep);
+        console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
+        currentStep++;
+        
+        // Force UI update before download
+        await new Promise(resolve => {
+          setTimeout(() => {
+            console.log(`⏳ Download preparation delay completed`);
+            resolve(undefined);
+          }, 1000);
+        });
         
         const link = document.createElement('a');
         link.href = URL.createObjectURL(zipBlob);
