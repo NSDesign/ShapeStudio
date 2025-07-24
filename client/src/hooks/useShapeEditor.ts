@@ -1225,26 +1225,7 @@ export const useShapeEditor = () => {
           }
         }
         
-        // Handle stroke color
-        if (batchConfigSettings.strokeEnabled) {
-          // Generate stroke color using new HSL system
-          const strokeColor = generateColor(
-            batchConfigSettings.strokeColorMode,
-            batchConfigSettings.strokeColorRange,
-            batchConfigSettings.strokeColorPalette,
-            batchConfigSettings.strokeColorDefine,
-            index
-          );
-          shape.properties.strokeColor = strokeColor;
-          
-          // Apply stroke opacity based on mode
-          if (batchConfigSettings.strokeOpacityMode === 'range') {
-            const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
-            shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-          } else if (batchConfigSettings.strokeOpacityMode === 'define') {
-            shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
-          }
-        }
+        // Stroke properties will be handled by stroke probability gate below
       } else {
         // Original randomization behavior (before noise system)
         const hue = Math.random() * 360;
@@ -1330,21 +1311,28 @@ export const useShapeEditor = () => {
           }
         }
         
-        // Handle stroke probability
+        // Handle stroke probability - PRIMARY GATE for all stroke properties
         if (batchConfigSettings.strokeEnabled) {
           const shouldHaveStroke = Math.random() * 100 < batchConfigSettings.strokeProbability;
           if (!shouldHaveStroke) {
+            // No stroke - disable all stroke properties
             shape.properties.strokeColor = 'transparent';
             shape.properties.strokeOpacity = 0;
             shape.properties.strokeWidth = 0;
           } else {
+            // Stroke enabled - apply all stroke properties
+            
             // Apply stroke width range
             const [minWidth, maxWidth] = batchConfigSettings.strokeWidthRange;
             shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
             
-            // Apply stroke opacity range
-            const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
-            shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            // Apply stroke opacity based on mode
+            if (batchConfigSettings.strokeOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
+              shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            } else if (batchConfigSettings.strokeOpacityMode === 'define') {
+              shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
+            }
             
             // Apply stroke color using new HSL system
             const strokeColor = generateColor(
@@ -1356,6 +1344,11 @@ export const useShapeEditor = () => {
             );
             shape.properties.strokeColor = strokeColor;
           }
+        } else {
+          // Stroke section disabled - ensure no stroke
+          shape.properties.strokeColor = 'transparent';
+          shape.properties.strokeOpacity = 0;
+          shape.properties.strokeWidth = 0;
         }
         
         // Prevent invisible shapes if enabled

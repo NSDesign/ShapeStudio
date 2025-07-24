@@ -1,0 +1,54 @@
+ The issue is that the color wheel wraps around at 360°/0°, but when you're selecting hue values on a linear color spectrum interface, you're thinking in terms of a straight line progression.
+
+The Problem
+Currently, the getHueDistance function in hslColor.ts calculates the shortest path on the color wheel:
+
+// Current logic - shortest path on color wheel
+function getHueDistance(h1: number, h2: number) {
+  const direct = h2 - h1;
+  const wrap = direct > 0 ? direct - 360 : direct + 360;
+  
+  if (Math.abs(direct) <= Math.abs(wrap)) {
+    return { distance: Math.abs(direct), direction: Math.sign(direct) };
+  } else {
+    return { distance: Math.abs(wrap), direction: Math.sign(wrap) };
+  }
+}
+Linear Color Spectrum Approach
+For a linear color spectrum interpolation (like what you see in most color pickers), the equation would be much simpler:
+
+// Linear spectrum interpolation - no wraparound
+function interpolateLinearHue(h1: number, h2: number, t: number): number {
+  // Simple linear interpolation between two hue values
+  return h1 + (h2 - h1) * t;
+}
+Example Scenarios
+Your Example: H=342 to H=50
+
+Current (Color Wheel) Behavior:
+
+Shortest path: 342 → 360 → 0 → 50 = 68° span
+Colors: Deep red → Red → Orange → Yellow-orange
+Limited range, misses most of the spectrum
+Linear Spectrum Behavior:
+
+Direct path: 342 → 270 → 180 → 90 → 50 = 292° span
+Colors: Deep red → Magenta → Blue → Cyan → Green → Yellow → Yellow-orange
+Full spectrum coverage as you intended
+Another Example: H=50 to H=300
+
+Current (Color Wheel):
+
+Shortest path: 50 → 300 = 250° span (going backwards)
+Colors: Yellow-orange → Orange → Red → Magenta → Purple
+Linear Spectrum:
+
+Direct path: 50 → 120 → 180 → 240 → 300 = 250° span (going forwards)
+Colors: Yellow-orange → Green → Cyan → Blue → Purple
+Same span but different color progression
+The Key Difference
+Color Wheel: Always takes the shortest route, wraps around at 360°/0°
+Linear Spectrum: Treats hue as a straight line from 0° to 360°, no wraparound consideration
+For your use case where you want to sample between two specific hue positions as they appear on a linear spectrum, you'd want the simple linear interpolation without any shortest-path logic.
+
+The current HSL interpolation is designed for color harmony (natural color relationships), but you're looking for spectral sampling (sampling across the visible light spectrum in a linear fashion).
