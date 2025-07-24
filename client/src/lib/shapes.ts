@@ -239,10 +239,15 @@ export class Shape {
       };
     }
     
+    const fillColor = hasFill ? `hsl(${hue}, ${saturation}%, ${lightness}%)` : 'transparent';
+    const strokeColor = hasStroke ? `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)` : 'transparent';
+    
+    console.log(`🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="${fillColor}", strokeColor="${strokeColor}" (non-batch creation)`);
+    
     return {
-      fillColor: hasFill ? `hsl(${hue}, ${saturation}%, ${lightness}%)` : 'transparent',
+      fillColor: fillColor,
       fillOpacity: hasFill ? 0.7 + Math.random() * 0.3 : 0,
-      strokeColor: hasStroke ? `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)` : 'transparent',
+      strokeColor: strokeColor,
       strokeWidth: hasStroke ? 1 + Math.random() * 4 : 0,
       strokeOpacity: hasStroke ? 0.8 + Math.random() * 0.2 : 0,
       blendMode: 'source-over' as BlendMode,

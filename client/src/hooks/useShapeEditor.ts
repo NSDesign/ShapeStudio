@@ -1231,13 +1231,17 @@ export const useShapeEditor = () => {
         const hue = Math.random() * 360;
         const saturation = 50 + Math.random() * 50;
         const lightness = 30 + Math.random() * 40;
-        shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        shape.properties.fillColor = fillColor;
+        console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback)`);
         
         // Random stroke color
         const strokeHue = Math.random() * 360;
         const strokeSaturation = 60 + Math.random() * 40;
         const strokeLightness = 20 + Math.random() * 60;
-        shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+        const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+        shape.properties.strokeColor = strokeColor;
+        console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
       }
       
       // Apply fill and stroke probabilities from batch config
@@ -1247,6 +1251,8 @@ export const useShapeEditor = () => {
           // Independent probability checks
           const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
           const shouldHaveGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
+          
+          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillProb=${batchConfigSettings.fillProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
           
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
@@ -1287,6 +1293,7 @@ export const useShapeEditor = () => {
             
             // When gradient is used, set transparent fill so gradient shows through
             shape.properties.fillColor = 'transparent';
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using GRADIENT, fillColor set to transparent`);
             
             // Apply fill opacity range for gradient
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
@@ -1305,6 +1312,7 @@ export const useShapeEditor = () => {
               index
             );
             shape.properties.fillColor = fillColor;
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${batchConfigSettings.fillColorMode}"`);
             
             // Apply fill opacity range for solid fill
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
@@ -1315,6 +1323,7 @@ export const useShapeEditor = () => {
             shape.properties.fillColor = 'transparent';
             shape.properties.fillOpacity = 0;
             shape.properties.gradient = undefined;
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: NO FILL - both probabilities failed, fillColor set to transparent`);
           }
         }
         
@@ -1489,7 +1498,9 @@ export const useShapeEditor = () => {
             const saturation = noiseResult.saturation; // Direct 50-100% value  
             const lightness = noiseResult.lightness; // Direct 30-70% value
             
-            shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            shape.properties.fillColor = noiseColor;
+            console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE randomise applied! fillColor="${noiseColor}"`);
           } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
             // Extract existing HSL values for variation-based algorithms
             let hue = 0, saturation = 50, lightness = 50;
@@ -1505,7 +1516,9 @@ export const useShapeEditor = () => {
             saturation = Math.max(0, Math.min(100, saturation + noiseResult.saturation));
             lightness = Math.max(0, Math.min(100, lightness + noiseResult.lightness));
             
-            shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            shape.properties.fillColor = noiseColor;
+            console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE perlin applied! fillColor="${noiseColor}" (from base: ${hslMatch?.[0] || 'no match'})`);
             
             // Random stroke color (original behavior - use different seed offset)
             const strokeHue = (hue + 180) % 360; // Complementary hue
@@ -1522,7 +1535,9 @@ export const useShapeEditor = () => {
             const finalSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation));
             const finalLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness));
             
-            shape.properties.fillColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
+            const noiseColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
+            shape.properties.fillColor = noiseColor;
+            console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE ${batchConfigSettings.noiseAlgorithm} applied! fillColor="${noiseColor}"`);
             
             const strokeHue = (finalHue + 30 + noiseResult.hue * 0.3) % 360;
             const strokeSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation * 0.8));
@@ -1542,6 +1557,8 @@ export const useShapeEditor = () => {
         // Ensure original opacity values
         shape.properties.fillOpacity = 0.8 + Math.random() * 0.2;
         shape.properties.strokeOpacity = 0.9 + Math.random() * 0.1;
+        
+        console.log(`🔧 [NO NOISE] Shape ${index}: Noise disabled, applying transform only. Current fillColor="${shape.properties.fillColor}"`);
       }
       
       return shape;
