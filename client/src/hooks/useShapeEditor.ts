@@ -834,10 +834,6 @@ export const useShapeEditor = () => {
 
       const newShape = new Shape(randomType, finalX, finalY);
 
-      // Assign proper z-index for layering
-      const existingMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
-      newShape.properties.zIndex = existingMaxZ + index + 1;
-
       // Add some variation to scattered shapes
       const sizeVariation = 0.5 + Math.random() * randomness;
       newShape.transform.scaleX *= sizeVariation;
@@ -845,10 +841,6 @@ export const useShapeEditor = () => {
 
       // Random rotation
       newShape.transform.rotation = Math.random() * 360 * randomness;
-
-      // Assign proper z-index for layering
-      const currentMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
-      newShape.properties.zIndex = currentMaxZ + newShapes.length + 1;
 
       // Random color variation
       const hue = Math.random() * 360;
@@ -859,7 +851,18 @@ export const useShapeEditor = () => {
       newShapes.push(newShape);
     });
 
-    setShapes(prev => [...prev, ...newShapes]);
+    setShapes(prev => {
+      // Calculate proper z-indices for scatter shapes to avoid conflicts
+      const currentMaxZIndex = prev.length > 0 ? Math.max(...prev.map(s => s.properties.zIndex)) : 0;
+      const shapesWithFixedZIndex = newShapes.map((shape, index) => ({
+        ...shape,
+        properties: {
+          ...shape.properties,
+          zIndex: currentMaxZIndex + index + 1
+        }
+      }));
+      return [...prev, ...shapesWithFixedZIndex];
+    });
   }, [enabledShapeTypes, scatterSettings]);
 
   const toggleShapeType = useCallback((type: ShapeType) => {
@@ -1098,10 +1101,6 @@ export const useShapeEditor = () => {
       scatterSettings.distribution
     );
 
-    // Calculate base z-index once before the loop to avoid stale state issues
-    const baseZIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
-    console.log(`🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=${shapes.length}, baseZIndex=${baseZIndex}`);
-
     const newShapes = positions.map((position, index) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
 
@@ -1174,10 +1173,10 @@ export const useShapeEditor = () => {
         }
       }
 
-      // Assign proper z-index for layering using running counter
-      shape.properties.zIndex = baseZIndex + index + 1;
+      // Temporarily assign a placeholder z-index, will be fixed during state update
+      shape.properties.zIndex = index + 1;
       
-      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: baseZIndex=${baseZIndex}, assigned z-index=${shape.properties.zIndex}`);
+      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: temporary z-index=${shape.properties.zIndex} (will be fixed in state update)`);
       console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Shape ID=${shape.id}, Type=${shape.type}`)
 
       // Apply color harmony if enabled
@@ -1611,8 +1610,21 @@ export const useShapeEditor = () => {
     
     console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
     setShapes(prev => {
-      const updatedShapes = [...prev, ...finalShapes];
-      console.log(`🔍 [AFTER ADD] Total shapes: ${updatedShapes.length}, All z-indices: [${updatedShapes.map(s => s.properties.zIndex).join(', ')}]`);
+      // Calculate the correct base z-index from the current state
+      const currentMaxZIndex = prev.length > 0 ? Math.max(...prev.map(s => s.properties.zIndex)) : 0;
+      console.log(`🔍 [STATE UPDATE] Current shapes: ${prev.length}, currentMaxZIndex: ${currentMaxZIndex}`);
+      
+      // Fix z-indices for the new shapes based on current state
+      const shapesWithFixedZIndex = finalShapes.map((shape, index) => ({
+        ...shape,
+        properties: {
+          ...shape.properties,
+          zIndex: currentMaxZIndex + index + 1
+        }
+      }));
+      
+      const updatedShapes = [...prev, ...shapesWithFixedZIndex];
+      console.log(`🔍 [AFTER ADD] Total shapes: ${updatedShapes.length}, New z-indices: [${shapesWithFixedZIndex.map(s => s.properties.zIndex).join(', ')}]`);
       return updatedShapes;
     });
 
