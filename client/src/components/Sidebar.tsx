@@ -448,6 +448,8 @@ export default function Sidebar({
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
+    const [batchTotalSteps, setBatchTotalSteps] = useState(0);
+    const [batchStatus, setBatchStatus] = useState('');
     const [batchModeEnabled, setBatchModeEnabled] = useState(false);
     const [batchSaveProjectFiles, setBatchSaveProjectFiles] = useState(false);
 
@@ -782,6 +784,10 @@ export default function Sidebar({
 
       setIsBatchExporting(true);
       setBatchProgress(0);
+      // Calculate total steps: shape generation + image creation + zip creation + download
+      const totalSteps = (batchExportCount * 2) + 2; // 2 steps per image + zip creation + download
+      setBatchTotalSteps(totalSteps);
+      setBatchStatus('Initializing batch export...');
       console.log(`🚀 ZIP BATCH EXPORT: Starting ${batchExportCount} exports`);
       
       // Get the target artboard for shape generation
@@ -807,17 +813,20 @@ export default function Sidebar({
         const zip = new JSZip();
         const timestamp = Date.now();
         
+        let currentStep = 0;
+        
         for (let i = 0; i < batchExportCount; i++) {
           console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${batchExportCount} exports`);
           
-          // Update progress immediately at start of iteration
-          setBatchProgress(i);
-          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show progress update
+          // STEP 1: Shape Generation
+          setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
+          setBatchProgress(currentStep++);
+          await new Promise(resolve => setTimeout(resolve, 100));
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
-          await new Promise(resolve => setTimeout(resolve, 200)); // Longer delay to show progress
+          await new Promise(resolve => setTimeout(resolve, 200));
 
           // Generate shapes for this export
           const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
@@ -868,6 +877,11 @@ export default function Sidebar({
           const filename = `batch-${String(i + 1).padStart(3, '0')}-${imageTimestamp}.${exportFormat}`;
           
           if (currentExportShapes.length > 0) {
+            // STEP 2: Image Creation and Export
+            setBatchStatus(`Creating image for artwork ${i + 1}...`);
+            setBatchProgress(currentStep++);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
             // Use artboard bounds for export dimensions when in artboard mode
@@ -1015,20 +1029,28 @@ export default function Sidebar({
             console.error(`❌ No shapes generated for export ${i + 1}`);
           }
 
-          setBatchProgress(i + 1);
-          await new Promise(resolve => setTimeout(resolve, 100)); // Reduced delay
+          // Progress already updated after image creation step
         }
         
-        // Generate and download ZIP file
+        // FINAL STEP: ZIP Creation and Download
+        setBatchStatus('Creating ZIP file...');
+        setBatchProgress(currentStep++);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         const projectFilesText = batchSaveProjectFiles ? ` and ${batchExportCount} project files` : '';
         console.log(`📦 Creating ZIP file with ${batchExportCount} images${projectFilesText}`);
         const zipBlob = await zip.generateAsync({ type: 'blob' });
+        
+        setBatchStatus('Downloading ZIP file...');
+        setBatchProgress(currentStep++);
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const link = document.createElement('a');
         link.href = URL.createObjectURL(zipBlob);
         link.download = `batch-export-${timestamp}.zip`;
         link.click();
         
+        setBatchStatus('Download complete!');
         console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${batchExportCount} images${projectFilesText}`);
       } catch (error) {
         console.error('❌ Batch export error:', error);
@@ -1036,6 +1058,7 @@ export default function Sidebar({
         onClearAll?.();
         setIsBatchExporting(false);
         setBatchProgress(0);
+        setBatchStatus('');
       }
     };
 
@@ -1253,16 +1276,16 @@ export default function Sidebar({
                 <div className="space-y-2 p-3 bg-purple-900/20 rounded border border-purple-500/30">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-purple-300 font-medium">Batch Export Progress</span>
-                    <span className="text-purple-200">{batchProgress}/{batchExportCount}</span>
+                    <span className="text-purple-200">{batchProgress}/{batchTotalSteps}</span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div 
                       className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(batchProgress / batchExportCount) * 100}%` }}
+                      style={{ width: `${(batchProgress / batchTotalSteps) * 100}%` }}
                     ></div>
                   </div>
                   <div className="text-xs text-purple-400">
-                    Creating artwork {batchProgress} of {batchExportCount}...
+                    {batchStatus || 'Processing...'}
                   </div>
                 </div>
               )}
@@ -1275,7 +1298,7 @@ export default function Sidebar({
                 {isBatchExporting ? (
                   <>
                     <div className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Exporting... ({batchProgress}/{batchExportCount})
+                    Exporting... ({Math.round((batchProgress / batchTotalSteps) * 100)}%)
                   </>
                 ) : (
                   <>
