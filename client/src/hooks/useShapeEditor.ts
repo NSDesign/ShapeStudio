@@ -1238,87 +1238,85 @@ export const useShapeEditor = () => {
 
       // Apply fill and stroke probabilities from batch config
       if (batchConfigSettings.propertiesEnabled) {
-        // Handle fill color and gradient as separate independent systems
-        let hasSolidFill = false;
-        let hasGradient = false;
+        // Handle fill and gradient probabilities independently
+        if (batchConfigSettings.fillEnabled) {
+          // Independent probability checks
+          const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
+          const shouldHaveGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
 
-        // Check solid fill first (if enabled)
-        if (batchConfigSettings.fillColorEnabled) {
-          hasSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
-        }
+          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillProb=${batchConfigSettings.fillProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
 
-        // Check gradient independently (if enabled)  
-        if (batchConfigSettings.fillGradientEnabled) {
-          hasGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
-        }
+          // Determine fill type based on probabilities
+          if (shouldHaveGradient) {
+            // Create gradient (takes priority if both are true)
+            const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
+            const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
+            const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
 
-        console.log(`🎨 [FILL DEBUG] Shape ${index}: colorEnabled=${batchConfigSettings.fillColorEnabled}, gradientEnabled=${batchConfigSettings.fillGradientEnabled}, hasSolidFill=${hasSolidFill}, hasGradient=${hasGradient}`);
+            const gradientStops = [];
+            for (let i = 0; i < stopCount; i++) {
+              let stopColor: string;
 
-        // Apply gradient first (if enabled and selected)
-        if (hasGradient) {
-            // Create gradient
-          const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
-          const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
-          const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+              if (batchConfigSettings.fillGradientColorMode === 'define') {
+                // For define mode, use specific colors from the array
+                const colors = batchConfigSettings.fillGradientColorDefine || ['#3b82f6'];
+                stopColor = colors[i % colors.length];
+              } else {
+                // For range and palette modes, use generateColor
+                stopColor = generateColor(
+                  batchConfigSettings.fillGradientColorMode,
+                  batchConfigSettings.fillGradientColorRange,
+                  batchConfigSettings.fillGradientColorPalette,
+                  undefined, // define is handled above
+                  index + i
+                );
+              }
 
-          const gradientStops = [];
-          for (let i = 0; i < stopCount; i++) {
-            let stopColor: string;
-
-            if (batchConfigSettings.fillGradientColorMode === 'define') {
-              const colors = batchConfigSettings.fillGradientColorDefine || ['#3b82f6'];
-              stopColor = colors[i % colors.length];
-            } else {
-              stopColor = generateColor(
-                batchConfigSettings.fillGradientColorMode,
-                batchConfigSettings.fillGradientColorRange,
-                batchConfigSettings.fillGradientColorPalette,
-                undefined,
-                index + i
-              );
+              gradientStops.push({
+                offset: i / (stopCount - 1),
+                color: stopColor
+              });
             }
 
-            gradientStops.push({
-              offset: i / (stopCount - 1),  
-              color: stopColor
-            });
-          }
+            shape.properties.gradient = {
+              type: gradientType,
+              stops: gradientStops
+            };
 
-          shape.properties.gradient = {
-            type: gradientType,
-            stops: gradientStops
-          };
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: Created GRADIENT with ${stopCount} stops`);
-        }
+            // When gradient is used, set transparent fill so gradient shows through
+            shape.properties.fillColor = 'transparent';
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using GRADIENT, fillColor set to transparent`);
 
-        // Apply solid fill (if enabled and selected, doesn't conflict with gradient)
-        if (hasSolidFill) {
-          const fillColor = generateColor(
-            batchConfigSettings.fillColorMode,
-            batchConfigSettings.fillColorRange,
-            batchConfigSettings.fillColorPalette,
-            batchConfigSettings.fillColorDefine,
-            index
-          );
-          shape.properties.fillColor = fillColor;
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: Applied SOLID FILL, fillColor="${fillColor}"`);
-        } else {
-          // No solid fill - set transparent
-          shape.properties.fillColor = 'transparent';
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: No solid fill, fillColor set to transparent`);
-        }
-
-        // Apply fill opacity (applies to both solid and gradient)
-        if (hasSolidFill || hasGradient) {
-          if (batchConfigSettings.fillOpacityMode === 'range') {
+            // Apply fill opacity range for gradient
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+
+          } else if (shouldHaveSolidFill) {
+            // Create solid fill (only if no gradient)
+            shape.properties.gradient = undefined;
+
+            // Apply solid fill color using new HSL system
+            const fillColor = generateColor(
+              batchConfigSettings.fillColorMode,
+              batchConfigSettings.fillColorRange,
+              batchConfigSettings.fillColorPalette,
+              batchConfigSettings.fillColorDefine,
+              index
+            );
+            shape.properties.fillColor = fillColor;
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${batchConfigSettings.fillColorMode}"`);
+
+            // Apply fill opacity range for solid fill
+            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
+            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+
           } else {
-            shape.properties.fillOpacity = batchConfigSettings.fillOpacityDefine / 100;
+            // No fill at all - both probabilities failed
+            shape.properties.fillColor = 'transparent';
+            shape.properties.fillOpacity = 0;
+            shape.properties.gradient = undefined;
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: NO FILL - both probabilities failed, fillColor set to transparent`);
           }
-        } else {
-          shape.properties.fillOpacity = 0;
-        }
         }
 
         // Handle stroke probability - PRIMARY GATE for all stroke properties
