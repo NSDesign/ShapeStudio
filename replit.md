@@ -285,6 +285,13 @@ Changelog:
   - **Sidebar Settings Fallback**: Disabled properties now fallback to sidebar settings instead of hardcoded defaults
   - **Batch Size Integration**: Position calculations now use actual batch size for proper directional distribution
   - **Temporal Variation Disabled**: Marked temporal variation system as future feature and disabled in current implementation
+- July 24, 2025. Fill UI Restructure with Accordion Layout & Gradient Contamination Fix
+  - **Fill Accordion Structure**: Restructured Fill Properties to use "Fill" as umbrella term with separate "Solid" and "Gradient" accordions
+  - **Independent Gradient Controls**: Added separate fillGradientEnabled control independent from solid fill probability
+  - **Gradient Contamination Fix**: Fixed critical issue where "prevent invisible shapes" logic was overriding gradient transparent fills with random colors
+  - **Enhanced Fill Logic**: Gradients with transparent fills now correctly recognized as valid fills to prevent contamination
+  - **UI Consistency**: Fill controls now match gradient UI style with compact selectors and organized layout
+  - **Probability Display**: Added probability percentages in accordion headers for quick reference
 ```
 
 ## User Preferences
