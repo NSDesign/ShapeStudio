@@ -150,6 +150,7 @@ export interface BatchConfigSettings {
   fillColorDefine: string; // For define mode
   
   // Fill Gradient Settings
+  fillGradientEnabled: boolean; // Enable/disable gradients independently from solid fills
   fillGradientProbability: number; // 0-100%
   fillGradientColorMode: 'range' | 'palette' | 'define';
   fillGradientColorRange: [string, string]; // For range mode (HSL interpolation)
@@ -388,6 +389,7 @@ const defaultSettings: BatchConfigSettings = {
   fillColorDefine: '#3b82f6',
   
   // Fill Gradient Settings
+  fillGradientEnabled: true,
   fillGradientProbability: 20,
   fillGradientColorMode: 'range' as const,
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
@@ -1876,8 +1878,18 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
                           {/* Fill Gradient Controls */}
                           <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Fill Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.fillGradientEnabled}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600"
+                              />
+                              <Label className="text-sm font-medium text-slate-200">Fill Gradients</Label>
+                            </div>
+                            {currentSettings.fillGradientEnabled && (
+                              <>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Fill Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
                               <Slider
                                 value={[currentSettings.fillGradientProbability]}
                                 onValueChange={([value]) => handleSettingsUpdate({ fillGradientProbability: value })}
@@ -1996,6 +2008,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 </div>
                                 <p className="text-xs text-slate-400">Colors used in order for gradient stops</p>
                               </div>
+                            )}
+                              </>
                             )}
                           </div>
                         </div>

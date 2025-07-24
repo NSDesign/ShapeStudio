@@ -1240,9 +1240,10 @@ export const useShapeEditor = () => {
       if (batchConfigSettings.propertiesEnabled) {
         // Handle fill and gradient probabilities independently
         if (batchConfigSettings.fillEnabled) {
-          // Independent probability checks
+          // Independent probability checks - gradient requires both enabled and probability
           const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
-          const shouldHaveGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
+          const shouldHaveGradient = batchConfigSettings.fillGradientEnabled && 
+            Math.random() * 100 < batchConfigSettings.fillGradientProbability;
 
           console.log(`🎨 [FILL DEBUG] Shape ${index}: fillProb=${batchConfigSettings.fillProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
 
@@ -1361,7 +1362,8 @@ export const useShapeEditor = () => {
 
         // Prevent invisible shapes if enabled
         if (batchConfigSettings.preventInvisibleShapes) {
-          const hasFill = shape.properties.fillColor !== 'transparent' && shape.properties.fillOpacity > 0;
+          const hasFill = (shape.properties.fillColor !== 'transparent' && shape.properties.fillOpacity > 0) || 
+                         (shape.properties.gradient && shape.properties.fillOpacity > 0);
           const hasStroke = shape.properties.strokeColor !== 'transparent' && shape.properties.strokeOpacity > 0 && shape.properties.strokeWidth > 0;
 
           if (!hasFill && !hasStroke) {
@@ -1369,6 +1371,7 @@ export const useShapeEditor = () => {
             shape.properties.fillColor = shape.properties.fillColor === 'transparent' ? 
               `hsl(${Math.random() * 360}, 75%, 50%)` : shape.properties.fillColor;
             shape.properties.fillOpacity = 0.7;
+            console.log(`⚠️ [INVISIBLE PREVENTION] Shape ${index}: Forced fill color to prevent invisible shape`);
           }
         }
 
