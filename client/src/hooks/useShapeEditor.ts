@@ -1227,21 +1227,26 @@ export const useShapeEditor = () => {
 
         // Stroke properties will be handled by stroke probability gate below
       } else {
-          // Original randomization behavior (before noise system)
-          const hue = Math.random() * 360;
-          const saturation = 50 + Math.random() * 50;
-          const lightness = 30 + Math.random() * 40;
-          const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-          shape.properties.fillColor = fillColor;
-          console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${batchConfigSettings.propertiesEnabled}`);
+          // Only apply legacy randomization if batch config properties are completely disabled
+          if (!batchConfigSettings.propertiesEnabled) {
+            // Original randomization behavior (before noise system)
+            const hue = Math.random() * 360;
+            const saturation = 50 + Math.random() * 50;
+            const lightness = 30 + Math.random() * 40;
+            const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            shape.properties.fillColor = fillColor;
+            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${batchConfigSettings.propertiesEnabled}`);
 
-          // Random stroke color
-          const strokeHue = Math.random() * 360;
-          const strokeSaturation = 60 + Math.random() * 40;
-          const strokeLightness = 20 + Math.random() * 60;
-          const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
-          shape.properties.strokeColor = strokeColor;
-          console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
+            // Random stroke color
+            const strokeHue = Math.random() * 360;
+            const strokeSaturation = 60 + Math.random() * 40;
+            const strokeLightness = 20 + Math.random() * 60;
+            const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+            shape.properties.strokeColor = strokeColor;
+            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
+          } else {
+            console.log(`🚫 [LEGACY SKIP] Shape ${index}: Skipping legacy randomization because propertiesEnabled=true. Current fillColor="${shape.properties.fillColor}"`);
+          }
         }
 
       // Apply fill and stroke probabilities from batch config
