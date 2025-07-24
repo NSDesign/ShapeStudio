@@ -1,0 +1,346 @@
+useShapeEditor.ts:1074 🔍 generateRandomShapes: count=13, enabledTypes=3, types=rectangle,circle,polygon
+useShapeEditor.ts:1103 🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=0, baseZIndex=0
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(38.923251860433105, 66.04819512938543%, 52.36618054358342%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400725_32r7rymj4
+ 🔢 [Z-INDEX DEBUG] Shape 0: baseZIndex=0, assigned z-index=1
+ 🔢 [Z-INDEX DEBUG] Shape 0: Shape ID=shape_1753356400725_32r7rymj4, Type=circle
+ 🔥 [LEGACY RANDOM] Shape 0: LEGACY HSL randomization applied! fillColor="hsl(308.1613525293047, 98.51414347603775%, 42.85336228128297%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 0: LEGACY stroke color="hsl(69.43379144167703, 90.52313626713413%, 72.76946598073641%)"
+ 🧪 [PRE-NOISE] Shape 0: BEFORE noise processing, fillColor="hsl(308.1613525293047, 98.51414347603775%, 42.85336228128297%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 0: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="hsl(308.1613525293047, 98.51414347603775%, 42.85336228128297%)"
+ ✅ [POST-NOISE] Shape 0: AFTER noise processing, final fillColor="hsl(308.1613525293047, 98.51414347603775%, 42.85336228128297%)"
+ 📊 [SUMMARY] Shape 0: ✅ Color preserved
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(211.98204421383647, 54.57710191400283%, 46.042421599471595%)", strokeColor="hsl(241.98204421383647, 54.57710191400283%, 26.042421599471595%)" (non-batch creation) - ID: shape_1753356400757_s2kuhrygf
+ 🔢 [Z-INDEX DEBUG] Shape 1: baseZIndex=0, assigned z-index=2
+ 🔢 [Z-INDEX DEBUG] Shape 1: Shape ID=shape_1753356400757_s2kuhrygf, Type=circle
+ 🔥 [LEGACY RANDOM] Shape 1: LEGACY HSL randomization applied! fillColor="hsl(104.69629554913915, 58.35442216406371%, 54.38748830241204%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 1: LEGACY stroke color="hsl(348.974889643657, 62.982032134420265%, 63.7671302678231%)"
+ 🧪 [PRE-NOISE] Shape 1: BEFORE noise processing, fillColor="hsl(104.69629554913915, 58.35442216406371%, 54.38748830241204%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 1: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 1: Noise disabled, applying transform only. Current fillColor="hsl(104.69629554913915, 58.35442216406371%, 54.38748830241204%)"
+ ✅ [POST-NOISE] Shape 1: AFTER noise processing, final fillColor="hsl(104.69629554913915, 58.35442216406371%, 54.38748830241204%)"
+ 📊 [SUMMARY] Shape 1: ✅ Color preserved
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(62.62628345275787, 95.8137926901763%, 64.32588751821704%)", strokeColor="hsl(92.62628345275786, 95.8137926901763%, 44.325887518217044%)" (non-batch creation) - ID: shape_1753356400762_7671rlobi
+ 🔢 [Z-INDEX DEBUG] Shape 2: baseZIndex=0, assigned z-index=3
+ 🔢 [Z-INDEX DEBUG] Shape 2: Shape ID=shape_1753356400762_7671rlobi, Type=rectangle
+ 🔥 [LEGACY RANDOM] Shape 2: LEGACY HSL randomization applied! fillColor="hsl(299.8372795876901, 90.92773004773484%, 66.05030480799057%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 2: LEGACY stroke color="hsl(358.01232380234865, 80.09866998642431%, 73.67653565102785%)"
+ 🧪 [PRE-NOISE] Shape 2: BEFORE noise processing, fillColor="hsl(299.8372795876901, 90.92773004773484%, 66.05030480799057%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 2: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 2: Noise disabled, applying transform only. Current fillColor="hsl(299.8372795876901, 90.92773004773484%, 66.05030480799057%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 2: AFTER noise processing, final fillColor="hsl(299.8372795876901, 90.92773004773484%, 66.05030480799057%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 2: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(91.1003271819234, 99.90972939395193%, 59.87670780074065%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400769_nb3npvk22
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 3: baseZIndex=0, assigned z-index=4
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 3: Shape ID=shape_1753356400769_nb3npvk22, Type=circle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 3: LEGACY HSL randomization applied! fillColor="hsl(74.83823147786175, 82.59025392151219%, 40.388740628836985%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 3: LEGACY stroke color="hsl(9.679507991801923, 95.14395543294353%, 47.08347023085648%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 3: BEFORE noise processing, fillColor="hsl(74.83823147786175, 82.59025392151219%, 40.388740628836985%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 3: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 3: Noise disabled, applying transform only. Current fillColor="hsl(74.83823147786175, 82.59025392151219%, 40.388740628836985%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 3: AFTER noise processing, final fillColor="hsl(74.83823147786175, 82.59025392151219%, 40.388740628836985%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 3: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(30.457685498459405, 76.91058676125277%, 62.40405594945336%)", strokeColor="hsl(60.457685498459405, 76.91058676125277%, 42.40405594945336%)" (non-batch creation) - ID: shape_1753356400773_ui7mphj2s
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 4: baseZIndex=0, assigned z-index=5
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 4: Shape ID=shape_1753356400773_ui7mphj2s, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 4: LEGACY HSL randomization applied! fillColor="hsl(319.19839995640586, 72.79809089904528%, 37.459424621805574%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 4: LEGACY stroke color="hsl(48.98891583825186, 73.72201134869543%, 36.19854107772938%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 4: BEFORE noise processing, fillColor="hsl(319.19839995640586, 72.79809089904528%, 37.459424621805574%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 4: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 4: Noise disabled, applying transform only. Current fillColor="hsl(319.19839995640586, 72.79809089904528%, 37.459424621805574%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 4: AFTER noise processing, final fillColor="hsl(319.19839995640586, 72.79809089904528%, 37.459424621805574%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 4: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="transparent", strokeColor="hsl(15.67423218695825, 84.87943771767297%, 50.044178592463254%)" (non-batch creation) - ID: shape_1753356400778_osmj75u8i
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 5: baseZIndex=0, assigned z-index=6
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 5: Shape ID=shape_1753356400778_osmj75u8i, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 5: LEGACY HSL randomization applied! fillColor="hsl(185.48221359772833, 66.22767794949326%, 36.63608064024319%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 5: LEGACY stroke color="hsl(89.52287906602928, 84.65214029126928%, 44.39292281367291%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 5: BEFORE noise processing, fillColor="hsl(185.48221359772833, 66.22767794949326%, 36.63608064024319%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 5: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 5: Noise disabled, applying transform only. Current fillColor="hsl(185.48221359772833, 66.22767794949326%, 36.63608064024319%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 5: AFTER noise processing, final fillColor="hsl(185.48221359772833, 66.22767794949326%, 36.63608064024319%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 5: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="transparent", strokeColor="hsl(270.1976522905443, 98.25699311285163%, 32.19155348570237%)" (non-batch creation) - ID: shape_1753356400787_nbvrptaoj
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 6: baseZIndex=0, assigned z-index=7
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 6: Shape ID=shape_1753356400787_nbvrptaoj, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 6: LEGACY HSL randomization applied! fillColor="hsl(292.08267940901646, 95.34049968923536%, 32.06556876485534%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 6: LEGACY stroke color="hsl(70.19160025965698, 99.54947355756363%, 51.30201068179971%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 6: BEFORE noise processing, fillColor="hsl(292.08267940901646, 95.34049968923536%, 32.06556876485534%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 6: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 6: Noise disabled, applying transform only. Current fillColor="hsl(292.08267940901646, 95.34049968923536%, 32.06556876485534%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 6: AFTER noise processing, final fillColor="hsl(292.08267940901646, 95.34049968923536%, 32.06556876485534%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 6: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(278.6346018710001, 95.85026860980983%, 77.81930384983279%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400846_pgh8a72jn
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 7: baseZIndex=0, assigned z-index=8
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 7: Shape ID=shape_1753356400846_pgh8a72jn, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 7: LEGACY HSL randomization applied! fillColor="hsl(178.49324886947917, 99.26019063069297%, 45.547327424508794%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 7: LEGACY stroke color="hsl(193.88637918425363, 82.66568413588519%, 41.50492378702384%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 7: BEFORE noise processing, fillColor="hsl(178.49324886947917, 99.26019063069297%, 45.547327424508794%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 7: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 7: Noise disabled, applying transform only. Current fillColor="hsl(178.49324886947917, 99.26019063069297%, 45.547327424508794%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 7: AFTER noise processing, final fillColor="hsl(178.49324886947917, 99.26019063069297%, 45.547327424508794%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 7: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(173.87785910617933, 68.41669069063335%, 59.57669423223881%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400913_vgu69akhf
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 8: baseZIndex=0, assigned z-index=9
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 8: Shape ID=shape_1753356400913_vgu69akhf, Type=circle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 8: LEGACY HSL randomization applied! fillColor="hsl(232.66825141616775, 54.27842625663507%, 62.56939591649293%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 8: LEGACY stroke color="hsl(149.10977923452742, 81.39762495707454%, 59.65597602900641%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 8: BEFORE noise processing, fillColor="hsl(232.66825141616775, 54.27842625663507%, 62.56939591649293%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 8: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 8: Noise disabled, applying transform only. Current fillColor="hsl(232.66825141616775, 54.27842625663507%, 62.56939591649293%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 8: AFTER noise processing, final fillColor="hsl(232.66825141616775, 54.27842625663507%, 62.56939591649293%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 8: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(225.11841701037784, 80.35298320942636%, 65.09677700490074%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400954_phrfmorww
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 9: baseZIndex=0, assigned z-index=10
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 9: Shape ID=shape_1753356400954_phrfmorww, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 9: LEGACY HSL randomization applied! fillColor="hsl(199.74448981871325, 67.1202726017936%, 48.65444985790484%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 9: LEGACY stroke color="hsl(41.76796989865931, 92.87598477159156%, 72.6205791350119%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 9: BEFORE noise processing, fillColor="hsl(199.74448981871325, 67.1202726017936%, 48.65444985790484%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 9: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 9: Noise disabled, applying transform only. Current fillColor="hsl(199.74448981871325, 67.1202726017936%, 48.65444985790484%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 9: AFTER noise processing, final fillColor="hsl(199.74448981871325, 67.1202726017936%, 48.65444985790484%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 9: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(321.88251059899983, 77.16290163088121%, 58.843903978119144%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356400969_rbizz4cob
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 10: baseZIndex=0, assigned z-index=11
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 10: Shape ID=shape_1753356400969_rbizz4cob, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 10: LEGACY HSL randomization applied! fillColor="hsl(340.72820432703395, 78.08533738320477%, 30.99727384560488%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 10: LEGACY stroke color="hsl(162.0060673246219, 82.87271453469614%, 32.884651488262946%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 10: BEFORE noise processing, fillColor="hsl(340.72820432703395, 78.08533738320477%, 30.99727384560488%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 10: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 10: Noise disabled, applying transform only. Current fillColor="hsl(340.72820432703395, 78.08533738320477%, 30.99727384560488%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 10: AFTER noise processing, final fillColor="hsl(340.72820432703395, 78.08533738320477%, 30.99727384560488%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 10: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(180.98163487487741, 64.52183341985213%, 71.34473328390821%)", strokeColor="hsl(210.98163487487741, 64.52183341985213%, 51.34473328390821%)" (non-batch creation) - ID: shape_1753356400975_l772pb5dk
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 11: baseZIndex=0, assigned z-index=12
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 11: Shape ID=shape_1753356400975_l772pb5dk, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 11: LEGACY HSL randomization applied! fillColor="hsl(247.303327950632, 94.33131039757205%, 39.99694084508725%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 11: LEGACY stroke color="hsl(310.79704284773624, 91.7881782639364%, 67.86853923383615%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 11: BEFORE noise processing, fillColor="hsl(247.303327950632, 94.33131039757205%, 39.99694084508725%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 11: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 11: Noise disabled, applying transform only. Current fillColor="hsl(247.303327950632, 94.33131039757205%, 39.99694084508725%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 11: AFTER noise processing, final fillColor="hsl(247.303327950632, 94.33131039757205%, 39.99694084508725%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 11: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(108.11425181217432, 76.65737023751333%, 69.12634609188697%)", strokeColor="hsl(138.1142518121743, 76.65737023751333%, 49.12634609188697%)" (non-batch creation) - ID: shape_1753356400985_bf162ix5m
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 12: baseZIndex=0, assigned z-index=13
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 12: Shape ID=shape_1753356400985_bf162ix5m, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 12: LEGACY HSL randomization applied! fillColor="hsl(115.87210474697041, 87.68294406612826%, 47.17801093081452%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 12: LEGACY stroke color="hsl(142.94332054509553, 80.26314038735089%, 42.426920413723714%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 12: BEFORE noise processing, fillColor="hsl(115.87210474697041, 87.68294406612826%, 47.17801093081452%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 12: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 12: Noise disabled, applying transform only. Current fillColor="hsl(115.87210474697041, 87.68294406612826%, 47.17801093081452%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 12: AFTER noise processing, final fillColor="hsl(115.87210474697041, 87.68294406612826%, 47.17801093081452%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 12: ✅ Color preserved
+useShapeEditor.ts:1609 🔍 [FINAL Z-INDEX] All new shapes z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+useShapeEditor.ts:1610 🔍 [FINAL Z-INDEX] Existing shapes count: 0, New shapes count: 13
+useShapeEditor.ts:1612 ✅ Created 13 shapes, adding to existing 0 shapes
+useShapeEditor.ts:1615 🔍 [AFTER ADD] Total shapes: 13, All z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:527 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:532 [BatchConfigDialog] Dialog state changed: {isOpen: false}
+useShapeEditor.ts:1074 🔍 generateRandomShapes: count=1, enabledTypes=3, types=rectangle,circle,polygon
+useShapeEditor.ts:1103 🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=0, baseZIndex=0
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(138.60224049282812, 98.66894706131421%, 70.14088800686336%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356416298_rlcihawvs
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 0: baseZIndex=0, assigned z-index=1
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 0: Shape ID=shape_1753356416298_rlcihawvs, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 0: LEGACY HSL randomization applied! fillColor="hsl(160.60769697475837, 74.29894892209741%, 47.21563042044709%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 0: LEGACY stroke color="hsl(131.49164106645358, 99.45522694238548%, 22.00093266219437%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 0: BEFORE noise processing, fillColor="hsl(160.60769697475837, 74.29894892209741%, 47.21563042044709%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 0: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="hsl(160.60769697475837, 74.29894892209741%, 47.21563042044709%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 0: AFTER noise processing, final fillColor="hsl(160.60769697475837, 74.29894892209741%, 47.21563042044709%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 0: ✅ Color preserved
+useShapeEditor.ts:1609 🔍 [FINAL Z-INDEX] All new shapes z-indices: [1]
+useShapeEditor.ts:1610 🔍 [FINAL Z-INDEX] Existing shapes count: 0, New shapes count: 1
+useShapeEditor.ts:1612 ✅ Created 1 shapes, adding to existing 0 shapes
+useShapeEditor.ts:1615 🔍 [AFTER ADD] Total shapes: 14, All z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1]
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:527 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:532 [BatchConfigDialog] Dialog state changed: {isOpen: false}
+useShapeEditor.ts:1074 🔍 generateRandomShapes: count=8, enabledTypes=3, types=rectangle,circle,polygon
+useShapeEditor.ts:1103 🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=0, baseZIndex=0
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(118.0907308931076, 71.4458293509964%, 44.435792608946244%)", strokeColor="hsl(148.0907308931076, 71.4458293509964%, 24.435792608946244%)" (non-batch creation) - ID: shape_1753356431713_4w8d8v6bw
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 0: baseZIndex=0, assigned z-index=1
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 0: Shape ID=shape_1753356431713_4w8d8v6bw, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 0: LEGACY HSL randomization applied! fillColor="hsl(222.88187084741364, 99.86284052513265%, 38.14293445183472%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 0: LEGACY stroke color="hsl(120.55522110618341, 84.31028355282648%, 39.26107604075845%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 0: BEFORE noise processing, fillColor="hsl(222.88187084741364, 99.86284052513265%, 38.14293445183472%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 0: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="hsl(222.88187084741364, 99.86284052513265%, 38.14293445183472%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 0: AFTER noise processing, final fillColor="hsl(222.88187084741364, 99.86284052513265%, 38.14293445183472%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 0: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(239.4178487668775, 57.73097977124951%, 73.43250438818373%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356431717_mn2ks9bsi
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 1: baseZIndex=0, assigned z-index=2
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 1: Shape ID=shape_1753356431717_mn2ks9bsi, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 1: LEGACY HSL randomization applied! fillColor="hsl(140.00626855757162, 72.33848388303585%, 49.112612819458334%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 1: LEGACY stroke color="hsl(204.2447919159001, 78.5674076849754%, 52.12356161978984%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 1: BEFORE noise processing, fillColor="hsl(140.00626855757162, 72.33848388303585%, 49.112612819458334%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 1: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 1: Noise disabled, applying transform only. Current fillColor="hsl(140.00626855757162, 72.33848388303585%, 49.112612819458334%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 1: AFTER noise processing, final fillColor="hsl(140.00626855757162, 72.33848388303585%, 49.112612819458334%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 1: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(24.97169259312465, 71.49803532450642%, 69.22102817942428%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356431720_of4xflrvs
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 2: baseZIndex=0, assigned z-index=3
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 2: Shape ID=shape_1753356431720_of4xflrvs, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 2: LEGACY HSL randomization applied! fillColor="hsl(321.63145852905615, 61.37380820878066%, 62.346482603519895%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 2: LEGACY stroke color="hsl(294.8995317685166, 80.95093534609197%, 24.419989142756435%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 2: BEFORE noise processing, fillColor="hsl(321.63145852905615, 61.37380820878066%, 62.346482603519895%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 2: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 2: Noise disabled, applying transform only. Current fillColor="hsl(321.63145852905615, 61.37380820878066%, 62.346482603519895%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 2: AFTER noise processing, final fillColor="hsl(321.63145852905615, 61.37380820878066%, 62.346482603519895%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 2: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(5.728099607459756, 66.64439675250138%, 53.976745760976584%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356431722_7ber2wmup
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 3: baseZIndex=0, assigned z-index=4
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 3: Shape ID=shape_1753356431722_7ber2wmup, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 3: LEGACY HSL randomization applied! fillColor="hsl(335.7447769868665, 89.91348738754107%, 59.34924411229164%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 3: LEGACY stroke color="hsl(106.33273178148673, 76.99314409004167%, 37.83167185118805%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 3: BEFORE noise processing, fillColor="hsl(335.7447769868665, 89.91348738754107%, 59.34924411229164%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 3: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 3: Noise disabled, applying transform only. Current fillColor="hsl(335.7447769868665, 89.91348738754107%, 59.34924411229164%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 3: AFTER noise processing, final fillColor="hsl(335.7447769868665, 89.91348738754107%, 59.34924411229164%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 3: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(53.284302072109, 61.23807075109512%, 41.617131646809945%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356431724_hb5zvl26e
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 4: baseZIndex=0, assigned z-index=5
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 4: Shape ID=shape_1753356431724_hb5zvl26e, Type=circle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 4: LEGACY HSL randomization applied! fillColor="hsl(139.62487629265112, 73.07010013693198%, 49.32017056167741%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 4: LEGACY stroke color="hsl(80.84303310026101, 74.16274116368695%, 41.21350687067454%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 4: BEFORE noise processing, fillColor="hsl(139.62487629265112, 73.07010013693198%, 49.32017056167741%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 4: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 4: Noise disabled, applying transform only. Current fillColor="hsl(139.62487629265112, 73.07010013693198%, 49.32017056167741%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 4: AFTER noise processing, final fillColor="hsl(139.62487629265112, 73.07010013693198%, 49.32017056167741%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 4: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(73.59830617220896, 67.15537203722414%, 54.51436637723806%)", strokeColor="hsl(103.59830617220896, 67.15537203722414%, 34.51436637723806%)" (non-batch creation) - ID: shape_1753356431730_ow3pf7cdr
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 5: baseZIndex=0, assigned z-index=6
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 5: Shape ID=shape_1753356431730_ow3pf7cdr, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 5: LEGACY HSL randomization applied! fillColor="hsl(82.02476829292019, 76.99061537387455%, 38.22611102375673%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 5: LEGACY stroke color="hsl(45.295970806245045, 71.71550715113209%, 67.76417133254574%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 5: BEFORE noise processing, fillColor="hsl(82.02476829292019, 76.99061537387455%, 38.22611102375673%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 5: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 5: Noise disabled, applying transform only. Current fillColor="hsl(82.02476829292019, 76.99061537387455%, 38.22611102375673%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 5: AFTER noise processing, final fillColor="hsl(82.02476829292019, 76.99061537387455%, 38.22611102375673%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 5: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(104.17584219259996, 89.13152416349834%, 58.32010730062008%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356431733_uaocmu37f
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 6: baseZIndex=0, assigned z-index=7
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 6: Shape ID=shape_1753356431733_uaocmu37f, Type=circle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 6: LEGACY HSL randomization applied! fillColor="hsl(50.48479004980585, 89.31050509291626%, 30.903610874331005%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 6: LEGACY stroke color="hsl(345.6462002458062, 90.2592858982217%, 48.80518894228795%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 6: BEFORE noise processing, fillColor="hsl(50.48479004980585, 89.31050509291626%, 30.903610874331005%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 6: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 6: Noise disabled, applying transform only. Current fillColor="hsl(50.48479004980585, 89.31050509291626%, 30.903610874331005%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 6: AFTER noise processing, final fillColor="hsl(50.48479004980585, 89.31050509291626%, 30.903610874331005%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 6: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(44.10080418642203, 59.36894819235135%, 45.78574220905334%)", strokeColor="hsl(74.10080418642204, 59.36894819235135%, 25.78574220905334%)" (non-batch creation) - ID: shape_1753356431735_m00zewjmb
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 7: baseZIndex=0, assigned z-index=8
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 7: Shape ID=shape_1753356431735_m00zewjmb, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 7: LEGACY HSL randomization applied! fillColor="hsl(169.24113289562848, 53.44117844771602%, 52.368807325709305%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 7: LEGACY stroke color="hsl(127.99380278803191, 97.13772880871039%, 21.076836796408685%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 7: BEFORE noise processing, fillColor="hsl(169.24113289562848, 53.44117844771602%, 52.368807325709305%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 7: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 7: Noise disabled, applying transform only. Current fillColor="hsl(169.24113289562848, 53.44117844771602%, 52.368807325709305%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 7: AFTER noise processing, final fillColor="hsl(169.24113289562848, 53.44117844771602%, 52.368807325709305%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 7: ✅ Color preserved
+useShapeEditor.ts:1609 🔍 [FINAL Z-INDEX] All new shapes z-indices: [1, 2, 3, 4, 5, 6, 7, 8]
+useShapeEditor.ts:1610 🔍 [FINAL Z-INDEX] Existing shapes count: 0, New shapes count: 8
+useShapeEditor.ts:1612 ✅ Created 8 shapes, adding to existing 0 shapes
+useShapeEditor.ts:1615 🔍 [AFTER ADD] Total shapes: 22, All z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 1, 2, 3, 4, 5, 6, 7, 8]
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:527 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:532 [BatchConfigDialog] Dialog state changed: {isOpen: false}
+useShapeEditor.ts:1074 🔍 generateRandomShapes: count=9, enabledTypes=3, types=rectangle,circle,polygon
+useShapeEditor.ts:1103 🔍 [Z-INDEX DEBUG] Base calculation: existingShapes=0, baseZIndex=0
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(133.28472516667676, 73.79067808926047%, 61.085041202094416%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441420_bvao9swbz
+ 🔢 [Z-INDEX DEBUG] Shape 0: baseZIndex=0, assigned z-index=1
+ 🔢 [Z-INDEX DEBUG] Shape 0: Shape ID=shape_1753356441420_bvao9swbz, Type=rectangle
+ 🔥 [LEGACY RANDOM] Shape 0: LEGACY HSL randomization applied! fillColor="hsl(63.95910567240881, 74.91213410119244%, 44.068708587271374%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 0: LEGACY stroke color="hsl(319.42022792445437, 86.81942974291164%, 25.787494038923473%)"
+ 🧪 [PRE-NOISE] Shape 0: BEFORE noise processing, fillColor="hsl(63.95910567240881, 74.91213410119244%, 44.068708587271374%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 0: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="hsl(63.95910567240881, 74.91213410119244%, 44.068708587271374%)"
+ ✅ [POST-NOISE] Shape 0: AFTER noise processing, final fillColor="hsl(63.95910567240881, 74.91213410119244%, 44.068708587271374%)"
+ 📊 [SUMMARY] Shape 0: ✅ Color preserved
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(211.08198082486012, 56.661701723216076%, 67.54938133652996%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441431_mu0gfh8he
+ 🔢 [Z-INDEX DEBUG] Shape 1: baseZIndex=0, assigned z-index=2
+ 🔢 [Z-INDEX DEBUG] Shape 1: Shape ID=shape_1753356441431_mu0gfh8he, Type=circle
+ 🔥 [LEGACY RANDOM] Shape 1: LEGACY HSL randomization applied! fillColor="hsl(173.38666691882764, 57.192726026688504%, 37.14517805996057%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 1: LEGACY stroke color="hsl(231.42788942584906, 98.8055965574915%, 75.4212023526997%)"
+ 🧪 [PRE-NOISE] Shape 1: BEFORE noise processing, fillColor="hsl(173.38666691882764, 57.192726026688504%, 37.14517805996057%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 1: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 1: Noise disabled, applying transform only. Current fillColor="hsl(173.38666691882764, 57.192726026688504%, 37.14517805996057%)"
+ ✅ [POST-NOISE] Shape 1: AFTER noise processing, final fillColor="hsl(173.38666691882764, 57.192726026688504%, 37.14517805996057%)"
+ 📊 [SUMMARY] Shape 1: ✅ Color preserved
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(342.30217251969856, 80.64196662392875%, 59.663906438532706%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441441_ie8t1kqfq
+ 🔢 [Z-INDEX DEBUG] Shape 2: baseZIndex=0, assigned z-index=3
+ 🔢 [Z-INDEX DEBUG] Shape 2: Shape ID=shape_1753356441441_ie8t1kqfq, Type=polygon
+ 🔥 [LEGACY RANDOM] Shape 2: LEGACY HSL randomization applied! fillColor="hsl(199.64057519184527, 71.17838794211059%, 44.58772534078358%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 2: LEGACY stroke color="hsl(331.427429607475, 85.04925293170675%, 61.518971776370556%)"
+ 🧪 [PRE-NOISE] Shape 2: BEFORE noise processing, fillColor="hsl(199.64057519184527, 71.17838794211059%, 44.58772534078358%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 2: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 2: Noise disabled, applying transform only. Current fillColor="hsl(199.64057519184527, 71.17838794211059%, 44.58772534078358%)"
+ ✅ [POST-NOISE] Shape 2: AFTER noise processing, final fillColor="hsl(199.64057519184527, 71.17838794211059%, 44.58772534078358%)"
+ 📊 [SUMMARY] Shape 2: ✅ Color preserved
+ 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(219.41143170106932, 54.32275867206825%, 63.282032593143036%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441447_0rcmy0zvy
+ 🔢 [Z-INDEX DEBUG] Shape 3: baseZIndex=0, assigned z-index=4
+ 🔢 [Z-INDEX DEBUG] Shape 3: Shape ID=shape_1753356441447_0rcmy0zvy, Type=circle
+ 🔥 [LEGACY RANDOM] Shape 3: LEGACY HSL randomization applied! fillColor="hsl(173.0368614262076, 80.79928144036654%, 33.03196888145901%)" (properties disabled fallback) - propertiesEnabled=false
+ 🔥 [LEGACY RANDOM] Shape 3: LEGACY stroke color="hsl(324.07309379080993, 66.70833528003249%, 33.53539913981823%)"
+ 🧪 [PRE-NOISE] Shape 3: BEFORE noise processing, fillColor="hsl(173.0368614262076, 80.79928144036654%, 33.03196888145901%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 3: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 3: Noise disabled, applying transform only. Current fillColor="hsl(173.0368614262076, 80.79928144036654%, 33.03196888145901%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 3: AFTER noise processing, final fillColor="hsl(173.0368614262076, 80.79928144036654%, 33.03196888145901%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 3: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(40.027817097047055, 68.70382973820799%, 60.546473279453856%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441453_nwad3a0ay
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 4: baseZIndex=0, assigned z-index=5
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 4: Shape ID=shape_1753356441453_nwad3a0ay, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 4: LEGACY HSL randomization applied! fillColor="hsl(258.5251629292216, 89.33123950983006%, 32.44997235197626%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 4: LEGACY stroke color="hsl(259.5255443523159, 69.88194242337576%, 27.024352093089185%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 4: BEFORE noise processing, fillColor="hsl(258.5251629292216, 89.33123950983006%, 32.44997235197626%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 4: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 4: Noise disabled, applying transform only. Current fillColor="hsl(258.5251629292216, 89.33123950983006%, 32.44997235197626%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 4: AFTER noise processing, final fillColor="hsl(258.5251629292216, 89.33123950983006%, 32.44997235197626%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 4: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="transparent", strokeColor="hsl(310.95618403785045, 52.090732039558134%, 50.51104095269318%)" (non-batch creation) - ID: shape_1753356441461_f7i532qlp
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 5: baseZIndex=0, assigned z-index=6
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 5: Shape ID=shape_1753356441461_f7i532qlp, Type=rectangle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 5: LEGACY HSL randomization applied! fillColor="hsl(16.825239510403822, 83.15145435677542%, 32.99352499441302%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 5: LEGACY stroke color="hsl(10.321343761636506, 61.00919280281971%, 68.26956844372702%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 5: BEFORE noise processing, fillColor="hsl(16.825239510403822, 83.15145435677542%, 32.99352499441302%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 5: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 5: Noise disabled, applying transform only. Current fillColor="hsl(16.825239510403822, 83.15145435677542%, 32.99352499441302%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 5: AFTER noise processing, final fillColor="hsl(16.825239510403822, 83.15145435677542%, 32.99352499441302%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 5: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="transparent", strokeColor="hsl(157.279524374045, 64.0637660441929%, 59.34033828351504%)" (non-batch creation) - ID: shape_1753356441468_h911lgwip
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 6: baseZIndex=0, assigned z-index=7
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 6: Shape ID=shape_1753356441468_h911lgwip, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 6: LEGACY HSL randomization applied! fillColor="hsl(156.98155978497238, 65.38029127757132%, 30.06008687405407%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 6: LEGACY stroke color="hsl(7.062891323552547, 65.11015008813335%, 35.27142805794743%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 6: BEFORE noise processing, fillColor="hsl(156.98155978497238, 65.38029127757132%, 30.06008687405407%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 6: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 6: Noise disabled, applying transform only. Current fillColor="hsl(156.98155978497238, 65.38029127757132%, 30.06008687405407%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 6: AFTER noise processing, final fillColor="hsl(156.98155978497238, 65.38029127757132%, 30.06008687405407%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 6: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(267.8954582248426, 89.77932667572719%, 43.484923306888916%)", strokeColor="transparent" (non-batch creation) - ID: shape_1753356441477_z7k535m8f
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 7: baseZIndex=0, assigned z-index=8
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 7: Shape ID=shape_1753356441477_z7k535m8f, Type=polygon
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 7: LEGACY HSL randomization applied! fillColor="hsl(166.90569489460177, 59.854303007168085%, 52.44537732351822%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 7: LEGACY stroke color="hsl(314.33508613995195, 87.68270434892051%, 53.633941742812%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 7: BEFORE noise processing, fillColor="hsl(166.90569489460177, 59.854303007168085%, 52.44537732351822%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 7: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 7: Noise disabled, applying transform only. Current fillColor="hsl(166.90569489460177, 59.854303007168085%, 52.44537732351822%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 7: AFTER noise processing, final fillColor="hsl(166.90569489460177, 59.854303007168085%, 52.44537732351822%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 7: ✅ Color preserved
+shapes.ts:245 🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="hsl(209.39791135111167, 59.46586346148671%, 65.19627581942787%)", strokeColor="hsl(239.39791135111167, 59.46586346148671%, 45.19627581942787%)" (non-batch creation) - ID: shape_1753356441482_zwxkz739v
+useShapeEditor.ts:1180 🔢 [Z-INDEX DEBUG] Shape 8: baseZIndex=0, assigned z-index=9
+useShapeEditor.ts:1181 🔢 [Z-INDEX DEBUG] Shape 8: Shape ID=shape_1753356441482_zwxkz739v, Type=circle
+useShapeEditor.ts:1234 🔥 [LEGACY RANDOM] Shape 8: LEGACY HSL randomization applied! fillColor="hsl(292.7083558081019, 51.91843098764784%, 35.19170270862148%)" (properties disabled fallback) - propertiesEnabled=false
+useShapeEditor.ts:1242 🔥 [LEGACY RANDOM] Shape 8: LEGACY stroke color="hsl(197.86710156571618, 78.70701242640561%, 48.69700793617926%)"
+useShapeEditor.ts:1409 🧪 [PRE-NOISE] Shape 8: BEFORE noise processing, fillColor="hsl(292.7083558081019, 51.91843098764784%, 35.19170270862148%)", noiseEnabled=false
+useShapeEditor.ts:1569 🚫 [NO NOISE] Shape 8: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1581 🔧 [NO NOISE] Shape 8: Noise disabled, applying transform only. Current fillColor="hsl(292.7083558081019, 51.91843098764784%, 35.19170270862148%)"
+useShapeEditor.ts:1584 ✅ [POST-NOISE] Shape 8: AFTER noise processing, final fillColor="hsl(292.7083558081019, 51.91843098764784%, 35.19170270862148%)"
+useShapeEditor.ts:1585 📊 [SUMMARY] Shape 8: ✅ Color preserved
+useShapeEditor.ts:1609 🔍 [FINAL Z-INDEX] All new shapes z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+useShapeEditor.ts:1610 🔍 [FINAL Z-INDEX] Existing shapes count: 0, New shapes count: 9
+useShapeEditor.ts:1612 ✅ Created 9 shapes, adding to existing 0 shapes
+useShapeEditor.ts:1615 🔍 [AFTER ADD] Total shapes: 31, All z-indices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:527 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:532 [BatchConfigDialog] Dialog state changed: {isOpen: false}
