@@ -811,13 +811,13 @@ export default function Sidebar({
           console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${batchExportCount} exports`);
           
-          // Update progress
-          const progress = Math.floor((i / batchExportCount) * 100);
-          setBatchProgress(progress);
+          // Update progress immediately at start of iteration
+          setBatchProgress(i);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show progress update
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
-          await new Promise(resolve => setTimeout(resolve, 50)); // Reduced delay
+          await new Promise(resolve => setTimeout(resolve, 200)); // Longer delay to show progress
 
           // Generate shapes for this export
           const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
@@ -1249,6 +1249,24 @@ export default function Sidebar({
                 </div>
               </div>
 
+              {isBatchExporting && (
+                <div className="space-y-2 p-3 bg-purple-900/20 rounded border border-purple-500/30">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-purple-300 font-medium">Batch Export Progress</span>
+                    <span className="text-purple-200">{batchProgress}/{batchExportCount}</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(batchProgress / batchExportCount) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-purple-400">
+                    Creating artwork {batchProgress} of {batchExportCount}...
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={handleBatchExportNew}
                 disabled={isBatchExporting || enabledShapeTypes.size === 0}
@@ -1257,7 +1275,7 @@ export default function Sidebar({
                 {isBatchExporting ? (
                   <>
                     <div className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Exporting... ({Math.floor((batchProgress / batchExportCount) * 100)}%)
+                    Exporting... ({batchProgress}/{batchExportCount})
                   </>
                 ) : (
                   <>
