@@ -854,13 +854,11 @@ export const useShapeEditor = () => {
     setShapes(prev => {
       // Calculate proper z-indices for scatter shapes to avoid conflicts
       const currentMaxZIndex = prev.length > 0 ? Math.max(...prev.map(s => s.properties.zIndex)) : 0;
-      const shapesWithFixedZIndex = newShapes.map((shape, index) => ({
-        ...shape,
-        properties: {
-          ...shape.properties,
-          zIndex: currentMaxZIndex + index + 1
-        }
-      }));
+      const shapesWithFixedZIndex = newShapes.map((shape, index) => {
+        // Directly modify the existing Shape instance instead of creating a plain object
+        shape.properties.zIndex = currentMaxZIndex + index + 1;
+        return shape;
+      });
       return [...prev, ...shapesWithFixedZIndex];
     });
   }, [enabledShapeTypes, scatterSettings]);
@@ -1615,13 +1613,11 @@ export const useShapeEditor = () => {
       console.log(`🔍 [STATE UPDATE] Current shapes: ${prev.length}, currentMaxZIndex: ${currentMaxZIndex}`);
       
       // Fix z-indices for the new shapes based on current state
-      const shapesWithFixedZIndex = finalShapes.map((shape, index) => ({
-        ...shape,
-        properties: {
-          ...shape.properties,
-          zIndex: currentMaxZIndex + index + 1
-        }
-      }));
+      const shapesWithFixedZIndex = finalShapes.map((shape, index) => {
+        // Directly modify the existing Shape instance instead of creating a plain object
+        shape.properties.zIndex = currentMaxZIndex + index + 1;
+        return shape;
+      });
       
       const updatedShapes = [...prev, ...shapesWithFixedZIndex];
       console.log(`🔍 [AFTER ADD] Total shapes: ${updatedShapes.length}, New z-indices: [${shapesWithFixedZIndex.map(s => s.properties.zIndex).join(', ')}]`);
