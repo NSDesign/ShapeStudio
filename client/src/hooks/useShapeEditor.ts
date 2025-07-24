@@ -74,7 +74,7 @@ export const useShapeEditor = () => {
   });
 
 
-  
+
   // Artboard state
   const [artboards, setArtboards] = useState<Artboard[]>([
     {
@@ -89,11 +89,11 @@ export const useShapeEditor = () => {
     }
   ]);
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
-  
+
   // Batch Configuration Settings - using defaults from BatchConfigDialog
   const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>({
     selectedPreset: 'custom',
-    
+
     noiseEnabled: false,
     noiseAlgorithm: 'randomise',
     noiseScale: 1,
@@ -101,24 +101,24 @@ export const useShapeEditor = () => {
     noiseAmplitude: 50,
     noiseSeed: Math.floor(Math.random() * 10000),
     noiseScaleToCanvas: true,
-    
+
     // Property-specific amplitude multipliers
     noisePositionAmplitude: 1.0,
     noiseRotationAmplitude: 1.0,
     noiseScaleAmplitude: 1.0,
     noiseOpacityAmplitude: 1.0,
     noiseColorAmplitude: 1.0,
-    
+
     // Octave handling mode
     noiseOctaveMode: 'natural' as const,
-    
+
     noiseLacunarity: 2.0,
     noiseGain: 0.5,
     noiseDistanceFunction: 'euclidean',
     noiseFeaturePoints: 1,
     noiseRidgeOffset: 1.0,
     noiseTurbulencePower: 1.0,
-    
+
     distributionLayoutEnabled: false,
     distributionPattern: 'grid',
     gridRows: 3,
@@ -126,28 +126,28 @@ export const useShapeEditor = () => {
     gridRowOffset: 120,
     gridColumnOffset: 120,
     gridSortBy: 'none',
-    
+
     blendModeEnabled: false,
     enabledBlendModes: { 'source-over': 100 },
-    
+
     propertiesEnabled: false,
     preventInvisibleShapes: true,
-    
+
     shapePropertiesEnabled: false,
     widthRange: [50, 200],
     heightRange: [50, 200],
     xPositionRange: [-100, 100],
     yPositionRange: [-100, 100],
-    
+
     // Rectangle-specific Properties
     rectangleCornerRadiusRange: [0, 20],
-    
+
     // Star-specific Properties
     starInnerRadiusRange: [0.3, 0.7],
-    
+
     // Ring-specific Properties
     ringInnerRadiusRange: [0.4, 0.8],
-    
+
     fillEnabled: true,
     fillProbability: 80,
     fillColorProbability: 70,
@@ -157,7 +157,7 @@ export const useShapeEditor = () => {
     fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
     fillGradientStopsRange: [2, 4],
     fillOpacityRange: [20, 100],
-    
+
     strokeEnabled: true,
     strokeProbability: 60,
     strokeColorProbability: 80,
@@ -168,19 +168,19 @@ export const useShapeEditor = () => {
     strokeGradientStopsRange: [2, 3],
     strokeOpacityRange: [40, 100],
     strokeWidthRange: [1, 5],
-    
+
     polygonPropertiesEnabled: false,
     segmentCountRange: [3, 12],
-    
+
     linePropertiesEnabled: false,
     pointCountRange: [2, 8],
     pointPositionRange: [10, 200],
-    
+
     splinePropertiesEnabled: false,
     splinePointCountRange: [3, 8],
     splinePointPositionRange: [10, 200],
     splineControlPointRange: [5, 50],
-    
+
     transformsEnabled: false,
     translateXRange: [-50, 50],
     translateYRange: [-50, 50],
@@ -191,14 +191,14 @@ export const useShapeEditor = () => {
     rotationRange: [0, 360],
     skewXRange: [0, 0],
     skewYRange: [0, 0],
-    
+
     colorHarmonyEnabled: false,
     harmonyType: 'complementary',
     baseColor: '#3b82f6',
     hueVariance: 15,
     saturationRange: [0, 100],
     lightnessRange: [0, 100],
-    
+
     monochromaticSettings: {
       lightnessSteps: 5,
       saturationSteps: 3,
@@ -224,7 +224,7 @@ export const useShapeEditor = () => {
       squareHarmony: true,
       rectangleRatio: 60,
     },
-    
+
     physicsEnabled: false,
     physicsType: 'none',
     gravityDirection: 270,
@@ -234,7 +234,7 @@ export const useShapeEditor = () => {
     collisionDistance: 20,
     collisionBounce: 0.5,
     simulationSteps: 100,
-    
+
     temporalEnabled: false,
     evolutionMode: 'linear',
     seedIncrement: 1,
@@ -263,13 +263,13 @@ export const useShapeEditor = () => {
   const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
-  
+
   // Track incremental index for continuous incremental positioning
   const [lastIncrementalIndex, setLastIncrementalIndex] = useState(0);
-  
+
   // Multi-touch gesture state
   const [isMultiTouch, setIsMultiTouch] = useState(false);
-  
+
   // Use refs for immediate access to gesture data
   const gestureDataRef = useRef({
     isActive: false,
@@ -278,9 +278,9 @@ export const useShapeEditor = () => {
     initialScale: 1,
     initialRotation: 0
   });
-  
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // Touch device detection
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
@@ -288,12 +288,12 @@ export const useShapeEditor = () => {
   useEffect(() => {
     const currentSelectedShapes = shapes.filter(shape => shape.selected);
     const currentSelectedGroups = groups.filter(group => group.selected);
-    
+
     if (currentSelectedShapes.length !== selectedShapes.length || 
         !currentSelectedShapes.every(shape => selectedShapes.includes(shape))) {
       setSelectedShapes(currentSelectedShapes);
     }
-    
+
     if (currentSelectedGroups.length !== selectedGroups.length || 
         !currentSelectedGroups.every(group => selectedGroups.includes(group))) {
       setSelectedGroups(currentSelectedGroups);
@@ -321,7 +321,7 @@ export const useShapeEditor = () => {
     // Sort shapes by z-index from highest to lowest and find first hit
     const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
     let topShape: Shape | null = null;
-    
+
     // Find the first (topmost) shape that contains the point
     for (const shape of sortedShapes) {
       if (shape.containsPoint(x, y)) {
@@ -329,7 +329,7 @@ export const useShapeEditor = () => {
         break;
       }
     }
-    
+
     if (!topShape) {
       if (!addToSelection) {
         clearSelection();
@@ -354,12 +354,12 @@ export const useShapeEditor = () => {
   const selectPointAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
     // Sort shapes by z-index from highest to lowest to respect layering
     const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
-    
+
     for (const shape of sortedShapes) {
       if (shape.points) {
         // Check if this shape blocks access to lower shapes
         const shapeBlocks = shape.containsPoint(x, y);
-        
+
         // Check tangent handles first (for cubic curves)
         if (shape.tangentHandles) {
           for (let i = 0; i < shape.tangentHandles.length; i++) {
@@ -391,7 +391,7 @@ export const useShapeEditor = () => {
                 return true;
               }
             }
-            
+
             // Check 'out' handle
             const worldHandleOut = shape.getWorldTangentHandle(i, 'out');
             if (worldHandleOut) {
@@ -422,7 +422,7 @@ export const useShapeEditor = () => {
             }
           }
         }
-        
+
         // Check control points (for bezier curves)
         if (shape.controlPoints) {
           for (let i = 0; i < shape.controlPoints.length; i++) {
@@ -455,7 +455,7 @@ export const useShapeEditor = () => {
             }
           }
         }
-        
+
         // Check regular points
         for (let i = 0; i < shape.points.length; i++) {
           const worldPoint = shape.getWorldPoint(i);
@@ -486,7 +486,7 @@ export const useShapeEditor = () => {
             }
           }
         }
-        
+
         // If this shape blocks access to lower shapes, stop searching
         if (shapeBlocks) {
           return false;
@@ -503,30 +503,30 @@ export const useShapeEditor = () => {
   const selectSegmentAt = useCallback((x: number, y: number, addToSelection: boolean = false) => {
     // Sort shapes by z-index from highest to lowest to respect layering
     const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
-    
+
     for (const shape of sortedShapes) {
       if (shape.points && shape.points.length > 1) {
         // Check if this shape blocks access to lower shapes
         const shapeBlocks = shape.containsPoint(x, y);
-        
+
         for (let i = 0; i < shape.points.length - 1; i++) {
           const worldP1 = shape.getWorldPoint(i);
           const worldP2 = shape.getWorldPoint(i + 1);
-          
+
           if (worldP1 && worldP2) {
             let distance = Infinity;
-            
+
             // For spline shapes, use cubic Bézier curve distance calculation
             if (shape.type.startsWith('spline-') && shape.tangentHandles && i < shape.tangentHandles.length && (i + 1) < shape.tangentHandles.length) {
               // Get world-space tangent handles for this segment
               const worldTangent1Out = shape.getWorldTangentHandle(i, 'out');
               const worldTangent2In = shape.getWorldTangentHandle(i + 1, 'in');
-              
+
               if (worldTangent1Out && worldTangent2In) {
                 // Sample points along the cubic Bézier curve and find the closest distance
                 const sampleCount = 20;
                 let minDistance = Infinity;
-                
+
                 for (let t = 0; t <= 1; t += 1 / sampleCount) {
                   // Cubic Bézier formula: B(t) = (1-t)³P₀ + 3(1-t)²tC₀ + 3(1-t)t²C₁ + t³P₁
                   const t1 = 1 - t;
@@ -534,26 +534,26 @@ export const useShapeEditor = () => {
                   const t1_3 = t1_2 * t1;
                   const t_2 = t * t;
                   const t_3 = t_2 * t;
-                  
+
                   const curveX = t1_3 * worldP1.x + 
                                3 * t1_2 * t * worldTangent1Out.x + 
                                3 * t1 * t_2 * worldTangent2In.x + 
                                t_3 * worldP2.x;
-                  
+
                   const curveY = t1_3 * worldP1.y + 
                                3 * t1_2 * t * worldTangent1Out.y + 
                                3 * t1 * t_2 * worldTangent2In.y + 
                                t_3 * worldP2.y;
-                  
+
                   const dx = x - curveX;
                   const dy = y - curveY;
                   const sampleDistance = Math.sqrt(dx * dx + dy * dy);
-                  
+
                   if (sampleDistance < minDistance) {
                     minDistance = sampleDistance;
                   }
                 }
-                
+
                 distance = minDistance;
               }
             } else {
@@ -613,7 +613,7 @@ export const useShapeEditor = () => {
             }
           }
         }
-        
+
         // If this shape blocks access to lower shapes, stop searching
         if (shapeBlocks) {
           return false;
@@ -650,18 +650,18 @@ export const useShapeEditor = () => {
     selectedPoints.forEach(({ shapeId, pointIndex }) => {
       const shape = shapes.find(s => s.id === shapeId);
       if (!shape) return;
-      
+
       const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
-      
+
       if (pointIndex < 1000) {
         // Regular point
         if (shape.points && shape.points[pointIndex]) {
           const oldX = shape.points[pointIndex].x;
           const oldY = shape.points[pointIndex].y;
-          
+
           shape.points[pointIndex].x += localDelta.x;
           shape.points[pointIndex].y += localDelta.y;
-          
+
           // Move associated control points and tangent handles with the point
           if (shape.controlPoints) {
             // For bezier curves, move the control point associated with this point
@@ -669,7 +669,7 @@ export const useShapeEditor = () => {
               shape.controlPoints[pointIndex].x += localDelta.x;
               shape.controlPoints[pointIndex].y += localDelta.y;
             }
-            
+
             // For blob shapes, also move the previous control point (since they're between points)
             if (shape.type === 'blob') {
               const prevControlIndex = (pointIndex - 1 + shape.controlPoints.length) % shape.controlPoints.length;
@@ -677,7 +677,7 @@ export const useShapeEditor = () => {
               shape.controlPoints[prevControlIndex].y += localDelta.y;
             }
           }
-          
+
           // Move associated tangent handles with the point
           if (shape.tangentHandles && pointIndex < shape.tangentHandles.length) {
             shape.tangentHandles[pointIndex].in.x += localDelta.x;
@@ -697,26 +697,26 @@ export const useShapeEditor = () => {
         // Tangent handle (for cubic curves)
         const handlePointIndex = Math.floor((pointIndex - 2000) / 2);
         const isOut = (pointIndex - 2000) % 2 === 1;
-        
+
         if (shape.tangentHandles && shape.tangentHandles[handlePointIndex]) {
           const handleType = isOut ? 'out' : 'in';
           shape.tangentHandles[handlePointIndex][handleType].x += localDelta.x;
           shape.tangentHandles[handlePointIndex][handleType].y += localDelta.y;
-          
+
           // If the point is marked as smooth, update the opposite handle to maintain continuity
           if (shape.smoothPoints && shape.smoothPoints[handlePointIndex]) {
             const oppositeType = isOut ? 'in' : 'out';
             const currentHandle = shape.tangentHandles[handlePointIndex][handleType];
             const oppositeHandle = shape.tangentHandles[handlePointIndex][oppositeType];
             const basePoint = shape.points[handlePointIndex];
-            
+
             if (basePoint) {
               // Calculate the vector from base point to current handle
               const currentVector = {
                 x: currentHandle.x - basePoint.x,
                 y: currentHandle.y - basePoint.y
               };
-              
+
               // Set opposite handle to be the reflection of current handle
               oppositeHandle.x = basePoint.x - currentVector.x;
               oppositeHandle.y = basePoint.y - currentVector.y;
@@ -735,17 +735,17 @@ export const useShapeEditor = () => {
         const localDelta = shape.worldDeltaToLocal(deltaX, deltaY);
         const p1 = shape.points[segmentIndex];
         const p2 = shape.points[segmentIndex + 1];
-        
+
         if (p1) {
           p1.x += localDelta.x;
           p1.y += localDelta.y;
-          
+
           // Move associated control points and tangent handles with the first point
           if (shape.controlPoints && segmentIndex < shape.controlPoints.length) {
             shape.controlPoints[segmentIndex].x += localDelta.x;
             shape.controlPoints[segmentIndex].y += localDelta.y;
           }
-          
+
           if (shape.tangentHandles && segmentIndex < shape.tangentHandles.length) {
             shape.tangentHandles[segmentIndex].in.x += localDelta.x;
             shape.tangentHandles[segmentIndex].in.y += localDelta.y;
@@ -753,18 +753,18 @@ export const useShapeEditor = () => {
             shape.tangentHandles[segmentIndex].out.y += localDelta.y;
           }
         }
-        
+
         if (p2) {
           p2.x += localDelta.x;
           p2.y += localDelta.y;
-          
+
           // Move associated control points and tangent handles with the second point
           const p2Index = segmentIndex + 1;
           if (shape.controlPoints && p2Index < shape.controlPoints.length) {
             shape.controlPoints[p2Index].x += localDelta.x;
             shape.controlPoints[p2Index].y += localDelta.y;
           }
-          
+
           if (shape.tangentHandles && p2Index < shape.tangentHandles.length) {
             shape.tangentHandles[p2Index].in.x += localDelta.x;
             shape.tangentHandles[p2Index].in.y += localDelta.y;
@@ -782,10 +782,10 @@ export const useShapeEditor = () => {
 
     const newShapes: Shape[] = [];
     const enabledTypes = Array.from(enabledShapeTypes);
-    
+
     // Use smart distribution algorithm
     let positions: Point[] = [];
-    
+
     if (scatterSettings.onPoints) {
       // Scatter on shape points
       positions = targetShape.points.slice();
@@ -797,7 +797,7 @@ export const useShapeEditor = () => {
         bounds,
         scatterSettings.distribution
       );
-      
+
       // Filter positions to only include those inside the shape
       positions = positions.filter(pos => targetShape.containsPoint(pos.x, pos.y));
     } else {
@@ -811,7 +811,7 @@ export const useShapeEditor = () => {
         width: bounds.width * 1.4,
         height: bounds.height * 1.4
       };
-      
+
       positions = SmartDistributionAlgorithm.generatePositions(
         scatterSettings.count,
         expandedBounds,
@@ -821,38 +821,38 @@ export const useShapeEditor = () => {
 
     positions.forEach((position, index) => {
       if (enabledTypes.length === 0) return;
-      
+
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
       const randomness = scatterSettings.randomness;
-      
+
       // Add some randomness to position
       const finalX = position.x + (Math.random() - 0.5) * 20 * randomness;
       const finalY = position.y + (Math.random() - 0.5) * 20 * randomness;
-      
+
       const newShape = new Shape(randomType, finalX, finalY);
-      
+
       // Assign proper z-index for layering
       const existingMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       newShape.properties.zIndex = existingMaxZ + index + 1;
-      
+
       // Add some variation to scattered shapes
       const sizeVariation = 0.5 + Math.random() * randomness;
       newShape.transform.scaleX *= sizeVariation;
       newShape.transform.scaleY *= sizeVariation;
-      
+
       // Random rotation
       newShape.transform.rotation = Math.random() * 360 * randomness;
-      
+
       // Assign proper z-index for layering
       const currentMaxZ = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       newShape.properties.zIndex = currentMaxZ + newShapes.length + 1;
-      
+
       // Random color variation
       const hue = Math.random() * 360;
       const saturation = 50 + Math.random() * 50;
       const lightness = 30 + Math.random() * 40;
       newShape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-      
+
       newShapes.push(newShape);
     });
 
@@ -877,23 +877,23 @@ export const useShapeEditor = () => {
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return (Math.random() - 0.5) * artboardWidth * 0.8; // Fallback to random position
     }
-    
+
     switch (settings.xPositionMode) {
       case 'range':
         const [minX, maxX] = settings.xPositionRange;
         return minX + Math.random() * (maxX - minX);
-      
+
       case 'value':
         return settings.xPositionValue;
-      
+
       case 'directional':
         return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).x;
-      
+
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         return effectiveIndex * settings.xPositionIncrement;
-      
+
       default:
         return 0;
     }
@@ -905,29 +905,29 @@ export const useShapeEditor = () => {
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return 50 + Math.random() * 150; // Fallback to random size
     }
-    
+
     let baseWidth = 0;
-    
+
     switch (settings.widthMode) {
       case 'range':
         const [minW, maxW] = settings.widthRange;
         baseWidth = minW + Math.random() * (maxW - minW);
         break;
-      
+
       case 'value':
         baseWidth = settings.widthValue;
         break;
-      
+
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         baseWidth = settings.sizeIncrementalStartValue + (effectiveIndex * settings.widthIncrement);
         break;
-      
+
       default:
         baseWidth = 100;
     }
-    
+
     // Apply basic size constraints (10px minimum, 1000px maximum)
     return Math.max(10, Math.min(1000, baseWidth));
   };
@@ -937,29 +937,29 @@ export const useShapeEditor = () => {
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return 50 + Math.random() * 150; // Fallback to random size
     }
-    
+
     let baseHeight = 0;
-    
+
     switch (settings.heightMode) {
       case 'range':
         const [minH, maxH] = settings.heightRange;
         baseHeight = minH + Math.random() * (maxH - minH);
         break;
-      
+
       case 'value':
         baseHeight = settings.heightValue;
         break;
-      
+
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         baseHeight = settings.sizeIncrementalStartValue + (effectiveIndex * settings.heightIncrement);
         break;
-      
+
       default:
         baseHeight = 100;
     }
-    
+
     // Apply basic size constraints (10px minimum, 1000px maximum)
     return Math.max(10, Math.min(1000, baseHeight));
   };
@@ -970,21 +970,21 @@ export const useShapeEditor = () => {
     if (!['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(shapeType)) {
       return width; // For non-circular shapes, use width as-is
     }
-    
+
     // If aspect ratio is enforced, use width
     if (settings.maintainAspectRatio) {
       return width;
     }
-    
+
     // Apply constraint preferences
     if (settings.useMinWidthHeight) {
       return Math.min(width, height);
     }
-    
+
     if (settings.useAvgWidthHeight) {
       return (width + height) / 2;
     }
-    
+
     // Default: use maximum value (useMaxWidthHeight is default)
     return Math.max(width, height);
   };
@@ -996,23 +996,23 @@ export const useShapeEditor = () => {
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
       return (Math.random() - 0.5) * artboardHeight * 0.8; // Fallback to random position
     }
-    
+
     switch (settings.yPositionMode) {
       case 'range':
         const [minY, maxY] = settings.yPositionRange;
         return minY + Math.random() * (maxY - minY);
-      
+
       case 'value':
         return settings.yPositionValue;
-      
+
       case 'directional':
         return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).y;
-      
+
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         return effectiveIndex * settings.yPositionIncrement;
-      
+
       default:
         return 0;
     }
@@ -1021,7 +1021,7 @@ export const useShapeEditor = () => {
   const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
-    
+
     switch (settings.positionDirectionalMode) {
       case 'outward-center':
         if (settings.directionalEvenDistribution) {
@@ -1033,7 +1033,7 @@ export const useShapeEditor = () => {
           angle = (shapeIndex * clusterRange / Math.max(1, batchSize - 1)) - (clusterRange / 2);
         }
         break;
-      
+
       case 'outward-edge':
         // Distribute shapes outward from nearest edge
         const edgeAngle = Math.atan2(artboardHeight, artboardWidth);
@@ -1044,7 +1044,7 @@ export const useShapeEditor = () => {
           angle = (shapeIndex * clusterRange / Math.max(1, batchSize - 1)) - (clusterRange / 2) + edgeAngle;
         }
         break;
-      
+
       case 'angle-based':
         // All shapes at the same angle, but can be spread along the angle
         const baseAngle = settings.positionDirectionalAngle * (Math.PI / 180);
@@ -1057,7 +1057,7 @@ export const useShapeEditor = () => {
         }
         break;
     }
-    
+
     return {
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance
@@ -1067,9 +1067,9 @@ export const useShapeEditor = () => {
   const generateRandomShapes = useCallback(() => {
     const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
     const enabledTypes = Array.from(enabledShapeTypes);
-    
+
     console.log(`🔍 generateRandomShapes: count=${count}, enabledTypes=${enabledTypes.length}, types=${enabledTypes.join(',')}`);
-    
+
     if (enabledTypes.length === 0) {
       console.log(`❌ No enabled shape types, returning early`);
       return;
@@ -1097,30 +1097,30 @@ export const useShapeEditor = () => {
 
     const newShapes = positions.map((position, index) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
-      
+
       // Apply position from batch config if properties are enabled
       let shapeX = position.x;
       let shapeY = position.y;
-      
+
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
         // Enhanced position calculation based on mode
         shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
       }
-      
+
       // Combine batch config with scatter settings for complete configuration
       const combinedConfig = { 
         ...batchConfigSettings, 
         scatterSettings: scatterSettings 
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
-      
+
       // Apply width/height from batch config if properties are enabled
       if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
         // Enhanced width and height calculation based on mode
         let width = calculateWidth(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
-        
+
         // Apply the size based on shape type with new constraint system
         switch (shape.type) {
           case 'rectangle':
@@ -1166,11 +1166,11 @@ export const useShapeEditor = () => {
             break;
         }
       }
-      
+
       // Assign proper z-index for layering
       const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       shape.properties.zIndex = existingMaxIndex + index + 1;
-      
+
       // Apply color harmony if enabled
       if (batchConfigSettings.colorHarmonyEnabled) {
         const colorHarmonySettings: ColorHarmonySettings = {
@@ -1187,13 +1187,13 @@ export const useShapeEditor = () => {
           splitComplementarySettings: batchConfigSettings.splitComplementarySettings,
           tetradicSettings: batchConfigSettings.tetradicSettings
         };
-        
+
         // Apply harmony to fill color
         shape.properties.fillColor = ColorUtils.generateHarmonyColor(colorHarmonySettings);
-        
+
         // Apply harmony to stroke color (related but slightly different)
         shape.properties.strokeColor = ColorUtils.generateHarmonyColor(colorHarmonySettings);
-        
+
         // Apply harmony to gradients if they exist
         if (shape.properties.gradient) {
           shape.properties.gradient.stops = shape.properties.gradient.stops.map(stop => ({
@@ -1201,7 +1201,7 @@ export const useShapeEditor = () => {
             color: ColorUtils.generateHarmonyColor(colorHarmonySettings)
           }));
         }
-        
+
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
       } else if (batchConfigSettings.propertiesEnabled) {
         // Apply fill and stroke colors when properties are enabled but no color harmony
@@ -1215,7 +1215,7 @@ export const useShapeEditor = () => {
             index
           );
           shape.properties.fillColor = fillColor;
-          
+
           // Apply fill opacity based on mode
           if (batchConfigSettings.fillOpacityMode === 'range') {
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
@@ -1224,26 +1224,26 @@ export const useShapeEditor = () => {
             shape.properties.fillOpacity = batchConfigSettings.fillOpacityDefine / 100;
           }
         }
-        
+
         // Stroke properties will be handled by stroke probability gate below
       } else {
-        // Original randomization behavior (before noise system)
-        const hue = Math.random() * 360;
-        const saturation = 50 + Math.random() * 50;
-        const lightness = 30 + Math.random() * 40;
-        const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        shape.properties.fillColor = fillColor;
-        console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback)`);
-        
-        // Random stroke color
-        const strokeHue = Math.random() * 360;
-        const strokeSaturation = 60 + Math.random() * 40;
-        const strokeLightness = 20 + Math.random() * 60;
-        const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
-        shape.properties.strokeColor = strokeColor;
-        console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
-      }
-      
+          // Original randomization behavior (before noise system)
+          const hue = Math.random() * 360;
+          const saturation = 50 + Math.random() * 50;
+          const lightness = 30 + Math.random() * 40;
+          const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          shape.properties.fillColor = fillColor;
+          console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${batchConfigSettings.propertiesEnabled}`);
+
+          // Random stroke color
+          const strokeHue = Math.random() * 360;
+          const strokeSaturation = 60 + Math.random() * 40;
+          const strokeLightness = 20 + Math.random() * 60;
+          const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+          shape.properties.strokeColor = strokeColor;
+          console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
+        }
+
       // Apply fill and stroke probabilities from batch config
       if (batchConfigSettings.propertiesEnabled) {
         // Handle fill and gradient probabilities independently
@@ -1251,20 +1251,20 @@ export const useShapeEditor = () => {
           // Independent probability checks
           const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
           const shouldHaveGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
-          
+
           console.log(`🎨 [FILL DEBUG] Shape ${index}: fillProb=${batchConfigSettings.fillProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
-          
+
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
             // Create gradient (takes priority if both are true)
             const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
             const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
             const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
-            
+
             const gradientStops = [];
             for (let i = 0; i < stopCount; i++) {
               let stopColor: string;
-              
+
               if (batchConfigSettings.fillGradientColorMode === 'define') {
                 // For define mode, use specific colors from the array
                 const colors = batchConfigSettings.fillGradientColorDefine || ['#3b82f6'];
@@ -1279,30 +1279,30 @@ export const useShapeEditor = () => {
                   index + i
                 );
               }
-              
+
               gradientStops.push({
                 offset: i / (stopCount - 1),
                 color: stopColor
               });
             }
-            
+
             shape.properties.gradient = {
               type: gradientType,
               stops: gradientStops
             };
-            
+
             // When gradient is used, set transparent fill so gradient shows through
             shape.properties.fillColor = 'transparent';
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using GRADIENT, fillColor set to transparent`);
-            
+
             // Apply fill opacity range for gradient
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            
+
           } else if (shouldHaveSolidFill) {
             // Create solid fill (only if no gradient)
             shape.properties.gradient = undefined;
-            
+
             // Apply solid fill color using new HSL system
             const fillColor = generateColor(
               batchConfigSettings.fillColorMode,
@@ -1313,11 +1313,11 @@ export const useShapeEditor = () => {
             );
             shape.properties.fillColor = fillColor;
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${batchConfigSettings.fillColorMode}"`);
-            
+
             // Apply fill opacity range for solid fill
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            
+
           } else {
             // No fill at all - both probabilities failed
             shape.properties.fillColor = 'transparent';
@@ -1326,7 +1326,7 @@ export const useShapeEditor = () => {
             console.log(`🎨 [FILL DEBUG] Shape ${index}: NO FILL - both probabilities failed, fillColor set to transparent`);
           }
         }
-        
+
         // Handle stroke probability - PRIMARY GATE for all stroke properties
         if (batchConfigSettings.strokeEnabled) {
           const shouldHaveStroke = Math.random() * 100 < batchConfigSettings.strokeProbability;
@@ -1337,11 +1337,11 @@ export const useShapeEditor = () => {
             shape.properties.strokeWidth = 0;
           } else {
             // Stroke enabled - apply all stroke properties
-            
+
             // Apply stroke width range
             const [minWidth, maxWidth] = batchConfigSettings.strokeWidthRange;
             shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
-            
+
             // Apply stroke opacity based on mode
             if (batchConfigSettings.strokeOpacityMode === 'range') {
               const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
@@ -1349,7 +1349,7 @@ export const useShapeEditor = () => {
             } else if (batchConfigSettings.strokeOpacityMode === 'define') {
               shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
             }
-            
+
             // Apply stroke color using new HSL system
             const strokeColor = generateColor(
               batchConfigSettings.strokeColorMode,
@@ -1366,12 +1366,12 @@ export const useShapeEditor = () => {
           shape.properties.strokeOpacity = 0;
           shape.properties.strokeWidth = 0;
         }
-        
+
         // Prevent invisible shapes if enabled
         if (batchConfigSettings.preventInvisibleShapes) {
           const hasFill = shape.properties.fillColor !== 'transparent' && shape.properties.fillOpacity > 0;
           const hasStroke = shape.properties.strokeColor !== 'transparent' && shape.properties.strokeOpacity > 0 && shape.properties.strokeWidth > 0;
-          
+
           if (!hasFill && !hasStroke) {
             // Force at least a fill
             shape.properties.fillColor = shape.properties.fillColor === 'transparent' ? 
@@ -1379,7 +1379,7 @@ export const useShapeEditor = () => {
             shape.properties.fillOpacity = 0.7;
           }
         }
-        
+
         // Apply shape transforms if enabled
         if (batchConfigSettings.transformsEnabled) {
           // Apply translation
@@ -1387,7 +1387,7 @@ export const useShapeEditor = () => {
           const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
           shape.transform.x += minTransX + Math.random() * (maxTransX - minTransX);
           shape.transform.y += minTransY + Math.random() * (maxTransY - minTransY);
-          
+
           // Apply scale
           if (batchConfigSettings.scaleUniform) {
             const [minScale, maxScale] = batchConfigSettings.scaleRange;
@@ -1400,11 +1400,11 @@ export const useShapeEditor = () => {
             shape.transform.scaleX = minScaleX + Math.random() * (maxScaleX - minScaleX);
             shape.transform.scaleY = minScaleY + Math.random() * (maxScaleY - minScaleY);
           }
-          
+
           // Apply rotation
           const [minRot, maxRot] = batchConfigSettings.rotationRange;
           shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
-          
+
           // Apply skew if configured
           if (batchConfigSettings.skewXRange && batchConfigSettings.skewYRange) {
             const [minSkewX, maxSkewX] = batchConfigSettings.skewXRange;
@@ -1414,14 +1414,14 @@ export const useShapeEditor = () => {
           }
         }
       }
-      
+
       // Apply noise variations ONLY if enabled - this fixes the disabled state issue
       if (batchConfigSettings.noiseEnabled) {
         // Get current artboard dimensions
         const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
         const artboardWidth = currentArtboard?.width || 400;
         const artboardHeight = currentArtboard?.height || 400;
-        
+
         const noiseResult = NoiseSystem.generateNoiseVariation(
           index, 
           batchConfigSettings, 
@@ -1430,7 +1430,7 @@ export const useShapeEditor = () => {
           artboardWidth,
           artboardHeight
         );
-        
+
         // Apply noise to position based on position mode and noise mode
         if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
           // For enhanced position modes, handle noise differently
@@ -1446,7 +1446,7 @@ export const useShapeEditor = () => {
             // Multiplicative noise
             shape.transform.x *= (1 + noiseResult.x * 0.1);
           }
-          
+
           if (batchConfigSettings.yPositionMode === 'range' && batchConfigSettings.rangeNoiseWithinRange) {
             // Noise defines values within the range
             const [minY, maxY] = batchConfigSettings.yPositionRange;
@@ -1469,14 +1469,14 @@ export const useShapeEditor = () => {
             shape.transform.y *= (1 + noiseResult.y * 0.1);
           }
         }
-        
+
         // Apply noise to rotation based on noise mode
         if (batchConfigSettings.noiseMode === 'additive') {
           shape.transform.rotation += noiseResult.rotation;
         } else {
           shape.transform.rotation *= (1 + noiseResult.rotation * 0.001); // Small multiplicative effect
         }
-        
+
         // Apply noise to scale based on noise mode
         if (batchConfigSettings.noiseMode === 'additive') {
           shape.transform.scaleX += noiseResult.scaleX * 0.1;
@@ -1485,11 +1485,11 @@ export const useShapeEditor = () => {
           shape.transform.scaleX *= noiseResult.scaleX;
           shape.transform.scaleY *= noiseResult.scaleY;
         }
-        
+
         // Apply noise to opacity - direct assignment for all
         shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
         shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
-        
+
         // Apply noise to colors if color harmony is not enabled
         if (!batchConfigSettings.colorHarmonyEnabled) {
           if (batchConfigSettings.noiseAlgorithm === 'randomise') {
@@ -1497,7 +1497,7 @@ export const useShapeEditor = () => {
             const hue = noiseResult.hue; // Direct 0-360° value
             const saturation = noiseResult.saturation; // Direct 50-100% value  
             const lightness = noiseResult.lightness; // Direct 30-70% value
-            
+
             const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE randomise applied! fillColor="${noiseColor}"`);
@@ -1510,16 +1510,16 @@ export const useShapeEditor = () => {
               saturation = parseFloat(hslMatch[2]);
               lightness = parseFloat(hslMatch[3]);
             }
-            
+
             // Apply variations
             hue = (hue + noiseResult.hue + 360) % 360; // Add variation and wrap
             saturation = Math.max(0, Math.min(100, saturation + noiseResult.saturation));
             lightness = Math.max(0, Math.min(100, lightness + noiseResult.lightness));
-            
+
             const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE perlin applied! fillColor="${noiseColor}" (from base: ${hslMatch?.[0] || 'no match'})`);
-            
+
             // Random stroke color (original behavior - use different seed offset)
             const strokeHue = (hue + 180) % 360; // Complementary hue
             const strokeSaturation = 60 + (noiseResult.saturation * 0.8) * 40; // Map to 60-100%
@@ -1530,22 +1530,22 @@ export const useShapeEditor = () => {
             const baseHue = Math.random() * 360;
             const baseSaturation = 60 + Math.random() * 30;
             const baseLightness = 40 + Math.random() * 30;
-            
+
             const finalHue = (baseHue + noiseResult.hue + 360) % 360;
             const finalSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation));
             const finalLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness));
-            
+
             const noiseColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE ${batchConfigSettings.noiseAlgorithm} applied! fillColor="${noiseColor}"`);
-            
+
             const strokeHue = (finalHue + 30 + noiseResult.hue * 0.3) % 360;
             const strokeSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation * 0.8));
             const strokeLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness * 0.7));
             shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
           }
         }
-        
+
         console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
       } else {
         // Original randomization behavior when noise is disabled
@@ -1553,14 +1553,14 @@ export const useShapeEditor = () => {
         shape.transform.scaleX = scale;
         shape.transform.scaleY = scale;
         shape.transform.rotation = Math.random() * 360;
-        
+
         // Ensure original opacity values
         shape.properties.fillOpacity = 0.8 + Math.random() * 0.2;
         shape.properties.strokeOpacity = 0.9 + Math.random() * 0.1;
-        
+
         console.log(`🔧 [NO NOISE] Shape ${index}: Noise disabled, applying transform only. Current fillColor="${shape.properties.fillColor}"`);
       }
-      
+
       return shape;
     });
 
@@ -1576,7 +1576,7 @@ export const useShapeEditor = () => {
         gridColumnOffset: batchConfigSettings.gridColumnOffset,
         gridSortBy: batchConfigSettings.gridSortBy
       };
-      
+
       // Apply grid positioning additively with existing positions
       finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 });
       console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy}`);
@@ -1584,7 +1584,7 @@ export const useShapeEditor = () => {
 
     console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
     setShapes(prev => [...prev, ...finalShapes]);
-    
+
     // Update incremental index if not resetting per batch
     if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled && 
         !batchConfigSettings.incrementalResetPerBatch) {
@@ -1596,10 +1596,10 @@ export const useShapeEditor = () => {
     const rect = canvas.getBoundingClientRect();
     const centerX = (touch1.clientX + touch2.clientX) / 2;
     const centerY = (touch1.clientY + touch2.clientY) / 2;
-    
+
     const screenX = (centerX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (centerY - rect.top - rect.height / 2) / canvasSettings.zoom;
-    
+
     return {
       x: screenX - canvasSettings.panX,
       y: screenY - canvasSettings.panY
@@ -1608,31 +1608,31 @@ export const useShapeEditor = () => {
 
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left - rect.width / 2;
     const mouseY = e.clientY - rect.top - rect.height / 2;
-    
+
     const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
-    
+
     // World coordinates before zoom
     const worldXBefore = (mouseX / currentZoom) - canvasSettings.panX;
     const worldYBefore = (mouseY / currentZoom) - canvasSettings.panY;
-    
+
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     const newZoom = Math.max(0.05, Math.min(5, currentZoom * zoomFactor));
-    
+
     // World coordinates after zoom
     const worldXAfter = (mouseX / newZoom) - canvasSettings.panX;
     const worldYAfter = (mouseY / newZoom) - canvasSettings.panY;
-    
+
     // Adjust pan to keep mouse position fixed
     const panDeltaX = worldXAfter - worldXBefore;
     const panDeltaY = worldYAfter - worldYBefore;
-    
+
     setCanvasSettings(prev => ({
       ...prev,
       zoom: newZoom,
@@ -1663,7 +1663,7 @@ export const useShapeEditor = () => {
           clearSelection();
         }
       }
-      
+
       // Escape to clear selection
       if (e.key === 'Escape') {
         clearSelection();
@@ -1671,7 +1671,7 @@ export const useShapeEditor = () => {
         setMarqueeStart(null);
         setMarqueeEnd(null);
       }
-      
+
       // Tab to cycle through edit modes
       if (e.key === 'Tab') {
         e.preventDefault();
@@ -1693,13 +1693,13 @@ export const useShapeEditor = () => {
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
-    
+
     // Handle middle mouse button for panning
     if (e.button === 1) {
       setDragState({
@@ -1713,7 +1713,7 @@ export const useShapeEditor = () => {
       setIsDragging(true);
       return;
     }
-    
+
     // Handle space key + left click for panning
     if (e.button === 0 && (e.metaKey || e.ctrlKey)) {
       setDragState({
@@ -1727,7 +1727,7 @@ export const useShapeEditor = () => {
       setIsDragging(true);
       return;
     }
-    
+
     // Initialize new drag state tracking system
     setDragState({
       startScreenX: e.clientX,
@@ -1737,11 +1737,11 @@ export const useShapeEditor = () => {
       totalDeltaX: 0,
       totalDeltaY: 0
     });
-    
+
     // Intelligent mode detection and auto-switching
     let clickedOnShape = false;
     let detectedMode: 'shapes' | 'points' | 'segments' = 'shapes';
-    
+
     // First, check for point selection (highest priority)
     const pointSelected = selectPointAt(x, y, e.shiftKey);
     if (pointSelected) {
@@ -1769,7 +1769,7 @@ export const useShapeEditor = () => {
         // Check for shape selection - iterate from highest to lowest z-index
         const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
         let topShape: Shape | null = null;
-        
+
         // Find the first (topmost) shape that contains the point
         for (const shape of sortedShapes) {
           if (shape.containsPoint(x, y)) {
@@ -1777,19 +1777,19 @@ export const useShapeEditor = () => {
             break;
           }
         }
-        
+
         clickedOnShape = topShape !== null;
         if (clickedOnShape && topShape) {
           detectedMode = 'shapes';
           if (editMode !== 'shapes') {
             setEditMode('shapes');
           }
-          
+
           // Preserve multi-selection if:
           // 1. Shift is held and clicking on a selected shape, OR
           // 2. Clicking on any selected shape when multiple shapes are selected (for dragging)
           const isMultiSelectDrag = topShape.selected && selectedShapes.length > 1;
-          
+
           // If clicking on a selected shape with multiple selections, don't change selection
           if (!isMultiSelectDrag) {
             if (e.shiftKey) {
@@ -1802,7 +1802,7 @@ export const useShapeEditor = () => {
               setSelectedSegments([]);
               topShape.selected = true;
             }
-            
+
             const newSelectedShapes = shapes.filter(shape => shape.selected);
             setSelectedShapes(newSelectedShapes);
           }
@@ -1839,7 +1839,7 @@ export const useShapeEditor = () => {
         }
       }
     }
-    
+
     // Start marquee selection if clicking on empty space
     if (!clickedOnShape && !e.shiftKey) {
       clearSelection();
@@ -1849,27 +1849,27 @@ export const useShapeEditor = () => {
       setMarqueeStart({ x, y });
       setIsMarqueeSelecting(false); // Will be set to true on mouse move
     }
-    
+
     setIsDragging(true);
   }, [canvasSettings.zoom, canvasSettings.panX, canvasSettings.panY, editMode, selectPointAt, selectSegmentAt, selectedPoints, selectedSegments, shapes, selectedShapes, clearSelection]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
-    
+
     // Handle canvas panning (middle mouse or Cmd/Ctrl+drag)
     if (isDragging && dragState && (e.buttons === 4 || (e.buttons === 1 && (e.metaKey || e.ctrlKey)))) {
       const deltaX = (e.clientX - dragState.lastScreenX) / canvasSettings.zoom;
       const deltaY = (e.clientY - dragState.lastScreenY) / canvasSettings.zoom;
-      
+
       setCanvasSettings(prev => ({
         ...prev,
         panX: prev.panX + deltaX,
         panY: prev.panY + deltaY
       }));
-      
+
       setDragState(prev => prev ? {
         ...prev,
         lastScreenX: e.clientX,
@@ -1877,13 +1877,13 @@ export const useShapeEditor = () => {
       } : null);
       return;
     }
-    
+
     // Convert screen coordinates to world coordinates - match canvas transformation
     const screenX = (e.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (e.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
-    
+
     // Start marquee selection if dragging from empty space
     if (marqueeStart && !isMarqueeSelecting && isDragging) {
       const dragDistance = Math.sqrt((x - marqueeStart.x) ** 2 + (y - marqueeStart.y) ** 2);
@@ -1895,13 +1895,13 @@ export const useShapeEditor = () => {
     // Update marquee selection
     if (isMarqueeSelecting && marqueeStart) {
       setMarqueeEnd({ x, y });
-      
+
       // Select shapes/points/segments within marquee
       const minX = Math.min(marqueeStart.x, x);
       const maxX = Math.max(marqueeStart.x, x);
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
-      
+
       if (editMode === 'shapes') {
         shapes.forEach(shape => {
           // Use world bounds for proper marquee selection
@@ -1949,16 +1949,16 @@ export const useShapeEditor = () => {
         });
         setSelectedSegments(newSelectedSegments);
       }
-      
+
       return;
     }
-    
+
     if (!isDragging || !dragState) return;
-    
+
     // Calculate precise delta from last position
     const deltaX = (e.clientX - dragState.lastScreenX) / canvasSettings.zoom;
     const deltaY = (e.clientY - dragState.lastScreenY) / canvasSettings.zoom;
-    
+
     // Only apply movement if there's actual delta
     if (Math.abs(deltaX) > 0.01 || Math.abs(deltaY) > 0.01) {
       // Handle different edit modes
@@ -1979,7 +1979,7 @@ export const useShapeEditor = () => {
           }
           break;
       }
-      
+
       // Update drag state with new position and accumulated delta
       setDragState(prev => prev ? {
         ...prev,
@@ -1997,7 +1997,7 @@ export const useShapeEditor = () => {
       setIsMarqueeSelecting(false);
       setMarqueeStart(null);
       setMarqueeEnd(null);
-      
+
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
@@ -2006,7 +2006,7 @@ export const useShapeEditor = () => {
       setMarqueeStart(null);
       setMarqueeEnd(null);
     }
-    
+
     setIsDragging(false);
     setDragState(null);
   }, [isMarqueeSelecting, marqueeStart, shapes]);
@@ -2021,17 +2021,17 @@ export const useShapeEditor = () => {
       setIsMultiTouch(true);
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      
+
       const distance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) + 
         Math.pow(touch2.clientY - touch1.clientY, 2)
       );
-      
+
       const angle = Math.atan2(
         touch2.clientY - touch1.clientY,
         touch2.clientX - touch1.clientX
       ) * 180 / Math.PI;
-      
+
       gestureDataRef.current = {
         isActive: true,
         initialDistance: distance,
@@ -2039,19 +2039,19 @@ export const useShapeEditor = () => {
         initialScale: canvasSettings.zoom,
         initialRotation: 0
       };
-      
+
       return;
     }
-    
+
     setIsMultiTouch(false);
-    
+
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
-    
+
     setTouchStartTime(Date.now());
     setDragState({
       startScreenX: e.touches[0].clientX,
@@ -2061,10 +2061,10 @@ export const useShapeEditor = () => {
       totalDeltaX: 0,
       totalDeltaY: 0
     });
-    
+
     // Check if touching empty space for potential marquee selection
     let touchedShape = false;
-    
+
     switch (editMode) {
       case 'points':
         touchedShape = selectPointAt(x, y, isMultiSelectMode);
@@ -2076,17 +2076,17 @@ export const useShapeEditor = () => {
         touchedShape = selectShapeAtPoint(x, y, isMultiSelectMode);
         break;
     }
-    
+
     if (!touchedShape && !isMultiSelectMode) {
       setMarqueeStart({ x, y });
     }
-    
+
     setIsDragging(true);
   }, [canvasSettings.zoom, canvasSettings.panX, canvasSettings.panY, editMode, isMultiSelectMode, selectPointAt, selectSegmentAt, selectShapeAtPoint]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -2094,85 +2094,85 @@ export const useShapeEditor = () => {
     if (e.touches.length === 2 && gestureDataRef.current.isActive) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      
+
       const currentDistance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) + 
         Math.pow(touch2.clientY - touch1.clientY, 2)
       );
-      
+
       const scale = currentDistance / gestureDataRef.current.initialDistance;
       const newZoom = Math.max(0.05, Math.min(5, gestureDataRef.current.initialScale * scale));
-      
+
       // Get center point for zoom
       const centerX = (touch1.clientX + touch2.clientX) / 2;
       const centerY = (touch1.clientY + touch2.clientY) / 2;
       const rect = canvas.getBoundingClientRect();
       const mouseX = centerX - rect.left - rect.width / 2;
       const mouseY = centerY - rect.top - rect.height / 2;
-      
+
       // Apply zoom with center point
       const worldXBefore = (mouseX / canvasSettings.zoom) - canvasSettings.panX;
       const worldYBefore = (mouseY / canvasSettings.zoom) - canvasSettings.panY;
       const worldXAfter = (mouseX / newZoom) - canvasSettings.panX;
       const worldYAfter = (mouseY / newZoom) - canvasSettings.panY;
-      
+
       setCanvasSettings(prev => ({
         ...prev,
         zoom: newZoom,
         panX: prev.panX + (worldXAfter - worldXBefore),
         panY: prev.panY + (worldYAfter - worldYBefore)
       }));
-      
+
       return;
     }
-    
+
     // Single touch handling
     if (!dragState || e.touches.length > 1) return;
-    
+
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const screenX = (touch.clientX - rect.left - rect.width / 2) / canvasSettings.zoom;
     const screenY = (touch.clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
     const x = screenX - canvasSettings.panX;
     const y = screenY - canvasSettings.panY;
-    
+
     // Calculate precise delta from last position
     const deltaX = (touch.clientX - dragState.lastScreenX) / canvasSettings.zoom;
     const deltaY = (touch.clientY - dragState.lastScreenY) / canvasSettings.zoom;
-    
+
     // Check if we should start marquee selection on touch devices
     if (marqueeStart && !isMarqueeSelecting && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
       setIsMarqueeSelecting(true);
       clearSelection();
     }
-    
+
     // Handle marquee selection for touch
     if (isMarqueeSelecting && marqueeStart) {
       setMarqueeEnd({ x, y });
-      
+
       // Select shapes within marquee rectangle
       const minX = Math.min(marqueeStart.x, x);
       const maxX = Math.max(marqueeStart.x, x);
       const minY = Math.min(marqueeStart.y, y);
       const maxY = Math.max(marqueeStart.y, y);
-      
+
       shapes.forEach(shape => {
         // Check if shape center is within marquee bounds
         const shapeCenterX = shape.transform.x;
         const shapeCenterY = shape.transform.y;
-        
+
         const shapeInMarquee = shapeCenterX >= minX && shapeCenterX <= maxX &&
                               shapeCenterY >= minY && shapeCenterY <= maxY;
         shape.selected = shapeInMarquee;
       });
-      
+
       return;
     }
-    
+
     // Handle shape/point/segment dragging or canvas panning
     if (isDragging && Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
       let handledDrag = false;
-      
+
       switch (editMode) {
         case 'points':
           if (selectedPoints.length > 0) {
@@ -2193,7 +2193,7 @@ export const useShapeEditor = () => {
           }
           break;
       }
-      
+
       // If no shapes/points/segments were moved, pan the canvas
       if (!handledDrag) {
         setCanvasSettings(prev => ({
@@ -2202,7 +2202,7 @@ export const useShapeEditor = () => {
           panY: prev.panY + deltaY
         }));
       }
-      
+
       setDragState(prev => prev ? {
         ...prev,
         lastScreenX: touch.clientX,
@@ -2216,9 +2216,9 @@ export const useShapeEditor = () => {
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     // Prevent default browser touch behavior
     e.preventDefault();
-    
+
     const touchDuration = Date.now() - touchStartTime;
-    
+
     // Reset multi-touch state when touches end
     if (e.touches.length < 2) {
       gestureDataRef.current = {
@@ -2236,7 +2236,7 @@ export const useShapeEditor = () => {
       setIsMarqueeSelecting(false);
       setMarqueeStart(null);
       setMarqueeEnd(null);
-      
+
       // Update selected shapes array based on shape.selected flags
       const newSelectedShapes = shapes.filter(shape => shape.selected);
       setSelectedShapes(newSelectedShapes);
@@ -2249,7 +2249,7 @@ export const useShapeEditor = () => {
         const screenY = (e.changedTouches[0].clientY - rect.top - rect.height / 2) / canvasSettings.zoom;
         const x = screenX - canvasSettings.panX;
         const y = screenY - canvasSettings.panY;
-        
+
         switch (editMode) {
           case 'points':
             selectPointAt(x, y, isMultiSelectMode);
@@ -2263,7 +2263,7 @@ export const useShapeEditor = () => {
         }
       }
     }
-    
+
     setIsDragging(false);
     setDragState(null);
     setTouchStartTime(0);
@@ -2287,7 +2287,7 @@ export const useShapeEditor = () => {
     // Center the artboard on the canvas (stack them on top of each other)
     const centerX = -preset.width / 2;
     const centerY = -preset.height / 2;
-    
+
     const newArtboard: Artboard = {
       id: `artboard_${Date.now()}`,
       name: `${preset.name}`,
@@ -2321,24 +2321,24 @@ export const useShapeEditor = () => {
 
   const distributeSelected = useCallback(() => {
     if (selectedShapes.length < 2) return;
-    
+
     // Sort shapes by position for proper distribution
     const sortedShapes = [...selectedShapes].sort((a, b) => a.transform.x - b.transform.x);
-    
+
     const firstX = sortedShapes[0].transform.x;
     const lastX = sortedShapes[sortedShapes.length - 1].transform.x;
     const totalDistance = lastX - firstX;
-    
+
     if (totalDistance === 0) return;
-    
+
     const spacing = totalDistance / (sortedShapes.length - 1);
-    
+
     sortedShapes.forEach((shape, index) => {
       if (index > 0 && index < sortedShapes.length - 1) {
         shape.transform.x = firstX + spacing * index;
       }
     });
-    
+
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
@@ -2355,36 +2355,36 @@ export const useShapeEditor = () => {
     enabledShapeTypes: Set<ShapeType>;
   }) => {
     console.log('🔄 Loading project with data:', data);
-    
+
     // Clear current state
     setShapes([]);
     setGroups([]);
     setSelectedShapes([]);
     setSelectedGroups([]);
-    
+
     // Convert plain objects back to Shape instances
     const shapeInstances = (data.shapes || []).map((shapeData: any) => {
       // Create a new Shape instance
       const shape = new Shape(shapeData.type, shapeData.transform.x, shapeData.transform.y);
-      
+
       // Copy all properties from saved data
       Object.assign(shape, shapeData);
-      
+
       // Ensure the shape has all required methods by creating a proper instance
       return shape;
     });
-    
+
     // Convert groups if needed (for now, just use empty array since groups might be plain objects too)
     const groupInstances = (data.groups || []).map((groupData: any) => {
       // For now, just return the group data as-is since groups are less complex
       return groupData;
     });
-    
+
     // Load new data
     setShapes(shapeInstances);
     setGroups(groupInstances);
     setEnabledShapeTypes(data.enabledShapeTypes || new Set());
-    
+
     // Update settings if provided with proper defaults
     if (data.scatterSettings) {
       setScatterSettings(data.scatterSettings);
@@ -2415,9 +2415,9 @@ export const useShapeEditor = () => {
       });
       console.log('📐 Reset to default canvas settings');
     }
-    
+
     console.log('✅ Project loaded successfully with', shapeInstances.length, 'shapes');
-    
+
     // Log shape positions for debugging
     if (shapeInstances.length > 0) {
       console.log('📍 First few shape positions:', shapeInstances.slice(0, 3).map(s => ({
@@ -2454,7 +2454,7 @@ export const useShapeEditor = () => {
     isTouchDevice,
     isMultiTouch,
     isMultiSelectMode,
-    
+
     // Canvas interaction
     canvasRef,
     handleMouseDown,
@@ -2464,7 +2464,7 @@ export const useShapeEditor = () => {
     handleTouchMove,
     handleTouchEnd,
     handleWheel,
-    
+
     // Actions
     toggleShapeType,
     updateScatterSettings,
@@ -2475,7 +2475,7 @@ export const useShapeEditor = () => {
     setEditMode,
     toggleMultiSelectMode,
     changeBlendMode,
-    
+
     // Canvas controls
     zoomIn: () => {
       const currentZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
@@ -2498,7 +2498,7 @@ export const useShapeEditor = () => {
         updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 });
       }
     },
-    
+
     // Transform operations
     moveBy: (x: number, y: number) => moveSelected(x, y),
     scaleBy: (x: number, y: number) => {
@@ -2533,7 +2533,7 @@ export const useShapeEditor = () => {
       });
       setShapes(prev => [...prev]);
     },
-    
+
     // Layer operations
     deleteSelected: () => {
       setShapes(prev => prev.filter(shape => !shape.selected));
@@ -2570,47 +2570,47 @@ export const useShapeEditor = () => {
       });
       setShapes(prev => [...prev]);
     },
-    
+
     // Group operations
     composeShapes: () => {
       if (selectedShapes.length < 2) return;
-      
+
       const newGroup = new ShapeGroupClass([...selectedShapes]);
       selectedShapes.forEach(shape => {
         shape.selected = false;
       });
-      
+
       setGroups(prev => [...prev, newGroup]);
       setSelectedShapes([]);
       setSelectedGroups([newGroup]);
     },
     canComposeShapes: selectedShapes.length >= 2,
-    
+
     // Artboard operations
     addArtboard,
     selectArtboard,
     deleteArtboard,
     updateArtboard,
     distributeSelected,
-    
+
     // Boolean operations
     applyBooleanOperation: useCallback((operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => {
       if (selectedShapes.length !== 1) return;
-      
+
       const sourceShape = selectedShapes[0];
       const targetShape = shapes.find(s => s.id === targetId);
-      
+
       if (!targetShape) return;
-      
+
       const result = BooleanOperations.applyBooleanOperation(sourceShape, targetShape, operation);
-      
+
       if (result) {
         // Remove both original shapes and add the result
         const newShapes = shapes.filter(shape => 
           shape.id !== sourceShape.id && shape.id !== targetId
         );
         newShapes.push(result);
-        
+
         setShapes(newShapes);
         setSelectedShapes([result]);
         console.log(`${operation.charAt(0).toUpperCase() + operation.slice(1)} operation completed successfully.`);
@@ -2618,11 +2618,11 @@ export const useShapeEditor = () => {
         console.warn(`Cannot perform ${operation}: shapes do not intersect or are incompatible.`);
       }
     }, [selectedShapes, shapes, setShapes, setSelectedShapes]),
-    
+
     // Color manipulation
     applyColorManipulation: useCallback((manipulation: ColorManipulation) => {
       const targetShapes = selectedShapes.length > 0 ? selectedShapes : shapes;
-      
+
       if (manipulation.mode === 'shift' && manipulation.hslShift) {
         targetShapes.forEach(shape => {
           if (manipulation.affectFill && shape.properties.fillColor !== 'none') {
@@ -2654,10 +2654,10 @@ export const useShapeEditor = () => {
           }
         });
       }
-      
+
       setShapes(prev => [...prev]);
     }, [selectedShapes, shapes]),
-    
+
     // Project management
     onLoadProject,
     setGroups,

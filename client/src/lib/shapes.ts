@@ -242,7 +242,7 @@ export class Shape {
     const fillColor = hasFill ? `hsl(${hue}, ${saturation}%, ${lightness}%)` : 'transparent';
     const strokeColor = hasStroke ? `hsl(${(hue + 30) % 360}, ${saturation}%, ${Math.max(20, lightness - 20)}%)` : 'transparent';
     
-    console.log(`🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="${fillColor}", strokeColor="${strokeColor}" (non-batch creation)`);
+    console.log(`🏗️ [SHAPE CONSTRUCTOR] generateRandomProperties: fillColor="${fillColor}", strokeColor="${strokeColor}" (non-batch creation) - ID: ${this.id}`);
     
     return {
       fillColor: fillColor,
