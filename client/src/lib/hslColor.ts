@@ -87,7 +87,7 @@ export function hslToHex(hsl: HSL): string {
 }
 
 /**
- * Calculate the shortest path between two hues on the color wheel
+ * Calculate the shortest path between two hues on the color wheel (for color harmony)
  */
 function getHueDistance(h1: number, h2: number): { distance: number, direction: number } {
   const direct = h2 - h1;
@@ -101,13 +101,50 @@ function getHueDistance(h1: number, h2: number): { distance: number, direction: 
 }
 
 /**
- * Interpolate between two HSL colors with proper hue handling
+ * Linear hue interpolation - treats hue as a straight line from 0° to 360°
+ * This gives full spectrum coverage as expected in color picker interfaces
+ */
+function interpolateLinearHue(h1: number, h2: number, t: number): number {
+  // Simple linear interpolation between two hue values
+  let result = h1 + (h2 - h1) * t;
+  
+  // Normalize to 0-360 range
+  while (result < 0) result += 360;
+  while (result >= 360) result -= 360;
+  
+  return result;
+}
+
+/**
+ * Interpolate between two HSL colors using linear spectrum interpolation
+ * This provides full spectrum coverage for color ranges (H=342 to H=50 = 292° span)
  */
 export function interpolateHSL(color1: string, color2: string, t: number): string {
   const hsl1 = hexToHSL(color1);
   const hsl2 = hexToHSL(color2);
   
-  // Handle hue interpolation with wraparound
+  // Use linear hue interpolation for spectrum coverage
+  const newHue = interpolateLinearHue(hsl1.h, hsl2.h, t);
+  
+  // Linear interpolation for saturation and lightness
+  const newHSL: HSL = {
+    h: Math.round(newHue),
+    s: Math.round(hsl1.s + (hsl2.s - hsl1.s) * t),
+    l: Math.round(hsl1.l + (hsl2.l - hsl1.l) * t)
+  };
+  
+  return hslToHex(newHSL);
+}
+
+/**
+ * Interpolate between two HSL colors using color wheel logic (shortest path)
+ * This is useful for color harmony applications where natural color relationships matter
+ */
+export function interpolateHSLColorWheel(color1: string, color2: string, t: number): string {
+  const hsl1 = hexToHSL(color1);
+  const hsl2 = hexToHSL(color2);
+  
+  // Handle hue interpolation with wraparound (shortest path)
   const hueInfo = getHueDistance(hsl1.h, hsl2.h);
   let newHue = hsl1.h + (hueInfo.direction * hueInfo.distance * t);
   
