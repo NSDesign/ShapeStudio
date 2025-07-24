@@ -9,7 +9,39 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BlendMode } from '@/lib/shapeTypes';
+import { BlendMode, ShapeType } from '@/lib/shapeTypes';
+
+// Shape type display names
+const shapeTypeDisplayNames: Record<ShapeType, string> = {
+  rectangle: 'Rectangle',
+  square: 'Square',
+  circle: 'Circle',
+  ellipse: 'Ellipse',
+  triangle: 'Triangle',
+  'right-triangle': 'Right Triangle',
+  trapezoid: 'Trapezoid',
+  pentagon: 'Pentagon',
+  hexagon: 'Hexagon',
+  rhombus: 'Rhombus',
+  parallelogram: 'Parallelogram',
+  kite: 'Kite',
+  semicircle: 'Semicircle',
+  heart: 'Heart',
+  arrow: 'Arrow',
+  cross: 'Cross',
+  polygon: 'Polygon',
+  star: 'Star',
+  line: 'Line',
+  bezier: 'Bézier Curve',
+  cubic: 'Cubic Spline',
+  'smooth-spline': 'Smooth Spline',
+  chunk: 'Chunk',
+  blob: 'Organic Blob',
+  ring: 'Ring',
+  'spline-circle': 'Spline Circle',
+  'spline-ellipse': 'Spline Ellipse',
+  'spline-ring': 'Spline Ring'
+};
 
 export interface BatchConfigSettings {
   // Preset Selection
@@ -507,9 +539,20 @@ interface BatchConfigDialogProps {
   onSettingsChange: (settings: BatchConfigSettings) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  enabledShapeTypes: Set<string>;
+  onToggleShapeType: (type: string) => void;
+  onToggleAllShapeTypes: (enabled: boolean) => void;
 }
 
-export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange }: BatchConfigDialogProps) {
+export default function BatchConfigDialog({ 
+  settings, 
+  onSettingsChange, 
+  isOpen: controlledIsOpen, 
+  onOpenChange: controlledOnOpenChange,
+  enabledShapeTypes,
+  onToggleShapeType,
+  onToggleAllShapeTypes
+}: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -665,6 +708,53 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              {/* Shape Types Configuration */}
+              <div className="space-y-3">
+                <Label className="font-medium text-slate-200">Enabled Shape Types</Label>
+                
+                {/* All On/Off Buttons */}
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onToggleAllShapeTypes(true)}
+                    className="flex-1 bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+                  >
+                    All On
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onToggleAllShapeTypes(false)}
+                    className="flex-1 bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+                  >
+                    All Off
+                  </Button>
+                </div>
+
+                {/* Shape Types Grid */}
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-800/30 rounded border border-slate-600">
+                  {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => (
+                    <div key={type} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={enabledShapeTypes.has(type)}
+                        onCheckedChange={() => onToggleShapeType(type)}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                      />
+                      <Label className="text-xs text-slate-300 cursor-pointer" onClick={() => onToggleShapeType(type)}>
+                        {displayName}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                
+                <p className="text-xs text-slate-400">
+                  Enabled: {enabledShapeTypes.size} / {Object.keys(shapeTypeDisplayNames).length} shape types
+                </p>
               </div>
 
               <Separator className="bg-slate-600" />
