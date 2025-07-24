@@ -1,0 +1,131 @@
+useShapeEditor.ts:1071 🔍 generateRandomShapes: count=18, enabledTypes=3, types=rectangle,circle,polygon
+ 🎨 [FILL DEBUG] Shape 0: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 0: NO FILL - both probabilities failed, fillColor set to transparent
+ 🧪 [PRE-NOISE] Shape 0: BEFORE noise processing, fillColor="transparent", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 0: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="transparent"
+ ✅ [POST-NOISE] Shape 0: AFTER noise processing, final fillColor="transparent"
+ 📊 [SUMMARY] Shape 0: ❌ TRANSPARENT LOST
+ 🎨 [FILL DEBUG] Shape 1: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 1: NO FILL - both probabilities failed, fillColor set to transparent
+ 🧪 [PRE-NOISE] Shape 1: BEFORE noise processing, fillColor="hsl(23.99101189412778, 75%, 50%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 1: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 1: Noise disabled, applying transform only. Current fillColor="hsl(23.99101189412778, 75%, 50%)"
+ ✅ [POST-NOISE] Shape 1: AFTER noise processing, final fillColor="hsl(23.99101189412778, 75%, 50%)"
+ 📊 [SUMMARY] Shape 1: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 2: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 2: Using SOLID FILL, fillColor="#000000" from mode="define"
+ 🧪 [PRE-NOISE] Shape 2: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 2: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 2: Noise disabled, applying transform only. Current fillColor="#000000"
+ ✅ [POST-NOISE] Shape 2: AFTER noise processing, final fillColor="#000000"
+ 📊 [SUMMARY] Shape 2: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 3: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 3: Using SOLID FILL, fillColor="#000000" from mode="define"
+ 🧪 [PRE-NOISE] Shape 3: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 3: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 3: Noise disabled, applying transform only. Current fillColor="#000000"
+ ✅ [POST-NOISE] Shape 3: AFTER noise processing, final fillColor="#000000"
+ 📊 [SUMMARY] Shape 3: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 4: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 4: NO FILL - both probabilities failed, fillColor set to transparent
+ 🧪 [PRE-NOISE] Shape 4: BEFORE noise processing, fillColor="hsl(23.838617336165598, 75%, 50%)", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 4: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 4: Noise disabled, applying transform only. Current fillColor="hsl(23.838617336165598, 75%, 50%)"
+ ✅ [POST-NOISE] Shape 4: AFTER noise processing, final fillColor="hsl(23.838617336165598, 75%, 50%)"
+ 📊 [SUMMARY] Shape 4: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 5: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 5: Using SOLID FILL, fillColor="#000000" from mode="define"
+ 🧪 [PRE-NOISE] Shape 5: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 5: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 5: Noise disabled, applying transform only. Current fillColor="#000000"
+ ✅ [POST-NOISE] Shape 5: AFTER noise processing, final fillColor="#000000"
+ 📊 [SUMMARY] Shape 5: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 6: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 6: Using SOLID FILL, fillColor="#000000" from mode="define"
+ 🧪 [PRE-NOISE] Shape 6: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 6: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 6: Noise disabled, applying transform only. Current fillColor="#000000"
+ ✅ [POST-NOISE] Shape 6: AFTER noise processing, final fillColor="#000000"
+ 📊 [SUMMARY] Shape 6: ✅ Color preserved
+ 🎨 [FILL DEBUG] Shape 7: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+ 🎨 [FILL DEBUG] Shape 7: Using SOLID FILL, fillColor="#000000" from mode="define"
+ 🧪 [PRE-NOISE] Shape 7: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+ 🚫 [NO NOISE] Shape 7: Noise disabled, entering non-noise branch
+ 🔧 [NO NOISE] Shape 7: Noise disabled, applying transform only. Current fillColor="#000000"
+ ✅ [POST-NOISE] Shape 7: AFTER noise processing, final fillColor="#000000"
+ 📊 [SUMMARY] Shape 7: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 8: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 8: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 8: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 8: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 8: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 8: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 8: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 9: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=true
+useShapeEditor.ts:1296 🎨 [FILL DEBUG] Shape 9: Using GRADIENT, fillColor set to transparent
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 9: BEFORE noise processing, fillColor="transparent", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 9: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 9: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 9: AFTER noise processing, final fillColor="transparent"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 9: ❌ TRANSPARENT LOST
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 10: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=true
+useShapeEditor.ts:1296 🎨 [FILL DEBUG] Shape 10: Using GRADIENT, fillColor set to transparent
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 10: BEFORE noise processing, fillColor="transparent", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 10: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 10: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 10: AFTER noise processing, final fillColor="transparent"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 10: ❌ TRANSPARENT LOST
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 11: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 11: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 11: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 11: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 11: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 11: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 11: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 12: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 12: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 12: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 12: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 12: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 12: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 12: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 13: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 13: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 13: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 13: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 13: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 13: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 13: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 14: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 14: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 14: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 14: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 14: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 14: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 14: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 15: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 15: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 15: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 15: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 15: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 15: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 15: ✅ Color preserved
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 16: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=true
+useShapeEditor.ts:1296 🎨 [FILL DEBUG] Shape 16: Using GRADIENT, fillColor set to transparent
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 16: BEFORE noise processing, fillColor="transparent", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 16: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 16: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 16: AFTER noise processing, final fillColor="transparent"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 16: ❌ TRANSPARENT LOST
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 17: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 17: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1418 🧪 [PRE-NOISE] Shape 17: BEFORE noise processing, fillColor="#000000", noiseEnabled=false
+useShapeEditor.ts:1578 🚫 [NO NOISE] Shape 17: Noise disabled, entering non-noise branch
+useShapeEditor.ts:1590 🔧 [NO NOISE] Shape 17: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1593 ✅ [POST-NOISE] Shape 17: AFTER noise processing, final fillColor="#000000"
+useShapeEditor.ts:1594 📊 [SUMMARY] Shape 17: ✅ Color preserved
+useShapeEditor.ts:1617 ✅ Created 18 shapes, adding to existing 0 shapes
+BatchConfigDialog.tsx:529 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:533 [BatchConfigDialog] Dialog state changed: {isOpen: false}
