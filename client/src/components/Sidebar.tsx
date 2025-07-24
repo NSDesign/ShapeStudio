@@ -458,8 +458,8 @@ export default function Sidebar({
       const originalSelected = shape.selected;
       shape.selected = false;
 
-      // Use the Shape class's render method with zoom=1 for export
-      shape.render(ctx, 1);
+      // Use the Shape class's render method for export
+      shape.render(ctx);
 
       // Restore original selection state
       shape.selected = originalSelected;
@@ -822,7 +822,8 @@ export default function Sidebar({
           // STEP 1: Shape Generation
           setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
           setBatchProgress(currentStep++);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
+          await new Promise(resolve => setTimeout(resolve, 500)); // Longer delay to see progress
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
@@ -880,7 +881,8 @@ export default function Sidebar({
             // STEP 2: Image Creation and Export
             setBatchStatus(`Creating image for artwork ${i + 1}...`);
             setBatchProgress(currentStep++);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Creating image for artwork ${i + 1}`);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Longer delay to see progress
             
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
@@ -1035,7 +1037,8 @@ export default function Sidebar({
         // FINAL STEP: ZIP Creation and Download
         setBatchStatus('Creating ZIP file...');
         setBatchProgress(currentStep++);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Creating ZIP file`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Much longer delay for ZIP creation
         
         const projectFilesText = batchSaveProjectFiles ? ` and ${batchExportCount} project files` : '';
         console.log(`📦 Creating ZIP file with ${batchExportCount} images${projectFilesText}`);
@@ -1043,7 +1046,8 @@ export default function Sidebar({
         
         setBatchStatus('Downloading ZIP file...');
         setBatchProgress(currentStep++);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log(`📊 PROGRESS UPDATE: Step ${currentStep-1}/${totalSteps} - Downloading ZIP file`);
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const link = document.createElement('a');
         link.href = URL.createObjectURL(zipBlob);
