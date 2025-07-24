@@ -1203,20 +1203,17 @@ export const useShapeEditor = () => {
         }
         
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
-      } else if (batchConfigSettings.propertiesEnabled && batchConfigSettings.fillEnabled) {
-        // Apply fill color based on mode
-        const useFillColor = Math.random() * 100 < batchConfigSettings.fillProbability;
-        
-        if (useFillColor) {
+      } else if (batchConfigSettings.propertiesEnabled) {
+        // Apply fill and stroke colors when properties are enabled but no color harmony
+        if (batchConfigSettings.fillEnabled) {
           // Generate fill color using new HSL system
           const fillColor = generateColor(
             batchConfigSettings.fillColorMode,
             batchConfigSettings.fillColorRange,
             batchConfigSettings.fillColorPalette,
             batchConfigSettings.fillColorDefine,
-            index // Use shape index for palette cycling
+            index
           );
-          
           shape.properties.fillColor = fillColor;
           
           // Apply fill opacity based on mode
@@ -1226,50 +1223,27 @@ export const useShapeEditor = () => {
           } else if (batchConfigSettings.fillOpacityMode === 'define') {
             shape.properties.fillOpacity = batchConfigSettings.fillOpacityDefine / 100;
           }
-        } else {
-          // Use original random behavior
-          const hue = Math.random() * 360;
-          const saturation = 50 + Math.random() * 50;
-          const lightness = 30 + Math.random() * 40;
-          shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         }
         
         // Handle stroke color
         if (batchConfigSettings.strokeEnabled) {
-          const useStrokeColor = Math.random() * 100 < batchConfigSettings.strokeProbability;
+          // Generate stroke color using new HSL system
+          const strokeColor = generateColor(
+            batchConfigSettings.strokeColorMode,
+            batchConfigSettings.strokeColorRange,
+            batchConfigSettings.strokeColorPalette,
+            batchConfigSettings.strokeColorDefine,
+            index
+          );
+          shape.properties.strokeColor = strokeColor;
           
-          if (useStrokeColor) {
-            // Generate stroke color using new HSL system
-            const strokeColor = generateColor(
-              batchConfigSettings.strokeColorMode,
-              batchConfigSettings.strokeColorRange,
-              batchConfigSettings.strokeColorPalette,
-              batchConfigSettings.strokeColorDefine,
-              index // Use shape index for palette cycling
-            );
-            
-            shape.properties.strokeColor = strokeColor;
-            
-            // Apply stroke opacity based on mode
-            if (batchConfigSettings.strokeOpacityMode === 'range') {
-              const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
-              shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            } else if (batchConfigSettings.strokeOpacityMode === 'define') {
-              shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
-            }
-          } else {
-            // Random stroke color fallback
-            const strokeHue = Math.random() * 360;
-            const strokeSaturation = 60 + Math.random() * 40;
-            const strokeLightness = 20 + Math.random() * 60;
-            shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+          // Apply stroke opacity based on mode
+          if (batchConfigSettings.strokeOpacityMode === 'range') {
+            const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
+            shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+          } else if (batchConfigSettings.strokeOpacityMode === 'define') {
+            shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
           }
-        } else {
-          // Random stroke color
-          const strokeHue = Math.random() * 360;
-          const strokeSaturation = 60 + Math.random() * 40;
-          const strokeLightness = 20 + Math.random() * 60;
-          shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
         }
       } else {
         // Original randomization behavior (before noise system)
@@ -1293,13 +1267,15 @@ export const useShapeEditor = () => {
           if (!shouldHaveFill) {
             shape.properties.fillColor = 'transparent';
             shape.properties.fillOpacity = 0;
+            shape.properties.gradient = undefined; // Ensure no gradient
           } else {
             // Apply fill opacity range
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
             
-            // Handle gradient probability
-            if (Math.random() * 100 < batchConfigSettings.fillGradientProbability) {
+            // Handle gradient probability - this controls whether gradient is created at all
+            const shouldHaveGradient = Math.random() * 100 < batchConfigSettings.fillGradientProbability;
+            if (shouldHaveGradient) {
               // Create gradient
               const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
               const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
@@ -1307,13 +1283,22 @@ export const useShapeEditor = () => {
               
               const gradientStops = [];
               for (let i = 0; i < stopCount; i++) {
-                const stopColor = generateColor(
-                  batchConfigSettings.fillGradientColorMode,
-                  batchConfigSettings.fillGradientColorRange,
-                  batchConfigSettings.fillGradientColorPalette,
-                  batchConfigSettings.fillGradientColorDefine,
-                  index + i // Use shape index + stop index for variation
-                );
+                let stopColor: string;
+                
+                if (batchConfigSettings.fillGradientColorMode === 'define') {
+                  // For define mode, use specific colors from the array
+                  const colors = batchConfigSettings.fillGradientColorDefine || ['#3b82f6'];
+                  stopColor = colors[i % colors.length];
+                } else {
+                  // For range and palette modes, use generateColor
+                  stopColor = generateColor(
+                    batchConfigSettings.fillGradientColorMode,
+                    batchConfigSettings.fillGradientColorRange,
+                    batchConfigSettings.fillGradientColorPalette,
+                    undefined, // define is handled above
+                    index + i
+                  );
+                }
                 
                 gradientStops.push({
                   offset: i / (stopCount - 1),
@@ -1325,6 +1310,22 @@ export const useShapeEditor = () => {
                 type: gradientType,
                 stops: gradientStops
               };
+              
+              // When gradient is used, set transparent fill so gradient shows through
+              shape.properties.fillColor = 'transparent';
+            } else {
+              // No gradient - ensure it's cleared and apply solid fill color
+              shape.properties.gradient = undefined;
+              
+              // Apply solid fill color using new HSL system
+              const fillColor = generateColor(
+                batchConfigSettings.fillColorMode,
+                batchConfigSettings.fillColorRange,
+                batchConfigSettings.fillColorPalette,
+                batchConfigSettings.fillColorDefine,
+                index
+              );
+              shape.properties.fillColor = fillColor;
             }
           }
         }

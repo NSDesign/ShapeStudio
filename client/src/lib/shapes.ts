@@ -31,7 +31,16 @@ export class Shape {
       skewX: 0,
       skewY: 0
     };
-    this.properties = this.generateRandomProperties();
+    
+    // Initialize properties based on whether batch config is provided
+    if (batchConfig && batchConfig.propertiesEnabled) {
+      // Use minimal properties that batch config will override
+      this.properties = this.generateMinimalProperties();
+    } else {
+      // Use full random properties for non-batch creation
+      this.properties = this.generateRandomProperties();
+    }
+    
     this.selected = false;
     this.points = [];
     
@@ -168,6 +177,20 @@ export class Shape {
       default:
         return 'polygon'; // Use polygon for geometric shapes
     }
+  }
+
+  private generateMinimalProperties(): ShapeProperties {
+    // Minimal properties for batch configuration to override
+    return {
+      fillColor: 'transparent',
+      fillOpacity: 0,
+      strokeColor: 'transparent',
+      strokeWidth: 0,
+      strokeOpacity: 0,
+      blendMode: 'source-over' as BlendMode,
+      zIndex: Date.now(),
+      gradient: undefined
+    };
   }
 
   private generateRandomProperties(): ShapeProperties {
