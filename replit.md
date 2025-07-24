@@ -296,6 +296,12 @@ Changelog:
   - **Enhanced Fill Logic**: Gradients with transparent fills now correctly recognized as valid fills to prevent contamination
   - **UI Consistency**: Fill controls now match gradient UI style with compact selectors and organized layout
   - **Probability Display**: Added probability percentages in accordion headers for quick reference
+- July 24, 2025. Shape Types All On/Off Buttons Implementation
+  - **Added Control Buttons**: Implemented "All On" and "All Off" buttons in sidebar Shape Types section
+  - **Strategic Positioning**: Placed buttons between last shape type and random shape count range as requested
+  - **Toggle Functionality**: All On enables all disabled shape types, All Off disables all currently enabled types
+  - **UI Styling**: Compact outline buttons with consistent slate color scheme matching sidebar design
+  - **Efficient Implementation**: Uses existing onToggleShapeType function to maintain state consistency
 ```
 
 ## User Preferences

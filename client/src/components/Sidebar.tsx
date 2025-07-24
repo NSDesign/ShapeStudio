@@ -1784,6 +1784,38 @@ export default function Sidebar({
           );
         })}
 
+        {/* All On/Off Buttons */}
+        <div className="flex gap-2 py-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const allTypes = Object.keys(shapeTypeDisplayNames) as ShapeType[];
+              allTypes.forEach(type => {
+                if (!enabledShapeTypes.has(type)) {
+                  onToggleShapeType(type);
+                }
+              });
+            }}
+            className="flex-1 h-7 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+          >
+            All On
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const enabledTypes = Array.from(enabledShapeTypes);
+              enabledTypes.forEach(type => {
+                onToggleShapeType(type);
+              });
+            }}
+            className="flex-1 h-7 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+          >
+            All Off
+          </Button>
+        </div>
+
         <div className="space-y-2 pb-6">
           <Label className="text-xs text-slate-400">Random Shape Count Range</Label>
           <div className="space-y-1">
