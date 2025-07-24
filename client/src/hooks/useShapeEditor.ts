@@ -1204,28 +1204,15 @@ export const useShapeEditor = () => {
 
         console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
       } else if (batchConfigSettings.propertiesEnabled) {
-        // Apply fill and stroke colors when properties are enabled but no color harmony
-        if (batchConfigSettings.fillEnabled) {
-          // Generate fill color using new HSL system
-          const fillColor = generateColor(
-            batchConfigSettings.fillColorMode,
-            batchConfigSettings.fillColorRange,
-            batchConfigSettings.fillColorPalette,
-            batchConfigSettings.fillColorDefine,
-            index
-          );
-          shape.properties.fillColor = fillColor;
-
-          // Apply fill opacity based on mode
-          if (batchConfigSettings.fillOpacityMode === 'range') {
-            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
-            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-          } else if (batchConfigSettings.fillOpacityMode === 'define') {
-            shape.properties.fillOpacity = batchConfigSettings.fillOpacityDefine / 100;
-          }
-        }
-
-        // Stroke properties will be handled by stroke probability gate below
+        // When properties are enabled, don't pre-set colors here
+        // Fill and stroke colors will be determined by probability logic below
+        console.log(`🎯 [BATCH PROPERTIES] Shape ${index}: Properties enabled, colors will be set by probability logic`);
+        
+        // Set default transparent values - probability logic will override if needed
+        shape.properties.fillColor = 'transparent';
+        shape.properties.fillOpacity = 0;
+        shape.properties.strokeColor = 'transparent';
+        shape.properties.strokeOpacity = 0;
       } else {
           // Only apply legacy randomization if batch config properties are completely disabled
           if (!batchConfigSettings.propertiesEnabled) {
