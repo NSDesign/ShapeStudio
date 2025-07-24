@@ -1656,10 +1656,10 @@ export default function Sidebar({
                     <div key={cap} className="space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-300 capitalize">{cap}</span>
-                        <span className="text-slate-400">{scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.[cap as keyof typeof scatterSettings.shapeSpecific.line.strokeCapProbabilities] || 0}%</span>
+                        <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
                       </div>
                       <Slider
-                        value={[scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.[cap as keyof typeof scatterSettings.shapeSpecific.line.strokeCapProbabilities] || 0]}
+                        value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
                         onValueChange={(value) => {
                           const probability = value[0];
                           setTimeout(() => {
