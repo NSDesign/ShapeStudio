@@ -1,0 +1,38 @@
+useShapeEditor.ts:1071 🔍 generateRandomShapes: count=11, enabledTypes=3, types=rectangle,circle,polygon
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 0: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 0: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 0: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 1: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 1: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 1: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 2: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 2: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 2: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 3: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 3: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 3: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 4: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 4: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 4: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 5: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+useShapeEditor.ts:1326 🎨 [FILL DEBUG] Shape 5: NO FILL - both probabilities failed, fillColor set to transparent
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 5: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 6: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+useShapeEditor.ts:1326 🎨 [FILL DEBUG] Shape 6: NO FILL - both probabilities failed, fillColor set to transparent
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 6: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 7: fillProb=80%, shouldHaveSolidFill=false, shouldHaveGradient=false
+useShapeEditor.ts:1326 🎨 [FILL DEBUG] Shape 7: NO FILL - both probabilities failed, fillColor set to transparent
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 7: Noise disabled, applying transform only. Current fillColor="hsl(160.44175271961933, 75%, 50%)"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 8: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 8: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 8: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 9: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=true
+useShapeEditor.ts:1296 🎨 [FILL DEBUG] Shape 9: Using GRADIENT, fillColor set to transparent
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 9: Noise disabled, applying transform only. Current fillColor="transparent"
+useShapeEditor.ts:1255 🎨 [FILL DEBUG] Shape 10: fillProb=80%, shouldHaveSolidFill=true, shouldHaveGradient=false
+useShapeEditor.ts:1315 🎨 [FILL DEBUG] Shape 10: Using SOLID FILL, fillColor="#000000" from mode="define"
+useShapeEditor.ts:1561 🔧 [NO NOISE] Shape 10: Noise disabled, applying transform only. Current fillColor="#000000"
+useShapeEditor.ts:1585 ✅ Created 11 shapes, adding to existing 0 shapes
+BatchConfigDialog.tsx:529 [BatchConfigDialog] Component unmounting
+BatchConfigDialog.tsx:528 [BatchConfigDialog] Component mounted
+BatchConfigDialog.tsx:533 [BatchConfigDialog] Dialog state changed: {isOpen: false}
