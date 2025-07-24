@@ -320,6 +320,9 @@ export const useShapeEditor = () => {
   const selectShapeAtPoint = useCallback((x: number, y: number, addToSelection: boolean = false) => {
     // Sort shapes by z-index from highest to lowest and find first hit
     const sortedShapes = [...shapes].sort((a, b) => b.properties.zIndex - a.properties.zIndex);
+    console.log(`🎯 [SELECTION] Sorting ${shapes.length} shapes by z-index for selection`);
+    console.log(`🎯 [SELECTION] Original z-indices: [${shapes.map(s => s.properties.zIndex).join(', ')}]`);
+    console.log(`🎯 [SELECTION] Sorted z-indices (high→low): [${sortedShapes.map(s => s.properties.zIndex).join(', ')}]`);
     let topShape: Shape | null = null;
 
     // Find the first (topmost) shape that contains the point
@@ -1167,9 +1170,19 @@ export const useShapeEditor = () => {
         }
       }
 
+      // Log existing shapes z-indices before assignment
+      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Current shapes count: ${shapes.length}`);
+      if (shapes.length > 0) {
+        const allZIndices = shapes.map(s => s.properties.zIndex);
+        console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Existing z-indices: [${allZIndices.join(', ')}]`);
+      }
+
       // Assign proper z-index for layering
       const existingMaxIndex = shapes.length > 0 ? Math.max(...shapes.map(s => s.properties.zIndex)) : 0;
       shape.properties.zIndex = existingMaxIndex + index + 1;
+      
+      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: existingMaxIndex=${existingMaxIndex}, assigned z-index=${shape.properties.zIndex}`);
+      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Shape ID=${shape.id}, Type=${shape.type}`)
 
       // Apply color harmony if enabled
       if (batchConfigSettings.colorHarmonyEnabled) {
@@ -1596,8 +1609,16 @@ export const useShapeEditor = () => {
       console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy}`);
     }
 
+    // Log all final z-indices before adding to state
+    console.log(`🔍 [FINAL Z-INDEX] All new shapes z-indices: [${finalShapes.map(s => s.properties.zIndex).join(', ')}]`);
+    console.log(`🔍 [FINAL Z-INDEX] Existing shapes count: ${shapes.length}, New shapes count: ${finalShapes.length}`);
+    
     console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
-    setShapes(prev => [...prev, ...finalShapes]);
+    setShapes(prev => {
+      const updatedShapes = [...prev, ...finalShapes];
+      console.log(`🔍 [AFTER ADD] Total shapes: ${updatedShapes.length}, All z-indices: [${updatedShapes.map(s => s.properties.zIndex).join(', ')}]`);
+      return updatedShapes;
+    });
 
     // Update incremental index if not resetting per batch
     if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled && 
