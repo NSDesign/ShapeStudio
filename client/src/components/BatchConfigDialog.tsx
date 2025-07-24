@@ -1151,18 +1151,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 
                 {currentSettings.propertiesEnabled && (
                   <div className="ml-6 space-y-4">
-                    {/* Safety Constraints at top */}
-                    <div className="space-y-2 p-3 bg-slate-800 rounded">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={currentSettings.preventInvisibleShapes}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ preventInvisibleShapes: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-sm text-slate-200">Prevent Invisible Shapes</Label>
-                      </div>
-                      <p className="text-xs text-slate-400 ml-6">Ensures fill OR stroke is always present</p>
-                    </div>
+
 
                     {/* Shape Properties */}
                     <div className="space-y-3">
@@ -1724,6 +1713,21 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
                     <Separator className="bg-slate-700" />
 
+                    {/* Prevent Invisible Shapes */}
+                    <div className="space-y-2 p-3 bg-slate-800 rounded">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={currentSettings.preventInvisibleShapes}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ preventInvisibleShapes: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-blue-600"
+                        />
+                        <Label className="text-sm text-slate-200">Prevent Invisible Shapes</Label>
+                      </div>
+                      <p className="text-xs text-slate-400 ml-6">Ensures fill OR stroke is always present</p>
+                    </div>
+
+                    <Separator className="bg-slate-700" />
+
                     {/* Fill Properties */}
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
@@ -1732,7 +1736,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           onCheckedChange={(checked) => handleSettingsUpdate({ fillEnabled: checked as boolean })}
                           className="border-slate-500 data-[state=checked]:bg-blue-600"
                         />
-                        <Label className="text-sm font-medium text-slate-200">Fill</Label>
+                        <Label className="text-sm font-medium text-slate-200">Fill Properties</Label>
                       </div>
                       
                       {currentSettings.fillEnabled && (
@@ -1742,12 +1746,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             <AccordionItem value="solid" className="border border-slate-600 rounded bg-slate-800">
                               <AccordionTrigger className="px-3 py-2 hover:no-underline">
                                 <div className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    checked={currentSettings.fillEnabled}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillEnabled: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
                                   <Label className="text-sm font-medium text-slate-200">Solid</Label>
                                   <div className="flex items-center space-x-1 text-xs text-slate-400">
                                     <span>Probability: {currentSettings.fillProbability}%</span>
@@ -1900,12 +1898,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             <AccordionItem value="gradient" className="border border-slate-600 rounded bg-slate-800">
                               <AccordionTrigger className="px-3 py-2 hover:no-underline">
                                 <div className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    checked={currentSettings.fillGradientEnabled}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
                                   <Label className="text-sm font-medium text-slate-200">Gradient</Label>
                                   <div className="flex items-center space-x-1 text-xs text-slate-400">
                                     <span>Probability: {currentSettings.fillGradientProbability}%</span>
@@ -1914,6 +1906,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </AccordionTrigger>
                               <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-4">
+                                  {/* Gradient Enable Control */}
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      checked={currentSettings.fillGradientEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-sm font-medium text-slate-200">Enable Gradients</Label>
+                                  </div>
+
                                   {/* Gradient Probability */}
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-300">Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
@@ -2043,6 +2045,48 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </AccordionContent>
                             </AccordionItem>
                           </Accordion>
+
+                          {/* Fill Opacity Section - Separate from accordions */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
+                              <Select value={currentSettings.fillOpacityMode} onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as any })}>
+                                <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {currentSettings.fillOpacityMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] || 20}% - {currentSettings.fillOpacityRange?.[1] || 100}%</Label>
+                                <Slider
+                                  value={currentSettings.fillOpacityRange || [20, 100]}
+                                  onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+
+                            {currentSettings.fillOpacityMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Opacity: {currentSettings.fillOpacityDefine || 80}%</Label>
+                                <Slider
+                                  value={[currentSettings.fillOpacityDefine || 80]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

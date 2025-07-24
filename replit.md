@@ -286,8 +286,12 @@ Changelog:
   - **Batch Size Integration**: Position calculations now use actual batch size for proper directional distribution
   - **Temporal Variation Disabled**: Marked temporal variation system as future feature and disabled in current implementation
 - July 24, 2025. Fill UI Restructure with Accordion Layout & Gradient Contamination Fix
-  - **Fill Accordion Structure**: Restructured Fill Properties to use "Fill" as umbrella term with separate "Solid" and "Gradient" accordions
+  - **Fill Properties Renaming**: Changed "Fill" to "Fill Properties" for consistent section naming throughout interface
+  - **Fill Accordion Structure**: Restructured Fill Properties with separate "Solid" and "Gradient" accordions under Fill Properties umbrella
+  - **Separate Fill Opacity Section**: Moved fill opacity controls to independent section outside accordions for cleaner organization
+  - **Repositioned Prevent Invisible Shapes**: Moved safety control between Shape Properties and Fill Properties sections for logical flow
   - **Independent Gradient Controls**: Added separate fillGradientEnabled control independent from solid fill probability
+  - **Fixed Button Nesting**: Removed nested button elements in accordion triggers to eliminate DOM validation warnings
   - **Gradient Contamination Fix**: Fixed critical issue where "prevent invisible shapes" logic was overriding gradient transparent fills with random colors
   - **Enhanced Fill Logic**: Gradients with transparent fills now correctly recognized as valid fills to prevent contamination
   - **UI Consistency**: Fill controls now match gradient UI style with compact selectors and organized layout
