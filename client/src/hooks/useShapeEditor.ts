@@ -467,22 +467,23 @@ export const useShapeEditor = () => {
                 const exists = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
                 if (exists) {
                   setSelectedPoints(prev => prev.filter(p => !(p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex)));
-                } else {
-                  const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
-                  if (pointsFromOtherShapes.length > 0) {
-                    setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
                   } else {
-                    setSelectedPoints(prev => [...prev, pointId]);
+                    const pointsFromOtherShapes = selectedPoints.filter(p => p.shapeId !== shape.id);
+                    if (pointsFromOtherShapes.length > 0) {
+                      setSelectedPoints(prev => prev.filter(p => p.shapeId === shape.id).concat([pointId]));
+                    } else {
+                      setSelectedPoints(prev => [...prev, pointId]);
+                    }
+                  }
+                } else {
+                  // Check if clicking on already selected point - if so, maintain selection for dragging
+                  const isAlreadySelected = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
+                  if (!isAlreadySelected) {
+                    setSelectedPoints([pointId]);
                   }
                 }
-              } else {
-                // Check if clicking on already selected point - if so, maintain selection for dragging
-                const isAlreadySelected = selectedPoints.some(p => p.shapeId === pointId.shapeId && p.pointIndex === pointId.pointIndex);
-                if (!isAlreadySelected) {
-                  setSelectedPoints([pointId]);
-                }
+                return true;
               }
-              return true;
             }
           }
         }
@@ -1207,7 +1208,7 @@ export const useShapeEditor = () => {
         // When properties are enabled, don't pre-set colors here
         // Fill and stroke colors will be determined by probability logic below
         console.log(`🎯 [BATCH PROPERTIES] Shape ${index}: Properties enabled, colors will be set by probability logic`);
-        
+
         // Set default transparent values - probability logic will override if needed
         shape.properties.fillColor = 'transparent';
         shape.properties.fillOpacity = 0;
@@ -1411,11 +1412,11 @@ export const useShapeEditor = () => {
       }
 
       console.log(`🧪 [PRE-NOISE] Shape ${index}: BEFORE noise processing, fillColor="${shape.properties.fillColor}", noiseEnabled=${batchConfigSettings.noiseEnabled}`);
-      
+
       // Apply noise variations ONLY if enabled - this fixes the disabled state issue
       if (batchConfigSettings.noiseEnabled) {
         console.log(`🌊 [NOISE START] Shape ${index}: Entering noise processing, current fillColor="${shape.properties.fillColor}"`);
-        
+
         // Get current artboard dimensions
         const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
         const artboardWidth = currentArtboard?.width || 400;
@@ -1496,24 +1497,24 @@ export const useShapeEditor = () => {
         // Apply noise to colors if color harmony is not enabled
         if (!batchConfigSettings.colorHarmonyEnabled) {
           console.log(`🔍 [COLOR BRANCH] Shape ${index}: Entering color noise processing. noiseAlgorithm="${batchConfigSettings.noiseAlgorithm}"`);
-          
+
           if (batchConfigSettings.noiseAlgorithm === 'randomise') {
             console.log(`🎯 [RANDOMISE BRANCH] Shape ${index}: BEFORE randomise - fillColor="${shape.properties.fillColor}"`);
-            
+
             // Randomise uses absolute values like original
             const hue = noiseResult.hue; // Direct 0-360° value
             const saturation = noiseResult.saturation; // Direct 50-100% value  
             const lightness = noiseResult.lightness; // Direct 30-70% value
 
             const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            
+
             console.log(`💥 [COLOR OVERRIDE] Shape ${index}: *** THIS IS THE OVERRIDE *** fillColor changing from "${shape.properties.fillColor}" to "${noiseColor}"`);
-            
+
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE randomise applied! fillColor="${noiseColor}"`);
           } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
             console.log(`🎯 [PERLIN BRANCH] Shape ${index}: BEFORE perlin - fillColor="${shape.properties.fillColor}"`);
-            
+
             // Extract existing HSL values for variation-based algorithms
             let hue = 0, saturation = 50, lightness = 50;
             const hslMatch = shape.properties.fillColor?.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
@@ -1529,9 +1530,9 @@ export const useShapeEditor = () => {
             lightness = Math.max(0, Math.min(100, lightness + noiseResult.lightness));
 
             const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            
+
             console.log(`💥 [COLOR OVERRIDE] Shape ${index}: *** THIS IS THE OVERRIDE *** fillColor changing from "${shape.properties.fillColor}" to "${noiseColor}"`);
-            
+
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE perlin applied! fillColor="${noiseColor}" (from base: ${hslMatch?.[0] || 'no match'})`);
 
@@ -1542,7 +1543,7 @@ export const useShapeEditor = () => {
             shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
           } else {
             console.log(`🎯 [OTHER ALGORITHM BRANCH] Shape ${index}: BEFORE other algorithm - fillColor="${shape.properties.fillColor}", algorithm="${batchConfigSettings.noiseAlgorithm}"`);
-            
+
             // Other noise algorithms use additive variation
             const baseHue = Math.random() * 360;
             const baseSaturation = 60 + Math.random() * 30;
@@ -1553,9 +1554,9 @@ export const useShapeEditor = () => {
             const finalLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness));
 
             const noiseColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
-            
+
             console.log(`💥 [COLOR OVERRIDE] Shape ${index}: *** THIS IS THE OVERRIDE *** fillColor changing from "${shape.properties.fillColor}" to "${noiseColor}"`);
-            
+
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE ${batchConfigSettings.noiseAlgorithm} applied! fillColor="${noiseColor}"`);
 
@@ -1571,7 +1572,10 @@ export const useShapeEditor = () => {
         console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
       } else {
         console.log(`🚫 [NO NOISE] Shape ${index}: Noise disabled, entering non-noise branch`);
-        
+
+        // Check if we have gradient contamination here
+        console.log(`🔍 [CONTAMINATION CHECK] Shape ${index}: Pre-transform fillColor="${shape.properties.fillColor}", hasGradient=${!!shape.properties.gradient}`);
+
         // Original randomization behavior when noise is disabled
         const scale = 0.5 + Math.random() * 2;
         shape.transform.scaleX = scale;
@@ -1584,7 +1588,7 @@ export const useShapeEditor = () => {
 
         console.log(`🔧 [NO NOISE] Shape ${index}: Noise disabled, applying transform only. Current fillColor="${shape.properties.fillColor}"`);
       }
-      
+
       console.log(`✅ [POST-NOISE] Shape ${index}: AFTER noise processing, final fillColor="${shape.properties.fillColor}"`);
       console.log(`📊 [SUMMARY] Shape ${index}: ${shape.properties.fillColor === 'transparent' ? '❌ TRANSPARENT LOST' : '✅ Color preserved'}`);
 
