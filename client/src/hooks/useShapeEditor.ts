@@ -1275,7 +1275,16 @@ export const useShapeEditor = () => {
                   batchConfigSettings.fillGradientColorRange,
                   batchConfigSettings.fillGradientColorPalette,
                   undefined, // define is handled above
-                  index + i
+                  index + i,
+                  batchConfigSettings.fillGradientColorMode === 'hsl' ? {
+                    hslMode: batchConfigSettings.fillGradientColorHslMode,
+                    hueRange: batchConfigSettings.fillGradientColorHueRange,
+                    saturationRange: batchConfigSettings.fillGradientColorSaturationRange,
+                    lightnessRange: batchConfigSettings.fillGradientColorLightnessRange,
+                    hueDefine: batchConfigSettings.fillGradientColorHueDefine,
+                    saturationDefine: batchConfigSettings.fillGradientColorSaturationDefine,
+                    lightnessDefine: batchConfigSettings.fillGradientColorLightnessDefine
+                  } : undefined
                 );
               }
 
@@ -1308,7 +1317,16 @@ export const useShapeEditor = () => {
               batchConfigSettings.fillColorRange,
               batchConfigSettings.fillColorPalette,
               batchConfigSettings.fillColorDefine,
-              index
+              index,
+              batchConfigSettings.fillColorMode === 'hsl' ? {
+                hslMode: batchConfigSettings.fillColorHslMode,
+                hueRange: batchConfigSettings.fillColorHueRange,
+                saturationRange: batchConfigSettings.fillColorSaturationRange,
+                lightnessRange: batchConfigSettings.fillColorLightnessRange,
+                hueDefine: batchConfigSettings.fillColorHueDefine,
+                saturationDefine: batchConfigSettings.fillColorSaturationDefine,
+                lightnessDefine: batchConfigSettings.fillColorLightnessDefine
+              } : undefined
             );
             shape.properties.fillColor = fillColor;
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${batchConfigSettings.fillColorMode}"`);
@@ -1355,7 +1373,16 @@ export const useShapeEditor = () => {
               batchConfigSettings.strokeColorRange,
               batchConfigSettings.strokeColorPalette,
               batchConfigSettings.strokeColorDefine,
-              index
+              index,
+              batchConfigSettings.strokeColorMode === 'hsl' ? {
+                hslMode: batchConfigSettings.strokeColorHslMode,
+                hueRange: batchConfigSettings.strokeColorHueRange,
+                saturationRange: batchConfigSettings.strokeColorSaturationRange,
+                lightnessRange: batchConfigSettings.strokeColorLightnessRange,
+                hueDefine: batchConfigSettings.strokeColorHueDefine,
+                saturationDefine: batchConfigSettings.strokeColorSaturationDefine,
+                lightnessDefine: batchConfigSettings.strokeColorLightnessDefine
+              } : undefined
             );
             shape.properties.strokeColor = strokeColor;
           }

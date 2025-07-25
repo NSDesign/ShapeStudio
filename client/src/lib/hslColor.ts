@@ -163,14 +163,23 @@ export function interpolateHSLColorWheel(color1: string, color2: string, t: numb
 }
 
 /**
- * Generate color based on mode (range, palette, define)
+ * Generate color based on mode (range, palette, define, hsl)
  */
 export function generateColor(
-  mode: 'range' | 'palette' | 'define',
+  mode: 'range' | 'palette' | 'define' | 'hsl',
   range?: [string, string],
   palette?: string[],
   define?: string,
-  shapeIndex?: number
+  shapeIndex?: number,
+  hslSettings?: {
+    hslMode: 'range' | 'define';
+    hueRange?: [number, number];
+    saturationRange?: [number, number];
+    lightnessRange?: [number, number];
+    hueDefine?: number;
+    saturationDefine?: number;
+    lightnessDefine?: number;
+  }
 ): string {
   switch (mode) {
     case 'range':
@@ -190,6 +199,29 @@ export function generateColor(
     case 'define':
       return define || '#3b82f6';
       
+    case 'hsl':
+      if (!hslSettings) return '#3b82f6';
+      
+      let h: number, s: number, l: number;
+      
+      if (hslSettings.hslMode === 'range') {
+        // Generate random values within ranges
+        const hueRange = hslSettings.hueRange || [0, 360];
+        const satRange = hslSettings.saturationRange || [50, 100];
+        const lightRange = hslSettings.lightnessRange || [30, 70];
+        
+        h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
+        s = satRange[0] + Math.random() * (satRange[1] - satRange[0]);
+        l = lightRange[0] + Math.random() * (lightRange[1] - lightRange[0]);
+      } else {
+        // Use defined values
+        h = hslSettings.hueDefine || 210;
+        s = hslSettings.saturationDefine || 80;
+        l = hslSettings.lightnessDefine || 50;
+      }
+      
+      return hslToHex({ h: Math.round(h), s: Math.round(s), l: Math.round(l) });
+      
     default:
       return '#3b82f6';
   }
@@ -199,12 +231,21 @@ export function generateColor(
  * Generate array of colors for gradients
  */
 export function generateGradientColors(
-  mode: 'range' | 'palette' | 'define',
+  mode: 'range' | 'palette' | 'define' | 'hsl',
   stopCount: number,
   range?: [string, string],
   palette?: string[],
   define?: string[],
-  shapeIndex?: number
+  shapeIndex?: number,
+  hslSettings?: {
+    hslMode: 'range' | 'define';
+    hueRange?: [number, number];
+    saturationRange?: [number, number];
+    lightnessRange?: [number, number];
+    hueDefine?: number;
+    saturationDefine?: number;
+    lightnessDefine?: number;
+  }
 ): string[] {
   switch (mode) {
     case 'range':
@@ -238,6 +279,35 @@ export function generateGradientColors(
         defineColors.push(define[i % define.length]);
       }
       return defineColors;
+      
+    case 'hsl':
+      if (!hslSettings) return ['#3b82f6', '#8b5cf6'];
+      
+      const hslColors: string[] = [];
+      
+      for (let i = 0; i < stopCount; i++) {
+        let h: number, s: number, l: number;
+        
+        if (hslSettings.hslMode === 'range') {
+          // Generate random values within ranges for each stop
+          const hueRange = hslSettings.hueRange || [0, 360];
+          const satRange = hslSettings.saturationRange || [50, 100];
+          const lightRange = hslSettings.lightnessRange || [30, 70];
+          
+          h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
+          s = satRange[0] + Math.random() * (satRange[1] - satRange[0]);
+          l = lightRange[0] + Math.random() * (lightRange[1] - lightRange[0]);
+        } else {
+          // Use defined values for all stops
+          h = hslSettings.hueDefine || 270;
+          s = hslSettings.saturationDefine || 70;
+          l = hslSettings.lightnessDefine || 60;
+        }
+        
+        hslColors.push(hslToHex({ h: Math.round(h), s: Math.round(s), l: Math.round(l) }));
+      }
+      
+      return hslColors;
       
     default:
       return ['#3b82f6', '#8b5cf6'];
