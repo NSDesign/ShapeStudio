@@ -1987,48 +1987,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       </div>
                                     )}
                                   </div>
-
-                                  {/* Fill Opacity Controls */}
-                                  <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                      <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
-                                      <Select value={currentSettings.fillOpacityMode} onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as any })}>
-                                        <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                          <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-
-                                    {currentSettings.fillOpacityMode === 'range' && (
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] || 20}% - {currentSettings.fillOpacityRange?.[1] || 100}%</Label>
-                                        <Slider
-                                          value={currentSettings.fillOpacityRange || [20, 100]}
-                                          onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
-                                          max={100}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
-                                    )}
-
-                                    {currentSettings.fillOpacityMode === 'define' && (
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">Opacity: {currentSettings.fillOpacityDefine || 80}%</Label>
-                                        <Slider
-                                          value={[currentSettings.fillOpacityDefine || 80]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
-                                          max={100}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
