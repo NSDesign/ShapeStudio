@@ -142,34 +142,24 @@ export interface BatchConfigSettings {
   fillProbability: number; // 0-100%
   
   // Fill Color Settings
-  fillColorMode: 'range' | 'palette' | 'define' | 'hsl';
+  fillColorMode: 'range' | 'palette' | 'define';
   fillColorRange: [string, string]; // For range mode (HSL interpolation)
   fillColorPalette: string[]; // For palette mode
   fillColorDefine: string; // For define mode
-  // HSL mode settings
-  fillColorHslMode: 'range' | 'define';
-  fillColorHueRange: [number, number]; // 0-360 degrees
-  fillColorSaturationRange: [number, number]; // 0-100%
-  fillColorLightnessRange: [number, number]; // 0-100%
-  fillColorHueDefine: number; // Fixed hue value
-  fillColorSaturationDefine: number; // Fixed saturation value
-  fillColorLightnessDefine: number; // Fixed lightness value
+  // Additional HSL controls for range mode
+  fillColorSaturationRange: [number, number]; // 0-100% for range mode
+  fillColorLightnessRange: [number, number]; // 0-100% for range mode
   
   // Fill Gradient Settings
   fillGradientEnabled: boolean; // Enable/disable gradients independently from solid fills
   fillGradientProbability: number; // 0-100%
-  fillGradientColorMode: 'range' | 'palette' | 'define' | 'hsl';
+  fillGradientColorMode: 'range' | 'palette' | 'define';
   fillGradientColorRange: [string, string]; // For range mode (HSL interpolation)
   fillGradientColorPalette: string[]; // For palette mode
   fillGradientColorDefine: string[]; // For define mode - array based on max stops
-  // HSL mode settings for gradients
-  fillGradientColorHslMode: 'range' | 'define';
-  fillGradientColorHueRange: [number, number]; // 0-360 degrees
-  fillGradientColorSaturationRange: [number, number]; // 0-100%
-  fillGradientColorLightnessRange: [number, number]; // 0-100%
-  fillGradientColorHueDefine: number; // Fixed hue value
-  fillGradientColorSaturationDefine: number; // Fixed saturation value
-  fillGradientColorLightnessDefine: number; // Fixed lightness value
+  // Additional HSL controls for range mode
+  fillGradientColorSaturationRange: [number, number]; // 0-100% for range mode
+  fillGradientColorLightnessRange: [number, number]; // 0-100% for range mode
   fillGradientStopsRange: [number, number]; // RGBA gradient stops
   
   // Fill Opacity Settings
@@ -182,18 +172,13 @@ export interface BatchConfigSettings {
   strokeProbability: number; // 0-100%
   
   // Stroke Color Settings
-  strokeColorMode: 'range' | 'palette' | 'define' | 'hsl';
+  strokeColorMode: 'range' | 'palette' | 'define';
   strokeColorRange: [string, string]; // For range mode (HSL interpolation)
   strokeColorPalette: string[]; // For palette mode
   strokeColorDefine: string; // For define mode
-  // HSL mode settings for stroke
-  strokeColorHslMode: 'range' | 'define';
-  strokeColorHueRange: [number, number]; // 0-360 degrees
-  strokeColorSaturationRange: [number, number]; // 0-100%
-  strokeColorLightnessRange: [number, number]; // 0-100%
-  strokeColorHueDefine: number; // Fixed hue value
-  strokeColorSaturationDefine: number; // Fixed saturation value
-  strokeColorLightnessDefine: number; // Fixed lightness value
+  // Additional HSL controls for range mode
+  strokeColorSaturationRange: [number, number]; // 0-100% for range mode
+  strokeColorLightnessRange: [number, number]; // 0-100% for range mode
   
   // Stroke Opacity Settings
   strokeOpacityMode: 'range' | 'define';
@@ -408,14 +393,9 @@ const defaultSettings: BatchConfigSettings = {
   fillColorRange: ['#3b82f6', '#8b5cf6'],
   fillColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
   fillColorDefine: '#3b82f6',
-  // HSL mode defaults for fill
-  fillColorHslMode: 'range' as const,
-  fillColorHueRange: [0, 360],
+  // HSL range controls for range mode
   fillColorSaturationRange: [50, 100],
   fillColorLightnessRange: [30, 70],
-  fillColorHueDefine: 210,
-  fillColorSaturationDefine: 80,
-  fillColorLightnessDefine: 50,
   
   // Fill Gradient Settings
   fillGradientEnabled: true,
@@ -424,14 +404,9 @@ const defaultSettings: BatchConfigSettings = {
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
   fillGradientColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
   fillGradientColorDefine: ['#3b82f6', '#8b5cf6', '#ef4444'],
-  // HSL mode defaults for gradient
-  fillGradientColorHslMode: 'range' as const,
-  fillGradientColorHueRange: [0, 360],
+  // HSL range controls for range mode
   fillGradientColorSaturationRange: [40, 90],
   fillGradientColorLightnessRange: [20, 80],
-  fillGradientColorHueDefine: 270,
-  fillGradientColorSaturationDefine: 70,
-  fillGradientColorLightnessDefine: 60,
   fillGradientStopsRange: [2, 4],
   
   // Fill Opacity Settings
@@ -448,14 +423,9 @@ const defaultSettings: BatchConfigSettings = {
   strokeColorRange: ['#ef4444', '#f59e0b'],
   strokeColorPalette: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981', '#3b82f6'],
   strokeColorDefine: '#ef4444',
-  // HSL mode defaults for stroke
-  strokeColorHslMode: 'range' as const,
-  strokeColorHueRange: [0, 360],
+  // HSL range controls for range mode
   strokeColorSaturationRange: [60, 100],
   strokeColorLightnessRange: [20, 60],
-  strokeColorHueDefine: 10,
-  strokeColorSaturationDefine: 90,
-  strokeColorLightnessDefine: 40,
   
   // Stroke Opacity Settings
   strokeOpacityMode: 'range' as const,
@@ -1807,30 +1777,57 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                           <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                           <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
                                           <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                          <SelectItem value="hsl" className="text-slate-200 hover:bg-slate-700">HSL</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
 
                                     {currentSettings.fillColorMode === 'range' && (
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">HSL Range</Label>
-                                        <div className="flex space-x-2">
-                                          <Input
-                                            type="color"
-                                            value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
-                                            onChange={(e) => handleSettingsUpdate({
-                                              fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
-                                            })}
-                                            className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                      <div className="space-y-3">
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Color Range</Label>
+                                          <div className="flex space-x-2">
+                                            <Input
+                                              type="color"
+                                              value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
+                                              onChange={(e) => handleSettingsUpdate({
+                                                fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
+                                              })}
+                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                            />
+                                            <Input
+                                              type="color"
+                                              value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
+                                              onChange={(e) => handleSettingsUpdate({
+                                                fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
+                                              })}
+                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                            />
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Saturation Range */}
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillColorSaturationRange?.[0] || 50}% - {currentSettings.fillColorSaturationRange?.[1] || 100}%</Label>
+                                          <Slider
+                                            value={currentSettings.fillColorSaturationRange || [50, 100]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillColorSaturationRange: value as [number, number] })}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-green-500"
                                           />
-                                          <Input
-                                            type="color"
-                                            value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
-                                            onChange={(e) => handleSettingsUpdate({
-                                              fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
-                                            })}
-                                            className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                        </div>
+                                        
+                                        {/* Lightness Range */}
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillColorLightnessRange?.[0] || 30}% - {currentSettings.fillColorLightnessRange?.[1] || 70}%</Label>
+                                          <Slider
+                                            value={currentSettings.fillColorLightnessRange || [30, 70]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillColorLightnessRange: value as [number, number] })}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-blue-500"
                                           />
                                         </div>
                                       </div>
@@ -1879,113 +1876,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       </div>
                                     )}
 
-                                    {currentSettings.fillColorMode === 'hsl' && (
-                                      <div className="space-y-3">
-                                        <div className="flex items-center space-x-2">
-                                          <Label className="text-xs text-slate-300">HSL Mode</Label>
-                                          <Select value={currentSettings.fillColorHslMode} onValueChange={(value) => handleSettingsUpdate({ fillColorHslMode: value as any })}>
-                                            <SelectTrigger className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                              <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
 
-                                        {currentSettings.fillColorHslMode === 'range' && (
-                                          <div className="space-y-3">
-                                            {/* Hue Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Hue Range: {currentSettings.fillColorHueRange?.[0]}° - {currentSettings.fillColorHueRange?.[1]}°</Label>
-                                              <Slider
-                                                value={currentSettings.fillColorHueRange || [0, 360]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillColorHueRange: value as [number, number] })}
-                                                min={0}
-                                                max={360}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-red-500"
-                                                minStepsBetweenThumbs={10}
-                                              />
-                                            </div>
-                                            
-                                            {/* Saturation Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillColorSaturationRange?.[0]}% - {currentSettings.fillColorSaturationRange?.[1]}%</Label>
-                                              <Slider
-                                                value={currentSettings.fillColorSaturationRange || [50, 100]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillColorSaturationRange: value as [number, number] })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-green-500"
-                                                minStepsBetweenThumbs={5}
-                                              />
-                                            </div>
-                                            
-                                            {/* Lightness Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillColorLightnessRange?.[0]}% - {currentSettings.fillColorLightnessRange?.[1]}%</Label>
-                                              <Slider
-                                                value={currentSettings.fillColorLightnessRange || [30, 70]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillColorLightnessRange: value as [number, number] })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-blue-500"
-                                                minStepsBetweenThumbs={5}
-                                              />
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        {currentSettings.fillColorHslMode === 'define' && (
-                                          <div className="space-y-3">
-                                            {/* Hue Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Hue: {currentSettings.fillColorHueDefine}°</Label>
-                                              <Slider
-                                                value={[currentSettings.fillColorHueDefine || 210]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillColorHueDefine: value })}
-                                                min={0}
-                                                max={360}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-red-500"
-                                              />
-                                            </div>
-                                            
-                                            {/* Saturation Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Saturation: {currentSettings.fillColorSaturationDefine}%</Label>
-                                              <Slider
-                                                value={[currentSettings.fillColorSaturationDefine || 80]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillColorSaturationDefine: value })}
-                                                min={0}
-                                                max={100}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-green-500"
-                                              />
-                                            </div>
-                                            
-                                            {/* Lightness Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Lightness: {currentSettings.fillColorLightnessDefine}%</Label>
-                                              <Slider
-                                                value={[currentSettings.fillColorLightnessDefine || 50]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillColorLightnessDefine: value })}
-                                                min={0}
-                                                max={100}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-blue-500"
-                                              />
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        <p className="text-xs text-slate-400">Individual control over Hue, Saturation, and Lightness components</p>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                               </AccordionContent>
@@ -2050,30 +1941,57 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                           <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                           <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
                                           <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                          <SelectItem value="hsl" className="text-slate-200 hover:bg-slate-700">HSL</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
 
                                     {currentSettings.fillGradientColorMode === 'range' && (
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">HSL Range</Label>
-                                        <div className="flex space-x-2">
-                                          <Input
-                                            type="color"
-                                            value={currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}
-                                            onChange={(e) => handleSettingsUpdate({
-                                              fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
-                                            })}
-                                            className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                      <div className="space-y-3">
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Color Range</Label>
+                                          <div className="flex space-x-2">
+                                            <Input
+                                              type="color"
+                                              value={currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}
+                                              onChange={(e) => handleSettingsUpdate({
+                                                fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
+                                              })}
+                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                            />
+                                            <Input
+                                              type="color"
+                                              value={currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'}
+                                              onChange={(e) => handleSettingsUpdate({
+                                                fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
+                                              })}
+                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                            />
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Saturation Range */}
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillGradientColorSaturationRange?.[0] || 40}% - {currentSettings.fillGradientColorSaturationRange?.[1] || 90}%</Label>
+                                          <Slider
+                                            value={currentSettings.fillGradientColorSaturationRange || [40, 90]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientColorSaturationRange: value as [number, number] })}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-green-500"
                                           />
-                                          <Input
-                                            type="color"
-                                            value={currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'}
-                                            onChange={(e) => handleSettingsUpdate({
-                                              fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
-                                            })}
-                                            className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                        </div>
+                                        
+                                        {/* Lightness Range */}
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillGradientColorLightnessRange?.[0] || 20}% - {currentSettings.fillGradientColorLightnessRange?.[1] || 80}%</Label>
+                                          <Slider
+                                            value={currentSettings.fillGradientColorLightnessRange || [20, 80]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientColorLightnessRange: value as [number, number] })}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-blue-500"
                                           />
                                         </div>
                                       </div>
@@ -2140,113 +2058,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       </div>
                                     )}
 
-                                    {currentSettings.fillGradientColorMode === 'hsl' && (
-                                      <div className="space-y-3">
-                                        <div className="flex items-center space-x-2">
-                                          <Label className="text-xs text-slate-300">HSL Mode</Label>
-                                          <Select value={currentSettings.fillGradientColorHslMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientColorHslMode: value as any })}>
-                                            <SelectTrigger className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                              <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
 
-                                        {currentSettings.fillGradientColorHslMode === 'range' && (
-                                          <div className="space-y-3">
-                                            {/* Hue Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Hue Range: {currentSettings.fillGradientColorHueRange?.[0]}° - {currentSettings.fillGradientColorHueRange?.[1]}°</Label>
-                                              <Slider
-                                                value={currentSettings.fillGradientColorHueRange || [0, 360]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientColorHueRange: value as [number, number] })}
-                                                min={0}
-                                                max={360}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-red-500"
-                                                minStepsBetweenThumbs={10}
-                                              />
-                                            </div>
-                                            
-                                            {/* Saturation Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillGradientColorSaturationRange?.[0]}% - {currentSettings.fillGradientColorSaturationRange?.[1]}%</Label>
-                                              <Slider
-                                                value={currentSettings.fillGradientColorSaturationRange || [50, 100]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientColorSaturationRange: value as [number, number] })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-green-500"
-                                                minStepsBetweenThumbs={5}
-                                              />
-                                            </div>
-                                            
-                                            {/* Lightness Range */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillGradientColorLightnessRange?.[0]}% - {currentSettings.fillGradientColorLightnessRange?.[1]}%</Label>
-                                              <Slider
-                                                value={currentSettings.fillGradientColorLightnessRange || [30, 70]}
-                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientColorLightnessRange: value as [number, number] })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="[&_[role=slider]]:bg-blue-500"
-                                                minStepsBetweenThumbs={5}
-                                              />
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        {currentSettings.fillGradientColorHslMode === 'define' && (
-                                          <div className="space-y-3">
-                                            {/* Hue Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Hue: {currentSettings.fillGradientColorHueDefine}°</Label>
-                                              <Slider
-                                                value={[currentSettings.fillGradientColorHueDefine || 270]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientColorHueDefine: value })}
-                                                min={0}
-                                                max={360}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-red-500"
-                                              />
-                                            </div>
-                                            
-                                            {/* Saturation Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Saturation: {currentSettings.fillGradientColorSaturationDefine}%</Label>
-                                              <Slider
-                                                value={[currentSettings.fillGradientColorSaturationDefine || 70]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientColorSaturationDefine: value })}
-                                                min={0}
-                                                max={100}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-green-500"
-                                              />
-                                            </div>
-                                            
-                                            {/* Lightness Define */}
-                                            <div className="space-y-2">
-                                              <Label className="text-xs text-slate-300">Lightness: {currentSettings.fillGradientColorLightnessDefine}%</Label>
-                                              <Slider
-                                                value={[currentSettings.fillGradientColorLightnessDefine || 60]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientColorLightnessDefine: value })}
-                                                min={0}
-                                                max={100}
-                                                step={1}
-                                                className="[&_[role=slider]]:bg-blue-500"
-                                              />
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        <p className="text-xs text-slate-400">Individual HSL control for gradient colors</p>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                               </AccordionContent>
@@ -2350,33 +2162,59 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                   <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
                                   <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  <SelectItem value="hsl" className="text-slate-200 hover:bg-slate-700">HSL</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
 
                             {currentSettings.strokeColorMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">HSL Color Range</Label>
-                                <div className="flex space-x-2">
-                                  <Input
-                                    type="color"
-                                    value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
-                                    onChange={(e) => handleSettingsUpdate({
-                                      strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
-                                    })}
-                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                                  />
-                                  <Input
-                                    type="color"
-                                    value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
-                                    onChange={(e) => handleSettingsUpdate({
-                                      strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
-                                    })}
-                                    className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                              <div className="space-y-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Color Range</Label>
+                                  <div className="flex space-x-2">
+                                    <Input
+                                      type="color"
+                                      value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
+                                      onChange={(e) => handleSettingsUpdate({
+                                        strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
+                                      })}
+                                      className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                    <Input
+                                      type="color"
+                                      value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
+                                      onChange={(e) => handleSettingsUpdate({
+                                        strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
+                                      })}
+                                      className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Saturation Range */}
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.strokeColorSaturationRange?.[0] || 60}% - {currentSettings.strokeColorSaturationRange?.[1] || 100}%</Label>
+                                  <Slider
+                                    value={currentSettings.strokeColorSaturationRange || [60, 100]}
+                                    onValueChange={(value) => handleSettingsUpdate({ strokeColorSaturationRange: value as [number, number] })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-green-500"
                                   />
                                 </div>
-                                <p className="text-xs text-slate-400">Colors interpolated in HSL space for smooth hue transitions</p>
+                                
+                                {/* Lightness Range */}
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.strokeColorLightnessRange?.[0] || 20}% - {currentSettings.strokeColorLightnessRange?.[1] || 60}%</Label>
+                                  <Slider
+                                    value={currentSettings.strokeColorLightnessRange || [20, 60]}
+                                    onValueChange={(value) => handleSettingsUpdate({ strokeColorLightnessRange: value as [number, number] })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-blue-500"
+                                  />
+                                </div>
                               </div>
                             )}
 
@@ -2424,113 +2262,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
 
-                            {currentSettings.strokeColorMode === 'hsl' && (
-                              <div className="space-y-3">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">HSL Mode</Label>
-                                  <Select value={currentSettings.strokeColorHslMode} onValueChange={(value) => handleSettingsUpdate({ strokeColorHslMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-16 text-xs bg-slate-900 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                      <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
 
-                                {currentSettings.strokeColorHslMode === 'range' && (
-                                  <div className="space-y-3">
-                                    {/* Hue Range */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Hue Range: {currentSettings.strokeColorHueRange?.[0]}° - {currentSettings.strokeColorHueRange?.[1]}°</Label>
-                                      <Slider
-                                        value={currentSettings.strokeColorHueRange || [0, 360]}
-                                        onValueChange={(value) => handleSettingsUpdate({ strokeColorHueRange: value as [number, number] })}
-                                        min={0}
-                                        max={360}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-red-500"
-                                        minStepsBetweenThumbs={10}
-                                      />
-                                    </div>
-                                    
-                                    {/* Saturation Range */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.strokeColorSaturationRange?.[0]}% - {currentSettings.strokeColorSaturationRange?.[1]}%</Label>
-                                      <Slider
-                                        value={currentSettings.strokeColorSaturationRange || [60, 100]}
-                                        onValueChange={(value) => handleSettingsUpdate({ strokeColorSaturationRange: value as [number, number] })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-green-500"
-                                        minStepsBetweenThumbs={5}
-                                      />
-                                    </div>
-                                    
-                                    {/* Lightness Range */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.strokeColorLightnessRange?.[0]}% - {currentSettings.strokeColorLightnessRange?.[1]}%</Label>
-                                      <Slider
-                                        value={currentSettings.strokeColorLightnessRange || [20, 60]}
-                                        onValueChange={(value) => handleSettingsUpdate({ strokeColorLightnessRange: value as [number, number] })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-blue-500"
-                                        minStepsBetweenThumbs={5}
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-
-                                {currentSettings.strokeColorHslMode === 'define' && (
-                                  <div className="space-y-3">
-                                    {/* Hue Define */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Hue: {currentSettings.strokeColorHueDefine}°</Label>
-                                      <Slider
-                                        value={[currentSettings.strokeColorHueDefine || 10]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeColorHueDefine: value })}
-                                        min={0}
-                                        max={360}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-red-500"
-                                      />
-                                    </div>
-                                    
-                                    {/* Saturation Define */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Saturation: {currentSettings.strokeColorSaturationDefine}%</Label>
-                                      <Slider
-                                        value={[currentSettings.strokeColorSaturationDefine || 90]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeColorSaturationDefine: value })}
-                                        min={0}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-green-500"
-                                      />
-                                    </div>
-                                    
-                                    {/* Lightness Define */}
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Lightness: {currentSettings.strokeColorLightnessDefine}%</Label>
-                                      <Slider
-                                        value={[currentSettings.strokeColorLightnessDefine || 40]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeColorLightnessDefine: value })}
-                                        min={0}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-blue-500"
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-
-                                <p className="text-xs text-slate-400">Individual HSL control for stroke colors</p>
-                              </div>
-                            )}
                           </div>
 
                           {/* Stroke Opacity Controls */}
