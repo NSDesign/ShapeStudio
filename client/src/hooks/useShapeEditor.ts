@@ -1276,14 +1276,9 @@ export const useShapeEditor = () => {
                   batchConfigSettings.fillGradientColorPalette,
                   undefined, // define is handled above
                   index + i,
-                  batchConfigSettings.fillGradientColorMode === 'hsl' ? {
-                    hslMode: batchConfigSettings.fillGradientColorHslMode,
-                    hueRange: batchConfigSettings.fillGradientColorHueRange,
+                  batchConfigSettings.fillGradientColorMode === 'range' ? {
                     saturationRange: batchConfigSettings.fillGradientColorSaturationRange,
-                    lightnessRange: batchConfigSettings.fillGradientColorLightnessRange,
-                    hueDefine: batchConfigSettings.fillGradientColorHueDefine,
-                    saturationDefine: batchConfigSettings.fillGradientColorSaturationDefine,
-                    lightnessDefine: batchConfigSettings.fillGradientColorLightnessDefine
+                    lightnessRange: batchConfigSettings.fillGradientColorLightnessRange
                   } : undefined
                 );
               }
@@ -1311,21 +1306,16 @@ export const useShapeEditor = () => {
             // Create solid fill (only if no gradient)
             shape.properties.gradient = undefined;
 
-            // Apply solid fill color using new HSL system
+            // Apply solid fill color using range mode with saturation/lightness controls
             const fillColor = generateColor(
               batchConfigSettings.fillColorMode,
               batchConfigSettings.fillColorRange,
               batchConfigSettings.fillColorPalette,
               batchConfigSettings.fillColorDefine,
               index,
-              batchConfigSettings.fillColorMode === 'hsl' ? {
-                hslMode: batchConfigSettings.fillColorHslMode,
-                hueRange: batchConfigSettings.fillColorHueRange,
+              batchConfigSettings.fillColorMode === 'range' ? {
                 saturationRange: batchConfigSettings.fillColorSaturationRange,
-                lightnessRange: batchConfigSettings.fillColorLightnessRange,
-                hueDefine: batchConfigSettings.fillColorHueDefine,
-                saturationDefine: batchConfigSettings.fillColorSaturationDefine,
-                lightnessDefine: batchConfigSettings.fillColorLightnessDefine
+                lightnessRange: batchConfigSettings.fillColorLightnessRange
               } : undefined
             );
             shape.properties.fillColor = fillColor;
@@ -1367,21 +1357,16 @@ export const useShapeEditor = () => {
               shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
             }
 
-            // Apply stroke color using new HSL system
+            // Apply stroke color using range mode with saturation/lightness controls
             const strokeColor = generateColor(
               batchConfigSettings.strokeColorMode,
               batchConfigSettings.strokeColorRange,
               batchConfigSettings.strokeColorPalette,
               batchConfigSettings.strokeColorDefine,
               index,
-              batchConfigSettings.strokeColorMode === 'hsl' ? {
-                hslMode: batchConfigSettings.strokeColorHslMode,
-                hueRange: batchConfigSettings.strokeColorHueRange,
+              batchConfigSettings.strokeColorMode === 'range' ? {
                 saturationRange: batchConfigSettings.strokeColorSaturationRange,
-                lightnessRange: batchConfigSettings.strokeColorLightnessRange,
-                hueDefine: batchConfigSettings.strokeColorHueDefine,
-                saturationDefine: batchConfigSettings.strokeColorSaturationDefine,
-                lightnessDefine: batchConfigSettings.strokeColorLightnessDefine
+                lightnessRange: batchConfigSettings.strokeColorLightnessRange
               } : undefined
             );
             shape.properties.strokeColor = strokeColor;

@@ -166,25 +166,43 @@ export function interpolateHSLColorWheel(color1: string, color2: string, t: numb
  * Generate color based on mode (range, palette, define, hsl)
  */
 export function generateColor(
-  mode: 'range' | 'palette' | 'define' | 'hsl',
+  mode: 'range' | 'palette' | 'define',
   range?: [string, string],
   palette?: string[],
   define?: string,
   shapeIndex?: number,
-  hslSettings?: {
-    hslMode: 'range' | 'define';
-    hueRange?: [number, number];
+  rangeSettings?: {
     saturationRange?: [number, number];
     lightnessRange?: [number, number];
-    hueDefine?: number;
-    saturationDefine?: number;
-    lightnessDefine?: number;
   }
 ): string {
   switch (mode) {
     case 'range':
       if (!range || range.length !== 2) return '#3b82f6';
-      return interpolateHSL(range[0], range[1], Math.random());
+      
+      // If we have saturation/lightness ranges, use them to modify the interpolated color
+      if (rangeSettings?.saturationRange || rangeSettings?.lightnessRange) {
+        // First interpolate hue between the two colors
+        const baseColor = interpolateHSL(range[0], range[1], Math.random());
+        const hsl = hexToHSL(baseColor);
+        
+        // Override saturation if range is provided
+        if (rangeSettings.saturationRange) {
+          const [minSat, maxSat] = rangeSettings.saturationRange;
+          hsl.s = Math.round(minSat + Math.random() * (maxSat - minSat));
+        }
+        
+        // Override lightness if range is provided
+        if (rangeSettings.lightnessRange) {
+          const [minLight, maxLight] = rangeSettings.lightnessRange;
+          hsl.l = Math.round(minLight + Math.random() * (maxLight - minLight));
+        }
+        
+        return hslToHex(hsl);
+      } else {
+        // Standard HSL interpolation without saturation/lightness overrides
+        return interpolateHSL(range[0], range[1], Math.random());
+      }
       
     case 'palette':
       if (!palette || palette.length === 0) return '#3b82f6';
@@ -198,29 +216,6 @@ export function generateColor(
       
     case 'define':
       return define || '#3b82f6';
-      
-    case 'hsl':
-      if (!hslSettings) return '#3b82f6';
-      
-      let h: number, s: number, l: number;
-      
-      if (hslSettings.hslMode === 'range') {
-        // Generate random values within ranges
-        const hueRange = hslSettings.hueRange || [0, 360];
-        const satRange = hslSettings.saturationRange || [50, 100];
-        const lightRange = hslSettings.lightnessRange || [30, 70];
-        
-        h = hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]);
-        s = satRange[0] + Math.random() * (satRange[1] - satRange[0]);
-        l = lightRange[0] + Math.random() * (lightRange[1] - lightRange[0]);
-      } else {
-        // Use defined values
-        h = hslSettings.hueDefine || 210;
-        s = hslSettings.saturationDefine || 80;
-        l = hslSettings.lightnessDefine || 50;
-      }
-      
-      return hslToHex({ h: Math.round(h), s: Math.round(s), l: Math.round(l) });
       
     default:
       return '#3b82f6';

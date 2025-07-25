@@ -308,6 +308,13 @@ Changelog:
   - **Interface Cleanup**: Removed preventInvisibleShapes property from BatchConfigSettings interface
   - **Code Simplification**: Removed forced fill color overrides and invisible shape detection
   - **Natural Behavior**: Shapes now maintain their natural transparent fills and stroke settings without forced modifications
+- July 25, 2025. Complete HSL Integration and Color System Overhaul
+  - **HSL Range Mode Integration**: Combined HSL controls into range mode - color swatches define hue range, separate S&L sliders define saturation/lightness ranges
+  - **Removed HSL Mode**: Eliminated HSL as separate mode from Fill solid, Fill gradient, and Stroke color selectors
+  - **Unified Color Generation**: Updated generateColor function to use saturation/lightness ranges when provided in range mode
+  - **Fixed Stroke Color Bug**: Stroke colors now properly interpolate between range colors instead of using only the two defined colors
+  - **Enhanced Range Mode**: All color sections (fill, gradient, stroke) now support integrated HSL controls in range mode
+  - **Simplified Interface**: Cleaner UI with HSL controls as part of range mode rather than separate complex modes
 ```
 
 ## User Preferences
