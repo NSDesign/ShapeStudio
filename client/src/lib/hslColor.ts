@@ -101,31 +101,12 @@ function getHueDistance(h1: number, h2: number): { distance: number, direction: 
 }
 
 /**
- * Linear hue interpolation - handles wraparound through 360°/0° for full spectrum coverage
- * This gives the expected behavior when going from high hues (like 342°) to low hues (like 10°)
+ * Linear hue interpolation - treats hue as a straight line from 0° to 360°
+ * This gives full spectrum coverage as expected in color picker interfaces
  */
 function interpolateLinearHue(h1: number, h2: number, t: number): number {
-  // Calculate direct distance
-  const directDistance = h2 - h1;
-  
-  // Calculate wraparound distance (going through 360°/0°)
-  let wraparoundDistance;
-  if (directDistance > 0) {
-    wraparoundDistance = directDistance - 360;
-  } else {
-    wraparoundDistance = directDistance + 360;
-  }
-  
-  // Choose the path that gives us the larger range (more spectrum coverage)
-  // For range mode, we want maximum color variety
-  const useWraparound = Math.abs(wraparoundDistance) > Math.abs(directDistance);
-  
-  let result;
-  if (useWraparound) {
-    result = h1 + wraparoundDistance * t;
-  } else {
-    result = h1 + directDistance * t;
-  }
+  // Simple linear interpolation between two hue values
+  let result = h1 + (h2 - h1) * t;
   
   // Normalize to 0-360 range
   while (result < 0) result += 360;
