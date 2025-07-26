@@ -322,6 +322,8 @@ Changelog:
   - **Multiple Generation Calls**: Each batch export now makes 2-5 generation calls (based on range), each creating shapes per scatter settings
   - **Complete Batch Config Integration**: Batch exports now respect all noise algorithms, color systems, property controls, and distribution patterns
   - **Enhanced Logging**: Added detailed console logging to track generation calls and shape creation process
+  - **UI Status Clarity**: Disabled and greyed out unimplemented sections (Blend Mode Control, Physics Simulation, Temporal Variation) with clear status indicators
+  - **Visual Feedback**: Added opacity reduction, pointer-events blocking, and color-coded status labels to prevent user confusion
 ```
 
 ## User Preferences

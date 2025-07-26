@@ -1073,15 +1073,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
               <Separator className="bg-slate-600" />
 
-              {/* Blend Mode Control */}
-              <div className="space-y-3">
+              {/* Blend Mode Control - NOT IMPLEMENTED */}
+              <div className="space-y-3 opacity-50 pointer-events-none">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
-                    checked={currentSettings.blendModeEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ blendModeEnabled: checked as boolean })}
+                    checked={false}
+                    disabled={true}
                     className="border-slate-500 data-[state=checked]:bg-blue-600"
                   />
-                  <Label className="font-medium text-slate-200">Blend Mode Control</Label>
+                  <Label className="font-medium text-slate-400">Blend Mode Control <span className="text-xs text-red-400">(NOT IMPLEMENTED)</span></Label>
                 </div>
                 
                 {currentSettings.blendModeEnabled && (
@@ -2685,15 +2685,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
               <Separator className="bg-slate-600" />
 
-              {/* Physics Simulation */}
-              <div className="space-y-3">
+              {/* Physics Simulation - NOT IMPLEMENTED */}
+              <div className="space-y-3 opacity-50 pointer-events-none">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    checked={currentSettings.physicsEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ physicsEnabled: checked as boolean })}
+                    checked={false}
+                    disabled={true}
                     className="border-slate-500 data-[state=checked]:bg-blue-600"
                   />
-                  <Label className="font-medium text-slate-200">Physics Simulation</Label>
+                  <Label className="font-medium text-slate-400">Physics Simulation <span className="text-xs text-red-400">(NOT IMPLEMENTED)</span></Label>
                 </div>
                 
                 {currentSettings.physicsEnabled && (
@@ -2750,15 +2750,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
               <Separator className="bg-slate-600" />
 
-              {/* Temporal Variation */}
-              <div className="space-y-3">
+              {/* Temporal Variation - DISABLED BY DESIGN */}
+              <div className="space-y-3 opacity-50 pointer-events-none">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    checked={currentSettings.temporalEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ temporalEnabled: checked as boolean })}
+                    checked={false}
+                    disabled={true}
                     className="border-slate-500 data-[state=checked]:bg-blue-600"
                   />
-                  <Label className="font-medium text-slate-200">Temporal Variation</Label>
+                  <Label className="font-medium text-slate-400">Temporal Variation <span className="text-xs text-yellow-400">(DISABLED BY DESIGN)</span></Label>
                 </div>
                 
                 {currentSettings.temporalEnabled && (
