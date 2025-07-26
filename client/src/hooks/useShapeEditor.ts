@@ -1068,36 +1068,30 @@ export const useShapeEditor = () => {
     };
   };
 
-  const generateRandomShapes = useCallback(() => {
-    const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+  // Unified shape generation function that both regular and batch export can use
+  const generateShapesWithBatchConfig = useCallback((
+    count: number, 
+    canvasBounds: { x: number; y: number; width: number; height: number },
+    useDistribution: boolean = true,
+    shapeGenerationIndex: number = 0
+  ): Shape[] => {
     const enabledTypes = Array.from(enabledShapeTypes);
 
-    console.log(`🔍 generateRandomShapes: count=${count}, enabledTypes=${enabledTypes.length}, types=${enabledTypes.join(',')}`);
+    console.log(`🔍 generateShapesWithBatchConfig: count=${count}, enabledTypes=${enabledTypes.length}, types=${enabledTypes.join(',')}`);
 
     if (enabledTypes.length === 0) {
-      console.log(`❌ No enabled shape types, returning early`);
-      return;
+      console.log(`❌ No enabled shape types, returning empty array`);
+      return [];
     }
 
-    // Use current artboard bounds for shape placement
-    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
-    const canvasBounds = currentArtboard ? {
-      x: currentArtboard.x,
-      y: currentArtboard.y,
-      width: currentArtboard.width,
-      height: currentArtboard.height
-    } : {
-      x: -200,
-      y: -200,
-      width: 400,
-      height: 400
-    };
-
-    const positions = SmartDistributionAlgorithm.generatePositions(
+    const positions = useDistribution ? SmartDistributionAlgorithm.generatePositions(
       count,
       canvasBounds,
       scatterSettings.distribution
-    );
+    ) : Array.from({ length: count }, (_, i) => ({
+      x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
+      y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
+    }));
 
     const newShapes = positions.map((position, index) => {
       const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
@@ -1618,14 +1612,51 @@ export const useShapeEditor = () => {
     console.log(`🔍 [FINAL Z-INDEX] All new shapes z-indices: [${finalShapes.map(s => s.properties.zIndex).join(', ')}]`);
     console.log(`🔍 [FINAL Z-INDEX] Existing shapes count: ${shapes.length}, New shapes count: ${finalShapes.length}`);
     
-    console.log(`✅ Created ${finalShapes.length} shapes, adding to existing ${shapes.length} shapes`);
+    console.log(`✅ Created ${finalShapes.length} shapes, returning for further processing`);
+    
+    return finalShapes;
+  }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
+
+  const generateRandomShapes = useCallback(() => {
+    const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+
+    console.log(`🔍 generateRandomShapes: count=${count}, using unified generation function`);
+
+    if (enabledShapeTypes.size === 0) {
+      console.log(`❌ No enabled shape types, returning early`);
+      return;
+    }
+
+    // Use current artboard bounds for shape placement
+    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+    const canvasBounds = currentArtboard ? {
+      x: currentArtboard.x,
+      y: currentArtboard.y,
+      width: currentArtboard.width,
+      height: currentArtboard.height
+    } : {
+      x: -200,
+      y: -200,
+      width: 400,
+      height: 400
+    };
+
+    // Generate shapes using the unified function
+    const newShapes = generateShapesWithBatchConfig(count, canvasBounds, true, 0);
+
+    if (newShapes.length === 0) {
+      console.log(`❌ No shapes generated, returning early`);
+      return;
+    }
+
+    // Add shapes to state
     setShapes(prev => {
       // Calculate the correct base z-index from the current state
       const currentMaxZIndex = prev.length > 0 ? Math.max(...prev.map(s => s.properties.zIndex)) : 0;
       console.log(`🔍 [STATE UPDATE] Current shapes: ${prev.length}, currentMaxZIndex: ${currentMaxZIndex}`);
       
       // Fix z-indices for the new shapes based on current state
-      const shapesWithFixedZIndex = finalShapes.map((shape, index) => {
+      const shapesWithFixedZIndex = newShapes.map((shape, index) => {
         // Directly modify the existing Shape instance instead of creating a plain object
         shape.properties.zIndex = currentMaxZIndex + index + 1;
         return shape;
@@ -1639,9 +1670,9 @@ export const useShapeEditor = () => {
     // Update incremental index if not resetting per batch
     if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled && 
         !batchConfigSettings.incrementalResetPerBatch) {
-      setLastIncrementalIndex(prev => prev + finalShapes.length);
+      setLastIncrementalIndex(prev => prev + newShapes.length);
     }
-  }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
+  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, batchConfigSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
@@ -2521,6 +2552,7 @@ export const useShapeEditor = () => {
     updateScatterSettings,
     updateBatchConfigSettings,
     generateRandomShapes,
+    generateShapesWithBatchConfig,
     scatterOnShape,
     clearSelection,
     setEditMode,

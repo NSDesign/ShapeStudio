@@ -120,6 +120,7 @@ interface SidebarProps {
   onToggleShapeType: (type: ShapeType) => void;
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
   onGenerateRandomShapes: () => void;
+  onGenerateShapesWithBatchConfig: (count: number, canvasBounds: { x: number; y: number; width: number; height: number }, useDistribution?: boolean, shapeGenerationIndex?: number) => Shape[];
   onComposeShapes: () => void;
   onSetEditMode: (mode: 'shapes' | 'points' | 'segments') => void;
   onMoveBy: (x: number, y: number) => void;
@@ -172,6 +173,7 @@ export default function Sidebar({
   onUpdateScatterSettings,
   onUpdateBatchConfigSettings,
   onGenerateRandomShapes,
+  onGenerateShapesWithBatchConfig,
   onComposeShapes,
   onSetEditMode,
   onMoveBy,
@@ -837,49 +839,14 @@ export default function Sidebar({
           onClearAll?.();
           await new Promise(resolve => setTimeout(resolve, 200));
 
-          // Generate shapes for this export
+          // Generate shapes for this export using batch configuration
           const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
-          console.log(`🔢 Will generate ${shapesToGenerate} shape calls for export ${i + 1}`);
+          console.log(`🔢 Will generate ${shapesToGenerate} shapes for export ${i + 1} using batch configuration`);
 
-          // Generate shapes directly without using the scatter system
-          const currentExportShapes: Shape[] = [];
+          // Use the same sophisticated generation logic as the main Generate Random Shapes button
+          const currentExportShapes = onGenerateShapesWithBatchConfig(shapesToGenerate, generationBounds, true, i);
           
-          for (let j = 0; j < shapesToGenerate; j++) {
-            // Use Random Shape Count Range from Shape Types section
-            const shapeCount = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
-            
-            for (let k = 0; k < shapeCount; k++) {
-              // Use enabled shape types from UI
-              const enabledTypes = Array.from(enabledShapeTypes);
-              if (enabledTypes.length === 0) continue; // Skip if no types enabled
-              
-              const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
-              
-              // Random position within the target artboard bounds
-              const x = generationBounds.x + (Math.random() - 0.5) * (generationBounds.width * 0.8);
-              const y = generationBounds.y + (Math.random() - 0.5) * (generationBounds.height * 0.8);
-              
-              const newShape = new Shape(randomType, x, y);
-              
-              // Random properties
-              const hue = Math.random() * 360;
-              const saturation = 50 + Math.random() * 50;
-              const lightness = 30 + Math.random() * 40;
-              newShape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-              
-              // Random size
-              const scale = 0.5 + Math.random() * 2;
-              newShape.transform.scaleX = scale;
-              newShape.transform.scaleY = scale;
-              
-              // Random rotation
-              newShape.transform.rotation = Math.random() * 360;
-              
-              currentExportShapes.push(newShape);
-            }
-            
-            console.log(`✨ Generation ${j + 1}: Created ${shapeCount} shapes (total: ${currentExportShapes.length})`);
-          }
+          console.log(`✨ Generated ${currentExportShapes.length} shapes with batch configuration for export ${i + 1}`);
 
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image

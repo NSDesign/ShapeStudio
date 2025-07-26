@@ -29,6 +29,7 @@ export default function ShapeEditor() {
     isTouchDevice,
     isMultiTouch,
     generateRandomShapes,
+    generateShapesWithBatchConfig,
     toggleShapeType,
     updateScatterSettings,
     updateBatchConfigSettings,
@@ -144,6 +145,7 @@ export default function ShapeEditor() {
           onUpdateScatterSettings={updateScatterSettings}
           onUpdateBatchConfigSettings={updateBatchConfigSettings}
           onGenerateRandomShapes={generateRandomShapes}
+          onGenerateShapesWithBatchConfig={generateShapesWithBatchConfig}
           onComposeShapes={composeShapes}
           onSetEditMode={setEditMode}
           onMoveBy={handleMoveBy}
