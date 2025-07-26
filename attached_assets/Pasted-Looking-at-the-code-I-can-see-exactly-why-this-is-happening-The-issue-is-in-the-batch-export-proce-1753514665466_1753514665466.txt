@@ -1,0 +1,38 @@
+Looking at the code, I can see exactly why this is happening. The issue is in the batch export process in  versus the regular shape generation in .
+
+The Problem
+Regular Generate Random Shapes (in ):
+
+Uses the full batch configuration settings including all the probability logic
+Respects fillEnabled, strokeEnabled, fillProbability, strokeProbability, etc.
+Goes through the complete property application process with probability checks
+Batch Export Process (in ):
+
+Completely bypasses the batch configuration system
+Uses a simplified shape generation that always applies random colors
+Has hardcoded color application that ignores all batch config settings
+The Root Cause
+In the batch export section around line 1750+ in , the code creates shapes using this simplified approach:
+
+const newShape = new Shape(randomType, x, y);
+// Random properties - HARDCODED, ignores batch config
+const hue = Math.random() * 360;
+const saturation = 50 + Math.random() * 50;
+const lightness = 30 + Math.random() * 40;
+newShape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+// Random stroke color - ALSO HARDCODED
+const strokeHue = Math.random() * 360;
+const strokeSaturation = 60 + Math.random() * 40;
+const strokeLightness = 20 + Math.random() * 60;
+const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+shape.properties.strokeColor = strokeColor;
+This completely ignores:
+
+fillEnabled / strokeEnabled flags
+Probability settings
+Color mode settings (range/palette/define)
+All other batch configuration properties
+The Solution
+The batch export should use the same shape generation logic as the regular "Generate Random Shapes" button. Instead of the hardcoded color application, it should pass the batch configuration to the Shape constructor and let the same probability-based system handle fill/stroke application.
+
+The batch export is essentially using a "legacy" shape generation approach that predates the batch configuration system, which is why it always produces shapes with both fill and stroke regardless of your settings.
