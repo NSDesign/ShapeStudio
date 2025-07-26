@@ -840,13 +840,23 @@ export default function Sidebar({
           await new Promise(resolve => setTimeout(resolve, 200));
 
           // Generate shapes for this export using batch configuration
-          const shapesToGenerate = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
-          console.log(`🔢 Will generate ${shapesToGenerate} shapes for export ${i + 1} using batch configuration`);
+          // Random Shape Range determines how many times to call the generation function (like pressing the button multiple times)
+          const generationCallsCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+          console.log(`🔢 Will make ${generationCallsCount} generation calls for export ${i + 1} (simulating ${generationCallsCount} button presses)`);
 
-          // Use the same sophisticated generation logic as the main Generate Random Shapes button
-          const currentExportShapes = onGenerateShapesWithBatchConfig(shapesToGenerate, generationBounds, true, i);
+          // Simulate multiple button presses - each call generates shapes based on scatterSettings.minCount to maxCount
+          const currentExportShapes: Shape[] = [];
           
-          console.log(`✨ Generated ${currentExportShapes.length} shapes with batch configuration for export ${i + 1}`);
+          for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
+            // Each call generates a random number of shapes based on the scatter settings (like a single button press)
+            const shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+            console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes`);
+            
+            const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
+            currentExportShapes.push(...newShapes);
+          }
+          
+          console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
 
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image

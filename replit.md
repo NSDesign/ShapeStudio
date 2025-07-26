@@ -315,6 +315,13 @@ Changelog:
   - **Fixed Stroke Color Bug**: Stroke colors now properly interpolate between range colors instead of using only the two defined colors
   - **Enhanced Range Mode**: All color sections (fill, gradient, stroke) now support integrated HSL controls in range mode
   - **Simplified Interface**: Cleaner UI with HSL controls as part of range mode rather than separate complex modes
+- July 26, 2025. Critical Batch Export Architecture Fix & Random Shape Range Implementation
+  - **Fixed Batch Export Architecture**: Eliminated hardcoded shape generation in batch export that bypassed all batch configuration settings
+  - **Unified Generation System**: Created generateShapesWithBatchConfig function shared between regular generation and batch export
+  - **Proper Random Shape Range**: Fixed Random Shape Range to simulate multiple "Generate Random Shapes" button presses per export
+  - **Multiple Generation Calls**: Each batch export now makes 2-5 generation calls (based on range), each creating shapes per scatter settings
+  - **Complete Batch Config Integration**: Batch exports now respect all noise algorithms, color systems, property controls, and distribution patterns
+  - **Enhanced Logging**: Added detailed console logging to track generation calls and shape creation process
 ```
 
 ## User Preferences
