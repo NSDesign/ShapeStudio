@@ -277,25 +277,50 @@ export class Shape {
     };
     
     const getSegmentCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.segmentCountRange) {
+      // Check if polygon properties are specifically enabled
+      if (batchConfig?.propertiesEnabled && batchConfig?.polygonPropertiesEnabled && batchConfig?.segmentCountRange) {
         const [min, max] = batchConfig.segmentCountRange;
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      // Fallback to scatter settings for polygon-specific properties
+      if (batchConfig?.scatterSettings?.shapeSpecific?.polygon?.segmentCountRange) {
+        const [min, max] = batchConfig.scatterSettings.shapeSpecific.polygon.segmentCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
       }
       return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
     };
     
     const getPointCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.pointCountRange) {
+      // Check if line properties are specifically enabled
+      if (batchConfig?.propertiesEnabled && batchConfig?.linePropertiesEnabled && batchConfig?.pointCountRange) {
         const [min, max] = batchConfig.pointCountRange;
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      // Fallback to scatter settings for line-specific properties
+      if (batchConfig?.scatterSettings?.shapeSpecific?.line?.pointCountRange) {
+        const [min, max] = batchConfig.scatterSettings.shapeSpecific.line.pointCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
       }
       return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
     };
     
     const getSplinePointCount = (defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.splinePointCountRange) {
+      // Check if spline properties are specifically enabled
+      if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled && batchConfig?.splinePointCountRange) {
         const [min, max] = batchConfig.splinePointCountRange;
         return Math.floor(min + Math.random() * (max - min + 1));
+      }
+      // Fallback to scatter settings for spline-specific properties
+      if (batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']?.pointCountRange || 
+          batchConfig?.scatterSettings?.shapeSpecific?.bezier?.pointCountRange ||
+          batchConfig?.scatterSettings?.shapeSpecific?.cubic?.pointCountRange) {
+        const splineSettings = batchConfig.scatterSettings.shapeSpecific['smooth-spline'] || 
+                              batchConfig.scatterSettings.shapeSpecific.bezier ||
+                              batchConfig.scatterSettings.shapeSpecific.cubic;
+        if (splineSettings?.pointCountRange) {
+          const [min, max] = splineSettings.pointCountRange;
+          return Math.floor(min + Math.random() * (max - min + 1));
+        }
       }
       return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
     };
@@ -423,7 +448,7 @@ export class Shape {
         this.generateStarPoints();
         break;
       case 'line':
-        this.generateLinePoints(getPointCount(2, 8));
+        this.generateLinePoints(getPointCount(2, 8), batchConfig);
         break;
       case 'bezier':
       case 'cubic':
@@ -474,13 +499,29 @@ export class Shape {
     }
   }
 
-  private generateLinePoints(numPoints?: number): void {
+  private generateLinePoints(numPoints?: number, batchConfig?: any): void {
     const pointCount = numPoints || 2 + Math.floor(Math.random() * 6);
     this.points = [];
+    
+    // Get point position range from batch config if available
+    let positionRange = [-50, 50]; // Default range
+    if (batchConfig?.propertiesEnabled && batchConfig?.linePropertiesEnabled && batchConfig?.pointPositionRange) {
+      positionRange = batchConfig.pointPositionRange;
+    } else if (batchConfig?.scatterSettings?.shapeSpecific?.line?.pointPositionRange) {
+      positionRange = batchConfig.scatterSettings.shapeSpecific.line.pointPositionRange;
+    }
+    
+    const [minPos, maxPos] = positionRange;
+    const baseSpacing = 40; // Base spacing between points
+    
     for (let i = 0; i < pointCount; i++) {
+      // Calculate position with controlled variation
+      const xVariation = minPos + Math.random() * (maxPos - minPos);
+      const yVariation = minPos + Math.random() * (maxPos - minPos);
+      
       this.points.push({
-        x: i * (20 + Math.random() * 40),
-        y: (Math.random() - 0.5) * 100
+        x: i * baseSpacing + xVariation,
+        y: yVariation
       });
     }
   }
@@ -492,18 +533,53 @@ export class Shape {
     this.tangentHandles = [];
     this.smoothPoints = [];
     
+    // Get spline positioning ranges from batch config if available
+    let pointPositionRange = [-50, 50]; // Default range for point positioning
+    let controlPointRange = [-25, 25]; // Default range for control point positioning
+    
+    if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled) {
+      if (batchConfig?.splinePointPositionRange) {
+        pointPositionRange = batchConfig.splinePointPositionRange;
+      }
+      if (batchConfig?.splineControlPointRange) {
+        controlPointRange = batchConfig.splineControlPointRange;
+      }
+    } else if (batchConfig?.scatterSettings?.shapeSpecific) {
+      // Fallback to scatter settings for spline-specific properties
+      const splineSettings = batchConfig.scatterSettings.shapeSpecific['smooth-spline'] || 
+                            batchConfig.scatterSettings.shapeSpecific.bezier ||
+                            batchConfig.scatterSettings.shapeSpecific.cubic;
+      if (splineSettings?.pointPositionRange) {
+        pointPositionRange = splineSettings.pointPositionRange;
+      }
+      if (splineSettings?.controlPointRange) {
+        controlPointRange = splineSettings.controlPointRange;
+      }
+    }
+    
+    const [minPointPos, maxPointPos] = pointPositionRange;
+    const [minControlPos, maxControlPos] = controlPointRange;
+    
     if (this.type === 'cubic') {
       // Generate cubic spline with control points between segments
       this.points = [];
       const width = 120;
       const height = 80;
       
-      // Generate points with some randomness
+      // Generate points with configurable randomness
       for (let i = 0; i < pointCount; i++) {
         const t = i / (pointCount - 1);
-        const x = (t - 0.5) * width + (Math.random() - 0.5) * 20;
-        const y = (Math.random() - 0.5) * height;
-        this.points.push({ x, y });
+        const baseX = (t - 0.5) * width;
+        const baseY = 0;
+        
+        // Apply point position variation from batch config
+        const xVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        const yVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        
+        this.points.push({ 
+          x: baseX + xVariation, 
+          y: baseY + yVariation 
+        });
       }
       
       // Generate control points for cubic splines (between segments)
@@ -511,13 +587,16 @@ export class Shape {
         const p1 = this.points[i];
         const p2 = this.points[i + 1];
         
-        // Control point positioned between current and next point with some offset
-        const controlX = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 40;
-        const controlY = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 40;
+        // Control point positioned between current and next point with configurable offset
+        const baseControlX = (p1.x + p2.x) / 2;
+        const baseControlY = (p1.y + p2.y) / 2;
+        
+        const controlXVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
+        const controlYVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
         
         this.controlPoints!.push({
-          x: controlX,
-          y: controlY
+          x: baseControlX + controlXVariation,
+          y: baseControlY + controlYVariation
         });
       }
       
@@ -1104,6 +1183,29 @@ export class Shape {
     this.points = [];
     this.controlPoints = [];
     
+    // Get spline positioning ranges from batch config if available
+    let pointPositionRange = [-50, 50]; // Default range for point positioning
+    let controlPointRange = [-25, 25]; // Default range for control point positioning
+    
+    if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled) {
+      if (batchConfig?.splinePointPositionRange) {
+        pointPositionRange = batchConfig.splinePointPositionRange;
+      }
+      if (batchConfig?.splineControlPointRange) {
+        controlPointRange = batchConfig.splineControlPointRange;
+      }
+    } else if (batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']) {
+      if (batchConfig.scatterSettings.shapeSpecific['smooth-spline'].pointPositionRange) {
+        pointPositionRange = batchConfig.scatterSettings.shapeSpecific['smooth-spline'].pointPositionRange;
+      }
+      if (batchConfig.scatterSettings.shapeSpecific['smooth-spline'].controlPointRange) {
+        controlPointRange = batchConfig.scatterSettings.shapeSpecific['smooth-spline'].controlPointRange;
+      }
+    }
+    
+    const [minPointPos, maxPointPos] = pointPositionRange;
+    const [minControlPos, maxControlPos] = controlPointRange;
+    
     // Use batch config settings for open/closed probability if available
     let openProbability = 30; // Default 30% open (70% closed)
     if (batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']?.openProbability !== undefined) {
@@ -1122,9 +1224,13 @@ export class Shape {
         const radiusVar = 0.7 + Math.random() * 0.6;
         const radius = baseRadius * radiusVar;
         
+        // Apply point position variation from batch config
+        const xVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        const yVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        
         this.points.push({
-          x: Math.cos(angle) * radius,
-          y: Math.sin(angle) * radius
+          x: Math.cos(angle) * radius + xVariation,
+          y: Math.sin(angle) * radius + yVariation
         });
       }
     } else {
@@ -1132,10 +1238,17 @@ export class Shape {
       const width = baseRadius * 2;
       for (let i = 0; i < pointCount; i++) {
         const t = i / (pointCount - 1);
-        const x = (t - 0.5) * width;
-        const y = Math.sin(t * Math.PI * 2) * baseRadius * (0.3 + Math.random() * 0.4);
+        const baseX = (t - 0.5) * width;
+        const baseY = Math.sin(t * Math.PI * 2) * baseRadius * (0.3 + Math.random() * 0.4);
         
-        this.points.push({ x, y });
+        // Apply point position variation from batch config
+        const xVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        const yVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        
+        this.points.push({ 
+          x: baseX + xVariation, 
+          y: baseY + yVariation 
+        });
       }
     }
     
@@ -1165,21 +1278,25 @@ export class Shape {
       const tangentY = (next.y - prev.y) * tangentLength / 
         Math.sqrt(Math.pow(next.x - prev.x, 2) + Math.pow(next.y - prev.y, 2));
       
-      // Add some controlled randomness for organic feel
+      // Add some controlled randomness for organic feel using batch config control point range
       const randomFactor = variation * 0.3;
-      const randomX = (Math.random() - 0.5) * randomFactor * tangentLength;
-      const randomY = (Math.random() - 0.5) * randomFactor * tangentLength;
+      const baseRandomX = (Math.random() - 0.5) * randomFactor * tangentLength;
+      const baseRandomY = (Math.random() - 0.5) * randomFactor * tangentLength;
+      
+      // Apply additional control point variation from batch config
+      const controlXVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
+      const controlYVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
       
       // First control point (outgoing from current)
       this.controlPoints.push({
-        x: current.x + (tangentX + randomX) * 0.5,
-        y: current.y + (tangentY + randomY) * 0.5
+        x: current.x + (tangentX + baseRandomX) * 0.5 + controlXVariation,
+        y: current.y + (tangentY + baseRandomY) * 0.5 + controlYVariation
       });
       
       // Second control point (incoming to next)
       this.controlPoints.push({
-        x: next.x - (tangentX + randomX) * 0.5,
-        y: next.y - (tangentY + randomY) * 0.5
+        x: next.x - (tangentX + baseRandomX) * 0.5 + controlXVariation,
+        y: next.y - (tangentY + baseRandomY) * 0.5 + controlYVariation
       });
     }
     

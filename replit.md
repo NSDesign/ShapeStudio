@@ -324,6 +324,10 @@ Changelog:
   - **Enhanced Logging**: Added detailed console logging to track generation calls and shape creation process
   - **UI Status Clarity**: Disabled and greyed out unimplemented sections (Blend Mode Control, Physics Simulation, Temporal Variation) with clear status indicators
   - **Visual Feedback**: Added opacity reduction, pointer-events blocking, and color-coded status labels to prevent user confusion
+  - **Shape-Specific Properties Complete Implementation**: Fixed polygon segment counts, line point counts, and spline control point positioning
+  - **Enhanced Shape Generation**: All shape-specific properties now properly integrate with batch configuration and fallback to scatter settings
+  - **Point/Control Point Positioning**: Implemented configurable ranges for line point positioning and spline control point variation
+  - **Polygon Segment Control**: Polygon and star shapes now respect segment count ranges from batch configuration properties
 ```
 
 ## User Preferences
