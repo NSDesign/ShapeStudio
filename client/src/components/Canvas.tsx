@@ -88,6 +88,8 @@ export default function Canvas({
 
   // Set canvas size to match container with proper pixel density
   useEffect(() => {
+    let resizeTimeoutId: number;
+    
     const resizeCanvas = () => {
       if (canvasRef.current) {
         const canvas = canvasRef.current;
@@ -113,18 +115,26 @@ export default function Canvas({
       }
     };
 
+    const debouncedResizeCanvas = () => {
+      clearTimeout(resizeTimeoutId);
+      resizeTimeoutId = window.setTimeout(() => {
+        requestAnimationFrame(resizeCanvas);
+      }, 16); // ~60fps debouncing
+    };
+
     resizeCanvas();
     
-    const resizeObserver = new ResizeObserver(resizeCanvas);
+    const resizeObserver = new ResizeObserver(debouncedResizeCanvas);
     if (canvasRef.current?.parentElement) {
       resizeObserver.observe(canvasRef.current.parentElement);
     }
 
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', debouncedResizeCanvas);
     
     return () => {
+      clearTimeout(resizeTimeoutId);
       resizeObserver.disconnect();
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', debouncedResizeCanvas);
     };
   }, []);
 
