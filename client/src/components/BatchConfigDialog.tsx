@@ -59,6 +59,9 @@ export interface BatchConfigSettings {
   gridRowOffset: number;
   gridColumnOffset: number;
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+  // Grid randomization amounts
+  gridXRandomization: number; // 0-100 pixels randomization in X direction
+  gridYRandomization: number; // 0-100 pixels randomization in Y direction
   
   // Blend Mode Control
   blendModeEnabled: boolean;
@@ -308,6 +311,8 @@ const defaultSettings: BatchConfigSettings = {
   gridRowOffset: 120,
   gridColumnOffset: 120,
   gridSortBy: 'none',
+  gridXRandomization: 0,
+  gridYRandomization: 0,
   
   blendModeEnabled: false,
   enabledBlendModes: { 'source-over': 100 },
@@ -972,6 +977,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                     <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
                       <p className="text-xs text-slate-400">
                         <strong>Grid positioning works additively with noise:</strong> Grid provides base layout, noise adds variation on top.
+                        <strong>X/Y Randomization:</strong> Adds scatter to grid positions independently from noise system.
                         When grid is active, consider zeroing transform position properties to avoid conflicts.
                       </p>
                     </div>
@@ -1042,6 +1048,31 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               max={300}
                               step={10}
                               className="[&_[role=slider]]:bg-green-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Randomization: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Randomization: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
                             />
                           </div>
                         </div>

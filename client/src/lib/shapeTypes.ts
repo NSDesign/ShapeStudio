@@ -18,6 +18,8 @@ export interface DistributionConfig {
   gridRowOffset: number;
   gridColumnOffset: number;
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+  gridXRandomization: number;
+  gridYRandomization: number;
 }
 
 export interface Transform {
@@ -379,11 +381,16 @@ export function applyGridDistribution(
       canvasCenter.y
     );
     
-    // Apply grid position additively with existing position
-    // Grid provides base position, existing transform adds variation
-    // Modify the shape in-place to preserve class methods
-    shape.transform.x = gridPos.x + (shape.transform?.x || 0);
-    shape.transform.y = gridPos.y + (shape.transform?.y || 0);
+    // Apply X and Y randomization to grid positions
+    const xRandomization = config.gridXRandomization ? 
+      (Math.random() - 0.5) * 2 * config.gridXRandomization : 0;
+    const yRandomization = config.gridYRandomization ? 
+      (Math.random() - 0.5) * 2 * config.gridYRandomization : 0;
+    
+    // Apply grid position additively with existing position and randomization
+    // Grid provides base position, existing transform adds variation, randomization adds scatter
+    shape.transform.x = gridPos.x + (shape.transform?.x || 0) + xRandomization;
+    shape.transform.y = gridPos.y + (shape.transform?.y || 0) + yRandomization;
     
     return shape;
   });
