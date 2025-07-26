@@ -328,12 +328,12 @@ Changelog:
   - **Enhanced Shape Generation**: All shape-specific properties now properly integrate with batch configuration and fallback to scatter settings
   - **Point/Control Point Positioning**: Implemented configurable ranges for line point positioning and spline control point variation
   - **Polygon Segment Control**: Polygon and star shapes now respect segment count ranges from batch configuration properties
-- July 26, 2025. Distribution Layout X/Y Randomization Enhancement
-  - **Grid Randomization Sliders**: Added X and Y randomization sliders (0-100px) to Distribution Layout grid positioning
-  - **Independent Scatter Control**: X/Y randomization works independently from noise system for precise grid scatter control
-  - **Additive Positioning**: Grid provides base layout, noise adds variation, randomization adds final scatter positioning
-  - **Enhanced Grid Control**: Users can now fine-tune grid positioning with separate X and Y scatter amounts
-  - **Purple Slider Styling**: Used distinct purple slider styling to differentiate randomization controls from other settings
+- July 26, 2025. Distribution Layout X/Y Randomization Scaling Enhancement
+  - **Grid Randomization Scale Sliders**: Added X and Y randomization scale sliders (0-100%) to control existing variation in grid positioning
+  - **Scaling Control**: X/Y randomization scales the existing random variation rather than adding new randomization layers
+  - **Proportional Variation**: 0% removes all random variation, 100% applies full existing variation, intermediate values scale proportionally
+  - **Enhanced Grid Control**: Users can fine-tune the amount of scatter applied to grid positions without additional randomization
+  - **Purple Slider Styling**: Used distinct purple slider styling to differentiate scaling controls from other settings
 ```
 
 ## User Preferences

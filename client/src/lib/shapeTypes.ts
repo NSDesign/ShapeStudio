@@ -381,16 +381,22 @@ export function applyGridDistribution(
       canvasCenter.y
     );
     
-    // Apply X and Y randomization to grid positions
-    const xRandomization = config.gridXRandomization ? 
-      (Math.random() - 0.5) * 2 * config.gridXRandomization : 0;
-    const yRandomization = config.gridYRandomization ? 
-      (Math.random() - 0.5) * 2 * config.gridYRandomization : 0;
+    // Scale existing transform randomization using X/Y randomization factors
+    // If randomization is 0, existing transform is preserved (no scaling)
+    // If randomization is 100, existing transform variation is maximized
+    const existingXVariation = shape.transform?.x || 0;
+    const existingYVariation = shape.transform?.y || 0;
     
-    // Apply grid position additively with existing position and randomization
-    // Grid provides base position, existing transform adds variation, randomization adds scatter
-    shape.transform.x = gridPos.x + (shape.transform?.x || 0) + xRandomization;
-    shape.transform.y = gridPos.y + (shape.transform?.y || 0) + yRandomization;
+    const xScaleFactor = config.gridXRandomization / 100; // Convert 0-100 to 0-1 scale
+    const yScaleFactor = config.gridYRandomization / 100; // Convert 0-100 to 0-1 scale
+    
+    const scaledXVariation = existingXVariation * xScaleFactor;
+    const scaledYVariation = existingYVariation * yScaleFactor;
+    
+    // Apply grid position with scaled existing variation
+    // Grid provides base position, scaled existing transform provides controlled variation
+    shape.transform.x = gridPos.x + scaledXVariation;
+    shape.transform.y = gridPos.y + scaledYVariation;
     
     return shape;
   });

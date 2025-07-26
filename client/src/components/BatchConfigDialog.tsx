@@ -977,7 +977,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                     <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
                       <p className="text-xs text-slate-400">
                         <strong>Grid positioning works additively with noise:</strong> Grid provides base layout, noise adds variation on top.
-                        <strong>X/Y Randomization:</strong> Adds scatter to grid positions independently from noise system.
+                        <strong>X/Y Randomization Scale:</strong> Controls the amount of existing random variation applied to grid positions (0% = no variation, 100% = full variation).
                         When grid is active, consider zeroing transform position properties to avoid conflicts.
                       </p>
                     </div>
@@ -1054,7 +1054,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Randomization: {currentSettings.gridXRandomization}px</Label>
+                            <Label className="text-sm text-slate-300">X Randomization Scale: {currentSettings.gridXRandomization}%</Label>
                             <Slider
                               value={[currentSettings.gridXRandomization]}
                               onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
@@ -1065,7 +1065,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Randomization: {currentSettings.gridYRandomization}px</Label>
+                            <Label className="text-sm text-slate-300">Y Randomization Scale: {currentSettings.gridYRandomization}%</Label>
                             <Slider
                               value={[currentSettings.gridYRandomization]}
                               onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
