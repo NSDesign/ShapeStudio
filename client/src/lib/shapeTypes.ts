@@ -85,6 +85,7 @@ export interface ShapeProperties {
   strokeOpacity: number;
   blendMode: BlendMode;
   zIndex: number;
+  blurRadius: number; // 0 = no blur, >0 = blur in pixels
   gradient?: {
     type: 'linear' | 'radial';
     stops: { offset: number; color: string }[];

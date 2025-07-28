@@ -170,6 +170,13 @@ export interface BatchConfigSettings {
   fillOpacityRange: [number, number]; // For range mode
   fillOpacityDefine: number; // For define mode
   
+  // Blur Properties
+  blurEnabled: boolean;
+  blurProbability: number; // 0-100%
+  blurMode: 'range' | 'define';
+  blurRange: [number, number]; // For range mode (e.g., [2, 15])
+  blurDefine: number; // For define mode (e.g., 8)
+  
   // Stroke Properties  
   strokeEnabled: boolean;
   strokeProbability: number; // 0-100%
@@ -418,6 +425,13 @@ const defaultSettings: BatchConfigSettings = {
   fillOpacityMode: 'range' as const,
   fillOpacityRange: [20, 100],
   fillOpacityDefine: 80,
+  
+  // Blur Properties
+  blurEnabled: false,
+  blurProbability: 50,
+  blurMode: 'range' as const,
+  blurRange: [2, 15],
+  blurDefine: 8,
   
   // Stroke Properties
   strokeEnabled: true,
@@ -2134,6 +2148,70 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Blur Properties Section */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.blurEnabled}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600"
+                              />
+                              <Label className="text-sm font-medium text-slate-200">Blur Properties</Label>
+                              <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
+                                <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {currentSettings.blurEnabled && (
+                              <div className="space-y-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Blur Probability: {currentSettings.blurProbability}%</Label>
+                                  <Slider
+                                    value={[currentSettings.blurProbability]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ blurProbability: value })}
+                                    max={100}
+                                    step={5}
+                                    className="[&_[role=slider]]:bg-purple-600"
+                                  />
+                                </div>
+
+                                {currentSettings.blurMode === 'range' && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Blur Range: {currentSettings.blurRange?.[0] || 2}px - {currentSettings.blurRange?.[1] || 15}px</Label>
+                                    <Slider
+                                      value={currentSettings.blurRange || [2, 15]}
+                                      onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
+                                      min={0}
+                                      max={50}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-purple-600"
+                                    />
+                                  </div>
+                                )}
+
+                                {currentSettings.blurMode === 'define' && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Blur Radius: {currentSettings.blurDefine || 8}px</Label>
+                                    <Slider
+                                      value={[currentSettings.blurDefine || 8]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ blurDefine: value })}
+                                      min={0}
+                                      max={50}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-purple-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

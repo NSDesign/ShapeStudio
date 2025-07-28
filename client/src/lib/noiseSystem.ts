@@ -44,6 +44,7 @@ export interface NoiseResult {
   scaleX: number;    // Multiplicative scale >= 1.0
   scaleY: number;    // Multiplicative scale >= 1.0
   opacity: number;   // Range [0.1, 1.0]
+  blur: number;      // Blur radius in pixels (0 = no blur)
   hue: number;       // Absolute hue 0-360°
   saturation: number; // Absolute saturation 0-100%
   lightness: number;  // Absolute lightness 0-100%
@@ -83,7 +84,7 @@ export class NoiseSystem {
     if (!noiseEnabled) {
       return {
         x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, 
-        opacity: 1, hue: 0, saturation: 0, lightness: 0
+        opacity: 1, blur: 0, hue: 0, saturation: 0, lightness: 0
       };
     }
 
@@ -154,6 +155,7 @@ export class NoiseSystem {
     const randHue = this.seededRandom(options.seed + baseOffset + 48299)();
     const randSat = this.seededRandom(options.seed + baseOffset + 56377)();
     const randLght = this.seededRandom(options.seed + baseOffset + 64439)();
+    const randBlur = this.seededRandom(options.seed + baseOffset + 72511)();
     
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
@@ -178,6 +180,9 @@ export class NoiseSystem {
       // Opacity: 0.1-1.0 range
       opacity: Math.max(0.1, 0.1 + randOpacity * 0.9 * options.amplitude),
       
+      // Blur: 0-20px range
+      blur: randBlur * 20 * options.amplitude,
+      
       // Colors: natural HSL ranges
       hue: randHue * 360 * options.amplitude,
       saturation: 50 + randSat * 50 * options.amplitude, // 50-100%
@@ -190,7 +195,7 @@ export class NoiseSystem {
    */
   private static generatePerlinNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
     
     const artboardWidth = options.artboardWidth || 400;
@@ -216,6 +221,7 @@ export class NoiseSystem {
       const noiseHue = this.perlin3D(x * frequency + 19997 * i, y * frequency + 21107 * i, z * frequency + 22217 * i, options.seed + 7);
       const noiseSat = this.perlin3D(x * frequency + 23327 * i, y * frequency + 24437 * i, z * frequency + 25547 * i, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 26657 * i, y * frequency + 27767 * i, z * frequency + 28877 * i, options.seed + 9);
+      const noiseBlur = this.perlin3D(x * frequency + 29987 * i, y * frequency + 31097 * i, z * frequency + 32207 * i, options.seed + 10);
       
       // Apply noise with proper ranges per octave
       positionX += noiseX * amplitude * maxPosOffset * 0.25;
@@ -224,6 +230,7 @@ export class NoiseSystem {
       scaleX += noiseScaleX * amplitude * 0.125; // ±0.125x per octave
       scaleY += noiseScaleY * amplitude * 0.125;
       opacity += noiseOpacity * amplitude * 0.15; // ±0.15 per octave
+      blur += noiseBlur * amplitude * 5; // ±5px per octave
       hue += noiseHue * amplitude * 60; // ±60° per octave
       saturation += noiseSat * amplitude * 30; // ±30% per octave
       lightness += noiseLght * amplitude * 25; // ±25% per octave
@@ -240,6 +247,7 @@ export class NoiseSystem {
       scaleX: Math.max(1.0, 1.0 + scaleX),
       scaleY: Math.max(1.0, 1.0 + scaleY),
       opacity: Math.max(0.1, Math.min(1.0, 1.0 + opacity)),
+      blur: Math.max(0, blur + 10), // 0-20px range with 10px base
       hue: Math.abs(hue) % 360,
       saturation: Math.max(0, Math.min(100, 75 + saturation)),
       lightness: Math.max(0, Math.min(100, 50 + lightness))
@@ -251,7 +259,7 @@ export class NoiseSystem {
    */
   private static generateSimplexNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
     
     const artboardWidth = options.artboardWidth || 400;
@@ -305,6 +313,7 @@ export class NoiseSystem {
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      blur: Math.max(0, blur + 5),
       hue: Math.max(-25, Math.min(25, hue)),
       saturation: Math.max(-10, Math.min(10, saturation)),
       lightness: Math.max(-8, Math.min(8, lightness))
@@ -316,7 +325,7 @@ export class NoiseSystem {
    */
   private static generateFractalNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
 
     const artboardWidth = options.artboardWidth || 400;
@@ -371,6 +380,7 @@ export class NoiseSystem {
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      blur: Math.max(0, blur + 5),
       hue: Math.max(-25, Math.min(25, hue)),
       saturation: Math.max(-10, Math.min(10, saturation)),
       lightness: Math.max(-8, Math.min(8, lightness))
@@ -393,7 +403,7 @@ export class NoiseSystem {
       50;
     
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
     
     // Accumulate noise across octaves
@@ -453,6 +463,7 @@ export class NoiseSystem {
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      blur: Math.max(0, blur + 5),
       hue: Math.max(-25, Math.min(25, hue)),
       saturation: Math.max(-10, Math.min(10, saturation)),
       lightness: Math.max(-8, Math.min(8, lightness))
@@ -465,7 +476,7 @@ export class NoiseSystem {
   private static generateRidgeNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     const ridgeOffset = options.ridgeOffset || 1.0;
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
 
     const artboardWidth = options.artboardWidth || 400;
@@ -529,6 +540,7 @@ export class NoiseSystem {
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      blur: Math.max(0, blur + 5),
       hue: Math.max(-25, Math.min(25, hue)),
       saturation: Math.max(-10, Math.min(10, saturation)),
       lightness: Math.max(-8, Math.min(8, lightness))
@@ -541,7 +553,7 @@ export class NoiseSystem {
   private static generateTurbulenceNoise(x: number, y: number, z: number, options: NoiseOptions): NoiseResult {
     const turbulencePower = options.turbulencePower || 1.0;
     let positionX = 0, positionY = 0, rotation = 0;
-    let scaleX = 0, scaleY = 0, opacity = 0;
+    let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
 
     const artboardWidth = options.artboardWidth || 400;
@@ -605,6 +617,7 @@ export class NoiseSystem {
       scaleX: 1 + Math.max(-0.25, Math.min(0.25, scaleX)),
       scaleY: 1 + Math.max(-0.25, Math.min(0.25, scaleY)),
       opacity: Math.max(0.7, Math.min(1, 1 + opacity)),
+      blur: Math.max(0, blur + 5),
       hue: Math.max(-25, Math.min(25, hue)),
       saturation: Math.max(-10, Math.min(10, saturation)),
       lightness: Math.max(-8, Math.min(8, lightness))

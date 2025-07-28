@@ -189,6 +189,7 @@ export class Shape {
       strokeOpacity: 0,
       blendMode: 'source-over' as BlendMode,
       zIndex: Date.now(),
+      blurRadius: 0,
       gradient: undefined
     };
   }
@@ -252,6 +253,7 @@ export class Shape {
       strokeOpacity: hasStroke ? 0.8 + Math.random() * 0.2 : 0,
       blendMode: 'source-over' as BlendMode,
       zIndex: Date.now(), // Use timestamp for proper ordering
+      blurRadius: 0, // No blur by default in random generation
       gradient: hasFill ? gradient : undefined
     };
   }
@@ -1310,6 +1312,13 @@ export class Shape {
     }
     
     ctx.save();
+    
+    // Apply blur filter if specified
+    if (this.properties.blurRadius > 0) {
+      ctx.filter = `blur(${this.properties.blurRadius}px)`;
+    } else {
+      ctx.filter = 'none';
+    }
     
     // Apply blend mode
     ctx.globalCompositeOperation = this.properties.blendMode;

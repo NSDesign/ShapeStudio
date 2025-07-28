@@ -222,7 +222,7 @@ export default function Canvas({
       // Draw shapes in z-index order (lowest z-index first, highest on top)
       const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
       sortedShapes.forEach(shape => {
-        shape.render(ctx, effectiveZoom);
+        shape.render(ctx);
       });
 
       // Draw group handles

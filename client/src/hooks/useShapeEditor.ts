@@ -1372,7 +1372,26 @@ export const useShapeEditor = () => {
           shape.properties.strokeWidth = 0;
         }
 
-
+        // Handle blur properties
+        if (batchConfigSettings.blurEnabled) {
+          const shouldHaveBlur = Math.random() * 100 < batchConfigSettings.blurProbability;
+          if (shouldHaveBlur) {
+            // Apply blur based on mode
+            if (batchConfigSettings.blurMode === 'range') {
+              const [minBlur, maxBlur] = batchConfigSettings.blurRange;
+              shape.properties.blurRadius = minBlur + Math.random() * (maxBlur - minBlur);
+            } else if (batchConfigSettings.blurMode === 'define') {
+              shape.properties.blurRadius = batchConfigSettings.blurDefine;
+            }
+            console.log(`🌊 [BLUR] Shape ${index}: Applied blur radius=${shape.properties.blurRadius}px`);
+          } else {
+            shape.properties.blurRadius = 0;
+            console.log(`🌊 [BLUR] Shape ${index}: No blur applied (probability failed)`);
+          }
+        } else {
+          // Blur section disabled - ensure no blur
+          shape.properties.blurRadius = 0;
+        }
 
         // Apply shape transforms if enabled
         if (batchConfigSettings.transformsEnabled) {
@@ -1489,6 +1508,9 @@ export const useShapeEditor = () => {
         // Apply noise to opacity - direct assignment for all
         shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
         shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
+
+        // Apply noise to blur
+        shape.properties.blurRadius = Math.max(0, noiseResult.blur);
 
         console.log(`🎨 [COLOR CHECK] Shape ${index}: About to apply noise colors. colorHarmonyEnabled=${batchConfigSettings.colorHarmonyEnabled}, current fillColor="${shape.properties.fillColor}"`);
 
