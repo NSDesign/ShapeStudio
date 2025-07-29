@@ -246,6 +246,7 @@ export interface BatchConfigSettings {
   rotationValue: number;
   rotationIncrement: number;
   rotationModulation: number; // Modulation value (e.g., 360 for full circle reset)
+  rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
   
   // Shape Effects
   shapeEffectsEnabled: boolean;
@@ -529,6 +530,7 @@ const defaultSettings: BatchConfigSettings = {
   rotationValue: 0,
   rotationIncrement: 15,
   rotationModulation: 360,
+  rotationModulationEnabled: false,
   
   // Shape Effects
   shapeEffectsEnabled: false,
@@ -2433,7 +2435,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               {/* X Position Controls */}
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">X Position</Label>
+                                  <Label className="text-xs text-slate-300">X</Label>
                                   <Select value={currentSettings.xTransformMode} onValueChange={(value) => handleSettingsUpdate({ xTransformMode: value as any })}>
                                     <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
                                       <SelectValue />
@@ -2492,7 +2494,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               {/* Y Position Controls */}
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Y Position</Label>
+                                  <Label className="text-xs text-slate-300">Y</Label>
                                   <Select value={currentSettings.yTransformMode} onValueChange={(value) => handleSettingsUpdate({ yTransformMode: value as any })}>
                                     <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
                                       <SelectValue />
@@ -2576,7 +2578,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               {/* Scale X Controls */}
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Scale X</Label>
+                                  <Label className="text-xs text-slate-300">X</Label>
                                   <Select 
                                     value={currentSettings.scaleXMode} 
                                     onValueChange={(value) => {
@@ -2659,7 +2661,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               {/* Scale Y Controls */}
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Scale Y</Label>
+                                  <Label className="text-xs text-slate-300">Y</Label>
                                   <Select 
                                     value={currentSettings.scaleYMode} 
                                     onValueChange={(value) => handleSettingsUpdate({ scaleYMode: value as any })}
@@ -2784,17 +2786,29 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       className="[&_[role=slider]]:bg-orange-600"
                                     />
                                   </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Modulation: {currentSettings.rotationModulation}° (reset cycle)</Label>
-                                    <Slider
-                                      value={[currentSettings.rotationModulation]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
-                                      min={90}
-                                      max={720}
-                                      step={30}
-                                      className="[&_[role=slider]]:bg-orange-600"
+                                  
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                      checked={currentSettings.rotationModulationEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ rotationModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-orange-600"
                                     />
+                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
                                   </div>
+                                  
+                                  {currentSettings.rotationModulationEnabled && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Modulation: {currentSettings.rotationModulation}° (reset cycle)</Label>
+                                      <Slider
+                                        value={[currentSettings.rotationModulation]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
+                                        min={90}
+                                        max={720}
+                                        step={30}
+                                        className="[&_[role=slider]]:bg-orange-600"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
