@@ -223,6 +223,9 @@ export interface BatchConfigSettings {
   skewXRange: [number, number];
   skewYRange: [number, number];
   
+  // Shape Effects
+  shapeEffectsEnabled: boolean;
+  
   // Color Harmony
   colorHarmonyEnabled: boolean;
   harmonyType: 'monochromatic' | 'analogous' | 'complementary' | 'triadic' | 'split-complementary' | 'tetradic';
@@ -478,6 +481,9 @@ const defaultSettings: BatchConfigSettings = {
   rotationRange: [0, 360],
   skewXRange: [0, 0],
   skewYRange: [0, 0],
+  
+  // Shape Effects
+  shapeEffectsEnabled: false,
   
   colorHarmonyEnabled: false,
   harmonyType: 'complementary',
@@ -2151,70 +2157,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                               </div>
                             )}
                           </div>
-                          
-                          {/* Blur Properties Section */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                checked={currentSettings.blurEnabled}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
-                                className="border-slate-500 data-[state=checked]:bg-blue-600"
-                              />
-                              <Label className="text-sm font-medium text-slate-200">Blur Properties</Label>
-                              <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
-                                <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
 
-                            {currentSettings.blurEnabled && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Blur Probability: {currentSettings.blurProbability}%</Label>
-                                  <Slider
-                                    value={[currentSettings.blurProbability]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ blurProbability: value })}
-                                    max={100}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-purple-600"
-                                  />
-                                </div>
-
-                                {currentSettings.blurMode === 'range' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Blur Range: {currentSettings.blurRange?.[0] || 2}px - {currentSettings.blurRange?.[1] || 15}px</Label>
-                                    <Slider
-                                      value={currentSettings.blurRange || [2, 15]}
-                                      onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
-                                      min={0}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-purple-600"
-                                    />
-                                  </div>
-                                )}
-
-                                {currentSettings.blurMode === 'define' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Blur Radius: {currentSettings.blurDefine || 8}px</Label>
-                                    <Slider
-                                      value={[currentSettings.blurDefine || 8]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ blurDefine: value })}
-                                      min={0}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-purple-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
                         </div>
                       )}
                     </div>
@@ -2480,6 +2423,95 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              {/* Shape Effects */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={currentSettings.shapeEffectsEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ shapeEffectsEnabled: checked as boolean })}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="font-medium text-slate-200">Shape Effects</Label>
+                </div>
+                
+                {currentSettings.shapeEffectsEnabled && (
+                  <div className="ml-6 space-y-4">
+                    {/* Blur Effects Section */}
+                    <div className="space-y-3 p-3 bg-slate-800 rounded">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.blurEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-blue-600"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Blur</Label>
+                        <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
+                          <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {currentSettings.blurEnabled && (
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Blur Probability: {currentSettings.blurProbability}%</Label>
+                            <Slider
+                              value={[currentSettings.blurProbability]}
+                              onValueChange={([value]) => handleSettingsUpdate({ blurProbability: value })}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+
+                          {currentSettings.blurMode === 'range' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Blur Range: {currentSettings.blurRange?.[0] || 2}px - {currentSettings.blurRange?.[1] || 15}px</Label>
+                              <Slider
+                                value={currentSettings.blurRange || [2, 15]}
+                                onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
+                                min={0}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-purple-600"
+                              />
+                            </div>
+                          )}
+
+                          {currentSettings.blurMode === 'define' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Blur Radius: {currentSettings.blurDefine || 8}px</Label>
+                              <Slider
+                                value={[currentSettings.blurDefine || 8]}
+                                onValueChange={([value]) => handleSettingsUpdate({ blurDefine: value })}
+                                min={0}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-purple-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Future effects can be added here */}
+                    <div className="p-3 bg-slate-700/50 rounded border border-slate-600">
+                      <p className="text-xs text-slate-400">
+                        Future effects like drop shadow and glow will be added here.
+                      </p>
                     </div>
                   </div>
                 )}
