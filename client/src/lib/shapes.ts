@@ -1313,13 +1313,6 @@ export class Shape {
     
     ctx.save();
     
-    // Apply blur filter if specified
-    if (this.properties.blurRadius > 0) {
-      ctx.filter = `blur(${this.properties.blurRadius}px)`;
-    } else {
-      ctx.filter = 'none';
-    }
-    
     // Apply blend mode
     ctx.globalCompositeOperation = this.properties.blendMode;
     
@@ -1329,8 +1322,13 @@ export class Shape {
     ctx.scale(this.transform.scaleX, this.transform.scaleY);
     ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
     
-    // Draw shape
-    this.drawShape(ctx);
+    // Check if blur should be applied
+    if (this.properties.blurRadius > 0) {
+      this.renderWithCanvasBlur(ctx);
+    } else {
+      // Draw shape normally
+      this.drawShape(ctx);
+    }
     
     // Draw selection indicator
     if (this.selected) {
@@ -1344,6 +1342,122 @@ export class Shape {
     }
     
     ctx.restore();
+  }
+
+  private renderWithCanvasBlur(ctx: CanvasRenderingContext2D): void {
+    // Get the bounds of the shape for blur calculation
+    const bounds = this.getBounds();
+    const blurRadius = Math.max(1, Math.min(20, this.properties.blurRadius)); // Clamp blur radius
+    
+    // Expand bounds to account for blur effect
+    const expandedBounds = {
+      x: bounds.x - blurRadius * 2,
+      y: bounds.y - blurRadius * 2,
+      width: bounds.width + blurRadius * 4,
+      height: bounds.height + blurRadius * 4
+    };
+    
+    // Create temporary canvas for shape rendering
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCanvas.width = expandedBounds.width;
+    tempCanvas.height = expandedBounds.height;
+    
+    // Save current transform and translate temp context
+    tempCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    
+    // Draw shape on temporary canvas without transforms (they're already applied)
+    tempCtx.save();
+    this.drawShape(tempCtx);
+    tempCtx.restore();
+    
+    // Apply blur effect to the temporary canvas
+    const blurredImageData = this.applyGaussianBlur(tempCtx, tempCanvas.width, tempCanvas.height, blurRadius);
+    
+    // Draw the blurred result back to the main canvas
+    const blurredCanvas = document.createElement('canvas');
+    const blurredCtx = blurredCanvas.getContext('2d')!;
+    blurredCanvas.width = tempCanvas.width;
+    blurredCanvas.height = tempCanvas.height;
+    blurredCtx.putImageData(blurredImageData, 0, 0);
+    
+    // Draw blurred result to main canvas
+    ctx.drawImage(blurredCanvas, expandedBounds.x, expandedBounds.y);
+  }
+
+  private applyGaussianBlur(ctx: CanvasRenderingContext2D, width: number, height: number, radius: number): ImageData {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    
+    // Simple box blur approximation (3 passes for Gaussian-like effect)
+    const boxBlurRadius = Math.ceil(radius / 3);
+    
+    // Apply horizontal blur
+    this.boxBlurHorizontal(data, width, height, boxBlurRadius);
+    // Apply vertical blur  
+    this.boxBlurVertical(data, width, height, boxBlurRadius);
+    // Apply horizontal blur again
+    this.boxBlurHorizontal(data, width, height, boxBlurRadius);
+    
+    return imageData;
+  }
+
+  private boxBlurHorizontal(data: Uint8ClampedArray, width: number, height: number, radius: number): void {
+    const temp = new Uint8ClampedArray(data.length);
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let r = 0, g = 0, b = 0, a = 0, count = 0;
+        
+        for (let i = -radius; i <= radius; i++) {
+          const xi = Math.max(0, Math.min(width - 1, x + i));
+          const idx = (y * width + xi) * 4;
+          
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          a += data[idx + 3];
+          count++;
+        }
+        
+        const idx = (y * width + x) * 4;
+        temp[idx] = r / count;
+        temp[idx + 1] = g / count;
+        temp[idx + 2] = b / count;
+        temp[idx + 3] = a / count;
+      }
+    }
+    
+    data.set(temp);
+  }
+
+  private boxBlurVertical(data: Uint8ClampedArray, width: number, height: number, radius: number): void {
+    const temp = new Uint8ClampedArray(data.length);
+    
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let r = 0, g = 0, b = 0, a = 0, count = 0;
+        
+        for (let i = -radius; i <= radius; i++) {
+          const yi = Math.max(0, Math.min(height - 1, y + i));
+          const idx = (yi * width + x) * 4;
+          
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          a += data[idx + 3];
+          count++;
+        }
+        
+        const idx = (y * width + x) * 4;
+        temp[idx] = r / count;
+        temp[idx + 1] = g / count;
+        temp[idx + 2] = b / count;
+        temp[idx + 3] = a / count;
+      }
+    }
+    
+    data.set(temp);
   }
 
   private drawShape(ctx: CanvasRenderingContext2D): void {

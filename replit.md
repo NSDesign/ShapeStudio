@@ -334,6 +334,15 @@ Changelog:
   - **Proportional Variation**: 0% removes all random variation, 100% applies full existing variation, intermediate values scale proportionally
   - **Enhanced Grid Control**: Users can fine-tune the amount of scatter applied to grid positions without additional randomization
   - **Purple Slider Styling**: Used distinct purple slider styling to differentiate scaling controls from other settings
+- July 29, 2025. Canvas-Based Blur System Implementation
+  - **Replaced CSS Filter Blur**: Eliminated CSS filter: blur() in favor of direct canvas pixel manipulation
+  - **Gaussian Blur Algorithm**: Implemented multi-pass box blur approximation for Gaussian-like blur effects
+  - **Pixel-Perfect Blur**: Created renderWithCanvasBlur method with temporary canvas rendering and pixel data processing
+  - **Performance Optimized**: Box blur with horizontal/vertical passes for efficient blur computation
+  - **Bounds-Aware Rendering**: Expanded rendering bounds to accommodate blur spread without clipping
+  - **Complete Integration**: Blur radius controls now apply true canvas-based blur to shape pixels
+  - **Noise System Compatibility**: All 7 noise algorithms (Randomise, Perlin, Simplex, Fractal, Worley, Ridge, Turbulence) generate blur values
+  - **Batch Configuration**: Blur probability and range/define modes work seamlessly with canvas blur rendering
 ```
 
 ## User Preferences
