@@ -14,7 +14,7 @@ export interface NoiseOptions {
   scaleToCanvas?: boolean;
   artboardWidth?: number;
   artboardHeight?: number;
-  
+
   // Algorithm-specific options
   lacunarity?: number;
   gain?: number;
@@ -22,14 +22,14 @@ export interface NoiseOptions {
   featurePoints?: number;
   ridgeOffset?: number;
   turbulencePower?: number;
-  
+
   // Property-specific amplitude multipliers
   positionAmplitude?: number;
   rotationAmplitude?: number;
   scaleAmplitude?: number;
   opacityAmplitude?: number;
   colorAmplitude?: number;
-  
+
   // Octave handling mode
   octaveMode?: 'natural' | 'normalized';
 }
@@ -53,13 +53,13 @@ export interface NoiseResult {
 export class NoiseSystem {
   private static permutation: number[] = [];
   private static gradients3D: number[][] = [];
-  
+
   static {
     // Initialize permutation table for Perlin noise
     for (let i = 0; i < 256; i++) {
       NoiseSystem.permutation[i] = i;
     }
-    
+
     // Initialize 3D gradients
     NoiseSystem.gradients3D = [
       [1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0],
@@ -80,7 +80,7 @@ export class NoiseSystem {
     artboardHeight: number = 400
   ): NoiseResult {
     const { noiseEnabled, noiseAlgorithm, noiseScale, noiseOctaves, noiseAmplitude, noiseSeed } = settings;
-    
+
     if (!noiseEnabled) {
       return {
         x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, 
@@ -145,7 +145,7 @@ export class NoiseSystem {
   private static generateRandomNoise(shapeIndex: number, options: NoiseOptions): NoiseResult {
     // Use large prime offsets to eliminate sequential correlation
     const baseOffset = shapeIndex * 4177;
-    
+
     // Generate independent random values
     const randX = this.seededRandom(options.seed + baseOffset + 7919)();
     const randY = this.seededRandom(options.seed + baseOffset + 15937)();
@@ -156,40 +156,40 @@ export class NoiseSystem {
     const randSat = this.seededRandom(options.seed + baseOffset + 56377)();
     const randLght = this.seededRandom(options.seed + baseOffset + 64439)();
     const randBlur = this.seededRandom(options.seed + baseOffset + 72511)();
-    
+
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Position range - unconstrained 20px or artboard-based
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       20;
-    
+
     return {
       // Position: centered around 0 with ±range
       x: (randX - 0.5) * 2 * maxPosOffset * options.amplitude,
       y: (randY - 0.5) * 2 * maxPosOffset * options.amplitude,
-      
+
       // Rotation: 0-360 degrees
       rotation: randRot * 360 * options.amplitude,
-      
+
       // Scale: 0.5-1.5x range
       scaleX: 0.5 + randScale * 1.0 * options.amplitude,
       scaleY: 0.5 + randScale * 1.0 * options.amplitude,
-      
+
       // Opacity: 0.1-1.0 range
       opacity: Math.max(0.1, 0.1 + randOpacity * 0.9 * options.amplitude),
-      
+
       // Blur: 0-20px range
       blur: randBlur * 20 * options.amplitude,
-      
+
       // Colors: natural HSL ranges
       hue: randHue * 360 * options.amplitude,
       saturation: 50 + randSat * 50 * options.amplitude, // 50-100%
       lightness: 30 + randLght * 40 * options.amplitude  // 30-70%
     };
   }
-  
+
   /**
    * Perlin noise implementation with unified approach
    */
@@ -197,18 +197,18 @@ export class NoiseSystem {
     let positionX = 0, positionY = 0, rotation = 0;
     let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
-    
+
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     let amplitude = options.amplitude;
     let frequency = 1 / options.scale;
-    
+
     // Generate noise across octaves with improved coordinate independence
     for (let i = 0; i < options.octaves; i++) {
       // Use large prime numbers to eliminate coordinate correlations
@@ -222,7 +222,7 @@ export class NoiseSystem {
       const noiseSat = this.perlin3D(x * frequency + 23327 * i, y * frequency + 24437 * i, z * frequency + 25547 * i, options.seed + 8);
       const noiseLght = this.perlin3D(x * frequency + 26657 * i, y * frequency + 27767 * i, z * frequency + 28877 * i, options.seed + 9);
       const noiseBlur = this.perlin3D(x * frequency + 29987 * i, y * frequency + 31097 * i, z * frequency + 32207 * i, options.seed + 10);
-      
+
       // Apply noise with proper ranges per octave
       positionX += noiseX * amplitude * maxPosOffset * 0.25;
       positionY += noiseY * amplitude * maxPosOffset * 0.25;
@@ -234,12 +234,12 @@ export class NoiseSystem {
       hue += noiseHue * amplitude * 60; // ±60° per octave
       saturation += noiseSat * amplitude * 30; // ±30% per octave
       lightness += noiseLght * amplitude * 25; // ±25% per octave
-      
+
       // Update for next octave
       amplitude *= (options.gain || 0.5);
       frequency *= (options.lacunarity || 2.0);
     }
-    
+
     return {
       x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
       y: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionY)),
@@ -261,24 +261,24 @@ export class NoiseSystem {
     let positionX = 0, positionY = 0, rotation = 0;
     let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
-    
+
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     const positionScale = maxPosOffset / options.octaves; // Distribute across octaves
-    
+
     let amplitude = options.amplitude;
     let frequency = 1 / options.scale;
-    
+
     // Accumulate noise across octaves with proper control
     for (let i = 0; i < options.octaves; i++) {
       const octaveAmplitude = amplitude;
-      
+
       // Use large prime numbers for coordinate independence
       const noiseX = this.gradientNoise(x * frequency + 1423 * i, y * frequency + 2347 * i, options.seed + 1);
       const noiseY = this.gradientNoise(x * frequency + 3449 * i, y * frequency + 4547 * i, options.seed + 2);
@@ -289,7 +289,7 @@ export class NoiseSystem {
       const noiseHue = this.gradientNoise(x * frequency + 13441 * i, y * frequency + 14549 * i, options.seed + 7);
       const noiseSat = this.gradientNoise(x * frequency + 15643 * i, y * frequency + 16747 * i, options.seed + 8);
       const noiseLght = this.gradientNoise(x * frequency + 17851 * i, y * frequency + 18947 * i, options.seed + 9);
-      
+
       // Apply noise with controlled ranges per octave
       positionX += noiseX * octaveAmplitude * positionScale * 0.25;
       positionY += noiseY * octaveAmplitude * positionScale * 0.25;
@@ -300,11 +300,11 @@ export class NoiseSystem {
       hue += noiseHue * octaveAmplitude * 10;
       saturation += noiseSat * octaveAmplitude * 3;
       lightness += noiseLght * octaveAmplitude * 2.5;
-      
+
       amplitude *= 0.5; // Reduce amplitude for next octave
       frequency *= 2; // Increase frequency for next octave
     }
-    
+
     // Final clamping to ensure reasonable ranges
     return {
       x: Math.max(-maxPosOffset, Math.min(maxPosOffset, positionX)),
@@ -330,12 +330,12 @@ export class NoiseSystem {
 
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
@@ -345,7 +345,7 @@ export class NoiseSystem {
 
     for (let i = 0; i < options.octaves; i++) {
       const octaveAmplitude = amplitude;
-      
+
       // Use large prime numbers for coordinate independence
       const noiseX = this.perlin3D(x * frequency + 2003 * i, y * frequency + 3011 * i, z * frequency + 4021 * i, options.seed);
       const noiseY = this.perlin3D(x * frequency + 5023 * i, y * frequency + 6037 * i, z * frequency + 7043 * i, options.seed);
@@ -393,33 +393,33 @@ export class NoiseSystem {
   private static generateWorleyNoise(x: number, y: number, options: NoiseOptions): NoiseResult {
     const featurePoints = options.featurePoints || 4;
     const distanceFunction = options.distanceFunction || 'euclidean';
-    
+
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     let positionX = 0, positionY = 0, rotation = 0;
     let scaleX = 0, scaleY = 0, opacity = 0, blur = 0;
     let hue = 0, saturation = 0, lightness = 0;
-    
+
     // Accumulate noise across octaves
     let amplitude = options.amplitude;
     let frequency = 1 / options.scale;
-    
+
     for (let octave = 0; octave < options.octaves; octave++) {
       let minDistance = Infinity;
       let secondMinDistance = Infinity;
-      
+
       // Generate feature points with coordinate independence
       for (let i = 0; i < featurePoints; i++) {
         // Use large prime numbers for coordinate independence
         const fx = this.seededRandom(options.seed + i * 1109 + octave * 2113)() * 10 - 5;
         const fy = this.seededRandom(options.seed + i * 3119 + octave * 4129)() * 10 - 5;
-        
+
         const distance = this.calculateDistance(
           x * frequency, 
           y * frequency, 
@@ -427,7 +427,7 @@ export class NoiseSystem {
           fy, 
           distanceFunction
         );
-        
+
         if (distance < minDistance) {
           secondMinDistance = minDistance;
           minDistance = distance;
@@ -435,11 +435,11 @@ export class NoiseSystem {
           secondMinDistance = distance;
         }
       }
-      
+
       // Normalize cell and edge values to [-1, 1] range
       const cellValue = (minDistance - 2.5) / 2.5; // Normalize from typical [0, 5] to [-1, 1]
       const edgeValue = ((secondMinDistance - minDistance) - 1) / 1; // Normalize edge difference
-      
+
       // Apply controlled ranges per octave
       positionX += cellValue * amplitude * maxPosOffset * 0.2;
       positionY += edgeValue * amplitude * maxPosOffset * 0.2;
@@ -450,7 +450,7 @@ export class NoiseSystem {
       hue += cellValue * amplitude * 8;
       saturation += edgeValue * amplitude * 3;
       lightness += (cellValue + edgeValue) * amplitude * 2;
-      
+
       amplitude *= 0.5;
       frequency *= 2;
     }
@@ -481,12 +481,12 @@ export class NoiseSystem {
 
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
@@ -494,7 +494,7 @@ export class NoiseSystem {
 
     for (let i = 0; i < options.octaves; i++) {
       const octaveAmplitude = amplitude;
-      
+
       // Use large prime numbers for coordinate independence
       const noiseX = this.perlin3D(x * frequency + 1283 * i, y * frequency + 2287 * i, z * frequency + 3299 * i, options.seed);
       const noiseY = this.perlin3D(x * frequency + 4297 * i, y * frequency + 5303 * i, z * frequency + 6311 * i, options.seed);
@@ -505,7 +505,7 @@ export class NoiseSystem {
       const noiseHue = this.perlin3D(x * frequency + 19381 * i, y * frequency + 20389 * i, z * frequency + 21391 * i, options.seed);
       const noiseSat = this.perlin3D(x * frequency + 22397 * i, y * frequency + 23399 * i, z * frequency + 24407 * i, options.seed);
       const noiseLght = this.perlin3D(x * frequency + 25409 * i, y * frequency + 26417 * i, z * frequency + 27427 * i, options.seed);
-      
+
       // Apply ridge effect to each noise value
       const ridgeX = ridgeOffset - Math.abs(noiseX);
       const ridgeY = ridgeOffset - Math.abs(noiseY);
@@ -558,12 +558,12 @@ export class NoiseSystem {
 
     const artboardWidth = options.artboardWidth || 400;
     const artboardHeight = options.artboardHeight || 400;
-    
+
     // Max allowed offset: 50px unconstrained or 30% of artboard
     const maxPosOffset = options.scaleToCanvas ? 
       Math.min(artboardWidth * 0.3, artboardHeight * 0.3) : 
       50;
-    
+
     const positionScale = maxPosOffset / options.octaves;
 
     let amplitude = options.amplitude;
@@ -571,7 +571,7 @@ export class NoiseSystem {
 
     for (let i = 0; i < options.octaves; i++) {
       const octaveAmplitude = amplitude;
-      
+
       // Use large prime numbers for coordinate independence
       const noiseX = this.perlin3D(x * frequency + 1607 * i, y * frequency + 2609 * i, z * frequency + 3613 * i, options.seed);
       const noiseY = this.perlin3D(x * frequency + 4621 * i, y * frequency + 5623 * i, z * frequency + 6637 * i, options.seed);
@@ -665,7 +665,7 @@ export class NoiseSystem {
         this.lerp(u, this.grad(perm[AB + 1], x, y - 1, z - 1), this.grad(perm[BB + 1], x - 1, y - 1, z - 1))
       )
     );
-    
+
     // Ensure proper zero-centering and [-1, 1] range
     // The theoretical range of Perlin noise is approximately [-√(n/2), √(n/2)] where n is dimensions
     // For 3D, this is approximately [-0.866, 0.866], so we normalize to [-1, 1]
