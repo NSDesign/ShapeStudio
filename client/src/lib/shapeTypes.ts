@@ -234,6 +234,8 @@ export interface ScatterSettings {
   count: number;
   minCount: number;
   maxCount: number;
+  shapeCountMode: 'range' | 'fixed'; // Mode for shape count generation
+  fixedShapeCount: number; // Fixed number when using fixed mode
   randomness: number;
   distribution: DistributionSettings;
   shapeSpecific: Partial<ShapeSpecificSettings>;

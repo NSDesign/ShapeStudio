@@ -22,6 +22,8 @@ export const useShapeEditor = () => {
     count: 5,
     minCount: 1,
     maxCount: 20,
+    shapeCountMode: 'range',
+    fixedShapeCount: 10,
     randomness: 0.5,
     distribution: {
       pattern: 'random',
@@ -236,7 +238,7 @@ export const useShapeEditor = () => {
     simulationSteps: 100,
 
     temporalEnabled: false,
-    evolutionMode: 'linear',
+    evolutionMode: 'none',
     seedIncrement: 1,
     evolutionTargets: {
       position: true,
@@ -1642,7 +1644,9 @@ export const useShapeEditor = () => {
   }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
 
   const generateRandomShapes = useCallback(() => {
-    const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+    const count = scatterSettings.shapeCountMode === 'fixed' 
+      ? (scatterSettings.fixedShapeCount || 10)
+      : Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
 
     console.log(`🔍 generateRandomShapes: count=${count}, using unified generation function`);
 

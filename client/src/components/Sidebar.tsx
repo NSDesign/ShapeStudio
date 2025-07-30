@@ -1897,22 +1897,86 @@ export default function Sidebar({
         </div>
 
         <div className="space-y-2 pb-6">
-          <Label className="text-xs text-slate-400">Random Shape Count Range</Label>
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Min: {scatterSettings.minCount}</span>
-              <span className="text-slate-400">Max: {scatterSettings.maxCount}</span>
-            </div>
-            <Slider
-              value={[scatterSettings.minCount, scatterSettings.maxCount]}
-              onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
-              min={1}
-              max={50}
-              step={1}
-              className="w-full"
-              minStepsBetweenThumbs={1}
-            />
+          <div className="flex items-center space-x-2">
+            <Label className="text-xs text-slate-400">Shape Count</Label>
+            <Select 
+              value={scatterSettings.shapeCountMode || 'range'} 
+              onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
+            >
+              <SelectTrigger className="h-6 w-16 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          
+          {scatterSettings.shapeCountMode === 'range' ? (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400">Min: {scatterSettings.minCount}</span>
+                <Input
+                  type="number"
+                  value={scatterSettings.minCount}
+                  onChange={(e) => {
+                    const value = Math.max(1, Math.min(Number(e.target.value), scatterSettings.maxCount - 1));
+                    onUpdateScatterSettings({ minCount: value });
+                  }}
+                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
+                  min={1}
+                  max={49}
+                />
+                <span className="text-slate-400">Max: {scatterSettings.maxCount}</span>
+                <Input
+                  type="number"
+                  value={scatterSettings.maxCount}
+                  onChange={(e) => {
+                    const value = Math.max(scatterSettings.minCount + 1, Math.min(Number(e.target.value), 50));
+                    onUpdateScatterSettings({ maxCount: value });
+                  }}
+                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
+                  min={2}
+                  max={50}
+                />
+              </div>
+              <Slider
+                value={[scatterSettings.minCount, scatterSettings.maxCount]}
+                onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+                min={1}
+                max={50}
+                step={1}
+                className="w-full"
+                minStepsBetweenThumbs={1}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400">Count: {scatterSettings.fixedShapeCount || 10}</span>
+                <Input
+                  type="number"
+                  value={scatterSettings.fixedShapeCount || 10}
+                  onChange={(e) => {
+                    const value = Math.max(1, Math.min(Number(e.target.value), 50));
+                    onUpdateScatterSettings({ fixedShapeCount: value });
+                  }}
+                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
+                  min={1}
+                  max={50}
+                />
+              </div>
+              <Slider
+                value={[scatterSettings.fixedShapeCount || 10]}
+                onValueChange={([value]) => onUpdateScatterSettings({ fixedShapeCount: value })}
+                min={1}
+                max={50}
+                step={1}
+                className="w-full"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">
