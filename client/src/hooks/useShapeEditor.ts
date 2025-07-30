@@ -1728,13 +1728,8 @@ export const useShapeEditor = () => {
       } else {
         console.log(`🚫 [NO NOISE] Shape ${index}: Noise disabled, entering non-noise branch`);
 
-        // Original randomization behavior when noise is disabled
-        const scale = 0.5 + Math.random() * 2;
-        shape.transform.scaleX = scale;
-        shape.transform.scaleY = scale;
-        shape.transform.rotation = Math.random() * 360;
-
-        // Ensure original opacity values
+        // Skip legacy randomization - transforms are now handled by the enhanced transform system above
+        // Only ensure original opacity values when no noise
         shape.properties.fillOpacity = 0.8 + Math.random() * 0.2;
         shape.properties.strokeOpacity = 0.9 + Math.random() * 0.1;
 
