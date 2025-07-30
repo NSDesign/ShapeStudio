@@ -2841,7 +2841,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-purple-600"
                                 />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to position transforms</p>
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to position transforms (range: -1 to 1)</p>
                               </div>
                               
                               {/* Scale Randomization Scale */}
@@ -2855,7 +2855,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-purple-600"
                                 />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms</p>
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms (range: 0 to 1)</p>
                               </div>
                               
                               {/* Rotation Randomization Scale */}
@@ -2869,7 +2869,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-purple-600"
                                 />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms</p>
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms (range: 0 to 1)</p>
                               </div>
                             </div>
                           </div>

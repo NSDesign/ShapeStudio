@@ -1419,15 +1419,15 @@ export const useShapeEditor = () => {
             shape.transform.x += scaledRandomization;
           } else if (batchConfigSettings.xTransformMode === 'value') {
             const baseValue = batchConfigSettings.xTransformValue || 0;
-            // Apply randomization scaling to value mode
-            const randomVariation = (Math.random() - 0.5) * 100; // ±50px variation
+            // Apply randomization scaling to value mode using (-1, 1) range
+            const randomVariation = (Math.random() * 2 - 1) * 50; // (-1, 1) * 50px = ±50px variation
             const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
             shape.transform.x += baseValue + scaledVariation;
           } else if (batchConfigSettings.xTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (batchConfigSettings.xTransformIncrement || 0) * index;
-            // Apply randomization scaling to incremental mode
-            const randomVariation = (Math.random() - 0.5) * 50; // ±25px variation
+            // Apply randomization scaling to incremental mode using (-1, 1) range
+            const randomVariation = (Math.random() * 2 - 1) * 25; // (-1, 1) * 25px = ±25px variation
             const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
             shape.transform.x += incrementAmount + scaledVariation;
           }
@@ -1441,15 +1441,15 @@ export const useShapeEditor = () => {
             shape.transform.y += scaledRandomization;
           } else if (batchConfigSettings.yTransformMode === 'value') {
             const baseValue = batchConfigSettings.yTransformValue || 0;
-            // Apply randomization scaling to value mode
-            const randomVariation = (Math.random() - 0.5) * 100; // ±50px variation
+            // Apply randomization scaling to value mode using (-1, 1) range
+            const randomVariation = (Math.random() * 2 - 1) * 50; // (-1, 1) * 50px = ±50px variation
             const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
             shape.transform.y += baseValue + scaledVariation;
           } else if (batchConfigSettings.yTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (batchConfigSettings.yTransformIncrement || 0) * index;
-            // Apply randomization scaling to incremental mode
-            const randomVariation = (Math.random() - 0.5) * 50; // ±25px variation
+            // Apply randomization scaling to incremental mode using (-1, 1) range
+            const randomVariation = (Math.random() * 2 - 1) * 25; // (-1, 1) * 25px = ±25px variation
             const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
             shape.transform.y += incrementAmount + scaledVariation;
           }
@@ -1460,16 +1460,16 @@ export const useShapeEditor = () => {
             if (batchConfigSettings.scaleXMode === 'range') {
               const [minScale, maxScale] = batchConfigSettings.scaleXRange;
               const baseScale = minScale + Math.random() * (maxScale - minScale);
-              // Apply randomization scaling (0-100%)
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              // Apply randomization scaling (0-100%) using (0, 1) range
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               const finalScale = baseScale + scaledVariation;
               shape.transform.scaleX = Math.max(0.1, finalScale); // Prevent negative scale
               shape.transform.scaleY = Math.max(0.1, finalScale);
             } else if (batchConfigSettings.scaleXMode === 'value') {
               const baseScale = batchConfigSettings.scaleXValue || 1;
-              // Apply randomization scaling to value mode
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              // Apply randomization scaling to value mode using (0, 1) range
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               const finalScale = baseScale + scaledVariation;
               shape.transform.scaleX = Math.max(0.1, finalScale);
@@ -1477,8 +1477,8 @@ export const useShapeEditor = () => {
             } else if (batchConfigSettings.scaleXMode === 'incremental') {
               const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
               const baseScale = 1 + incrementAmount;
-              // Apply randomization scaling to incremental mode
-              const randomVariation = (Math.random() - 0.5) * 0.3; // ±0.15 scale variation
+              // Apply randomization scaling to incremental mode using (0, 1) range
+              const randomVariation = Math.random() * 0.3; // (0, 1) * 0.3 = 0 to 0.3 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               const finalScale = baseScale + scaledVariation;
               shape.transform.scaleX = Math.max(0.1, finalScale);
@@ -1490,18 +1490,18 @@ export const useShapeEditor = () => {
             if (batchConfigSettings.scaleXMode === 'range') {
               const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
               const baseScale = minScaleX + Math.random() * (maxScaleX - minScaleX);
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleX = Math.max(0.1, baseScale + scaledVariation);
             } else if (batchConfigSettings.scaleXMode === 'value') {
               const baseScale = batchConfigSettings.scaleXValue || 1;
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleX = Math.max(0.1, baseScale + scaledVariation);
             } else if (batchConfigSettings.scaleXMode === 'incremental') {
               const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
               const baseScale = 1 + incrementAmount;
-              const randomVariation = (Math.random() - 0.5) * 0.3; // ±0.15 scale variation
+              const randomVariation = Math.random() * 0.3; // (0, 1) * 0.3 = 0 to 0.3 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleX = Math.max(0.1, baseScale + scaledVariation);
             }
@@ -1510,18 +1510,18 @@ export const useShapeEditor = () => {
             if (batchConfigSettings.scaleYMode === 'range') {
               const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
               const baseScale = minScaleY + Math.random() * (maxScaleY - minScaleY);
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleY = Math.max(0.1, baseScale + scaledVariation);
             } else if (batchConfigSettings.scaleYMode === 'value') {
               const baseScale = batchConfigSettings.scaleYValue || 1;
-              const randomVariation = (Math.random() - 0.5) * 0.5; // ±0.25 scale variation
+              const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleY = Math.max(0.1, baseScale + scaledVariation);
             } else if (batchConfigSettings.scaleYMode === 'incremental') {
               const incrementAmount = (batchConfigSettings.scaleYIncrement || 0) * index;
               const baseScale = 1 + incrementAmount;
-              const randomVariation = (Math.random() - 0.5) * 0.3; // ±0.15 scale variation
+              const randomVariation = Math.random() * 0.3; // (0, 1) * 0.3 = 0 to 0.3 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleY = Math.max(0.1, baseScale + scaledVariation);
             }
@@ -1531,14 +1531,14 @@ export const useShapeEditor = () => {
           if (batchConfigSettings.rotationMode === 'range') {
             const [minRot, maxRot] = batchConfigSettings.rotationRange;
             const baseRotation = minRot + Math.random() * (maxRot - minRot);
-            // Apply randomization scaling (0-100%)
-            const randomVariation = (Math.random() - 0.5) * 90; // ±45 degree variation
+            // Apply randomization scaling (0-100%) using (0, 1) range
+            const randomVariation = Math.random() * 90; // (0, 1) * 90 = 0 to 90 degree variation
             const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
             shape.transform.rotation = baseRotation + scaledVariation;
           } else if (batchConfigSettings.rotationMode === 'value') {
             const baseRotation = batchConfigSettings.rotationValue || 0;
-            // Apply randomization scaling to value mode
-            const randomVariation = (Math.random() - 0.5) * 90; // ±45 degree variation
+            // Apply randomization scaling to value mode using (0, 1) range
+            const randomVariation = Math.random() * 90; // (0, 1) * 90 = 0 to 90 degree variation
             const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
             shape.transform.rotation = baseRotation + scaledVariation;
           } else if (batchConfigSettings.rotationMode === 'incremental') {
@@ -1550,8 +1550,8 @@ export const useShapeEditor = () => {
               incrementAmount = incrementAmount % batchConfigSettings.rotationModulation;
             }
             
-            // Apply randomization scaling to incremental mode
-            const randomVariation = (Math.random() - 0.5) * 60; // ±30 degree variation
+            // Apply randomization scaling to incremental mode using (0, 1) range
+            const randomVariation = Math.random() * 60; // (0, 1) * 60 = 0 to 60 degree variation
             const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
             shape.transform.rotation = incrementAmount + scaledVariation;
           }
