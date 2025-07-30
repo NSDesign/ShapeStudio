@@ -757,9 +757,9 @@ export const useShapeEditor = () => {
 
   // Helper functions for enhanced width/height calculation
   const calculateWidth = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to sidebar settings
+    // If properties are disabled, use fallback to deterministic default size
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-      return 50 + Math.random() * 150; // Fallback to random size
+      return 100; // Deterministic fallback size
     }
 
     let baseWidth = 0;
@@ -793,9 +793,9 @@ export const useShapeEditor = () => {
   };
 
   const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to sidebar settings
+    // If properties are disabled, use fallback to deterministic default size
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-      return 50 + Math.random() * 150; // Fallback to random size
+      return 100; // Deterministic fallback size
     }
 
     let baseHeight = 0;
@@ -1462,60 +1462,16 @@ export const useShapeEditor = () => {
 
         console.log(`🎲 [NOISE VALUES] Shape ${index}: noiseResult.hue=${noiseResult.hue}, saturation=${noiseResult.saturation}, lightness=${noiseResult.lightness}`);
 
-        // Apply noise to position based on position mode and noise mode
-        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
-          // For enhanced position modes, handle noise differently
-          if (batchConfigSettings.xPositionMode === 'range' && batchConfigSettings.rangeNoiseWithinRange) {
-            // Noise defines values within the range
-            const [minX, maxX] = batchConfigSettings.xPositionRange;
-            const normalizedNoiseX = (noiseResult.x + 1) / 2; // Convert [-1,1] to [0,1]
-            shape.transform.x = minX + normalizedNoiseX * (maxX - minX);
-          } else if (batchConfigSettings.noiseMode === 'additive') {
-            // Additive noise to current position
-            shape.transform.x += noiseResult.x;
-          } else {
-            // Multiplicative noise
-            shape.transform.x *= (1 + noiseResult.x * 0.1);
-          }
+        // Apply additive noise to position (simplified, no mode selection)
+        shape.transform.x += noiseResult.x;
+        shape.transform.y += noiseResult.y;
 
-          if (batchConfigSettings.yPositionMode === 'range' && batchConfigSettings.rangeNoiseWithinRange) {
-            // Noise defines values within the range
-            const [minY, maxY] = batchConfigSettings.yPositionRange;
-            const normalizedNoiseY = (noiseResult.y + 1) / 2; // Convert [-1,1] to [0,1]
-            shape.transform.y = minY + normalizedNoiseY * (maxY - minY);
-          } else if (batchConfigSettings.noiseMode === 'additive') {
-            // Additive noise to current position
-            shape.transform.y += noiseResult.y;
-          } else {
-            // Multiplicative noise
-            shape.transform.y *= (1 + noiseResult.y * 0.1);
-          }
-        } else {
-          // Legacy behavior for non-enhanced position modes
-          if (batchConfigSettings.noiseMode === 'additive') {
-            shape.transform.x += noiseResult.x;
-            shape.transform.y += noiseResult.y;
-          } else {
-            shape.transform.x *= (1 + noiseResult.x * 0.1);
-            shape.transform.y *= (1 + noiseResult.y * 0.1);
-          }
-        }
+        // Apply additive noise to rotation
+        shape.transform.rotation += noiseResult.rotation;
 
-        // Apply noise to rotation based on noise mode
-        if (batchConfigSettings.noiseMode === 'additive') {
-          shape.transform.rotation += noiseResult.rotation;
-        } else {
-          shape.transform.rotation *= (1 + noiseResult.rotation * 0.001); // Small multiplicative effect
-        }
-
-        // Apply noise to scale based on noise mode
-        if (batchConfigSettings.noiseMode === 'additive') {
-          shape.transform.scaleX += noiseResult.scaleX * 0.1;
-          shape.transform.scaleY += noiseResult.scaleY * 0.1;
-        } else {
-          shape.transform.scaleX *= noiseResult.scaleX;
-          shape.transform.scaleY *= noiseResult.scaleY;
-        }
+        // Apply additive noise to scale
+        shape.transform.scaleX += noiseResult.scaleX * 0.1;
+        shape.transform.scaleY += noiseResult.scaleY * 0.1;
 
         // Apply noise to opacity - direct assignment for all
         shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));

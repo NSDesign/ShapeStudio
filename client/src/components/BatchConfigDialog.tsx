@@ -112,11 +112,9 @@ export interface BatchConfigSettings {
   yPositionMode: 'range' | 'value' | 'directional' | 'incremental';
   
   // Position Mode Toggles
-  rangeNoiseWithinRange: boolean; // true: noise defines values within range, false: noise adds to range
   incrementalResetPerBatch: boolean; // true: reset count per batch, false: continuous increment
   directionalEvenDistribution: boolean; // true: even 360° distribution, false: clustering
   directionalClusterAngle: number; // degrees for clustering mode
-  noiseMode: 'additive' | 'multiplicative'; // how noise affects properties
   
   // Position Value Mode
   xPositionValue: number;
@@ -405,11 +403,9 @@ export const defaultSettings: BatchConfigSettings = {
   yPositionMode: 'range' as const,
   
   // Position Mode Toggles
-  rangeNoiseWithinRange: false, // Default: noise adds to range
   incrementalResetPerBatch: true, // Default: reset count per batch
   directionalEvenDistribution: true, // Default: even 360° distribution
   directionalClusterAngle: 30, // Default clustering angle
-  noiseMode: 'additive' as const, // Default: additive noise
   
   // Position Value Mode
   xPositionValue: 0,
@@ -1528,38 +1524,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             </div>
                           </div>
                           
-                          {/* Noise Integration Section */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Size Noise Integration</Label>
-                            <div className="space-y-3">
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.sizeNoiseWithinRange}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ sizeNoiseWithinRange: checked as boolean })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Noise defines values within range</Label>
-                              </div>
-                              <p className="text-xs text-slate-400 ml-6">
-                                {currentSettings.sizeNoiseWithinRange ? "Noise determines size within specified range" : "Noise adds variation to base size"}
-                              </p>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Noise Mode</Label>
-                                <Select value={currentSettings.sizeNoiseMode} onValueChange={(value) => handleSettingsUpdate({ sizeNoiseMode: value as any })}>
-                                  <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="additive" className="text-slate-200 hover:bg-slate-700">Additive</SelectItem>
-                                    <SelectItem value="multiplicative" className="text-slate-200 hover:bg-slate-700">Multiplicative</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <p className="text-xs text-slate-400">
-                                {currentSettings.sizeNoiseMode === 'additive' ? "Noise adds to base size" : "Noise multiplies base size"}
-                              </p>
-                            </div>
-                          </div>
+
                           {/* Enhanced X Position Controls */}
                           <div className="space-y-3 p-3 bg-slate-800 rounded">
                             <div className="flex items-center space-x-2">
@@ -1843,41 +1808,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             </div>
                           </div>
 
-                          {/* Noise Integration Toggles */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Noise Integration</Label>
-                            
-                            {/* Range Noise Mode */}
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                checked={currentSettings.rangeNoiseWithinRange}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ rangeNoiseWithinRange: checked as boolean })}
-                                className="border-slate-500 data-[state=checked]:bg-blue-600"
-                              />
-                              <Label className="text-xs text-slate-300">Range noise within range</Label>
-                            </div>
-                            <p className="text-xs text-slate-400 ml-6">
-                              When enabled: noise defines values within the specified range. 
-                              When disabled: noise adds to the range values.
-                            </p>
-                            
-                            {/* Noise Mode */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Noise Mode</Label>
-                              <Select value={currentSettings.noiseMode} onValueChange={(value) => handleSettingsUpdate({ noiseMode: value as any })}>
-                                <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="additive" className="text-slate-200 hover:bg-slate-700">Additive (default)</SelectItem>
-                                  <SelectItem value="multiplicative" className="text-slate-200 hover:bg-slate-700">Multiplicative</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-xs text-slate-400">
-                                Additive: noise value is added to property. Multiplicative: property is multiplied by noise value.
-                              </p>
-                            </div>
-                          </div>
+
                         </div>
                       )}
                     </div>

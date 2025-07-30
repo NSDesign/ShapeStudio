@@ -262,14 +262,26 @@ export class Shape {
     // Helper function to get values from batch config or use defaults
     const getRange = (configRange: [number, number] | undefined, defaultMin: number, defaultMax: number): number => {
       if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && configRange) {
-        return configRange[0] + Math.random() * (configRange[1] - configRange[0]);
+        // Batch config handles its own randomization in the width/height calculation functions
+        // Don't add additional randomization here
+        const [min, max] = configRange;
+        return min + (max - min) / 2; // Use center value, randomization handled elsewhere
       }
       return defaultMin + Math.random() * (defaultMax - defaultMin);
     };
     
     const getWidthHeight = (): { width: number; height: number } => {
-      const width = getRange(batchConfig?.widthRange, 40, 150);
-      const height = getRange(batchConfig?.heightRange, 30, 120);
+      // For batch configuration, width and height are already calculated with proper randomization scaling
+      // Use the exact values passed in without additional randomization
+      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled) {
+        // Use default center values if ranges are not provided
+        const width = batchConfig?.widthRange ? (batchConfig.widthRange[0] + batchConfig.widthRange[1]) / 2 : 100;
+        const height = batchConfig?.heightRange ? (batchConfig.heightRange[0] + batchConfig.heightRange[1]) / 2 : 100;
+        return { width, height };
+      }
+      // For non-batch creation, use random values
+      const width = 40 + Math.random() * 110;
+      const height = 30 + Math.random() * 90;
       return { width, height };
     };
     
