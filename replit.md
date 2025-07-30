@@ -343,6 +343,15 @@ Changelog:
   - **Complete Integration**: Blur radius controls now apply true canvas-based blur to shape pixels
   - **Noise System Compatibility**: All 7 noise algorithms (Randomise, Perlin, Simplex, Fractal, Worley, Ridge, Turbulence) generate blur values
   - **Batch Configuration**: Blur probability and range/define modes work seamlessly with canvas blur rendering
+- July 30, 2025. Transform Randomization Scaling System Implementation
+  - **Transform Randomization Controls**: Added position, scale, and rotation randomization scale sliders (0-100%) in Shape Transforms section
+  - **Proportional Scaling**: 0% applies no randomization, 100% applies full randomization values, with linear scaling in between
+  - **Mode-Specific Variations**: Each transform mode (range, value, incremental) gets appropriate randomization amounts scaled by the percentage
+  - **Position Randomization**: ±50px variation for value mode, ±25px for incremental, scaled by percentage
+  - **Scale Randomization**: ±0.25 scale variation for range/value modes, ±0.15 for incremental, with minimum 0.1 scale protection
+  - **Rotation Randomization**: ±45° variation for range/value modes, ±30° for incremental, scaled by percentage
+  - **Similar to Distribution Layout**: Uses same approach as grid X/Y randomization scaling for consistent user experience
+  - **Complete Integration**: Works with all enhanced transform modes and maintains deterministic base behaviors when scaling is 0%
 ```
 
 ## User Preferences

@@ -248,6 +248,11 @@ export interface BatchConfigSettings {
   rotationModulation: number; // Modulation value (e.g., 360 for full circle reset)
   rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
   
+  // Transform Randomization Scaling (0-100%)
+  positionRandomizationScale: number; // Scale for position randomization
+  scaleRandomizationScale: number; // Scale for scale randomization  
+  rotationRandomizationScale: number; // Scale for rotation randomization
+  
   // Shape Effects
   shapeEffectsEnabled: boolean;
   
@@ -531,6 +536,11 @@ const defaultSettings: BatchConfigSettings = {
   rotationIncrement: 15,
   rotationModulation: 360,
   rotationModulationEnabled: false,
+  
+  // Transform Randomization Scaling (0-100%)
+  positionRandomizationScale: 50,
+  scaleRandomizationScale: 50,
+  rotationRandomizationScale: 50,
   
   // Shape Effects
   shapeEffectsEnabled: false,
@@ -2811,6 +2821,56 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   )}
                                 </div>
                               )}
+                            </div>
+                          </div>
+                          
+                          {/* Transform Randomization Scaling */}
+                          <div className="space-y-3 p-3 bg-slate-900 rounded border border-slate-600">
+                            <Label className="text-sm font-medium text-slate-200">Transform Randomization Scaling</Label>
+                            <p className="text-xs text-slate-400">Control how much additional randomization is applied to transform modes</p>
+                            
+                            <div className="space-y-3">
+                              {/* Position Randomization Scale */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Position Randomization: {currentSettings.positionRandomizationScale}%</Label>
+                                <Slider
+                                  value={[currentSettings.positionRandomizationScale]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ positionRandomizationScale: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to position transforms</p>
+                              </div>
+                              
+                              {/* Scale Randomization Scale */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Scale Randomization: {currentSettings.scaleRandomizationScale}%</Label>
+                                <Slider
+                                  value={[currentSettings.scaleRandomizationScale]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ scaleRandomizationScale: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms</p>
+                              </div>
+                              
+                              {/* Rotation Randomization Scale */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Rotation Randomization: {currentSettings.rotationRandomizationScale}%</Label>
+                                <Slider
+                                  value={[currentSettings.rotationRandomizationScale]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ rotationRandomizationScale: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms</p>
+                              </div>
                             </div>
                           </div>
                         </div>
