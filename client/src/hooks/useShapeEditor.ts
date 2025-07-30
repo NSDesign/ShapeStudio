@@ -5,7 +5,7 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
-import { BatchConfigSettings } from '../components/BatchConfigDialog';
+import { BatchConfigSettings, defaultSettings } from '../components/BatchConfigDialog';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
 export const useShapeEditor = () => {
@@ -23,6 +23,8 @@ export const useShapeEditor = () => {
     minCount: 1,
     maxCount: 20,
     randomness: 0.5,
+    shapeCountMode: 'fixed',
+    fixedShapeCount: 5,
     distribution: {
       pattern: 'random',
       spacing: 50,
@@ -91,161 +93,7 @@ export const useShapeEditor = () => {
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
 
   // Batch Configuration Settings - using defaults from BatchConfigDialog
-  const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>({
-    selectedPreset: 'custom',
-
-    noiseEnabled: false,
-    noiseAlgorithm: 'randomise',
-    noiseScale: 1,
-    noiseOctaves: 1,
-    noiseAmplitude: 50,
-    noiseSeed: Math.floor(Math.random() * 10000),
-    noiseScaleToCanvas: true,
-
-    // Property-specific amplitude multipliers
-    noisePositionAmplitude: 1.0,
-    noiseRotationAmplitude: 1.0,
-    noiseScaleAmplitude: 1.0,
-    noiseOpacityAmplitude: 1.0,
-    noiseColorAmplitude: 1.0,
-
-    // Octave handling mode
-    noiseOctaveMode: 'natural' as const,
-
-    noiseLacunarity: 2.0,
-    noiseGain: 0.5,
-    noiseDistanceFunction: 'euclidean',
-    noiseFeaturePoints: 1,
-    noiseRidgeOffset: 1.0,
-    noiseTurbulencePower: 1.0,
-
-    distributionLayoutEnabled: false,
-    distributionPattern: 'grid',
-    gridRows: 3,
-    gridColumns: 3,
-    gridRowOffset: 120,
-    gridColumnOffset: 120,
-    gridSortBy: 'none',
-
-    blendModeEnabled: false,
-    enabledBlendModes: { 'source-over': 100 },
-
-    propertiesEnabled: false,
-
-
-    shapePropertiesEnabled: false,
-    widthRange: [50, 200],
-    heightRange: [50, 200],
-    xPositionRange: [-100, 100],
-    yPositionRange: [-100, 100],
-
-    // Rectangle-specific Properties
-    rectangleCornerRadiusRange: [0, 20],
-
-    // Star-specific Properties
-    starInnerRadiusRange: [0.3, 0.7],
-
-    // Ring-specific Properties
-    ringInnerRadiusRange: [0.4, 0.8],
-
-    fillEnabled: true,
-    fillProbability: 80,
-    fillColorProbability: 70,
-    fillColorRange: ['#3b82f6', '#8b5cf6'],
-    fillGradientProbability: 20,
-    fillGradientTypeProbability: 50,
-    fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
-    fillGradientStopsRange: [2, 4],
-    fillOpacityRange: [20, 100],
-
-    strokeEnabled: true,
-    strokeProbability: 60,
-    strokeColorProbability: 80,
-    strokeColorRange: ['#ef4444', '#f59e0b'],
-    strokeGradientProbability: 15,
-    strokeGradientTypeProbability: 50,
-    strokeGradientColorRange: ['#ef4444', '#f59e0b'],
-    strokeGradientStopsRange: [2, 3],
-    strokeOpacityRange: [40, 100],
-    strokeWidthRange: [1, 5],
-
-    polygonPropertiesEnabled: false,
-    segmentCountRange: [3, 12],
-
-    linePropertiesEnabled: false,
-    pointCountRange: [2, 8],
-    pointPositionRange: [10, 200],
-
-    splinePropertiesEnabled: false,
-    splinePointCountRange: [3, 8],
-    splinePointPositionRange: [10, 200],
-    splineControlPointRange: [5, 50],
-
-    transformsEnabled: false,
-    translateXRange: [-50, 50],
-    translateYRange: [-50, 50],
-    scaleUniform: true,
-    scaleRange: [50, 200],
-    scaleXRange: [50, 200],
-    scaleYRange: [50, 200],
-    rotationRange: [0, 360],
-    skewXRange: [0, 0],
-    skewYRange: [0, 0],
-
-    colorHarmonyEnabled: false,
-    harmonyType: 'complementary',
-    baseColor: '#3b82f6',
-    hueVariance: 15,
-    saturationRange: [0, 100],
-    lightnessRange: [0, 100],
-
-    monochromaticSettings: {
-      lightnessSteps: 5,
-      saturationSteps: 3,
-      includeNeutrals: true,
-    },
-    analogousSettings: {
-      hueRange: 60,
-      colorCount: 3,
-    },
-    complementarySettings: {
-      includeNearComplements: false,
-      complementOffset: 0,
-    },
-    triadicSettings: {
-      rotationOffset: 0,
-      useEqualSpacing: true,
-    },
-    splitComplementarySettings: {
-      splitAngle: 30,
-      balanceWeights: true,
-    },
-    tetradicSettings: {
-      squareHarmony: true,
-      rectangleRatio: 60,
-    },
-
-    physicsEnabled: false,
-    physicsType: 'none',
-    gravityDirection: 270,
-    gravityStrength: 50,
-    magneticType: 'attraction',
-    magneticStrength: 50,
-    collisionDistance: 20,
-    collisionBounce: 0.5,
-    simulationSteps: 100,
-
-    temporalEnabled: false,
-    evolutionMode: 'linear',
-    seedIncrement: 1,
-    evolutionTargets: {
-      position: true,
-      rotation: true,
-      scale: false,
-      color: false,
-      opacity: false
-    }
-  });
+  const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
@@ -753,8 +601,7 @@ export const useShapeEditor = () => {
             shape.tangentHandles[segmentIndex].in.x += localDelta.x;
             shape.tangentHandles[segmentIndex].in.y += localDelta.y;
             shape.tangentHandles[segmentIndex].out.x += localDelta.x;
-            shape<replit_final_file>
-.tangentHandles[segmentIndex].out.y += localDelta.y;
+            shape.tangentHandles[segmentIndex].out.y += localDelta.y;
           }
         }
 
@@ -886,7 +733,11 @@ export const useShapeEditor = () => {
     switch (settings.xPositionMode) {
       case 'range':
         const [minX, maxX] = settings.xPositionRange;
-        return minX + Math.random() * (maxX - minX);
+        const baseX = minX + (maxX - minX) / 2; // Base position at center of range
+        const rangeX = (maxX - minX) / 2; // Half range for ±variation
+        const randomFactorX = (Math.random() - 0.5) * 2; // -1 to 1
+        const scaledRandomX = randomFactorX * (settings.positionPropertiesRandomizationScale / 100);
+        return baseX + (scaledRandomX * rangeX);
 
       case 'value':
         return settings.xPositionValue;
@@ -916,7 +767,11 @@ export const useShapeEditor = () => {
     switch (settings.widthMode) {
       case 'range':
         const [minW, maxW] = settings.widthRange;
-        baseWidth = minW + Math.random() * (maxW - minW);
+        const baseW = minW + (maxW - minW) / 2; // Base width at center of range
+        const rangeW = (maxW - minW) / 2; // Half range for ±variation
+        const randomFactorW = (Math.random() - 0.5) * 2; // -1 to 1
+        const scaledRandomW = randomFactorW * (settings.sizePropertiesRandomizationScale / 100);
+        baseWidth = baseW + (scaledRandomW * rangeW);
         break;
 
       case 'value':
@@ -948,7 +803,11 @@ export const useShapeEditor = () => {
     switch (settings.heightMode) {
       case 'range':
         const [minH, maxH] = settings.heightRange;
-        baseHeight = minH + Math.random() * (maxH - minH);
+        const baseH = minH + (maxH - minH) / 2; // Base height at center of range
+        const rangeH = (maxH - minH) / 2; // Half range for ±variation
+        const randomFactorH = (Math.random() - 0.5) * 2; // -1 to 1
+        const scaledRandomH = randomFactorH * (settings.sizePropertiesRandomizationScale / 100);
+        baseHeight = baseH + (scaledRandomH * rangeH);
         break;
 
       case 'value':
@@ -1005,7 +864,11 @@ export const useShapeEditor = () => {
     switch (settings.yPositionMode) {
       case 'range':
         const [minY, maxY] = settings.yPositionRange;
-        return minY + Math.random() * (maxY - minY);
+        const baseY = minY + (maxY - minY) / 2; // Base position at center of range
+        const rangeY = (maxY - minY) / 2; // Half range for ±variation
+        const randomFactorY = (Math.random() - 0.5) * 2; // -1 to 1
+        const scaledRandomY = randomFactorY * (settings.positionPropertiesRandomizationScale / 100);
+        return baseY + (scaledRandomY * rangeY);
 
       case 'value':
         return settings.yPositionValue;
@@ -1120,46 +983,60 @@ export const useShapeEditor = () => {
         let width = calculateWidth(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
 
-        // Apply the size based on shape type with new constraint system
+        // Check if 1:1 aspect ratio enforcement is enabled
+        if (batchConfigSettings.maintainAspectRatio) {
+          // Force 1:1 aspect ratio for ALL shape types
+          const constrainedSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+          width = constrainedSize;
+          height = constrainedSize;
+        }
+
+        // Apply the size based on shape type with constraint system
         switch (shape.type) {
           case 'rectangle':
             shape.width = width;
             shape.height = height;
             break;
           case 'square':
-            // Square always maintains 1:1 aspect ratio
-            shape.width = width;
-            shape.height = width;
+            // Square always maintains 1:1 aspect ratio regardless of setting
+            const squareSize = batchConfigSettings.maintainAspectRatio ? width : Math.max(width, height);
+            shape.width = squareSize;
+            shape.height = squareSize;
             break;
           case 'circle':
           case 'spline-circle':
             // Circular shapes use constraint system to determine final radius
-            const circleSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const circleSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
             shape.radius = circleSize / 2;
             break;
           case 'polygon':
             // Polygon uses constraint system for radius
-            const polygonSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const polygonSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
             shape.radius = polygonSize / 2;
             break;
           case 'star':
             // Star uses constraint system for outer radius
-            const starSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const starSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
             shape.radius = starSize / 2;
             break;
           case 'ring':
           case 'spline-ring':
             // Ring uses constraint system for outer radius
-            const ringSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const ringSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
             shape.radius = ringSize / 2;
             break;
           case 'line':
-            // For lines, width controls length, height controls endpoint spread
+          case 'bezier':
+          case 'cubic':
+          case 'smooth-spline':
+            // For lines and splines, when 1:1 is enforced, use same value for both dimensions
             if (shape.points.length >= 2) {
+              const lineWidth = batchConfigSettings.maintainAspectRatio ? width : width;
+              const lineHeight = batchConfigSettings.maintainAspectRatio ? width : height;
               const angle = Math.random() * Math.PI * 2;
               shape.points[1] = {
-                x: shape.points[0].x + Math.cos(angle) * width,
-                y: shape.points[0].y + Math.sin(angle) * height
+                x: shape.points[0].x + Math.cos(angle) * lineWidth,
+                y: shape.points[0].y + Math.sin(angle) * lineHeight
               };
             }
             break;

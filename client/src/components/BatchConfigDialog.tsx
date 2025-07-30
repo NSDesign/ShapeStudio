@@ -253,6 +253,10 @@ export interface BatchConfigSettings {
   scaleRandomizationScale: number; // Scale for scale randomization  
   rotationRandomizationScale: number; // Scale for rotation randomization
   
+  // Shape Properties Randomization Scaling (0-100%)
+  positionPropertiesRandomizationScale: number; // Scale for X/Y position randomization in range mode
+  sizePropertiesRandomizationScale: number; // Scale for width/height randomization in range mode
+  
   // Shape Effects
   shapeEffectsEnabled: boolean;
   
@@ -315,7 +319,7 @@ export interface BatchConfigSettings {
   };
 }
 
-const defaultSettings: BatchConfigSettings = {
+export const defaultSettings: BatchConfigSettings = {
   selectedPreset: 'custom',
   
   noiseEnabled: false,
@@ -541,6 +545,10 @@ const defaultSettings: BatchConfigSettings = {
   positionRandomizationScale: 50,
   scaleRandomizationScale: 50,
   rotationRandomizationScale: 50,
+  
+  // Shape Properties Randomization Scaling (0-100%)
+  positionPropertiesRandomizationScale: 100,
+  sizePropertiesRandomizationScale: 100,
   
   // Shape Effects
   shapeEffectsEnabled: false,
@@ -1501,6 +1509,25 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             </div>
                           </div>
                           
+                          {/* Size Randomization Scaling */}
+                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
+                            <Label className="text-sm font-medium text-slate-200">Size Randomization</Label>
+                            <p className="text-xs text-slate-400">Control how much randomization is applied to width/height in range mode</p>
+                            
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Size Randomization: {currentSettings.sizePropertiesRandomizationScale}%</Label>
+                              <Slider
+                                value={[currentSettings.sizePropertiesRandomizationScale]}
+                                onValueChange={([value]) => handleSettingsUpdate({ sizePropertiesRandomizationScale: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="[&_[role=slider]]:bg-purple-600"
+                              />
+                              <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full randomization applied to size ranges</p>
+                            </div>
+                          </div>
+                          
                           {/* Noise Integration Section */}
                           <div className="space-y-3 p-3 bg-slate-700 rounded">
                             <Label className="text-sm font-medium text-slate-200">Size Noise Integration</Label>
@@ -1797,6 +1824,25 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             )}
                           </div>
                           
+                          {/* Position Randomization Scaling */}
+                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
+                            <Label className="text-sm font-medium text-slate-200">Position Randomization</Label>
+                            <p className="text-xs text-slate-400">Control how much randomization is applied to X/Y position in range mode</p>
+                            
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Position Randomization: {currentSettings.positionPropertiesRandomizationScale}%</Label>
+                              <Slider
+                                value={[currentSettings.positionPropertiesRandomizationScale]}
+                                onValueChange={([value]) => handleSettingsUpdate({ positionPropertiesRandomizationScale: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="[&_[role=slider]]:bg-purple-600"
+                              />
+                              <p className="text-xs text-slate-400">0% = deterministic positioning, 100% = full randomization applied to position ranges</p>
+                            </div>
+                          </div>
+
                           {/* Noise Integration Toggles */}
                           <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
                             <Label className="text-sm font-medium text-slate-200">Noise Integration</Label>
