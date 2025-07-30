@@ -1410,30 +1410,92 @@ export const useShapeEditor = () => {
 
         // Apply shape transforms if enabled
         if (batchConfigSettings.transformsEnabled) {
-          // Apply translation
-          const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
-          const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
-          shape.transform.x += minTransX + Math.random() * (maxTransX - minTransX);
-          shape.transform.y += minTransY + Math.random() * (maxTransY - minTransY);
-
-          // Apply scale
-          if (batchConfigSettings.scaleUniform) {
-            const [minScale, maxScale] = batchConfigSettings.scaleRange;
-            const scale = minScale + Math.random() * (maxScale - minScale);
-            shape.transform.scaleX = scale;
-            shape.transform.scaleY = scale;
-          } else {
-            const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
-            const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
-            shape.transform.scaleX = minScaleX + Math.random() * (maxScaleX - minScaleX);
-            shape.transform.scaleY = minScaleY + Math.random() * (maxScaleY - minScaleY);
+          // Apply enhanced position transforms (X)
+          if (batchConfigSettings.xTransformMode === 'range') {
+            const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
+            shape.transform.x += minTransX + Math.random() * (maxTransX - minTransX);
+          } else if (batchConfigSettings.xTransformMode === 'value') {
+            shape.transform.x += batchConfigSettings.xTransformValue || 0;
+          } else if (batchConfigSettings.xTransformMode === 'incremental') {
+            // Incremental mode: each shape gets progressively more transform
+            const incrementAmount = (batchConfigSettings.xTransformIncrement || 0) * index;
+            shape.transform.x += incrementAmount;
           }
 
-          // Apply rotation
-          const [minRot, maxRot] = batchConfigSettings.rotationRange;
-          shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
+          // Apply enhanced position transforms (Y)
+          if (batchConfigSettings.yTransformMode === 'range') {
+            const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
+            shape.transform.y += minTransY + Math.random() * (maxTransY - minTransY);
+          } else if (batchConfigSettings.yTransformMode === 'value') {
+            shape.transform.y += batchConfigSettings.yTransformValue || 0;
+          } else if (batchConfigSettings.yTransformMode === 'incremental') {
+            // Incremental mode: each shape gets progressively more transform
+            const incrementAmount = (batchConfigSettings.yTransformIncrement || 0) * index;
+            shape.transform.y += incrementAmount;
+          }
 
-          // Apply skew if configured
+          // Apply enhanced scale transforms
+          if (batchConfigSettings.maintainScaleAspectRatio) {
+            // Use scaleX mode for both X and Y when aspect ratio is linked
+            if (batchConfigSettings.scaleXMode === 'range') {
+              const [minScale, maxScale] = batchConfigSettings.scaleXRange;
+              const scale = minScale + Math.random() * (maxScale - minScale);
+              shape.transform.scaleX = scale;
+              shape.transform.scaleY = scale;
+            } else if (batchConfigSettings.scaleXMode === 'value') {
+              const scale = batchConfigSettings.scaleXValue || 1;
+              shape.transform.scaleX = scale;
+              shape.transform.scaleY = scale;
+            } else if (batchConfigSettings.scaleXMode === 'incremental') {
+              const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
+              const scale = 1 + incrementAmount;
+              shape.transform.scaleX = scale;
+              shape.transform.scaleY = scale;
+            }
+          } else {
+            // Independent scale X and Y
+            // Scale X
+            if (batchConfigSettings.scaleXMode === 'range') {
+              const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
+              shape.transform.scaleX = minScaleX + Math.random() * (maxScaleX - minScaleX);
+            } else if (batchConfigSettings.scaleXMode === 'value') {
+              shape.transform.scaleX = batchConfigSettings.scaleXValue || 1;
+            } else if (batchConfigSettings.scaleXMode === 'incremental') {
+              const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
+              shape.transform.scaleX = 1 + incrementAmount;
+            }
+
+            // Scale Y
+            if (batchConfigSettings.scaleYMode === 'range') {
+              const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
+              shape.transform.scaleY = minScaleY + Math.random() * (maxScaleY - minScaleY);
+            } else if (batchConfigSettings.scaleYMode === 'value') {
+              shape.transform.scaleY = batchConfigSettings.scaleYValue || 1;
+            } else if (batchConfigSettings.scaleYMode === 'incremental') {
+              const incrementAmount = (batchConfigSettings.scaleYIncrement || 0) * index;
+              shape.transform.scaleY = 1 + incrementAmount;
+            }
+          }
+
+          // Apply enhanced rotation transforms
+          if (batchConfigSettings.rotationMode === 'range') {
+            const [minRot, maxRot] = batchConfigSettings.rotationRange;
+            shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
+          } else if (batchConfigSettings.rotationMode === 'value') {
+            shape.transform.rotation = batchConfigSettings.rotationValue || 0;
+          } else if (batchConfigSettings.rotationMode === 'incremental') {
+            // Incremental mode: each shape gets progressively more rotation
+            let incrementAmount = (batchConfigSettings.rotationIncrement || 0) * index;
+            
+            // Apply modulation if enabled
+            if (batchConfigSettings.rotationModulationEnabled && batchConfigSettings.rotationModulation > 0) {
+              incrementAmount = incrementAmount % batchConfigSettings.rotationModulation;
+            }
+            
+            shape.transform.rotation = incrementAmount;
+          }
+
+          // Apply skew if configured (legacy system)
           if (batchConfigSettings.skewXRange && batchConfigSettings.skewYRange) {
             const [minSkewX, maxSkewX] = batchConfigSettings.skewXRange;
             const [minSkewY, maxSkewY] = batchConfigSettings.skewYRange;
