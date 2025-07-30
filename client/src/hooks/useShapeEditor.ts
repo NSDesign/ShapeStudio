@@ -1413,10 +1413,10 @@ export const useShapeEditor = () => {
           // Apply enhanced position transforms (X)
           if (batchConfigSettings.xTransformMode === 'range') {
             const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
-            // Scale the range itself by the randomization percentage
-            const scaledRange = (maxTransX - minTransX) * (batchConfigSettings.positionRandomizationScale / 100);
-            const randomVariation = (Math.random() * 2 - 1) * (scaledRange / 2); // (-1, 1) scaled by range
-            shape.transform.x += minTransX + (maxTransX - minTransX) / 2 + randomVariation; // Center + scaled variation
+            const baseRandomization = minTransX + Math.random() * (maxTransX - minTransX);
+            // Apply randomization scaling to existing randomization (0-100%)
+            const scaledRandomization = baseRandomization * (batchConfigSettings.positionRandomizationScale / 100);
+            shape.transform.x += scaledRandomization;
           } else if (batchConfigSettings.xTransformMode === 'value') {
             const baseValue = batchConfigSettings.xTransformValue || 0;
             // Apply randomization scaling to value mode using (-1, 1) range
@@ -1435,10 +1435,10 @@ export const useShapeEditor = () => {
           // Apply enhanced position transforms (Y)
           if (batchConfigSettings.yTransformMode === 'range') {
             const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
-            // Scale the range itself by the randomization percentage
-            const scaledRange = (maxTransY - minTransY) * (batchConfigSettings.positionRandomizationScale / 100);
-            const randomVariation = (Math.random() * 2 - 1) * (scaledRange / 2); // (-1, 1) scaled by range
-            shape.transform.y += minTransY + (maxTransY - minTransY) / 2 + randomVariation; // Center + scaled variation
+            const baseRandomization = minTransY + Math.random() * (maxTransY - minTransY);
+            // Apply randomization scaling to existing randomization (0-100%)
+            const scaledRandomization = baseRandomization * (batchConfigSettings.positionRandomizationScale / 100);
+            shape.transform.y += scaledRandomization;
           } else if (batchConfigSettings.yTransformMode === 'value') {
             const baseValue = batchConfigSettings.yTransformValue || 0;
             // Apply randomization scaling to value mode using (-1, 1) range
@@ -1459,13 +1459,11 @@ export const useShapeEditor = () => {
             // Use scaleX mode for both X and Y when aspect ratio is linked
             if (batchConfigSettings.scaleXMode === 'range') {
               const [minScale, maxScale] = batchConfigSettings.scaleXRange;
-              // Scale the range itself by the randomization percentage
-              const scaleCenter = (minScale + maxScale) / 2;
-              const scaleRange = (maxScale - minScale) * (batchConfigSettings.scaleRandomizationScale / 100);
-              const randomVariation = Math.random() * scaleRange; // (0, 1) scaled by range
-              const finalScale = scaleCenter - scaleRange/2 + randomVariation; // Start from min + scaled variation
-              shape.transform.scaleX = Math.max(0.1, finalScale); // Prevent negative scale
-              shape.transform.scaleY = Math.max(0.1, finalScale);
+              const baseScale = minScale + Math.random() * (maxScale - minScale);
+              // Apply randomization scaling to existing randomization (0-100%)
+              const scaledScale = baseScale * (batchConfigSettings.scaleRandomizationScale / 100);
+              shape.transform.scaleX = Math.max(0.1, scaledScale); // Prevent negative scale
+              shape.transform.scaleY = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleXMode === 'value') {
               const baseScale = batchConfigSettings.scaleXValue || 1;
               // Apply randomization scaling to value mode using (0, 1) range
@@ -1489,12 +1487,10 @@ export const useShapeEditor = () => {
             // Scale X
             if (batchConfigSettings.scaleXMode === 'range') {
               const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
-              // Scale the range itself by the randomization percentage
-              const scaleCenter = (minScaleX + maxScaleX) / 2;
-              const scaleRange = (maxScaleX - minScaleX) * (batchConfigSettings.scaleRandomizationScale / 100);
-              const randomVariation = Math.random() * scaleRange; // (0, 1) scaled by range
-              const finalScale = scaleCenter - scaleRange/2 + randomVariation; // Start from min + scaled variation
-              shape.transform.scaleX = Math.max(0.1, finalScale);
+              const baseScale = minScaleX + Math.random() * (maxScaleX - minScaleX);
+              // Apply randomization scaling to existing randomization (0-100%)
+              const scaledScale = baseScale * (batchConfigSettings.scaleRandomizationScale / 100);
+              shape.transform.scaleX = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleXMode === 'value') {
               const baseScale = batchConfigSettings.scaleXValue || 1;
               const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
@@ -1511,12 +1507,10 @@ export const useShapeEditor = () => {
             // Scale Y
             if (batchConfigSettings.scaleYMode === 'range') {
               const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
-              // Scale the range itself by the randomization percentage
-              const scaleCenter = (minScaleY + maxScaleY) / 2;
-              const scaleRange = (maxScaleY - minScaleY) * (batchConfigSettings.scaleRandomizationScale / 100);
-              const randomVariation = Math.random() * scaleRange; // (0, 1) scaled by range
-              const finalScale = scaleCenter - scaleRange/2 + randomVariation; // Start from min + scaled variation
-              shape.transform.scaleY = Math.max(0.1, finalScale);
+              const baseScale = minScaleY + Math.random() * (maxScaleY - minScaleY);
+              // Apply randomization scaling to existing randomization (0-100%)
+              const scaledScale = baseScale * (batchConfigSettings.scaleRandomizationScale / 100);
+              shape.transform.scaleY = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleYMode === 'value') {
               const baseScale = batchConfigSettings.scaleYValue || 1;
               const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
@@ -1534,11 +1528,10 @@ export const useShapeEditor = () => {
           // Apply enhanced rotation transforms
           if (batchConfigSettings.rotationMode === 'range') {
             const [minRot, maxRot] = batchConfigSettings.rotationRange;
-            // Scale the range itself by the randomization percentage
-            const rotationCenter = (minRot + maxRot) / 2;
-            const rotationRange = (maxRot - minRot) * (batchConfigSettings.rotationRandomizationScale / 100);
-            const randomVariation = Math.random() * rotationRange; // (0, 1) scaled by range
-            shape.transform.rotation = rotationCenter - rotationRange/2 + randomVariation; // Start from min + scaled variation
+            const baseRotation = minRot + Math.random() * (maxRot - minRot);
+            // Apply randomization scaling to existing randomization (0-100%)
+            const scaledRotation = baseRotation * (batchConfigSettings.rotationRandomizationScale / 100);
+            shape.transform.rotation = scaledRotation;
           } else if (batchConfigSettings.rotationMode === 'value') {
             const baseRotation = batchConfigSettings.rotationValue || 0;
             // Apply randomization scaling to value mode using (0, 1) range
