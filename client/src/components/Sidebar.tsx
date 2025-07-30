@@ -1985,7 +1985,10 @@ export default function Sidebar({
             className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
           >
             <Wand2 className="w-4 h-4 mr-2" />
-            Generate Random Shapes
+            {scatterSettings.shapeCountMode === 'fixed' 
+              ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
+              : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
+            }
           </Button>
           <BatchConfigDialog
             settings={batchConfigSettings}

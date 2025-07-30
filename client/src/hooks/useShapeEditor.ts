@@ -1657,9 +1657,11 @@ export const useShapeEditor = () => {
   }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
 
   const generateRandomShapes = useCallback(() => {
-    const count = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+    const count = scatterSettings.shapeCountMode === 'fixed' 
+      ? (scatterSettings.fixedShapeCount || 10)
+      : Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
 
-    console.log(`🔍 generateRandomShapes: count=${count}, using unified generation function`);
+    console.log(`🔍 generateRandomShapes: count=${count}, mode=${scatterSettings.shapeCountMode || 'range'}, using unified generation function`);
 
     if (enabledShapeTypes.size === 0) {
       console.log(`❌ No enabled shape types, returning early`);
