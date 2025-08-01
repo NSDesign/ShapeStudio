@@ -2769,7 +2769,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
                                       min={-180}
                                       max={180}
-                                      step={1}
+                                      step={15}
                                       className="[&_[role=slider]]:bg-orange-600"
                                     />
                                   </div>
