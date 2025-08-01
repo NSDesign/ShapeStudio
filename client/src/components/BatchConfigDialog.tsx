@@ -163,6 +163,20 @@ export interface BatchConfigSettings {
   fillGradientColorLightnessRange: [number, number]; // 0-100% for range mode
   fillGradientStopsRange: [number, number]; // RGBA gradient stops
   
+  // Enhanced Gradient Type & Direction Controls
+  fillGradientLinearProbability: number; // 0-100% probability for linear gradients
+  fillGradientRadialProbability: number; // 0-100% probability for radial gradients
+  fillGradientLinearDirection: 'angle' | 'predefined'; // Linear direction mode
+  fillGradientLinearAngle: number; // 0-360° for angle mode
+  fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
+  fillGradientRadialCenter: 'center' | 'random' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
+  fillGradientRadialCenterX: number; // X coordinate for specific positioning (0-100%)
+  fillGradientRadialCenterY: number; // Y coordinate for specific positioning (0-100%)
+  fillGradientRadialShape: 'circle' | 'ellipse' | 'auto'; // Radial gradient shape
+  fillGradientRadialCircleProbability: number; // 0-100% probability for circle shape
+  fillGradientRadialEllipseProbability: number; // 0-100% probability for ellipse shape
+  fillGradientMatchShape: boolean; // Whether gradient type should match shape type
+  
   // Fill Opacity Settings
   fillOpacityMode: 'range' | 'define';
   fillOpacityRange: [number, number]; // For range mode
@@ -453,6 +467,20 @@ export const defaultSettings: BatchConfigSettings = {
   fillGradientColorSaturationRange: [40, 90],
   fillGradientColorLightnessRange: [20, 80],
   fillGradientStopsRange: [2, 4],
+  
+  // Enhanced Gradient Type & Direction Controls
+  fillGradientLinearProbability: 50, // 50% linear probability
+  fillGradientRadialProbability: 50, // 50% radial probability
+  fillGradientLinearDirection: 'angle' as const, // Default to angle control
+  fillGradientLinearAngle: 45, // Default 45° diagonal
+  fillGradientLinearPredefined: 'diagonal-down' as const, // Default predefined direction
+  fillGradientRadialCenter: 'center' as const, // Default center positioning
+  fillGradientRadialCenterX: 50, // 50% (center) X coordinate
+  fillGradientRadialCenterY: 50, // 50% (center) Y coordinate
+  fillGradientRadialShape: 'auto' as const, // Auto-determine based on shape
+  fillGradientRadialCircleProbability: 60, // 60% circle probability
+  fillGradientRadialEllipseProbability: 40, // 40% ellipse probability
+  fillGradientMatchShape: false, // Default: don't match shape type
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' as const,
@@ -2146,6 +2174,214 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       </div>
                                     )}
 
+                                  {/* Enhanced Gradient Type & Direction Controls */}
+                                  <Separator className="bg-slate-600" />
+                                  
+                                  <div className="space-y-4">
+                                    <Label className="text-sm font-medium text-slate-200">Gradient Type & Direction</Label>
+                                    
+                                    {/* Gradient Type Probability */}
+                                    <div className="space-y-3">
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          checked={currentSettings.fillGradientMatchShape}
+                                          onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientMatchShape: checked as boolean })}
+                                          className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                        />
+                                        <Label className="text-xs text-slate-300">Match gradient type to shape</Label>
+                                      </div>
+                                      <p className="text-xs text-slate-400 ml-6">
+                                        When enabled: radial gradients for round shapes (circles, stars, blobs), linear gradients for geometric shapes (rectangles, polygons)
+                                      </p>
+                                      
+                                      {!currentSettings.fillGradientMatchShape && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientLinearProbability]}
+                                              onValueChange={([value]) => {
+                                                const radialValue = 100 - value;
+                                                handleSettingsUpdate({ 
+                                                  fillGradientLinearProbability: value,
+                                                  fillGradientRadialProbability: radialValue
+                                                });
+                                              }}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-purple-600"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientRadialProbability]}
+                                              onValueChange={([value]) => {
+                                                const linearValue = 100 - value;
+                                                handleSettingsUpdate({ 
+                                                  fillGradientRadialProbability: value,
+                                                  fillGradientLinearProbability: linearValue
+                                                });
+                                              }}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-pink-600"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Linear Gradient Direction */}
+                                    <div className="space-y-3 p-3 bg-slate-700 rounded">
+                                      <Label className="text-sm font-medium text-slate-200">Linear Direction</Label>
+                                      
+                                      <div className="flex items-center space-x-2">
+                                        <Label className="text-xs text-slate-300">Mode</Label>
+                                        <Select value={currentSettings.fillGradientLinearDirection} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearDirection: value as any })}>
+                                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                            <SelectItem value="angle" className="text-slate-200 hover:bg-slate-700">Angle</SelectItem>
+                                            <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+
+                                      {currentSettings.fillGradientLinearDirection === 'angle' && (
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Angle: {currentSettings.fillGradientLinearAngle}°</Label>
+                                          <Slider
+                                            value={[currentSettings.fillGradientLinearAngle]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearAngle: value })}
+                                            min={0}
+                                            max={360}
+                                            step={15}
+                                            className="[&_[role=slider]]:bg-purple-600"
+                                          />
+                                        </div>
+                                      )}
+
+                                      {currentSettings.fillGradientLinearDirection === 'predefined' && (
+                                        <div className="space-y-2">
+                                          <Label className="text-xs text-slate-300">Direction</Label>
+                                          <Select value={currentSettings.fillGradientLinearPredefined} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearPredefined: value as any })}>
+                                            <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
+                                              <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
+                                              <SelectItem value="diagonal-down" className="text-slate-200 hover:bg-slate-700">Diagonal ↘</SelectItem>
+                                              <SelectItem value="diagonal-up" className="text-slate-200 hover:bg-slate-700">Diagonal ↗</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Radial Gradient Controls */}
+                                    <div className="space-y-3 p-3 bg-slate-700 rounded">
+                                      <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
+                                      
+                                      {/* Radial Center Position */}
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-300">Center Position</Label>
+                                        <Select value={currentSettings.fillGradientRadialCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenter: value as any })}>
+                                          <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                            <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                            <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                            <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
+                                            <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
+                                            <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+
+                                      {currentSettings.fillGradientRadialCenter === 'coordinates' && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">X: {currentSettings.fillGradientRadialCenterX}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientRadialCenterX]}
+                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterX: value })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-pink-600"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Y: {currentSettings.fillGradientRadialCenterY}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientRadialCenterY]}
+                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterY: value })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-pink-600"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Radial Shape */}
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-300">Radial Shape</Label>
+                                        <Select value={currentSettings.fillGradientRadialShape} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialShape: value as any })}>
+                                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                            <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                            <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle</SelectItem>
+                                            <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+
+                                      {currentSettings.fillGradientRadialShape === 'auto' && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Circle: {currentSettings.fillGradientRadialCircleProbability}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientRadialCircleProbability]}
+                                              onValueChange={([value]) => {
+                                                const ellipseValue = 100 - value;
+                                                handleSettingsUpdate({ 
+                                                  fillGradientRadialCircleProbability: value,
+                                                  fillGradientRadialEllipseProbability: ellipseValue
+                                                });
+                                              }}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-pink-600"
+                                            />
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Ellipse: {currentSettings.fillGradientRadialEllipseProbability}%</Label>
+                                            <Slider
+                                              value={[currentSettings.fillGradientRadialEllipseProbability]}
+                                              onValueChange={([value]) => {
+                                                const circleValue = 100 - value;
+                                                handleSettingsUpdate({ 
+                                                  fillGradientRadialEllipseProbability: value,
+                                                  fillGradientRadialCircleProbability: circleValue
+                                                });
+                                              }}
+                                              max={100}
+                                              step={5}
+                                              className="[&_[role=slider]]:bg-pink-600"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
 
                                   </div>
                                 </div>
