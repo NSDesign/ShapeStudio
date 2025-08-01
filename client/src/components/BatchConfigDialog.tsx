@@ -166,12 +166,26 @@ export interface BatchConfigSettings {
   // Enhanced Gradient Type & Direction Controls
   fillGradientLinearProbability: number; // 0-100% probability for linear gradients
   fillGradientRadialProbability: number; // 0-100% probability for radial gradients
-  fillGradientLinearDirection: 'angle' | 'predefined'; // Linear direction mode
-  fillGradientLinearAngle: number; // 0-360° for angle mode
+  fillGradientLinearDirection: 'range' | 'predefined'; // Linear direction mode
+  fillGradientLinearAngleRange: [number, number]; // Min-max angle range for range mode
   fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
+  fillGradientLinearAlignToShape: boolean; // Whether to align gradient to shape orientation/rotation
   fillGradientRadialCenter: 'center' | 'random' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
   fillGradientRadialCenterX: number; // X coordinate for specific positioning (0-100%)
   fillGradientRadialCenterY: number; // Y coordinate for specific positioning (0-100%)
+  fillGradientRadialCorners: {
+    topLeft: boolean;
+    topRight: boolean;
+    bottomLeft: boolean;
+    bottomRight: boolean;
+  }; // Which corners can be selected
+  fillGradientRadialMidpoints: {
+    top: boolean;
+    right: boolean;
+    bottom: boolean;
+    left: boolean;
+  }; // Which midpoints can be selected
+  fillGradientRadialSelectionMode: 'random' | 'cycle'; // How to select from enabled corners/midpoints
   fillGradientRadialShape: 'circle' | 'ellipse' | 'auto'; // Radial gradient shape
   fillGradientRadialCircleProbability: number; // 0-100% probability for circle shape
   fillGradientRadialEllipseProbability: number; // 0-100% probability for ellipse shape
@@ -471,12 +485,26 @@ export const defaultSettings: BatchConfigSettings = {
   // Enhanced Gradient Type & Direction Controls
   fillGradientLinearProbability: 50, // 50% linear probability
   fillGradientRadialProbability: 50, // 50% radial probability
-  fillGradientLinearDirection: 'angle' as const, // Default to angle control
-  fillGradientLinearAngle: 45, // Default 45° diagonal
+  fillGradientLinearDirection: 'range' as const, // Default to range control
+  fillGradientLinearAngleRange: [0, 360], // Default full angle range
   fillGradientLinearPredefined: 'diagonal-down' as const, // Default predefined direction
+  fillGradientLinearAlignToShape: false, // Default: don't align to shape
   fillGradientRadialCenter: 'center' as const, // Default center positioning
   fillGradientRadialCenterX: 50, // 50% (center) X coordinate
   fillGradientRadialCenterY: 50, // 50% (center) Y coordinate
+  fillGradientRadialCorners: {
+    topLeft: true,
+    topRight: true,
+    bottomLeft: true,
+    bottomRight: true,
+  }, // All corners enabled by default
+  fillGradientRadialMidpoints: {
+    top: true,
+    right: true,
+    bottom: true,
+    left: true,
+  }, // All midpoints enabled by default
+  fillGradientRadialSelectionMode: 'random' as const, // Default to random selection
   fillGradientRadialShape: 'auto' as const, // Auto-determine based on shape
   fillGradientRadialCircleProbability: 60, // 60% circle probability
   fillGradientRadialEllipseProbability: 40, // 40% ellipse probability
@@ -2243,18 +2271,20 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="angle" className="text-slate-200 hover:bg-slate-700">Angle</SelectItem>
+                                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                             <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
 
-                                      {currentSettings.fillGradientLinearDirection === 'angle' && (
+                                      {currentSettings.fillGradientLinearDirection === 'range' && (
                                         <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Angle: {currentSettings.fillGradientLinearAngle}°</Label>
+                                          <Label className="text-xs text-slate-300">
+                                            Angle Range: {currentSettings.fillGradientLinearAngleRange?.[0] || 0}° - {currentSettings.fillGradientLinearAngleRange?.[1] || 360}°
+                                          </Label>
                                           <Slider
-                                            value={[currentSettings.fillGradientLinearAngle]}
-                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearAngle: value })}
+                                            value={currentSettings.fillGradientLinearAngleRange || [0, 360]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearAngleRange: value as [number, number] })}
                                             min={0}
                                             max={360}
                                             step={15}
@@ -2264,19 +2294,33 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                       )}
 
                                       {currentSettings.fillGradientLinearDirection === 'predefined' && (
-                                        <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Direction</Label>
-                                          <Select value={currentSettings.fillGradientLinearPredefined} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearPredefined: value as any })}>
-                                            <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                              <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
-                                              <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
-                                              <SelectItem value="diagonal-down" className="text-slate-200 hover:bg-slate-700">Diagonal ↘</SelectItem>
-                                              <SelectItem value="diagonal-up" className="text-slate-200 hover:bg-slate-700">Diagonal ↗</SelectItem>
-                                            </SelectContent>
-                                          </Select>
+                                        <div className="space-y-3">
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Direction</Label>
+                                            <Select value={currentSettings.fillGradientLinearPredefined} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearPredefined: value as any })}>
+                                              <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
+                                                <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
+                                                <SelectItem value="diagonal-down" className="text-slate-200 hover:bg-slate-700">Diagonal ↘</SelectItem>
+                                                <SelectItem value="diagonal-up" className="text-slate-200 hover:bg-slate-700">Diagonal ↗</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          
+                                          <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                              checked={currentSettings.fillGradientLinearAlignToShape}
+                                              onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientLinearAlignToShape: checked as boolean })}
+                                              className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                            />
+                                            <Label className="text-xs text-slate-300">Align to shape orientation</Label>
+                                          </div>
+                                          <p className="text-xs text-slate-400 ml-6">
+                                            Adjust gradient direction based on shape rotation and orientation
+                                          </p>
                                         </div>
                                       )}
                                     </div>
@@ -2302,6 +2346,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                         </Select>
                                       </div>
 
+                                      {/* Enhanced Position Controls */}
                                       {currentSettings.fillGradientRadialCenter === 'coordinates' && (
                                         <div className="grid grid-cols-2 gap-3">
                                           <div className="space-y-2">
@@ -2325,6 +2370,158 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                               step={5}
                                               className="[&_[role=slider]]:bg-pink-600"
                                             />
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Corners Selection */}
+                                      {currentSettings.fillGradientRadialCenter === 'corners' && (
+                                        <div className="space-y-3">
+                                          <div className="flex items-center space-x-2">
+                                            <Label className="text-xs text-slate-300">Selection Mode</Label>
+                                            <Select value={currentSettings.fillGradientRadialSelectionMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialSelectionMode: value as any })}>
+                                              <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                                <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Available Corners</Label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialCorners?.topLeft}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialCorners: { 
+                                                      ...currentSettings.fillGradientRadialCorners, 
+                                                      topLeft: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Top Left</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialCorners?.topRight}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialCorners: { 
+                                                      ...currentSettings.fillGradientRadialCorners, 
+                                                      topRight: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Top Right</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialCorners?.bottomLeft}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialCorners: { 
+                                                      ...currentSettings.fillGradientRadialCorners, 
+                                                      bottomLeft: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Bottom Left</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialCorners?.bottomRight}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialCorners: { 
+                                                      ...currentSettings.fillGradientRadialCorners, 
+                                                      bottomRight: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Bottom Right</Label>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Midpoints Selection */}
+                                      {currentSettings.fillGradientRadialCenter === 'midpoints' && (
+                                        <div className="space-y-3">
+                                          <div className="flex items-center space-x-2">
+                                            <Label className="text-xs text-slate-300">Selection Mode</Label>
+                                            <Select value={currentSettings.fillGradientRadialSelectionMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialSelectionMode: value as any })}>
+                                              <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                                <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-300">Available Midpoints</Label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialMidpoints?.top}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialMidpoints: { 
+                                                      ...currentSettings.fillGradientRadialMidpoints, 
+                                                      top: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Top</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialMidpoints?.right}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialMidpoints: { 
+                                                      ...currentSettings.fillGradientRadialMidpoints, 
+                                                      right: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Right</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialMidpoints?.bottom}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialMidpoints: { 
+                                                      ...currentSettings.fillGradientRadialMidpoints, 
+                                                      bottom: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Bottom</Label>
+                                              </div>
+                                              <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                  checked={currentSettings.fillGradientRadialMidpoints?.left}
+                                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                    fillGradientRadialMidpoints: { 
+                                                      ...currentSettings.fillGradientRadialMidpoints, 
+                                                      left: checked as boolean 
+                                                    } 
+                                                  })}
+                                                  className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                />
+                                                <Label className="text-xs text-slate-300">Left</Label>
+                                              </div>
+                                            </div>
                                           </div>
                                         </div>
                                       )}
