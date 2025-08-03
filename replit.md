@@ -33,6 +33,7 @@ Preferred communication style: Simple, everyday language.
 - **Properties Section Integration**: Noise ranges are controlled by enabled Properties sections (Position, Rotation, Scale, Opacity, Fill Color, Shape Size, Corner Radius, Inner Radius, Segments, Point Counts).
 - **Transform Randomization Scaling**: Controls for position, scale, and rotation randomization amount.
 - **Canvas-Based Blur System**: Gaussian blur algorithm implemented via direct canvas pixel manipulation for pixel-perfect blur effects.
+- **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity, collinearity enforcement, and C1 smoothness. No random tangent generation to preserve mathematical integrity.
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.

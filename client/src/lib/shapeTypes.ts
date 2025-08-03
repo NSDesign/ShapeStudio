@@ -3,6 +3,13 @@ export interface Point {
   y: number;
 }
 
+export interface TangentHandle {
+  in: Point;   // Incoming tangent handle
+  out: Point;  // Outgoing tangent handle
+  linked: boolean; // Whether handles maintain collinearity
+  smooth: boolean; // Whether this point creates smooth continuity
+}
+
 export interface GridPosition {
   x: number;
   y: number;

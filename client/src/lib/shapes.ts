@@ -1,4 +1,4 @@
-import { BaseShape, ShapeType, Point, Transform, ShapeProperties, ShapeGroup, BlendMode } from './shapeTypes';
+import { BaseShape, ShapeType, Point, TangentHandle, Transform, ShapeProperties, ShapeGroup, BlendMode } from './shapeTypes';
 
 export class Shape {
   id: string;
@@ -13,7 +13,7 @@ export class Shape {
   width?: number;
   height?: number;
   controlPoints?: Point[];
-  tangentHandles?: { in: Point; out: Point }[];
+  tangentHandles?: TangentHandle[];
   smoothPoints?: boolean[];
   closed?: boolean;
   segments: number;
@@ -541,22 +541,18 @@ export class Shape {
   }
 
   private generateCurvePoints(numPoints?: number, batchConfig?: any): void {
-    const pointCount = numPoints || (this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 3));
+    const pointCount = numPoints || (this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 5)); // 3-7 points for variable complexity
     this.points = [];
     this.controlPoints = [];
     this.tangentHandles = [];
     this.smoothPoints = [];
     
     // Get spline positioning ranges from batch config if available
-    let pointPositionRange = [-50, 50]; // Default range for point positioning
-    let controlPointRange = [-25, 25]; // Default range for control point positioning
+    let pointPositionRange = [-30, 30]; // Reduced default range for better control
     
     if (batchConfig?.propertiesEnabled && batchConfig?.splinePropertiesEnabled) {
       if (batchConfig?.splinePointPositionRange) {
         pointPositionRange = batchConfig.splinePointPositionRange;
-      }
-      if (batchConfig?.splineControlPointRange) {
-        controlPointRange = batchConfig.splineControlPointRange;
       }
     } else if (batchConfig?.scatterSettings?.shapeSpecific) {
       // Fallback to scatter settings for spline-specific properties
@@ -566,29 +562,24 @@ export class Shape {
       if (splineSettings?.pointPositionRange) {
         pointPositionRange = splineSettings.pointPositionRange;
       }
-      if (splineSettings?.controlPointRange) {
-        controlPointRange = splineSettings.controlPointRange;
-      }
     }
     
     const [minPointPos, maxPointPos] = pointPositionRange;
-    const [minControlPos, maxControlPos] = controlPointRange;
     
     if (this.type === 'cubic') {
-      // Generate cubic spline with control points between segments
-      this.points = [];
+      // Generate cubic spline with mathematically smooth continuity
       const width = 120;
-      const height = 80;
+      const height = 60;
       
-      // Generate points with configurable randomness
+      // Generate base points along a smooth curve
       for (let i = 0; i < pointCount; i++) {
         const t = i / (pointCount - 1);
         const baseX = (t - 0.5) * width;
-        const baseY = 0;
+        const baseY = Math.sin(t * Math.PI) * height / 3; // Gentle sine curve
         
-        // Apply point position variation from batch config
-        const xVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
-        const yVariation = minPointPos + Math.random() * (maxPointPos - minPointPos);
+        // Apply controlled point position variation
+        const xVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos);
+        const yVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos);
         
         this.points.push({ 
           x: baseX + xVariation, 
@@ -596,62 +587,155 @@ export class Shape {
         });
       }
       
-      // Generate control points for cubic splines (between segments)
-      for (let i = 0; i < this.points.length - 1; i++) {
-        const p1 = this.points[i];
-        const p2 = this.points[i + 1];
+      // Generate mathematically continuous tangent handles
+      this.generateSmoothTangentHandles();
+      this.closed = false;
+      this.renderType = 'bezier'; // Use bezier rendering for smooth curves
+      
+    } else if (this.type === 'bezier') {
+      // Generate Bézier curve with proper tangent handle continuity
+      const width = 120;
+      const height = 60;
+      
+      // Generate base points along a smooth path
+      for (let i = 0; i < pointCount; i++) {
+        const t = i / (pointCount - 1);
+        const baseX = (t - 0.5) * width;
+        const baseY = Math.sin(t * Math.PI * 1.5) * height / 4; // Gentle wave
         
-        // Control point positioned between current and next point with configurable offset
-        const baseControlX = (p1.x + p2.x) / 2;
-        const baseControlY = (p1.y + p2.y) / 2;
+        // Apply controlled point position variation
+        const xVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.5;
+        const yVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.5;
         
-        const controlXVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
-        const controlYVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
-        
-        this.controlPoints!.push({
-          x: baseControlX + controlXVariation,
-          y: baseControlY + controlYVariation
+        this.points.push({ 
+          x: baseX + xVariation, 
+          y: baseY + yVariation 
         });
       }
       
-    } else {
-      // Generate bezier curve with tangent handles for each point
-      for (let i = 0; i < pointCount; i++) {
-        const point = {
-          x: (i - pointCount/2) * (40 + Math.random() * 30),
-          y: (Math.random() - 0.5) * 100
-        };
-        this.points.push(point);
-        
-        // Generate tangent handles for bezier curves
-        const handleLength = 15 + Math.random() * 10;
-        const angle1 = Math.random() * Math.PI * 2;
-        const angle2 = angle1 + Math.PI; // Opposite direction for smooth continuity
-        
-        this.tangentHandles!.push({
-          in: {
-            x: point.x + Math.cos(angle1) * handleLength,
-            y: point.y + Math.sin(angle1) * handleLength
-          },
-          out: {
-            x: point.x + Math.cos(angle2) * handleLength,
-            y: point.y + Math.sin(angle2) * handleLength
-          }
-        });
-        
-        // All points start as smooth (continuous tangents)
-        this.smoothPoints!.push(true);
-      }
+      // Generate mathematically continuous tangent handles
+      this.generateSmoothTangentHandles();
     }
     
     // Use batch config settings for open/closed probability if available
-    let openProbability = 50; // Default 50% open
+    let openProbability = 70; // Default 70% open for better curve display
     if (batchConfig?.scatterSettings?.shapeSpecific?.[this.type]?.openProbability !== undefined) {
       openProbability = batchConfig.scatterSettings.shapeSpecific[this.type].openProbability;
     }
     
     this.closed = Math.random() * 100 > openProbability;
     this.renderType = 'bezier';
+  }
+
+  /**
+   * Generate mathematically smooth tangent handles that maintain C1 continuity
+   * This ensures smooth curves without breaks or sharp angles between segments
+   */
+  private generateSmoothTangentHandles(): void {
+    if (!this.points || this.points.length < 2) return;
+    
+    this.tangentHandles = [];
+    this.smoothPoints = [];
+    
+    for (let i = 0; i < this.points.length; i++) {
+      const current = this.points[i];
+      const isFirst = i === 0;
+      const isLast = i === this.points.length - 1;
+      
+      let tangentVector: Point = { x: 0, y: 0 };
+      
+      if (isFirst && !this.closed) {
+        // First point: tangent points toward next point
+        const next = this.points[i + 1];
+        tangentVector = this.normalizeVector({
+          x: next.x - current.x,
+          y: next.y - current.y
+        });
+      } else if (isLast && !this.closed) {
+        // Last point: tangent points from previous point
+        const prev = this.points[i - 1];
+        tangentVector = this.normalizeVector({
+          x: current.x - prev.x,
+          y: current.y - prev.y
+        });
+      } else {
+        // Middle points or closed curve: tangent bisects adjacent segments
+        const prevIndex = this.closed ? (i - 1 + this.points.length) % this.points.length : Math.max(0, i - 1);
+        const nextIndex = this.closed ? (i + 1) % this.points.length : Math.min(this.points.length - 1, i + 1);
+        
+        const prev = this.points[prevIndex];
+        const next = this.points[nextIndex];
+        
+        // Calculate smooth tangent vector (average of normalized adjacent directions)
+        const incomingVector = this.normalizeVector({
+          x: current.x - prev.x,
+          y: current.y - prev.y
+        });
+        const outgoingVector = this.normalizeVector({
+          x: next.x - current.x,
+          y: next.y - current.y
+        });
+        
+        // Tangent is the normalized average of adjacent directions
+        tangentVector = this.normalizeVector({
+          x: (incomingVector.x + outgoingVector.x) / 2,
+          y: (incomingVector.y + outgoingVector.y) / 2
+        });
+      }
+      
+      // Calculate handle length based on distance to adjacent points (30% of average)
+      let handleLength = 25; // Default length
+      
+      const distances: number[] = [];
+      if (!isFirst || this.closed) {
+        const prevIndex = this.closed ? (i - 1 + this.points.length) % this.points.length : i - 1;
+        const prev = this.points[prevIndex];
+        distances.push(Math.sqrt(
+          Math.pow(current.x - prev.x, 2) + Math.pow(current.y - prev.y, 2)
+        ));
+      }
+      if (!isLast || this.closed) {
+        const nextIndex = this.closed ? (i + 1) % this.points.length : i + 1;
+        const next = this.points[nextIndex];
+        distances.push(Math.sqrt(
+          Math.pow(next.x - current.x, 2) + Math.pow(next.y - current.y, 2)
+        ));
+      }
+      
+      if (distances.length > 0) {
+        const avgDistance = distances.reduce((sum, d) => sum + d, 0) / distances.length;
+        handleLength = avgDistance * 0.3; // 30% of average adjacent segment length
+      }
+      
+      // Create collinear handles that maintain C1 continuity
+      this.tangentHandles.push({
+        in: {
+          x: current.x - tangentVector.x * handleLength,
+          y: current.y - tangentVector.y * handleLength
+        },
+        out: {
+          x: current.x + tangentVector.x * handleLength,
+          y: current.y + tangentVector.y * handleLength
+        },
+        linked: true,  // Handles maintain collinearity
+        smooth: true   // Point creates smooth continuity
+      });
+      
+      // All points are smooth by default for mathematical continuity
+      this.smoothPoints.push(true);
+    }
+  }
+
+  /**
+   * Normalize a vector to unit length
+   */
+  private normalizeVector(vector: Point): Point {
+    const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+    if (length === 0) return { x: 0, y: 0 };
+    return {
+      x: vector.x / length,
+      y: vector.y / length
+    };
   }
 
   private generateChunkPoints(): void {
