@@ -175,8 +175,8 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   const renderType = shape.renderType || 'polygon';
   
   if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
-    if (shape.type === 'bezier' && shape.tangentHandles && shape.points.length >= 2) {
-      // Bezier curves with tangent handles
+    if ((shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') && shape.tangentHandles && shape.points.length >= 2) {
+      // Bezier curves with tangent handles (includes cubic splines and smooth splines)
       for (let i = 0; i < shape.points.length - 1; i++) {
         const p1 = shape.points[i];
         const p2 = shape.points[i + 1];
@@ -187,6 +187,18 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
           ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
         } else {
           ctx.lineTo(p2.x, p2.y);
+        }
+      }
+      
+      // Handle closed curves
+      if (shape.closed && shape.points.length > 2) {
+        const lastIndex = shape.points.length - 1;
+        const firstPoint = shape.points[0];
+        
+        if (lastIndex < shape.tangentHandles.length && 0 < shape.tangentHandles.length) {
+          const cp1 = shape.tangentHandles[lastIndex].out;
+          const cp2 = shape.tangentHandles[0].in;
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, firstPoint.x, firstPoint.y);
         }
       }
     } else {

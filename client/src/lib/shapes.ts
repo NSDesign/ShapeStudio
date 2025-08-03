@@ -818,7 +818,9 @@ export class Shape {
         out: {
           x: current.x + tangentX + randomX,
           y: current.y + tangentY + randomY
-        }
+        },
+        linked: true,
+        smooth: true
       });
     }
     
@@ -1350,56 +1352,10 @@ export class Shape {
       }
     }
     
-    // Generate smooth control points for cubic Bézier curves
-    const totalSegments = this.closed ? pointCount : pointCount - 1;
-    this.controlPoints = [];
-    
-    for (let i = 0; i < totalSegments; i++) {
-      const current = this.points[i];
-      const next = this.points[(i + 1) % this.points.length];
-      
-      // Calculate smooth tangent vectors
-      const prevIndex = this.closed ? (i - 1 + pointCount) % pointCount : Math.max(0, i - 1);
-      const nextNextIndex = this.closed ? (i + 2) % pointCount : Math.min(pointCount - 1, i + 2);
-      
-      const prev = this.points[prevIndex];
-      const nextNext = this.points[nextNextIndex];
-      
-      // Smooth tangent calculation for continuity
-      const tangentLength = Math.sqrt(
-        Math.pow(next.x - current.x, 2) + Math.pow(next.y - current.y, 2)
-      ) * 0.3;
-      
-      // Direction from previous to next point
-      const tangentX = (next.x - prev.x) * tangentLength / 
-        Math.sqrt(Math.pow(next.x - prev.x, 2) + Math.pow(next.y - prev.y, 2));
-      const tangentY = (next.y - prev.y) * tangentLength / 
-        Math.sqrt(Math.pow(next.x - prev.x, 2) + Math.pow(next.y - prev.y, 2));
-      
-      // Add some controlled randomness for organic feel using batch config control point range
-      const randomFactor = variation * 0.3;
-      const baseRandomX = (Math.random() - 0.5) * randomFactor * tangentLength;
-      const baseRandomY = (Math.random() - 0.5) * randomFactor * tangentLength;
-      
-      // Apply additional control point variation from batch config
-      const controlXVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
-      const controlYVariation = minControlPos + Math.random() * (maxControlPos - minControlPos);
-      
-      // First control point (outgoing from current)
-      this.controlPoints.push({
-        x: current.x + (tangentX + baseRandomX) * 0.5 + controlXVariation,
-        y: current.y + (tangentY + baseRandomY) * 0.5 + controlYVariation
-      });
-      
-      // Second control point (incoming to next)
-      this.controlPoints.push({
-        x: next.x - (tangentX + baseRandomX) * 0.5 + controlXVariation,
-        y: next.y - (tangentY + baseRandomY) * 0.5 + controlYVariation
-      });
-    }
-    
-    this.renderType = 'cubic';
-    this.segments = totalSegments;
+    // Generate mathematically continuous tangent handles for smooth splines
+    this.generateSmoothTangentHandles();
+    this.renderType = 'bezier'; // Use bezier rendering for smooth curves
+    this.segments = this.closed ? pointCount : pointCount - 1;
   }
 
   render(ctx: CanvasRenderingContext2D): void {
