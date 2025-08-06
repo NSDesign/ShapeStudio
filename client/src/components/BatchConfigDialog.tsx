@@ -58,7 +58,9 @@ export interface BatchConfigSettings {
   gridColumns: number;
   gridRowOffset: number;
   gridColumnOffset: number;
-  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
+  gridSortScope: 'per-generation' | 'per-batch'; // Sort within each generation or across entire batch
+  gridSortOrder: 'ascending' | 'descending'; // Sort direction
   // Grid randomization amounts
   gridXRandomization: number; // 0-100 pixels randomization in X direction
   gridYRandomization: number; // 0-100 pixels randomization in Y direction
@@ -381,6 +383,8 @@ export const defaultSettings: BatchConfigSettings = {
   gridRowOffset: 120,
   gridColumnOffset: 120,
   gridSortBy: 'none',
+  gridSortScope: 'per-generation',
+  gridSortOrder: 'ascending',
   gridXRandomization: 0,
   gridYRandomization: 0,
   
@@ -1228,14 +1232,57 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             </SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                               <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None (generation order)</SelectItem>
-                              <SelectItem value="layer" className="text-slate-200 hover:bg-slate-700">Layer Order</SelectItem>
-                              <SelectItem value="id" className="text-slate-200 hover:bg-slate-700">Shape ID</SelectItem>
+                              <SelectItem value="layer" className="text-slate-200 hover:bg-slate-700">Layer Order (z-index)</SelectItem>
+                              <SelectItem value="creation-time" className="text-slate-200 hover:bg-slate-700">Creation Time</SelectItem>
                               <SelectItem value="shape-type" className="text-slate-200 hover:bg-slate-700">Shape Type</SelectItem>
-                              <SelectItem value="fill-color" className="text-slate-200 hover:bg-slate-700">Fill Color</SelectItem>
+                              <SelectItem value="size" className="text-slate-200 hover:bg-slate-700">Size (area)</SelectItem>
+                              <SelectItem value="fill-color" className="text-slate-200 hover:bg-slate-700">Fill Color (hue)</SelectItem>
                               <SelectItem value="opacity" className="text-slate-200 hover:bg-slate-700">Opacity</SelectItem>
+                              <SelectItem value="angle" className="text-slate-200 hover:bg-slate-700">Rotation Angle</SelectItem>
+                              <SelectItem value="id" className="text-slate-200 hover:bg-slate-700">Shape ID</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
+                        
+                        {currentSettings.gridSortBy !== 'none' && (
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label className="text-sm text-slate-300">Sort Scope</Label>
+                              <Select 
+                                value={currentSettings.gridSortScope}
+                                onValueChange={(value) => handleSettingsUpdate({ gridSortScope: value as any })}
+                              >
+                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="per-generation" className="text-slate-200 hover:bg-slate-700">Per Generation</SelectItem>
+                                  <SelectItem value="per-batch" className="text-slate-200 hover:bg-slate-700">Per Batch (all generations)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-slate-400">
+                                Per Generation: Sort shapes within each generation separately<br />
+                                Per Batch: Sort all shapes across all generations together
+                              </p>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label className="text-sm text-slate-300">Sort Order</Label>
+                              <Select 
+                                value={currentSettings.gridSortOrder}
+                                onValueChange={(value) => handleSettingsUpdate({ gridSortOrder: value as any })}
+                              >
+                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="ascending" className="text-slate-200 hover:bg-slate-700">Ascending (low → high)</SelectItem>
+                                  <SelectItem value="descending" className="text-slate-200 hover:bg-slate-700">Descending (high → low)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

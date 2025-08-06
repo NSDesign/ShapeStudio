@@ -1586,13 +1586,22 @@ export const useShapeEditor = () => {
         gridRowOffset: batchConfigSettings.gridRowOffset,
         gridColumnOffset: batchConfigSettings.gridColumnOffset,
         gridSortBy: batchConfigSettings.gridSortBy,
+        gridSortScope: batchConfigSettings.gridSortScope,
+        gridSortOrder: batchConfigSettings.gridSortOrder,
         gridXRandomization: batchConfigSettings.gridXRandomization,
         gridYRandomization: batchConfigSettings.gridYRandomization
       };
 
       // Apply grid positioning additively with existing positions
-      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 });
-      console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy}`);
+      // For now, assume single generation per call (can be enhanced for batch exports)
+      const generationInfo = {
+        currentGeneration: 0,
+        totalGenerations: 1,
+        shapesPerGeneration: newShapes.length
+      };
+      
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo);
+      console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy} (${batchConfigSettings.gridSortOrder}, ${batchConfigSettings.gridSortScope})`);
     }
 
     // Log all final z-indices before adding to state

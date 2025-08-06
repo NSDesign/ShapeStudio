@@ -24,7 +24,9 @@ export interface DistributionConfig {
   gridColumns: number;
   gridRowOffset: number;
   gridColumnOffset: number;
-  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'none';
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
+  gridSortScope: 'per-generation' | 'per-batch';
+  gridSortOrder: 'ascending' | 'descending';
   gridXRandomization: number;
   gridYRandomization: number;
 }
@@ -348,37 +350,150 @@ export function calculateGridPosition(
   return { x, y, row, column };
 }
 
-export function sortShapesForGrid(shapes: any[], sortBy: string): any[] {
+export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'ascending' | 'descending' = 'ascending'): any[] {
   if (sortBy === 'none') return shapes;
   
-  return [...shapes].sort((a, b) => {
+  const sorted = [...shapes].sort((a, b) => {
+    let comparison = 0;
+    
     switch (sortBy) {
       case 'layer':
-        return (a.properties?.zIndex || 0) - (b.properties?.zIndex || 0);
-      case 'id':
-        return a.id.localeCompare(b.id);
+        comparison = (a.properties?.zIndex || a.layerIndex || 0) - (b.properties?.zIndex || b.layerIndex || 0);
+        break;
+      case 'creation-time':
+        // Extract timestamp from shape ID if available, fallback to creation order
+        const aTime = extractTimestamp(a.id) || a.creationIndex || 0;
+        const bTime = extractTimestamp(b.id) || b.creationIndex || 0;
+        comparison = aTime - bTime;
+        break;
       case 'shape-type':
-        return a.type.localeCompare(b.type);
+        comparison = a.type.localeCompare(b.type);
+        break;
+      case 'size':
+        const aSize = calculateShapeArea(a);
+        const bSize = calculateShapeArea(b);
+        comparison = aSize - bSize;
+        break;
       case 'fill-color':
-        const aFill = a.properties?.fillColor || '#000000';
-        const bFill = b.properties?.fillColor || '#000000';
-        return aFill.localeCompare(bFill);
+        const aHue = extractHueFromColor(a.properties?.fillColor || a.fillColor || '#000000');
+        const bHue = extractHueFromColor(b.properties?.fillColor || b.fillColor || '#000000');
+        comparison = aHue - bHue;
+        break;
       case 'opacity':
-        return (a.properties?.opacity || 1) - (b.properties?.opacity || 1);
+        comparison = (a.properties?.opacity || a.opacity || 1) - (b.properties?.opacity || b.opacity || 1);
+        break;
+      case 'angle':
+        comparison = (a.transform?.rotation || a.rotation || 0) - (b.transform?.rotation || b.rotation || 0);
+        break;
+      case 'id':
+        comparison = a.id.localeCompare(b.id);
+        break;
       default:
         return 0;
     }
+    
+    return sortOrder === 'ascending' ? comparison : -comparison;
   });
+  
+  return sorted;
+}
+
+function extractTimestamp(id: string): number | null {
+  // Extract timestamp from shape ID format: shape_timestamp_random
+  const match = id.match(/shape_(\d+)_/);
+  return match ? parseInt(match[1]) : null;
+}
+
+function calculateShapeArea(shape: any): number {
+  if (!shape.points || shape.points.length === 0) return 0;
+  
+  // Simple area calculation using bounding box
+  const minX = Math.min(...shape.points.map((p: any) => p.x));
+  const maxX = Math.max(...shape.points.map((p: any) => p.x));
+  const minY = Math.min(...shape.points.map((p: any) => p.y));
+  const maxY = Math.max(...shape.points.map((p: any) => p.y));
+  
+  const width = maxX - minX;
+  const height = maxY - minY;
+  
+  // Apply transform scaling
+  const scaleX = shape.transform?.scaleX || 1;
+  const scaleY = shape.transform?.scaleY || 1;
+  
+  return width * height * Math.abs(scaleX) * Math.abs(scaleY);
+}
+
+function extractHueFromColor(color: string): number {
+  // Extract hue from HSL color string
+  const hslMatch = color.match(/hsl\((\d+(?:\.\d+)?),/);
+  if (hslMatch) {
+    return parseFloat(hslMatch[1]);
+  }
+  
+  // For hex colors, convert to HSL and extract hue
+  if (color.startsWith('#')) {
+    return hexToHue(color);
+  }
+  
+  return 0;
+}
+
+function hexToHue(hex: string): number {
+  // Convert hex to RGB
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const diff = max - min;
+  
+  if (diff === 0) return 0;
+  
+  let hue = 0;
+  if (max === r) {
+    hue = ((g - b) / diff) % 6;
+  } else if (max === g) {
+    hue = (b - r) / diff + 2;
+  } else {
+    hue = (r - g) / diff + 4;
+  }
+  
+  return (hue * 60 + 360) % 360;
 }
 
 export function applyGridDistribution(
   shapes: any[], 
   config: DistributionConfig,
-  canvasCenter = { x: 0, y: 0 }
+  canvasCenter = { x: 0, y: 0 },
+  generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number }
 ): any[] {
   if (!config.enabled || config.pattern !== 'grid') return shapes;
   
-  const sortedShapes = sortShapesForGrid(shapes, config.gridSortBy);
+  let sortedShapes: any[];
+  
+  if (config.gridSortScope === 'per-generation' && generationInfo) {
+    // Sort within each generation separately
+    const { shapesPerGeneration = shapes.length, totalGenerations = 1 } = generationInfo;
+    sortedShapes = [];
+    
+    for (let gen = 0; gen < totalGenerations; gen++) {
+      const startIndex = gen * shapesPerGeneration;
+      const endIndex = Math.min(startIndex + shapesPerGeneration, shapes.length);
+      const generationShapes = shapes.slice(startIndex, endIndex);
+      
+      const sortedGeneration = sortShapesForGrid(
+        generationShapes, 
+        config.gridSortBy, 
+        config.gridSortOrder
+      );
+      
+      sortedShapes.push(...sortedGeneration);
+    }
+  } else {
+    // Sort across entire batch
+    sortedShapes = sortShapesForGrid(shapes, config.gridSortBy, config.gridSortOrder);
+  }
   
   return sortedShapes.map((shape, index) => {
     const gridPos = calculateGridPosition(
