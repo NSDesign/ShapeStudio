@@ -516,7 +516,7 @@ export const defaultSettings: BatchConfigSettings = {
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' as const,
-  fillOpacityRange: [20, 100],
+  fillOpacityRange: [0, 100],
   fillOpacityDefine: 80,
   
   // Blur Properties
@@ -2650,10 +2650,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
                             {currentSettings.fillOpacityMode === 'range' && (
                               <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] || 20}% - {currentSettings.fillOpacityRange?.[1] || 100}%</Label>
+                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] ?? 0}% - {currentSettings.fillOpacityRange?.[1] ?? 100}%</Label>
                                 <Slider
-                                  value={currentSettings.fillOpacityRange || [20, 100]}
+                                  value={currentSettings.fillOpacityRange || [0, 100]}
                                   onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
+                                  min={0}
                                   max={100}
                                   step={5}
                                   className="[&_[role=slider]]:bg-blue-600"
