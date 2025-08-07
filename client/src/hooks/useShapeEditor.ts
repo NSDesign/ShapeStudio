@@ -1473,9 +1473,15 @@ export const useShapeEditor = () => {
         shape.transform.scaleX += noiseResult.scaleX * 0.1;
         shape.transform.scaleY += noiseResult.scaleY * 0.1;
 
-        // Apply noise to opacity - direct assignment for all
-        shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
-        shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseResult.opacity));
+        // Apply noise to opacity - only if opacity noise is enabled in Properties section
+        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.opacityEnabled) {
+          // Apply additive noise to batch config opacity values
+          const baseOpacity = shape.properties.fillOpacity;
+          const noiseOpacity = baseOpacity + (noiseResult.opacity - 1) * 0.3; // Scale noise effect
+          shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseOpacity));
+          shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseOpacity));
+        }
+        // If opacity Properties section is disabled, preserve batch config opacity values
 
         // Apply noise to blur
         shape.properties.blurRadius = Math.max(0, noiseResult.blur);
@@ -1562,9 +1568,8 @@ export const useShapeEditor = () => {
         console.log(`🚫 [NO NOISE] Shape ${index}: Noise disabled, entering non-noise branch`);
 
         // Skip legacy randomization - transforms are now handled by the enhanced transform system above
-        // Only ensure original opacity values when no noise
-        shape.properties.fillOpacity = 0.8 + Math.random() * 0.2;
-        shape.properties.strokeOpacity = 0.9 + Math.random() * 0.1;
+        // Preserve batch config opacity values when noise is disabled
+        // (opacity values were already set by batch config earlier in the generation process)
 
         console.log(`🔧 [NO NOISE] Shape ${index}: Noise disabled, applying transform only. Current fillColor="${shape.properties.fillColor}"`);
       }
