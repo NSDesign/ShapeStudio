@@ -1438,6 +1438,13 @@ export const useShapeEditor = () => {
             shape.transform.skewY = minSkewY + Math.random() * (maxSkewY - minSkewY);
           }
         }
+
+        // Apply basic rotation (legacy system) - works regardless of transforms enabled
+        if (batchConfigSettings.rotationRange && !batchConfigSettings.transformsEnabled) {
+          const [minRot, maxRot] = batchConfigSettings.rotationRange;
+          shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
+          console.log(`🔄 [ROTATION] Shape ${index}: Applied basic rotation=${shape.transform.rotation.toFixed(2)}° (range: ${minRot}°-${maxRot}°)`);
+        }
       }
 
       console.log(`🧪 [PRE-NOISE] Shape ${index}: BEFORE noise processing, fillColor="${shape.properties.fillColor}", noiseEnabled=${batchConfigSettings.noiseEnabled}`);
