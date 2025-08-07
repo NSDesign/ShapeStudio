@@ -1342,7 +1342,7 @@ export const useShapeEditor = () => {
               shape.transform.scaleX = Math.max(0.1, scaledScale); // Prevent negative scale
               shape.transform.scaleY = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleXMode === 'value') {
-              const baseScale = batchConfigSettings.scaleXValue || 1;
+              const baseScale = (batchConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               // Apply randomization scaling to value mode using (0, 1) range
               const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
@@ -1369,7 +1369,7 @@ export const useShapeEditor = () => {
               const scaledScale = baseScale * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleX = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleXMode === 'value') {
-              const baseScale = batchConfigSettings.scaleXValue || 1;
+              const baseScale = (batchConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleX = Math.max(0.1, baseScale + scaledVariation);
@@ -1389,7 +1389,7 @@ export const useShapeEditor = () => {
               const scaledScale = baseScale * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleY = Math.max(0.1, scaledScale);
             } else if (batchConfigSettings.scaleYMode === 'value') {
-              const baseScale = batchConfigSettings.scaleYValue || 1;
+              const baseScale = (batchConfigSettings.scaleYValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               const randomVariation = Math.random() * 0.5; // (0, 1) * 0.5 = 0 to 0.5 scale variation
               const scaledVariation = randomVariation * (batchConfigSettings.scaleRandomizationScale / 100);
               shape.transform.scaleY = Math.max(0.1, baseScale + scaledVariation);
