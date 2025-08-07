@@ -1406,15 +1406,12 @@ export const useShapeEditor = () => {
           if (batchConfigSettings.rotationMode === 'range') {
             const [minRot, maxRot] = batchConfigSettings.rotationRange;
             const baseRotation = minRot + Math.random() * (maxRot - minRot);
-            // Apply randomization scaling to existing randomization (0-100%)
-            const scaledRotation = baseRotation * (batchConfigSettings.rotationRandomizationScale / 100);
-            shape.transform.rotation = scaledRotation;
+            console.log(`🔄 [ENHANCED ROTATION RANGE] Shape ${index}: base=${baseRotation.toFixed(2)}°, range=${minRot}-${maxRot}`);
+            shape.transform.rotation = baseRotation;
           } else if (batchConfigSettings.rotationMode === 'value') {
             const baseRotation = batchConfigSettings.rotationValue || 0;
-            // Apply randomization scaling to value mode using (0, 1) range
-            const randomVariation = Math.random() * 90; // (0, 1) * 90 = 0 to 90 degree variation
-            const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
-            shape.transform.rotation = baseRotation + scaledVariation;
+            console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${baseRotation}°`);
+            shape.transform.rotation = baseRotation;
           } else if (batchConfigSettings.rotationMode === 'incremental') {
             // Incremental mode: each shape gets progressively more rotation
             let incrementAmount = (batchConfigSettings.rotationIncrement || 0) * index;
@@ -1424,10 +1421,8 @@ export const useShapeEditor = () => {
               incrementAmount = incrementAmount % batchConfigSettings.rotationModulation;
             }
             
-            // Apply randomization scaling to incremental mode using (0, 1) range
-            const randomVariation = Math.random() * 60; // (0, 1) * 60 = 0 to 60 degree variation
-            const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
-            shape.transform.rotation = incrementAmount + scaledVariation;
+            console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: increment=${incrementAmount}°`);
+            shape.transform.rotation = incrementAmount;
           }
 
           // Apply skew if configured (legacy system)
@@ -1439,18 +1434,12 @@ export const useShapeEditor = () => {
           }
         }
 
-        // Debug rotation settings
-        console.log(`🔍 [ROTATION DEBUG] Shape ${index}: rotationRange=${JSON.stringify(batchConfigSettings.rotationRange)}, transformsEnabled=${batchConfigSettings.transformsEnabled}, rotationMode=${batchConfigSettings.rotationMode}`);
-        
-        // Apply basic rotation (legacy system) - works when transforms are disabled or when enhanced rotation is not used
-        if (batchConfigSettings.rotationRange && 
-            (!batchConfigSettings.transformsEnabled || batchConfigSettings.rotationMode !== 'range')) {
-          const [minRot, maxRot] = batchConfigSettings.rotationRange;
-          const rotationValue = minRot + Math.random() * (maxRot - minRot);
-          shape.transform.rotation = rotationValue;
-          console.log(`🔄 [BASIC ROTATION] Shape ${index}: Applied rotation=${rotationValue.toFixed(2)}° (range: ${minRot}°-${maxRot}°, transformsEnabled=${batchConfigSettings.transformsEnabled})`);
-        } else {
-          console.log(`❌ [ROTATION SKIP] Shape ${index}: Skipped basic rotation - rotationRange exists=${!!batchConfigSettings.rotationRange}, transformsEnabled=${batchConfigSettings.transformsEnabled}, rotationMode=${batchConfigSettings.rotationMode}`);
+        // Apply rotation randomization if enabled (additive to any existing rotation)
+        if (batchConfigSettings.rotationRandomizationScale > 0) {
+          const randomVariation = (Math.random() * 2 - 1) * 30; // ±30° base variation
+          const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
+          shape.transform.rotation += scaledVariation;
+          console.log(`🎲 [ROTATION RANDOMIZATION] Shape ${index}: Added ${scaledVariation.toFixed(2)}° variation (scale=${batchConfigSettings.rotationRandomizationScale}%)`);
         }
       }
 
