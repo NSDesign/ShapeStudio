@@ -1439,11 +1439,13 @@ export const useShapeEditor = () => {
           }
         }
 
-        // Apply basic rotation (legacy system) - works regardless of transforms enabled
-        if (batchConfigSettings.rotationRange && !batchConfigSettings.transformsEnabled) {
+        // Apply basic rotation (legacy system) - works when transforms are disabled or when enhanced rotation is not used
+        if (batchConfigSettings.rotationRange && 
+            (!batchConfigSettings.transformsEnabled || batchConfigSettings.rotationMode !== 'range')) {
           const [minRot, maxRot] = batchConfigSettings.rotationRange;
-          shape.transform.rotation = minRot + Math.random() * (maxRot - minRot);
-          console.log(`🔄 [ROTATION] Shape ${index}: Applied basic rotation=${shape.transform.rotation.toFixed(2)}° (range: ${minRot}°-${maxRot}°)`);
+          const rotationValue = minRot + Math.random() * (maxRot - minRot);
+          shape.transform.rotation = rotationValue;
+          console.log(`🔄 [BASIC ROTATION] Shape ${index}: Applied rotation=${rotationValue.toFixed(2)}° (range: ${minRot}°-${maxRot}°, transformsEnabled=${batchConfigSettings.transformsEnabled})`);
         }
       }
 
