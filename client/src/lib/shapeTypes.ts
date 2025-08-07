@@ -380,7 +380,9 @@ export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'asc
         comparison = aHue - bHue;
         break;
       case 'opacity':
-        comparison = (a.properties?.opacity || a.opacity || 1) - (b.properties?.opacity || b.opacity || 1);
+        const aOpacity = a.properties?.fillOpacity || a.properties?.opacity || a.opacity || 1;
+        const bOpacity = b.properties?.fillOpacity || b.properties?.opacity || b.opacity || 1;
+        comparison = aOpacity - bOpacity;
         break;
       case 'angle':
         comparison = (a.transform?.rotation || a.rotation || 0) - (b.transform?.rotation || b.rotation || 0);

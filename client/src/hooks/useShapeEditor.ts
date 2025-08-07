@@ -1474,7 +1474,7 @@ export const useShapeEditor = () => {
         shape.transform.scaleY += noiseResult.scaleY * 0.1;
 
         // Apply noise to opacity - only if opacity noise is enabled in Properties section
-        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.opacityEnabled) {
+        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.noiseOpacityAmplitude > 0) {
           // Apply additive noise to batch config opacity values
           const baseOpacity = shape.properties.fillOpacity;
           const noiseOpacity = baseOpacity + (noiseResult.opacity - 1) * 0.3; // Scale noise effect
