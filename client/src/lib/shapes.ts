@@ -627,34 +627,85 @@ export class Shape {
   }
 
   private generateCubicCurvePoints(batchConfig?: any): void {
-    // Generate a simple cubic curve with starting point, ending point, and one control point
-    // Based on the reference image: Starting Point -> Control Point -> Ending Point
+    // Generate multiple connected cubic curves with smooth interpolation
     this.points = [];
     this.controlPoints = [];
     this.tangentHandles = [];
     this.smoothPoints = [];
 
-    // Create starting and ending points
-    const startPoint: Point = { x: -60, y: 0 };
-    const endPoint: Point = { x: 60, y: 0 };
-    
-    // Control point positioned above the line between start and end points
-    const controlPoint: Point = { x: 0, y: -40 };
-    
-    // Apply some randomization for variety
-    const variation = 20;
-    startPoint.x += (Math.random() - 0.5) * variation;
-    startPoint.y += (Math.random() - 0.5) * variation;
-    endPoint.x += (Math.random() - 0.5) * variation;
-    endPoint.y += (Math.random() - 0.5) * variation;
-    controlPoint.x += (Math.random() - 0.5) * variation;
-    controlPoint.y += (Math.random() - 0.5) * (variation * 0.8);
+    // Get point count from batch config or use default range
+    let pointCount = 3;
+    if (batchConfig?.scatterSettings?.shapeSpecific?.cubic?.pointCountRange) {
+      const [min, max] = batchConfig.scatterSettings.shapeSpecific.cubic.pointCountRange;
+      pointCount = Math.floor(min + Math.random() * (max - min + 1));
+    } else {
+      pointCount = 3 + Math.floor(Math.random() * 4); // 3-6 points
+    }
 
-    this.points = [startPoint, endPoint];
-    this.controlPoints = [controlPoint];
+    // Ensure minimum of 3 points for proper cubic curves
+    pointCount = Math.max(3, pointCount);
+
+    // Generate main curve points distributed along a path
+    const baseRadius = 60;
+    const angleStep = (Math.PI * 1.5) / (pointCount - 1); // Spread across 270 degrees
     
-    // Cubic curves are always open by default
-    this.closed = false;
+    for (let i = 0; i < pointCount; i++) {
+      const angle = -Math.PI * 0.75 + (i * angleStep); // Start from -135 degrees
+      const radius = baseRadius + (Math.random() - 0.5) * 30; // Add radius variation
+      
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      
+      // Add positional variation
+      const variation = 25;
+      this.points.push({
+        x: x + (Math.random() - 0.5) * variation,
+        y: y + (Math.random() - 0.5) * variation
+      });
+    }
+
+    // Generate smooth control points for cubic Bézier curves
+    // Each cubic segment needs 2 control points
+    this.controlPoints = [];
+    
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const current = this.points[i];
+      const next = this.points[i + 1];
+      
+      // Calculate control points for smooth interpolation
+      const dx = next.x - current.x;
+      const dy = next.y - current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Control points positioned at 1/3 and 2/3 of the segment
+      const cp1Distance = distance * 0.33;
+      const cp2Distance = distance * 0.67;
+      
+      // Add perpendicular offset for curve shape
+      const perpX = -dy / distance;
+      const perpY = dx / distance;
+      const curveHeight = (Math.random() - 0.5) * distance * 0.4;
+      
+      const cp1: Point = {
+        x: current.x + (dx * 0.33) + (perpX * curveHeight),
+        y: current.y + (dy * 0.33) + (perpY * curveHeight)
+      };
+      
+      const cp2: Point = {
+        x: current.x + (dx * 0.67) + (perpX * curveHeight * 0.5),
+        y: current.y + (dy * 0.67) + (perpY * curveHeight * 0.5)
+      };
+      
+      this.controlPoints.push(cp1, cp2);
+    }
+
+    // Use batch config settings for open/closed probability if available
+    let openProbability = 90; // Default 90% open for better curve display
+    if (batchConfig?.scatterSettings?.shapeSpecific?.[this.type]?.openProbability !== undefined) {
+      openProbability = batchConfig.scatterSettings.shapeSpecific[this.type].openProbability;
+    }
+    
+    this.closed = Math.random() * 100 > openProbability;
     this.renderType = 'cubic';
   }
 
@@ -1691,14 +1742,30 @@ export class Shape {
     if (!this.points || this.points.length < 2) return;
     if (!this.controlPoints || this.controlPoints.length === 0) return;
 
-    // Simple cubic curve: start point -> control point -> end point
-    const startPoint = this.points[0];
-    const endPoint = this.points[1];
-    const controlPoint = this.controlPoints[0];
+    ctx.moveTo(this.points[0].x, this.points[0].y);
 
-    ctx.moveTo(startPoint.x, startPoint.y);
-    // Draw quadratic curve using the single control point
-    ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
+    // Draw connected cubic Bézier curves with smooth interpolation
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const currentPoint = this.points[i];
+      const nextPoint = this.points[i + 1];
+      
+      // Each segment uses two control points for cubic Bézier
+      const cp1 = this.controlPoints[i * 2];
+      const cp2 = this.controlPoints[i * 2 + 1];
+      
+      if (cp1 && cp2) {
+        // Draw cubic Bézier curve segment
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
+      } else {
+        // Fallback to linear if control points missing
+        ctx.lineTo(nextPoint.x, nextPoint.y);
+      }
+    }
+
+    // Close the path if this is a closed curve
+    if (this.closed) {
+      ctx.closePath();
+    }
   }
 
   private drawLine(ctx: CanvasRenderingContext2D): void {
@@ -1716,7 +1783,7 @@ export class Shape {
     // Use renderType to determine how to draw curves
     const renderType = this.renderType || 'polygon';
     
-    if (renderType === 'bezier' || renderType === 'bezier' || renderType === 'smooth') {
+    if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
       if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
         // Draw four-segment Bézier curves for spline-based shapes
         this.drawSplineCubicBezier(ctx);
@@ -2685,7 +2752,7 @@ export class Shape {
             } else {
               ctx.lineTo(p2.x, p2.y);
             }
-          } else if (this.renderType === 'bezier' || this.renderType === 'bezier' || this.renderType === 'smooth') {
+          } else if (this.type === 'bezier' || this.type === 'cubic' || this.renderType === 'smooth') {
             // Draw curved segment using actual control points if available
             ctx.moveTo(p1.x, p1.y);
             
@@ -2774,7 +2841,7 @@ export class Shape {
             midX = (p1.x + p2.x) / 2;
             midY = (p1.y + p2.y) / 2;
           }
-        } else if (this.renderType === 'bezier' || this.renderType === 'bezier' || this.renderType === 'smooth') {
+        } else if (this.type === 'bezier' || this.type === 'cubic' || this.renderType === 'smooth') {
           // For other curve types with control points
           if (this.controlPoints && i < this.controlPoints.length) {
             const worldControl = this.getWorldControlPoint(i);

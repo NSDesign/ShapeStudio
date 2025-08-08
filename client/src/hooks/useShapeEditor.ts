@@ -45,8 +45,8 @@ export const useShapeEditor = () => {
         strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
       },
       cubic: { 
-        pointCountRange: [3, 6], 
-        openProbability: 50,
+        pointCountRange: [3, 8], 
+        openProbability: 90,
         strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
       },
       'smooth-spline': { 

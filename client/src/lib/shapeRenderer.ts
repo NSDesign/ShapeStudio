@@ -341,15 +341,30 @@ function drawCubicCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (!shape.points || shape.points.length < 2) return;
   if (!shape.controlPoints || shape.controlPoints.length === 0) return;
 
-  // Simple cubic curve: start point -> control point -> end point
-  const startPoint = shape.points[0];
-  const endPoint = shape.points[1];
-  const controlPoint = shape.controlPoints[0];
+  ctx.moveTo(shape.points[0].x, shape.points[0].y);
 
-  ctx.moveTo(startPoint.x, startPoint.y);
-  
-  // Draw quadratic curve using the single control point
-  ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
+  // Draw connected cubic Bézier curves with smooth interpolation
+  for (let i = 0; i < shape.points.length - 1; i++) {
+    const currentPoint = shape.points[i];
+    const nextPoint = shape.points[i + 1];
+    
+    // Each segment uses two control points for cubic Bézier
+    const cp1 = shape.controlPoints[i * 2];
+    const cp2 = shape.controlPoints[i * 2 + 1];
+    
+    if (cp1 && cp2) {
+      // Draw cubic Bézier curve segment
+      ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
+    } else {
+      // Fallback to linear if control points missing
+      ctx.lineTo(nextPoint.x, nextPoint.y);
+    }
+  }
+
+  // Close the path if this is a closed curve
+  if (shape.closed) {
+    ctx.closePath();
+  }
 }
 
 function drawSmoothSpline(ctx: CanvasRenderingContext2D, shape: Shape): void {
