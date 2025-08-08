@@ -188,7 +188,7 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
         const p1 = shape.points[i];
         const p2 = shape.points[i + 1];
         
-        if (i < shape.tangentHandles.length && (i + 1) < shape.tangentHandles.length) {
+        if (shape.tangentHandles.length > i && shape.tangentHandles.length > (i + 1)) {
           const cp1 = shape.tangentHandles[i].out;
           const cp2 = shape.tangentHandles[i + 1].in;
           ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);

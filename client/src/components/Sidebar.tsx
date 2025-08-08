@@ -2218,8 +2218,52 @@ export default function Sidebar({
           )}
 
           {selectedCount === 0 && (
-            <div className="text-xs text-slate-500">
-              Select shapes to edit their properties
+            <div className="space-y-4">
+              <div className="text-xs text-slate-500 mb-4">
+                Select shapes to edit their properties
+              </div>
+              
+              {/* General Canvas Properties */}
+              <div className="space-y-3">
+                <Label className="text-sm text-slate-300 font-medium">Canvas Settings</Label>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-400">Background Color</Label>
+                    <div className="w-6 h-6 rounded bg-slate-900 border border-slate-600"></div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-400">Canvas Size</Label>
+                    <span className="text-xs text-slate-300">1200 × 800</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-400">Zoom Level</Label>
+                    <span className="text-xs text-slate-300">100%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-3">
+                <Label className="text-sm text-slate-300 font-medium">Quick Actions</Label>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => onGenerateShapes(5)} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Generate 5 Shapes
+                  </Button>
+                  <Button onClick={() => onGenerateShapes(10)} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Generate 10 Shapes
+                  </Button>
+                  <Button onClick={onSelectAll} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Select All
+                  </Button>
+                  <Button onClick={onClearCanvas} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Clear Canvas
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
