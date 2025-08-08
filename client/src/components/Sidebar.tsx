@@ -1468,11 +1468,11 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability || 50}%</span>
-                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability || 50)}%</span>
+                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
+                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
                   </div>
                   <Slider
-                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability || 50]}
+                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50]}
                     onValueChange={([value]) => {
                       console.log(`${shapeType} open probability: ${value}%`);
                       onUpdateScatterSettings({

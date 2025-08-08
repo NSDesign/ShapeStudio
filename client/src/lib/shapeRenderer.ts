@@ -208,18 +208,43 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
           ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, firstPoint.x, firstPoint.y);
         }
       }
-    } else {
-      // Smooth curves
+    } else if (shape.controlPoints && shape.controlPoints.length > 0) {
+      // Use control points for cubic bezier curves (for cubic splines)
       for (let i = 1; i < shape.points.length; i++) {
-        const prevPoint = shape.points[i - 1];
-        const currentPoint = shape.points[i];
-        const nextPoint = shape.points[i + 1] || (shape.closed ? shape.points[0] : currentPoint);
+        const controlIndex1 = (i - 1) * 2;
+        const controlIndex2 = controlIndex1 + 1;
         
+        if (controlIndex1 < shape.controlPoints.length && controlIndex2 < shape.controlPoints.length) {
+          // Use two control points for proper cubic bezier curve
+          ctx.bezierCurveTo(
+            shape.controlPoints[controlIndex1].x,
+            shape.controlPoints[controlIndex1].y,
+            shape.controlPoints[controlIndex2].x,
+            shape.controlPoints[controlIndex2].y,
+            shape.points[i].x,
+            shape.points[i].y
+          );
+        } else {
+          // Fallback to linear if control points are missing
+          ctx.lineTo(shape.points[i].x, shape.points[i].y);
+        }
+      }
+    } else {
+      // Smooth curves using catmull-rom approximation
+      for (let i = 1; i < shape.points.length; i++) {
+        const p0 = shape.points[i - 2] || shape.points[i - 1];
+        const p1 = shape.points[i - 1];
+        const p2 = shape.points[i];
+        const p3 = shape.points[i + 1] || shape.points[i];
+        
+        // Catmull-Rom to Bezier conversion for smooth curves
         const tension = 0.3;
-        const controlX = currentPoint.x + (nextPoint.x - prevPoint.x) * tension;
-        const controlY = currentPoint.y + (nextPoint.y - prevPoint.y) * tension;
+        const cp1x = p1.x + (p2.x - p0.x) * tension;
+        const cp1y = p1.y + (p2.y - p0.y) * tension;
+        const cp2x = p2.x - (p3.x - p1.x) * tension;
+        const cp2y = p2.y - (p3.y - p1.y) * tension;
         
-        ctx.quadraticCurveTo(controlX, controlY, currentPoint.x, currentPoint.y);
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
       }
     }
   } else {
