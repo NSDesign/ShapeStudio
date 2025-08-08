@@ -339,25 +339,35 @@ function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
 
 function drawCubicCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   if (!shape.points || shape.points.length < 2) return;
-  if (!shape.controlPoints || shape.controlPoints.length === 0) return;
-
+  
   ctx.moveTo(shape.points[0].x, shape.points[0].y);
 
-  // Draw connected cubic Bézier curves with smooth interpolation
-  for (let i = 0; i < shape.points.length - 1; i++) {
-    const currentPoint = shape.points[i];
-    const nextPoint = shape.points[i + 1];
-    
-    // Each segment uses two control points for cubic Bézier
-    const cp1 = shape.controlPoints[i * 2];
-    const cp2 = shape.controlPoints[i * 2 + 1];
-    
-    if (cp1 && cp2) {
-      // Draw cubic Bézier curve segment
-      ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
-    } else {
-      // Fallback to linear if control points missing
-      ctx.lineTo(nextPoint.x, nextPoint.y);
+  // Use tangent handles for smooth cubic curves, same as Bézier curves
+  if (shape.tangentHandles && shape.tangentHandles.length > 0) {
+    for (let i = 0; i < shape.points.length - 1; i++) {
+      const p1 = shape.points[i];
+      const p2 = shape.points[i + 1];
+      
+      // Get tangent handles for smooth cubic interpolation
+      const handle1 = shape.tangentHandles[i * 2 + 1]; // Outgoing handle from current point
+      const handle2 = shape.tangentHandles[(i + 1) * 2]; // Incoming handle to next point
+      
+      if (handle1 && handle2 && 'out' in handle1 && 'in' in handle2) {
+        // Draw cubic Bézier curve with proper tangent continuity
+        ctx.bezierCurveTo(
+          p1.x + handle1.out.x, p1.y + handle1.out.y,
+          p2.x + handle2.in.x, p2.y + handle2.in.y,
+          p2.x, p2.y
+        );
+      } else {
+        // Fallback to linear if handles missing
+        ctx.lineTo(p2.x, p2.y);
+      }
+    }
+  } else {
+    // Fallback to simple lines if no tangent handles
+    for (let i = 1; i < shape.points.length; i++) {
+      ctx.lineTo(shape.points[i].x, shape.points[i].y);
     }
   }
 

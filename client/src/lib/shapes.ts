@@ -645,59 +645,34 @@ export class Shape {
     // Ensure minimum of 3 points for proper cubic curves
     pointCount = Math.max(3, pointCount);
 
-    // Generate main curve points distributed along a path
+    // Generate main curve points with natural distribution
     const baseRadius = 60;
-    const angleStep = (Math.PI * 1.5) / (pointCount - 1); // Spread across 270 degrees
+    const centerX = 0;
+    const centerY = 0;
     
+    // Create organic point distribution
     for (let i = 0; i < pointCount; i++) {
-      const angle = -Math.PI * 0.75 + (i * angleStep); // Start from -135 degrees
-      const radius = baseRadius + (Math.random() - 0.5) * 30; // Add radius variation
+      const angle = (i / (pointCount - 1)) * Math.PI * 1.5 - Math.PI * 0.75; // Spread across 270 degrees
+      const radiusVariation = 0.3 + Math.random() * 0.4; // 0.3 to 0.7 multiplier
+      const radius = baseRadius * radiusVariation;
       
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
+      const baseX = centerX + Math.cos(angle) * radius;
+      const baseY = centerY + Math.sin(angle) * radius;
       
-      // Add positional variation
-      const variation = 25;
-      this.points.push({
-        x: x + (Math.random() - 0.5) * variation,
-        y: y + (Math.random() - 0.5) * variation
+      // Add organic positional variation
+      const maxPointPos = Math.max(Math.abs(baseX), Math.abs(baseY));
+      const minPointPos = Math.min(Math.abs(baseX), Math.abs(baseY));
+      const xVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.3;
+      const yVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.3;
+      
+      this.points.push({ 
+        x: baseX + xVariation, 
+        y: baseY + yVariation 
       });
     }
-
-    // Generate smooth control points for cubic Bézier curves
-    // Each cubic segment needs 2 control points
-    this.controlPoints = [];
     
-    for (let i = 0; i < this.points.length - 1; i++) {
-      const current = this.points[i];
-      const next = this.points[i + 1];
-      
-      // Calculate control points for smooth interpolation
-      const dx = next.x - current.x;
-      const dy = next.y - current.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Control points positioned at 1/3 and 2/3 of the segment
-      const cp1Distance = distance * 0.33;
-      const cp2Distance = distance * 0.67;
-      
-      // Add perpendicular offset for curve shape
-      const perpX = -dy / distance;
-      const perpY = dx / distance;
-      const curveHeight = (Math.random() - 0.5) * distance * 0.4;
-      
-      const cp1: Point = {
-        x: current.x + (dx * 0.33) + (perpX * curveHeight),
-        y: current.y + (dy * 0.33) + (perpY * curveHeight)
-      };
-      
-      const cp2: Point = {
-        x: current.x + (dx * 0.67) + (perpX * curveHeight * 0.5),
-        y: current.y + (dy * 0.67) + (perpY * curveHeight * 0.5)
-      };
-      
-      this.controlPoints.push(cp1, cp2);
-    }
+    // Generate smooth tangent handles using the same approach as Bézier curves
+    this.generateSmoothTangentHandles();
 
     // Use batch config settings for open/closed probability if available
     let openProbability = 90; // Default 90% open for better curve display
@@ -1740,25 +1715,35 @@ export class Shape {
 
   private drawCubicCurve(ctx: CanvasRenderingContext2D): void {
     if (!this.points || this.points.length < 2) return;
-    if (!this.controlPoints || this.controlPoints.length === 0) return;
-
+    
     ctx.moveTo(this.points[0].x, this.points[0].y);
 
-    // Draw connected cubic Bézier curves with smooth interpolation
-    for (let i = 0; i < this.points.length - 1; i++) {
-      const currentPoint = this.points[i];
-      const nextPoint = this.points[i + 1];
-      
-      // Each segment uses two control points for cubic Bézier
-      const cp1 = this.controlPoints[i * 2];
-      const cp2 = this.controlPoints[i * 2 + 1];
-      
-      if (cp1 && cp2) {
-        // Draw cubic Bézier curve segment
-        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
-      } else {
-        // Fallback to linear if control points missing
-        ctx.lineTo(nextPoint.x, nextPoint.y);
+    // Use tangent handles for smooth cubic curves, same as Bézier curves
+    if (this.tangentHandles && this.tangentHandles.length > 0) {
+      for (let i = 0; i < this.points.length - 1; i++) {
+        const p1 = this.points[i];
+        const p2 = this.points[i + 1];
+        
+        // Get tangent handles for smooth cubic interpolation
+        const handle1 = this.tangentHandles[i * 2 + 1]; // Outgoing handle from current point
+        const handle2 = this.tangentHandles[(i + 1) * 2]; // Incoming handle to next point
+        
+        if (handle1 && handle2 && 'out' in handle1 && 'in' in handle2) {
+          // Draw cubic Bézier curve with proper tangent continuity
+          ctx.bezierCurveTo(
+            p1.x + handle1.out.x, p1.y + handle1.out.y,
+            p2.x + handle2.in.x, p2.y + handle2.in.y,
+            p2.x, p2.y
+          );
+        } else {
+          // Fallback to linear if handles missing
+          ctx.lineTo(p2.x, p2.y);
+        }
+      }
+    } else {
+      // Fallback to simple quadratic curves if no tangent handles
+      for (let i = 1; i < this.points.length; i++) {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
       }
     }
 
@@ -2894,6 +2879,57 @@ export class Shape {
       ctx.fill();
       ctx.stroke();
     });
+
+    // Draw tangent handles for curve types (cubic, bezier, smooth-spline)
+    if ((this.type === 'cubic' || this.type === 'bezier' || this.type === 'smooth-spline') && this.tangentHandles) {
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 1 / canvasZoom;
+      
+      this.points.forEach((point, index) => {
+        const worldPoint = this.getWorldPoint(index);
+        if (!worldPoint || !this.tangentHandles) return;
+        
+        // Draw incoming handle
+        const incomingHandle = this.tangentHandles[index * 2];
+        if (incomingHandle && 'in' in incomingHandle) {
+          const handleWorldPos = {
+            x: worldPoint.x + incomingHandle.in.x * this.transform.scaleX,
+            y: worldPoint.y + incomingHandle.in.y * this.transform.scaleY
+          };
+          
+          ctx.beginPath();
+          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.lineTo(handleWorldPos.x, handleWorldPos.y);
+          ctx.stroke();
+          
+          // Draw handle point
+          ctx.fillStyle = '#10B981';
+          ctx.beginPath();
+          ctx.arc(handleWorldPos.x, handleWorldPos.y, 3 / canvasZoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Draw outgoing handle
+        const outgoingHandle = this.tangentHandles[index * 2 + 1];
+        if (outgoingHandle && 'out' in outgoingHandle) {
+          const handleWorldPos = {
+            x: worldPoint.x + outgoingHandle.out.x * this.transform.scaleX,
+            y: worldPoint.y + outgoingHandle.out.y * this.transform.scaleY
+          };
+          
+          ctx.beginPath();
+          ctx.moveTo(worldPoint.x, worldPoint.y);
+          ctx.lineTo(handleWorldPos.x, handleWorldPos.y);
+          ctx.stroke();
+          
+          // Draw handle point
+          ctx.fillStyle = '#10B981';
+          ctx.beginPath();
+          ctx.arc(handleWorldPos.x, handleWorldPos.y, 3 / canvasZoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
     
     ctx.restore();
   }
