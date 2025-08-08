@@ -140,11 +140,11 @@ export interface BatchConfigSettings {
   // Ring-specific Properties
   ringInnerRadiusRange: [number, number];
   
-  // Fill Properties
+  // Fill Properties - Controls solid vs gradient vs pattern
   fillEnabled: boolean;
-  fillProbability: number; // 0-100%
+  fillStyleProbability: number; // 0-100% - probability for solid fill vs gradient fill
   
-  // Fill Color Settings
+  // Fill Color Settings (for solid fills)
   fillColorMode: 'range' | 'palette' | 'define';
   fillColorRange: [string, string]; // For range mode (HSL interpolation)
   fillColorPalette: string[]; // For palette mode
@@ -154,8 +154,12 @@ export interface BatchConfigSettings {
   fillColorLightnessRange: [number, number]; // 0-100% for range mode
   
   // Fill Gradient Settings
-  fillGradientEnabled: boolean; // Enable/disable gradients independently from solid fills
-  fillGradientProbability: number; // 0-100%
+  fillGradientEnabled: boolean; // Enable/disable gradients
+  // Individual gradient type probabilities (must sum to 100 when enabled)
+  fillGradientLinearProbability: number; // 0-100% probability for linear gradients
+  fillGradientRadialProbability: number; // 0-100% probability for radial gradients
+  fillGradientConicProbability: number; // 0-100% probability for conic gradients
+  
   fillGradientColorMode: 'range' | 'palette' | 'define';
   fillGradientColorRange: [string, string]; // For range mode (HSL interpolation)
   fillGradientColorPalette: string[]; // For palette mode
@@ -164,10 +168,7 @@ export interface BatchConfigSettings {
   fillGradientColorSaturationRange: [number, number]; // 0-100% for range mode
   fillGradientColorLightnessRange: [number, number]; // 0-100% for range mode
   fillGradientStopsRange: [number, number]; // RGBA gradient stops
-  
   // Enhanced Gradient Type & Direction Controls
-  fillGradientLinearProbability: number; // 0-100% probability for linear gradients
-  fillGradientRadialProbability: number; // 0-100% probability for radial gradients
   fillGradientLinearDirection: 'range' | 'predefined'; // Linear direction mode
   fillGradientLinearAngleRange: [number, number]; // Min-max angle range for range mode
   fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
@@ -192,6 +193,12 @@ export interface BatchConfigSettings {
   fillGradientRadialCircleProbability: number; // 0-100% probability for circle shape
   fillGradientRadialEllipseProbability: number; // 0-100% probability for ellipse shape
   fillGradientMatchShape: boolean; // Whether gradient type should match shape type
+  
+  // Conic gradient controls
+  fillGradientConicCenter: 'center' | 'random' | 'coordinates'; // Conic center positioning
+  fillGradientConicCenterX: number; // X coordinate for specific positioning (0-100%)
+  fillGradientConicCenterY: number; // Y coordinate for specific positioning (0-100%)
+  fillGradientConicAngle: number; // Starting angle for conic gradient (0-360°)
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' | 'define';
@@ -463,7 +470,7 @@ export const defaultSettings: BatchConfigSettings = {
   
   // Fill Properties
   fillEnabled: true,
-  fillProbability: 80,
+  fillStyleProbability: 60, // 60% solid fill, 40% gradient fill
   
   // Fill Color Settings
   fillColorMode: 'range' as const,
@@ -476,7 +483,10 @@ export const defaultSettings: BatchConfigSettings = {
   
   // Fill Gradient Settings
   fillGradientEnabled: true,
-  fillGradientProbability: 20,
+  // Individual gradient type probabilities
+  fillGradientLinearProbability: 50, // 50% of gradients are linear
+  fillGradientRadialProbability: 40, // 40% of gradients are radial
+  fillGradientConicProbability: 10,  // 10% of gradients are conic
   fillGradientColorMode: 'range' as const,
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
   fillGradientColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
@@ -487,8 +497,6 @@ export const defaultSettings: BatchConfigSettings = {
   fillGradientStopsRange: [2, 4],
   
   // Enhanced Gradient Type & Direction Controls
-  fillGradientLinearProbability: 50, // 50% linear probability
-  fillGradientRadialProbability: 50, // 50% radial probability
   fillGradientLinearDirection: 'range' as const, // Default to range control
   fillGradientLinearAngleRange: [0, 360], // Default full angle range
   fillGradientLinearPredefined: 'diagonal-down' as const, // Default predefined direction
@@ -513,6 +521,12 @@ export const defaultSettings: BatchConfigSettings = {
   fillGradientRadialCircleProbability: 60, // 60% circle probability
   fillGradientRadialEllipseProbability: 40, // 40% ellipse probability
   fillGradientMatchShape: false, // Default: don't match shape type
+  
+  // Conic gradient controls
+  fillGradientConicCenter: 'center' as const,
+  fillGradientConicCenterX: 50,
+  fillGradientConicCenterY: 50,
+  fillGradientConicAngle: 0,
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' as const,
@@ -1938,22 +1952,23 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 <div className="flex items-center space-x-2">
                                   <Label className="text-sm font-medium text-slate-200">Solid</Label>
                                   <div className="flex items-center space-x-1 text-xs text-slate-400">
-                                    <span>Probability: {currentSettings.fillProbability}%</span>
+                                    <span>Probability: {currentSettings.fillStyleProbability}%</span>
                                   </div>
                                 </div>
                               </AccordionTrigger>
                               <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-4">
-                                  {/* Fill Probability */}
+                                  {/* Fill Style Probability - Controls solid vs gradient */}
                                   <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Fill Probability: {currentSettings.fillProbability}%</Label>
+                                    <Label className="text-xs text-slate-300">Solid Fill Probability: {currentSettings.fillStyleProbability}%</Label>
                                     <Slider
-                                      value={[currentSettings.fillProbability]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ fillProbability: value })}
+                                      value={[currentSettings.fillStyleProbability]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ fillStyleProbability: value })}
                                       max={100}
                                       step={5}
                                       className="[&_[role=slider]]:bg-blue-600"
                                     />
+                                    <p className="text-xs text-slate-400">{currentSettings.fillStyleProbability}% solid fill, {100 - currentSettings.fillStyleProbability}% gradient fill</p>
                                   </div>
 
                                   {/* Solid Colors */}
@@ -2079,7 +2094,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 <div className="flex items-center space-x-2">
                                   <Label className="text-sm font-medium text-slate-200">Gradient</Label>
                                   <div className="flex items-center space-x-1 text-xs text-slate-400">
-                                    <span>Probability: {currentSettings.fillGradientProbability}%</span>
+                                    <span>Linear: {currentSettings.fillGradientLinearProbability}% | Radial: {currentSettings.fillGradientRadialProbability}% | Conic: {currentSettings.fillGradientConicProbability}%</span>
                                   </div>
                                 </div>
                               </AccordionTrigger>
@@ -2095,16 +2110,44 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                     <Label className="text-sm font-medium text-slate-200">Enable Gradients</Label>
                                   </div>
 
-                                  {/* Gradient Probability */}
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Gradient Probability: {currentSettings.fillGradientProbability}%</Label>
-                                    <Slider
-                                      value={[currentSettings.fillGradientProbability]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ fillGradientProbability: value })}
-                                      max={100}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
+                                  {/* Gradient Type Probabilities */}
+                                  <div className="space-y-3">
+                                    <Label className="text-sm font-medium text-slate-200">Gradient Type Probabilities</Label>
+                                    
+                                    <div className="space-y-2">
+                                      <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
+                                      <Slider
+                                        value={[currentSettings.fillGradientLinearProbability]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
+                                        max={100}
+                                        step={5}
+                                        className="[&_[role=slider]]:bg-blue-600"
+                                      />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
+                                      <Slider
+                                        value={[currentSettings.fillGradientRadialProbability]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
+                                        max={100}
+                                        step={5}
+                                        className="[&_[role=slider]]:bg-purple-600"
+                                      />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <Label className="text-xs text-slate-300">Conic: {currentSettings.fillGradientConicProbability}%</Label>
+                                      <Slider
+                                        value={[currentSettings.fillGradientConicProbability]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
+                                        max={100}
+                                        step={5}
+                                        className="[&_[role=slider]]:bg-green-600"
+                                      />
+                                    </div>
+                                    
+                                    <p className="text-xs text-slate-400">Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}% (normalization applied during generation)</p>
                                   </div>
 
                                   {/* Gradient Stops */}

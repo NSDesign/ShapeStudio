@@ -96,7 +96,7 @@ export interface ShapeProperties {
   zIndex: number;
   blurRadius: number; // 0 = no blur, >0 = blur in pixels
   gradient?: {
-    type: 'linear' | 'radial';
+    type: 'linear' | 'radial' | 'conic';
     stops: { offset: number; color: string }[];
   };
   // Boolean operation properties

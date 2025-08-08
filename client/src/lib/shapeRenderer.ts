@@ -104,11 +104,16 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
           bounds.x, bounds.y, 
           bounds.x + bounds.width, bounds.y + bounds.height
         );
-      } else {
+      } else if (shape.properties.gradient.type === 'radial') {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      } else {
+        // Conic gradient
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        gradient = ctx.createConicGradient(0, centerX, centerY);
       }
       
       shape.properties.gradient.stops.forEach(stop => {

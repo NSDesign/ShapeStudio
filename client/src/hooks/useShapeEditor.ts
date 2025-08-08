@@ -1130,19 +1130,39 @@ export const useShapeEditor = () => {
 
       // Apply fill and stroke probabilities from batch config
       if (batchConfigSettings.propertiesEnabled) {
-        // Handle fill and gradient probabilities independently
+        // Handle fill style: solid vs gradient (not transparent vs opaque)
         if (batchConfigSettings.fillEnabled) {
-          // Independent probability checks - gradient requires both enabled and probability
-          const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillProbability;
-          const shouldHaveGradient = batchConfigSettings.fillGradientEnabled && 
-            Math.random() * 100 < batchConfigSettings.fillGradientProbability;
+          // Determine if this shape gets solid or gradient fill
+          const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillStyleProbability;
+          const shouldHaveGradient = !shouldHaveSolidFill && batchConfigSettings.fillGradientEnabled;
 
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillProb=${batchConfigSettings.fillProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
+          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillStyleProb=${batchConfigSettings.fillStyleProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
 
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
-            // Create gradient (takes priority if both are true)
-            const gradientType = Math.random() < 0.5 ? 'linear' : 'radial';
+            // Determine gradient type based on individual probabilities
+            const totalGradientProb = batchConfigSettings.fillGradientLinearProbability + 
+                                    batchConfigSettings.fillGradientRadialProbability + 
+                                    batchConfigSettings.fillGradientConicProbability;
+            
+            let gradientType: 'linear' | 'radial' | 'conic' = 'linear';
+            
+            if (totalGradientProb > 0) {
+              const random = Math.random() * totalGradientProb;
+              let cumulative = 0;
+              
+              cumulative += batchConfigSettings.fillGradientLinearProbability;
+              if (random < cumulative) {
+                gradientType = 'linear';
+              } else {
+                cumulative += batchConfigSettings.fillGradientRadialProbability;
+                if (random < cumulative) {
+                  gradientType = 'radial';
+                } else {
+                  gradientType = 'conic';
+                }
+              }
+            }
             const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
             const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
 
@@ -1182,7 +1202,7 @@ export const useShapeEditor = () => {
 
             // When gradient is used, set transparent fill so gradient shows through
             shape.properties.fillColor = 'transparent';
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using GRADIENT, fillColor set to transparent`);
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using ${gradientType.toUpperCase()} GRADIENT, fillColor set to transparent`);
 
             // Apply fill opacity range for gradient
             const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
@@ -1212,11 +1232,12 @@ export const useShapeEditor = () => {
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
 
           } else {
-            // No fill at all - both probabilities failed
-            shape.properties.fillColor = 'transparent';
-            shape.properties.fillOpacity = 0;
+            // This should not happen in the new system - every shape gets either solid or gradient
+            // If neither solid nor gradient, default to a solid fill
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Fallback to default solid fill`);
             shape.properties.gradient = undefined;
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: NO FILL - both probabilities failed, fillColor set to transparent`);
+            shape.properties.fillColor = '#3b82f6';
+            shape.properties.fillOpacity = 0.8;
           }
         }
 
