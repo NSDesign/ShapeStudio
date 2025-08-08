@@ -1813,67 +1813,76 @@ export default function Sidebar({
     };
 
     return (
-      <Accordion type="single" collapsible defaultValue="shape-types" className="w-full">
-        <AccordionItem value="shape-types" className="border-slate-700">
-          <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
-            <div className="flex items-center">
-              <Shapes className="w-4 h-4 mr-2" />
-              Shape Types
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-4">
-            <div className="space-y-3">
-              {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
-          const isEnabled = enabledShapeTypes.has(type as ShapeType);
-          const isExpanded = expandedShapes.has(type);
-          const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rectangle', 'square'].includes(type);
-
-          return (
-            <div key={type} className="space-y-2">
-              {/* Shape Toggle Row */}
-              <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-              }`}>
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded transition-colors ${
-                    isEnabled ? 'bg-blue-400' : 'bg-slate-500'
-                  }`} />
-                  <Label className={`text-sm transition-colors ${
-                    isEnabled ? 'text-blue-200' : 'text-slate-300'
-                  }`}>{displayName}</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {isEnabled && hasProperties && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleShapeExpansion(type)}
-                      className="p-1 h-6 w-6 hover:bg-slate-700"
-                    >
-                      <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`} />
-                    </Button>
-                  )}
-                  <Switch
-                    checked={isEnabled}
-                    onCheckedChange={() => onToggleShapeType(type as ShapeType)}
-                    className="data-[state=checked]:bg-blue-600"
-                  />
-                </div>
+      <div className="space-y-3">
+        {/* Shape Types Accordion - Only includes the shape list */}
+        <Accordion type="single" collapsible defaultValue="shape-types" className="w-full">
+          <AccordionItem value="shape-types" className="border-slate-700">
+            <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
+              <div className="flex items-center">
+                <Shapes className="w-4 h-4 mr-2" />
+                Shape Types
               </div>
-              
-              {/* Shape Properties (Accordion Content) */}
-              {isEnabled && isExpanded && hasProperties && (
-                <div className="ml-4">
-                  {getShapeProperties(type)}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <div className="space-y-3">
+                {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
+                  const isEnabled = enabledShapeTypes.has(type as ShapeType);
+                  const isExpanded = expandedShapes.has(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rectangle', 'square'].includes(type);
 
-        {/* All On/Off Buttons */}
+                  return (
+                    <div key={type} className="space-y-2">
+                      {/* Shape Toggle Row */}
+                      <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                        isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+                      }`}>
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded transition-colors ${
+                            isEnabled ? 'bg-blue-400' : 'bg-slate-500'
+                          }`} />
+                          <Label className={`text-sm transition-colors ${
+                            isEnabled ? 'text-blue-200' : 'text-slate-300'
+                          }`}>{displayName}</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {isEnabled && hasProperties && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleShapeExpansion(type)}
+                              className="p-1 h-6 w-6 hover:bg-slate-700"
+                            >
+                              <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
+                                isExpanded ? 'rotate-180' : ''
+                              }`} />
+                            </Button>
+                          )}
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={() => onToggleShapeType(type as ShapeType)}
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Shape Properties (Accordion Content) */}
+                      {isEnabled && isExpanded && hasProperties && (
+                        <div className="ml-4">
+                          {getShapeProperties(type)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {/* Separator included in accordion so it disappears when collapsed */}
+                <Separator className="bg-slate-600" />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* All On/Off Buttons - Outside accordion */}
         <div className="flex gap-2 py-2">
           <Button
             variant="outline"
@@ -1905,6 +1914,7 @@ export default function Sidebar({
           </Button>
         </div>
 
+        {/* Shape Count Settings - Outside accordion */}
         <div className="space-y-2 pb-6">
           <div className="flex items-center space-x-2">
             <Label className="text-xs text-slate-400">Shape Count</Label>
@@ -1988,6 +1998,7 @@ export default function Sidebar({
           )}
         </div>
 
+        {/* Generate Buttons - Outside accordion */}
         <div className="flex gap-2">
           <Button 
             onClick={onGenerateRandomShapes}
@@ -2004,10 +2015,7 @@ export default function Sidebar({
             onSettingsChange={onUpdateBatchConfigSettings}
           />
         </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      </div>
     );
   }
 
