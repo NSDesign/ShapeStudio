@@ -2250,16 +2250,16 @@ export default function Sidebar({
                 <Label className="text-sm text-slate-300 font-medium">Quick Actions</Label>
                 
                 <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={() => onGenerateShapes(5)} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
-                    Generate 5 Shapes
+                  <Button onClick={onGenerateRandomShapes} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Generate Random
                   </Button>
-                  <Button onClick={() => onGenerateShapes(10)} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
-                    Generate 10 Shapes
+                  <Button onClick={() => onGenerateShapesWithBatchConfig(10, { x: 0, y: 0, width: 800, height: 600 })} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                    Generate 10
                   </Button>
-                  <Button onClick={onSelectAll} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                  <Button onClick={() => {/* Select all functionality would be handled by parent */}} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600 opacity-50" disabled>
                     Select All
                   </Button>
-                  <Button onClick={onClearCanvas} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600">
+                  <Button onClick={onClearAll} variant="secondary" size="sm" className="text-xs bg-slate-700 hover:bg-slate-600" disabled={!onClearAll}>
                     Clear Canvas
                   </Button>
                 </div>
