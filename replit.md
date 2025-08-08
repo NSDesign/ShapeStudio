@@ -35,6 +35,7 @@ Preferred communication style: Simple, everyday language.
 - **Canvas-Based Blur System**: Gaussian blur algorithm implemented via direct canvas pixel manipulation for pixel-perfect blur effects.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity, collinearity enforcement, and C1 smoothness. No random tangent generation to preserve mathematical integrity.
 - **Advanced Grid Layout Sorting**: Complete implementation with comprehensive sorting criteria (layer, creation-time, shape-type, size, fill-color, opacity, angle, id), configurable sort order (ascending/descending), and per-generation vs per-batch sorting scope for fine-grained control over shape arrangement in grid layouts.
+- **Shape Type Architecture**: Clear distinction between standard and rounded shapes - rectangle (sharp corners), rounded-rectangle (configurable radius), square (sharp corners), rounded-square (configurable radius with 1:1 aspect ratio). Only rounded variants support corner radius geometry properties with Range and Fixed modes.
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.

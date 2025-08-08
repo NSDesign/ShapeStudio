@@ -240,7 +240,7 @@ export interface ShapeSpecificSettings {
     cornerRadiusValue?: number;
   };
   square: {
-    cornerRadiusRange: [number, number];
+    // Standard square with sharp corners - no properties
   };
   'rounded-square': {
     cornerRadiusRange: [number, number];

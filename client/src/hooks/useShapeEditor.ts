@@ -69,7 +69,9 @@ export const useShapeEditor = () => {
         cornerRadiusMode: 'range' as const,
         cornerRadiusValue: 5
       },
-      square: { cornerRadiusRange: [0, 10] },
+      square: {
+        // Standard square has no special properties
+      },
       'rounded-square': { 
         cornerRadiusRange: [0, 10],
         cornerRadiusMode: 'range' as const,

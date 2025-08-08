@@ -1891,40 +1891,7 @@ export default function Sidebar({
           );
           
         case 'square':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange?.[0] || 0}px</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange?.[1] || 20}px</span>
-                  </div>
-                  <Slider
-                    value={(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange || [0, 20]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`square corner radius: ${min}px-${max}px`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          square: { 
-                            ...(scatterSettings.shapeSpecific.square || {}),
-                            cornerRadiusRange: [min, max] 
-                          }
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={50}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={0}
-                  />
-                </div>
-              </div>
-            </div>
-          );
+          return null; // Standard square has no properties
 
         default:
           return null;
@@ -1950,7 +1917,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'square', 'rounded-square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">
