@@ -17,7 +17,8 @@ export class Shape {
   smoothPoints?: boolean[];
   closed?: boolean;
   segments: number;
-  renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth';
+  renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth' | 'roundRect';
+  cornerRadius?: number;
 
   constructor(type: ShapeType, x: number = 0, y: number = 0, batchConfig?: any) {
     this.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -1052,41 +1053,19 @@ export class Shape {
     const h = this.height! / 2;
     const radius = cornerRadius || 0;
     
+    // Store corner radius for native roundRect() rendering
+    this.cornerRadius = radius;
+    
     if (radius > 0 && radius < Math.min(w, h)) {
-      // Generate rounded rectangle points
+      // For rounded rectangles, we'll use native roundRect() in drawing
+      // But still generate basic corner points for bounds calculation
       this.points = [
-        // Top edge (left to right)
-        { x: -w + radius, y: -h },
-        { x: w - radius, y: -h },
-        
-        // Top-right corner (approximated with extra points for curve)
-        { x: w - radius * 0.6, y: -h + radius * 0.3 },
-        { x: w - radius * 0.3, y: -h + radius * 0.6 },
-        { x: w, y: -h + radius },
-        
-        // Right edge (top to bottom)
-        { x: w, y: h - radius },
-        
-        // Bottom-right corner
-        { x: w - radius * 0.3, y: h - radius * 0.6 },
-        { x: w - radius * 0.6, y: h - radius * 0.3 },
-        { x: w - radius, y: h },
-        
-        // Bottom edge (right to left)
-        { x: -w + radius, y: h },
-        
-        // Bottom-left corner
-        { x: -w + radius * 0.3, y: h - radius * 0.6 },
-        { x: -w + radius * 0.6, y: h - radius * 0.3 },
-        { x: -w, y: h - radius },
-        
-        // Left edge (bottom to top)
-        { x: -w, y: -h + radius },
-        
-        // Top-left corner
-        { x: -w + radius * 0.3, y: -h + radius * 0.6 },
-        { x: -w + radius * 0.6, y: -h + radius * 0.3 }
+        { x: -w, y: -h },  // Top-left
+        { x: w, y: -h },   // Top-right
+        { x: w, y: h },    // Bottom-right
+        { x: -w, y: h }    // Bottom-left
       ];
+      this.renderType = 'roundRect';
     } else {
       // Standard rectangle
       this.points = [
@@ -1095,6 +1074,7 @@ export class Shape {
         { x: w, y: h },    // Bottom-right
         { x: -w, y: h }    // Bottom-left
       ];
+      this.renderType = 'polygon';
     }
     this.closed = true;
   }
@@ -1541,10 +1521,16 @@ export class Shape {
     
     switch (this.type) {
       case 'rectangle':
-      case 'rounded-rectangle':
       case 'square':
+        this.drawPolygon(ctx); // Use points for standard rectangles
+        break;
+      case 'rounded-rectangle':
       case 'rounded-square':
-        this.drawPolygon(ctx); // Use points for deformable rectangles
+        if (this.renderType === 'roundRect' && this.cornerRadius) {
+          this.drawRoundedRectangle(ctx); // Use native roundRect for rounded shapes
+        } else {
+          this.drawPolygon(ctx); // Fallback to polygon for deformed shapes
+        }
         break;
       case 'circle':
         this.drawPolygon(ctx); // Use points for deformable circles
@@ -1682,6 +1668,17 @@ export class Shape {
     ctx.closePath();
   }
 
+  private drawRoundedRectangle(ctx: CanvasRenderingContext2D): void {
+    if (!this.width || !this.height || !this.cornerRadius) return;
+    
+    const w = this.width / 2;
+    const h = this.height / 2;
+    const radius = Math.min(this.cornerRadius, Math.min(w, h));
+    
+    // Use native roundRect() method for perfect rounded rectangles
+    ctx.roundRect(-w, -h, this.width, this.height, radius);
+  }
+
   private drawLine(ctx: CanvasRenderingContext2D): void {
     this.points.forEach((point, i) => {
       if (i === 0) ctx.moveTo(point.x, point.y);
@@ -1702,17 +1699,23 @@ export class Shape {
         // Draw four-segment cubic Bézier curves for spline-based shapes
         this.drawSplineCubicBezier(ctx);
       } else if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
-        // Draw cubic splines using control points between segments
+        // Draw cubic splines using cubic bezier curves with control points
         for (let i = 1; i < this.points.length; i++) {
-          if (i - 1 < this.controlPoints.length) {
-            // Use control points for cubic splines
-            ctx.quadraticCurveTo(
-              this.controlPoints[i - 1].x,
-              this.controlPoints[i - 1].y,
+          const controlIndex1 = (i - 1) * 2;
+          const controlIndex2 = controlIndex1 + 1;
+          
+          if (controlIndex1 < this.controlPoints.length && controlIndex2 < this.controlPoints.length) {
+            // Use two control points for proper cubic bezier curve
+            ctx.bezierCurveTo(
+              this.controlPoints[controlIndex1].x,
+              this.controlPoints[controlIndex1].y,
+              this.controlPoints[controlIndex2].x,
+              this.controlPoints[controlIndex2].y,
               this.points[i].x,
               this.points[i].y
             );
           } else {
+            // Fallback to linear if control points are missing
             ctx.lineTo(this.points[i].x, this.points[i].y);
           }
         }
@@ -1895,34 +1898,51 @@ export class Shape {
   }
 
   private drawSmoothSpline(ctx: CanvasRenderingContext2D): void {
-    if (!this.points || this.points.length < 2) return;
-    if (!this.controlPoints || this.controlPoints.length === 0) return;
-
-    ctx.moveTo(this.points[0].x, this.points[0].y);
-
-    // Draw cubic Bézier segments using control points
-    const numSegments = this.closed ? this.points.length : this.points.length - 1;
+    if (this.points.length < 2) return;
     
-    for (let i = 0; i < numSegments; i++) {
-      const currentPoint = this.points[i];
-      const nextPoint = this.points[(i + 1) % this.points.length];
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    
+    // Use tangent handles for proper smooth spline curves
+    if (this.tangentHandles && this.tangentHandles.length >= this.points.length) {
+      // Draw smooth spline using cubic bezier curves with tangent handles
+      for (let i = 0; i < this.points.length - 1; i++) {
+        const p1 = this.points[i];
+        const p2 = this.points[i + 1];
+        const cp1 = this.tangentHandles[i].out;
+        const cp2 = this.tangentHandles[i + 1].in;
+        
+        // Draw cubic bezier curve for smooth continuity
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
+      }
       
-      // Each segment uses two control points
-      const cp1 = this.controlPoints[i * 2];
-      const cp2 = this.controlPoints[i * 2 + 1];
-      
-      if (cp1 && cp2) {
-        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, nextPoint.x, nextPoint.y);
-      } else {
-        // Fallback to linear if control points missing
-        ctx.lineTo(nextPoint.x, nextPoint.y);
+      // Handle closed curves
+      if (this.closed && this.points.length > 2) {
+        const lastIndex = this.points.length - 1;
+        const firstPoint = this.points[0];
+        const cp1 = this.tangentHandles[lastIndex].out;
+        const cp2 = this.tangentHandles[0].in;
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, firstPoint.x, firstPoint.y);
+      }
+    } else {
+      // Fallback: use catmull-rom spline approximation
+      for (let i = 1; i < this.points.length; i++) {
+        const p0 = this.points[i - 2] || this.points[i - 1];
+        const p1 = this.points[i - 1];
+        const p2 = this.points[i];
+        const p3 = this.points[i + 1] || this.points[i];
+        
+        // Catmull-Rom to Bezier conversion
+        const tension = 0.3;
+        const cp1x = p1.x + (p2.x - p0.x) * tension;
+        const cp1y = p1.y + (p2.y - p0.y) * tension;
+        const cp2x = p2.x - (p3.x - p1.x) * tension;
+        const cp2y = p2.y - (p3.y - p1.y) * tension;
+        
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
       }
     }
-
-    // Close the path only if this is a closed spline
-    if (this.closed) {
-      ctx.closePath();
-    }
+    
+    if (this.closed) ctx.closePath();
   }
 
   private drawSelectionBounds(ctx: CanvasRenderingContext2D): void {
