@@ -17,7 +17,7 @@ export class Shape {
   smoothPoints?: boolean[];
   closed?: boolean;
   segments: number;
-  renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth' | 'roundRect';
+  renderType: 'polygon' | 'bezier' | 'smooth' | 'roundRect';
   cornerRadius?: number;
 
   constructor(type: ShapeType, x: number = 0, y: number = 0, batchConfig?: any) {
@@ -163,7 +163,7 @@ export class Shape {
     }
   }
 
-  private getDefaultRenderType(): 'polygon' | 'bezier' | 'cubic' | 'smooth' {
+  private getDefaultRenderType(): 'polygon' | 'bezier' | 'smooth' {
     switch (this.type) {
       case 'circle':
       case 'ellipse':
@@ -171,10 +171,9 @@ export class Shape {
         return 'smooth'; // Use smooth curves for round shapes
       case 'bezier':
         return 'bezier';
-      case 'cubic':
-        return 'cubic';
+
       case 'blob':
-        return 'cubic';
+        return 'bezier';
       default:
         return 'polygon'; // Use polygon for geometric shapes
     }
@@ -328,10 +327,9 @@ export class Shape {
       // Fallback to scatter settings for spline-specific properties
       if (batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']?.pointCountRange || 
           batchConfig?.scatterSettings?.shapeSpecific?.bezier?.pointCountRange ||
-          batchConfig?.scatterSettings?.shapeSpecific?.cubic?.pointCountRange) {
+          batchConfig?.scatterSettings?.shapeSpecific?.bezier?.pointCountRange) {
         const splineSettings = batchConfig.scatterSettings.shapeSpecific['smooth-spline'] || 
-                              batchConfig.scatterSettings.shapeSpecific.bezier ||
-                              batchConfig.scatterSettings.shapeSpecific.cubic;
+                              batchConfig.scatterSettings.shapeSpecific.bezier;
         if (splineSettings?.pointCountRange) {
           const [min, max] = splineSettings.pointCountRange;
           return Math.floor(min + Math.random() * (max - min + 1));
@@ -490,7 +488,6 @@ export class Shape {
         this.generateLinePoints(getPointCount(2, 8), batchConfig);
         break;
       case 'bezier':
-      case 'cubic':
         this.generateCurvePoints(getSplinePointCount(3, 6), batchConfig);
         break;
       case 'smooth-spline':
@@ -566,7 +563,7 @@ export class Shape {
   }
 
   private generateCurvePoints(numPoints?: number, batchConfig?: any): void {
-    const pointCount = numPoints || (this.type === 'cubic' ? 4 : 3 + Math.floor(Math.random() * 5)); // 3-7 points for variable complexity
+    const pointCount = numPoints || 3 + Math.floor(Math.random() * 5); // 3-7 points for variable complexity
     this.points = [];
     this.controlPoints = [];
     this.tangentHandles = [];
@@ -582,8 +579,7 @@ export class Shape {
     } else if (batchConfig?.scatterSettings?.shapeSpecific) {
       // Fallback to scatter settings for spline-specific properties
       const splineSettings = batchConfig.scatterSettings.shapeSpecific['smooth-spline'] || 
-                            batchConfig.scatterSettings.shapeSpecific.bezier ||
-                            batchConfig.scatterSettings.shapeSpecific.cubic;
+                            batchConfig.scatterSettings.shapeSpecific.bezier;
       if (splineSettings?.pointPositionRange) {
         pointPositionRange = splineSettings.pointPositionRange;
       }
@@ -591,33 +587,7 @@ export class Shape {
     
     const [minPointPos, maxPointPos] = pointPositionRange;
     
-    if (this.type === 'cubic') {
-      // Generate cubic spline with mathematically smooth continuity
-      const width = 120;
-      const height = 60;
-      
-      // Generate base points along a smooth curve
-      for (let i = 0; i < pointCount; i++) {
-        const t = i / (pointCount - 1);
-        const baseX = (t - 0.5) * width;
-        const baseY = Math.sin(t * Math.PI) * height / 3; // Gentle sine curve
-        
-        // Apply controlled point position variation
-        const xVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos);
-        const yVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos);
-        
-        this.points.push({ 
-          x: baseX + xVariation, 
-          y: baseY + yVariation 
-        });
-      }
-      
-      // Generate mathematically continuous tangent handles
-      this.generateSmoothTangentHandles();
-      this.closed = false;
-      this.renderType = 'bezier'; // Use bezier rendering for smooth curves
-      
-    } else if (this.type === 'bezier') {
+    if (this.type === 'bezier') {
       // Generate Bézier curve with proper tangent handle continuity
       const width = 120;
       const height = 60;
@@ -817,7 +787,7 @@ export class Shape {
       });
     }
     
-    // Generate tangent handles for cubic bezier curves
+    // Generate tangent handles for bezier curves
     for (let i = 0; i < numPoints; i++) {
       const prevIndex = (i - 1 + numPoints) % numPoints;
       const nextIndex = (i + 1) % numPoints;
@@ -850,7 +820,7 @@ export class Shape {
     }
     
     this.closed = true;
-    this.renderType = 'cubic';
+    this.renderType = 'bezier';
   }
 
   private generateTrianglePoints(): void {
@@ -1174,9 +1144,9 @@ export class Shape {
 
   private generateSplineCirclePoints(): void {
     const radius = this.radius!;
-    // Four-segment cubic Bézier circle approximation
+    // Four-segment Bézier circle approximation
     // Control point distance for accurate circle approximation
-    const kappa = 0.5522848; // (4/3) * tan(π/8) - magic number for cubic Bézier circle
+    const kappa = 0.5522848; // (4/3) * tan(π/8) - magic number for Bézier circle
     const cp = kappa * radius; // Control point distance from anchor points
     
     // Four anchor points (cardinal directions)
@@ -1187,7 +1157,7 @@ export class Shape {
       { x: 0, y: radius }      // Bottom
     ];
     
-    // Four segments with control points for smooth cubic Bézier curves
+    // Four segments with control points for smooth Bézier curves
     this.controlPoints = [
       { x: radius, y: -cp },   // First control point for segment 0→1
       { x: cp, y: -radius },   // Second control point for segment 0→1
@@ -1200,8 +1170,8 @@ export class Shape {
     ];
     
     this.closed = true;
-    this.renderType = 'cubic';
-    this.segments = 4; // Four cubic Bézier segments
+    this.renderType = 'bezier';
+    this.segments = 4; // Four Bézier segments
   }
 
   private generateSplineEllipsePoints(): void {
@@ -1232,7 +1202,7 @@ export class Shape {
     ];
     
     this.closed = true;
-    this.renderType = 'cubic';
+    this.renderType = 'bezier';
     this.segments = 4;
   }
 
@@ -1278,7 +1248,7 @@ export class Shape {
     ];
     
     this.closed = true;
-    this.renderType = 'cubic';
+    this.renderType = 'bezier';
     this.segments = 8; // Four segments for outer + four for inner
   }
 
@@ -1562,7 +1532,7 @@ export class Shape {
         this.drawLine(ctx);
         break;
       case 'bezier':
-      case 'cubic':
+      case 'bezier':
         this.drawCurve(ctx);
         break;
       case 'smooth-spline':
@@ -1694,18 +1664,18 @@ export class Shape {
     // Use renderType to determine how to draw curves
     const renderType = this.renderType || 'polygon';
     
-    if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
+    if (renderType === 'bezier' || renderType === 'bezier' || renderType === 'smooth') {
       if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
-        // Draw four-segment cubic Bézier curves for spline-based shapes
+        // Draw four-segment Bézier curves for spline-based shapes
         this.drawSplineCubicBezier(ctx);
-      } else if (this.type === 'cubic' && this.controlPoints && this.points.length >= 2) {
-        // Draw cubic splines using cubic bezier curves with control points
+      } else if (this.type === 'bezier' && this.controlPoints && this.points.length >= 2) {
+        // Draw bezier curves using bezier curves with control points
         for (let i = 1; i < this.points.length; i++) {
           const controlIndex1 = (i - 1) * 2;
           const controlIndex2 = controlIndex1 + 1;
           
           if (controlIndex1 < this.controlPoints.length && controlIndex2 < this.controlPoints.length) {
-            // Use two control points for proper cubic bezier curve
+            // Use two control points for proper bezier curve
             ctx.bezierCurveTo(
               this.controlPoints[controlIndex1].x,
               this.controlPoints[controlIndex1].y,
@@ -1729,7 +1699,7 @@ export class Shape {
             const cp1 = this.tangentHandles[i].out;
             const cp2 = this.tangentHandles[i + 1].in;
             
-            // Draw cubic bezier curve
+            // Draw bezier curve
             ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
           } else {
             ctx.lineTo(p2.x, p2.y);
@@ -1808,7 +1778,7 @@ export class Shape {
     
     ctx.moveTo(this.points[0].x, this.points[0].y);
     
-    // Use cubic bezier curves with tangent handles for smooth organic shapes
+    // Use bezier curves with tangent handles for smooth organic shapes
     if (this.tangentHandles && this.tangentHandles.length === this.points.length) {
       for (let i = 0; i < this.points.length; i++) {
         const current = this.points[i];
@@ -1816,7 +1786,7 @@ export class Shape {
         const currentHandle = this.tangentHandles[i];
         const nextHandle = this.tangentHandles[(i + 1) % this.tangentHandles.length];
         
-        // Create smooth cubic bezier curve between points
+        // Create smooth bezier curve between points
         ctx.bezierCurveTo(
           currentHandle.out.x,
           currentHandle.out.y,
@@ -1852,10 +1822,10 @@ export class Shape {
     if (!this.controlPoints || !this.points) return;
     
     if (this.type === 'spline-circle' || this.type === 'spline-ellipse') {
-      // Four-segment cubic Bézier curve (circle/ellipse)
+      // Four-segment Bézier curve (circle/ellipse)
       ctx.moveTo(this.points[0].x, this.points[0].y);
       
-      // Draw four cubic Bézier segments
+      // Draw four Bézier segments
       for (let i = 0; i < 4; i++) {
         const startPoint = this.points[i];
         const endPoint = this.points[(i + 1) % 4];
@@ -1869,7 +1839,7 @@ export class Shape {
         ctx.closePath();
       }
     } else if (this.type === 'spline-ring') {
-      // Outer ring - four cubic Bézier segments
+      // Outer ring - four Bézier segments
       ctx.moveTo(this.points[0].x, this.points[0].y);
       
       for (let i = 0; i < 4; i++) {
@@ -1882,7 +1852,7 @@ export class Shape {
       }
       ctx.closePath();
       
-      // Inner ring - four cubic Bézier segments (reverse order)
+      // Inner ring - four Bézier segments (reverse order)
       ctx.moveTo(this.points[4].x, this.points[4].y);
       
       for (let i = 0; i < 4; i++) {
@@ -1904,14 +1874,14 @@ export class Shape {
     
     // Use tangent handles for proper smooth spline curves
     if (this.tangentHandles && this.tangentHandles.length >= this.points.length) {
-      // Draw smooth spline using cubic bezier curves with tangent handles
+      // Draw smooth spline using bezier curves with tangent handles
       for (let i = 0; i < this.points.length - 1; i++) {
         const p1 = this.points[i];
         const p2 = this.points[i + 1];
         const cp1 = this.tangentHandles[i].out;
         const cp2 = this.tangentHandles[i + 1].in;
         
-        // Draw cubic bezier curve for smooth continuity
+        // Draw bezier curve for smooth continuity
         ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y);
       }
       
@@ -2560,7 +2530,7 @@ export class Shape {
           ctx.stroke();
         }
       });
-    } else if ((this.type === 'cubic' || this.type === 'blob' || this.renderType === 'bezier') && this.controlPoints) {
+    } else if ((this.type === 'bezier' || this.type === 'blob' || this.renderType === 'bezier') && this.controlPoints) {
       // Draw control points for bezier curves and blob shapes
       this.controlPoints.forEach((controlPoint, index) => {
         const worldControl = this.getWorldControlPoint(index);
@@ -2634,8 +2604,8 @@ export class Shape {
             } else {
               ctx.lineTo(p2.x, p2.y);
             }
-          } else if (this.type === 'cubic' && this.controlPoints && i < this.controlPoints.length) {
-            // Draw cubic spline using control points for cubic curves
+          } else if (this.type === 'bezier' && this.controlPoints && i < this.controlPoints.length) {
+            // Draw bezier curve using control points for cubic curves
             ctx.moveTo(p1.x, p1.y);
             const worldControl = this.getWorldControlPoint(i);
             if (worldControl) {
@@ -2644,7 +2614,7 @@ export class Shape {
               ctx.lineTo(p2.x, p2.y);
             }
           } else if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
-            // Draw cubic Bézier curve segment for spline-based shapes
+            // Draw Bézier curve segment for spline-based shapes
             ctx.moveTo(p1.x, p1.y);
             
             const segmentIndex = i % 4; // Four segments for circles/ellipses
@@ -2663,7 +2633,7 @@ export class Shape {
             } else {
               ctx.lineTo(p2.x, p2.y);
             }
-          } else if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
+          } else if (this.renderType === 'bezier' || this.renderType === 'bezier' || this.renderType === 'smooth') {
             // Draw curved segment using actual control points if available
             ctx.moveTo(p1.x, p1.y);
             
@@ -2715,7 +2685,7 @@ export class Shape {
             midX = (p1.x + p2.x) / 2;
             midY = (p1.y + p2.y) / 2;
           }
-        } else if (this.type === 'cubic' && this.controlPoints && i < this.controlPoints.length) {
+        } else if (this.type === 'bezier' && this.controlPoints && i < this.controlPoints.length) {
           // For cubic curves, calculate quadratic curve midpoint
           const worldControl = this.getWorldControlPoint(i);
           if (worldControl) {
@@ -2729,7 +2699,7 @@ export class Shape {
             midY = (p1.y + p2.y) / 2;
           }
         } else if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
-          // For spline-based shapes, calculate cubic Bézier curve midpoint
+          // For spline-based shapes, calculate Bézier curve midpoint
           const segmentIndex = i % 4; // Four segments for circles/ellipses
           const cp1Index = segmentIndex * 2;
           const cp2Index = segmentIndex * 2 + 1;
@@ -2739,7 +2709,7 @@ export class Shape {
             const cp2 = this.getWorldControlPoint(cp2Index);
             
             if (cp1 && cp2) {
-              // Calculate cubic Bézier curve midpoint at t=0.5
+              // Calculate Bézier curve midpoint at t=0.5
               const t = 0.5;
               const mt = 1 - t;
               midX = mt * mt * mt * p1.x + 3 * mt * mt * t * cp1.x + 3 * mt * t * t * cp2.x + t * t * t * p2.x;
@@ -2752,7 +2722,7 @@ export class Shape {
             midX = (p1.x + p2.x) / 2;
             midY = (p1.y + p2.y) / 2;
           }
-        } else if (this.renderType === 'bezier' || this.renderType === 'cubic' || this.renderType === 'smooth') {
+        } else if (this.renderType === 'bezier' || this.renderType === 'bezier' || this.renderType === 'smooth') {
           // For other curve types with control points
           if (this.controlPoints && i < this.controlPoints.length) {
             const worldControl = this.getWorldControlPoint(i);

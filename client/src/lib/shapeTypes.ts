@@ -137,7 +137,6 @@ export type ShapeType =
   | 'blob'
   | 'ring'
   | 'bezier'
-  | 'cubic'
   | 'smooth-spline'
   | 'spline-circle'
   | 'spline-ellipse'
@@ -160,7 +159,7 @@ export interface BaseShape {
   smoothPoints?: boolean[]; // Track which points are smooth (continuous tangents) vs sharp
   closed?: boolean;
   segments?: number; // Number of segments for smooth curves
-  renderType?: 'polygon' | 'bezier' | 'cubic' | 'smooth'; // How to render the shape
+  renderType?: 'polygon' | 'bezier' | 'smooth'; // How to render the shape
 }
 
 export interface ShapeGroup {
@@ -206,11 +205,7 @@ export interface ShapeSpecificSettings {
     openProbability: number;
     strokeCapProbabilities: { round: number; square: number; butt: number };
   };
-  cubic: {
-    pointCountRange: [number, number];
-    openProbability: number;
-    strokeCapProbabilities: { round: number; square: number; butt: number };
-  };
+
   'smooth-spline': {
     pointCountRange: [number, number];
     openProbability: number;

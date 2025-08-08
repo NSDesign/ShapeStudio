@@ -95,7 +95,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   star: 'Star',
   line: 'Line',
   bezier: 'Bézier Curve',
-  cubic: 'Cubic Spline',
+
   'smooth-spline': 'Smooth Spline',
   chunk: 'Chunk',
   blob: 'Organic Blob',
@@ -1430,7 +1430,6 @@ export default function Sidebar({
           );
         
         case 'bezier':
-        case 'cubic':
         case 'smooth-spline':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
@@ -1438,11 +1437,11 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Point Count Range</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.pointCountRange?.[0] || 3}</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.pointCountRange?.[1] || 6}</span>
+                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange?.[0] || 3}</span>
+                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange?.[1] || 6}</span>
                   </div>
                   <Slider
-                    value={(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.pointCountRange || [3, 6]}
+                    value={(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange || [3, 6]}
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`${shapeType} points: ${min}-${max}`);
@@ -1450,7 +1449,7 @@ export default function Sidebar({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] || {}),
+                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
                             pointCountRange: [min, max] 
                           }
                         }
@@ -1468,18 +1467,18 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
-                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
+                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
+                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
                   </div>
                   <Slider
-                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.openProbability ?? 50]}
+                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
                     onValueChange={([value]) => {
                       console.log(`${shapeType} open probability: ${value}%`);
                       onUpdateScatterSettings({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] || {}),
+                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
                             openProbability: value 
                           }
                         }
@@ -1496,7 +1495,7 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
                 <div className="space-y-2">
                   {['round', 'square', 'butt'].map((cap) => {
-                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] || (cap === 'round' ? 50 : 25);
+                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] || (cap === 'round' ? 50 : 25);
                     return (
                       <div key={cap} className="space-y-1">
                         <div className="flex justify-between text-xs">
@@ -1507,12 +1506,12 @@ export default function Sidebar({
                           value={[currentValue]}
                           onValueChange={([value]) => {
                             console.log(`${shapeType} ${cap} cap: ${value}%`);
-                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] as any)?.strokeCapProbabilities || { round: 50, square: 25, butt: 25 };
+                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities || { round: 50, square: 25, butt: 25 };
                             onUpdateScatterSettings({
                               shapeSpecific: {
                                 ...scatterSettings.shapeSpecific,
                                 [shapeType]: { 
-                                  ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'cubic' | 'smooth-spline'] || {}),
+                                  ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
                                   strokeCapProbabilities: {
                                     ...currentCaps,
                                     [cap]: value
@@ -1917,7 +1916,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', , 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">
@@ -3376,7 +3375,7 @@ export default function Sidebar({
               )}
 
               {/* Point Management for Splines, Lines, and Polygons */}
-              {(selectedShapes[0].type === 'bezier' || selectedShapes[0].type === 'cubic' || selectedShapes[0].type === 'smooth-spline' || selectedShapes[0].type === 'line' || selectedShapes[0].type === 'polygon') && (
+              {(selectedShapes[0].type === 'bezier' || selectedShapes[0].type === 'smooth-spline' || selectedShapes[0].type === 'line' || selectedShapes[0].type === 'polygon') && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Point Count</Label>
                   <div className="flex items-center space-x-2">

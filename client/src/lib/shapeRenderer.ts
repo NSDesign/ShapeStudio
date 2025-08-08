@@ -73,9 +73,6 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       drawLine(ctx, shape);
       break;
     case 'bezier':
-    case 'cubic':
-      drawCurve(ctx, shape);
-      break;
     case 'smooth-spline':
       drawSmoothSpline(ctx, shape);
       break;
@@ -181,8 +178,8 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   
   const renderType = shape.renderType || 'polygon';
   
-  if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
-    if ((shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') && shape.tangentHandles && shape.points.length >= 2) {
+  if (renderType === 'bezier' || renderType === 'smooth') {
+    if ((shape.type === 'bezier' || shape.type === 'smooth-spline') && shape.tangentHandles && shape.points.length >= 2) {
       // Bezier curves with tangent handles (includes cubic splines and smooth splines)
       for (let i = 0; i < shape.points.length - 1; i++) {
         const p1 = shape.points[i];
