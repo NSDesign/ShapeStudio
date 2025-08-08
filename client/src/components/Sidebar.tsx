@@ -3369,6 +3369,126 @@ export default function Sidebar({
                   <span className="text-xs text-slate-500">{selectedShapes[0].segments} segments</span>
                 </div>
               )}
+
+              {/* Point Management for Splines, Lines, and Polygons */}
+              {(selectedShapes[0].type === 'bezier' || selectedShapes[0].type === 'cubic' || selectedShapes[0].type === 'smooth-spline' || selectedShapes[0].type === 'line' || selectedShapes[0].type === 'polygon') && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Point Count</Label>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => {
+                        updateShapeProperty((shape) => {
+                          if (shape.points && shape.points.length > 2) {
+                            // Remove the last point
+                            shape.points.pop();
+                            // Regenerate tangent handles for splines
+                            if (shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') {
+                              if (shape.generateSmoothTangentHandles) {
+                                shape.generateSmoothTangentHandles();
+                              }
+                            }
+                            // Regenerate polygon segments if needed
+                            if (shape.type === 'polygon' && shape.sides) {
+                              shape.sides = shape.points.length;
+                            }
+                          }
+                        });
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      className="text-xs h-6 px-2 bg-slate-700 hover:bg-slate-600"
+                      disabled={selectedShapes[0].points?.length <= 2}
+                    >
+                      - Remove Point
+                    </Button>
+                    <span className="text-xs text-slate-300 flex-1 text-center">
+                      {selectedShapes[0].points?.length || 0} points
+                    </span>
+                    <Button
+                      onClick={() => {
+                        updateShapeProperty((shape) => {
+                          if (shape.points && shape.points.length < 20) {
+                            // Add a new point between the last two points
+                            const lastPoint = shape.points[shape.points.length - 1];
+                            const secondLastPoint = shape.points[shape.points.length - 2] || lastPoint;
+                            const newPoint = {
+                              x: (lastPoint.x + secondLastPoint.x) / 2 + (Math.random() - 0.5) * 20,
+                              y: (lastPoint.y + secondLastPoint.y) / 2 + (Math.random() - 0.5) * 20
+                            };
+                            shape.points.push(newPoint);
+                            // Regenerate tangent handles for splines
+                            if (shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') {
+                              if (shape.generateSmoothTangentHandles) {
+                                shape.generateSmoothTangentHandles();
+                              }
+                            }
+                            // Regenerate polygon segments if needed
+                            if (shape.type === 'polygon' && shape.sides) {
+                              shape.sides = shape.points.length;
+                            }
+                          }
+                        });
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      className="text-xs h-6 px-2 bg-slate-700 hover:bg-slate-600"
+                      disabled={selectedShapes[0].points?.length >= 20}
+                    >
+                      + Add Point
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Corner Radius for Rounded Shapes */}
+              {(selectedShapes[0].type === 'rounded-rectangle' || selectedShapes[0].type === 'rounded-square') && selectedShapes[0].cornerRadius !== undefined && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Corner Radius</Label>
+                  <Input
+                    type="number"
+                    value={selectedShapes[0].cornerRadius || 0}
+                    onChange={(e) => {
+                      const newRadius = Number(e.target.value);
+                      updateShapeProperty((shape) => {
+                        if (shape.cornerRadius !== undefined) {
+                          shape.cornerRadius = Math.max(0, newRadius);
+                          if (shape.regeneratePointsFromSegments) {
+                            shape.regeneratePointsFromSegments();
+                          }
+                        }
+                      });
+                    }}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                    min="0"
+                    max="50"
+                  />
+                </div>
+              )}
+
+              {/* Inner Radius for Stars and Rings */}
+              {(selectedShapes[0].type === 'star' || selectedShapes[0].type === 'ring') && selectedShapes[0].innerRadius !== undefined && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Inner Radius</Label>
+                  <Input
+                    type="number"
+                    value={selectedShapes[0].innerRadius || 0}
+                    onChange={(e) => {
+                      const newInnerRadius = Number(e.target.value);
+                      updateShapeProperty((shape) => {
+                        if (shape.innerRadius !== undefined) {
+                          shape.innerRadius = Math.max(0, newInnerRadius);
+                          if (shape.regeneratePointsFromSegments) {
+                            shape.regeneratePointsFromSegments();
+                          }
+                        }
+                      });
+                    }}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
+                    min="0"
+                    max={selectedShapes[0].radius ? Math.floor(selectedShapes[0].radius * 0.9) : 50}
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
