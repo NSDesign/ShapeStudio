@@ -356,9 +356,14 @@ export class Shape {
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
-        } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-rectangle']?.cornerRadiusRange) {
-          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific['rounded-rectangle'].cornerRadiusRange;
-          cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-rectangle']) {
+          const roundedRectSettings = batchConfig.scatterSettings.shapeSpecific['rounded-rectangle'];
+          if (roundedRectSettings.cornerRadiusMode === 'fixed') {
+            cornerRadius = roundedRectSettings.cornerRadiusValue || 5;
+          } else {
+            const [minRadius, maxRadius] = roundedRectSettings.cornerRadiusRange || [0, 10];
+            cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+          }
         }
         this.generateRectanglePoints(cornerRadius);
         break;
@@ -366,14 +371,26 @@ export class Shape {
         const { width: squareSize } = getWidthHeight();
         this.width = squareSize;
         this.height = squareSize;
+        // Standard square - no rounded corners
+        this.generateRectanglePoints(0);
+        break;
+      case 'rounded-square':
+        const { width: roundedSquareSize } = getWidthHeight();
+        this.width = roundedSquareSize;
+        this.height = roundedSquareSize;
         // Apply corner radius from batch config or scatter settings if available
         let squareCornerRadius = 0;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
-        } else if (batchConfig?.scatterSettings?.shapeSpecific?.square?.cornerRadiusRange) {
-          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific.square.cornerRadiusRange;
-          squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-square']) {
+          const roundedSquareSettings = batchConfig.scatterSettings.shapeSpecific['rounded-square'];
+          if (roundedSquareSettings.cornerRadiusMode === 'fixed') {
+            squareCornerRadius = roundedSquareSettings.cornerRadiusValue || 5;
+          } else {
+            const [minRadius, maxRadius] = roundedSquareSettings.cornerRadiusRange || [0, 10];
+            squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+          }
         }
         this.generateRectanglePoints(squareCornerRadius);
         break;
@@ -1526,6 +1543,7 @@ export class Shape {
       case 'rectangle':
       case 'rounded-rectangle':
       case 'square':
+      case 'rounded-square':
         this.drawPolygon(ctx); // Use points for deformable rectangles
         break;
       case 'circle':

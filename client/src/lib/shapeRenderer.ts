@@ -40,6 +40,7 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     case 'rectangle':
     case 'rounded-rectangle':
     case 'square':
+    case 'rounded-square':
       drawPolygon(ctx, shape);
       break;
     case 'circle':

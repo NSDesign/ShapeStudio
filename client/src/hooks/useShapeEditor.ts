@@ -14,7 +14,7 @@ export const useShapeEditor = () => {
   const [selectedShapes, setSelectedShapes] = useState<Shape[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<ShapeGroupClass[]>([]);
   const [enabledShapeTypes, setEnabledShapeTypes] = useState<Set<ShapeType>>(
-    new Set(['rectangle' as ShapeType, 'rounded-rectangle' as ShapeType, 'circle' as ShapeType, 'polygon' as ShapeType])
+    new Set(['rectangle' as ShapeType, 'rounded-rectangle' as ShapeType, 'square' as ShapeType, 'rounded-square' as ShapeType, 'circle' as ShapeType, 'polygon' as ShapeType])
   );
   const [scatterSettings, setScatterSettings] = useState<ScatterSettings>({
     onPoints: false,
@@ -64,8 +64,17 @@ export const useShapeEditor = () => {
       rectangle: {
         // Standard rectangle has no special properties
       },
-      'rounded-rectangle': { cornerRadiusRange: [0, 10] },
-      square: { cornerRadiusRange: [0, 10] }
+      'rounded-rectangle': { 
+        cornerRadiusRange: [0, 10],
+        cornerRadiusMode: 'range' as const,
+        cornerRadiusValue: 5
+      },
+      square: { cornerRadiusRange: [0, 10] },
+      'rounded-square': { 
+        cornerRadiusRange: [0, 10],
+        cornerRadiusMode: 'range' as const,
+        cornerRadiusValue: 5
+      }
     }
   });
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
@@ -1002,6 +1011,7 @@ export const useShapeEditor = () => {
             shape.height = height;
             break;
           case 'square':
+          case 'rounded-square':
             // Square always maintains 1:1 aspect ratio regardless of setting
             const squareSize = batchConfigSettings.maintainAspectRatio ? width : Math.max(width, height);
             shape.width = squareSize;

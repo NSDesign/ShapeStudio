@@ -115,6 +115,7 @@ export type ShapeType =
   | 'rectangle' 
   | 'rounded-rectangle'
   | 'square' 
+  | 'rounded-square'
   | 'circle' 
   | 'ellipse' 
   | 'triangle'
@@ -235,9 +236,16 @@ export interface ShapeSpecificSettings {
   };
   'rounded-rectangle': {
     cornerRadiusRange: [number, number];
+    cornerRadiusMode?: 'range' | 'fixed';
+    cornerRadiusValue?: number;
   };
   square: {
     cornerRadiusRange: [number, number];
+  };
+  'rounded-square': {
+    cornerRadiusRange: [number, number];
+    cornerRadiusMode?: 'range' | 'fixed';
+    cornerRadiusValue?: number;
   };
 }
 

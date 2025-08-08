@@ -76,6 +76,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   rectangle: 'Rectangle',
   'rounded-rectangle': 'Rounded Rectangle',
   square: 'Square',
+  'rounded-square': 'Rounded Square',
   circle: 'Circle',
   ellipse: 'Ellipse',
   triangle: 'Triangle',
@@ -1778,6 +1779,117 @@ export default function Sidebar({
           return null; // Standard rectangle has no properties
           
         case 'rounded-rectangle':
+        case 'rounded-square':
+          const roundedShapeSettings = scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'rounded-square'] as any;
+          const radiusMode = roundedShapeSettings?.cornerRadiusMode || 'range';
+          
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              {/* Mode Toggle */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Corner Radius Mode</Label>
+                <div className="flex space-x-2">
+                  <Button
+                    variant={radiusMode === 'range' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => {
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          [shapeType]: { 
+                            ...roundedShapeSettings,
+                            cornerRadiusMode: 'range'
+                          }
+                        }
+                      });
+                    }}
+                    className={`text-xs px-2 py-1 h-7 ${radiusMode === 'range' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                  >
+                    Range
+                  </Button>
+                  <Button
+                    variant={radiusMode === 'fixed' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => {
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          [shapeType]: { 
+                            ...roundedShapeSettings,
+                            cornerRadiusMode: 'fixed'
+                          }
+                        }
+                      });
+                    }}
+                    className={`text-xs px-2 py-1 h-7 ${radiusMode === 'fixed' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                  >
+                    Fixed
+                  </Button>
+                </div>
+              </div>
+
+              {/* Range Mode Controls */}
+              {radiusMode === 'range' && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">Min: {roundedShapeSettings?.cornerRadiusRange?.[0] || 0}px</span>
+                      <span className="text-slate-400">Max: {roundedShapeSettings?.cornerRadiusRange?.[1] || 20}px</span>
+                    </div>
+                    <Slider
+                      value={roundedShapeSettings?.cornerRadiusRange || [0, 20]}
+                      onValueChange={(value) => {
+                        const [min, max] = value;
+                        console.log(`${shapeType} corner radius range: ${min}px-${max}px`);
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            [shapeType]: { 
+                              ...roundedShapeSettings,
+                              cornerRadiusRange: [min, max] 
+                            }
+                          }
+                        });
+                      }}
+                      min={0}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                      minStepsBetweenThumbs={0}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Fixed Mode Controls */}
+              {radiusMode === 'fixed' && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Fixed Corner Radius: {roundedShapeSettings?.cornerRadiusValue || 5}px</Label>
+                  <Slider
+                    value={[roundedShapeSettings?.cornerRadiusValue || 5]}
+                    onValueChange={([value]) => {
+                      console.log(`${shapeType} fixed corner radius: ${value}px`);
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          [shapeType]: { 
+                            ...roundedShapeSettings,
+                            cornerRadiusValue: value
+                          }
+                        }
+                      });
+                    }}
+                    min={0}
+                    max={50}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          );
+          
         case 'square':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
@@ -1785,19 +1897,19 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange?.[0] || 0}px</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange?.[1] || 20}px</span>
+                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange?.[0] || 0}px</span>
+                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange?.[1] || 20}px</span>
                   </div>
                   <Slider
-                    value={(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange || [0, 20]}
+                    value={(scatterSettings.shapeSpecific.square as any)?.cornerRadiusRange || [0, 20]}
                     onValueChange={(value) => {
                       const [min, max] = value;
-                      console.log(`${shapeType} corner radius: ${min}px-${max}px`);
+                      console.log(`square corner radius: ${min}px-${max}px`);
                       onUpdateScatterSettings({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] || {}),
+                          square: { 
+                            ...(scatterSettings.shapeSpecific.square || {}),
                             cornerRadiusRange: [min, max] 
                           }
                         }
@@ -1838,7 +1950,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'square', 'rounded-square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">

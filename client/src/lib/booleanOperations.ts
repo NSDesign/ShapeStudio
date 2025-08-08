@@ -291,7 +291,7 @@ export class BooleanOperations {
     }
     
     // Support all other polygon-based shapes
-    const supportedTypes = ['rectangle', 'rounded-rectangle', 'square', 'circle', 'ellipse', 'polygon', 'star', 'ring', 'blob', 'spline-circle', 'spline-ellipse', 'spline-ring', 'bezier', 'cubic'];
+    const supportedTypes = ['rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 'ellipse', 'polygon', 'star', 'ring', 'blob', 'spline-circle', 'spline-ellipse', 'spline-ring', 'bezier', 'cubic'];
     
     return supportedTypes.includes(shape1.type) && supportedTypes.includes(shape2.type);
   }
