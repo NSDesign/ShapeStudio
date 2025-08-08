@@ -1331,6 +1331,9 @@ export default function Sidebar({
 
   // Move expanded shapes state outside of function to prevent reset on re-renders
   const [expandedShapes, setExpandedShapes] = useState<Set<string>>(new Set());
+  
+  // Add state for the shape list accordion to prevent auto-expansion
+  const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>("shape-list");
 
   const toggleShapeExpansion = useCallback((shapeType: string) => {
     setExpandedShapes(prev => {
@@ -1815,7 +1818,13 @@ export default function Sidebar({
     return (
       <div className="space-y-3">
         {/* Internal accordion to control shape list visibility */}
-        <Accordion type="single" collapsible defaultValue="shape-list" className="w-full">
+        <Accordion 
+          type="single" 
+          collapsible 
+          value={shapeListAccordionOpen} 
+          onValueChange={setShapeListAccordionOpen}
+          className="w-full"
+        >
           <AccordionItem value="shape-list" className="border-0">
             <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
               <span>Shape List ({Object.keys(shapeTypeDisplayNames).length} types)</span>
