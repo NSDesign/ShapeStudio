@@ -1813,8 +1813,17 @@ export default function Sidebar({
     };
 
     return (
-      <div className="space-y-3">
-        {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
+      <Accordion type="single" collapsible defaultValue="shape-types" className="w-full">
+        <AccordionItem value="shape-types" className="border-slate-700">
+          <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
+            <div className="flex items-center">
+              <Shapes className="w-4 h-4 mr-2" />
+              Shape Types
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3">
+              {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
           const isEnabled = enabledShapeTypes.has(type as ShapeType);
           const isExpanded = expandedShapes.has(type);
           const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rectangle', 'square'].includes(type);
@@ -1995,7 +2004,10 @@ export default function Sidebar({
             onSettingsChange={onUpdateBatchConfigSettings}
           />
         </div>
-      </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     );
   }
 
