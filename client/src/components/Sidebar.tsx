@@ -94,6 +94,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   polygon: 'Polygon',
   star: 'Star',
   line: 'Line',
+  cubic: 'Cubic Curve',
   bezier: 'Bézier Curve',
 
   'smooth-spline': 'Smooth Spline',
@@ -1429,6 +1430,7 @@ export default function Sidebar({
             </div>
           );
         
+        case 'cubic':
         case 'bezier':
         case 'smooth-spline':
           return (

@@ -72,6 +72,9 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     case 'line':
       drawLine(ctx, shape);
       break;
+    case 'cubic':
+      drawCubicCurve(ctx, shape);
+      break;
     case 'bezier':
     case 'smooth-spline':
       drawSmoothSpline(ctx, shape);
@@ -178,8 +181,8 @@ function drawCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
   
   const renderType = shape.renderType || 'polygon';
   
-  if (renderType === 'bezier' || renderType === 'smooth') {
-    if ((shape.type === 'bezier' || shape.type === 'smooth-spline') && shape.tangentHandles && shape.points.length >= 2) {
+  if (renderType === 'bezier' || renderType === 'cubic' || renderType === 'smooth') {
+    if ((shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') && shape.tangentHandles && shape.points.length >= 2) {
       // Bezier curves with tangent handles (includes cubic splines and smooth splines)
       for (let i = 0; i < shape.points.length - 1; i++) {
         const p1 = shape.points[i];
@@ -332,6 +335,21 @@ function drawBlob(ctx: CanvasRenderingContext2D, shape: Shape): void {
   }
   
   ctx.closePath();
+}
+
+function drawCubicCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
+  if (!shape.points || shape.points.length < 2) return;
+  if (!shape.controlPoints || shape.controlPoints.length === 0) return;
+
+  // Simple cubic curve: start point -> control point -> end point
+  const startPoint = shape.points[0];
+  const endPoint = shape.points[1];
+  const controlPoint = shape.controlPoints[0];
+
+  ctx.moveTo(startPoint.x, startPoint.y);
+  
+  // Draw quadratic curve using the single control point
+  ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
 }
 
 function drawSmoothSpline(ctx: CanvasRenderingContext2D, shape: Shape): void {

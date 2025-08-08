@@ -17,7 +17,7 @@ export class Shape {
   smoothPoints?: boolean[];
   closed?: boolean;
   segments: number;
-  renderType: 'polygon' | 'bezier' | 'smooth' | 'roundRect';
+  renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth' | 'roundRect';
   cornerRadius?: number;
 
   constructor(type: ShapeType, x: number = 0, y: number = 0, batchConfig?: any) {
@@ -163,15 +163,16 @@ export class Shape {
     }
   }
 
-  private getDefaultRenderType(): 'polygon' | 'bezier' | 'smooth' {
+  private getDefaultRenderType(): 'polygon' | 'bezier' | 'cubic' | 'smooth' {
     switch (this.type) {
       case 'circle':
       case 'ellipse':
       case 'ring':
         return 'smooth'; // Use smooth curves for round shapes
+      case 'cubic':
+        return 'cubic';
       case 'bezier':
         return 'bezier';
-
       case 'blob':
         return 'bezier';
       default:
@@ -487,6 +488,9 @@ export class Shape {
       case 'line':
         this.generateLinePoints(getPointCount(2, 8), batchConfig);
         break;
+      case 'cubic':
+        this.generateCubicCurvePoints(batchConfig);
+        break;
       case 'bezier':
         this.generateCurvePoints(getSplinePointCount(3, 6), batchConfig);
         break;
@@ -620,6 +624,38 @@ export class Shape {
     
     this.closed = Math.random() * 100 > openProbability;
     this.renderType = 'bezier';
+  }
+
+  private generateCubicCurvePoints(batchConfig?: any): void {
+    // Generate a simple cubic curve with starting point, ending point, and one control point
+    // Based on the reference image: Starting Point -> Control Point -> Ending Point
+    this.points = [];
+    this.controlPoints = [];
+    this.tangentHandles = [];
+    this.smoothPoints = [];
+
+    // Create starting and ending points
+    const startPoint: Point = { x: -60, y: 0 };
+    const endPoint: Point = { x: 60, y: 0 };
+    
+    // Control point positioned above the line between start and end points
+    const controlPoint: Point = { x: 0, y: -40 };
+    
+    // Apply some randomization for variety
+    const variation = 20;
+    startPoint.x += (Math.random() - 0.5) * variation;
+    startPoint.y += (Math.random() - 0.5) * variation;
+    endPoint.x += (Math.random() - 0.5) * variation;
+    endPoint.y += (Math.random() - 0.5) * variation;
+    controlPoint.x += (Math.random() - 0.5) * variation;
+    controlPoint.y += (Math.random() - 0.5) * (variation * 0.8);
+
+    this.points = [startPoint, endPoint];
+    this.controlPoints = [controlPoint];
+    
+    // Cubic curves are always open by default
+    this.closed = false;
+    this.renderType = 'cubic';
   }
 
   /**
@@ -1531,7 +1567,9 @@ export class Shape {
       case 'line':
         this.drawLine(ctx);
         break;
-      case 'bezier':
+      case 'cubic':
+        this.drawCubicCurve(ctx);
+        break;
       case 'bezier':
         this.drawCurve(ctx);
         break;
@@ -1647,6 +1685,20 @@ export class Shape {
     
     // Use native roundRect() method for perfect rounded rectangles
     ctx.roundRect(-w, -h, this.width, this.height, radius);
+  }
+
+  private drawCubicCurve(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 2) return;
+    if (!this.controlPoints || this.controlPoints.length === 0) return;
+
+    // Simple cubic curve: start point -> control point -> end point
+    const startPoint = this.points[0];
+    const endPoint = this.points[1];
+    const controlPoint = this.controlPoints[0];
+
+    ctx.moveTo(startPoint.x, startPoint.y);
+    // Draw quadratic curve using the single control point
+    ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
   }
 
   private drawLine(ctx: CanvasRenderingContext2D): void {
