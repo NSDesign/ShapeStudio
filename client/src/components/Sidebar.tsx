@@ -2207,6 +2207,11 @@ export default function Sidebar({
         <div className="space-y-4 pr-4">
           <div className="text-sm text-slate-400">
             Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
+            {selectedCount === 1 && selectedShapes[0] && (
+              <div className="text-xs text-slate-500 mt-1">
+                Type: <span className="text-slate-300">{shapeTypeDisplayNames[selectedShapes[0].type] || selectedShapes[0].type}</span>
+              </div>
+            )}
           </div>
 
           {selectedCount > 0 && (
@@ -3381,11 +3386,9 @@ export default function Sidebar({
                           if (shape.points && shape.points.length > 2) {
                             // Remove the last point
                             shape.points.pop();
-                            // Regenerate tangent handles for splines
-                            if (shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') {
-                              if (shape.generateSmoothTangentHandles) {
-                                shape.generateSmoothTangentHandles();
-                              }
+                            // Update shape geometry
+                            if (shape.updateShapeFromPoints) {
+                              shape.updateShapeFromPoints();
                             }
                             // Regenerate polygon segments if needed
                             if (shape.type === 'polygon' && shape.sides) {
@@ -3416,11 +3419,9 @@ export default function Sidebar({
                               y: (lastPoint.y + secondLastPoint.y) / 2 + (Math.random() - 0.5) * 20
                             };
                             shape.points.push(newPoint);
-                            // Regenerate tangent handles for splines
-                            if (shape.type === 'bezier' || shape.type === 'cubic' || shape.type === 'smooth-spline') {
-                              if (shape.generateSmoothTangentHandles) {
-                                shape.generateSmoothTangentHandles();
-                              }
+                            // Update shape geometry
+                            if (shape.updateShapeFromPoints) {
+                              shape.updateShapeFromPoints();
                             }
                             // Regenerate polygon segments if needed
                             if (shape.type === 'polygon' && shape.sides) {
