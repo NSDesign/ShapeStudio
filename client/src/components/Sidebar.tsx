@@ -74,6 +74,7 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 // Shape display names mapping
 const shapeTypeDisplayNames: Record<ShapeType, string> = {
   rectangle: 'Rectangle',
+  'rounded-rectangle': 'Rounded Rectangle',
   square: 'Square',
   circle: 'Circle',
   ellipse: 'Ellipse',
@@ -1774,6 +1775,9 @@ export default function Sidebar({
           );
 
         case 'rectangle':
+          return null; // Standard rectangle has no properties
+          
+        case 'rounded-rectangle':
         case 'square':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
@@ -1781,11 +1785,11 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'rectangle' | 'square'] as any)?.cornerRadiusRange?.[0] || 0}px</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'rectangle' | 'square'] as any)?.cornerRadiusRange?.[1] || 20}px</span>
+                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange?.[0] || 0}px</span>
+                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange?.[1] || 20}px</span>
                   </div>
                   <Slider
-                    value={(scatterSettings.shapeSpecific[shapeType as 'rectangle' | 'square'] as any)?.cornerRadiusRange || [0, 20]}
+                    value={(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] as any)?.cornerRadiusRange || [0, 20]}
                     onValueChange={(value) => {
                       const [min, max] = value;
                       console.log(`${shapeType} corner radius: ${min}px-${max}px`);
@@ -1793,7 +1797,7 @@ export default function Sidebar({
                         shapeSpecific: {
                           ...scatterSettings.shapeSpecific,
                           [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'rectangle' | 'square'] || {}),
+                            ...(scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'square'] || {}),
                             cornerRadiusRange: [min, max] 
                           }
                         }
@@ -1834,7 +1838,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rectangle', 'square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">

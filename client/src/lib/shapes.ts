@@ -344,13 +344,20 @@ export class Shape {
         const rectDims = getWidthHeight();
         this.width = rectDims.width;
         this.height = rectDims.height;
+        // Standard rectangle - no rounded corners
+        this.generateRectanglePoints(0);
+        break;
+      case 'rounded-rectangle':
+        const roundedRectDims = getWidthHeight();
+        this.width = roundedRectDims.width;
+        this.height = roundedRectDims.height;
         // Apply corner radius from batch config or scatter settings if available
         let cornerRadius = 0;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
-        } else if (batchConfig?.scatterSettings?.shapeSpecific?.rectangle?.cornerRadiusRange) {
-          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific.rectangle.cornerRadiusRange;
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-rectangle']?.cornerRadiusRange) {
+          const [minRadius, maxRadius] = batchConfig.scatterSettings.shapeSpecific['rounded-rectangle'].cornerRadiusRange;
           cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
         }
         this.generateRectanglePoints(cornerRadius);
@@ -1517,6 +1524,7 @@ export class Shape {
     
     switch (this.type) {
       case 'rectangle':
+      case 'rounded-rectangle':
       case 'square':
         this.drawPolygon(ctx); // Use points for deformable rectangles
         break;

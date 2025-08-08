@@ -38,6 +38,7 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
   
   switch (shape.type) {
     case 'rectangle':
+    case 'rounded-rectangle':
     case 'square':
       drawPolygon(ctx, shape);
       break;

@@ -113,6 +113,7 @@ export interface ShapeProperties {
 
 export type ShapeType = 
   | 'rectangle' 
+  | 'rounded-rectangle'
   | 'square' 
   | 'circle' 
   | 'ellipse' 
@@ -230,6 +231,9 @@ export interface ShapeSpecificSettings {
     strokeCapProbabilities: { round: number; square: number; butt: number };
   };
   rectangle: {
+    // Standard rectangle with no rounded corners
+  };
+  'rounded-rectangle': {
     cornerRadiusRange: [number, number];
   };
   square: {

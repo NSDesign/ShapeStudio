@@ -1051,7 +1051,7 @@ export class GeometricIntersection {
    */
   private static performRectangleCircleUnion(shape1: Shape, shape2: Shape): Shape | null {
     // Determine which is rectangle and which is circle
-    const isRect1 = shape1.type === 'rectangle' || shape1.type === 'square';
+    const isRect1 = shape1.type === 'rectangle' || shape1.type === 'rounded-rectangle' || shape1.type === 'square';
     const rect = isRect1 ? shape1 : shape2;
     const circle = isRect1 ? shape2 : shape1;
     

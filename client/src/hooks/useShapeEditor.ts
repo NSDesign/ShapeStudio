@@ -14,7 +14,7 @@ export const useShapeEditor = () => {
   const [selectedShapes, setSelectedShapes] = useState<Shape[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<ShapeGroupClass[]>([]);
   const [enabledShapeTypes, setEnabledShapeTypes] = useState<Set<ShapeType>>(
-    new Set(['rectangle' as ShapeType, 'circle' as ShapeType, 'polygon' as ShapeType])
+    new Set(['rectangle' as ShapeType, 'rounded-rectangle' as ShapeType, 'circle' as ShapeType, 'polygon' as ShapeType])
   );
   const [scatterSettings, setScatterSettings] = useState<ScatterSettings>({
     onPoints: false,
@@ -61,7 +61,10 @@ export const useShapeEditor = () => {
         pointCountRange: [2, 4],
         strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
       },
-      rectangle: { cornerRadiusRange: [0, 10] },
+      rectangle: {
+        // Standard rectangle has no special properties
+      },
+      'rounded-rectangle': { cornerRadiusRange: [0, 10] },
       square: { cornerRadiusRange: [0, 10] }
     }
   });
@@ -994,6 +997,7 @@ export const useShapeEditor = () => {
         // Apply the size based on shape type with constraint system
         switch (shape.type) {
           case 'rectangle':
+          case 'rounded-rectangle':
             shape.width = width;
             shape.height = height;
             break;
