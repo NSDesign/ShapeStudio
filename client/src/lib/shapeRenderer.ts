@@ -349,14 +349,14 @@ function drawCubicCurve(ctx: CanvasRenderingContext2D, shape: Shape): void {
       const p2 = shape.points[i + 1];
       
       // Get tangent handles for smooth cubic interpolation
-      const handle1 = shape.tangentHandles[i * 2 + 1]; // Outgoing handle from current point
-      const handle2 = shape.tangentHandles[(i + 1) * 2]; // Incoming handle to next point
+      const handle1 = shape.tangentHandles[i]; // Current point's tangent handle
+      const handle2 = shape.tangentHandles[i + 1]; // Next point's tangent handle
       
       if (handle1 && handle2 && 'out' in handle1 && 'in' in handle2) {
         // Draw cubic Bézier curve with proper tangent continuity
         ctx.bezierCurveTo(
-          p1.x + handle1.out.x, p1.y + handle1.out.y,
-          p2.x + handle2.in.x, p2.y + handle2.in.y,
+          handle1.out.x, handle1.out.y,
+          handle2.in.x, handle2.in.y,
           p2.x, p2.y
         );
       } else {

@@ -1725,14 +1725,14 @@ export class Shape {
         const p2 = this.points[i + 1];
         
         // Get tangent handles for smooth cubic interpolation
-        const handle1 = this.tangentHandles[i * 2 + 1]; // Outgoing handle from current point
-        const handle2 = this.tangentHandles[(i + 1) * 2]; // Incoming handle to next point
+        const handle1 = this.tangentHandles[i]; // Current point's tangent handle
+        const handle2 = this.tangentHandles[i + 1]; // Next point's tangent handle
         
         if (handle1 && handle2 && 'out' in handle1 && 'in' in handle2) {
           // Draw cubic Bézier curve with proper tangent continuity
           ctx.bezierCurveTo(
-            p1.x + handle1.out.x, p1.y + handle1.out.y,
-            p2.x + handle2.in.x, p2.y + handle2.in.y,
+            handle1.out.x, handle1.out.y,
+            handle2.in.x, handle2.in.y,
             p2.x, p2.y
           );
         } else {
@@ -2889,43 +2889,31 @@ export class Shape {
         const worldPoint = this.getWorldPoint(index);
         if (!worldPoint || !this.tangentHandles) return;
         
-        // Draw incoming handle
-        const incomingHandle = this.tangentHandles[index * 2];
-        if (incomingHandle && 'in' in incomingHandle) {
-          const handleWorldPos = {
-            x: worldPoint.x + incomingHandle.in.x * this.transform.scaleX,
-            y: worldPoint.y + incomingHandle.in.y * this.transform.scaleY
-          };
-          
+        // Each point has one TangentHandle object with 'in' and 'out' properties
+        const tangentHandle = this.tangentHandles[index];
+        if (tangentHandle && 'in' in tangentHandle && 'out' in tangentHandle) {
+          // Draw incoming handle (handle.in contains absolute world coordinates)
           ctx.beginPath();
           ctx.moveTo(worldPoint.x, worldPoint.y);
-          ctx.lineTo(handleWorldPos.x, handleWorldPos.y);
+          ctx.lineTo(tangentHandle.in.x, tangentHandle.in.y);
           ctx.stroke();
           
-          // Draw handle point
+          // Draw incoming handle point
           ctx.fillStyle = '#10B981';
           ctx.beginPath();
-          ctx.arc(handleWorldPos.x, handleWorldPos.y, 3 / canvasZoom, 0, Math.PI * 2);
+          ctx.arc(tangentHandle.in.x, tangentHandle.in.y, 3 / canvasZoom, 0, Math.PI * 2);
           ctx.fill();
-        }
-        
-        // Draw outgoing handle
-        const outgoingHandle = this.tangentHandles[index * 2 + 1];
-        if (outgoingHandle && 'out' in outgoingHandle) {
-          const handleWorldPos = {
-            x: worldPoint.x + outgoingHandle.out.x * this.transform.scaleX,
-            y: worldPoint.y + outgoingHandle.out.y * this.transform.scaleY
-          };
           
+          // Draw outgoing handle (handle.out contains absolute world coordinates)
           ctx.beginPath();
           ctx.moveTo(worldPoint.x, worldPoint.y);
-          ctx.lineTo(handleWorldPos.x, handleWorldPos.y);
+          ctx.lineTo(tangentHandle.out.x, tangentHandle.out.y);
           ctx.stroke();
           
-          // Draw handle point
-          ctx.fillStyle = '#10B981';
+          // Draw outgoing handle point
+          ctx.fillStyle = '#F59E0B';
           ctx.beginPath();
-          ctx.arc(handleWorldPos.x, handleWorldPos.y, 3 / canvasZoom, 0, Math.PI * 2);
+          ctx.arc(tangentHandle.out.x, tangentHandle.out.y, 3 / canvasZoom, 0, Math.PI * 2);
           ctx.fill();
         }
       });
