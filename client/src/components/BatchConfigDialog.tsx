@@ -65,6 +65,15 @@ export interface BatchConfigSettings {
   gridXRandomization: number; // 0-100 pixels randomization in X direction
   gridYRandomization: number; // 0-100 pixels randomization in Y direction
   
+  // Generation Count Controls
+  generationCountMode: 'range' | 'fixed' | 'incremental';
+  generationCountDefine: number;
+  generationCountStartValue: number;
+  generationCountIncrement: number;
+  generationCountResetPerBatch: boolean;
+  generationCountModulationEnabled: boolean;
+  generationCountModulationValue: number;
+
   // Blend Mode Control
   blendModeEnabled: boolean;
   enabledBlendModes: { [key in BlendMode]?: number }; // weight 0-100
@@ -494,6 +503,15 @@ export const defaultSettings: BatchConfigSettings = {
   gridSortOrder: 'ascending',
   gridXRandomization: 0,
   gridYRandomization: 0,
+  
+  // Generation Count Controls
+  generationCountMode: 'range' as const,
+  generationCountDefine: 5,
+  generationCountStartValue: 1,
+  generationCountIncrement: 1,
+  generationCountResetPerBatch: true,
+  generationCountModulationEnabled: false,
+  generationCountModulationValue: 3,
   
   blendModeEnabled: false,
   enabledBlendModes: { 'source-over': 100 },
@@ -926,8 +944,47 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
       timestamp: new Date().toISOString()
     });
     
-    // Only update internal state, don't call parent callback immediately
-    setCurrentSettings(prevSettings => ({ ...prevSettings, ...updates }));
+    // Handle gradient probability auto-balancing
+    if ('fillGradientLinearProbability' in updates || 'fillGradientRadialProbability' in updates || 'fillGradientConicProbability' in updates) {
+      setCurrentSettings(prevSettings => {
+        const newSettings = { ...prevSettings, ...updates };
+        
+        // Get the current probabilities
+        const linear = newSettings.fillGradientLinearProbability;
+        const radial = newSettings.fillGradientRadialProbability;
+        const conic = newSettings.fillGradientConicProbability;
+        
+        // Auto-balance to 100%
+        const total = linear + radial + conic;
+        if (total !== 100 && total > 0) {
+          // Determine which property was changed
+          const changedKey = Object.keys(updates)[0];
+          const changedValue = updates[changedKey as keyof typeof updates] as number;
+          
+          if (changedKey === 'fillGradientLinearProbability') {
+            const remaining = 100 - changedValue;
+            const radialRatio = radial / (radial + conic || 1);
+            newSettings.fillGradientRadialProbability = Math.round(remaining * radialRatio);
+            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientRadialProbability;
+          } else if (changedKey === 'fillGradientRadialProbability') {
+            const remaining = 100 - changedValue;
+            const linearRatio = linear / (linear + conic || 1);
+            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
+            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientLinearProbability;
+          } else if (changedKey === 'fillGradientConicProbability') {
+            const remaining = 100 - changedValue;
+            const linearRatio = linear / (linear + radial || 1);
+            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
+            newSettings.fillGradientRadialProbability = remaining - newSettings.fillGradientLinearProbability;
+          }
+        }
+        
+        return newSettings;
+      });
+    } else {
+      // Only update internal state, don't call parent callback immediately
+      setCurrentSettings(prevSettings => ({ ...prevSettings, ...updates }));
+    }
   }, [isOpen]);
 
   const resetToDefaults = useCallback(() => {
@@ -1952,6 +2009,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             
                             {currentSettings.xPositionMode === 'incremental' && (
                               <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.xPositionStartValue}px</Label>
+                                <Slider
+                                  value={[currentSettings.xPositionStartValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionStartValue: value })}
+                                  min={0}
+                                  max={200}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
                                 <Label className="text-xs text-slate-300">Increment: {currentSettings.xPositionIncrement}px</Label>
                                 <Slider
                                   value={[currentSettings.xPositionIncrement]}
@@ -1961,7 +2027,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={1}
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
-                                <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
                                     checked={currentSettings.incrementalResetPerBatch}
@@ -1970,6 +2035,28 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   />
                                   <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.xPositionModulationEnabled}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ xPositionModulationEnabled: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                </div>
+                                {currentSettings.xPositionModulationEnabled && (
+                                  <>
+                                    <Label className="text-xs text-slate-300">Modulation Value: {currentSettings.xPositionModulationValue}px</Label>
+                                    <Slider
+                                      value={[currentSettings.xPositionModulationValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ xPositionModulationValue: value })}
+                                      min={50}
+                                      max={1500}
+                                      step={50}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </>
+                                )}
+                                <p className="text-xs text-slate-400">Stepped positioning (start + index × increment, with optional modulation)</p>
                               </div>
                             )}
                           </div>
@@ -2084,6 +2171,15 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             
                             {currentSettings.yPositionMode === 'incremental' && (
                               <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.yPositionStartValue}px</Label>
+                                <Slider
+                                  value={[currentSettings.yPositionStartValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionStartValue: value })}
+                                  min={0}
+                                  max={200}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
                                 <Label className="text-xs text-slate-300">Increment: {currentSettings.yPositionIncrement}px</Label>
                                 <Slider
                                   value={[currentSettings.yPositionIncrement]}
@@ -2093,7 +2189,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={1}
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
-                                <p className="text-xs text-slate-400">Stepped positioning (shape 1 at 0, shape 2 at increment, etc.)</p>
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
                                     checked={currentSettings.incrementalResetPerBatch}
@@ -2102,6 +2197,28 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   />
                                   <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.yPositionModulationEnabled}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ yPositionModulationEnabled: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                </div>
+                                {currentSettings.yPositionModulationEnabled && (
+                                  <>
+                                    <Label className="text-xs text-slate-300">Modulation Value: {currentSettings.yPositionModulationValue}px</Label>
+                                    <Slider
+                                      value={[currentSettings.yPositionModulationValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ yPositionModulationValue: value })}
+                                      min={50}
+                                      max={1500}
+                                      step={50}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </>
+                                )}
+                                <p className="text-xs text-slate-400">Stepped positioning (start + index × increment, with optional modulation)</p>
                               </div>
                             )}
                           </div>

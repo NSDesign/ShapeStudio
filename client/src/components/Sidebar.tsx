@@ -1227,22 +1227,107 @@ export default function Sidebar({
           {batchModeEnabled && (
             <>
               <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Random Shape Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
-                    <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
-                  </div>
-                  <Slider
-                    value={batchShapeCount}
-                    onValueChange={(value) => setBatchShapeCount(value)}
-                    min={1}
-                    max={20}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
+                <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400">Number of Generations per Export</Label>
+                  <Select 
+                    value={batchConfigSettings.generationCountMode || 'range'} 
+                    onValueChange={(value) => onUpdateBatchConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' })}
+                  >
+                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                      <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                {batchConfigSettings.generationCountMode === 'range' && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
+                      <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
+                    </div>
+                    <Slider
+                      value={batchShapeCount}
+                      onValueChange={(value) => setBatchShapeCount(value)}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="w-full"
+                      minStepsBetweenThumbs={1}
+                    />
+                  </div>
+                )}
+                
+                {batchConfigSettings.generationCountMode === 'fixed' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-300">Fixed Value: {batchConfigSettings.generationCountDefine}</Label>
+                    <Slider
+                      value={[batchConfigSettings.generationCountDefine]}
+                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountDefine: value })}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                  </div>
+                )}
+                
+                {batchConfigSettings.generationCountMode === 'incremental' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-300">Start Value: {batchConfigSettings.generationCountStartValue}</Label>
+                    <Slider
+                      value={[batchConfigSettings.generationCountStartValue]}
+                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountStartValue: value })}
+                      min={1}
+                      max={15}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                    <Label className="text-xs text-slate-300">Increment: {batchConfigSettings.generationCountIncrement}</Label>
+                    <Slider
+                      value={[batchConfigSettings.generationCountIncrement]}
+                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountIncrement: value })}
+                      min={1}
+                      max={5}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={batchConfigSettings.generationCountResetPerBatch}
+                        onCheckedChange={(checked) => onUpdateBatchConfigSettings({ generationCountResetPerBatch: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                      />
+                      <Label className="text-xs text-slate-300">Reset per batch</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={batchConfigSettings.generationCountModulationEnabled}
+                        onCheckedChange={(checked) => onUpdateBatchConfigSettings({ generationCountModulationEnabled: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                      />
+                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                    </div>
+                    {batchConfigSettings.generationCountModulationEnabled && (
+                      <>
+                        <Label className="text-xs text-slate-300">Modulation Value: {batchConfigSettings.generationCountModulationValue}</Label>
+                        <Slider
+                          value={[batchConfigSettings.generationCountModulationValue]}
+                          onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountModulationValue: value })}
+                          min={1}
+                          max={10}
+                          step={1}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </>
+                    )}
+                    <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
