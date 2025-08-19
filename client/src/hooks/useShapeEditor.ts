@@ -2487,8 +2487,8 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
-  const updateBatchConfigSettings = useCallback((settings: BatchConfigSettings) => {
-    setBatchConfigSettings(settings);
+  const updateBatchConfigSettings = useCallback((updates: Partial<BatchConfigSettings>) => {
+    setBatchConfigSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
   // Project loading functionality

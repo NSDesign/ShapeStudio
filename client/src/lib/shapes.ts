@@ -19,6 +19,7 @@ export class Shape {
   segments: number;
   renderType: 'polygon' | 'bezier' | 'cubic' | 'smooth' | 'roundRect';
   cornerRadius?: number;
+  strokeCap?: 'round' | 'square' | 'butt';
 
   constructor(type: ShapeType, x: number = 0, y: number = 0, batchConfig?: any) {
     this.id = `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
