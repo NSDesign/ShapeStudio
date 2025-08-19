@@ -1891,6 +1891,179 @@ export default function Sidebar({
             </div>
           );
           
+        case 'cubic':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Point Count Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.cubic?.pointCountRange?.[0] || 3}</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.cubic?.pointCountRange?.[1] || 7}</span>
+                  </div>
+                  <Slider
+                    value={scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      console.log(`Cubic points: ${min}-${max}`);
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          cubic: { 
+                            pointCountRange: [min, max],
+                            curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                            spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                            patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                            openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                          }
+                        }
+                      });
+                    }}
+                    min={3}
+                    max={8}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Curvature Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {((scatterSettings.shapeSpecific.cubic?.curvatureRange?.[0] || 0.2) * 100).toFixed(0)}%</span>
+                    <span className="text-slate-400">Max: {((scatterSettings.shapeSpecific.cubic?.curvatureRange?.[1] || 0.8) * 100).toFixed(0)}%</span>
+                  </div>
+                  <Slider
+                    value={[(scatterSettings.shapeSpecific.cubic?.curvatureRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific.cubic?.curvatureRange?.[1] || 0.8) * 100]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            cubic: { 
+                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                              curvatureRange: [min / 100, max / 100],
+                              spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                              openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={10}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Curve Spread Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.cubic?.spreadRange?.[0] || 40}px</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.cubic?.spreadRange?.[1] || 120}px</span>
+                  </div>
+                  <Slider
+                    value={scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            cubic: { 
+                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                              curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                              spreadRange: [min, max],
+                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                              openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={20}
+                    max={200}
+                    step={10}
+                    className="w-full"
+                    minStepsBetweenThumbs={10}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Curve Pattern</Label>
+                <Select 
+                  value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
+                  onValueChange={(value) => {
+                    onUpdateScatterSettings({
+                      shapeSpecific: {
+                        ...scatterSettings.shapeSpecific,
+                        cubic: { 
+                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                          patternType: parseInt(value),
+                          openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                        }
+                      }
+                    });
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
+                    <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
+                    <SelectItem value="2" className="text-slate-200 hover:bg-slate-700">Organic</SelectItem>
+                    <SelectItem value="3" className="text-slate-200 hover:bg-slate-700">Arc</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Open Curve Probability</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">{scatterSettings.shapeSpecific.cubic?.openProbability || 85}% Open</span>
+                  </div>
+                  <Slider
+                    value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
+                    onValueChange={(value) => {
+                      const probability = value[0];
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            cubic: { 
+                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                              curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                              spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                              openProbability: probability
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          );
+
         case 'square':
           return null; // Standard square has no properties
 
@@ -1918,7 +2091,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', , 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">

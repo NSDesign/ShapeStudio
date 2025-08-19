@@ -629,59 +629,135 @@ export class Shape {
   private generateCubicCurvePoints(batchConfig?: any): void {
     // Generate multiple connected cubic curves with smooth interpolation
     this.points = [];
-    this.controlPoints = [];
+    // Don't initialize controlPoints - let tangentHandles be used instead
     this.tangentHandles = [];
     this.smoothPoints = [];
 
-    // Get point count from batch config or use default range
-    let pointCount = 3;
-    if (batchConfig?.scatterSettings?.shapeSpecific?.cubic?.pointCountRange) {
-      const [min, max] = batchConfig.scatterSettings.shapeSpecific.cubic.pointCountRange;
-      pointCount = Math.floor(min + Math.random() * (max - min + 1));
-    } else {
-      pointCount = 3 + Math.floor(Math.random() * 4); // 3-6 points
+    // Get configuration from batch config if available
+    let pointCount = 3 + Math.floor(Math.random() * 5); // Default 3-7 points
+    let curvatureVariation = 0.3 + Math.random() * 0.4; // Default 0.3-0.7
+    let pointSpread = 60 + Math.random() * 40; // Default 60-100 spread
+    let curvePattern = Math.floor(Math.random() * 4); // 0-3 different patterns
+
+    if (batchConfig?.scatterSettings?.shapeSpecific?.cubic) {
+      const settings = batchConfig.scatterSettings.shapeSpecific.cubic;
+      if (settings.pointCountRange) {
+        const [min, max] = settings.pointCountRange;
+        pointCount = Math.floor(min + Math.random() * (max - min + 1));
+      }
+      if (settings.curvatureRange) {
+        const [min, max] = settings.curvatureRange;
+        curvatureVariation = min + Math.random() * (max - min);
+      }
+      if (settings.spreadRange) {
+        const [min, max] = settings.spreadRange;
+        pointSpread = min + Math.random() * (max - min);
+      }
+      if (settings.patternType !== undefined) {
+        curvePattern = settings.patternType;
+      }
     }
 
     // Ensure minimum of 3 points for proper cubic curves
-    pointCount = Math.max(3, pointCount);
+    pointCount = Math.max(3, Math.min(8, pointCount));
 
-    // Generate main curve points with natural distribution
-    const baseRadius = 60;
-    const centerX = 0;
-    const centerY = 0;
-    
-    // Create organic point distribution
-    for (let i = 0; i < pointCount; i++) {
-      const angle = (i / (pointCount - 1)) * Math.PI * 1.5 - Math.PI * 0.75; // Spread across 270 degrees
-      const radiusVariation = 0.3 + Math.random() * 0.4; // 0.3 to 0.7 multiplier
-      const radius = baseRadius * radiusVariation;
-      
-      const baseX = centerX + Math.cos(angle) * radius;
-      const baseY = centerY + Math.sin(angle) * radius;
-      
-      // Add organic positional variation
-      const maxPointPos = Math.max(Math.abs(baseX), Math.abs(baseY));
-      const minPointPos = Math.min(Math.abs(baseX), Math.abs(baseY));
-      const xVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.3;
-      const yVariation = (Math.random() - 0.5) * (maxPointPos - minPointPos) * 0.3;
-      
-      this.points.push({ 
-        x: baseX + xVariation, 
-        y: baseY + yVariation 
-      });
+    // Generate points based on different curve patterns for variety
+    switch (curvePattern) {
+      case 0: // Spiral pattern
+        this.generateSpiralCubicPoints(pointCount, pointSpread, curvatureVariation);
+        break;
+      case 1: // Wave pattern
+        this.generateWaveCubicPoints(pointCount, pointSpread, curvatureVariation);
+        break;
+      case 2: // Organic scatter
+        this.generateOrganicCubicPoints(pointCount, pointSpread, curvatureVariation);
+        break;
+      case 3: // Geometric arc
+        this.generateArcCubicPoints(pointCount, pointSpread, curvatureVariation);
+        break;
+      default:
+        this.generateOrganicCubicPoints(pointCount, pointSpread, curvatureVariation);
     }
     
     // Generate smooth tangent handles using the same approach as Bézier curves
     this.generateSmoothTangentHandles();
 
     // Use batch config settings for open/closed probability if available
-    let openProbability = 90; // Default 90% open for better curve display
+    let openProbability = 85; // Default 85% open for better curve display
     if (batchConfig?.scatterSettings?.shapeSpecific?.[this.type]?.openProbability !== undefined) {
       openProbability = batchConfig.scatterSettings.shapeSpecific[this.type].openProbability;
     }
     
     this.closed = Math.random() * 100 > openProbability;
     this.renderType = 'cubic';
+  }
+
+  private generateSpiralCubicPoints(pointCount: number, spread: number, variation: number): void {
+    const centerX = 0, centerY = 0;
+    const maxRadius = spread;
+    
+    for (let i = 0; i < pointCount; i++) {
+      const t = i / (pointCount - 1);
+      const angle = t * Math.PI * 2.5; // 2.5 rotations for spiral
+      const radius = (t * maxRadius) + (Math.random() - 0.5) * variation * 30;
+      
+      this.points.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius
+      });
+    }
+  }
+
+  private generateWaveCubicPoints(pointCount: number, spread: number, variation: number): void {
+    const width = spread * 1.5;
+    const amplitude = spread * 0.6;
+    
+    for (let i = 0; i < pointCount; i++) {
+      const t = i / (pointCount - 1);
+      const x = (t - 0.5) * width;
+      const baseY = Math.sin(t * Math.PI * 2) * amplitude;
+      const y = baseY + (Math.random() - 0.5) * variation * 40;
+      
+      this.points.push({ x, y });
+    }
+  }
+
+  private generateOrganicCubicPoints(pointCount: number, spread: number, variation: number): void {
+    const centerX = 0, centerY = 0;
+    
+    for (let i = 0; i < pointCount; i++) {
+      const angle = (i / (pointCount - 1)) * Math.PI * 1.8 - Math.PI * 0.9;
+      const radius = spread * (0.4 + Math.random() * 0.6);
+      
+      const baseX = centerX + Math.cos(angle) * radius;
+      const baseY = centerY + Math.sin(angle) * radius;
+      
+      const xVar = (Math.random() - 0.5) * variation * 60;
+      const yVar = (Math.random() - 0.5) * variation * 60;
+      
+      this.points.push({ 
+        x: baseX + xVar, 
+        y: baseY + yVar 
+      });
+    }
+  }
+
+  private generateArcCubicPoints(pointCount: number, spread: number, variation: number): void {
+    const centerX = 0, centerY = 0;
+    const radius = spread;
+    const arcAngle = Math.PI * (0.5 + Math.random() * 1.0); // 90-180 degree arcs
+    const startAngle = Math.random() * Math.PI * 2;
+    
+    for (let i = 0; i < pointCount; i++) {
+      const t = i / (pointCount - 1);
+      const angle = startAngle + t * arcAngle;
+      const r = radius + (Math.random() - 0.5) * variation * 40;
+      
+      this.points.push({
+        x: centerX + Math.cos(angle) * r,
+        y: centerY + Math.sin(angle) * r
+      });
+    }
   }
 
   /**
@@ -2901,8 +2977,10 @@ export class Shape {
       });
     }
 
-    // Draw tangent handles for curve types (cubic, bezier, smooth-spline)
-    if ((this.type === 'cubic' || this.type === 'bezier' || this.type === 'smooth-spline') && this.tangentHandles && this.tangentHandles.length > 0) {
+    // Draw tangent handles for curve types (cubic, bezier, smooth-spline) - only when in point selection mode
+    if ((this.type === 'cubic' || this.type === 'bezier' || this.type === 'smooth-spline') && 
+        this.tangentHandles && this.tangentHandles.length > 0 && 
+        (selectedPoints.length > 0 || this.selected)) {
       ctx.strokeStyle = '#10B981';
       ctx.lineWidth = 1 / canvasZoom;
       
