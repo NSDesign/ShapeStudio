@@ -148,7 +148,7 @@ interface SidebarProps {
   onDistributeSelected: () => void;
   onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
   onApplyColorManipulation: (manipulation: any) => void;
-  onUpdateBatchConfigSettings: (settings: BatchConfigSettings) => void;
+  onUpdateBatchConfigSettings: (settings: Partial<BatchConfigSettings>) => void;
   onLoadProject: (data: {
     shapes: any[];
     groups: any[];
@@ -1231,7 +1231,10 @@ export default function Sidebar({
                   <Label className="text-xs text-slate-400">Number of Generations per Export</Label>
                   <Select 
                     value={batchConfigSettings.generationCountMode || 'range'} 
-                    onValueChange={(value) => onUpdateBatchConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' })}
+                    onValueChange={(value) => {
+                      console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
+                      onUpdateBatchConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
+                    }}
                   >
                     <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
                       <SelectValue />
@@ -1395,6 +1398,7 @@ export default function Sidebar({
                 onClick={handleBatchExportNew}
                 disabled={isBatchExporting || enabledShapeTypes.size === 0}
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
+                title={enabledShapeTypes.size === 0 ? `No shape types enabled (${enabledShapeTypes.size})` : undefined}
               >
                 {isBatchExporting ? (
                   <>
