@@ -2388,6 +2388,250 @@ export default function Sidebar({
             )}
           </div>
 
+          {/* Shape Properties Information */}
+          {selectedCount === 1 && selectedShapes[0] && (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <Label className="text-sm text-slate-300 font-medium">Shape Properties</Label>
+              
+              <div className="space-y-2 text-xs">
+                {(() => {
+                  const shape = selectedShapes[0];
+                  const properties = [];
+
+                  // Basic position and transform info
+                  properties.push(
+                    <div key="position" className="flex justify-between">
+                      <span className="text-slate-400">Position</span>
+                      <span className="text-slate-300">
+                        {Math.round(shape.transform.x)}, {Math.round(shape.transform.y)}
+                      </span>
+                    </div>
+                  );
+
+                  properties.push(
+                    <div key="rotation" className="flex justify-between">
+                      <span className="text-slate-400">Rotation</span>
+                      <span className="text-slate-300">{Math.round(shape.transform.rotation)}°</span>
+                    </div>
+                  );
+
+                  properties.push(
+                    <div key="scale" className="flex justify-between">
+                      <span className="text-slate-400">Scale</span>
+                      <span className="text-slate-300">
+                        {shape.transform.scaleX.toFixed(2)}×, {shape.transform.scaleY.toFixed(2)}×
+                      </span>
+                    </div>
+                  );
+
+                  // Shape-specific properties
+                  switch (shape.type) {
+                    case 'cubic':
+                    case 'bezier':
+                    case 'smooth-spline':
+                      properties.push(
+                        <div key="curve-type" className="flex justify-between">
+                          <span className="text-slate-400">Curve Type</span>
+                          <span className="text-slate-300 capitalize">
+                            {shape.closed ? 'Closed' : 'Open'}
+                          </span>
+                        </div>
+                      );
+                      properties.push(
+                        <div key="points" className="flex justify-between">
+                          <span className="text-slate-400">Control Points</span>
+                          <span className="text-slate-300">{shape.points?.length || 0}</span>
+                        </div>
+                      );
+                      if (shape.tangentHandles?.length) {
+                        properties.push(
+                          <div key="handles" className="flex justify-between">
+                            <span className="text-slate-400">Tangent Handles</span>
+                            <span className="text-slate-300">{shape.tangentHandles.length}</span>
+                          </div>
+                        );
+                      }
+                      break;
+
+                    case 'polygon':
+                    case 'star':
+                      if (shape.sides) {
+                        properties.push(
+                          <div key="sides" className="flex justify-between">
+                            <span className="text-slate-400">{shape.type === 'star' ? 'Points' : 'Sides'}</span>
+                            <span className="text-slate-300">{shape.sides}</span>
+                          </div>
+                        );
+                      }
+                      if (shape.type === 'star' && shape.innerRadius) {
+                        properties.push(
+                          <div key="inner-radius" className="flex justify-between">
+                            <span className="text-slate-400">Inner Radius</span>
+                            <span className="text-slate-300">{Math.round(shape.innerRadius)}px</span>
+                          </div>
+                        );
+                      }
+                      break;
+
+                    case 'circle':
+                    case 'ellipse':
+                      if (shape.radius) {
+                        properties.push(
+                          <div key="radius" className="flex justify-between">
+                            <span className="text-slate-400">Radius</span>
+                            <span className="text-slate-300">{Math.round(shape.radius)}px</span>
+                          </div>
+                        );
+                      }
+                      break;
+
+                    case 'rectangle':
+                    case 'rounded-rectangle':
+                    case 'square':
+                    case 'rounded-square':
+                      if (shape.width && shape.height) {
+                        properties.push(
+                          <div key="dimensions" className="flex justify-between">
+                            <span className="text-slate-400">Dimensions</span>
+                            <span className="text-slate-300">
+                              {Math.round(shape.width)} × {Math.round(shape.height)}
+                            </span>
+                          </div>
+                        );
+                      }
+                      if ((shape.type === 'rounded-rectangle' || shape.type === 'rounded-square') && shape.cornerRadius) {
+                        properties.push(
+                          <div key="corner-radius" className="flex justify-between">
+                            <span className="text-slate-400">Corner Radius</span>
+                            <span className="text-slate-300">{Math.round(shape.cornerRadius)}px</span>
+                          </div>
+                        );
+                      }
+                      break;
+
+                    case 'line':
+                      properties.push(
+                        <div key="points" className="flex justify-between">
+                          <span className="text-slate-400">Line Points</span>
+                          <span className="text-slate-300">{shape.points?.length || 2}</span>
+                        </div>
+                      );
+                      if (shape.strokeCap) {
+                        properties.push(
+                          <div key="stroke-cap" className="flex justify-between">
+                            <span className="text-slate-400">Stroke Cap</span>
+                            <span className="text-slate-300 capitalize">{shape.strokeCap}</span>
+                          </div>
+                        );
+                      }
+                      break;
+
+                    case 'ring':
+                    case 'spline-ring':
+                      if (shape.radius) {
+                        properties.push(
+                          <div key="outer-radius" className="flex justify-between">
+                            <span className="text-slate-400">Outer Radius</span>
+                            <span className="text-slate-300">{Math.round(shape.radius)}px</span>
+                          </div>
+                        );
+                      }
+                      if (shape.innerRadius) {
+                        properties.push(
+                          <div key="inner-radius" className="flex justify-between">
+                            <span className="text-slate-400">Inner Radius</span>
+                            <span className="text-slate-300">{Math.round(shape.innerRadius)}px</span>
+                          </div>
+                        );
+                      }
+                      break;
+                  }
+
+                  // Common properties for all shapes
+                  properties.push(
+                    <div key="opacity" className="flex justify-between">
+                      <span className="text-slate-400">Fill Opacity</span>
+                      <span className="text-slate-300">{Math.round(shape.properties.fillOpacity * 100)}%</span>
+                    </div>
+                  );
+
+                  if (shape.properties.strokeWidth > 0) {
+                    properties.push(
+                      <div key="stroke-width" className="flex justify-between">
+                        <span className="text-slate-400">Stroke Width</span>
+                        <span className="text-slate-300">{shape.properties.strokeWidth}px</span>
+                      </div>
+                    );
+                  }
+
+                  if (shape.properties.blurRadius > 0) {
+                    properties.push(
+                      <div key="blur" className="flex justify-between">
+                        <span className="text-slate-400">Blur Radius</span>
+                        <span className="text-slate-300">{shape.properties.blurRadius}px</span>
+                      </div>
+                    );
+                  }
+
+                  properties.push(
+                    <div key="layer" className="flex justify-between">
+                      <span className="text-slate-400">Layer Index</span>
+                      <span className="text-slate-300">{shape.properties.zIndex}</span>
+                    </div>
+                  );
+
+                  return properties;
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Multiple shapes selected - show aggregate information */}
+          {selectedCount > 1 && (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <Label className="text-sm text-slate-300 font-medium">Selection Properties</Label>
+              
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Shape Types</span>
+                  <span className="text-slate-300">
+                    {Array.from(new Set(selectedShapes.map(s => s.type))).length} different
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Total Shapes</span>
+                  <span className="text-slate-300">{selectedCount}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Layer Range</span>
+                  <span className="text-slate-300">
+                    {Math.min(...selectedShapes.map(s => s.properties.zIndex))} - {Math.max(...selectedShapes.map(s => s.properties.zIndex))}
+                  </span>
+                </div>
+
+                {/* Show types breakdown */}
+                <div className="mt-2 pt-2 border-t border-slate-600">
+                  <span className="text-slate-400 text-xs">Types breakdown:</span>
+                  <div className="mt-1 space-y-1">
+                    {Object.entries(
+                      selectedShapes.reduce((acc, shape) => {
+                        acc[shape.type] = (acc[shape.type] || 0) + 1;
+                        return acc;
+                      }, {} as Record<string, number>)
+                    ).map(([type, count]) => (
+                      <div key={type} className="flex justify-between text-xs">
+                        <span className="text-slate-500">{shapeTypeDisplayNames[type as ShapeType] || type}</span>
+                        <span className="text-slate-400">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {selectedCount > 0 && (
             <ShapePropertiesPanel 
               selectedShapes={selectedShapes}

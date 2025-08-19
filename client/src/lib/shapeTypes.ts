@@ -209,8 +209,10 @@ export interface ShapeSpecificSettings {
 
   cubic: {
     pointCountRange: [number, number];
+    curvatureRange: [number, number];
+    spreadRange: [number, number];
+    patternType: number;
     openProbability: number;
-    strokeCapProbabilities: { round: number; square: number; butt: number };
   };
 
   'smooth-spline': {
