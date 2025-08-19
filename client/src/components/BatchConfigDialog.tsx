@@ -102,7 +102,12 @@ export interface BatchConfigSettings {
   // Width/Height Incremental Mode
   widthIncrement: number;
   heightIncrement: number;
-  sizeIncrementalStartValue: number;
+  widthStartValue: number; // Individual start values
+  heightStartValue: number;
+  widthModulationEnabled: boolean; // Enable modulation for width
+  widthModulationValue: number; // Modulation value for width
+  heightModulationEnabled: boolean; // Enable modulation for height
+  heightModulationValue: number; // Modulation value for height
   
   // Size Constraints
   maintainAspectRatio: boolean; // force width/height to maintain shape proportions
@@ -130,15 +135,39 @@ export interface BatchConfigSettings {
   // Position Incremental Mode
   xPositionIncrement: number;
   yPositionIncrement: number;
+  xPositionStartValue: number; // Start value for X position
+  yPositionStartValue: number; // Start value for Y position
+  xPositionModulationEnabled: boolean; // Enable modulation for X position
+  xPositionModulationValue: number; // Modulation value for X position
+  yPositionModulationEnabled: boolean; // Enable modulation for Y position
+  yPositionModulationValue: number; // Modulation value for Y position
   
   // Rectangle-specific Properties
+  rectangleCornerRadiusMode: 'range' | 'define' | 'incremental';
   rectangleCornerRadiusRange: [number, number];
+  rectangleCornerRadiusDefine: number;
+  rectangleCornerRadiusStartValue: number;
+  rectangleCornerRadiusIncrement: number;
+  rectangleCornerRadiusModulationEnabled: boolean;
+  rectangleCornerRadiusModulationValue: number;
   
   // Star-specific Properties
+  starInnerRadiusMode: 'range' | 'define' | 'incremental';
   starInnerRadiusRange: [number, number];
+  starInnerRadiusDefine: number;
+  starInnerRadiusStartValue: number;
+  starInnerRadiusIncrement: number;
+  starInnerRadiusModulationEnabled: boolean;
+  starInnerRadiusModulationValue: number;
   
   // Ring-specific Properties
+  ringInnerRadiusMode: 'range' | 'define' | 'incremental';
   ringInnerRadiusRange: [number, number];
+  ringInnerRadiusDefine: number;
+  ringInnerRadiusStartValue: number;
+  ringInnerRadiusIncrement: number;
+  ringInnerRadiusModulationEnabled: boolean;
+  ringInnerRadiusModulationValue: number;
   
   // Fill Properties - Controls solid vs gradient vs pattern
   fillEnabled: boolean;
@@ -201,16 +230,24 @@ export interface BatchConfigSettings {
   fillGradientConicAngle: number; // Starting angle for conic gradient (0-360°)
   
   // Fill Opacity Settings
-  fillOpacityMode: 'range' | 'define';
+  fillOpacityMode: 'range' | 'define' | 'incremental';
   fillOpacityRange: [number, number]; // For range mode
   fillOpacityDefine: number; // For define mode
+  fillOpacityStartValue: number; // For incremental mode
+  fillOpacityIncrement: number; // For incremental mode
+  fillOpacityModulationEnabled: boolean; // Enable modulation
+  fillOpacityModulationValue: number; // Modulation value
   
   // Blur Properties
   blurEnabled: boolean;
   blurProbability: number; // 0-100%
-  blurMode: 'range' | 'define';
+  blurMode: 'range' | 'define' | 'incremental';
   blurRange: [number, number]; // For range mode (e.g., [2, 15])
   blurDefine: number; // For define mode (e.g., 8)
+  blurStartValue: number; // For incremental mode
+  blurIncrement: number; // For incremental mode
+  blurModulationEnabled: boolean; // Enable modulation
+  blurModulationValue: number; // Modulation value
   
   // Stroke Properties  
   strokeEnabled: boolean;
@@ -226,25 +263,76 @@ export interface BatchConfigSettings {
   strokeColorLightnessRange: [number, number]; // 0-100% for range mode
   
   // Stroke Opacity Settings
-  strokeOpacityMode: 'range' | 'define';
+  strokeOpacityMode: 'range' | 'define' | 'incremental';
   strokeOpacityRange: [number, number]; // For range mode
   strokeOpacityDefine: number; // For define mode
+  strokeOpacityStartValue: number; // For incremental mode
+  strokeOpacityIncrement: number; // For incremental mode
+  strokeOpacityModulationEnabled: boolean; // Enable modulation
+  strokeOpacityModulationValue: number; // Modulation value
+  
+  // Stroke Width Settings
+  strokeWidthMode: 'range' | 'define' | 'incremental';
   strokeWidthRange: [number, number];
+  strokeWidthDefine: number; // For define mode
+  strokeWidthStartValue: number; // For incremental mode
+  strokeWidthIncrement: number; // For incremental mode
+  strokeWidthModulationEnabled: boolean; // Enable modulation
+  strokeWidthModulationValue: number; // Modulation value
   
   // Polygon Shape Properties
   polygonPropertiesEnabled: boolean;
+  segmentCountMode: 'range' | 'define' | 'incremental';
   segmentCountRange: [number, number];
+  segmentCountDefine: number;
+  segmentCountStartValue: number;
+  segmentCountIncrement: number;
+  segmentCountModulationEnabled: boolean;
+  segmentCountModulationValue: number;
   
   // Line Properties
   linePropertiesEnabled: boolean;
+  pointCountMode: 'range' | 'define' | 'incremental';
   pointCountRange: [number, number];
+  pointCountDefine: number;
+  pointCountStartValue: number;
+  pointCountIncrement: number;
+  pointCountModulationEnabled: boolean;
+  pointCountModulationValue: number;
+  
+  pointPositionMode: 'range' | 'define' | 'incremental';
   pointPositionRange: [number, number];
+  pointPositionDefine: number;
+  pointPositionStartValue: number;
+  pointPositionIncrement: number;
+  pointPositionModulationEnabled: boolean;
+  pointPositionModulationValue: number;
   
   // Spline Curve Properties
   splinePropertiesEnabled: boolean;
+  splinePointCountMode: 'range' | 'define' | 'incremental';
   splinePointCountRange: [number, number];
+  splinePointCountDefine: number;
+  splinePointCountStartValue: number;
+  splinePointCountIncrement: number;
+  splinePointCountModulationEnabled: boolean;
+  splinePointCountModulationValue: number;
+  
+  splinePointPositionMode: 'range' | 'define' | 'incremental';
   splinePointPositionRange: [number, number];
+  splinePointPositionDefine: number;
+  splinePointPositionStartValue: number;
+  splinePointPositionIncrement: number;
+  splinePointPositionModulationEnabled: boolean;
+  splinePointPositionModulationValue: number;
+  
+  splineControlPointMode: 'range' | 'define' | 'incremental';
   splineControlPointRange: [number, number];
+  splineControlPointDefine: number;
+  splineControlPointStartValue: number;
+  splineControlPointIncrement: number;
+  splineControlPointModulationEnabled: boolean;
+  splineControlPointModulationValue: number;
   
   // Shape Transforms
   transformsEnabled: boolean;
@@ -266,6 +354,12 @@ export interface BatchConfigSettings {
   yTransformValue: number;
   xTransformIncrement: number;
   yTransformIncrement: number;
+  xTransformStartValue: number;
+  yTransformStartValue: number;
+  xTransformModulationEnabled: boolean;
+  xTransformModulationValue: number;
+  yTransformModulationEnabled: boolean;
+  yTransformModulationValue: number;
   
   // Scale Enhanced Modes
   scaleXMode: 'range' | 'value' | 'incremental';
@@ -274,6 +368,12 @@ export interface BatchConfigSettings {
   scaleYValue: number;
   scaleXIncrement: number;
   scaleYIncrement: number;
+  scaleXStartValue: number;
+  scaleYStartValue: number;
+  scaleXModulationEnabled: boolean;
+  scaleXModulationValue: number;
+  scaleYModulationEnabled: boolean;
+  scaleYModulationValue: number;
   maintainScaleAspectRatio: boolean; // Link scale X and Y
   
   // Rotation Enhanced Mode
@@ -430,7 +530,12 @@ export const defaultSettings: BatchConfigSettings = {
   // Width/Height Incremental Mode
   widthIncrement: 10,
   heightIncrement: 10,
-  sizeIncrementalStartValue: 50,
+  widthStartValue: 50,
+  heightStartValue: 50,
+  widthModulationEnabled: false,
+  widthModulationValue: 500,
+  heightModulationEnabled: false,
+  heightModulationValue: 500,
   
   // Size Constraints
   maintainAspectRatio: false, // Default: independent width/height
@@ -458,15 +563,39 @@ export const defaultSettings: BatchConfigSettings = {
   // Position Incremental Mode
   xPositionIncrement: 50,
   yPositionIncrement: 50,
+  xPositionStartValue: 0,
+  yPositionStartValue: 0,
+  xPositionModulationEnabled: false,
+  xPositionModulationValue: 800,
+  yPositionModulationEnabled: false,
+  yPositionModulationValue: 600,
   
   // Rectangle-specific Properties
+  rectangleCornerRadiusMode: 'range' as const,
   rectangleCornerRadiusRange: [0, 20],
+  rectangleCornerRadiusDefine: 10,
+  rectangleCornerRadiusStartValue: 0,
+  rectangleCornerRadiusIncrement: 2,
+  rectangleCornerRadiusModulationEnabled: false,
+  rectangleCornerRadiusModulationValue: 50,
   
   // Star-specific Properties
+  starInnerRadiusMode: 'range' as const,
   starInnerRadiusRange: [0.3, 0.7],
+  starInnerRadiusDefine: 0.5,
+  starInnerRadiusStartValue: 0.3,
+  starInnerRadiusIncrement: 0.05,
+  starInnerRadiusModulationEnabled: false,
+  starInnerRadiusModulationValue: 1.0,
   
   // Ring-specific Properties
+  ringInnerRadiusMode: 'range' as const,
   ringInnerRadiusRange: [0.4, 0.8],
+  ringInnerRadiusDefine: 0.6,
+  ringInnerRadiusStartValue: 0.4,
+  ringInnerRadiusIncrement: 0.05,
+  ringInnerRadiusModulationEnabled: false,
+  ringInnerRadiusModulationValue: 1.0,
   
   // Fill Properties
   fillEnabled: true,
@@ -530,8 +659,12 @@ export const defaultSettings: BatchConfigSettings = {
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' as const,
-  fillOpacityRange: [0, 100],
+  fillOpacityRange: [70, 100],
   fillOpacityDefine: 80,
+  fillOpacityStartValue: 70,
+  fillOpacityIncrement: 5,
+  fillOpacityModulationEnabled: false,
+  fillOpacityModulationValue: 100,
   
   // Blur Properties
   blurEnabled: false,
@@ -539,6 +672,10 @@ export const defaultSettings: BatchConfigSettings = {
   blurMode: 'range' as const,
   blurRange: [2, 15],
   blurDefine: 8,
+  blurStartValue: 2,
+  blurIncrement: 1,
+  blurModulationEnabled: false,
+  blurModulationValue: 20,
   
   // Stroke Properties
   strokeEnabled: true,
@@ -557,22 +694,73 @@ export const defaultSettings: BatchConfigSettings = {
   strokeOpacityMode: 'range' as const,
   strokeOpacityRange: [40, 100],
   strokeOpacityDefine: 80,
+  strokeOpacityStartValue: 40,
+  strokeOpacityIncrement: 10,
+  strokeOpacityModulationEnabled: false,
+  strokeOpacityModulationValue: 100,
+  
+  // Stroke Width Settings
+  strokeWidthMode: 'range' as const,
   strokeWidthRange: [1, 5],
+  strokeWidthDefine: 3,
+  strokeWidthStartValue: 1,
+  strokeWidthIncrement: 0.5,
+  strokeWidthModulationEnabled: false,
+  strokeWidthModulationValue: 10,
   
   // Polygon Shape Properties
   polygonPropertiesEnabled: false,
+  segmentCountMode: 'range' as const,
   segmentCountRange: [3, 12],
+  segmentCountDefine: 6,
+  segmentCountStartValue: 3,
+  segmentCountIncrement: 1,
+  segmentCountModulationEnabled: false,
+  segmentCountModulationValue: 20,
   
   // Line Properties
   linePropertiesEnabled: false,
+  pointCountMode: 'range' as const,
   pointCountRange: [3, 8],
+  pointCountDefine: 4,
+  pointCountStartValue: 3,
+  pointCountIncrement: 1,
+  pointCountModulationEnabled: false,
+  pointCountModulationValue: 15,
+  
+  pointPositionMode: 'range' as const,
   pointPositionRange: [-50, 50],
+  pointPositionDefine: 0,
+  pointPositionStartValue: -50,
+  pointPositionIncrement: 10,
+  pointPositionModulationEnabled: false,
+  pointPositionModulationValue: 200,
   
   // Spline Curve Properties
   splinePropertiesEnabled: false,
+  splinePointCountMode: 'range' as const,
   splinePointCountRange: [3, 6],
+  splinePointCountDefine: 4,
+  splinePointCountStartValue: 3,
+  splinePointCountIncrement: 1,
+  splinePointCountModulationEnabled: false,
+  splinePointCountModulationValue: 10,
+  
+  splinePointPositionMode: 'range' as const,
   splinePointPositionRange: [-50, 50],
+  splinePointPositionDefine: 0,
+  splinePointPositionStartValue: -50,
+  splinePointPositionIncrement: 10,
+  splinePointPositionModulationEnabled: false,
+  splinePointPositionModulationValue: 200,
+  
+  splineControlPointMode: 'range' as const,
   splineControlPointRange: [-25, 25],
+  splineControlPointDefine: 0,
+  splineControlPointStartValue: -25,
+  splineControlPointIncrement: 5,
+  splineControlPointModulationEnabled: false,
+  splineControlPointModulationValue: 100,
   
   // Shape Transforms
   transformsEnabled: false,
@@ -594,6 +782,12 @@ export const defaultSettings: BatchConfigSettings = {
   yTransformValue: 0,
   xTransformIncrement: 10,
   yTransformIncrement: 10,
+  xTransformStartValue: 0,
+  yTransformStartValue: 0,
+  xTransformModulationEnabled: false,
+  xTransformModulationValue: 100,
+  yTransformModulationEnabled: false,
+  yTransformModulationValue: 100,
   
   // Scale Enhanced Modes
   scaleXMode: 'range' as const,
@@ -602,6 +796,12 @@ export const defaultSettings: BatchConfigSettings = {
   scaleYValue: 100,
   scaleXIncrement: 10,
   scaleYIncrement: 10,
+  scaleXStartValue: 100,
+  scaleYStartValue: 100,
+  scaleXModulationEnabled: false,
+  scaleXModulationValue: 200,
+  scaleYModulationEnabled: false,
+  scaleYModulationValue: 200,
   maintainScaleAspectRatio: true,
   
   // Rotation Enhanced Mode
@@ -1460,10 +1660,10 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             
                             {currentSettings.widthMode === 'incremental' && (
                               <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.sizeIncrementalStartValue}px</Label>
+                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.widthStartValue}px</Label>
                                 <Slider
-                                  value={[currentSettings.sizeIncrementalStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ sizeIncrementalStartValue: value })}
+                                  value={[currentSettings.widthStartValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ widthStartValue: value })}
                                   min={10}
                                   max={200}
                                   step={5}
@@ -1539,10 +1739,10 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             
                             {currentSettings.heightMode === 'incremental' && (
                               <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.sizeIncrementalStartValue}px</Label>
+                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.heightStartValue}px</Label>
                                 <Slider
-                                  value={[currentSettings.sizeIncrementalStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ sizeIncrementalStartValue: value })}
+                                  value={[currentSettings.heightStartValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ heightStartValue: value })}
                                   min={10}
                                   max={200}
                                   step={5}

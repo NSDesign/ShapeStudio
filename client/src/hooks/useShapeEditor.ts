@@ -41,25 +41,21 @@ export const useShapeEditor = () => {
       ellipse: { segmentCountRange: [16, 32] },
       bezier: { 
         pointCountRange: [3, 6], 
-        openProbability: 50,
-        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+        openProbability: 50
       },
       cubic: { 
         pointCountRange: [3, 8], 
-        openProbability: 90,
-        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+        openProbability: 90
       },
       'smooth-spline': { 
         pointCountRange: [3, 6], 
-        openProbability: 50,
-        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+        openProbability: 50
       },
       star: { pointCountRange: [5, 8], innerRadiusRange: [0.3, 0.7] },
       ring: { innerRadiusRange: [0.2, 0.8] },
       'spline-ring': { innerRadiusRange: [0.2, 0.8], segmentCountRange: [16, 32] },
       line: { 
-        pointCountRange: [2, 4],
-        strokeCapProbabilities: { round: 50, square: 25, butt: 25 }
+        pointCountRange: [2, 4]
       },
       rectangle: {
         // Standard rectangle has no special properties
@@ -762,7 +758,14 @@ export const useShapeEditor = () => {
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        return effectiveIndex * settings.xPositionIncrement;
+        let value = settings.xPositionStartValue + (effectiveIndex * settings.xPositionIncrement);
+        
+        // Apply modulation if enabled
+        if (settings.xPositionModulationEnabled && settings.xPositionModulationValue > 0) {
+          value = value % settings.xPositionModulationValue;
+        }
+        
+        return value;
 
       default:
         return 0;
@@ -795,7 +798,12 @@ export const useShapeEditor = () => {
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        baseWidth = settings.sizeIncrementalStartValue + (effectiveIndex * settings.widthIncrement);
+        baseWidth = settings.widthStartValue + (effectiveIndex * settings.widthIncrement);
+        
+        // Apply modulation if enabled
+        if (settings.widthModulationEnabled && settings.widthModulationValue > 0) {
+          baseWidth = baseWidth % settings.widthModulationValue;
+        }
         break;
 
       default:
@@ -831,7 +839,12 @@ export const useShapeEditor = () => {
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        baseHeight = settings.sizeIncrementalStartValue + (effectiveIndex * settings.heightIncrement);
+        baseHeight = settings.heightStartValue + (effectiveIndex * settings.heightIncrement);
+        
+        // Apply modulation if enabled
+        if (settings.heightModulationEnabled && settings.heightModulationValue > 0) {
+          baseHeight = baseHeight % settings.heightModulationValue;
+        }
         break;
 
       default:
@@ -893,7 +906,14 @@ export const useShapeEditor = () => {
       case 'incremental':
         // Use actual shape index, with optional reset per batch
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        return effectiveIndex * settings.yPositionIncrement;
+        let value = settings.yPositionStartValue + (effectiveIndex * settings.yPositionIncrement);
+        
+        // Apply modulation if enabled
+        if (settings.yPositionModulationEnabled && settings.yPositionModulationValue > 0) {
+          value = value % settings.yPositionModulationValue;
+        }
+        
+        return value;
 
       default:
         return 0;
