@@ -569,7 +569,7 @@ export class Shape {
   private generateCurvePoints(numPoints?: number, batchConfig?: any): void {
     const pointCount = numPoints || 3 + Math.floor(Math.random() * 5); // 3-7 points for variable complexity
     this.points = [];
-    this.controlPoints = [];
+    // Don't initialize controlPoints - let tangentHandles be used instead
     this.tangentHandles = [];
     this.smoothPoints = [];
     
@@ -1772,8 +1772,8 @@ export class Shape {
       if ((this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring') && this.controlPoints) {
         // Draw four-segment Bézier curves for spline-based shapes
         this.drawSplineCubicBezier(ctx);
-      } else if (this.type === 'bezier' && this.controlPoints && this.points.length >= 2) {
-        // Draw bezier curves using bezier curves with control points
+      } else if (this.type === 'bezier' && this.controlPoints && this.controlPoints.length > 0 && this.points.length >= 2) {
+        // Draw bezier curves using bezier curves with control points (only if control points actually exist)
         for (let i = 1; i < this.points.length; i++) {
           const controlIndex1 = (i - 1) * 2;
           const controlIndex2 = controlIndex1 + 1;
@@ -2880,8 +2880,29 @@ export class Shape {
       ctx.stroke();
     });
 
+    // Draw control points for legacy bezier curves using controlPoints  
+    if (this.controlPoints && this.controlPoints.length > 0 && 
+        (this.type === 'spline-circle' || this.type === 'spline-ellipse' || this.type === 'spline-ring')) {
+      ctx.fillStyle = '#8B5CF6';
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1 / canvasZoom;
+      
+      this.controlPoints.forEach((controlPoint, index) => {
+        const worldControlPoint = {
+          x: controlPoint.x * this.transform.scaleX + this.transform.x,
+          y: controlPoint.y * this.transform.scaleY + this.transform.y
+        };
+        
+        const radius = 4 / canvasZoom;
+        ctx.beginPath();
+        ctx.arc(worldControlPoint.x, worldControlPoint.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
     // Draw tangent handles for curve types (cubic, bezier, smooth-spline)
-    if ((this.type === 'cubic' || this.type === 'bezier' || this.type === 'smooth-spline') && this.tangentHandles) {
+    if ((this.type === 'cubic' || this.type === 'bezier' || this.type === 'smooth-spline') && this.tangentHandles && this.tangentHandles.length > 0) {
       ctx.strokeStyle = '#10B981';
       ctx.lineWidth = 1 / canvasZoom;
       
