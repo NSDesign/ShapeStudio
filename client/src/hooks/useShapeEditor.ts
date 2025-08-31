@@ -1071,6 +1071,9 @@ export const useShapeEditor = () => {
             }
             break;
         }
+        
+        // CRITICAL: Regenerate points after width/height changes to update visual rendering
+        shape.regenerateShapePoints();
       }
 
       // Temporarily assign a placeholder z-index, will be fixed during state update
