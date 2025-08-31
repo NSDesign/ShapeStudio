@@ -1621,10 +1621,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   )}
                 </div>
 
-              <Separator className="bg-slate-600" />
+              <>
+                <Separator className="bg-slate-600" />
 
-              {/* Blend Mode Control - NOT IMPLEMENTED */}
-              <div className="space-y-3 opacity-50 pointer-events-none">
+                {/* Blend Mode Control - NOT IMPLEMENTED */}
+                <div className="space-y-3 opacity-50 pointer-events-none">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     checked={false}
@@ -4267,6 +4268,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   </div>
                 )}
               </div>
+              </>
             </div>
             
             {/* Footer */}
