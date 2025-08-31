@@ -65,11 +65,6 @@ export interface BatchConfigSettings {
   gridXRandomization: number; // 0-100 pixels randomization in X direction
   gridYRandomization: number; // 0-100 pixels randomization in Y direction
   
-  // Grid additive positioning controls
-  gridAdditivePositioning: boolean; // Enable additive positioning on top of grid
-  gridXOffsetEnabled: boolean; // Enable X offset calculations
-  gridYOffsetEnabled: boolean; // Enable Y offset calculations
-  
   // Generation Count Controls
   generationCountMode: 'range' | 'fixed' | 'incremental';
   generationCountDefine: number;
@@ -508,11 +503,6 @@ export const defaultSettings: BatchConfigSettings = {
   gridSortOrder: 'ascending',
   gridXRandomization: 0,
   gridYRandomization: 0,
-  
-  // Grid additive positioning controls
-  gridAdditivePositioning: false,
-  gridXOffsetEnabled: false,
-  gridYOffsetEnabled: false,
   
   // Generation Count Controls
   generationCountMode: 'range' as const,
@@ -954,53 +944,38 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
       timestamp: new Date().toISOString()
     });
     
-    // Handle fill properties auto-balance logic
-    if ('fillGradientEnabled' in updates || 'fillStyleProbability' in updates || 
-        'fillGradientLinearProbability' in updates || 'fillGradientRadialProbability' in updates || 'fillGradientConicProbability' in updates) {
+    // Handle gradient probability auto-balancing
+    if ('fillGradientLinearProbability' in updates || 'fillGradientRadialProbability' in updates || 'fillGradientConicProbability' in updates) {
       setCurrentSettings(prevSettings => {
         const newSettings = { ...prevSettings, ...updates };
         
-        // Auto-balance solid/gradient fill probability
-        if ('fillGradientEnabled' in updates && !newSettings.fillGradientEnabled) {
-          // When gradient is disabled, set solid fill to 100%
-          newSettings.fillStyleProbability = 100;
-          console.log('🎨 Gradient disabled → Solid fill set to 100%');
-        } else if ('fillStyleProbability' in updates && newSettings.fillStyleProbability === 100 && newSettings.fillGradientEnabled) {
-          // When solid is set to 100% and gradient is enabled, reset solid to reasonable default
-          newSettings.fillStyleProbability = 60;
-          console.log('🎨 Solid fill was 100% and gradient enabled → Reset solid to 60%');
-        }
+        // Get the current probabilities
+        const linear = newSettings.fillGradientLinearProbability;
+        const radial = newSettings.fillGradientRadialProbability;
+        const conic = newSettings.fillGradientConicProbability;
         
-        // Handle gradient type probability auto-balancing
-        if ('fillGradientLinearProbability' in updates || 'fillGradientRadialProbability' in updates || 'fillGradientConicProbability' in updates) {
-          // Get the current probabilities
-          const linear = newSettings.fillGradientLinearProbability;
-          const radial = newSettings.fillGradientRadialProbability;
-          const conic = newSettings.fillGradientConicProbability;
+        // Auto-balance to 100%
+        const total = linear + radial + conic;
+        if (total !== 100 && total > 0) {
+          // Determine which property was changed
+          const changedKey = Object.keys(updates)[0];
+          const changedValue = updates[changedKey as keyof typeof updates] as number;
           
-          // Auto-balance to 100%
-          const total = linear + radial + conic;
-          if (total !== 100 && total > 0) {
-            // Determine which property was changed
-            const changedKey = Object.keys(updates)[0];
-            const changedValue = updates[changedKey as keyof typeof updates] as number;
-            
-            if (changedKey === 'fillGradientLinearProbability') {
-              const remaining = 100 - changedValue;
-              const radialRatio = radial / (radial + conic || 1);
-              newSettings.fillGradientRadialProbability = Math.round(remaining * radialRatio);
-              newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientRadialProbability;
-            } else if (changedKey === 'fillGradientRadialProbability') {
-              const remaining = 100 - changedValue;
-              const linearRatio = linear / (linear + conic || 1);
-              newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
-              newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientLinearProbability;
-            } else if (changedKey === 'fillGradientConicProbability') {
-              const remaining = 100 - changedValue;
-              const linearRatio = linear / (linear + radial || 1);
-              newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
-              newSettings.fillGradientRadialProbability = remaining - newSettings.fillGradientLinearProbability;
-            }
+          if (changedKey === 'fillGradientLinearProbability') {
+            const remaining = 100 - changedValue;
+            const radialRatio = radial / (radial + conic || 1);
+            newSettings.fillGradientRadialProbability = Math.round(remaining * radialRatio);
+            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientRadialProbability;
+          } else if (changedKey === 'fillGradientRadialProbability') {
+            const remaining = 100 - changedValue;
+            const linearRatio = linear / (linear + conic || 1);
+            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
+            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientLinearProbability;
+          } else if (changedKey === 'fillGradientConicProbability') {
+            const remaining = 100 - changedValue;
+            const linearRatio = linear / (linear + radial || 1);
+            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
+            newSettings.fillGradientRadialProbability = remaining - newSettings.fillGradientLinearProbability;
           }
         }
         
@@ -1579,47 +1554,11 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             </div>
                           </div>
                         )}
-                        
-                        {/* Grid Additive Positioning Controls */}
-                        <div className="p-3 bg-slate-800/30 rounded border border-slate-600 space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              checked={currentSettings.gridAdditivePositioning}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ gridAdditivePositioning: checked as boolean })}
-                              className="border-slate-500 data-[state=checked]:bg-green-600"
-                            />
-                            <Label className="text-sm font-medium text-slate-200">Additive Positioning</Label>
-                          </div>
-                          
-                          <p className="text-xs text-slate-400">
-                            Add position calculations on top of grid positions. Enable X/Y offsets below to include position property calculations.
-                          </p>
-                          
-                          {currentSettings.gridAdditivePositioning && (
-                            <div className="flex space-x-4 ml-6">
-                              <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                  checked={currentSettings.gridXOffsetEnabled}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridXOffsetEnabled: checked as boolean })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">X Offset</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                  checked={currentSettings.gridYOffsetEnabled}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridYOffsetEnabled: checked as boolean })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Y Offset</Label>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Separator className="bg-slate-600" />
 
