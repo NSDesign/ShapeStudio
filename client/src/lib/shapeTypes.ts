@@ -484,7 +484,8 @@ export function applyGridDistribution(
   shapes: any[], 
   config: DistributionConfig,
   canvasCenter = { x: 0, y: 0 },
-  generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number }
+  generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number },
+  additiveOffsets?: { x: number; y: number }[]
 ): any[] {
   if (!config.enabled || config.pattern !== 'grid') return shapes;
   
@@ -536,10 +537,19 @@ export function applyGridDistribution(
     const scaledXVariation = existingXVariation * xScaleFactor;
     const scaledYVariation = existingYVariation * yScaleFactor;
     
-    // Apply grid position with scaled existing variation
+    // Apply grid position with scaled existing variation and optional additive offsets
     // Grid provides base position, scaled existing transform provides controlled variation
-    shape.transform.x = gridPos.x + scaledXVariation;
-    shape.transform.y = gridPos.y + scaledYVariation;
+    let finalX = gridPos.x + scaledXVariation;
+    let finalY = gridPos.y + scaledYVariation;
+    
+    // Add additional position offsets if provided (for batch config position calculations)
+    if (additiveOffsets && additiveOffsets[index]) {
+      finalX += additiveOffsets[index].x;
+      finalY += additiveOffsets[index].y;
+    }
+    
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
     
     return shape;
   });

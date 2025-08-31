@@ -41,21 +41,27 @@ export const useShapeEditor = () => {
       ellipse: { segmentCountRange: [16, 32] },
       bezier: { 
         pointCountRange: [3, 6], 
-        openProbability: 50
+        openProbability: 50,
+        strokeCapProbabilities: { round: 60, square: 30, butt: 10 }
       },
       cubic: { 
         pointCountRange: [3, 8], 
+        curvatureRange: [0.2, 0.8],
+        spreadRange: [40, 120],
+        patternType: 2,
         openProbability: 90
       },
       'smooth-spline': { 
         pointCountRange: [3, 6], 
-        openProbability: 50
+        openProbability: 50,
+        strokeCapProbabilities: { round: 60, square: 30, butt: 10 }
       },
       star: { pointCountRange: [5, 8], innerRadiusRange: [0.3, 0.7] },
       ring: { innerRadiusRange: [0.2, 0.8] },
       'spline-ring': { innerRadiusRange: [0.2, 0.8], segmentCountRange: [16, 32] },
       line: { 
-        pointCountRange: [2, 4]
+        pointCountRange: [2, 4],
+        strokeCapProbabilities: { round: 60, square: 30, butt: 10 }
       },
       rectangle: {
         // Standard rectangle has no special properties
@@ -784,11 +790,7 @@ export const useShapeEditor = () => {
     switch (settings.widthMode) {
       case 'range':
         const [minW, maxW] = settings.widthRange;
-        const baseW = minW + (maxW - minW) / 2; // Base width at center of range
-        const rangeW = (maxW - minW) / 2; // Half range for ±variation
-        const randomFactorW = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomW = randomFactorW * (settings.sizePropertiesRandomizationScale / 100);
-        baseWidth = baseW + (scaledRandomW * rangeW);
+        baseWidth = Math.random() * (maxW - minW) + minW;
         break;
 
       case 'value':
@@ -825,11 +827,7 @@ export const useShapeEditor = () => {
     switch (settings.heightMode) {
       case 'range':
         const [minH, maxH] = settings.heightRange;
-        const baseH = minH + (maxH - minH) / 2; // Base height at center of range
-        const rangeH = (maxH - minH) / 2; // Half range for ±variation
-        const randomFactorH = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomH = randomFactorH * (settings.sizePropertiesRandomizationScale / 100);
-        baseHeight = baseH + (scaledRandomH * rangeH);
+        baseHeight = Math.random() * (maxH - minH) + minH;
         break;
 
       case 'value':
@@ -1657,15 +1655,38 @@ export const useShapeEditor = () => {
         gridYRandomization: batchConfigSettings.gridYRandomization
       };
 
-      // Apply grid positioning additively with existing positions
-      // For now, assume single generation per call (can be enhanced for batch exports)
+      // Calculate additive position offsets if enabled
+      let additiveOffsets: { x: number; y: number }[] | undefined;
+      
+      if (batchConfigSettings.gridAdditivePositioning) {
+        additiveOffsets = newShapes.map((_, index) => {
+          let offsetX = 0;
+          let offsetY = 0;
+          
+          // Calculate X offset if enabled
+          if (batchConfigSettings.gridXOffsetEnabled && batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+            offsetX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, newShapes.length);
+          }
+          
+          // Calculate Y offset if enabled
+          if (batchConfigSettings.gridYOffsetEnabled && batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+            offsetY = calculatePositionY(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, newShapes.length);
+          }
+          
+          return { x: offsetX, y: offsetY };
+        });
+        
+        console.log(`🎯 Grid additive positioning enabled: X offsets ${batchConfigSettings.gridXOffsetEnabled ? 'ON' : 'OFF'}, Y offsets ${batchConfigSettings.gridYOffsetEnabled ? 'ON' : 'OFF'}`);
+      }
+
+      // Apply grid positioning with optional additive offsets
       const generationInfo = {
         currentGeneration: 0,
         totalGenerations: 1,
         shapesPerGeneration: newShapes.length
       };
       
-      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo);
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, additiveOffsets);
       console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy} (${batchConfigSettings.gridSortOrder}, ${batchConfigSettings.gridSortScope})`);
     }
 
