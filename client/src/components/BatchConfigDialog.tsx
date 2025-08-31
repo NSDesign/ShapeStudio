@@ -399,7 +399,8 @@ export interface BatchConfigSettings {
   
   // Shape Properties Randomization Scaling (0-100%)
   positionPropertiesRandomizationScale: number; // Scale for X/Y position randomization in range mode
-  sizePropertiesRandomizationScale: number; // Scale for width/height randomization in range mode
+  widthRandomizationScale: number; // Scale for width randomization in range mode
+  heightRandomizationScale: number; // Scale for height randomization in range mode
   
   // Shape Effects
   shapeEffectsEnabled: boolean;
@@ -836,7 +837,8 @@ export const defaultSettings: BatchConfigSettings = {
   
   // Shape Properties Randomization Scaling (0-100%)
   positionPropertiesRandomizationScale: 100,
-  sizePropertiesRandomizationScale: 100,
+  widthRandomizationScale: 100,
+  heightRandomizationScale: 100,
   
   // Shape Effects
   shapeEffectsEnabled: false,
@@ -1696,6 +1698,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
+                                <Label className="text-xs text-slate-300">Width Randomization: {currentSettings.widthRandomizationScale}%</Label>
+                                <Slider
+                                  value={[currentSettings.widthRandomizationScale]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ widthRandomizationScale: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full range randomization</p>
                               </div>
                             )}
                             
@@ -1775,6 +1787,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                   step={5}
                                   className="[&_[role=slider]]:bg-blue-600"
                                 />
+                                <Label className="text-xs text-slate-300">Height Randomization: {currentSettings.heightRandomizationScale}%</Label>
+                                <Slider
+                                  value={[currentSettings.heightRandomizationScale]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ heightRandomizationScale: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                                <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full range randomization</p>
                               </div>
                             )}
                             
@@ -1876,25 +1898,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                                 />
                                 <Label className="text-xs text-slate-300">Force 1:1 aspect ratio for all shapes</Label>
                               </div>
-                            </div>
-                          </div>
-                          
-                          {/* Size Randomization Scaling */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Size Randomization</Label>
-                            <p className="text-xs text-slate-400">Control how much randomization is applied to width/height in range mode</p>
-                            
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Size Randomization: {currentSettings.sizePropertiesRandomizationScale}%</Label>
-                              <Slider
-                                value={[currentSettings.sizePropertiesRandomizationScale]}
-                                onValueChange={([value]) => handleSettingsUpdate({ sizePropertiesRandomizationScale: value })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-purple-600"
-                              />
-                              <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full randomization applied to size ranges</p>
                             </div>
                           </div>
                           
