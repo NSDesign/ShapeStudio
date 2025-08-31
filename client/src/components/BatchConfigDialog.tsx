@@ -1621,31 +1621,30 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   )}
                 </div>
 
-              <>
                 <Separator className="bg-slate-600" />
 
                 {/* Blend Mode Control - NOT IMPLEMENTED */}
                 <div className="space-y-3 opacity-50 pointer-events-none">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={false}
-                    disabled={true}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="font-medium text-slate-400">Blend Mode Control <span className="text-xs text-red-400">(NOT IMPLEMENTED)</span></Label>
-                </div>
-                
-                {currentSettings.blendModeEnabled && (
-                  <div className="ml-6 space-y-3">
-                    <div className="border border-slate-600 rounded">
-                      <Button
-                        variant="ghost"
-                        className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
-                        onClick={() => setShowBlendModeExplanation(!showBlendModeExplanation)}
-                      >
-                        <Label className="text-xs text-slate-300">Blend Mode Behavior</Label>
-                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showBlendModeExplanation ? 'rotate-180' : ''}`} />
-                      </Button>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={false}
+                      disabled={true}
+                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                    />
+                    <Label className="font-medium text-slate-400">Blend Mode Control <span className="text-xs text-red-400">(NOT IMPLEMENTED)</span></Label>
+                  </div>
+                  
+                  {currentSettings.blendModeEnabled && (
+                    <div className="ml-6 space-y-3">
+                      <div className="border border-slate-600 rounded">
+                        <Button
+                          variant="ghost"
+                          className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
+                          onClick={() => setShowBlendModeExplanation(!showBlendModeExplanation)}
+                        >
+                          <Label className="text-xs text-slate-300">Blend Mode Behavior</Label>
+                          <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showBlendModeExplanation ? 'rotate-180' : ''}`} />
+                        </Button>
                       {showBlendModeExplanation && (
                         <div className="p-2 bg-slate-800 border-t border-slate-600">
                           <p className="text-xs text-slate-400">
@@ -4268,7 +4267,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   </div>
                 )}
               </div>
-              </>
             </div>
             
             {/* Footer */}
