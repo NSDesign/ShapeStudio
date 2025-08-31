@@ -1401,8 +1401,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
               <Separator className="bg-slate-600" />
 
-              {/* Distribution Layout */}
-              <div className="space-y-3">
+                <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     checked={currentSettings.distributionLayoutEnabled}
@@ -1621,10 +1620,10 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   )}
                 </div>
 
-                <Separator className="bg-slate-600" />
+              <Separator className="bg-slate-600" />
 
-                {/* Blend Mode Control - NOT IMPLEMENTED */}
-                <div className="space-y-3 opacity-50 pointer-events-none">
+              {/* Blend Mode Control - TEMPORARILY DISABLED FOR DEBUGGING */}
+              {/* <div className="space-y-3 opacity-50 pointer-events-none">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       checked={false}
@@ -1645,17 +1644,17 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           <Label className="text-xs text-slate-300">Blend Mode Behavior</Label>
                           <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showBlendModeExplanation ? 'rotate-180' : ''}`} />
                         </Button>
-                      {showBlendModeExplanation && (
-                        <div className="p-2 bg-slate-800 border-t border-slate-600">
-                          <p className="text-xs text-slate-400">
-                            Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
-                            {currentSettings.noiseEnabled && currentSettings.blendModeEnabled && 
-                              " Advanced Noise adds variation to these probability values when Blend Mode Control is enabled."
-                            }
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                        {showBlendModeExplanation && (
+                          <div className="p-2 bg-slate-800 border-t border-slate-600">
+                            <p className="text-xs text-slate-400">
+                              Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
+                              {currentSettings.noiseEnabled && currentSettings.blendModeEnabled && 
+                                " Advanced Noise adds variation to these probability values when Blend Mode Control is enabled."
+                              }
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     
                     <Label className="text-sm text-slate-300">Active Blend Modes</Label>
                     <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
