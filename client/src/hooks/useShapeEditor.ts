@@ -784,11 +784,8 @@ export const useShapeEditor = () => {
     switch (settings.widthMode) {
       case 'range':
         const [minW, maxW] = settings.widthRange;
-        const baseW = minW + (maxW - minW) / 2; // Base width at center of range
-        const rangeW = (maxW - minW) / 2; // Half range for ±variation
-        const randomFactorW = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomW = randomFactorW * (settings.sizePropertiesRandomizationScale / 100);
-        baseWidth = baseW + (scaledRandomW * rangeW);
+        // Generate random value directly between min and max for true range behavior
+        baseWidth = minW + Math.random() * (maxW - minW);
         break;
 
       case 'value':
@@ -825,11 +822,8 @@ export const useShapeEditor = () => {
     switch (settings.heightMode) {
       case 'range':
         const [minH, maxH] = settings.heightRange;
-        const baseH = minH + (maxH - minH) / 2; // Base height at center of range
-        const rangeH = (maxH - minH) / 2; // Half range for ±variation
-        const randomFactorH = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomH = randomFactorH * (settings.sizePropertiesRandomizationScale / 100);
-        baseHeight = baseH + (scaledRandomH * rangeH);
+        // Generate random value directly between min and max for true range behavior
+        baseHeight = minH + Math.random() * (maxH - minH);
         break;
 
       case 'value':
