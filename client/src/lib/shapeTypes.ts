@@ -29,6 +29,7 @@ export interface DistributionConfig {
   gridSortOrder: 'ascending' | 'descending';
   gridXRandomization: number;
   gridYRandomization: number;
+  positionsEnabled: boolean; // Whether to add position offsets to grid layout
 }
 
 export interface Transform {
@@ -524,22 +525,38 @@ export function applyGridDistribution(
       canvasCenter.y
     );
     
-    // Scale existing transform randomization using X/Y randomization factors
-    // If randomization is 0, existing transform is preserved (no scaling)
-    // If randomization is 100, existing transform variation is maximized
-    const existingXVariation = shape.transform?.x || 0;
-    const existingYVariation = shape.transform?.y || 0;
+    // If positions are enabled, preserve existing transform as position offset
+    // If positions are disabled, scale existing transform randomization using X/Y randomization factors
+    let finalX: number;
+    let finalY: number;
     
-    const xScaleFactor = config.gridXRandomization / 100; // Convert 0-100 to 0-1 scale
-    const yScaleFactor = config.gridYRandomization / 100; // Convert 0-100 to 0-1 scale
+    if (config.positionsEnabled) {
+      // Add position offsets to grid layout
+      const positionOffsetX = shape.transform?.x || 0;
+      const positionOffsetY = shape.transform?.y || 0;
+      
+      finalX = gridPos.x + positionOffsetX;
+      finalY = gridPos.y + positionOffsetY;
+    } else {
+      // Scale existing transform randomization using X/Y randomization factors
+      // If randomization is 0, existing transform is preserved (no scaling)
+      // If randomization is 100, existing transform variation is maximized
+      const existingXVariation = shape.transform?.x || 0;
+      const existingYVariation = shape.transform?.y || 0;
+      
+      const xScaleFactor = config.gridXRandomization / 100; // Convert 0-100 to 0-1 scale
+      const yScaleFactor = config.gridYRandomization / 100; // Convert 0-100 to 0-1 scale
+      
+      const scaledXVariation = existingXVariation * xScaleFactor;
+      const scaledYVariation = existingYVariation * yScaleFactor;
+      
+      finalX = gridPos.x + scaledXVariation;
+      finalY = gridPos.y + scaledYVariation;
+    }
     
-    const scaledXVariation = existingXVariation * xScaleFactor;
-    const scaledYVariation = existingYVariation * yScaleFactor;
-    
-    // Apply grid position with scaled existing variation
-    // Grid provides base position, scaled existing transform provides controlled variation
-    shape.transform.x = gridPos.x + scaledXVariation;
-    shape.transform.y = gridPos.y + scaledYVariation;
+    // Apply final grid position
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
     
     return shape;
   });

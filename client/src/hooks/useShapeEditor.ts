@@ -1657,7 +1657,8 @@ export const useShapeEditor = () => {
         gridSortScope: batchConfigSettings.gridSortScope,
         gridSortOrder: batchConfigSettings.gridSortOrder,
         gridXRandomization: batchConfigSettings.gridXRandomization,
-        gridYRandomization: batchConfigSettings.gridYRandomization
+        gridYRandomization: batchConfigSettings.gridYRandomization,
+        positionsEnabled: batchConfigSettings.positionsEnabled
       };
 
       // Apply grid positioning additively with existing positions
