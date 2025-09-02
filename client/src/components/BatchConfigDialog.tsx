@@ -394,12 +394,8 @@ export interface BatchConfigSettings {
   rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
   
   // Transform Randomization Scaling (0-100%)
-  positionRandomizationScale: number; // Scale for position randomization
   scaleRandomizationScale: number; // Scale for scale randomization  
   rotationRandomizationScale: number; // Scale for rotation randomization
-  
-  // Shape Properties Randomization Scaling (0-100%)
-  positionPropertiesRandomizationScale: number; // Scale for X/Y position randomization in range mode
   widthRandomizationScale: number; // Scale for width randomization in range mode
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
@@ -833,12 +829,8 @@ export const defaultSettings: BatchConfigSettings = {
   rotationModulationEnabled: false,
   
   // Transform Randomization Scaling (0-100%)
-  positionRandomizationScale: 50,
   scaleRandomizationScale: 50,
   rotationRandomizationScale: 50,
-  
-  // Shape Properties Randomization Scaling (0-100%)
-  positionPropertiesRandomizationScale: 100,
   widthRandomizationScale: 100,
   heightRandomizationScale: 100,
   
@@ -2246,24 +2238,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             )}
                           </div>
                           
-                          {/* Position Randomization Scaling */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Position Randomization</Label>
-                            <p className="text-xs text-slate-400">Control how much randomization is applied to X/Y position in range mode</p>
-                            
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Position Randomization: {currentSettings.positionPropertiesRandomizationScale}%</Label>
-                              <Slider
-                                value={[currentSettings.positionPropertiesRandomizationScale]}
-                                onValueChange={([value]) => handleSettingsUpdate({ positionPropertiesRandomizationScale: value })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-purple-600"
-                              />
-                              <p className="text-xs text-slate-400">0% = deterministic positioning, 100% = full randomization applied to position ranges</p>
-                            </div>
-                          </div>
 
 
                         </div>
@@ -3671,19 +3645,6 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                             <p className="text-xs text-slate-400">Control how much additional randomization is applied to transform modes</p>
                             
                             <div className="space-y-3">
-                              {/* Position Randomization Scale */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Position Randomization: {currentSettings.positionRandomizationScale}%</Label>
-                                <Slider
-                                  value={[currentSettings.positionRandomizationScale]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ positionRandomizationScale: value })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to position transforms (range: -1 to 1)</p>
-                              </div>
                               
                               {/* Scale Randomization Scale */}
                               <div className="space-y-2">

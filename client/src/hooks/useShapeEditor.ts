@@ -743,11 +743,8 @@ export const useShapeEditor = () => {
     switch (settings.xPositionMode) {
       case 'range':
         const [minX, maxX] = settings.xPositionRange;
-        const baseX = minX + (maxX - minX) / 2; // Base position at center of range
-        const rangeX = (maxX - minX) / 2; // Half range for ±variation
-        const randomFactorX = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomX = randomFactorX * (settings.positionPropertiesRandomizationScale / 100);
-        return baseX + (scaledRandomX * rangeX);
+        // Simple random value between min and max like other range controls
+        return minX + Math.random() * (maxX - minX);
 
       case 'value':
         return settings.xPositionValue;
@@ -891,11 +888,8 @@ export const useShapeEditor = () => {
     switch (settings.yPositionMode) {
       case 'range':
         const [minY, maxY] = settings.yPositionRange;
-        const baseY = minY + (maxY - minY) / 2; // Base position at center of range
-        const rangeY = (maxY - minY) / 2; // Half range for ±variation
-        const randomFactorY = (Math.random() - 0.5) * 2; // -1 to 1
-        const scaledRandomY = randomFactorY * (settings.positionPropertiesRandomizationScale / 100);
-        return baseY + (scaledRandomY * rangeY);
+        // Simple random value between min and max like other range controls
+        return minY + Math.random() * (maxY - minY);
 
       case 'value':
         return settings.yPositionValue;
@@ -1350,45 +1344,37 @@ export const useShapeEditor = () => {
           // Apply enhanced position transforms (X)
           if (batchConfigSettings.xTransformMode === 'range') {
             const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
-            const baseRandomization = minTransX + Math.random() * (maxTransX - minTransX);
-            // Apply randomization scaling to existing randomization (0-100%)
-            const scaledRandomization = baseRandomization * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.x += scaledRandomization;
+            const randomization = minTransX + Math.random() * (maxTransX - minTransX);
+            shape.transform.x += randomization;
           } else if (batchConfigSettings.xTransformMode === 'value') {
             const baseValue = batchConfigSettings.xTransformValue || 0;
-            // Apply randomization scaling to value mode using (-1, 1) range
-            const randomVariation = (Math.random() * 2 - 1) * 50; // (-1, 1) * 50px = ±50px variation
-            const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.x += baseValue + scaledVariation;
+            // Add small random variation for value mode
+            const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
+            shape.transform.x += baseValue + randomVariation;
           } else if (batchConfigSettings.xTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (batchConfigSettings.xTransformIncrement || 0) * index;
-            // Apply randomization scaling to incremental mode using (-1, 1) range
-            const randomVariation = (Math.random() * 2 - 1) * 25; // (-1, 1) * 25px = ±25px variation
-            const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.x += incrementAmount + scaledVariation;
+            // Add small random variation for incremental mode
+            const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
+            shape.transform.x += incrementAmount + randomVariation;
           }
 
           // Apply enhanced position transforms (Y)
           if (batchConfigSettings.yTransformMode === 'range') {
             const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
-            const baseRandomization = minTransY + Math.random() * (maxTransY - minTransY);
-            // Apply randomization scaling to existing randomization (0-100%)
-            const scaledRandomization = baseRandomization * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.y += scaledRandomization;
+            const randomization = minTransY + Math.random() * (maxTransY - minTransY);
+            shape.transform.y += randomization;
           } else if (batchConfigSettings.yTransformMode === 'value') {
             const baseValue = batchConfigSettings.yTransformValue || 0;
-            // Apply randomization scaling to value mode using (-1, 1) range
-            const randomVariation = (Math.random() * 2 - 1) * 50; // (-1, 1) * 50px = ±50px variation
-            const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.y += baseValue + scaledVariation;
+            // Add small random variation for value mode
+            const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
+            shape.transform.y += baseValue + randomVariation;
           } else if (batchConfigSettings.yTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (batchConfigSettings.yTransformIncrement || 0) * index;
-            // Apply randomization scaling to incremental mode using (-1, 1) range
-            const randomVariation = (Math.random() * 2 - 1) * 25; // (-1, 1) * 25px = ±25px variation
-            const scaledVariation = randomVariation * (batchConfigSettings.positionRandomizationScale / 100);
-            shape.transform.y += incrementAmount + scaledVariation;
+            // Add small random variation for incremental mode
+            const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
+            shape.transform.y += incrementAmount + randomVariation;
           }
 
           // Apply enhanced scale transforms
