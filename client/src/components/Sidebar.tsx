@@ -1586,7 +1586,7 @@ export default function Sidebar({
                 <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
                 <div className="space-y-2">
                   {['round', 'square', 'butt'].map((cap) => {
-                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] || (cap === 'round' ? 50 : 25);
+                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] ?? (cap === 'round' ? 50 : 25);
                     return (
                       <div key={cap} className="space-y-1">
                         <div className="flex justify-between text-xs">
@@ -1597,7 +1597,7 @@ export default function Sidebar({
                           value={[currentValue]}
                           onValueChange={([value]) => {
                             console.log(`${shapeType} ${cap} cap: ${value}%`);
-                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities || { round: 50, square: 25, butt: 25 };
+                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
                             onUpdateScatterSettings({
                               shapeSpecific: {
                                 ...scatterSettings.shapeSpecific,
