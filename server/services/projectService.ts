@@ -81,35 +81,29 @@ export class ProjectService {
   }
 
   private serializeShape(shape: Shape): any {
-    // This would need to be implemented based on the actual Shape class structure
-    // For now, return a basic serialization
     return {
-      type: shape.constructor.name,
-      x: shape.x,
-      y: shape.y,
+      id: shape.id,
+      type: shape.type,
+      transform: shape.transform,
+      properties: shape.properties,
+      selected: false, // Don't save selection state
+      points: shape.points,
+      sides: shape.sides,
+      radius: shape.radius,
+      innerRadius: shape.innerRadius,
       width: shape.width,
       height: shape.height,
-      fill: shape.fill,
-      stroke: shape.stroke,
-      strokeWidth: shape.strokeWidth,
-      rotation: shape.rotation,
-      opacity: shape.opacity,
-      // Add more properties as needed based on the actual Shape class
+      controlPoints: shape.controlPoints,
+      closed: shape.closed
     };
   }
 
   private serializeGroup(group: ShapeGroupClass): any {
-    // This would need to be implemented based on the actual ShapeGroupClass structure
-    // For now, return a basic serialization
     return {
       id: group.id,
-      x: group.x,
-      y: group.y,
-      rotation: group.rotation,
-      scaleX: group.scaleX,
-      scaleY: group.scaleY,
       shapes: group.shapes.map(shape => this.serializeShape(shape)),
-      // Add more properties as needed based on the actual ShapeGroupClass
+      transform: group.transform,
+      selected: false // Don't save selection state
     };
   }
 

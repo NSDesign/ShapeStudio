@@ -300,20 +300,29 @@ export class ExportService {
   }
 
   private serializeShape(shape: Shape): any {
-    // This would need to be implemented based on the Shape class structure
-    // For now, return a placeholder
     return {
-      type: shape.constructor.name,
-      // Add shape serialization logic here
+      id: shape.id,
+      type: shape.type,
+      transform: shape.transform,
+      properties: shape.properties,
+      selected: false, // Don't save selection state
+      points: shape.points,
+      sides: shape.sides,
+      radius: shape.radius,
+      innerRadius: shape.innerRadius,
+      width: shape.width,
+      height: shape.height,
+      controlPoints: shape.controlPoints,
+      closed: shape.closed
     };
   }
 
   private serializeGroup(group: ShapeGroupClass): any {
-    // This would need to be implemented based on the ShapeGroupClass structure
-    // For now, return a placeholder
     return {
       id: group.id,
-      // Add group serialization logic here
+      shapes: group.shapes.map(shape => this.serializeShape(shape)),
+      transform: group.transform,
+      selected: false // Don't save selection state
     };
   }
 
@@ -329,7 +338,7 @@ export class ExportService {
     // Clean up exports older than 24 hours
     const cutoffTime = Date.now() - (24 * 60 * 60 * 1000);
     
-    for (const [exportId, progress] of this.activeExports.entries()) {
+    for (const [exportId, progress] of Array.from(this.activeExports.entries())) {
       const timestamp = parseInt(exportId.split('_')[1]);
       if (timestamp < cutoffTime) {
         // Remove from tracking

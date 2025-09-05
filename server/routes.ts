@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { registerExportRoutes } from "./routes/export";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -103,7 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // More routes can be added here
+  // Register export API routes
+  registerExportRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
