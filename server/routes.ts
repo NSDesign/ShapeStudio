@@ -12,6 +12,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await setupAuth(app);
   }
 
+  // API key authentication for external access
+  const apiKeyAuth = (req: any, res: any, next: any) => {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey === process.env.API_KEY) {
+      req.user = {
+        claims: {
+          sub: 'api-user',
+          email: 'api@system',
+          first_name: 'API',
+          last_name: 'User'
+        }
+      };
+      return next();
+    }
+    next();
+  };
+
   // Conditional authentication middleware
   const conditionalAuth = isDevelopment ? 
     (req: any, res: any, next: any) => {
@@ -26,7 +43,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       next();
     } : 
-    isAuthenticated;
+    (req: any, res: any, next: any) => {
+      // Try API key first, then regular auth
+      apiKeyAuth(req, res, () => {
+        if (req.user) return next();
+        isAuthenticated(req, res, next);
+      });
+    };
 
   // Auth routes
   app.get('/api/auth/user', conditionalAuth, async (req: any, res) => {
