@@ -32,8 +32,8 @@ interface ApiV2Payload {
   scale?: number;
   includeBackground?: boolean;
   backgroundColor?: string;
-  batchExportCount?: number;
-  batchSaveProjectFiles?: boolean;
+  exportBatchCount?: number;
+  exportSaveProjectFiles?: boolean;
   packageAsZip?: boolean;
   
   // V2 additions
@@ -60,8 +60,8 @@ export default function ApiCallGenerator({
       scale: 1,
       includeBackground: true,
       backgroundColor: '#1e293b',
-      batchExportCount: exportBatchCount,
-      batchSaveProjectFiles: exportSaveProjectFiles,
+      exportBatchCount: exportBatchCount,
+      exportSaveProjectFiles: exportSaveProjectFiles,
       packageAsZip: false,
     };
 

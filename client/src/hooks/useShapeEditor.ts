@@ -41,21 +41,27 @@ export const useShapeEditor = () => {
       ellipse: { segmentCountRange: [16, 32] },
       bezier: { 
         pointCountRange: [3, 6], 
-        openProbability: 50
+        openProbability: 50,
+        strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
       },
       cubic: { 
         pointCountRange: [3, 8], 
-        openProbability: 90
+        openProbability: 90,
+        curvatureRange: [0.2, 0.8],
+        spreadRange: [40, 120],
+        patternType: 2
       },
       'smooth-spline': { 
         pointCountRange: [3, 6], 
-        openProbability: 50
+        openProbability: 50,
+        strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
       },
       star: { pointCountRange: [5, 8], innerRadiusRange: [0.3, 0.7] },
       ring: { innerRadiusRange: [0.2, 0.8] },
       'spline-ring': { innerRadiusRange: [0.2, 0.8], segmentCountRange: [16, 32] },
       line: { 
-        pointCountRange: [2, 4]
+        pointCountRange: [2, 4],
+        strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
       },
       rectangle: {
         // Standard rectangle has no special properties
@@ -103,7 +109,7 @@ export const useShapeEditor = () => {
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
 
   // Batch Configuration Settings - using defaults from BatchConfigDialog
-  const [batchConfigSettings, setBatchConfigSettings] = useState<BatchConfigSettings>(defaultSettings);
+  const [generationConfigSettings, setGenerationConfigSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
@@ -992,29 +998,29 @@ export const useShapeEditor = () => {
       let shapeX = position.x;
       let shapeY = position.y;
 
-      if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+      if (generationConfigSettings.propertiesEnabled && generationConfigSettings.shapePropertiesEnabled) {
         // Enhanced position calculation based on mode
-        shapeX = calculatePositionX(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
-        shapeY = calculatePositionY(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeX = calculatePositionX(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeY = calculatePositionY(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
       }
 
       // Combine batch config with scatter settings for complete configuration
       const combinedConfig = { 
-        ...batchConfigSettings, 
+        ...generationConfigSettings, 
         scatterSettings: scatterSettings 
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
 
       // Apply width/height from batch config if properties are enabled
-      if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled) {
+      if (generationConfigSettings.propertiesEnabled && generationConfigSettings.shapePropertiesEnabled) {
         // Enhanced width and height calculation based on mode
-        let width = calculateWidth(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
-        let height = calculateHeight(batchConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        let width = calculateWidth(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        let height = calculateHeight(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
 
         // Check if 1:1 aspect ratio enforcement is enabled
-        if (batchConfigSettings.maintainAspectRatio) {
+        if (generationConfigSettings.maintainAspectRatio) {
           // Force 1:1 aspect ratio for ALL shape types
-          const constrainedSize = calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+          const constrainedSize = calculateConstrainedSize(generationConfigSettings, width, height, shape.type);
           width = constrainedSize;
           height = constrainedSize;
         }
@@ -1029,30 +1035,30 @@ export const useShapeEditor = () => {
           case 'square':
           case 'rounded-square':
             // Square always maintains 1:1 aspect ratio regardless of setting
-            const squareSize = batchConfigSettings.maintainAspectRatio ? width : Math.max(width, height);
+            const squareSize = generationConfigSettings.maintainAspectRatio ? width : Math.max(width, height);
             shape.width = squareSize;
             shape.height = squareSize;
             break;
           case 'circle':
           case 'spline-circle':
             // Circular shapes use constraint system to determine final radius
-            const circleSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const circleSize = generationConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(generationConfigSettings, width, height, shape.type);
             shape.radius = circleSize / 2;
             break;
           case 'polygon':
             // Polygon uses constraint system for radius
-            const polygonSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const polygonSize = generationConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(generationConfigSettings, width, height, shape.type);
             shape.radius = polygonSize / 2;
             break;
           case 'star':
             // Star uses constraint system for outer radius
-            const starSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const starSize = generationConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(generationConfigSettings, width, height, shape.type);
             shape.radius = starSize / 2;
             break;
           case 'ring':
           case 'spline-ring':
             // Ring uses constraint system for outer radius
-            const ringSize = batchConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(batchConfigSettings, width, height, shape.type);
+            const ringSize = generationConfigSettings.maintainAspectRatio ? width : calculateConstrainedSize(generationConfigSettings, width, height, shape.type);
             shape.radius = ringSize / 2;
             break;
           case 'line':
@@ -1061,8 +1067,8 @@ export const useShapeEditor = () => {
           case 'smooth-spline':
             // For lines and splines, when 1:1 is enforced, use same value for both dimensions
             if (shape.points.length >= 2) {
-              const lineWidth = batchConfigSettings.maintainAspectRatio ? width : width;
-              const lineHeight = batchConfigSettings.maintainAspectRatio ? width : height;
+              const lineWidth = generationConfigSettings.maintainAspectRatio ? width : width;
+              const lineHeight = generationConfigSettings.maintainAspectRatio ? width : height;
               const angle = Math.random() * Math.PI * 2;
               shape.points[1] = {
                 x: shape.points[0].x + Math.cos(angle) * lineWidth,
@@ -1097,20 +1103,20 @@ export const useShapeEditor = () => {
       });
 
       // Apply color harmony if enabled
-      if (batchConfigSettings.colorHarmonyEnabled) {
+      if (generationConfigSettings.colorHarmonyEnabled) {
         const colorHarmonySettings: ColorHarmonySettings = {
-          enabled: batchConfigSettings.colorHarmonyEnabled,
-          harmonyType: batchConfigSettings.harmonyType,
-          baseColor: batchConfigSettings.baseColor,
-          hueVariance: batchConfigSettings.hueVariance,
-          saturationRange: batchConfigSettings.saturationRange,
-          lightnessRange: batchConfigSettings.lightnessRange,
-          monochromaticSettings: batchConfigSettings.monochromaticSettings,
-          analogousSettings: batchConfigSettings.analogousSettings,
-          complementarySettings: batchConfigSettings.complementarySettings,
-          triadicSettings: batchConfigSettings.triadicSettings,
-          splitComplementarySettings: batchConfigSettings.splitComplementarySettings,
-          tetradicSettings: batchConfigSettings.tetradicSettings
+          enabled: generationConfigSettings.colorHarmonyEnabled,
+          harmonyType: generationConfigSettings.harmonyType,
+          baseColor: generationConfigSettings.baseColor,
+          hueVariance: generationConfigSettings.hueVariance,
+          saturationRange: generationConfigSettings.saturationRange,
+          lightnessRange: generationConfigSettings.lightnessRange,
+          monochromaticSettings: generationConfigSettings.monochromaticSettings,
+          analogousSettings: generationConfigSettings.analogousSettings,
+          complementarySettings: generationConfigSettings.complementarySettings,
+          triadicSettings: generationConfigSettings.triadicSettings,
+          splitComplementarySettings: generationConfigSettings.splitComplementarySettings,
+          tetradicSettings: generationConfigSettings.tetradicSettings
         };
 
         // Apply harmony to fill color
@@ -1127,8 +1133,8 @@ export const useShapeEditor = () => {
           }));
         }
 
-        console.log(`🎨 Applied ${batchConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
-      } else if (batchConfigSettings.propertiesEnabled) {
+        console.log(`🎨 Applied ${generationConfigSettings.harmonyType} harmony - Fill: ${shape.properties.fillColor}, Stroke: ${shape.properties.strokeColor}`);
+      } else if (generationConfigSettings.propertiesEnabled) {
         // When properties are enabled, don't pre-set colors here
         // Fill and stroke colors will be determined by probability logic below
         console.log(`🎯 [BATCH PROPERTIES] Shape ${index}: Properties enabled, colors will be set by probability logic`);
@@ -1140,14 +1146,14 @@ export const useShapeEditor = () => {
         shape.properties.strokeOpacity = 0;
       } else {
           // Only apply legacy randomization if batch config properties are completely disabled
-          if (!batchConfigSettings.propertiesEnabled) {
+          if (!generationConfigSettings.propertiesEnabled) {
             // Original randomization behavior (before noise system)
             const hue = Math.random() * 360;
             const saturation = 50 + Math.random() * 50;
             const lightness = 30 + Math.random() * 40;
             const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             shape.properties.fillColor = fillColor;
-            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${batchConfigSettings.propertiesEnabled}`);
+            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${generationConfigSettings.propertiesEnabled}`);
 
             // Random stroke color
             const strokeHue = Math.random() * 360;
@@ -1162,21 +1168,21 @@ export const useShapeEditor = () => {
         }
 
       // Apply fill and stroke probabilities from batch config
-      if (batchConfigSettings.propertiesEnabled) {
+      if (generationConfigSettings.propertiesEnabled) {
         // Handle fill style: solid vs gradient (not transparent vs opaque)
-        if (batchConfigSettings.fillEnabled) {
+        if (generationConfigSettings.fillEnabled) {
           // Determine if this shape gets solid or gradient fill
-          const shouldHaveSolidFill = Math.random() * 100 < batchConfigSettings.fillStyleProbability;
-          const shouldHaveGradient = !shouldHaveSolidFill && batchConfigSettings.fillGradientEnabled;
+          const shouldHaveSolidFill = Math.random() * 100 < generationConfigSettings.fillStyleProbability;
+          const shouldHaveGradient = !shouldHaveSolidFill && generationConfigSettings.fillGradientEnabled;
 
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillStyleProb=${batchConfigSettings.fillStyleProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
+          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillStyleProb=${generationConfigSettings.fillStyleProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
 
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
             // Determine gradient type based on individual probabilities
-            const totalGradientProb = batchConfigSettings.fillGradientLinearProbability + 
-                                    batchConfigSettings.fillGradientRadialProbability + 
-                                    batchConfigSettings.fillGradientConicProbability;
+            const totalGradientProb = generationConfigSettings.fillGradientLinearProbability + 
+                                    generationConfigSettings.fillGradientRadialProbability + 
+                                    generationConfigSettings.fillGradientConicProbability;
             
             let gradientType: 'linear' | 'radial' | 'conic' = 'linear';
             
@@ -1184,11 +1190,11 @@ export const useShapeEditor = () => {
               const random = Math.random() * totalGradientProb;
               let cumulative = 0;
               
-              cumulative += batchConfigSettings.fillGradientLinearProbability;
+              cumulative += generationConfigSettings.fillGradientLinearProbability;
               if (random < cumulative) {
                 gradientType = 'linear';
               } else {
-                cumulative += batchConfigSettings.fillGradientRadialProbability;
+                cumulative += generationConfigSettings.fillGradientRadialProbability;
                 if (random < cumulative) {
                   gradientType = 'radial';
                 } else {
@@ -1196,28 +1202,28 @@ export const useShapeEditor = () => {
                 }
               }
             }
-            const [minStops, maxStops] = batchConfigSettings.fillGradientStopsRange;
+            const [minStops, maxStops] = generationConfigSettings.fillGradientStopsRange;
             const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
 
             const gradientStops = [];
             for (let i = 0; i < stopCount; i++) {
               let stopColor: string;
 
-              if (batchConfigSettings.fillGradientColorMode === 'define') {
+              if (generationConfigSettings.fillGradientColorMode === 'define') {
                 // For define mode, use specific colors from the array
-                const colors = batchConfigSettings.fillGradientColorDefine || ['#3b82f6'];
+                const colors = generationConfigSettings.fillGradientColorDefine || ['#3b82f6'];
                 stopColor = colors[i % colors.length];
               } else {
                 // For range and palette modes, use generateColor
                 stopColor = generateColor(
-                  batchConfigSettings.fillGradientColorMode,
-                  batchConfigSettings.fillGradientColorRange,
-                  batchConfigSettings.fillGradientColorPalette,
+                  generationConfigSettings.fillGradientColorMode,
+                  generationConfigSettings.fillGradientColorRange,
+                  generationConfigSettings.fillGradientColorPalette,
                   undefined, // define is handled above
                   index + i,
-                  batchConfigSettings.fillGradientColorMode === 'range' ? {
-                    saturationRange: batchConfigSettings.fillGradientColorSaturationRange,
-                    lightnessRange: batchConfigSettings.fillGradientColorLightnessRange
+                  generationConfigSettings.fillGradientColorMode === 'range' ? {
+                    saturationRange: generationConfigSettings.fillGradientColorSaturationRange,
+                    lightnessRange: generationConfigSettings.fillGradientColorLightnessRange
                   } : undefined
                 );
               }
@@ -1238,7 +1244,7 @@ export const useShapeEditor = () => {
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using ${gradientType.toUpperCase()} GRADIENT, fillColor set to transparent`);
 
             // Apply fill opacity range for gradient
-            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
+            const [minOpacity, maxOpacity] = generationConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
 
           } else if (shouldHaveSolidFill) {
@@ -1247,21 +1253,21 @@ export const useShapeEditor = () => {
 
             // Apply solid fill color using range mode with saturation/lightness controls
             const fillColor = generateColor(
-              batchConfigSettings.fillColorMode,
-              batchConfigSettings.fillColorRange,
-              batchConfigSettings.fillColorPalette,
-              batchConfigSettings.fillColorDefine,
+              generationConfigSettings.fillColorMode,
+              generationConfigSettings.fillColorRange,
+              generationConfigSettings.fillColorPalette,
+              generationConfigSettings.fillColorDefine,
               index,
-              batchConfigSettings.fillColorMode === 'range' ? {
-                saturationRange: batchConfigSettings.fillColorSaturationRange,
-                lightnessRange: batchConfigSettings.fillColorLightnessRange
+              generationConfigSettings.fillColorMode === 'range' ? {
+                saturationRange: generationConfigSettings.fillColorSaturationRange,
+                lightnessRange: generationConfigSettings.fillColorLightnessRange
               } : undefined
             );
             shape.properties.fillColor = fillColor;
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${batchConfigSettings.fillColorMode}"`);
+            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${generationConfigSettings.fillColorMode}"`);
 
             // Apply fill opacity range for solid fill
-            const [minOpacity, maxOpacity] = batchConfigSettings.fillOpacityRange;
+            const [minOpacity, maxOpacity] = generationConfigSettings.fillOpacityRange;
             shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
 
           } else {
@@ -1275,8 +1281,8 @@ export const useShapeEditor = () => {
         }
 
         // Handle stroke probability - PRIMARY GATE for all stroke properties
-        if (batchConfigSettings.strokeEnabled) {
-          const shouldHaveStroke = Math.random() * 100 < batchConfigSettings.strokeProbability;
+        if (generationConfigSettings.strokeEnabled) {
+          const shouldHaveStroke = Math.random() * 100 < generationConfigSettings.strokeProbability;
           if (!shouldHaveStroke) {
             // No stroke - disable all stroke properties
             shape.properties.strokeColor = 'transparent';
@@ -1286,27 +1292,27 @@ export const useShapeEditor = () => {
             // Stroke enabled - apply all stroke properties
 
             // Apply stroke width range
-            const [minWidth, maxWidth] = batchConfigSettings.strokeWidthRange;
+            const [minWidth, maxWidth] = generationConfigSettings.strokeWidthRange;
             shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
 
             // Apply stroke opacity based on mode
-            if (batchConfigSettings.strokeOpacityMode === 'range') {
-              const [minOpacity, maxOpacity] = batchConfigSettings.strokeOpacityRange;
+            if (generationConfigSettings.strokeOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = generationConfigSettings.strokeOpacityRange;
               shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            } else if (batchConfigSettings.strokeOpacityMode === 'define') {
-              shape.properties.strokeOpacity = batchConfigSettings.strokeOpacityDefine / 100;
+            } else if (generationConfigSettings.strokeOpacityMode === 'define') {
+              shape.properties.strokeOpacity = generationConfigSettings.strokeOpacityDefine / 100;
             }
 
             // Apply stroke color using range mode with saturation/lightness controls
             const strokeColor = generateColor(
-              batchConfigSettings.strokeColorMode,
-              batchConfigSettings.strokeColorRange,
-              batchConfigSettings.strokeColorPalette,
-              batchConfigSettings.strokeColorDefine,
+              generationConfigSettings.strokeColorMode,
+              generationConfigSettings.strokeColorRange,
+              generationConfigSettings.strokeColorPalette,
+              generationConfigSettings.strokeColorDefine,
               index,
-              batchConfigSettings.strokeColorMode === 'range' ? {
-                saturationRange: batchConfigSettings.strokeColorSaturationRange,
-                lightnessRange: batchConfigSettings.strokeColorLightnessRange
+              generationConfigSettings.strokeColorMode === 'range' ? {
+                saturationRange: generationConfigSettings.strokeColorSaturationRange,
+                lightnessRange: generationConfigSettings.strokeColorLightnessRange
               } : undefined
             );
             shape.properties.strokeColor = strokeColor;
@@ -1319,15 +1325,15 @@ export const useShapeEditor = () => {
         }
 
         // Handle blur properties
-        if (batchConfigSettings.blurEnabled) {
-          const shouldHaveBlur = Math.random() * 100 < batchConfigSettings.blurProbability;
+        if (generationConfigSettings.blurEnabled) {
+          const shouldHaveBlur = Math.random() * 100 < generationConfigSettings.blurProbability;
           if (shouldHaveBlur) {
             // Apply blur based on mode
-            if (batchConfigSettings.blurMode === 'range') {
-              const [minBlur, maxBlur] = batchConfigSettings.blurRange;
+            if (generationConfigSettings.blurMode === 'range') {
+              const [minBlur, maxBlur] = generationConfigSettings.blurRange;
               shape.properties.blurRadius = minBlur + Math.random() * (maxBlur - minBlur);
-            } else if (batchConfigSettings.blurMode === 'define') {
-              shape.properties.blurRadius = batchConfigSettings.blurDefine;
+            } else if (generationConfigSettings.blurMode === 'define') {
+              shape.properties.blurRadius = generationConfigSettings.blurDefine;
             }
             console.log(`🌊 [BLUR] Shape ${index}: Applied blur radius=${shape.properties.blurRadius}px`);
           } else {
@@ -1340,58 +1346,58 @@ export const useShapeEditor = () => {
         }
 
         // Apply shape transforms if enabled
-        if (batchConfigSettings.transformsEnabled) {
+        if (generationConfigSettings.transformsEnabled) {
           // Apply enhanced position transforms (X)
-          if (batchConfigSettings.xTransformMode === 'range') {
-            const [minTransX, maxTransX] = batchConfigSettings.translateXRange;
+          if (generationConfigSettings.xTransformMode === 'range') {
+            const [minTransX, maxTransX] = generationConfigSettings.translateXRange;
             const randomization = minTransX + Math.random() * (maxTransX - minTransX);
             shape.transform.x += randomization;
-          } else if (batchConfigSettings.xTransformMode === 'value') {
-            const baseValue = batchConfigSettings.xTransformValue || 0;
+          } else if (generationConfigSettings.xTransformMode === 'value') {
+            const baseValue = generationConfigSettings.xTransformValue || 0;
             // Add small random variation for value mode
             const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
             shape.transform.x += baseValue + randomVariation;
-          } else if (batchConfigSettings.xTransformMode === 'incremental') {
+          } else if (generationConfigSettings.xTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
-            const incrementAmount = (batchConfigSettings.xTransformIncrement || 0) * index;
+            const incrementAmount = (generationConfigSettings.xTransformIncrement || 0) * index;
             // Add small random variation for incremental mode
             const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
             shape.transform.x += incrementAmount + randomVariation;
           }
 
           // Apply enhanced position transforms (Y)
-          if (batchConfigSettings.yTransformMode === 'range') {
-            const [minTransY, maxTransY] = batchConfigSettings.translateYRange;
+          if (generationConfigSettings.yTransformMode === 'range') {
+            const [minTransY, maxTransY] = generationConfigSettings.translateYRange;
             const randomization = minTransY + Math.random() * (maxTransY - minTransY);
             shape.transform.y += randomization;
-          } else if (batchConfigSettings.yTransformMode === 'value') {
-            const baseValue = batchConfigSettings.yTransformValue || 0;
+          } else if (generationConfigSettings.yTransformMode === 'value') {
+            const baseValue = generationConfigSettings.yTransformValue || 0;
             // Add small random variation for value mode
             const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
             shape.transform.y += baseValue + randomVariation;
-          } else if (batchConfigSettings.yTransformMode === 'incremental') {
+          } else if (generationConfigSettings.yTransformMode === 'incremental') {
             // Incremental mode: each shape gets progressively more transform
-            const incrementAmount = (batchConfigSettings.yTransformIncrement || 0) * index;
+            const incrementAmount = (generationConfigSettings.yTransformIncrement || 0) * index;
             // Add small random variation for incremental mode
             const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
             shape.transform.y += incrementAmount + randomVariation;
           }
 
           // Apply enhanced scale transforms
-          if (batchConfigSettings.maintainScaleAspectRatio) {
+          if (generationConfigSettings.maintainScaleAspectRatio) {
             // Use scaleX mode for both X and Y when aspect ratio is linked
-            if (batchConfigSettings.scaleXMode === 'range') {
-              const [minScale, maxScale] = batchConfigSettings.scaleXRange;
+            if (generationConfigSettings.scaleXMode === 'range') {
+              const [minScale, maxScale] = generationConfigSettings.scaleXRange;
               // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScale + Math.random() * (maxScale - minScale)) / 100;
               shape.transform.scaleX = Math.max(0.1, randomScale); // Prevent negative scale
               shape.transform.scaleY = Math.max(0.1, randomScale);
-            } else if (batchConfigSettings.scaleXMode === 'value') {
-              const baseScale = (batchConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
+            } else if (generationConfigSettings.scaleXMode === 'value') {
+              const baseScale = (generationConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               shape.transform.scaleX = Math.max(0.1, baseScale);
               shape.transform.scaleY = Math.max(0.1, baseScale);
-            } else if (batchConfigSettings.scaleXMode === 'incremental') {
-              const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
+            } else if (generationConfigSettings.scaleXMode === 'incremental') {
+              const incrementAmount = (generationConfigSettings.scaleXIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
               shape.transform.scaleX = Math.max(0.1, finalScale);
               shape.transform.scaleY = Math.max(0.1, finalScale);
@@ -1399,53 +1405,53 @@ export const useShapeEditor = () => {
           } else {
             // Independent scale X and Y
             // Scale X
-            if (batchConfigSettings.scaleXMode === 'range') {
-              const [minScaleX, maxScaleX] = batchConfigSettings.scaleXRange;
+            if (generationConfigSettings.scaleXMode === 'range') {
+              const [minScaleX, maxScaleX] = generationConfigSettings.scaleXRange;
               // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScaleX + Math.random() * (maxScaleX - minScaleX)) / 100;
               shape.transform.scaleX = Math.max(0.1, randomScale);
-            } else if (batchConfigSettings.scaleXMode === 'value') {
-              const baseScale = (batchConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
+            } else if (generationConfigSettings.scaleXMode === 'value') {
+              const baseScale = (generationConfigSettings.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               shape.transform.scaleX = Math.max(0.1, baseScale);
-            } else if (batchConfigSettings.scaleXMode === 'incremental') {
-              const incrementAmount = (batchConfigSettings.scaleXIncrement || 0) * index;
+            } else if (generationConfigSettings.scaleXMode === 'incremental') {
+              const incrementAmount = (generationConfigSettings.scaleXIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
               shape.transform.scaleX = Math.max(0.1, finalScale);
             }
 
             // Scale Y
-            if (batchConfigSettings.scaleYMode === 'range') {
-              const [minScaleY, maxScaleY] = batchConfigSettings.scaleYRange;
+            if (generationConfigSettings.scaleYMode === 'range') {
+              const [minScaleY, maxScaleY] = generationConfigSettings.scaleYRange;
               // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScaleY + Math.random() * (maxScaleY - minScaleY)) / 100;
               shape.transform.scaleY = Math.max(0.1, randomScale);
-            } else if (batchConfigSettings.scaleYMode === 'value') {
-              const baseScale = (batchConfigSettings.scaleYValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
+            } else if (generationConfigSettings.scaleYMode === 'value') {
+              const baseScale = (generationConfigSettings.scaleYValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
               shape.transform.scaleY = Math.max(0.1, baseScale);
-            } else if (batchConfigSettings.scaleYMode === 'incremental') {
-              const incrementAmount = (batchConfigSettings.scaleYIncrement || 0) * index;
+            } else if (generationConfigSettings.scaleYMode === 'incremental') {
+              const incrementAmount = (generationConfigSettings.scaleYIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
               shape.transform.scaleY = Math.max(0.1, finalScale);
             }
           }
 
           // Apply enhanced rotation transforms
-          if (batchConfigSettings.rotationMode === 'range') {
-            const [minRot, maxRot] = batchConfigSettings.rotationRange;
+          if (generationConfigSettings.rotationMode === 'range') {
+            const [minRot, maxRot] = generationConfigSettings.rotationRange;
             const baseRotation = minRot + Math.random() * (maxRot - minRot);
             console.log(`🔄 [ENHANCED ROTATION RANGE] Shape ${index}: base=${baseRotation.toFixed(2)}°, range=${minRot}-${maxRot}`);
             shape.transform.rotation = baseRotation;
-          } else if (batchConfigSettings.rotationMode === 'value') {
-            const baseRotation = batchConfigSettings.rotationValue || 0;
+          } else if (generationConfigSettings.rotationMode === 'value') {
+            const baseRotation = generationConfigSettings.rotationValue || 0;
             console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${baseRotation}°`);
             shape.transform.rotation = baseRotation;
-          } else if (batchConfigSettings.rotationMode === 'incremental') {
+          } else if (generationConfigSettings.rotationMode === 'incremental') {
             // Incremental mode: each shape gets progressively more rotation
-            let incrementAmount = (batchConfigSettings.rotationIncrement || 0) * index;
+            let incrementAmount = (generationConfigSettings.rotationIncrement || 0) * index;
             
             // Apply modulation if enabled
-            if (batchConfigSettings.rotationModulationEnabled && batchConfigSettings.rotationModulation > 0) {
-              incrementAmount = incrementAmount % batchConfigSettings.rotationModulation;
+            if (generationConfigSettings.rotationModulationEnabled && generationConfigSettings.rotationModulation > 0) {
+              incrementAmount = incrementAmount % generationConfigSettings.rotationModulation;
             }
             
             console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: increment=${incrementAmount}°`);
@@ -1453,27 +1459,27 @@ export const useShapeEditor = () => {
           }
 
           // Apply skew if configured (legacy system)
-          if (batchConfigSettings.skewXRange && batchConfigSettings.skewYRange) {
-            const [minSkewX, maxSkewX] = batchConfigSettings.skewXRange;
-            const [minSkewY, maxSkewY] = batchConfigSettings.skewYRange;
+          if (generationConfigSettings.skewXRange && generationConfigSettings.skewYRange) {
+            const [minSkewX, maxSkewX] = generationConfigSettings.skewXRange;
+            const [minSkewY, maxSkewY] = generationConfigSettings.skewYRange;
             shape.transform.skewX = minSkewX + Math.random() * (maxSkewX - minSkewX);
             shape.transform.skewY = minSkewY + Math.random() * (maxSkewY - minSkewY);
           }
         }
 
         // Apply rotation randomization if enabled (additive to any existing rotation)
-        if (batchConfigSettings.rotationRandomizationScale > 0) {
+        if (generationConfigSettings.rotationRandomizationScale > 0) {
           const randomVariation = (Math.random() * 2 - 1) * 30; // ±30° base variation
-          const scaledVariation = randomVariation * (batchConfigSettings.rotationRandomizationScale / 100);
+          const scaledVariation = randomVariation * (generationConfigSettings.rotationRandomizationScale / 100);
           shape.transform.rotation += scaledVariation;
-          console.log(`🎲 [ROTATION RANDOMIZATION] Shape ${index}: Added ${scaledVariation.toFixed(2)}° variation (scale=${batchConfigSettings.rotationRandomizationScale}%)`);
+          console.log(`🎲 [ROTATION RANDOMIZATION] Shape ${index}: Added ${scaledVariation.toFixed(2)}° variation (scale=${generationConfigSettings.rotationRandomizationScale}%)`);
         }
       }
 
-      console.log(`🧪 [PRE-NOISE] Shape ${index}: BEFORE noise processing, fillColor="${shape.properties.fillColor}", noiseEnabled=${batchConfigSettings.noiseEnabled}`);
+      console.log(`🧪 [PRE-NOISE] Shape ${index}: BEFORE noise processing, fillColor="${shape.properties.fillColor}", noiseEnabled=${generationConfigSettings.noiseEnabled}`);
 
       // Apply noise variations ONLY if enabled - this fixes the disabled state issue
-      if (batchConfigSettings.noiseEnabled) {
+      if (generationConfigSettings.noiseEnabled) {
         console.log(`🌊 [NOISE START] Shape ${index}: Entering noise processing, current fillColor="${shape.properties.fillColor}"`);
 
         // Get current artboard dimensions
@@ -1483,7 +1489,7 @@ export const useShapeEditor = () => {
 
         const noiseResult = NoiseSystem.generateNoiseVariation(
           index, 
-          batchConfigSettings, 
+          generationConfigSettings, 
           position.x, 
           position.y,
           artboardWidth,
@@ -1504,7 +1510,7 @@ export const useShapeEditor = () => {
         shape.transform.scaleY += noiseResult.scaleY * 0.1;
 
         // Apply noise to opacity - only if opacity noise is enabled in Properties section
-        if (batchConfigSettings.propertiesEnabled && batchConfigSettings.noiseOpacityAmplitude > 0) {
+        if (generationConfigSettings.propertiesEnabled && generationConfigSettings.noiseOpacityAmplitude > 0) {
           // Apply additive noise to batch config opacity values
           const baseOpacity = shape.properties.fillOpacity;
           const noiseOpacity = baseOpacity + (noiseResult.opacity - 1) * 0.3; // Scale noise effect
@@ -1516,13 +1522,13 @@ export const useShapeEditor = () => {
         // Apply noise to blur
         shape.properties.blurRadius = Math.max(0, noiseResult.blur);
 
-        console.log(`🎨 [COLOR CHECK] Shape ${index}: About to apply noise colors. colorHarmonyEnabled=${batchConfigSettings.colorHarmonyEnabled}, current fillColor="${shape.properties.fillColor}"`);
+        console.log(`🎨 [COLOR CHECK] Shape ${index}: About to apply noise colors. colorHarmonyEnabled=${generationConfigSettings.colorHarmonyEnabled}, current fillColor="${shape.properties.fillColor}"`);
 
         // Apply noise to colors if color harmony is not enabled
-        if (!batchConfigSettings.colorHarmonyEnabled) {
-          console.log(`🔍 [COLOR BRANCH] Shape ${index}: Entering color noise processing. noiseAlgorithm="${batchConfigSettings.noiseAlgorithm}"`);
+        if (!generationConfigSettings.colorHarmonyEnabled) {
+          console.log(`🔍 [COLOR BRANCH] Shape ${index}: Entering color noise processing. noiseAlgorithm="${generationConfigSettings.noiseAlgorithm}"`);
 
-          if (batchConfigSettings.noiseAlgorithm === 'randomise') {
+          if (generationConfigSettings.noiseAlgorithm === 'randomise') {
             console.log(`🎯 [RANDOMISE BRANCH] Shape ${index}: BEFORE randomise - fillColor="${shape.properties.fillColor}"`);
 
             // Randomise uses absolute values like original
@@ -1536,7 +1542,7 @@ export const useShapeEditor = () => {
 
             shape.properties.fillColor = noiseColor;
             console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE randomise applied! fillColor="${noiseColor}"`);
-          } else if (batchConfigSettings.noiseAlgorithm === 'perlin') {
+          } else if (generationConfigSettings.noiseAlgorithm === 'perlin') {
             console.log(`🎯 [PERLIN BRANCH] Shape ${index}: BEFORE perlin - fillColor="${shape.properties.fillColor}"`);
 
             // Extract existing HSL values for variation-based algorithms
@@ -1566,7 +1572,7 @@ export const useShapeEditor = () => {
             const strokeLightness = 20 + (noiseResult.lightness * 0.7) * 60; // Map to 20-80%
             shape.properties.strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
           } else {
-            console.log(`🎯 [OTHER ALGORITHM BRANCH] Shape ${index}: BEFORE other algorithm - fillColor="${shape.properties.fillColor}", algorithm="${batchConfigSettings.noiseAlgorithm}"`);
+            console.log(`🎯 [OTHER ALGORITHM BRANCH] Shape ${index}: BEFORE other algorithm - fillColor="${shape.properties.fillColor}", algorithm="${generationConfigSettings.noiseAlgorithm}"`);
 
             // Other noise algorithms use additive variation
             const baseHue = Math.random() * 360;
@@ -1582,7 +1588,7 @@ export const useShapeEditor = () => {
             console.log(`💥 [COLOR OVERRIDE] Shape ${index}: *** THIS IS THE OVERRIDE *** fillColor changing from "${shape.properties.fillColor}" to "${noiseColor}"`);
 
             shape.properties.fillColor = noiseColor;
-            console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE ${batchConfigSettings.noiseAlgorithm} applied! fillColor="${noiseColor}"`);
+            console.log(`🌊 [NOISE COLOR] Shape ${index}: NOISE ${generationConfigSettings.noiseAlgorithm} applied! fillColor="${noiseColor}"`);
 
             const strokeHue = (finalHue + 30 + noiseResult.hue * 0.3) % 360;
             const strokeSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation * 0.8));
@@ -1593,7 +1599,7 @@ export const useShapeEditor = () => {
           console.log(`⏭️ [SKIP COLOR] Shape ${index}: Skipping color noise due to colorHarmonyEnabled=true`);
         }
 
-        console.log(`🔊 Applied ${batchConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
+        console.log(`🔊 Applied ${generationConfigSettings.noiseAlgorithm} noise to shape ${index}: pos(${noiseResult.x.toFixed(1)}, ${noiseResult.y.toFixed(1)}), rot(${noiseResult.rotation.toFixed(1)}), scale(${noiseResult.scaleX.toFixed(2)})`);
       } else {
         console.log(`🚫 [NO NOISE] Shape ${index}: Noise disabled, entering non-noise branch`);
 
@@ -1612,20 +1618,20 @@ export const useShapeEditor = () => {
 
     // Apply grid distribution if enabled
     let finalShapes = newShapes;
-    if (batchConfigSettings.distributionLayoutEnabled) {
+    if (generationConfigSettings.distributionLayoutEnabled) {
       const distributionConfig: DistributionConfig = {
-        enabled: batchConfigSettings.distributionLayoutEnabled,
-        pattern: batchConfigSettings.distributionPattern,
-        gridRows: batchConfigSettings.gridRows,
-        gridColumns: batchConfigSettings.gridColumns,
-        gridRowOffset: batchConfigSettings.gridRowOffset,
-        gridColumnOffset: batchConfigSettings.gridColumnOffset,
-        gridSortBy: batchConfigSettings.gridSortBy,
-        gridSortScope: batchConfigSettings.gridSortScope,
-        gridSortOrder: batchConfigSettings.gridSortOrder,
-        gridXRandomization: batchConfigSettings.gridXRandomization,
-        gridYRandomization: batchConfigSettings.gridYRandomization,
-        positionsEnabled: batchConfigSettings.positionsEnabled
+        enabled: generationConfigSettings.distributionLayoutEnabled,
+        pattern: generationConfigSettings.distributionPattern,
+        gridRows: generationConfigSettings.gridRows,
+        gridColumns: generationConfigSettings.gridColumns,
+        gridRowOffset: generationConfigSettings.gridRowOffset,
+        gridColumnOffset: generationConfigSettings.gridColumnOffset,
+        gridSortBy: generationConfigSettings.gridSortBy,
+        gridSortScope: generationConfigSettings.gridSortScope,
+        gridSortOrder: generationConfigSettings.gridSortOrder,
+        gridXRandomization: generationConfigSettings.gridXRandomization,
+        gridYRandomization: generationConfigSettings.gridYRandomization,
+        positionsEnabled: generationConfigSettings.positionsEnabled
       };
 
       // Apply grid positioning additively with existing positions
@@ -1637,7 +1643,7 @@ export const useShapeEditor = () => {
       };
       
       finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo);
-      console.log(`🎯 Applied grid distribution: ${batchConfigSettings.gridRows}×${batchConfigSettings.gridColumns}, sort by ${batchConfigSettings.gridSortBy} (${batchConfigSettings.gridSortOrder}, ${batchConfigSettings.gridSortScope})`);
+      console.log(`🎯 Applied grid distribution: ${generationConfigSettings.gridRows}×${generationConfigSettings.gridColumns}, sort by ${generationConfigSettings.gridSortBy} (${generationConfigSettings.gridSortOrder}, ${generationConfigSettings.gridSortScope})`);
     }
 
     // Log all final z-indices before adding to state
@@ -1647,7 +1653,7 @@ export const useShapeEditor = () => {
     console.log(`✅ Created ${finalShapes.length} shapes, returning for further processing`);
 
     return finalShapes;
-  }, [enabledShapeTypes, scatterSettings, canvasSettings, batchConfigSettings]);
+  }, [enabledShapeTypes, scatterSettings, canvasSettings, generationConfigSettings]);
 
   const generateRandomShapes = useCallback(() => {
     const count = scatterSettings.shapeCountMode === 'fixed' 
@@ -1702,11 +1708,11 @@ export const useShapeEditor = () => {
     });
 
     // Update incremental index if not resetting per batch
-    if (batchConfigSettings.propertiesEnabled && batchConfigSettings.shapePropertiesEnabled && 
-        !batchConfigSettings.incrementalResetPerBatch) {
+    if (generationConfigSettings.propertiesEnabled && generationConfigSettings.shapePropertiesEnabled && 
+        !generationConfigSettings.incrementalResetPerBatch) {
       setLastIncrementalIndex(prev => prev + newShapes.length);
     }
-  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, batchConfigSettings]);
+  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, generationConfigSettings]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
@@ -2458,8 +2464,8 @@ export const useShapeEditor = () => {
     setShapes(prev => [...prev]);
   }, [selectedShapes]);
 
-  const updateBatchConfigSettings = useCallback((updates: Partial<BatchConfigSettings>) => {
-    setBatchConfigSettings(prev => ({ ...prev, ...updates }));
+  const updateGenerationConfigSettings = useCallback((updates: Partial<BatchConfigSettings>) => {
+    setGenerationConfigSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
   // Project loading functionality
@@ -2554,7 +2560,7 @@ export const useShapeEditor = () => {
     selectedGroups,
     enabledShapeTypes,
     scatterSettings,
-    batchConfigSettings,
+    generationConfigSettings,
     canvasSettings,
     artboards,
     activeArtboard,
@@ -2584,7 +2590,7 @@ export const useShapeEditor = () => {
     // Actions
     toggleShapeType,
     updateScatterSettings,
-    updateBatchConfigSettings,
+    updateGenerationConfigSettings,
     generateRandomShapes,
     generateShapesWithBatchConfig,
     scatterOnShape,

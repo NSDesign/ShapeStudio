@@ -1258,7 +1258,7 @@ export default function Sidebar({
                     </div>
                     <Slider
                       value={exportShapeCountRange}
-                      onValueChange={(value) => setExportShapeCountRange(value)}
+                      onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
                       min={1}
                       max={20}
                       step={1}
