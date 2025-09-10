@@ -110,7 +110,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
 interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
-  batchConfigSettings: BatchConfigSettings;
+  generationConfigSettings: BatchConfigSettings;
   selectedCount: number;
   selectedPointsCount: number;
   selectedSegmentsCount: number;
@@ -149,7 +149,7 @@ interface SidebarProps {
   onDistributeSelected: () => void;
   onApplyBooleanOperation: (operation: 'union' | 'subtract' | 'intersect' | 'exclude', targetId: string) => void;
   onApplyColorManipulation: (manipulation: any) => void;
-  onUpdateBatchConfigSettings: (settings: Partial<BatchConfigSettings>) => void;
+  onUpdateGenerationConfigSettings: (settings: Partial<BatchConfigSettings>) => void;
   onLoadProject: (data: {
     shapes: any[];
     groups: any[];
@@ -162,7 +162,7 @@ interface SidebarProps {
 export default function Sidebar({
   enabledShapeTypes,
   scatterSettings,
-  batchConfigSettings,
+  generationConfigSettings,
   selectedCount,
   selectedPointsCount,
   selectedSegmentsCount,
@@ -175,7 +175,7 @@ export default function Sidebar({
   activeArtboard,
   onToggleShapeType,
   onUpdateScatterSettings,
-  onUpdateBatchConfigSettings,
+  onUpdateGenerationConfigSettings,
   onGenerateRandomShapes,
   onGenerateShapesWithBatchConfig,
   onComposeShapes,
@@ -449,15 +449,15 @@ export default function Sidebar({
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
     // Batch export state
-    const [batchShapeCount, setBatchShapeCount] = useState([5, 15]);
-    const [batchExportCount, setBatchExportCount] = useState(10);
+    const [exportShapeCountRange, setExportShapeCountRange] = useState([5, 15]);
+    const [exportBatchCount, setExportBatchCount] = useState(10);
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchTotalSteps, setBatchTotalSteps] = useState(0);
     const [batchStatus, setBatchStatus] = useState('');
-    const [batchModeEnabled, setBatchModeEnabled] = useState(false);
-    const [batchSaveProjectFiles, setBatchSaveProjectFiles] = useState(false);
+    const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
+    const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
@@ -786,15 +786,15 @@ export default function Sidebar({
 
     // NEW BATCH EXPORT WITH ZIP PACKAGING
     const handleBatchExportNew = async () => {
-      if (!batchModeEnabled) return;
+      if (!exportBatchModeEnabled) return;
 
       setIsBatchExporting(true);
       setBatchProgress(0);
       // Calculate total steps: shape generation + image creation + zip creation + download
-      const totalSteps = (batchExportCount * 2) + 2; // 2 steps per image + zip creation + download
+      const totalSteps = (exportBatchCount * 2) + 2; // 2 steps per image + zip creation + download
       setBatchTotalSteps(totalSteps);
       setBatchStatus('Initializing batch export...');
-      console.log(`🚀 ZIP BATCH EXPORT: Starting ${batchExportCount} exports`);
+      console.log(`🚀 ZIP BATCH EXPORT: Starting ${exportBatchCount} exports`);
       
       // Get the target artboard for shape generation
       const targetArtboard = exportMode === 'artboard' && selectedArtboardForExport 
@@ -821,9 +821,9 @@ export default function Sidebar({
         
         let currentStep = 0;
         
-        for (let i = 0; i < batchExportCount; i++) {
-          console.log(`🎨 Creating artwork ${i + 1} of ${batchExportCount}`);
-          console.log(`📊 BATCH PROCESSING: ${i + 1} of ${batchExportCount} exports`);
+        for (let i = 0; i < exportBatchCount; i++) {
+          console.log(`🎨 Creating artwork ${i + 1} of ${exportBatchCount}`);
+          console.log(`📊 BATCH PROCESSING: ${i + 1} of ${exportBatchCount} exports`);
           
           // STEP 1: Shape Generation
           setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
@@ -845,7 +845,7 @@ export default function Sidebar({
 
           // Generate shapes for this export using batch configuration
           // Random Shape Range determines how many times to call the generation function (like pressing the button multiple times)
-          const generationCallsCount = Math.floor(Math.random() * (batchShapeCount[1] - batchShapeCount[0] + 1)) + batchShapeCount[0];
+          const generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
           console.log(`🔢 Will make ${generationCallsCount} generation calls for export ${i + 1} (simulating ${generationCallsCount} button presses)`);
 
           // Simulate multiple button presses - each call generates shapes based on scatterSettings.minCount to maxCount
@@ -996,7 +996,7 @@ export default function Sidebar({
               console.log(`📦 Added ${filename} to ZIP`);
 
               // Save project file if enabled
-              if (batchSaveProjectFiles) {
+              if (exportSaveProjectFiles) {
                 const projectFilename = filename.replace(/\.(png|jpg|webp|avif|bmp|pdf)$/, '.json');
                 const projectData = {
                   shapes: currentExportShapes,
@@ -1005,14 +1005,14 @@ export default function Sidebar({
                   artboards: targetArtboard ? [targetArtboard] : [],
                   metadata: {
                     exportIndex: i + 1,
-                    totalExports: batchExportCount,
+                    totalExports: exportBatchCount,
                     timestamp: new Date().toISOString(),
                     version: '1.0.0',
                     exportMode: exportMode,
                     generationBounds: generationBounds,
                     imageFilename: filename,
                     shapeCount: currentExportShapes.length,
-                    description: `Batch export ${i + 1} of ${batchExportCount} - Generated ${currentExportShapes.length} shapes`
+                    description: `Batch export ${i + 1} of ${exportBatchCount} - Generated ${currentExportShapes.length} shapes`
                   }
                 };
                 
@@ -1045,8 +1045,8 @@ export default function Sidebar({
           }, 2000);
         });
         
-        const projectFilesText = batchSaveProjectFiles ? ` and ${batchExportCount} project files` : '';
-        console.log(`📦 Creating ZIP file with ${batchExportCount} images${projectFilesText}`);
+        const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
+        console.log(`📦 Creating ZIP file with ${exportBatchCount} images${projectFilesText}`);
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         
         setBatchStatus('Downloading ZIP file...');
@@ -1068,7 +1068,7 @@ export default function Sidebar({
         link.click();
         
         setBatchStatus('Download complete!');
-        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${batchExportCount} images${projectFilesText}`);
+        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
       } catch (error) {
         console.error('❌ Batch export error:', error);
       } finally {
@@ -1219,22 +1219,22 @@ export default function Sidebar({
               <Label htmlFor="batch-mode" className="text-xs text-slate-400">Enable</Label>
               <Switch
                 id="batch-mode"
-                checked={batchModeEnabled}
-                onCheckedChange={setBatchModeEnabled}
+                checked={exportBatchModeEnabled}
+                onCheckedChange={setExportBatchModeEnabled}
               />
             </div>
           </div>
 
-          {batchModeEnabled && (
+          {exportBatchModeEnabled && (
             <>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">Number of Generations per Export</Label>
                   <Select 
-                    value={batchConfigSettings.generationCountMode || 'range'} 
+                    value={generationConfigSettings.generationCountMode || 'range'} 
                     onValueChange={(value) => {
                       console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
-                      onUpdateBatchConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
+                      onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
                     }}
                   >
                     <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
@@ -1248,15 +1248,15 @@ export default function Sidebar({
                   </Select>
                 </div>
                 
-                {batchConfigSettings.generationCountMode === 'range' && (
+                {generationConfigSettings.generationCountMode === 'range' && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Min: {batchShapeCount[0]}</span>
-                      <span className="text-slate-400">Max: {batchShapeCount[1]}</span>
+                      <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
+                      <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
                     </div>
                     <Slider
-                      value={batchShapeCount}
-                      onValueChange={(value) => setBatchShapeCount(value)}
+                      value={exportShapeCountRange}
+                      onValueChange={(value) => setExportShapeCountRange(value)}
                       min={1}
                       max={20}
                       step={1}
@@ -1266,12 +1266,12 @@ export default function Sidebar({
                   </div>
                 )}
                 
-                {batchConfigSettings.generationCountMode === 'fixed' && (
+                {generationConfigSettings.generationCountMode === 'fixed' && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Fixed Value: {batchConfigSettings.generationCountDefine}</Label>
+                    <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings.generationCountDefine}</Label>
                     <Slider
-                      value={[batchConfigSettings.generationCountDefine]}
-                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountDefine: value })}
+                      value={[generationConfigSettings.generationCountDefine]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
                       min={1}
                       max={20}
                       step={1}
@@ -1280,21 +1280,21 @@ export default function Sidebar({
                   </div>
                 )}
                 
-                {batchConfigSettings.generationCountMode === 'incremental' && (
+                {generationConfigSettings.generationCountMode === 'incremental' && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Start Value: {batchConfigSettings.generationCountStartValue}</Label>
+                    <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings.generationCountStartValue}</Label>
                     <Slider
-                      value={[batchConfigSettings.generationCountStartValue]}
-                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountStartValue: value })}
+                      value={[generationConfigSettings.generationCountStartValue]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
                       min={1}
                       max={15}
                       step={1}
                       className="[&_[role=slider]]:bg-blue-600"
                     />
-                    <Label className="text-xs text-slate-300">Increment: {batchConfigSettings.generationCountIncrement}</Label>
+                    <Label className="text-xs text-slate-300">Increment: {generationConfigSettings.generationCountIncrement}</Label>
                     <Slider
-                      value={[batchConfigSettings.generationCountIncrement]}
-                      onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountIncrement: value })}
+                      value={[generationConfigSettings.generationCountIncrement]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
                       min={1}
                       max={5}
                       step={1}
@@ -1302,26 +1302,26 @@ export default function Sidebar({
                     />
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        checked={batchConfigSettings.generationCountResetPerBatch}
-                        onCheckedChange={(checked) => onUpdateBatchConfigSettings({ generationCountResetPerBatch: checked as boolean })}
+                        checked={generationConfigSettings.generationCountResetPerBatch}
+                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
                       <Label className="text-xs text-slate-300">Reset per batch</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        checked={batchConfigSettings.generationCountModulationEnabled}
-                        onCheckedChange={(checked) => onUpdateBatchConfigSettings({ generationCountModulationEnabled: checked as boolean })}
+                        checked={generationConfigSettings.generationCountModulationEnabled}
+                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
                       <Label className="text-xs text-slate-300">Enable Modulation</Label>
                     </div>
-                    {batchConfigSettings.generationCountModulationEnabled && (
+                    {generationConfigSettings.generationCountModulationEnabled && (
                       <>
-                        <Label className="text-xs text-slate-300">Modulation Value: {batchConfigSettings.generationCountModulationValue}</Label>
+                        <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings.generationCountModulationValue}</Label>
                         <Slider
-                          value={[batchConfigSettings.generationCountModulationValue]}
-                          onValueChange={([value]) => onUpdateBatchConfigSettings({ generationCountModulationValue: value })}
+                          value={[generationConfigSettings.generationCountModulationValue]}
+                          onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
                           min={1}
                           max={10}
                           step={1}
@@ -1337,11 +1337,11 @@ export default function Sidebar({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Number of Exports</span>
-                  <span className="text-slate-300">{batchExportCount}</span>
+                  <span className="text-slate-300">{exportBatchCount}</span>
                 </div>
                 <Slider
-                  value={[batchExportCount]}
-                  onValueChange={([value]) => setBatchExportCount(value)}
+                  value={[exportBatchCount]}
+                  onValueChange={([value]) => setExportBatchCount(value)}
                   min={1}
                   max={100}
                   step={1}
@@ -1355,12 +1355,12 @@ export default function Sidebar({
                   <Label className="text-xs text-slate-300">Save Project Files</Label>
                 </div>
                 <Switch
-                  checked={batchSaveProjectFiles}
-                  onCheckedChange={setBatchSaveProjectFiles}
+                  checked={exportSaveProjectFiles}
+                  onCheckedChange={setExportSaveProjectFiles}
                 />
               </div>
 
-              {batchSaveProjectFiles && (
+              {exportSaveProjectFiles && (
                 <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                   <div className="flex items-center space-x-1 mb-1">
                     <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
@@ -1423,11 +1423,11 @@ export default function Sidebar({
             <Label className="text-xs text-slate-400">Quick Actions</Label>
           </div>
           <ApiCallGenerator 
-            batchConfigSettings={batchConfigSettings}
-            batchModeEnabled={batchModeEnabled}
-            batchSaveProjectFiles={batchSaveProjectFiles}
-            batchExportCount={batchExportCount}
-            batchShapeCount={batchShapeCount}
+            generationConfigSettings={generationConfigSettings}
+            exportBatchModeEnabled={exportBatchModeEnabled}
+            exportSaveProjectFiles={exportSaveProjectFiles}
+            exportBatchCount={exportBatchCount}
+            exportShapeCountRange={exportShapeCountRange}
             className="w-full text-xs"
           />
         </div>
@@ -2377,8 +2377,8 @@ export default function Sidebar({
             }
           </Button>
           <BatchConfigDialog
-            settings={batchConfigSettings}
-            onSettingsChange={onUpdateBatchConfigSettings}
+            settings={generationConfigSettings}
+            onSettingsChange={onUpdateGenerationConfigSettings}
           />
         </div>
       </div>
