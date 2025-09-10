@@ -1417,7 +1417,20 @@ export default function Sidebar({
           )}
         </div>
 
-
+        {/* API Call Generator */}
+        <div className="mt-6 pt-4 border-t border-slate-700">
+          <div className="mb-3">
+            <Label className="text-xs text-slate-400">Quick Actions</Label>
+          </div>
+          <ApiCallGenerator 
+            batchConfigSettings={batchConfigSettings}
+            batchModeEnabled={batchModeEnabled}
+            batchSaveProjectFiles={batchSaveProjectFiles}
+            batchExportCount={batchExportCount}
+            batchShapeCount={batchShapeCount}
+            className="w-full text-xs"
+          />
+        </div>
       </div>
     );
   }
@@ -3315,10 +3328,6 @@ export default function Sidebar({
               New Project
             </Button>
 
-            <ApiCallGenerator 
-              batchConfigSettings={batchConfigSettings}
-              className="w-full text-xs"
-            />
           </div>
         </div>
 
@@ -4235,6 +4244,7 @@ export default function Sidebar({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <ProjectManagementContent />
+                
               </AccordionContent>
             </AccordionItem>
 

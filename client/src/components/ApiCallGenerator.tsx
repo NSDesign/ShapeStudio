@@ -7,6 +7,11 @@ import { BatchConfigSettings } from './BatchConfigDialog';
 
 interface ApiCallGeneratorProps {
   batchConfigSettings: BatchConfigSettings;
+  // Export dialog state
+  batchModeEnabled: boolean;
+  batchSaveProjectFiles: boolean;
+  batchExportCount: number;
+  batchShapeCount: [number, number]; // [min, max] range
   className?: string;
 }
 
@@ -36,50 +41,45 @@ interface ApiV2Payload {
   modulationValue?: number;
 }
 
-export default function ApiCallGenerator({ batchConfigSettings, className = "" }: ApiCallGeneratorProps) {
+export default function ApiCallGenerator({ 
+  batchConfigSettings, 
+  batchModeEnabled,
+  batchSaveProjectFiles,
+  batchExportCount,
+  batchShapeCount,
+  className = "" 
+}: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
 
   // Convert current settings to API payload
   const generateApiPayload = (): ApiV2Payload => {
     const payload: ApiV2Payload = {
-      // Default V1 parameters (can be customized)
+      // V1 parameters from actual export dialog state
       format: 'png',
       quality: 92,
       scale: 1,
       includeBackground: true,
       backgroundColor: '#1e293b',
-      batchExportCount: 10,
-      batchSaveProjectFiles: false,
+      batchExportCount: batchExportCount,
+      batchSaveProjectFiles: batchSaveProjectFiles,
       packageAsZip: false,
     };
 
-    // Only add V2 parameters if they differ from defaults
-    // Check if generation count mode is actually configured (not just default)
-    const isGenerationCountConfigured = 
-      batchConfigSettings.generationCountMode && 
-      (batchConfigSettings.generationCountMode !== 'range' || 
-       batchConfigSettings.generationCountDefine !== 5); // 5 seems to be default
-
-    if (isGenerationCountConfigured) {
+    // V2 parameters: Check if batch mode is enabled and shape count is configured as range
+    if (batchModeEnabled && batchShapeCount) {
+      const [min, max] = batchShapeCount;
+      
+      // Add generation count configuration based on the export dialog range
       const generationCount: GenerationCountConfig = {
-        mode: batchConfigSettings.generationCountMode
+        mode: 'range' as const,
+        min: min,
+        max: max
       };
-
-      if (batchConfigSettings.generationCountMode === 'fixed') {
-        generationCount.fixed = batchConfigSettings.generationCountDefine;
-      } else if (batchConfigSettings.generationCountMode === 'range') {
-        generationCount.min = 1;
-        generationCount.max = batchConfigSettings.generationCountDefine;
-      } else if (batchConfigSettings.generationCountMode === 'incremental') {
-        generationCount.start = batchConfigSettings.generationCountStartValue;
-        generationCount.increment = batchConfigSettings.generationCountIncrement;
-        generationCount.resetPerBatch = batchConfigSettings.generationCountResetPerBatch;
-      }
 
       payload.generationCount = generationCount;
     }
 
-    // Add modulation if enabled
+    // Add modulation if enabled from batch config dialog
     if (batchConfigSettings.generationCountModulationEnabled) {
       payload.modulationValue = batchConfigSettings.generationCountModulationValue;
     }
@@ -233,71 +233,46 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
             </TabsContent>
           </Tabs>
 
-          {/* Current Settings Summary - Only show if V2 features are configured */}
-          {(payload.generationCount || payload.modulationValue !== undefined) && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-3">Current V2 Configuration</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {payload.generationCount && (
-                  <>
-                    <div>
-                      <span className="text-slate-400">Generation Count Mode:</span>
-                      <span className="ml-2 font-medium">{payload.generationCount.mode}</span>
-                    </div>
-                    {payload.generationCount.mode === 'fixed' && (
-                      <div>
-                        <span className="text-slate-400">Fixed Count:</span>
-                        <span className="ml-2 font-medium">{payload.generationCount.fixed}</span>
-                      </div>
-                    )}
-                    {payload.generationCount.mode === 'range' && (
-                      <>
-                        <div>
-                          <span className="text-slate-400">Min Count:</span>
-                          <span className="ml-2 font-medium">{payload.generationCount.min}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">Max Count:</span>
-                          <span className="ml-2 font-medium">{payload.generationCount.max}</span>
-                        </div>
-                      </>
-                    )}
-                    {payload.generationCount.mode === 'incremental' && (
-                      <>
-                        <div>
-                          <span className="text-slate-400">Start Value:</span>
-                          <span className="ml-2 font-medium">{payload.generationCount.start}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">Increment:</span>
-                          <span className="ml-2 font-medium">{payload.generationCount.increment}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">Reset Per Batch:</span>
-                          <span className="ml-2 font-medium">{payload.generationCount.resetPerBatch ? 'Yes' : 'No'}</span>
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-                {payload.modulationValue !== undefined && (
+          {/* Current Settings Summary - Show actual export dialog settings */}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-3">Current Export Configuration</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-slate-400">Batch Mode:</span>
+                <span className="ml-2 font-medium">{batchModeEnabled ? 'Enabled' : 'Disabled'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Export Count:</span>
+                <span className="ml-2 font-medium">{batchExportCount}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Save Project Files:</span>
+                <span className="ml-2 font-medium">{batchSaveProjectFiles ? 'Yes' : 'No'}</span>
+              </div>
+              {payload.generationCount && (
+                <>
                   <div>
-                    <span className="text-slate-400">Modulation Value:</span>
-                    <span className="ml-2 font-medium">{payload.modulationValue}</span>
+                    <span className="text-slate-400">Generation Mode:</span>
+                    <span className="ml-2 font-medium">{payload.generationCount.mode}</span>
                   </div>
-                )}
-              </div>
+                  <div>
+                    <span className="text-slate-400">Min Count:</span>
+                    <span className="ml-2 font-medium">{payload.generationCount.min}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Max Count:</span>
+                    <span className="ml-2 font-medium">{payload.generationCount.max}</span>
+                  </div>
+                </>
+              )}
+              {payload.modulationValue !== undefined && (
+                <div>
+                  <span className="text-slate-400">Modulation Value:</span>
+                  <span className="ml-2 font-medium">{payload.modulationValue}</span>
+                </div>
+              )}
             </div>
-          )}
-          
-          {/* Show message when no V2 features are configured */}
-          {!payload.generationCount && payload.modulationValue === undefined && (
-            <div className="border-t pt-4">
-              <div className="text-sm text-slate-400">
-                No V2 features configured. This will generate a standard V1 API call. Configure generation count settings in Batch Configuration to see V2 parameters.
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
