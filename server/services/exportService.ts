@@ -33,6 +33,7 @@ export interface BatchExportSettings {
   // Batch-specific settings
   batchExportCount: number;
   batchSaveProjectFiles?: boolean;
+  packageAsZip?: boolean; // New: Whether to package files in ZIP (default: false)
   
   // Additional options
   includeAdornments?: boolean;
@@ -62,12 +63,23 @@ export interface BatchExportResult {
   exportId: string;
   estimatedDuration: number;
   totalImages: number;
-  downloadUrl: string;
+  downloadUrl?: string; // Only present if packageAsZip is true
+  imageFiles?: Array<{
+    filename: string;
+    url: string;
+    index: number;
+  }>;
+  projectFiles?: Array<{
+    filename: string;
+    url: string;
+    index: number;
+  }>;
 }
 
 export class ExportService {
   private activeExports = new Map<string, ExportProgress>();
   private exportResults = new Map<string, string>(); // exportId -> file path
+  private individualFiles = new Map<string, { imageFiles: any[], projectFiles: any[] }>(); // exportId -> file arrays
   
   constructor() {
     // Ensure exports directory exists
@@ -97,6 +109,7 @@ export class ExportService {
       marginLeft: 20,
       batchExportCount: 10,
       batchSaveProjectFiles: false,
+      packageAsZip: false, // Default to individual files
       includeAdornments: false,
       includeGrid: false,
       includeArtboardGeometry: false,
