@@ -235,40 +235,40 @@ export default function ApiCallGenerator({
 
           {/* Current Settings Summary - Show actual export dialog settings */}
           <div className="border-t pt-4">
-            <h3 className="text-sm font-medium mb-3">Current Export Configuration</h3>
+            <h3 className="text-sm font-medium mb-3 text-black">Current Export Configuration</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-400">Batch Mode:</span>
-                <span className="ml-2 font-medium">{exportBatchModeEnabled ? 'Enabled' : 'Disabled'}</span>
+                <span className="ml-2 font-medium text-black">{exportBatchModeEnabled ? 'Enabled' : 'Disabled'}</span>
               </div>
               <div>
                 <span className="text-slate-400">Export Count:</span>
-                <span className="ml-2 font-medium">{exportBatchCount}</span>
+                <span className="ml-2 font-medium text-black">{exportBatchCount}</span>
               </div>
               <div>
                 <span className="text-slate-400">Save Project Files:</span>
-                <span className="ml-2 font-medium">{exportSaveProjectFiles ? 'Yes' : 'No'}</span>
+                <span className="ml-2 font-medium text-black">{exportSaveProjectFiles ? 'Yes' : 'No'}</span>
               </div>
               {payload.generationCount && (
                 <>
                   <div>
                     <span className="text-slate-400">Generation Mode:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.mode}</span>
+                    <span className="ml-2 font-medium text-black">{payload.generationCount.mode}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Min Count:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.min}</span>
+                    <span className="ml-2 font-medium text-black">{payload.generationCount.min}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Max Count:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.max}</span>
+                    <span className="ml-2 font-medium text-black">{payload.generationCount.max}</span>
                   </div>
                 </>
               )}
               {payload.modulationValue !== undefined && (
                 <div>
                   <span className="text-slate-400">Modulation Value:</span>
-                  <span className="ml-2 font-medium">{payload.modulationValue}</span>
+                  <span className="ml-2 font-medium text-black">{payload.modulationValue}</span>
                 </div>
               )}
             </div>
