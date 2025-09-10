@@ -141,7 +141,7 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
     <Dialog>
       <DialogTrigger asChild>
         <Button 
-          variant="outline" 
+          variant="secondary" 
           size="sm" 
           className={`gap-2 ${className}`}
         >
