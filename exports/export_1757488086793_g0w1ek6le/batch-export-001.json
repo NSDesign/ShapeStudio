@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-09-10T07:08:06.795Z",
+  "name": "batch-export-001",
+  "canvasSettings": {
+    "width": 1200,
+    "height": 800,
+    "zoom": 1,
+    "panX": 0,
+    "panY": 0,
+    "backgroundColor": "#1e293b",
+    "showGrid": false
+  },
+  "batchConfigSettings": {
+    "selectedPreset": "none",
+    "noiseEnabled": false,
+    "distributionLayoutEnabled": false,
+    "propertiesEnabled": true
+  },
+  "enabledShapeTypes": [
+    "rectangle",
+    "circle",
+    "polygon"
+  ],
+  "shapes": [],
+  "groups": []
+}
