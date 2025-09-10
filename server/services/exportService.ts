@@ -158,13 +158,25 @@ export class ExportService {
       generateShapesFunction
     );
     
-    return {
-      success: true,
-      exportId,
-      estimatedDuration: this.calculateEstimatedDuration(settings.batchExportCount),
-      totalImages: settings.batchExportCount,
-      downloadUrl: `/api/export/download/${exportId}`
-    };
+    // Return appropriate response based on packaging mode
+    if (settings.packageAsZip) {
+      return {
+        success: true,
+        exportId,
+        estimatedDuration: this.calculateEstimatedDuration(settings.batchExportCount),
+        totalImages: settings.batchExportCount,
+        downloadUrl: `/api/export/download/${exportId}`
+      };
+    } else {
+      return {
+        success: true,
+        exportId,
+        estimatedDuration: this.calculateEstimatedDuration(settings.batchExportCount),
+        totalImages: settings.batchExportCount,
+        imageFiles: [], // Will be populated when processing completes
+        projectFiles: []
+      };
+    }
   }
 
   private async processBatchExport(
@@ -181,14 +193,31 @@ export class ExportService {
     
     try {
       progress.status = 'processing';
-      progress.currentStep = 'Creating ZIP archive...';
+      progress.currentStep = settings.packageAsZip ? 'Creating ZIP archive...' : 'Creating individual files...';
       this.activeExports.set(exportId, progress);
       
-      const zip = new JSZip();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       
+      // Initialize tracking for individual files
+      const imageFiles: any[] = [];
+      const projectFiles: any[] = [];
+      
+      // Create export directory for this batch
+      const exportDir = path.join(process.cwd(), 'exports', exportId);
+      if (!fs.existsSync(exportDir)) {
+        fs.mkdirSync(exportDir, { recursive: true });
+      }
+      
+      // Initialize ZIP only if needed
+      let zip: JSZip | null = null;
+      if (settings.packageAsZip) {
+        zip = new JSZip();
+      }
+      
       // Calculate total steps for progress tracking
-      const totalSteps = (settings.batchExportCount * 2) + 2; // 2 steps per image + zip creation + save
+      const baseSteps = settings.batchExportCount * 2; // 2 steps per image
+      const finalSteps = settings.packageAsZip ? 2 : 1; // zip creation + save OR just completion
+      const totalSteps = baseSteps + finalSteps;
       let currentStep = 0;
       
       for (let i = 0; i < settings.batchExportCount; i++) {
@@ -230,13 +259,29 @@ export class ExportService {
         
         // For now, create a mock blob since we can't use browser Canvas API on server
         // In a real implementation, this would use a server-side canvas library like node-canvas
-        const mockImageData = Buffer.from('mock-image-data');
+        const mockImageData = Buffer.from(`mock-image-data-${i + 1}`);
         const blob = { arrayBuffer: async () => mockImageData.buffer } as Blob;
         
         // Generate filename
         const filename = this.generateBatchFilename(settings, i + 1);
         const imageData = await blob.arrayBuffer();
-        zip.file(`${filename}.${settings.format}`, imageData);
+        const imageFilename = `${filename}.${settings.format}`;
+        
+        if (settings.packageAsZip) {
+          // Add to ZIP
+          zip!.file(imageFilename, imageData);
+        } else {
+          // Save individual file
+          const imagePath = path.join(exportDir, imageFilename);
+          fs.writeFileSync(imagePath, Buffer.from(imageData));
+          
+          // Track individual file
+          imageFiles.push({
+            filename: imageFilename,
+            url: `/api/export/files/${exportId}/${imageFilename}`,
+            index: i + 1
+          });
+        }
         
         // Save project file if requested
         if (settings.batchSaveProjectFiles) {
@@ -251,31 +296,59 @@ export class ExportService {
             groups: currentGroups.map(group => this.serializeGroup(group))
           };
           
-          zip.file(`${filename}.json`, JSON.stringify(projectData, null, 2));
+          const projectJson = JSON.stringify(projectData, null, 2);
+          const projectFilename = `${filename}.json`;
+          
+          if (settings.packageAsZip) {
+            // Add to ZIP
+            zip!.file(projectFilename, projectJson);
+          } else {
+            // Save individual file
+            const projectPath = path.join(exportDir, projectFilename);
+            fs.writeFileSync(projectPath, projectJson);
+            
+            // Track individual file
+            projectFiles.push({
+              filename: projectFilename,
+              url: `/api/export/files/${exportId}/${projectFilename}`,
+              index: i + 1
+            });
+          }
         }
         
         progress.imagesCompleted = i + 1;
         currentStep++;
       }
       
-      // Create ZIP file
-      progress.currentStep = 'Creating ZIP file...';
-      progress.progress = Math.round((currentStep / totalSteps) * 100);
-      this.activeExports.set(exportId, progress);
-      
-      const zipBlob = await zip.generateAsync({ type: 'nodebuffer' });
-      const zipFilename = `batch-export-${timestamp}.zip`;
-      const zipPath = path.join(process.cwd(), 'exports', zipFilename);
-      
-      fs.writeFileSync(zipPath, zipBlob);
-      
-      // Complete export
-      progress.status = 'completed';
-      progress.progress = 100;
-      progress.currentStep = 'Export completed successfully';
-      progress.downloadPath = zipPath;
-      this.activeExports.set(exportId, progress);
-      this.exportResults.set(exportId, zipPath);
+      if (settings.packageAsZip) {
+        // Create ZIP file
+        progress.currentStep = 'Creating ZIP file...';
+        progress.progress = Math.round((currentStep / totalSteps) * 100);
+        this.activeExports.set(exportId, progress);
+        
+        const zipBlob = await zip!.generateAsync({ type: 'nodebuffer' });
+        const zipFilename = `batch-export-${timestamp}.zip`;
+        const zipPath = path.join(process.cwd(), 'exports', zipFilename);
+        
+        fs.writeFileSync(zipPath, zipBlob);
+        
+        // Complete export
+        progress.status = 'completed';
+        progress.progress = 100;
+        progress.currentStep = 'ZIP export completed successfully';
+        progress.downloadPath = zipPath;
+        this.activeExports.set(exportId, progress);
+        this.exportResults.set(exportId, zipPath);
+      } else {
+        // Complete individual files export
+        progress.status = 'completed';
+        progress.progress = 100;
+        progress.currentStep = 'Individual files export completed successfully';
+        this.activeExports.set(exportId, progress);
+        
+        // Store individual file information
+        this.individualFiles.set(exportId, { imageFiles, projectFiles });
+      }
       
     } catch (error) {
       progress.status = 'error';
@@ -342,6 +415,21 @@ export class ExportService {
 
   getExportFile(exportId: string): string | null {
     return this.exportResults.get(exportId) || null;
+  }
+
+  getIndividualFiles(exportId: string): { imageFiles: any[], projectFiles: any[] } | null {
+    return this.individualFiles.get(exportId) || null;
+  }
+
+  getIndividualFile(exportId: string, filename: string): string | null {
+    const exportDir = path.join(process.cwd(), 'exports', exportId);
+    const filePath = path.join(exportDir, filename);
+    
+    if (fs.existsSync(filePath)) {
+      return filePath;
+    }
+    
+    return null;
   }
 
   cleanupOldExports(): void {
