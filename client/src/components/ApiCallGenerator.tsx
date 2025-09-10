@@ -112,7 +112,7 @@ export default function ApiCallGenerator({
     if (generationConfigSettings.distributionLayoutEnabled) {
       enabled.distributionLayout = {
         enabled: true,
-        algorithm: generationConfigSettings.distributionLayout || 'grid'
+        algorithm: 'grid'
       };
     }
     
@@ -417,7 +417,7 @@ export default function ApiCallGenerator({
                   </div>
                   <div>
                     <span className="text-slate-400">Export:</span>
-                    <span className="ml-2 font-medium text-black">{payload.currentState.exportFormat.toUpperCase()}, Q{payload.currentState.exportQuality}, {payload.currentState.exportScale}x, {payload.currentState.exportScope}</span>
+                    <span className="ml-2 font-medium text-black">{payload.currentState.exportFormat?.toUpperCase() || 'PNG'}, Q{payload.currentState.exportQuality}, {payload.currentState.exportScale}x, {payload.currentState.exportScope}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Background:</span>
