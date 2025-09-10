@@ -209,6 +209,11 @@
     color: inherit !important;
   }
 
+  /* API Generator TabsTrigger specific styling */
+  .grid.grid-cols-3 [data-state="active"] {
+    color: hsl(0, 0%, 0%) !important;
+  }
+
   /* Transparent input increment/decrement buttons */
   .slider-input::-webkit-outer-spin-button,
   .slider-input::-webkit-inner-spin-button {

@@ -173,9 +173,9 @@ export default function ApiCallGenerator({
 
           <Tabs defaultValue="curl-linux" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="curl-linux" className="data-[state=active]:bg-white data-[state=active]:text-black">cURL (Linux/Mac)</TabsTrigger>
-              <TabsTrigger value="curl-windows" className="data-[state=active]:bg-white data-[state=active]:text-black">cURL (Windows)</TabsTrigger>
-              <TabsTrigger value="n8n" className="data-[state=active]:bg-white data-[state=active]:text-black">n8n HTTP Request</TabsTrigger>
+              <TabsTrigger value="curl-linux" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">cURL (Linux/Mac)</TabsTrigger>
+              <TabsTrigger value="curl-windows" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">cURL (Windows)</TabsTrigger>
+              <TabsTrigger value="n8n" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">n8n HTTP Request</TabsTrigger>
             </TabsList>
             
             <TabsContent value="curl-linux" className="space-y-3">
