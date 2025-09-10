@@ -1233,7 +1233,7 @@ export default function Sidebar({
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">Number of Generations per Export</Label>
                   <Select 
-                    value={generationConfigSettings.generationCountMode || 'range'} 
+                    value={generationConfigSettings?.generationCountMode || 'range'} 
                     onValueChange={(value) => {
                       console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
                       onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
@@ -1250,7 +1250,7 @@ export default function Sidebar({
                   </Select>
                 </div>
                 
-                {generationConfigSettings.generationCountMode === 'range' && (
+                {generationConfigSettings?.generationCountMode === 'range' && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
@@ -1268,11 +1268,11 @@ export default function Sidebar({
                   </div>
                 )}
                 
-                {generationConfigSettings.generationCountMode === 'fixed' && (
+                {generationConfigSettings?.generationCountMode === 'fixed' && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings.generationCountDefine}</Label>
+                    <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
                     <Slider
-                      value={[generationConfigSettings.generationCountDefine]}
+                      value={[generationConfigSettings?.generationCountDefine || 5]}
                       onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
                       min={1}
                       max={20}
@@ -1282,20 +1282,20 @@ export default function Sidebar({
                   </div>
                 )}
                 
-                {generationConfigSettings.generationCountMode === 'incremental' && (
+                {generationConfigSettings?.generationCountMode === 'incremental' && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings.generationCountStartValue}</Label>
+                    <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
                     <Slider
-                      value={[generationConfigSettings.generationCountStartValue]}
+                      value={[generationConfigSettings?.generationCountStartValue || 1]}
                       onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
                       min={1}
                       max={15}
                       step={1}
                       className="[&_[role=slider]]:bg-blue-600"
                     />
-                    <Label className="text-xs text-slate-300">Increment: {generationConfigSettings.generationCountIncrement}</Label>
+                    <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
                     <Slider
-                      value={[generationConfigSettings.generationCountIncrement]}
+                      value={[generationConfigSettings?.generationCountIncrement || 1]}
                       onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
                       min={1}
                       max={5}
@@ -1304,7 +1304,7 @@ export default function Sidebar({
                     />
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        checked={generationConfigSettings.generationCountResetPerBatch}
+                        checked={generationConfigSettings?.generationCountResetPerBatch || false}
                         onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
@@ -1312,17 +1312,17 @@ export default function Sidebar({
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        checked={generationConfigSettings.generationCountModulationEnabled}
+                        checked={generationConfigSettings?.generationCountModulationEnabled || false}
                         onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
                         className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
                       <Label className="text-xs text-slate-300">Enable Modulation</Label>
                     </div>
-                    {generationConfigSettings.generationCountModulationEnabled && (
+                    {generationConfigSettings?.generationCountModulationEnabled && (
                       <>
-                        <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings.generationCountModulationValue}</Label>
+                        <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
                         <Slider
-                          value={[generationConfigSettings.generationCountModulationValue]}
+                          value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
                           onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
                           min={1}
                           max={10}
