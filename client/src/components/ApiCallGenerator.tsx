@@ -254,7 +254,7 @@ export default function ApiCallGenerator({
           
           <div className="text-sm text-slate-400">
             {selectedApiVersion === 'live' 
-              ? 'Uses your current UI settings - no complex parameters needed!' 
+              ? 'Executes with ALL your current app settings - export format, batch size, save options, generation config, everything!' 
               : 'Based on your current generation count settings. Ready to use with Shape Studio API.'}
           </div>
 
@@ -362,7 +362,7 @@ export default function ApiCallGenerator({
                 <>
                   <div>
                     <span className="text-slate-400">API Mode:</span>
-                    <span className="ml-2 font-medium text-black">Live State (Current UI)</span>
+                    <span className="ml-2 font-medium text-black">Live State - All Current Settings</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Background Color:</span>
@@ -371,6 +371,10 @@ export default function ApiCallGenerator({
                   <div>
                     <span className="text-slate-400">Shape Count Range:</span>
                     <span className="ml-2 font-medium text-black">{payload.currentState.exportShapeCountRange[0]} - {payload.currentState.exportShapeCountRange[1]}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Using Current:</span>
+                    <span className="ml-2 font-medium text-black">Export format, batch settings, save options, generation config</span>
                   </div>
                 </>
               )}
