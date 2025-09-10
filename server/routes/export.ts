@@ -26,6 +26,7 @@ const BatchExportSchema = z.object({
   marginLeft: z.number().min(0).optional().default(20),
   batchExportCount: z.number().min(1).max(100).default(10),
   batchSaveProjectFiles: z.boolean().optional().default(false),
+  packageAsZip: z.boolean().optional().default(false),
   includeAdornments: z.boolean().optional().default(false),
   includeGrid: z.boolean().optional().default(false),
   includeArtboardGeometry: z.boolean().optional().default(false),
@@ -152,6 +153,21 @@ export function registerExportRoutes(app: Express): void {
         });
       }
       
+      // If export is completed and was using individual files, include file arrays
+      if (status.status === 'completed') {
+        const individualFiles = exportService.getIndividualFiles(exportId);
+        if (individualFiles) {
+          return res.json({
+            success: true,
+            status: {
+              ...status,
+              imageFiles: individualFiles.imageFiles,
+              projectFiles: individualFiles.projectFiles
+            }
+          });
+        }
+      }
+      
       res.json({ success: true, status });
       
     } catch (error) {
@@ -163,7 +179,7 @@ export function registerExportRoutes(app: Express): void {
     }
   });
 
-  // Download completed export
+  // Download completed export (ZIP only)
   app.get('/api/export/download/:exportId', (req, res) => {
     try {
       const { exportId } = req.params;
@@ -194,6 +210,41 @@ export function registerExportRoutes(app: Express): void {
       res.status(500).json({ 
         success: false, 
         error: 'Failed to download export',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Serve individual export files
+  app.get('/api/export/files/:exportId/:filename', (req, res) => {
+    try {
+      const { exportId, filename } = req.params;
+      const filePath = exportService.getIndividualFile(exportId, filename);
+      
+      if (!filePath) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'File not found' 
+        });
+      }
+      
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error('Download error:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ 
+              success: false, 
+              error: 'Failed to download file',
+              message: err.message
+            });
+          }
+        }
+      });
+      
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to serve file',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
