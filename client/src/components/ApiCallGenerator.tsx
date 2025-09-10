@@ -46,6 +46,22 @@ interface ApiV2Payload {
   modulationValue?: number;
 }
 
+interface LiveStatePayload {
+  apiMode: 'live';
+  format?: string;
+  quality?: number;
+  currentState: {
+    exportBatchModeEnabled: boolean;
+    exportBatchCount: number;
+    exportSaveProjectFiles: boolean;
+    exportShapeCountRange: [number, number];
+    artboardBackgroundColor: string;
+    generationConfigSettings: BatchConfigSettings;
+  };
+}
+
+type ApiPayload = ApiV2Payload | LiveStatePayload;
+
 export default function ApiCallGenerator({ 
   generationConfigSettings, 
   exportBatchModeEnabled,
@@ -57,7 +73,7 @@ export default function ApiCallGenerator({
   className = "" 
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
-  const [selectedApiVersion, setSelectedApiVersion] = useState<'v1' | 'v2' | 'v3' | 'v4'>('v2');
+  const [selectedApiVersion, setSelectedApiVersion] = useState<'live' | 'v1' | 'v2' | 'v3' | 'v4'>('live');
 
   // Get current artboard background color
   const getCurrentArtboardBackground = (): string => {
@@ -65,8 +81,25 @@ export default function ApiCallGenerator({
     return currentArtboard?.backgroundColor || '#ffffff';
   };
 
-  // Convert current settings to API payload
-  const generateApiPayload = (): ApiV2Payload => {
+  // Generate Live State API payload
+  const generateLiveStatePayload = () => {
+    return {
+      apiMode: 'live',
+      format: 'png',
+      quality: 92,
+      currentState: {
+        exportBatchModeEnabled: exportBatchModeEnabled,
+        exportBatchCount: exportBatchCount,
+        exportSaveProjectFiles: exportSaveProjectFiles,
+        exportShapeCountRange: exportShapeCountRange,
+        artboardBackgroundColor: getCurrentArtboardBackground(),
+        generationConfigSettings: generationConfigSettings
+      }
+    };
+  };
+
+  // Convert current settings to API payload (Detailed APIs)
+  const generateDetailedApiPayload = (): ApiV2Payload => {
     const payload: ApiV2Payload = {
       // V1 parameters from actual export dialog state
       format: 'png',
@@ -104,11 +137,25 @@ export default function ApiCallGenerator({
     return payload;
   };
 
+  // Choose payload based on selected API version
+  const generateApiPayload = (): ApiPayload => {
+    if (selectedApiVersion === 'live') {
+      return generateLiveStatePayload();
+    } else {
+      return generateDetailedApiPayload();
+    }
+  };
+
   const generateCurlCommand = (platform: 'linux' | 'windows'): string => {
     const payload = generateApiPayload();
     const jsonPayload = JSON.stringify(payload, null, 2);
     const baseUrl = 'https://shape-studio-nsdesign.replit.app';
     const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
+    
+    // Choose endpoint based on API version
+    const endpoint = selectedApiVersion === 'live' 
+      ? '/api/live/generate' 
+      : `/api/export/batch/${selectedApiVersion}`;
     
     if (platform === 'windows') {
       // Windows cmd/PowerShell format
@@ -117,25 +164,29 @@ export default function ApiCallGenerator({
   -H "Content-Type: application/json" ^
   -H "x-api-key: ${apiKey}" ^
   -d "${escapedJson}" ^
-  ${baseUrl}/api/export/batch/${selectedApiVersion}`;
+  ${baseUrl}${endpoint}`;
     } else {
       // Linux/Mac bash format
       return `curl -X POST \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${apiKey}" \\
   -d '${jsonPayload}' \\
-  ${baseUrl}/api/export/batch/${selectedApiVersion}`;
+  ${baseUrl}${endpoint}`;
     }
   };
 
   const generateN8nConfig = (): object => {
     const payload = generateApiPayload();
     const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
+    const endpoint = selectedApiVersion === 'live' 
+      ? '/api/live/generate' 
+      : `/api/export/batch/${selectedApiVersion}`;
+    
     return {
       "node": "HttpRequest",
       "parameters": {
         "method": "POST",
-        "url": `https://shape-studio-nsdesign.replit.app/api/export/batch/${selectedApiVersion}`,
+        "url": `https://shape-studio-nsdesign.replit.app${endpoint}`,
         "headers": {
           "Content-Type": "application/json",
           "x-api-key": apiKey
@@ -187,11 +238,12 @@ export default function ApiCallGenerator({
           {/* Version Selector */}
           <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
             <label className="text-sm font-medium">API Version:</label>
-            <Select value={selectedApiVersion} onValueChange={(value: 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
+            <Select value={selectedApiVersion} onValueChange={(value: 'live' | 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Select version" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="live">Live State (Current UI)</SelectItem>
                 <SelectItem value="v1">V1 (Basic)</SelectItem>
                 <SelectItem value="v2">V2 (Advanced)</SelectItem>
                 <SelectItem value="v3">V3 (Future)</SelectItem>
@@ -201,7 +253,9 @@ export default function ApiCallGenerator({
           </div>
           
           <div className="text-sm text-slate-400">
-            Based on your current generation count settings. Ready to use with Shape Studio API.
+            {selectedApiVersion === 'live' 
+              ? 'Uses your current UI settings - no complex parameters needed!' 
+              : 'Based on your current generation count settings. Ready to use with Shape Studio API.'}
           </div>
 
           <Tabs defaultValue="curl-linux" className="w-full">
@@ -282,7 +336,7 @@ export default function ApiCallGenerator({
                 <span className="text-slate-400">Save Project Files:</span>
                 <span className="ml-2 font-medium text-black">{exportSaveProjectFiles ? 'Yes' : 'No'}</span>
               </div>
-              {payload.generationCount && (
+              {selectedApiVersion !== 'live' && 'generationCount' in payload && payload.generationCount && (
                 <>
                   <div>
                     <span className="text-slate-400">Generation Mode:</span>
@@ -298,11 +352,27 @@ export default function ApiCallGenerator({
                   </div>
                 </>
               )}
-              {payload.modulationValue !== undefined && (
+              {selectedApiVersion !== 'live' && 'modulationValue' in payload && payload.modulationValue !== undefined && (
                 <div>
                   <span className="text-slate-400">Modulation Value:</span>
                   <span className="ml-2 font-medium text-black">{payload.modulationValue}</span>
                 </div>
+              )}
+              {selectedApiVersion === 'live' && 'currentState' in payload && (
+                <>
+                  <div>
+                    <span className="text-slate-400">API Mode:</span>
+                    <span className="ml-2 font-medium text-black">Live State (Current UI)</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Background Color:</span>
+                    <span className="ml-2 font-medium text-black">{payload.currentState.artboardBackgroundColor}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Shape Count Range:</span>
+                    <span className="ml-2 font-medium text-black">{payload.currentState.exportShapeCountRange[0]} - {payload.currentState.exportShapeCountRange[1]}</span>
+                  </div>
+                </>
               )}
             </div>
           </div>
