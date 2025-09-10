@@ -63,28 +63,27 @@ const SaveProjectSchema = z.object({
   includeTimestamp: z.boolean().optional().default(true)
 });
 
-// Live State API Schema - Minimal parameters, uses current UI state
+// Live State API Schema - Streamlined, uses current UI state
 const LiveStateApiSchema = z.object({
   // Mode differentiation
   apiMode: z.literal('live').default('live'),
   
-  // Minimal overrides (optional)
-  format: z.enum(['png', 'jpeg', 'webp', 'avif', 'svg', 'bmp']).optional(),
-  quality: z.number().min(1).max(100).optional(),
-  
   // Current UI state (passed from frontend)
   currentState: z.object({
+    // Export settings from current UI
+    exportFormat: z.string(),
+    exportQuality: z.number().min(1).max(100),
+    exportScale: z.number().min(1).max(4),
+    exportScope: z.enum(['all', 'selected', 'artboard']),
     // Batch settings from UI
     exportBatchModeEnabled: z.boolean(),
     exportBatchCount: z.number().min(1).max(100),
     exportSaveProjectFiles: z.boolean(),
     exportShapeCountRange: z.tuple([z.number(), z.number()]),
-    
     // Artboard settings
     artboardBackgroundColor: z.string(),
-    
-    // Generation config settings
-    generationConfigSettings: z.any(), // BatchConfigSettings type
+    // Only enabled generation config settings
+    enabledGenerationSettings: z.record(z.any()),
   }).optional()
 });
 
@@ -421,9 +420,10 @@ export function registerExportRoutes(app: Express): void {
       // Build complete export operation using ALL current UI settings
       const allSettings = {
         // Export settings from UI
-        format: validatedData.format || 'png',
-        quality: validatedData.quality || 92,
-        scale: 1,
+        format: currentState.exportFormat,
+        quality: currentState.exportQuality / 100, // Convert percentage to decimal
+        scale: currentState.exportScale,
+        scope: currentState.exportScope,
         includeBackground: true,
         backgroundColor: currentState.artboardBackgroundColor || '#ffffff',
         
@@ -441,9 +441,9 @@ export function registerExportRoutes(app: Express): void {
           }
         }),
         
-        // Advanced generation config from UI
-        ...(currentState.generationConfigSettings?.generationCountModulationEnabled && {
-          modulationValue: currentState.generationConfigSettings.generationCountModulationValue
+        // Advanced generation config from enabled sections only
+        ...(currentState.enabledGenerationSettings.modulation && {
+          modulationValue: currentState.enabledGenerationSettings.modulation.value
         })
       };
 
@@ -457,11 +457,14 @@ export function registerExportRoutes(app: Express): void {
         apiMode: 'live',
         appliedSettings: {
           format: allSettings.format,
+          quality: allSettings.quality,
+          scale: allSettings.scale,
+          scope: allSettings.scope,
           batchCount: allSettings.batchExportCount,
           backgroundColor: allSettings.backgroundColor,
           saveProjectFiles: allSettings.batchSaveProjectFiles,
           shapeCountRange: currentState.exportShapeCountRange,
-          modulation: allSettings.modulationValue || 'disabled'
+          enabledSections: Object.keys(currentState.enabledGenerationSettings)
         }
       });
       

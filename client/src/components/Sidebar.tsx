@@ -1430,6 +1430,10 @@ export default function Sidebar({
             exportSaveProjectFiles={exportSaveProjectFiles}
             exportBatchCount={exportBatchCount}
             exportShapeCountRange={exportShapeCountRange}
+            exportQuality={92}
+            exportScale={1}
+            exportFormat="png"
+            exportScope="all"
             artboards={artboards}
             activeArtboard={activeArtboard}
             className="w-full text-xs"

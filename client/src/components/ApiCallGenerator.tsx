@@ -104,17 +104,15 @@ export default function ApiCallGenerator({
     if (generationConfigSettings.noiseEnabled) {
       enabled.noise = {
         enabled: true,
-        amplitude: generationConfigSettings.noiseAmplitude,
-        octaves: generationConfigSettings.noiseOctaves,
-        frequency: generationConfigSettings.noiseFrequency
+        amplitude: generationConfigSettings.noiseAmplitude || 0.5,
+        octaves: generationConfigSettings.noiseOctaves || 4
       };
     }
     
     if (generationConfigSettings.distributionLayoutEnabled) {
       enabled.distributionLayout = {
         enabled: true,
-        algorithm: generationConfigSettings.distributionAlgorithm,
-        spacing: generationConfigSettings.gridSpacing
+        algorithm: generationConfigSettings.distributionLayout || 'grid'
       };
     }
     
