@@ -3317,7 +3317,7 @@ export default function Sidebar({
 
             <ApiCallGenerator 
               batchConfigSettings={batchConfigSettings}
-              className="w-full text-xs"
+              className="text-xs"
             />
           </div>
         </div>

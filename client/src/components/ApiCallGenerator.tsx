@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Code2 } from 'lucide-react';
 import { BatchConfigSettings } from './BatchConfigDialog';
@@ -138,141 +137,129 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
   const n8nConfig = generateN8nConfig();
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={`gap-2 ${className}`}
-        >
-          <Code2 className="h-4 w-4" />
-          Generate API Call
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Generated API Calls (v2)</DialogTitle>
-        </DialogHeader>
+    <div className={`space-y-4 ${className}`}>
+      {/* Header */}
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+        <Code2 className="h-4 w-4" />
+        Generated API Calls (v2)
+      </div>
+      
+      <div className="text-xs text-slate-400">
+        Based on your current batch configuration settings. Update the URL after publishing your project.
+      </div>
+
+      <Tabs defaultValue="curl-linux" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 h-8">
+          <TabsTrigger value="curl-linux" className="text-xs">cURL (Linux/Mac)</TabsTrigger>
+          <TabsTrigger value="curl-windows" className="text-xs">cURL (Windows)</TabsTrigger>
+          <TabsTrigger value="n8n" className="text-xs">n8n HTTP Request</TabsTrigger>
+        </TabsList>
         
-        <div className="space-y-4">
-          <div className="text-sm text-slate-400">
-            Based on your current batch configuration settings. Update the URL after publishing your project.
+        <TabsContent value="curl-linux" className="space-y-2 mt-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-medium">Linux/Mac Terminal</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(curlLinux, 'curl-linux')}
+              className="gap-1 h-6 px-2 text-xs"
+            >
+              <Copy className="h-3 w-3" />
+              {copied === 'curl-linux' ? 'Copied!' : 'Copy'}
+            </Button>
           </div>
+          <pre className="bg-slate-900 p-3 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
+            {curlLinux}
+          </pre>
+        </TabsContent>
+        
+        <TabsContent value="curl-windows" className="space-y-2 mt-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-medium">Windows Command Prompt</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(curlWindows, 'curl-windows')}
+              className="gap-1 h-6 px-2 text-xs"
+            >
+              <Copy className="h-3 w-3" />
+              {copied === 'curl-windows' ? 'Copied!' : 'Copy'}
+            </Button>
+          </div>
+          <pre className="bg-slate-900 p-3 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap max-h-32 overflow-y-auto">
+            {curlWindows}
+          </pre>
+        </TabsContent>
+        
+        <TabsContent value="n8n" className="space-y-2 mt-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-medium">n8n HTTP Request Node Configuration</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(JSON.stringify(n8nConfig, null, 2), 'n8n')}
+              className="gap-1 h-6 px-2 text-xs"
+            >
+              <Copy className="h-3 w-3" />
+              {copied === 'n8n' ? 'Copied!' : 'Copy'}
+            </Button>
+          </div>
+          <pre className="bg-slate-900 p-3 rounded-lg text-xs text-slate-300 overflow-x-auto max-h-32 overflow-y-auto">
+            {JSON.stringify(n8nConfig, null, 2)}
+          </pre>
+        </TabsContent>
+      </Tabs>
 
-          <Tabs defaultValue="curl-linux" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="curl-linux">cURL (Linux/Mac)</TabsTrigger>
-              <TabsTrigger value="curl-windows">cURL (Windows)</TabsTrigger>
-              <TabsTrigger value="n8n">n8n HTTP Request</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="curl-linux" className="space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Linux/Mac Terminal</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(curlLinux, 'curl-linux')}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  {copied === 'curl-linux' ? 'Copied!' : 'Copy'}
-                </Button>
-              </div>
-              <pre className="bg-slate-900 p-4 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                {curlLinux}
-              </pre>
-            </TabsContent>
-            
-            <TabsContent value="curl-windows" className="space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Windows Command Prompt</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(curlWindows, 'curl-windows')}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  {copied === 'curl-windows' ? 'Copied!' : 'Copy'}
-                </Button>
-              </div>
-              <pre className="bg-slate-900 p-4 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                {curlWindows}
-              </pre>
-            </TabsContent>
-            
-            <TabsContent value="n8n" className="space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">n8n HTTP Request Node Configuration</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(JSON.stringify(n8nConfig, null, 2), 'n8n')}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  {copied === 'n8n' ? 'Copied!' : 'Copy'}
-                </Button>
-              </div>
-              <pre className="bg-slate-900 p-4 rounded-lg text-xs text-slate-300 overflow-x-auto">
-                {JSON.stringify(n8nConfig, null, 2)}
-              </pre>
-            </TabsContent>
-          </Tabs>
-
-          {/* Current Settings Summary */}
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-medium mb-3">Current Configuration Summary</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-slate-400">Generation Count Mode:</span>
-                <span className="ml-2 font-medium">{payload.generationCount?.mode}</span>
-              </div>
-              {payload.generationCount?.mode === 'fixed' && (
-                <div>
-                  <span className="text-slate-400">Fixed Count:</span>
-                  <span className="ml-2 font-medium">{payload.generationCount.fixed}</span>
-                </div>
-              )}
-              {payload.generationCount?.mode === 'range' && (
-                <>
-                  <div>
-                    <span className="text-slate-400">Min Count:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.min}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Max Count:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.max}</span>
-                  </div>
-                </>
-              )}
-              {payload.generationCount?.mode === 'incremental' && (
-                <>
-                  <div>
-                    <span className="text-slate-400">Start Value:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.start}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Increment:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.increment}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Reset Per Batch:</span>
-                    <span className="ml-2 font-medium">{payload.generationCount.resetPerBatch ? 'Yes' : 'No'}</span>
-                  </div>
-                </>
-              )}
-              {payload.modulationValue !== undefined && (
-                <div>
-                  <span className="text-slate-400">Modulation Value:</span>
-                  <span className="ml-2 font-medium">{payload.modulationValue}</span>
-                </div>
-              )}
+      {/* Current Settings Summary */}
+      <div className="border-t border-slate-600 pt-3">
+        <h3 className="text-xs font-medium mb-2 text-slate-300">Current Configuration Summary</h3>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-slate-400">Generation Count Mode:</span>
+            <span className="ml-1 font-medium">{payload.generationCount?.mode}</span>
+          </div>
+          {payload.generationCount?.mode === 'fixed' && (
+            <div>
+              <span className="text-slate-400">Fixed Count:</span>
+              <span className="ml-1 font-medium">{payload.generationCount.fixed}</span>
             </div>
-          </div>
+          )}
+          {payload.generationCount?.mode === 'range' && (
+            <>
+              <div>
+                <span className="text-slate-400">Min Count:</span>
+                <span className="ml-1 font-medium">{payload.generationCount.min}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Max Count:</span>
+                <span className="ml-1 font-medium">{payload.generationCount.max}</span>
+              </div>
+            </>
+          )}
+          {payload.generationCount?.mode === 'incremental' && (
+            <>
+              <div>
+                <span className="text-slate-400">Start Value:</span>
+                <span className="ml-1 font-medium">{payload.generationCount.start}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Increment:</span>
+                <span className="ml-1 font-medium">{payload.generationCount.increment}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Reset Per Batch:</span>
+                <span className="ml-1 font-medium">{payload.generationCount.resetPerBatch ? 'Yes' : 'No'}</span>
+              </div>
+            </>
+          )}
+          {payload.modulationValue !== undefined && (
+            <div>
+              <span className="text-slate-400">Modulation Value:</span>
+              <span className="ml-1 font-medium">{payload.modulationValue}</span>
+            </div>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
