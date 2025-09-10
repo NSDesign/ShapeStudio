@@ -90,19 +90,22 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
   const generateCurlCommand = (platform: 'linux' | 'windows'): string => {
     const payload = generateApiPayload();
     const jsonPayload = JSON.stringify(payload, null, 2);
-    const baseUrl = 'https://your-published-app.replit.app'; // Will be updated when published
+    const baseUrl = 'https://shape-studio-nsdesign.replit.app';
+    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     
     if (platform === 'windows') {
       // Windows cmd/PowerShell format
       const escapedJson = jsonPayload.replace(/"/g, '\\"');
       return `curl -X POST ^
   -H "Content-Type: application/json" ^
+  -H "x-api-key: ${apiKey}" ^
   -d "${escapedJson}" ^
   ${baseUrl}/api/export/batch`;
     } else {
       // Linux/Mac bash format
       return `curl -X POST \\
   -H "Content-Type: application/json" \\
+  -H "x-api-key: ${apiKey}" \\
   -d '${jsonPayload}' \\
   ${baseUrl}/api/export/batch`;
     }
@@ -110,13 +113,15 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
 
   const generateN8nConfig = (): object => {
     const payload = generateApiPayload();
+    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     return {
       "node": "HttpRequest",
       "parameters": {
         "method": "POST",
-        "url": "https://your-published-app.replit.app/api/export/batch",
+        "url": "https://shape-studio-nsdesign.replit.app/api/export/batch",
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "x-api-key": apiKey
         },
         "body": {
           "bodyType": "json",
@@ -163,7 +168,7 @@ export default function ApiCallGenerator({ batchConfigSettings, className = "" }
         
         <div className="space-y-4">
           <div className="text-sm text-slate-400">
-            Based on your current generation count settings. Update the URL after publishing your project.
+            Based on your current generation count settings. Ready to use with Shape Studio API.
           </div>
 
           <Tabs defaultValue="curl-linux" className="w-full">
