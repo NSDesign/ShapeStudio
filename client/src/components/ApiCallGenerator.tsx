@@ -6,12 +6,12 @@ import { Copy, Code2 } from 'lucide-react';
 import { BatchConfigSettings } from './BatchConfigDialog';
 
 interface ApiCallGeneratorProps {
-  batchConfigSettings: BatchConfigSettings;
+  generationConfigSettings: BatchConfigSettings;
   // Export dialog state
-  batchModeEnabled: boolean;
-  batchSaveProjectFiles: boolean;
-  batchExportCount: number;
-  batchShapeCount: [number, number]; // [min, max] range
+  exportBatchModeEnabled: boolean;
+  exportSaveProjectFiles: boolean;
+  exportBatchCount: number;
+  exportShapeCountRange: [number, number]; // [min, max] range
   className?: string;
 }
 
@@ -42,11 +42,11 @@ interface ApiV2Payload {
 }
 
 export default function ApiCallGenerator({ 
-  batchConfigSettings, 
-  batchModeEnabled,
-  batchSaveProjectFiles,
-  batchExportCount,
-  batchShapeCount,
+  generationConfigSettings, 
+  exportBatchModeEnabled,
+  exportSaveProjectFiles,
+  exportBatchCount,
+  exportShapeCountRange,
   className = "" 
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
@@ -60,14 +60,14 @@ export default function ApiCallGenerator({
       scale: 1,
       includeBackground: true,
       backgroundColor: '#1e293b',
-      batchExportCount: batchExportCount,
-      batchSaveProjectFiles: batchSaveProjectFiles,
+      batchExportCount: exportBatchCount,
+      batchSaveProjectFiles: exportSaveProjectFiles,
       packageAsZip: false,
     };
 
     // V2 parameters: Check if batch mode is enabled and shape count is configured as range
-    if (batchModeEnabled && batchShapeCount) {
-      const [min, max] = batchShapeCount;
+    if (exportBatchModeEnabled && exportShapeCountRange) {
+      const [min, max] = exportShapeCountRange;
       
       // Add generation count configuration based on the export dialog range
       const generationCount: GenerationCountConfig = {
@@ -80,8 +80,8 @@ export default function ApiCallGenerator({
     }
 
     // Add modulation if enabled from batch config dialog
-    if (batchConfigSettings.generationCountModulationEnabled) {
-      payload.modulationValue = batchConfigSettings.generationCountModulationValue;
+    if (generationConfigSettings.generationCountModulationEnabled) {
+      payload.modulationValue = generationConfigSettings.generationCountModulationValue;
     }
 
     return payload;
@@ -239,15 +239,15 @@ export default function ApiCallGenerator({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-400">Batch Mode:</span>
-                <span className="ml-2 font-medium">{batchModeEnabled ? 'Enabled' : 'Disabled'}</span>
+                <span className="ml-2 font-medium">{exportBatchModeEnabled ? 'Enabled' : 'Disabled'}</span>
               </div>
               <div>
                 <span className="text-slate-400">Export Count:</span>
-                <span className="ml-2 font-medium">{batchExportCount}</span>
+                <span className="ml-2 font-medium">{exportBatchCount}</span>
               </div>
               <div>
                 <span className="text-slate-400">Save Project Files:</span>
-                <span className="ml-2 font-medium">{batchSaveProjectFiles ? 'Yes' : 'No'}</span>
+                <span className="ml-2 font-medium">{exportSaveProjectFiles ? 'Yes' : 'No'}</span>
               </div>
               {payload.generationCount && (
                 <>

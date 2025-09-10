@@ -441,6 +441,12 @@ export default function Sidebar({
     );
   }
 
+  // Export state variables lifted to main component level  
+  const [exportShapeCountRange, setExportShapeCountRange] = useState([5, 15]);
+  const [exportBatchCount, setExportBatchCount] = useState(10);
+  const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
+  const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
+
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
     const [exportQuality, setExportQuality] = useState(90);
@@ -448,16 +454,12 @@ export default function Sidebar({
     const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
-    // Batch export state
-    const [exportShapeCountRange, setExportShapeCountRange] = useState([5, 15]);
-    const [exportBatchCount, setExportBatchCount] = useState(10);
+    // Local export state (not needed by API generator)
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchTotalSteps, setBatchTotalSteps] = useState(0);
     const [batchStatus, setBatchStatus] = useState('');
-    const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
-    const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
