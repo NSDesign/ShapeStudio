@@ -63,6 +63,31 @@ const SaveProjectSchema = z.object({
   includeTimestamp: z.boolean().optional().default(true)
 });
 
+// Live State API Schema - Minimal parameters, uses current UI state
+const LiveStateApiSchema = z.object({
+  // Mode differentiation
+  apiMode: z.literal('live').default('live'),
+  
+  // Minimal overrides (optional)
+  format: z.enum(['png', 'jpeg', 'webp', 'avif', 'svg', 'bmp']).optional(),
+  quality: z.number().min(1).max(100).optional(),
+  
+  // Current UI state (passed from frontend)
+  currentState: z.object({
+    // Batch settings from UI
+    exportBatchModeEnabled: z.boolean(),
+    exportBatchCount: z.number().min(1).max(100),
+    exportSaveProjectFiles: z.boolean(),
+    exportShapeCountRange: z.tuple([z.number(), z.number()]),
+    
+    // Artboard settings
+    artboardBackgroundColor: z.string(),
+    
+    // Generation config settings
+    generationConfigSettings: z.any(), // BatchConfigSettings type
+  }).optional()
+});
+
 export function registerExportRoutes(app: Express): void {
   // Get available export formats
   app.get('/api/export/formats', (req, res) => {
@@ -354,6 +379,139 @@ export function registerExportRoutes(app: Express): void {
       res.status(500).json({ 
         success: false, 
         error: 'Failed to download project',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Live State API Endpoints
+  
+  // Live State Generate - Generate shapes using current UI state
+  app.post('/api/live/generate', async (req, res) => {
+    try {
+      // Validate API key
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey || apiKey !== '3211d3f332fsss4t4tbebw5r653765h6brb4') {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Invalid or missing API key' 
+        });
+      }
+
+      const validatedData = LiveStateApiSchema.parse({
+        ...req.body,
+        apiMode: 'live'
+      });
+
+      // Convert current UI state to batch export settings
+      const currentState = validatedData.currentState;
+      if (!currentState) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Current UI state is required for Live State API' 
+        });
+      }
+
+      // Force batch mode for Live State API
+      if (!currentState.exportBatchModeEnabled) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Live State API requires batch mode to be enabled. Set exportBatchModeEnabled: true or use generationCount mode: fixed with count: 1 for single generation.' 
+        });
+      }
+
+      // Build batch export settings from current UI state
+      const batchSettings: BatchExportSettings = {
+        format: validatedData.format || 'png',
+        quality: validatedData.quality || 92,
+        scale: 1,
+        includeBackground: true,
+        backgroundColor: currentState.artboardBackgroundColor || '#ffffff',
+        batchExportCount: currentState.exportBatchCount,
+        batchSaveProjectFiles: currentState.exportSaveProjectFiles,
+        packageAsZip: currentState.exportBatchCount > 1,
+        
+        // Add generation count if configured
+        ...(currentState.exportShapeCountRange && {
+          generationCount: {
+            mode: 'range' as const,
+            min: currentState.exportShapeCountRange[0],
+            max: currentState.exportShapeCountRange[1]
+          }
+        }),
+        
+        // Add modulation if enabled
+        ...(currentState.generationConfigSettings?.generationCountModulationEnabled && {
+          modulationValue: currentState.generationConfigSettings.generationCountModulationValue
+        })
+      };
+
+      // Start the export using existing batch export service
+      const exportId = await exportService.startBatchExport(batchSettings);
+      
+      res.json({ 
+        success: true, 
+        exportId: exportId,
+        message: 'Live State API export started successfully',
+        apiMode: 'live',
+        settings: {
+          batchCount: currentState.exportBatchCount,
+          backgroundColor: currentState.artboardBackgroundColor,
+          saveProjectFiles: currentState.exportSaveProjectFiles
+        }
+      });
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          success: false, 
+          error: 'Invalid request data for Live State API',
+          details: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to start Live State API export',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  });
+
+  // Live State Export - Quick export using current UI state
+  app.post('/api/live/export', async (req, res) => {
+    try {
+      // Validate API key
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey || apiKey !== '3211d3f332fsss4t4tbebw5r653765h6brb4') {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Invalid or missing API key' 
+        });
+      }
+
+      // For now, redirect to generate endpoint since they're the same operation
+      // In the future, this could be a separate lighter-weight operation
+      const generateResponse = await fetch(`${req.protocol}://${req.get('host')}/api/live/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey as string
+        },
+        body: JSON.stringify(req.body)
+      });
+
+      const result = await generateResponse.json();
+      res.status(generateResponse.status).json({
+        ...result,
+        apiMode: 'live',
+        endpoint: 'export'
+      });
+      
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to process Live State API export',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
