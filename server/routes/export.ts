@@ -9,7 +9,26 @@ const exportService = new ExportService();
 const projectService = new ProjectService();
 
 // Validation schemas
+// V2 Generation Count Schema
+const GenerationCountSchema = z.object({
+  mode: z.enum(['fixed', 'range', 'incremental']),
+  fixed: z.number().min(1).optional(),
+  min: z.number().min(1).optional(),
+  max: z.number().min(1).optional(),
+  start: z.number().min(1).optional(),
+  increment: z.number().min(1).optional(),
+  resetPerBatch: z.boolean().optional()
+}).refine((data) => {
+  if (data.mode === 'fixed') return typeof data.fixed === 'number';
+  if (data.mode === 'range') return typeof data.min === 'number' && typeof data.max === 'number' && data.min <= data.max;
+  if (data.mode === 'incremental') return typeof data.start === 'number' && typeof data.increment === 'number';
+  return false;
+}, {
+  message: "Invalid generation count configuration for the specified mode"
+});
+
 const BatchExportSchema = z.object({
+  // V1 (existing) parameters
   format: z.enum(['png', 'jpeg', 'webp', 'avif', 'svg', 'bmp']).default('png'),
   quality: z.number().min(1).max(100).optional().default(92),
   scale: z.number().min(0.1).max(10).optional().default(1),
@@ -32,7 +51,11 @@ const BatchExportSchema = z.object({
   includeArtboardGeometry: z.boolean().optional().default(false),
   filename: z.string().optional(),
   customPrefix: z.string().optional(),
-  includeTypeInName: z.boolean().optional().default(false)
+  includeTypeInName: z.boolean().optional().default(false),
+  
+  // V2 additions
+  generationCount: GenerationCountSchema.optional(),
+  modulationValue: z.number().min(0).max(1).optional()
 });
 
 const SaveProjectSchema = z.object({

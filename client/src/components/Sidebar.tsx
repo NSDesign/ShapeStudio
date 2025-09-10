@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog, { BatchConfigSettings } from './BatchConfigDialog';
+import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -3313,6 +3314,11 @@ export default function Sidebar({
               <Trash2 className="w-3 h-3 mr-1" />
               New Project
             </Button>
+
+            <ApiCallGenerator 
+              batchConfigSettings={batchConfigSettings}
+              className="w-full text-xs"
+            />
           </div>
         </div>
 
