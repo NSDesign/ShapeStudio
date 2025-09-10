@@ -1036,7 +1036,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900">
               <div>
-                <h3 className="text-lg font-semibold text-slate-200">Batch Configuration</h3>
+                <h3 className="text-lg font-semibold text-slate-200">Generation Config Settings</h3>
                 <p className="text-sm text-slate-400">
                   Configure advanced settings for batch shape generation
                 </p>
