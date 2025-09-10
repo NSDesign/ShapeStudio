@@ -1430,6 +1430,8 @@ export default function Sidebar({
             exportSaveProjectFiles={exportSaveProjectFiles}
             exportBatchCount={exportBatchCount}
             exportShapeCountRange={exportShapeCountRange}
+            artboards={artboards}
+            activeArtboard={activeArtboard}
             className="w-full text-xs"
           />
         </div>
