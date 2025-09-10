@@ -5,20 +5,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, Code2 } from 'lucide-react';
 import { BatchConfigSettings } from './BatchConfigDialog';
-import { Artboard } from '../lib/shapeTypes';
+import { Artboard, ShapeType, ScatterSettings } from '../lib/shapeTypes';
 
 interface ApiCallGeneratorProps {
+  // Real shape editor state
+  enabledShapeTypes: Set<ShapeType>;
+  scatterSettings: ScatterSettings;
   generationConfigSettings: BatchConfigSettings;
-  // Export dialog state
-  exportBatchModeEnabled: boolean;
-  exportSaveProjectFiles: boolean;
-  exportBatchCount: number;
-  exportShapeCountRange: [number, number]; // [min, max] range
+  // Export dialog state (with defaults for API)
+  exportBatchModeEnabled?: boolean;
+  exportSaveProjectFiles?: boolean;
+  exportBatchCount?: number;
+  exportShapeCountRange?: [number, number]; // [min, max] range
   // Export settings from current UI
-  exportQuality: number;
-  exportScale: number;
-  exportFormat: string;
-  exportScope: 'all' | 'selected' | 'artboard';
+  exportQuality?: number;
+  exportScale?: number;
+  exportFormat?: string;
+  exportScope?: 'all' | 'selected' | 'artboard';
   // Artboard data
   artboards: Artboard[];
   activeArtboard: string;
@@ -54,6 +57,12 @@ interface ApiV2Payload {
 interface LiveStatePayload {
   apiMode: 'live';
   currentState: {
+    // Shape types and settings from current UI
+    enabledShapeTypes: string[];
+    shapeCountMode: 'fixed' | 'range';
+    shapeCount: number;
+    shapeCountRange: [number, number];
+    shapeSpecificSettings: Record<string, any>;
     // Export settings from current UI
     exportFormat: string;
     exportQuality: number;
@@ -74,15 +83,17 @@ interface LiveStatePayload {
 type ApiPayload = ApiV2Payload | LiveStatePayload;
 
 export default function ApiCallGenerator({ 
+  enabledShapeTypes,
+  scatterSettings,
   generationConfigSettings, 
-  exportBatchModeEnabled,
-  exportSaveProjectFiles,
-  exportBatchCount,
+  exportBatchModeEnabled = true,
+  exportSaveProjectFiles = false,
+  exportBatchCount = 5,
   exportShapeCountRange,
-  exportQuality,
-  exportScale,
-  exportFormat,
-  exportScope,
+  exportQuality = 92,
+  exportScale = 1,
+  exportFormat = "png",
+  exportScope = "all",
   artboards,
   activeArtboard,
   className = "" 
@@ -94,6 +105,35 @@ export default function ApiCallGenerator({
   const getCurrentArtboardBackground = (): string => {
     const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
     return currentArtboard?.backgroundColor || '#ffffff';
+  };
+
+  // Get current shape count values based on mode
+  const getCurrentShapeCount = () => {
+    if (scatterSettings.shapeCountMode === 'fixed') {
+      return {
+        mode: 'fixed' as const,
+        count: scatterSettings.fixedShapeCount,
+        range: [scatterSettings.fixedShapeCount, scatterSettings.fixedShapeCount] as [number, number]
+      };
+    } else {
+      return {
+        mode: 'range' as const,
+        count: scatterSettings.minCount,
+        range: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
+      };
+    }
+  };
+
+  // Get shape-specific settings for enabled shape types only
+  const getEnabledShapeSettings = () => {
+    const enabled: Record<string, any> = {};
+    Array.from(enabledShapeTypes).forEach(shapeType => {
+      const settings = scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific];
+      if (settings) {
+        enabled[shapeType] = settings;
+      }
+    });
+    return enabled;
   };
 
   // Filter generation config settings to only include enabled sections
@@ -128,9 +168,18 @@ export default function ApiCallGenerator({
 
   // Generate Live State API payload
   const generateLiveStatePayload = (): LiveStatePayload => {
+    const currentShapeCount = getCurrentShapeCount();
+    const currentExportShapeCountRange = exportShapeCountRange || currentShapeCount.range;
+    
     return {
       apiMode: 'live',
       currentState: {
+        // Shape types and settings from current UI
+        enabledShapeTypes: Array.from(enabledShapeTypes),
+        shapeCountMode: currentShapeCount.mode,
+        shapeCount: currentShapeCount.count,
+        shapeCountRange: currentShapeCount.range,
+        shapeSpecificSettings: getEnabledShapeSettings(),
         // Export settings from current UI
         exportFormat: exportFormat,
         exportQuality: exportQuality,
@@ -140,7 +189,7 @@ export default function ApiCallGenerator({
         exportBatchModeEnabled: exportBatchModeEnabled,
         exportBatchCount: exportBatchCount,
         exportSaveProjectFiles: exportSaveProjectFiles,
-        exportShapeCountRange: exportShapeCountRange,
+        exportShapeCountRange: currentExportShapeCountRange,
         // Artboard settings
         artboardBackgroundColor: getCurrentArtboardBackground(),
         // Only enabled generation config settings
@@ -416,16 +465,20 @@ export default function ApiCallGenerator({
                     <span className="ml-2 font-medium text-black">Live State - All Current Settings</span>
                   </div>
                   <div>
+                    <span className="text-slate-400">Shape Types:</span>
+                    <span className="ml-2 font-medium text-black">{payload.currentState.enabledShapeTypes.length} enabled ({payload.currentState.enabledShapeTypes.slice(0, 3).join(', ')}{payload.currentState.enabledShapeTypes.length > 3 ? '...' : ''})</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Shape Count:</span>
+                    <span className="ml-2 font-medium text-black">{payload.currentState.shapeCountMode === 'fixed' ? `Fixed: ${payload.currentState.shapeCount}` : `Range: ${payload.currentState.shapeCountRange[0]}-${payload.currentState.shapeCountRange[1]}`}</span>
+                  </div>
+                  <div>
                     <span className="text-slate-400">Export:</span>
                     <span className="ml-2 font-medium text-black">{payload.currentState.exportFormat?.toUpperCase() || 'PNG'}, Q{payload.currentState.exportQuality}, {payload.currentState.exportScale}x, {payload.currentState.exportScope}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Background:</span>
                     <span className="ml-2 font-medium text-black">{payload.currentState.artboardBackgroundColor}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Shape Count:</span>
-                    <span className="ml-2 font-medium text-black">{payload.currentState.exportShapeCountRange[0]} - {payload.currentState.exportShapeCountRange[1]}</span>
                   </div>
                   <div>
                     <span className="text-slate-400">Enabled Sections:</span>

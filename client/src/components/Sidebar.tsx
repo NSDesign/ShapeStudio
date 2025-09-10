@@ -1425,6 +1425,8 @@ export default function Sidebar({
             <Label className="text-xs text-slate-400">Quick Actions</Label>
           </div>
           <ApiCallGenerator 
+            enabledShapeTypes={enabledShapeTypes}
+            scatterSettings={scatterSettings}
             generationConfigSettings={generationConfigSettings}
             exportBatchModeEnabled={exportBatchModeEnabled}
             exportSaveProjectFiles={exportSaveProjectFiles}

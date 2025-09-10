@@ -63,13 +63,19 @@ const SaveProjectSchema = z.object({
   includeTimestamp: z.boolean().optional().default(true)
 });
 
-// Live State API Schema - Streamlined, uses current UI state
+// Live State API Schema - Complete current UI state
 const LiveStateApiSchema = z.object({
   // Mode differentiation
   apiMode: z.literal('live').default('live'),
   
   // Current UI state (passed from frontend)
   currentState: z.object({
+    // Shape types and settings from current UI
+    enabledShapeTypes: z.array(z.string()),
+    shapeCountMode: z.enum(['fixed', 'range']),
+    shapeCount: z.number(),
+    shapeCountRange: z.tuple([z.number(), z.number()]),
+    shapeSpecificSettings: z.record(z.any()),
     // Export settings from current UI
     exportFormat: z.string(),
     exportQuality: z.number().min(1).max(100),
@@ -456,6 +462,10 @@ export function registerExportRoutes(app: Express): void {
         message: 'Live State API execution started - using all current app settings',
         apiMode: 'live',
         appliedSettings: {
+          enabledShapeTypes: currentState.enabledShapeTypes,
+          shapeCountMode: currentState.shapeCountMode,
+          shapeCount: currentState.shapeCount,
+          shapeCountRange: currentState.shapeCountRange,
           format: allSettings.format,
           quality: allSettings.quality,
           scale: allSettings.scale,
@@ -463,8 +473,9 @@ export function registerExportRoutes(app: Express): void {
           batchCount: allSettings.batchExportCount,
           backgroundColor: allSettings.backgroundColor,
           saveProjectFiles: allSettings.batchSaveProjectFiles,
-          shapeCountRange: currentState.exportShapeCountRange,
-          enabledSections: Object.keys(currentState.enabledGenerationSettings)
+          exportShapeCountRange: currentState.exportShapeCountRange,
+          enabledSections: Object.keys(currentState.enabledGenerationSettings),
+          shapeSpecificSettings: Object.keys(currentState.shapeSpecificSettings)
         }
       });
       
