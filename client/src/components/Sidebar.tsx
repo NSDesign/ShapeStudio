@@ -442,7 +442,7 @@ export default function Sidebar({
   }
 
   // Export state variables lifted to main component level  
-  const [exportShapeCountRange, setExportShapeCountRange] = useState([5, 15]);
+  const [exportShapeCountRange, setExportShapeCountRange] = useState<[number, number]>([5, 15]);
   const [exportBatchCount, setExportBatchCount] = useState(10);
   const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
   const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);

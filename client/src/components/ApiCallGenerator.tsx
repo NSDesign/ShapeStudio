@@ -80,7 +80,7 @@ export default function ApiCallGenerator({
     }
 
     // Add modulation if enabled from batch config dialog
-    if (generationConfigSettings.generationCountModulationEnabled) {
+    if (generationConfigSettings?.generationCountModulationEnabled) {
       payload.modulationValue = generationConfigSettings.generationCountModulationValue;
     }
 
