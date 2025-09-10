@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, Code2 } from 'lucide-react';
 import { BatchConfigSettings } from './BatchConfigDialog';
+import { Artboard } from '../lib/shapeTypes';
 
 interface ApiCallGeneratorProps {
   generationConfigSettings: BatchConfigSettings;
@@ -12,6 +14,9 @@ interface ApiCallGeneratorProps {
   exportSaveProjectFiles: boolean;
   exportBatchCount: number;
   exportShapeCountRange: [number, number]; // [min, max] range
+  // Artboard data
+  artboards: Artboard[];
+  activeArtboard: string;
   className?: string;
 }
 
@@ -47,9 +52,18 @@ export default function ApiCallGenerator({
   exportSaveProjectFiles,
   exportBatchCount,
   exportShapeCountRange,
+  artboards,
+  activeArtboard,
   className = "" 
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
+  const [selectedApiVersion, setSelectedApiVersion] = useState<'v1' | 'v2' | 'v3' | 'v4'>('v2');
+
+  // Get current artboard background color
+  const getCurrentArtboardBackground = (): string => {
+    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+    return currentArtboard?.backgroundColor || '#ffffff';
+  };
 
   // Convert current settings to API payload
   const generateApiPayload = (): ApiV2Payload => {
@@ -59,29 +73,32 @@ export default function ApiCallGenerator({
       quality: 92,
       scale: 1,
       includeBackground: true,
-      backgroundColor: '#1e293b',
+      backgroundColor: getCurrentArtboardBackground(),
       exportBatchCount: exportBatchCount,
       exportSaveProjectFiles: exportSaveProjectFiles,
       packageAsZip: false,
     };
 
-    // V2 parameters: Check if batch mode is enabled and shape count is configured as range
-    if (exportBatchModeEnabled && exportShapeCountRange) {
-      const [min, max] = exportShapeCountRange;
-      
-      // Add generation count configuration based on the export dialog range
-      const generationCount: GenerationCountConfig = {
-        mode: 'range' as const,
-        min: min,
-        max: max
-      };
+    // Only add V2+ features if V2+ version is selected
+    if (selectedApiVersion !== 'v1') {
+      // V2 parameters: Check if batch mode is enabled and shape count is configured as range
+      if (exportBatchModeEnabled && exportShapeCountRange) {
+        const [min, max] = exportShapeCountRange;
+        
+        // Add generation count configuration based on the export dialog range
+        const generationCount: GenerationCountConfig = {
+          mode: 'range' as const,
+          min: min,
+          max: max
+        };
 
-      payload.generationCount = generationCount;
-    }
+        payload.generationCount = generationCount;
+      }
 
-    // Add modulation if enabled from batch config dialog
-    if (generationConfigSettings?.generationCountModulationEnabled) {
-      payload.modulationValue = generationConfigSettings.generationCountModulationValue;
+      // Add modulation if enabled from batch config dialog
+      if (generationConfigSettings?.generationCountModulationEnabled) {
+        payload.modulationValue = generationConfigSettings.generationCountModulationValue;
+      }
     }
 
     return payload;
@@ -100,14 +117,14 @@ export default function ApiCallGenerator({
   -H "Content-Type: application/json" ^
   -H "x-api-key: ${apiKey}" ^
   -d "${escapedJson}" ^
-  ${baseUrl}/api/export/batch`;
+  ${baseUrl}/api/export/batch/${selectedApiVersion}`;
     } else {
       // Linux/Mac bash format
       return `curl -X POST \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${apiKey}" \\
   -d '${jsonPayload}' \\
-  ${baseUrl}/api/export/batch`;
+  ${baseUrl}/api/export/batch/${selectedApiVersion}`;
     }
   };
 
@@ -118,7 +135,7 @@ export default function ApiCallGenerator({
       "node": "HttpRequest",
       "parameters": {
         "method": "POST",
-        "url": "https://shape-studio-nsdesign.replit.app/api/export/batch",
+        "url": `https://shape-studio-nsdesign.replit.app/api/export/batch/${selectedApiVersion}`,
         "headers": {
           "Content-Type": "application/json",
           "x-api-key": apiKey
@@ -163,10 +180,26 @@ export default function ApiCallGenerator({
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Generated API Calls (v2)</DialogTitle>
+          <DialogTitle>Generated API Calls ({selectedApiVersion.toUpperCase()})</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
+          {/* Version Selector */}
+          <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+            <label className="text-sm font-medium">API Version:</label>
+            <Select value={selectedApiVersion} onValueChange={(value: 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Select version" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="v1">V1 (Basic)</SelectItem>
+                <SelectItem value="v2">V2 (Advanced)</SelectItem>
+                <SelectItem value="v3">V3 (Future)</SelectItem>
+                <SelectItem value="v4">V4 (Future)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="text-sm text-slate-400">
             Based on your current generation count settings. Ready to use with Shape Studio API.
           </div>
