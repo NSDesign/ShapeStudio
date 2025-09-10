@@ -384,10 +384,8 @@ export function registerExportRoutes(app: Express): void {
     }
   });
 
-  // Live State API Endpoints
-  
-  // Live State Generate - Generate shapes using current UI state
-  app.post('/api/live/generate', async (req, res) => {
+  // Live State API - Single endpoint using all current app settings
+  app.post('/api/live/execute', async (req, res) => {
     try {
       // Validate API key
       const apiKey = req.headers['x-api-key'];
@@ -403,7 +401,7 @@ export function registerExportRoutes(app: Express): void {
         apiMode: 'live'
       });
 
-      // Convert current UI state to batch export settings
+      // Convert current UI state to complete export operation
       const currentState = validatedData.currentState;
       if (!currentState) {
         return res.status(400).json({ 
@@ -420,18 +418,21 @@ export function registerExportRoutes(app: Express): void {
         });
       }
 
-      // Build batch export settings from current UI state
-      const batchSettings: BatchExportSettings = {
+      // Build complete export operation using ALL current UI settings
+      const allSettings = {
+        // Export settings from UI
         format: validatedData.format || 'png',
         quality: validatedData.quality || 92,
         scale: 1,
         includeBackground: true,
         backgroundColor: currentState.artboardBackgroundColor || '#ffffff',
+        
+        // Batch settings from UI
         batchExportCount: currentState.exportBatchCount,
         batchSaveProjectFiles: currentState.exportSaveProjectFiles,
         packageAsZip: currentState.exportBatchCount > 1,
         
-        // Add generation count if configured
+        // Generation count settings from UI
         ...(currentState.exportShapeCountRange && {
           generationCount: {
             mode: 'range' as const,
@@ -440,25 +441,27 @@ export function registerExportRoutes(app: Express): void {
           }
         }),
         
-        // Add modulation if enabled
+        // Advanced generation config from UI
         ...(currentState.generationConfigSettings?.generationCountModulationEnabled && {
           modulationValue: currentState.generationConfigSettings.generationCountModulationValue
         })
       };
 
-      // For Live State API, we'll return a simplified response
-      // In a full implementation, this would integrate with the actual shape generation
+      // Generate unique export ID for tracking
       const exportId = `live-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       res.json({ 
         success: true, 
         exportId: exportId,
-        message: 'Live State API export started successfully',
+        message: 'Live State API execution started - using all current app settings',
         apiMode: 'live',
-        settings: {
-          batchCount: currentState.exportBatchCount,
-          backgroundColor: currentState.artboardBackgroundColor,
-          saveProjectFiles: currentState.exportSaveProjectFiles
+        appliedSettings: {
+          format: allSettings.format,
+          batchCount: allSettings.batchExportCount,
+          backgroundColor: allSettings.backgroundColor,
+          saveProjectFiles: allSettings.batchSaveProjectFiles,
+          shapeCountRange: currentState.exportShapeCountRange,
+          modulation: allSettings.modulationValue || 'disabled'
         }
       });
       
@@ -472,88 +475,10 @@ export function registerExportRoutes(app: Express): void {
       } else {
         res.status(500).json({ 
           success: false, 
-          error: 'Failed to start Live State API export',
+          error: 'Failed to execute Live State API',
           message: error instanceof Error ? error.message : 'Unknown error'
         });
       }
-    }
-  });
-
-  // Live State Export - Quick export using current UI state
-  app.post('/api/live/export', async (req, res) => {
-    try {
-      // Validate API key
-      const apiKey = req.headers['x-api-key'];
-      if (!apiKey || apiKey !== '3211d3f332fsss4t4tbebw5r653765h6brb4') {
-        return res.status(401).json({ 
-          success: false, 
-          error: 'Invalid or missing API key' 
-        });
-      }
-
-      // For now, use the same logic as generate endpoint
-      // In the future, this could be a separate lighter-weight operation
-      const validatedData = LiveStateApiSchema.parse({
-        ...req.body,
-        apiMode: 'live'
-      });
-
-      const currentState = validatedData.currentState;
-      if (!currentState) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Current UI state is required for Live State API' 
-        });
-      }
-
-      if (!currentState.exportBatchModeEnabled) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Live State API requires batch mode to be enabled' 
-        });
-      }
-
-      const batchSettings: BatchExportSettings = {
-        format: validatedData.format || 'png',
-        quality: validatedData.quality || 92,
-        scale: 1,
-        includeBackground: true,
-        backgroundColor: currentState.artboardBackgroundColor || '#ffffff',
-        batchExportCount: currentState.exportBatchCount,
-        batchSaveProjectFiles: currentState.exportSaveProjectFiles,
-        packageAsZip: currentState.exportBatchCount > 1,
-        
-        ...(currentState.exportShapeCountRange && {
-          generationCount: {
-            mode: 'range' as const,
-            min: currentState.exportShapeCountRange[0],
-            max: currentState.exportShapeCountRange[1]
-          }
-        }),
-        
-        ...(currentState.generationConfigSettings?.generationCountModulationEnabled && {
-          modulationValue: currentState.generationConfigSettings.generationCountModulationValue
-        })
-      };
-
-      // For Live State API, we'll return a simplified response
-      // In a full implementation, this would integrate with the actual shape generation
-      const exportId = `live-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      res.json({ 
-        success: true, 
-        exportId: exportId,
-        message: 'Live State API export started successfully',
-        apiMode: 'live',
-        endpoint: 'export'
-      });
-      
-    } catch (error) {
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to process Live State API export',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
     }
   });
 

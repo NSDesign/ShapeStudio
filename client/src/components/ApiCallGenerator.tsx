@@ -154,7 +154,7 @@ export default function ApiCallGenerator({
     
     // Choose endpoint based on API version
     const endpoint = selectedApiVersion === 'live' 
-      ? '/api/live/generate' 
+      ? '/api/live/execute' 
       : `/api/export/batch/${selectedApiVersion}`;
     
     if (platform === 'windows') {
@@ -179,7 +179,7 @@ export default function ApiCallGenerator({
     const payload = generateApiPayload();
     const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     const endpoint = selectedApiVersion === 'live' 
-      ? '/api/live/generate' 
+      ? '/api/live/execute' 
       : `/api/export/batch/${selectedApiVersion}`;
     
     return {
