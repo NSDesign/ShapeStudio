@@ -392,9 +392,10 @@ export function registerExportRoutes(app: Express): void {
   // Live State API - Single endpoint using all current app settings
   app.post('/api/live/execute', async (req, res) => {
     try {
-      // Validate API key
+      // Validate API key from environment variable
       const apiKey = req.headers['x-api-key'];
-      if (!apiKey || apiKey !== '3211d3f332fsss4t4tbebw5r653765h6brb4') {
+      const expectedApiKey = process.env.API_KEY || 'your-api-key-here';
+      if (!apiKey || apiKey !== expectedApiKey) {
         return res.status(401).json({ 
           success: false, 
           error: 'Invalid or missing API key' 
@@ -433,7 +434,7 @@ export function registerExportRoutes(app: Express): void {
         includeBackground: true,
         backgroundColor: currentState.artboardBackgroundColor || '#ffffff',
         
-        // Batch settings from UI
+        // Batch settings from UI - use correct field names that match BatchExportSchema
         batchExportCount: currentState.exportBatchCount,
         batchSaveProjectFiles: currentState.exportSaveProjectFiles,
         packageAsZip: currentState.exportBatchCount > 1,
