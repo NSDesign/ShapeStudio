@@ -22,6 +22,10 @@ interface ApiCallGeneratorProps {
   exportScale?: number;
   exportFormat?: string;
   exportScope?: 'all' | 'selected' | 'artboard';
+  // Packaging and selective export settings
+  packageAsZip?: boolean;
+  exportAllImages?: boolean;
+  selectedImageIndices?: number[];
   // Artboard data
   artboards: Artboard[];
   activeArtboard: string;
@@ -73,6 +77,10 @@ interface LiveStatePayload {
     exportBatchCount: number;
     exportSaveProjectFiles: boolean;
     exportShapeCountRange: [number, number];
+    // Packaging and selective export settings
+    packageAsZip?: boolean;
+    exportAllImages?: boolean;
+    selectedImageIndices?: number[];
     // Artboard settings
     artboardBackgroundColor: string;
     // Only enabled generation config settings
@@ -94,6 +102,9 @@ export default function ApiCallGenerator({
   exportScale = 1,
   exportFormat = "png",
   exportScope = "all",
+  packageAsZip = false,
+  exportAllImages = true,
+  selectedImageIndices = [],
   artboards,
   activeArtboard,
   className = "" 
@@ -190,6 +201,10 @@ export default function ApiCallGenerator({
         exportBatchCount: exportBatchCount,
         exportSaveProjectFiles: exportSaveProjectFiles,
         exportShapeCountRange: currentExportShapeCountRange,
+        // Packaging and selective export settings
+        packageAsZip: packageAsZip,
+        exportAllImages: exportAllImages,
+        selectedImageIndices: selectedImageIndices,
         // Artboard settings
         artboardBackgroundColor: getCurrentArtboardBackground(),
         // Only enabled generation config settings
@@ -209,7 +224,7 @@ export default function ApiCallGenerator({
       backgroundColor: getCurrentArtboardBackground(),
       exportBatchCount: exportBatchCount,
       exportSaveProjectFiles: exportSaveProjectFiles,
-      packageAsZip: false,
+      packageAsZip: packageAsZip,
     };
 
     // Only add V2+ features if V2+ version is selected

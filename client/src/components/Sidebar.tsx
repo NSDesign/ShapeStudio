@@ -1490,6 +1490,9 @@ export default function Sidebar({
             exportBatchModeEnabled={exportBatchModeEnabled}
             exportSaveProjectFiles={exportSaveProjectFiles}
             exportBatchCount={exportBatchCount}
+            packageAsZip={packageAsZip}
+            exportAllImages={exportAllImages}
+            selectedImageIndices={selectedImageIndices}
             exportShapeCountRange={exportShapeCountRange}
             exportQuality={92}
             exportScale={1}
