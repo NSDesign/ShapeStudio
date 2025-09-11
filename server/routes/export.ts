@@ -392,9 +392,9 @@ export function registerExportRoutes(app: Express): void {
   // Live State API - Single endpoint using all current app settings
   app.post('/api/live/execute', async (req, res) => {
     try {
-      // Validate API key from environment variable
+      // Validate API key - using hardcoded key
       const apiKey = req.headers['x-api-key'];
-      const expectedApiKey = process.env.API_KEY || 'your-api-key-here';
+      const expectedApiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
       if (!apiKey || apiKey !== expectedApiKey) {
         return res.status(401).json({ 
           success: false, 
