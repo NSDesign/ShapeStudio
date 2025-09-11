@@ -46,6 +46,9 @@ const BatchExportSchema = z.object({
   batchExportCount: z.number().min(1).max(100).default(10),
   batchSaveProjectFiles: z.boolean().optional().default(false),
   packageAsZip: z.boolean().optional().default(false),
+  // Selective export settings (V3+ features)
+  exportAllImages: z.boolean().optional().default(true),
+  selectedImageIndices: z.array(z.number().int().positive()).optional().default([]),
   includeAdornments: z.boolean().optional().default(false),
   includeGrid: z.boolean().optional().default(false),
   includeArtboardGeometry: z.boolean().optional().default(false),
@@ -498,9 +501,46 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
+      // Apply selective export filtering if needed
+      let filteredResult = result;
+      if (!allSettings.exportAllImages && allSettings.selectedImageIndices.length > 0) {
+        // Convert 1-based UI indices to 0-based array indices and validate
+        const validIndices = allSettings.selectedImageIndices
+          .filter(idx => idx >= 1) // Must be 1-based
+          .map(idx => idx - 1); // Convert to 0-based
+        
+        // Filter files based on selectedImageIndices (handle multiple possible field names)
+        const fileFields = ['files', 'imageFiles'];
+        for (const field of fileFields) {
+          if (result[field] && Array.isArray(result[field])) {
+            const selectedFiles = validIndices
+              .filter(index => index >= 0 && index < result[field].length)
+              .map(index => result[field][index]);
+            
+            filteredResult = {
+              ...filteredResult,
+              [field]: selectedFiles,
+              [`${field}Count`]: selectedFiles.length
+            };
+          }
+        }
+        
+        // Also filter downloadUrls if present
+        if (result.downloadUrls && Array.isArray(result.downloadUrls)) {
+          const selectedDownloadUrls = validIndices
+            .filter(index => index >= 0 && index < result.downloadUrls.length)
+            .map(index => result.downloadUrls[index]);
+          
+          filteredResult = {
+            ...filteredResult,
+            downloadUrls: selectedDownloadUrls
+          };
+        }
+      }
+      
       // Return the same format as regular batch export with direct URLs
       res.json({
-        ...result,
+        ...filteredResult,
         apiMode: 'live',
         message: 'Live State API export completed - using current app settings'
       });

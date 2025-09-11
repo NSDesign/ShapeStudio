@@ -56,6 +56,10 @@ interface ApiV2Payload {
   // V2 additions
   generationCount?: GenerationCountConfig;
   modulationValue?: number;
+  
+  // V3+ additions for selective export
+  exportAllImages?: boolean;
+  selectedImageIndices?: number[];
 }
 
 interface LiveStatePayload {
@@ -246,6 +250,12 @@ export default function ApiCallGenerator({
       // Add modulation if enabled from batch config dialog
       if (generationConfigSettings?.generationCountModulationEnabled) {
         payload.modulationValue = generationConfigSettings.generationCountModulationValue;
+      }
+      
+      // V3+ selective export parameters  
+      if (['v3', 'v4'].includes(selectedApiVersion)) {
+        payload.exportAllImages = exportAllImages;
+        payload.selectedImageIndices = selectedImageIndices;
       }
     }
 

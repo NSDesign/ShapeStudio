@@ -1386,6 +1386,7 @@ export default function Sidebar({
                 <Switch
                   checked={packageAsZip}
                   onCheckedChange={setPackageAsZip}
+                  data-testid="toggle-package-as-zip"
                 />
               </div>
 
@@ -1397,11 +1398,12 @@ export default function Sidebar({
                 <Switch
                   checked={exportAllImages}
                   onCheckedChange={setExportAllImages}
+                  data-testid="toggle-export-all-images"
                 />
               </div>
 
               {!exportAllImages && (
-                <div className="space-y-2 p-3 bg-orange-900/20 rounded border border-orange-500/30">
+                <div className="space-y-2 p-3 bg-orange-900/20 rounded border border-orange-500/30" data-testid="accordion-selective-export">
                   <div className="flex items-center space-x-1 mb-2">
                     <div className="w-1 h-1 bg-orange-400 rounded-full"></div>
                     <span className="text-orange-300 font-medium text-xs">Selective Export</span>
@@ -1420,6 +1422,7 @@ export default function Sidebar({
                             }
                           }}
                           className="border-slate-500 data-[state=checked]:bg-orange-600"
+                          data-testid={`checkbox-image-${imageIndex}`}
                         />
                         <Label className="text-xs text-slate-300">{imageIndex}</Label>
                       </div>
