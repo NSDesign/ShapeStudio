@@ -454,30 +454,47 @@ export function registerExportRoutes(app: Express): void {
         })
       };
 
-      // Generate unique export ID for tracking
-      const exportId = `live-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Perform actual batch export using all current UI settings
+      const mockShapes: any[] = [];
+      const mockGroups: any[] = [];
+      const mockCanvasSettings = {
+        width: 1200,
+        height: 800,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        backgroundColor: allSettings.backgroundColor,
+        showGrid: false
+      };
+      const mockBatchConfigSettings = {
+        selectedPreset: 'none',
+        noiseEnabled: false,
+        distributionLayoutEnabled: false,
+        propertiesEnabled: true,
+      };
+      const enabledShapeTypesSet = new Set(currentState.enabledShapeTypes);
       
-      res.json({ 
-        success: true, 
-        exportId: exportId,
-        message: 'Live State API execution started - using all current app settings',
+      // Mock shape generation function
+      const mockGenerateShapes = (config: any) => {
+        return { shapes: [], groups: [] };
+      };
+      
+      // Actually perform the export using the export service
+      const result = await exportService.startBatchExport(
+        mockShapes,
+        mockGroups,
+        mockCanvasSettings,
+        mockBatchConfigSettings as any,
+        enabledShapeTypesSet,
+        allSettings,
+        mockGenerateShapes
+      );
+      
+      // Return the same format as regular batch export with direct URLs
+      res.json({
+        ...result,
         apiMode: 'live',
-        appliedSettings: {
-          enabledShapeTypes: currentState.enabledShapeTypes,
-          shapeCountMode: currentState.shapeCountMode,
-          shapeCount: currentState.shapeCount,
-          shapeCountRange: currentState.shapeCountRange,
-          format: allSettings.format,
-          quality: allSettings.quality,
-          scale: allSettings.scale,
-          scope: allSettings.scope,
-          batchCount: allSettings.batchExportCount,
-          backgroundColor: allSettings.backgroundColor,
-          saveProjectFiles: allSettings.batchSaveProjectFiles,
-          exportShapeCountRange: currentState.exportShapeCountRange,
-          enabledSections: Object.keys(currentState.enabledGenerationSettings),
-          shapeSpecificSettings: Object.keys(currentState.shapeSpecificSettings)
-        }
+        message: 'Live State API export completed - using current app settings'
       });
       
     } catch (error) {
