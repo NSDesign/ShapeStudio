@@ -43,6 +43,8 @@ import {
   Navigation,
   Shuffle,
   Layers3,
+  Package,
+  ImageIcon,
   Move,
   RotateCcw,
   Expand,
@@ -446,6 +448,10 @@ export default function Sidebar({
   const [exportBatchCount, setExportBatchCount] = useState(10);
   const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
   const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
+  // New packaging and selective export settings
+  const [packageAsZip, setPackageAsZip] = useState(false);
+  const [exportAllImages, setExportAllImages] = useState(true);
+  const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -1372,10 +1378,63 @@ export default function Sidebar({
                 </div>
               )}
 
+              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
+                <div className="flex items-center space-x-2">
+                  <Package className="w-3 h-3 text-slate-400" />
+                  <Label className="text-xs text-slate-300">Package as ZIP</Label>
+                </div>
+                <Switch
+                  checked={packageAsZip}
+                  onCheckedChange={setPackageAsZip}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
+                <div className="flex items-center space-x-2">
+                  <ImageIcon className="w-3 h-3 text-slate-400" />
+                  <Label className="text-xs text-slate-300">Export All Images</Label>
+                </div>
+                <Switch
+                  checked={exportAllImages}
+                  onCheckedChange={setExportAllImages}
+                />
+              </div>
+
+              {!exportAllImages && (
+                <div className="space-y-2 p-3 bg-orange-900/20 rounded border border-orange-500/30">
+                  <div className="flex items-center space-x-1 mb-2">
+                    <div className="w-1 h-1 bg-orange-400 rounded-full"></div>
+                    <span className="text-orange-300 font-medium text-xs">Selective Export</span>
+                  </div>
+                  <Label className="text-xs text-slate-400">Select images to export (1-{exportBatchCount}):</Label>
+                  <div className="grid grid-cols-5 gap-1 max-h-24 overflow-y-auto">
+                    {Array.from({ length: exportBatchCount }, (_, i) => i + 1).map((imageIndex) => (
+                      <div key={imageIndex} className="flex items-center space-x-1">
+                        <Checkbox
+                          checked={selectedImageIndices.includes(imageIndex)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedImageIndices([...selectedImageIndices, imageIndex]);
+                            } else {
+                              setSelectedImageIndices(selectedImageIndices.filter(idx => idx !== imageIndex));
+                            }
+                          }}
+                          className="border-slate-500 data-[state=checked]:bg-orange-600"
+                        />
+                        <Label className="text-xs text-slate-300">{imageIndex}</Label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Selected: {selectedImageIndices.length} of {exportBatchCount} images
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Export Format</Label>
                 <div className="text-xs text-slate-500 bg-slate-800 p-2 rounded border border-slate-600">
-                  All images will be packaged into a single ZIP file for easy download
+                  {packageAsZip ? 'Images will be packaged into a single ZIP file' : 'Individual image files will be downloaded'}
                 </div>
               </div>
 
