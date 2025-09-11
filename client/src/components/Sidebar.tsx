@@ -1360,7 +1360,7 @@ export default function Sidebar({
               <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
                 <div className="flex items-center space-x-2">
                   <Save className="w-3 h-3 text-slate-400" />
-                  <Label className="text-xs text-slate-300">Save Project Files</Label>
+                  <Label className="text-xs text-slate-300">Export Project Files</Label>
                 </div>
                 <Switch
                   checked={exportSaveProjectFiles}
@@ -1380,18 +1380,6 @@ export default function Sidebar({
 
               <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
                 <div className="flex items-center space-x-2">
-                  <Package className="w-3 h-3 text-slate-400" />
-                  <Label className="text-xs text-slate-300">Package as ZIP</Label>
-                </div>
-                <Switch
-                  checked={packageAsZip}
-                  onCheckedChange={setPackageAsZip}
-                  data-testid="toggle-package-as-zip"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
-                <div className="flex items-center space-x-2">
                   <ImageIcon className="w-3 h-3 text-slate-400" />
                   <Label className="text-xs text-slate-300">Export All Images</Label>
                 </div>
@@ -1399,6 +1387,18 @@ export default function Sidebar({
                   checked={exportAllImages}
                   onCheckedChange={setExportAllImages}
                   data-testid="toggle-export-all-images"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
+                <div className="flex items-center space-x-2">
+                  <Package className="w-3 h-3 text-slate-400" />
+                  <Label className="text-xs text-slate-300">Package as ZIP</Label>
+                </div>
+                <Switch
+                  checked={packageAsZip}
+                  onCheckedChange={setPackageAsZip}
+                  data-testid="toggle-package-as-zip"
                 />
               </div>
 
@@ -1435,9 +1435,17 @@ export default function Sidebar({
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Export Format</Label>
+                <Label className="text-xs text-slate-400">Export Info</Label>
                 <div className="text-xs text-slate-500 bg-slate-800 p-2 rounded border border-slate-600">
-                  {packageAsZip ? 'Images will be packaged into a single ZIP file' : 'Individual image files will be downloaded'}
+                  {exportSaveProjectFiles ? (
+                    packageAsZip 
+                      ? 'Project files (.json) with shape data will be packaged in a ZIP file'
+                      : 'Project files (.json) with shape data will be downloaded individually'
+                  ) : (
+                    packageAsZip 
+                      ? 'Images will be packaged into a single ZIP file'
+                      : 'Individual image files will be downloaded'
+                  )}
                 </div>
               </div>
 
