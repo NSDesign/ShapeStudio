@@ -101,77 +101,82 @@ const LiveStateApiSchema = z.object({
   }).optional()
 });
 
-// Helper function to apply consistent project file prioritization and selective filtering
+// Helper function to apply selective filtering to both image and project files
 // NOTE: This should only be used when files are actually available (e.g., Live API or status responses)
-function applyProjectFilePrioritization(
+function applySelectiveFiltering(
   result: any, 
   settings: { batchSaveProjectFiles?: boolean; exportAllImages?: boolean; selectedImageIndices?: number[] }
 ): any {
   const { batchSaveProjectFiles = false, exportAllImages = true, selectedImageIndices = [] } = settings;
   
-  // When Save Project Files is enabled, prioritize project files over image files
-  if (batchSaveProjectFiles) {
-    // Check if selective export is enabled
-    if (!exportAllImages && selectedImageIndices.length > 0) {
-      // Convert 1-based UI indices to 0-based array indices and validate
-      const validIndices = selectedImageIndices
-        .filter(idx => idx >= 1) // Must be 1-based
-        .map(idx => idx - 1); // Convert to 0-based
-      
-      // Filter project files based on selectedImageIndices
-      if (result.projectFiles && Array.isArray(result.projectFiles) && result.projectFiles.length > 0) {
-        const selectedProjectFiles = validIndices
-          .filter(index => index >= 0 && index < result.projectFiles!.length)
-          .map(index => result.projectFiles![index]);
-        
-        return {
-          ...result,
-          projectFiles: selectedProjectFiles,
-          // Primary files to download (project files prioritized)
-          files: selectedProjectFiles,
-          // For backward compatibility, set downloadUrl to first project file
-          downloadUrl: selectedProjectFiles.length > 0 ? selectedProjectFiles[0].url : result.downloadUrl
-        };
-      }
-    } else {
-      // Export all project files
-      if (result.projectFiles && Array.isArray(result.projectFiles) && result.projectFiles.length > 0) {
-        return {
-          ...result,
-          // Primary files to download (project files prioritized)
-          files: result.projectFiles,
-          // For backward compatibility, set downloadUrl to first project file
-          downloadUrl: result.projectFiles.length > 0 ? result.projectFiles[0].url : result.downloadUrl
-        };
-      }
+  // If Export All Images is enabled, return all files as-is
+  if (exportAllImages) {
+    // Create a files array that includes both types when available
+    let files: any[] = [];
+    
+    // Always include image files if available
+    if (result.imageFiles && Array.isArray(result.imageFiles)) {
+      files.push(...result.imageFiles);
     }
-  } else {
-    // Original logic for image files when Save Project Files is disabled
-    if (!exportAllImages && selectedImageIndices.length > 0) {
-      // Convert 1-based UI indices to 0-based array indices and validate
-      const validIndices = selectedImageIndices
-        .filter(idx => idx >= 1) // Must be 1-based
-        .map(idx => idx - 1); // Convert to 0-based
+    
+    // Include project files if enabled and available
+    if (batchSaveProjectFiles && result.projectFiles && Array.isArray(result.projectFiles)) {
+      files.push(...result.projectFiles);
+    }
+    
+    return {
+      ...result,
+      files,
+      downloadUrl: files.length > 0 ? files[0].url : result.downloadUrl
+    };
+  }
+  
+  // Selective export is enabled - only export selected files
+  if (selectedImageIndices.length > 0) {
+    // Convert 1-based UI indices to 0-based array indices and validate
+    const validIndices = selectedImageIndices
+      .filter(idx => idx >= 1) // Must be 1-based
+      .map(idx => idx - 1); // Convert to 0-based
+    
+    // If Save Project Files is enabled, return ONLY project files for selected indices
+    if (batchSaveProjectFiles && result.projectFiles && Array.isArray(result.projectFiles) && result.projectFiles.length > 0) {
+      const filteredProjectFiles = validIndices
+        .filter(index => index >= 0 && index < result.projectFiles!.length)
+        .map(index => result.projectFiles![index]);
       
-      // Filter image files based on selectedImageIndices
-      if (result.imageFiles && Array.isArray(result.imageFiles) && result.imageFiles.length > 0) {
-        const selectedImageFiles = validIndices
-          .filter(index => index >= 0 && index < result.imageFiles!.length)
-          .map(index => result.imageFiles![index]);
-        
-        return {
-          ...result,
-          imageFiles: selectedImageFiles,
-          // Primary files to download (image files)
-          files: selectedImageFiles,
-          // For backward compatibility, set downloadUrl to first image file
-          downloadUrl: selectedImageFiles.length > 0 ? selectedImageFiles[0].url : result.downloadUrl
-        };
-      }
+      return {
+        ...result,
+        imageFiles: [], // No image files when selective + project files enabled
+        projectFiles: filteredProjectFiles,
+        files: filteredProjectFiles,
+        downloadUrl: filteredProjectFiles.length > 0 ? filteredProjectFiles[0].url : result.downloadUrl
+      };
+    }
+    
+    // If Save Project Files is disabled, return ONLY image files for selected indices
+    if (result.imageFiles && Array.isArray(result.imageFiles) && result.imageFiles.length > 0) {
+      const filteredImageFiles = validIndices
+        .filter(index => index >= 0 && index < result.imageFiles!.length)
+        .map(index => result.imageFiles![index]);
+      
+      return {
+        ...result,
+        imageFiles: filteredImageFiles,
+        projectFiles: [], // No project files when not enabled
+        files: filteredImageFiles,
+        downloadUrl: filteredImageFiles.length > 0 ? filteredImageFiles[0].url : result.downloadUrl
+      };
     }
   }
   
-  return result;
+  // No files selected for export
+  return {
+    ...result,
+    imageFiles: [],
+    projectFiles: [],
+    files: [],
+    downloadUrl: result.downloadUrl
+  };
 }
 
 export function registerExportRoutes(app: Express): void {
@@ -302,24 +307,26 @@ export function registerExportRoutes(app: Express): void {
         const exportSettings = exportService.getExportSettings(exportId);
         
         if (individualFiles && exportSettings) {
-          // Apply consistent project file prioritization with stored settings
+          // Apply selective filtering with stored settings
           const resultWithFiles = {
             ...status,
             imageFiles: individualFiles.imageFiles,
             projectFiles: individualFiles.projectFiles
           };
           
-          const prioritizedResult = applyProjectFilePrioritization(resultWithFiles, exportSettings);
+          const filteredResult = applySelectiveFiltering(resultWithFiles, exportSettings);
           
           return res.json({
             success: true,
-            status: prioritizedResult
+            status: filteredResult
           });
         } else if (individualFiles) {
           // Fallback for exports without stored settings (backward compatibility)
-          const responseFiles = individualFiles.projectFiles && individualFiles.projectFiles.length > 0 
-            ? individualFiles.projectFiles 
-            : individualFiles.imageFiles;
+          let files: any[] = [];
+          
+          // Include both image and project files when available
+          if (individualFiles.imageFiles) files.push(...individualFiles.imageFiles);
+          if (individualFiles.projectFiles) files.push(...individualFiles.projectFiles);
             
           return res.json({
             success: true,
@@ -327,8 +334,8 @@ export function registerExportRoutes(app: Express): void {
               ...status,
               imageFiles: individualFiles.imageFiles,
               projectFiles: individualFiles.projectFiles,
-              // Primary files to download (prioritizes project files)
-              files: responseFiles
+              files,
+              downloadUrl: files.length > 0 ? files[0].url : status.downloadPath
             }
           });
         }
@@ -611,9 +618,9 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply consistent project file prioritization logic for Live API
+      // Apply selective filtering logic for Live API
       // Live API expects immediate results, so we apply the helper here
-      let filteredResult = applyProjectFilePrioritization(result, {
+      let filteredResult = applySelectiveFiltering(result, {
         batchSaveProjectFiles: allSettings.batchSaveProjectFiles,
         exportAllImages: exportAllImages,
         selectedImageIndices: selectedImageIndices
