@@ -86,6 +86,11 @@ const LiveStateApiSchema = z.object({
     exportBatchCount: z.number().min(1).max(100),
     exportSaveProjectFiles: z.boolean(),
     exportShapeCountRange: z.tuple([z.number(), z.number()]),
+    // Packaging settings
+    packageAsZip: z.boolean().optional().default(false),
+    // Selective export settings
+    exportAllImages: z.boolean().optional().default(true),
+    selectedImageIndices: z.array(z.number()).optional().default([]),
     // Artboard settings
     artboardBackgroundColor: z.string(),
     // Only enabled generation config settings
@@ -437,7 +442,10 @@ export function registerExportRoutes(app: Express): void {
         // Batch settings from UI - use correct field names that match BatchExportSchema
         batchExportCount: currentState.exportBatchCount,
         batchSaveProjectFiles: currentState.exportSaveProjectFiles,
-        packageAsZip: currentState.exportBatchCount > 1,
+        packageAsZip: currentState.packageAsZip || false,
+        // Selective export settings
+        exportAllImages: currentState.exportAllImages !== false, // default to true
+        selectedImageIndices: currentState.selectedImageIndices || [],
         
         // Generation count settings from UI
         ...(currentState.exportShapeCountRange && {
