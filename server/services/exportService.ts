@@ -80,6 +80,7 @@ export class ExportService {
   private activeExports = new Map<string, ExportProgress>();
   private exportResults = new Map<string, string>(); // exportId -> file path
   private individualFiles = new Map<string, { imageFiles: any[], projectFiles: any[] }>(); // exportId -> file arrays
+  private exportSettings = new Map<string, { batchSaveProjectFiles: boolean, exportAllImages: boolean, selectedImageIndices: number[] }>(); // exportId -> request settings
   
   constructor() {
     // Ensure exports directory exists
@@ -128,11 +129,18 @@ export class ExportService {
     canvasSettings: CanvasSettings,
     batchConfigSettings: BatchConfigSettings,
     enabledShapeTypes: Set<string>,
-    userSettings: Partial<BatchExportSettings>,
+    userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
     generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] }
   ): Promise<BatchExportResult> {
     const exportId = this.generateExportId();
     const settings = this.mergeBatchSettings(userSettings);
+    
+    // Store request settings for later use in status endpoint
+    this.exportSettings.set(exportId, {
+      batchSaveProjectFiles: settings.batchSaveProjectFiles || false,
+      exportAllImages: userSettings.exportAllImages !== false, // default to true
+      selectedImageIndices: userSettings.selectedImageIndices || []
+    });
     
     // Initialize progress tracking
     const progress: ExportProgress = {
@@ -421,6 +429,10 @@ export class ExportService {
     return this.individualFiles.get(exportId) || null;
   }
 
+  getExportSettings(exportId: string): { batchSaveProjectFiles: boolean, exportAllImages: boolean, selectedImageIndices: number[] } | null {
+    return this.exportSettings.get(exportId) || null;
+  }
+
   getIndividualFile(exportId: string, filename: string): string | null {
     const exportDir = path.join(process.cwd(), 'exports', exportId);
     const filePath = path.join(exportDir, filename);
@@ -448,6 +460,16 @@ export class ExportService {
           fs.unlinkSync(filePath);
         }
         this.exportResults.delete(exportId);
+        
+        // Clean up individual files tracking and export settings
+        this.individualFiles.delete(exportId);
+        this.exportSettings.delete(exportId);
+        
+        // Clean up export directory
+        const exportDir = path.join(process.cwd(), 'exports', exportId);
+        if (fs.existsSync(exportDir)) {
+          fs.rmSync(exportDir, { recursive: true, force: true });
+        }
       }
     }
   }

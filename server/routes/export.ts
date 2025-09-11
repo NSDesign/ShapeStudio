@@ -299,8 +299,24 @@ export function registerExportRoutes(app: Express): void {
       // If export is completed and was using individual files, include file arrays
       if (status.status === 'completed') {
         const individualFiles = exportService.getIndividualFiles(exportId);
-        if (individualFiles) {
-          // Prioritize project files in the response when they exist
+        const exportSettings = exportService.getExportSettings(exportId);
+        
+        if (individualFiles && exportSettings) {
+          // Apply consistent project file prioritization with stored settings
+          const resultWithFiles = {
+            ...status,
+            imageFiles: individualFiles.imageFiles,
+            projectFiles: individualFiles.projectFiles
+          };
+          
+          const prioritizedResult = applyProjectFilePrioritization(resultWithFiles, exportSettings);
+          
+          return res.json({
+            success: true,
+            status: prioritizedResult
+          });
+        } else if (individualFiles) {
+          // Fallback for exports without stored settings (backward compatibility)
           const responseFiles = individualFiles.projectFiles && individualFiles.projectFiles.length > 0 
             ? individualFiles.projectFiles 
             : individualFiles.imageFiles;
