@@ -141,8 +141,15 @@ export function registerExportRoutes(app: Express): void {
   // Start batch export
   app.post('/api/export/batch', async (req, res) => {
     try {
+      // Set defaults when options are not provided: Export All Images = true, Save Project Files = true
+      const requestWithDefaults = {
+        exportAllImages: true,
+        batchSaveProjectFiles: true,
+        ...req.body
+      };
+      
       // Validate request body
-      const validatedSettings = BatchExportSchema.parse(req.body);
+      const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
       
       // For now, we'll use mock data since we don't have the actual shape generation
       // In a real implementation, this would get the current shapes and settings
@@ -182,6 +189,9 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
+      // Apply the same project file prioritization logic as Live API
+      // When Save Project Files is enabled, the export service will automatically
+      // prioritize project files in the response through the status endpoint
       res.json(result);
       
     } catch (error) {
@@ -218,12 +228,19 @@ export function registerExportRoutes(app: Express): void {
       if (status.status === 'completed') {
         const individualFiles = exportService.getIndividualFiles(exportId);
         if (individualFiles) {
+          // Prioritize project files in the response when they exist
+          const responseFiles = individualFiles.projectFiles && individualFiles.projectFiles.length > 0 
+            ? individualFiles.projectFiles 
+            : individualFiles.imageFiles;
+            
           return res.json({
             success: true,
             status: {
               ...status,
               imageFiles: individualFiles.imageFiles,
-              projectFiles: individualFiles.projectFiles
+              projectFiles: individualFiles.projectFiles,
+              // Primary files to download (prioritizes project files)
+              files: responseFiles
             }
           });
         }
@@ -424,6 +441,11 @@ export function registerExportRoutes(app: Express): void {
         });
       }
 
+      // Set defaults when options are not provided: Export All Images = true, Save Project Files = true
+      const exportAllImages = currentState.exportAllImages !== false; // default to true
+      const exportSaveProjectFiles = currentState.exportSaveProjectFiles !== false; // default to true 
+      const selectedImageIndices = currentState.selectedImageIndices || [];
+
       // Force batch mode for Live State API
       if (!currentState.exportBatchModeEnabled) {
         return res.status(400).json({ 
@@ -444,11 +466,11 @@ export function registerExportRoutes(app: Express): void {
         
         // Batch settings from UI - use correct field names that match BatchExportSchema
         batchExportCount: currentState.exportBatchCount,
-        batchSaveProjectFiles: currentState.exportSaveProjectFiles,
+        batchSaveProjectFiles: exportSaveProjectFiles,
         packageAsZip: currentState.packageAsZip || false,
         // Selective export settings
-        exportAllImages: currentState.exportAllImages !== false, // default to true
-        selectedImageIndices: currentState.selectedImageIndices || [],
+        exportAllImages: exportAllImages,
+        selectedImageIndices: selectedImageIndices,
         
         // Generation count settings from UI
         ...(currentState.exportShapeCountRange && {
@@ -501,40 +523,62 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply selective export filtering if needed
+      // Apply selective export filtering and prioritize project files if Save Project Files is enabled
       let filteredResult = result;
-      if (!allSettings.exportAllImages && allSettings.selectedImageIndices.length > 0) {
-        // Convert 1-based UI indices to 0-based array indices and validate
-        const validIndices = allSettings.selectedImageIndices
-          .filter(idx => idx >= 1) // Must be 1-based
-          .map(idx => idx - 1); // Convert to 0-based
-        
-        // Filter files based on selectedImageIndices (handle multiple possible field names)
-        const fileFields = ['files', 'imageFiles'];
-        for (const field of fileFields) {
-          if (result[field] && Array.isArray(result[field])) {
-            const selectedFiles = validIndices
-              .filter(index => index >= 0 && index < result[field].length)
-              .map(index => result[field][index]);
+      
+      // When Save Project Files is enabled, prioritize project files over image files
+      if (allSettings.batchSaveProjectFiles) {
+        // Check if selective export is enabled
+        if (!exportAllImages && selectedImageIndices.length > 0) {
+          // Convert 1-based UI indices to 0-based array indices and validate
+          const validIndices = selectedImageIndices
+            .filter(idx => idx >= 1) // Must be 1-based
+            .map(idx => idx - 1); // Convert to 0-based
+          
+          // Filter project files based on selectedImageIndices
+          if (result.projectFiles && Array.isArray(result.projectFiles)) {
+            const selectedProjectFiles = validIndices
+              .filter(index => index >= 0 && index < result.projectFiles!.length)
+              .map(index => result.projectFiles![index]);
             
             filteredResult = {
               ...filteredResult,
-              [field]: selectedFiles,
-              [`${field}Count`]: selectedFiles.length
+              projectFiles: selectedProjectFiles,
+              // For backward compatibility, also set downloadUrl to first project file
+              downloadUrl: selectedProjectFiles.length > 0 ? selectedProjectFiles[0].url : result.downloadUrl
+            };
+          }
+        } else {
+          // Export all project files
+          if (result.projectFiles && Array.isArray(result.projectFiles)) {
+            filteredResult = {
+              ...filteredResult,
+              // For backward compatibility, also set downloadUrl to first project file
+              downloadUrl: result.projectFiles.length > 0 ? result.projectFiles[0].url : result.downloadUrl
             };
           }
         }
-        
-        // Also filter downloadUrls if present
-        if (result.downloadUrls && Array.isArray(result.downloadUrls)) {
-          const selectedDownloadUrls = validIndices
-            .filter(index => index >= 0 && index < result.downloadUrls.length)
-            .map(index => result.downloadUrls[index]);
+      } else {
+        // Original logic for image files when Save Project Files is disabled
+        if (!exportAllImages && selectedImageIndices.length > 0) {
+          // Convert 1-based UI indices to 0-based array indices and validate
+          const validIndices = selectedImageIndices
+            .filter(idx => idx >= 1) // Must be 1-based
+            .map(idx => idx - 1); // Convert to 0-based
           
-          filteredResult = {
-            ...filteredResult,
-            downloadUrls: selectedDownloadUrls
-          };
+          // Filter image files based on selectedImageIndices
+          if (result.imageFiles && Array.isArray(result.imageFiles)) {
+            const selectedImageFiles = validIndices
+              .filter(index => index >= 0 && index < result.imageFiles!.length)
+              .map(index => result.imageFiles![index]);
+            
+            filteredResult = {
+              ...filteredResult,
+              imageFiles: selectedImageFiles,
+              // For backward compatibility, set downloadUrl to first image file
+              downloadUrl: selectedImageFiles.length > 0 ? selectedImageFiles[0].url : result.downloadUrl
+            };
+          }
         }
       }
       
@@ -560,6 +604,217 @@ export function registerExportRoutes(app: Express): void {
         });
       }
     }
+  });
+
+  // Versioned batch export endpoints
+  app.post('/api/export/batch/v1', async (req, res) => {
+    try {
+      // V1 API - Basic batch export with defaults
+      const requestWithDefaults = {
+        exportAllImages: true,
+        batchSaveProjectFiles: true,
+        ...req.body
+      };
+      
+      const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
+      
+      // Use the same logic as regular batch export
+      const mockShapes: any[] = [];
+      const mockGroups: any[] = [];
+      const mockCanvasSettings = {
+        width: 1200,
+        height: 800,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        backgroundColor: '#1e293b',
+        showGrid: false
+      };
+      const mockBatchConfigSettings = {
+        selectedPreset: 'none',
+        noiseEnabled: false,
+        distributionLayoutEnabled: false,
+        propertiesEnabled: true,
+      };
+      const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
+      
+      const mockGenerateShapes = (config: any) => {
+        return { shapes: [], groups: [] };
+      };
+      
+      const result = await exportService.startBatchExport(
+        mockShapes,
+        mockGroups,
+        mockCanvasSettings,
+        mockBatchConfigSettings as any,
+        mockEnabledShapeTypes,
+        validatedSettings,
+        mockGenerateShapes
+      );
+      
+      res.json({
+        ...result,
+        apiVersion: 'v1',
+        message: 'V1 batch export completed'
+      });
+      
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          success: false, 
+          error: 'Invalid request parameters',
+          details: error.errors
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to start V1 batch export',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  });
+
+  // V2, V3, V4 endpoints use the same logic as V1 but with version-specific responses
+  ['v2', 'v3', 'v4'].forEach(version => {
+    app.post(`/api/export/batch/${version}`, async (req, res) => {
+      try {
+        // All versions support the full feature set with defaults
+        const requestWithDefaults = {
+          exportAllImages: true,
+          batchSaveProjectFiles: true,
+          ...req.body
+        };
+        
+        const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
+        
+        // Use the same logic as regular batch export
+        const mockShapes: any[] = [];
+        const mockGroups: any[] = [];
+        const mockCanvasSettings = {
+          width: 1200,
+          height: 800,
+          zoom: 1,
+          panX: 0,
+          panY: 0,
+          backgroundColor: '#1e293b',
+          showGrid: false
+        };
+        const mockBatchConfigSettings = {
+          selectedPreset: 'none',
+          noiseEnabled: false,
+          distributionLayoutEnabled: false,
+          propertiesEnabled: true,
+        };
+        const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
+        
+        const mockGenerateShapes = (config: any) => {
+          return { shapes: [], groups: [] };
+        };
+        
+        const result = await exportService.startBatchExport(
+          mockShapes,
+          mockGroups,
+          mockCanvasSettings,
+          mockBatchConfigSettings as any,
+          mockEnabledShapeTypes,
+          validatedSettings,
+          mockGenerateShapes
+        );
+        
+        res.json({
+          ...result,
+          apiVersion: version,
+          message: `${version.toUpperCase()} batch export completed`
+        });
+        
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ 
+            success: false, 
+            error: 'Invalid request parameters',
+            details: error.errors
+          });
+        } else {
+          res.status(500).json({ 
+            success: false, 
+            error: `Failed to start ${version.toUpperCase()} batch export`,
+            message: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+    });
+  });
+
+  // Versioned batch export endpoints (v1, v2, v3, v4)
+  ['v1', 'v2', 'v3', 'v4'].forEach(version => {
+    app.post(`/api/export/batch/${version}`, async (req, res) => {
+      try {
+        // All versions support the full feature set with defaults
+        const requestWithDefaults = {
+          exportAllImages: true,
+          batchSaveProjectFiles: true,
+          ...req.body
+        };
+        
+        const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
+        
+        // Use the same logic as regular batch export
+        const mockShapes: any[] = [];
+        const mockGroups: any[] = [];
+        const mockCanvasSettings = {
+          width: 1200,
+          height: 800,
+          zoom: 1,
+          panX: 0,
+          panY: 0,
+          backgroundColor: validatedSettings.backgroundColor || '#1e293b',
+          showGrid: false
+        };
+        const mockBatchConfigSettings = {
+          selectedPreset: 'none',
+          noiseEnabled: false,
+          distributionLayoutEnabled: false,
+          propertiesEnabled: true,
+        };
+        const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
+        
+        const mockGenerateShapes = (config: any) => {
+          return { shapes: [], groups: [] };
+        };
+        
+        const result = await exportService.startBatchExport(
+          mockShapes,
+          mockGroups,
+          mockCanvasSettings,
+          mockBatchConfigSettings as any,
+          mockEnabledShapeTypes,
+          validatedSettings,
+          mockGenerateShapes
+        );
+        
+        res.json({
+          ...result,
+          apiVersion: version,
+          message: `${version.toUpperCase()} batch export completed`
+        });
+        
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ 
+            success: false, 
+            error: 'Invalid request parameters',
+            details: error.errors
+          });
+        } else {
+          res.status(500).json({ 
+            success: false, 
+            error: `Failed to start ${version.toUpperCase()} batch export`,
+            message: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+    });
   });
 
   // Cleanup endpoint (can be called by cron job)
