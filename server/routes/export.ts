@@ -102,6 +102,7 @@ const LiveStateApiSchema = z.object({
 });
 
 // Helper function to apply consistent project file prioritization and selective filtering
+// NOTE: This should only be used when files are actually available (e.g., Live API or status responses)
 function applyProjectFilePrioritization(
   result: any, 
   settings: { batchSaveProjectFiles?: boolean; exportAllImages?: boolean; selectedImageIndices?: number[] }
@@ -118,7 +119,7 @@ function applyProjectFilePrioritization(
         .map(idx => idx - 1); // Convert to 0-based
       
       // Filter project files based on selectedImageIndices
-      if (result.projectFiles && Array.isArray(result.projectFiles)) {
+      if (result.projectFiles && Array.isArray(result.projectFiles) && result.projectFiles.length > 0) {
         const selectedProjectFiles = validIndices
           .filter(index => index >= 0 && index < result.projectFiles!.length)
           .map(index => result.projectFiles![index]);
@@ -134,7 +135,7 @@ function applyProjectFilePrioritization(
       }
     } else {
       // Export all project files
-      if (result.projectFiles && Array.isArray(result.projectFiles)) {
+      if (result.projectFiles && Array.isArray(result.projectFiles) && result.projectFiles.length > 0) {
         return {
           ...result,
           // Primary files to download (project files prioritized)
@@ -153,7 +154,7 @@ function applyProjectFilePrioritization(
         .map(idx => idx - 1); // Convert to 0-based
       
       // Filter image files based on selectedImageIndices
-      if (result.imageFiles && Array.isArray(result.imageFiles)) {
+      if (result.imageFiles && Array.isArray(result.imageFiles) && result.imageFiles.length > 0) {
         const selectedImageFiles = validIndices
           .filter(index => index >= 0 && index < result.imageFiles!.length)
           .map(index => result.imageFiles![index]);
@@ -261,9 +262,9 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply consistent project file prioritization logic
-      const prioritizedResult = applyProjectFilePrioritization(result, validatedSettings);
-      res.json(prioritizedResult);
+      // Note: Project file prioritization happens at the status endpoint when files are available
+      // The initial POST response contains empty arrays that will be populated during async processing
+      res.json(result);
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -594,7 +595,8 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply consistent project file prioritization logic using shared helper
+      // Apply consistent project file prioritization logic for Live API
+      // Live API expects immediate results, so we apply the helper here
       let filteredResult = applyProjectFilePrioritization(result, {
         batchSaveProjectFiles: allSettings.batchSaveProjectFiles,
         exportAllImages: exportAllImages,
@@ -673,11 +675,10 @@ export function registerExportRoutes(app: Express): void {
           mockGenerateShapes
         );
         
-        // Apply consistent project file prioritization logic
-        const prioritizedResult = applyProjectFilePrioritization(result, validatedSettings);
-        
+        // Note: Project file prioritization happens at the status endpoint when files are available
+        // The initial POST response contains empty arrays that will be populated during async processing
         res.json({
-          ...prioritizedResult,
+          ...result,
           apiVersion: version,
           message: `${version.toUpperCase()} batch export completed`
         });
