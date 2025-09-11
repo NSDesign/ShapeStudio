@@ -101,6 +101,78 @@ const LiveStateApiSchema = z.object({
   }).optional()
 });
 
+// Helper function to apply consistent project file prioritization and selective filtering
+function applyProjectFilePrioritization(
+  result: any, 
+  settings: { batchSaveProjectFiles?: boolean; exportAllImages?: boolean; selectedImageIndices?: number[] }
+): any {
+  const { batchSaveProjectFiles = false, exportAllImages = true, selectedImageIndices = [] } = settings;
+  
+  // When Save Project Files is enabled, prioritize project files over image files
+  if (batchSaveProjectFiles) {
+    // Check if selective export is enabled
+    if (!exportAllImages && selectedImageIndices.length > 0) {
+      // Convert 1-based UI indices to 0-based array indices and validate
+      const validIndices = selectedImageIndices
+        .filter(idx => idx >= 1) // Must be 1-based
+        .map(idx => idx - 1); // Convert to 0-based
+      
+      // Filter project files based on selectedImageIndices
+      if (result.projectFiles && Array.isArray(result.projectFiles)) {
+        const selectedProjectFiles = validIndices
+          .filter(index => index >= 0 && index < result.projectFiles!.length)
+          .map(index => result.projectFiles![index]);
+        
+        return {
+          ...result,
+          projectFiles: selectedProjectFiles,
+          // Primary files to download (project files prioritized)
+          files: selectedProjectFiles,
+          // For backward compatibility, set downloadUrl to first project file
+          downloadUrl: selectedProjectFiles.length > 0 ? selectedProjectFiles[0].url : result.downloadUrl
+        };
+      }
+    } else {
+      // Export all project files
+      if (result.projectFiles && Array.isArray(result.projectFiles)) {
+        return {
+          ...result,
+          // Primary files to download (project files prioritized)
+          files: result.projectFiles,
+          // For backward compatibility, set downloadUrl to first project file
+          downloadUrl: result.projectFiles.length > 0 ? result.projectFiles[0].url : result.downloadUrl
+        };
+      }
+    }
+  } else {
+    // Original logic for image files when Save Project Files is disabled
+    if (!exportAllImages && selectedImageIndices.length > 0) {
+      // Convert 1-based UI indices to 0-based array indices and validate
+      const validIndices = selectedImageIndices
+        .filter(idx => idx >= 1) // Must be 1-based
+        .map(idx => idx - 1); // Convert to 0-based
+      
+      // Filter image files based on selectedImageIndices
+      if (result.imageFiles && Array.isArray(result.imageFiles)) {
+        const selectedImageFiles = validIndices
+          .filter(index => index >= 0 && index < result.imageFiles!.length)
+          .map(index => result.imageFiles![index]);
+        
+        return {
+          ...result,
+          imageFiles: selectedImageFiles,
+          // Primary files to download (image files)
+          files: selectedImageFiles,
+          // For backward compatibility, set downloadUrl to first image file
+          downloadUrl: selectedImageFiles.length > 0 ? selectedImageFiles[0].url : result.downloadUrl
+        };
+      }
+    }
+  }
+  
+  return result;
+}
+
 export function registerExportRoutes(app: Express): void {
   // Get available export formats
   app.get('/api/export/formats', (req, res) => {
@@ -189,10 +261,9 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply the same project file prioritization logic as Live API
-      // When Save Project Files is enabled, the export service will automatically
-      // prioritize project files in the response through the status endpoint
-      res.json(result);
+      // Apply consistent project file prioritization logic
+      const prioritizedResult = applyProjectFilePrioritization(result, validatedSettings);
+      res.json(prioritizedResult);
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -523,64 +594,12 @@ export function registerExportRoutes(app: Express): void {
         mockGenerateShapes
       );
       
-      // Apply selective export filtering and prioritize project files if Save Project Files is enabled
-      let filteredResult = result;
-      
-      // When Save Project Files is enabled, prioritize project files over image files
-      if (allSettings.batchSaveProjectFiles) {
-        // Check if selective export is enabled
-        if (!exportAllImages && selectedImageIndices.length > 0) {
-          // Convert 1-based UI indices to 0-based array indices and validate
-          const validIndices = selectedImageIndices
-            .filter(idx => idx >= 1) // Must be 1-based
-            .map(idx => idx - 1); // Convert to 0-based
-          
-          // Filter project files based on selectedImageIndices
-          if (result.projectFiles && Array.isArray(result.projectFiles)) {
-            const selectedProjectFiles = validIndices
-              .filter(index => index >= 0 && index < result.projectFiles!.length)
-              .map(index => result.projectFiles![index]);
-            
-            filteredResult = {
-              ...filteredResult,
-              projectFiles: selectedProjectFiles,
-              // For backward compatibility, also set downloadUrl to first project file
-              downloadUrl: selectedProjectFiles.length > 0 ? selectedProjectFiles[0].url : result.downloadUrl
-            };
-          }
-        } else {
-          // Export all project files
-          if (result.projectFiles && Array.isArray(result.projectFiles)) {
-            filteredResult = {
-              ...filteredResult,
-              // For backward compatibility, also set downloadUrl to first project file
-              downloadUrl: result.projectFiles.length > 0 ? result.projectFiles[0].url : result.downloadUrl
-            };
-          }
-        }
-      } else {
-        // Original logic for image files when Save Project Files is disabled
-        if (!exportAllImages && selectedImageIndices.length > 0) {
-          // Convert 1-based UI indices to 0-based array indices and validate
-          const validIndices = selectedImageIndices
-            .filter(idx => idx >= 1) // Must be 1-based
-            .map(idx => idx - 1); // Convert to 0-based
-          
-          // Filter image files based on selectedImageIndices
-          if (result.imageFiles && Array.isArray(result.imageFiles)) {
-            const selectedImageFiles = validIndices
-              .filter(index => index >= 0 && index < result.imageFiles!.length)
-              .map(index => result.imageFiles![index]);
-            
-            filteredResult = {
-              ...filteredResult,
-              imageFiles: selectedImageFiles,
-              // For backward compatibility, set downloadUrl to first image file
-              downloadUrl: selectedImageFiles.length > 0 ? selectedImageFiles[0].url : result.downloadUrl
-            };
-          }
-        }
-      }
+      // Apply consistent project file prioritization logic using shared helper
+      let filteredResult = applyProjectFilePrioritization(result, {
+        batchSaveProjectFiles: allSettings.batchSaveProjectFiles,
+        exportAllImages: exportAllImages,
+        selectedImageIndices: selectedImageIndices
+      });
       
       // Return the same format as regular batch export with direct URLs
       res.json({
@@ -606,145 +625,6 @@ export function registerExportRoutes(app: Express): void {
     }
   });
 
-  // Versioned batch export endpoints
-  app.post('/api/export/batch/v1', async (req, res) => {
-    try {
-      // V1 API - Basic batch export with defaults
-      const requestWithDefaults = {
-        exportAllImages: true,
-        batchSaveProjectFiles: true,
-        ...req.body
-      };
-      
-      const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
-      
-      // Use the same logic as regular batch export
-      const mockShapes: any[] = [];
-      const mockGroups: any[] = [];
-      const mockCanvasSettings = {
-        width: 1200,
-        height: 800,
-        zoom: 1,
-        panX: 0,
-        panY: 0,
-        backgroundColor: '#1e293b',
-        showGrid: false
-      };
-      const mockBatchConfigSettings = {
-        selectedPreset: 'none',
-        noiseEnabled: false,
-        distributionLayoutEnabled: false,
-        propertiesEnabled: true,
-      };
-      const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
-      
-      const mockGenerateShapes = (config: any) => {
-        return { shapes: [], groups: [] };
-      };
-      
-      const result = await exportService.startBatchExport(
-        mockShapes,
-        mockGroups,
-        mockCanvasSettings,
-        mockBatchConfigSettings as any,
-        mockEnabledShapeTypes,
-        validatedSettings,
-        mockGenerateShapes
-      );
-      
-      res.json({
-        ...result,
-        apiVersion: 'v1',
-        message: 'V1 batch export completed'
-      });
-      
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          success: false, 
-          error: 'Invalid request parameters',
-          details: error.errors
-        });
-      } else {
-        res.status(500).json({ 
-          success: false, 
-          error: 'Failed to start V1 batch export',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
-  });
-
-  // V2, V3, V4 endpoints use the same logic as V1 but with version-specific responses
-  ['v2', 'v3', 'v4'].forEach(version => {
-    app.post(`/api/export/batch/${version}`, async (req, res) => {
-      try {
-        // All versions support the full feature set with defaults
-        const requestWithDefaults = {
-          exportAllImages: true,
-          batchSaveProjectFiles: true,
-          ...req.body
-        };
-        
-        const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
-        
-        // Use the same logic as regular batch export
-        const mockShapes: any[] = [];
-        const mockGroups: any[] = [];
-        const mockCanvasSettings = {
-          width: 1200,
-          height: 800,
-          zoom: 1,
-          panX: 0,
-          panY: 0,
-          backgroundColor: '#1e293b',
-          showGrid: false
-        };
-        const mockBatchConfigSettings = {
-          selectedPreset: 'none',
-          noiseEnabled: false,
-          distributionLayoutEnabled: false,
-          propertiesEnabled: true,
-        };
-        const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
-        
-        const mockGenerateShapes = (config: any) => {
-          return { shapes: [], groups: [] };
-        };
-        
-        const result = await exportService.startBatchExport(
-          mockShapes,
-          mockGroups,
-          mockCanvasSettings,
-          mockBatchConfigSettings as any,
-          mockEnabledShapeTypes,
-          validatedSettings,
-          mockGenerateShapes
-        );
-        
-        res.json({
-          ...result,
-          apiVersion: version,
-          message: `${version.toUpperCase()} batch export completed`
-        });
-        
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          res.status(400).json({ 
-            success: false, 
-            error: 'Invalid request parameters',
-            details: error.errors
-          });
-        } else {
-          res.status(500).json({ 
-            success: false, 
-            error: `Failed to start ${version.toUpperCase()} batch export`,
-            message: error instanceof Error ? error.message : 'Unknown error'
-          });
-        }
-      }
-    });
-  });
 
   // Versioned batch export endpoints (v1, v2, v3, v4)
   ['v1', 'v2', 'v3', 'v4'].forEach(version => {
@@ -793,8 +673,11 @@ export function registerExportRoutes(app: Express): void {
           mockGenerateShapes
         );
         
+        // Apply consistent project file prioritization logic
+        const prioritizedResult = applyProjectFilePrioritization(result, validatedSettings);
+        
         res.json({
-          ...result,
+          ...prioritizedResult,
           apiVersion: version,
           message: `${version.toUpperCase()} batch export completed`
         });
