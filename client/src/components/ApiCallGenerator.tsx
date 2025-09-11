@@ -249,8 +249,8 @@ export default function ApiCallGenerator({
   const generateCurlCommand = (platform: 'linux' | 'windows'): string => {
     const payload = generateApiPayload();
     const jsonPayload = JSON.stringify(payload, null, 2);
-    const baseUrl = 'https://your-app-domain.com';
-    const apiKey = 'your-api-key-here';
+    const baseUrl = 'https://shape-studio-nsdesign.replit.app';
+    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     
     // Choose endpoint based on API version
     const endpoint = selectedApiVersion === 'live' 
@@ -277,7 +277,7 @@ export default function ApiCallGenerator({
 
   const generateN8nConfig = (): object => {
     const payload = generateApiPayload();
-    const apiKey = 'your-api-key-here';
+    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     const endpoint = selectedApiVersion === 'live' 
       ? '/api/live/execute' 
       : `/api/export/batch/${selectedApiVersion}`;
@@ -286,7 +286,7 @@ export default function ApiCallGenerator({
       "node": "HttpRequest",
       "parameters": {
         "method": "POST",
-        "url": `https://your-app-domain.com${endpoint}`,
+        "url": `https://shape-studio-nsdesign.replit.app${endpoint}`,
         "headers": {
           "Content-Type": "application/json",
           "x-api-key": apiKey
