@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Palette, 
   Layers,
@@ -21,7 +22,10 @@ import {
   Settings,
   Info,
   Plus,
-  X
+  X,
+  AlertTriangle,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { 
   GenerationSet, 
@@ -31,11 +35,24 @@ import {
   SupportedShapeTypeSchema,
   BlendMode
 } from '@shared/schema';
+import {
+  ShapeSpecificPropertiesHelper,
+  BlendModeHelper,
+  GenerationSetValidator,
+  ValidationResult,
+  ValidationError,
+  ValidationWarning,
+  safeParseNumber,
+  isValidShapeType
+} from '@/lib/typedHelpers';
+import { SafeSection } from '@/components/ErrorBoundary';
 
 interface IndividualSetConfigProps {
   generationSet: GenerationSet;
   onUpdate: (updates: Partial<GenerationSet>) => void;
   globalZIndexEnabled?: boolean;
+  showInlineValidation?: boolean;
+  validationResult?: ValidationResult;
 }
 
 // Available shape types grouped by category
@@ -56,47 +73,55 @@ const BLEND_MODES: BlendMode[] = [
 export function IndividualSetConfig({ 
   generationSet, 
   onUpdate, 
-  globalZIndexEnabled = false 
+  globalZIndexEnabled = false,
+  showInlineValidation = true,
+  validationResult
 }: IndividualSetConfigProps) {
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationError | null>>({});
+  const [fieldWarnings, setFieldWarnings] = useState<Record<string, ValidationWarning | null>>({});
+  
+  // Create typed helpers
+  const shapePropertiesHelper = useMemo(() => 
+    new ShapeSpecificPropertiesHelper(generationSet.shapeSpecificProperties), 
+    [generationSet.shapeSpecificProperties]
+  );
 
-  // Validate the generation set
-  const validateGenerationSet = useCallback(() => {
-    const errors: string[] = [];
-
-    // Validate name
-    if (!generationSet.name.trim()) {
-      errors.push('Set name is required');
+  // Real-time validation
+  const currentValidation = useMemo(() => {
+    if (validationResult) {
+      return validationResult;
     }
+    return GenerationSetValidator.validateGenerationSet(generationSet);
+  }, [generationSet, validationResult]);
 
-    // Validate shape types
-    if (generationSet.enabledShapeTypes.length === 0) {
-      errors.push('At least one shape type must be selected');
-    }
-
-    // Validate shape count
-    if (generationSet.shapeCountMode === ShapeCountMode.FIXED) {
-      if (generationSet.shapeCountFixed < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet ||
-          generationSet.shapeCountFixed > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet) {
-        errors.push(`Shape count must be between ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet} and ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}`);
-      }
-    } else {
-      const [min, max] = generationSet.shapeCountRange;
-      if (min < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet ||
-          max > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet ||
-          min > max) {
-        errors.push(`Shape count range must be between ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet} and ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet} with min ≤ max`);
-      }
-    }
-
-    setValidationErrors(errors);
-    return errors.length === 0;
-  }, [generationSet]);
-
-  // Run validation whenever generation set changes
+  // Update field-level errors and warnings
   useEffect(() => {
-    validateGenerationSet();
-  }, [validateGenerationSet]);
+    if (!showInlineValidation) return;
+    
+    const newFieldErrors: Record<string, ValidationError | null> = {};
+    const newFieldWarnings: Record<string, ValidationWarning | null> = {};
+    
+    currentValidation.errors.forEach(error => {
+      newFieldErrors[error.field] = error;
+    });
+    
+    currentValidation.warnings.forEach(warning => {
+      newFieldWarnings[warning.field] = warning;
+    });
+    
+    setFieldErrors(newFieldErrors);
+    setFieldWarnings(newFieldWarnings);
+  }, [currentValidation, showInlineValidation]);
+
+  // Helper to get field validation state
+  const getFieldValidation = useCallback((fieldName: string) => {
+    return {
+      error: fieldErrors[fieldName],
+      warning: fieldWarnings[fieldName],
+      hasError: Boolean(fieldErrors[fieldName]),
+      hasWarning: Boolean(fieldWarnings[fieldName])
+    };
+  }, [fieldErrors, fieldWarnings]);
 
   // Update handlers
   const handleNameChange = useCallback((name: string) => {
@@ -153,83 +178,156 @@ export function IndividualSetConfig({
     });
   }, [generationSet.zIndexConfig, onUpdate]);
 
-  // Shape-specific property handlers
-  const handleShapeSpecificPropertyChange = useCallback((
+  // Shape-specific property handlers with type safety
+  const handleShapeSpecificPropertyChange = useCallback(<T = any>(
     shapeType: SupportedShapeType,
     property: string,
-    value: any
+    value: T
   ) => {
-    const currentProperties = generationSet.shapeSpecificProperties;
-    const shapeProperties = currentProperties[shapeType] || {};
+    if (!isValidShapeType(shapeType)) {
+      console.error(`Invalid shape type: ${shapeType}`);
+      return;
+    }
     
-    onUpdate({
-      shapeSpecificProperties: {
-        ...currentProperties,
-        [shapeType]: {
-          ...shapeProperties,
-          [property]: value
-        }
-      }
-    });
-  }, [generationSet.shapeSpecificProperties, onUpdate]);
+    const updatedProperties = shapePropertiesHelper.setProperty(shapeType, property, value);
+    onUpdate({ shapeSpecificProperties: updatedProperties });
+  }, [shapePropertiesHelper, onUpdate]);
+
+  // Helper to render field validation indicators
+  const renderFieldValidation = useCallback((fieldName: string) => {
+    const validation = getFieldValidation(fieldName);
+    
+    if (!showInlineValidation) return null;
+    
+    if (validation.hasError) {
+      return (
+        <div className="flex items-center gap-1 mt-1" data-testid={`validation-error-${fieldName}`}>
+          <AlertTriangle className="w-3 h-3 text-red-400" />
+          <span className="text-xs text-red-400">{validation.error!.message}</span>
+        </div>
+      );
+    }
+    
+    if (validation.hasWarning) {
+      return (
+        <div className="flex items-center gap-1 mt-1" data-testid={`validation-warning-${fieldName}`}>
+          <AlertCircle className="w-3 h-3 text-yellow-400" />
+          <span className="text-xs text-yellow-400">{validation.warning!.message}</span>
+        </div>
+      );
+    }
+    
+    return null;
+  }, [getFieldValidation, showInlineValidation]);
+
+  // Render validation summary
+  const renderValidationSummary = useCallback(() => {
+    if (!showInlineValidation || currentValidation.isValid) return null;
+    
+    return (
+      <Alert variant="destructive" className="mb-4" data-testid="validation-summary">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          <div className="space-y-1">
+            <p className="font-medium">Configuration Issues:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {currentValidation.errors.map((error, index) => (
+                <li key={`error-${index}`}>{error.message}</li>
+              ))}
+            </ul>
+            {currentValidation.warnings.length > 0 && (
+              <>
+                <p className="font-medium mt-2">Warnings:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-yellow-400">
+                  {currentValidation.warnings.map((warning, index) => (
+                    <li key={`warning-${index}`}>{warning.message}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }, [showInlineValidation, currentValidation]);
 
   return (
-    <Card className="bg-slate-900 border-slate-700" data-testid="individual-set-config">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-slate-200">
-          <Settings className="w-5 h-5" />
-          Configure Generation Set
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Type className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-slate-300">Basic Information</h4>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="set-name" className="text-slate-300">
-                    Set Name
-                  </Label>
-                  <Input
-                    id="set-name"
-                    value={generationSet.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="Enter set name"
-                    className="bg-slate-800 border-slate-600"
-                    data-testid="input-set-name"
-                  />
+    <SafeSection className="bg-slate-900 border-slate-700 rounded-lg">
+      <Card className="bg-slate-900 border-slate-700" data-testid="individual-set-config">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-slate-200">
+            <Settings className="w-5 h-5" />
+            Configure Generation Set
+            {!currentValidation.isValid && (
+              <Badge variant="destructive" className="ml-2" data-testid="badge-validation-status">
+                Issues
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-6">
+              {/* Validation Summary */}
+              {renderValidationSummary()}
+
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2" data-testid="section-basic-information">
+                  <Type className="w-4 h-4 text-slate-400" />
+                  <h4 className="text-sm font-medium text-slate-300" data-testid="heading-basic-information">Basic Information</h4>
                 </div>
                 
-                <div>
-                  <Label htmlFor="set-description" className="text-slate-300">
-                    Description (Optional)
-                  </Label>
-                  <Textarea
-                    id="set-description"
-                    value={generationSet.description || ''}
-                    onChange={(e) => handleDescriptionChange(e.target.value)}
-                    placeholder="Enter optional description"
-                    className="bg-slate-800 border-slate-600"
-                    rows={2}
-                    data-testid="textarea-set-description"
-                  />
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="set-name" className="text-slate-300">
+                      Set Name
+                    </Label>
+                    <Input
+                      id="set-name"
+                      value={generationSet.name}
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      placeholder="Enter set name"
+                      className={`bg-slate-800 border-slate-600 ${
+                        getFieldValidation('name').hasError ? 'border-red-500' : ''
+                      }`}
+                      data-testid="input-set-name"
+                      aria-invalid={getFieldValidation('name').hasError}
+                      aria-describedby={getFieldValidation('name').hasError ? 'set-name-error' : undefined}
+                    />
+                    <div id="set-name-error" role="alert">
+                      {renderFieldValidation('name')}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="set-description" className="text-slate-300">
+                      Description (Optional)
+                    </Label>
+                    <Textarea
+                      id="set-description"
+                      value={generationSet.description || ''}
+                      onChange={(e) => handleDescriptionChange(e.target.value)}
+                      placeholder="Enter optional description"
+                      className="bg-slate-800 border-slate-600"
+                      rows={2}
+                      data-testid="textarea-set-description"
+                      aria-describedby="set-description-help"
+                    />
+                    <div id="set-description-help" className="sr-only">
+                      Optional description for this generation set
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
             <Separator className="bg-slate-700" />
 
             {/* Shape Count Configuration */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" data-testid="section-shape-count">
                 <Hash className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-slate-300">Shape Count</h4>
+                <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-count">Shape Count</h4>
               </div>
 
               <div className="space-y-3">
@@ -237,44 +335,116 @@ export function IndividualSetConfig({
                   value={generationSet.shapeCountMode}
                   onValueChange={(value) => handleShapeCountModeChange(value as ShapeCountMode)}
                 >
-                  <SelectTrigger className="bg-slate-800 border-slate-600" data-testid="select-shape-count-mode">
+                  <SelectTrigger 
+                    className={`bg-slate-800 border-slate-600 ${
+                      getFieldValidation('shapeCountMode').hasError ? 'border-red-500' : ''
+                    }`} 
+                    data-testid="select-shape-count-mode"
+                    aria-invalid={getFieldValidation('shapeCountMode').hasError}
+                    aria-describedby={getFieldValidation('shapeCountMode').hasError ? 'shape-count-mode-error' : undefined}
+                  >
                     <SelectValue placeholder="Select count mode" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ShapeCountMode.FIXED}>Fixed Count</SelectItem>
-                    <SelectItem value={ShapeCountMode.RANGE}>Range</SelectItem>
+                    <SelectItem value={ShapeCountMode.FIXED} data-testid="option-shape-count-fixed">Fixed Count</SelectItem>
+                    <SelectItem value={ShapeCountMode.RANGE} data-testid="option-shape-count-range">Range</SelectItem>
                   </SelectContent>
                 </Select>
+                <div id="shape-count-mode-error" role="alert">
+                  {renderFieldValidation('shapeCountMode')}
+                </div>
 
                 {generationSet.shapeCountMode === ShapeCountMode.FIXED ? (
                   <div>
                     <Label className="text-slate-300 text-xs">
                       Fixed Shape Count: {generationSet.shapeCountFixed}
                     </Label>
-                    <Slider
-                      value={[generationSet.shapeCountFixed]}
-                      onValueChange={([value]) => handleShapeCountFixedChange(value)}
-                      min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
-                      max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
-                      step={1}
-                      className="mt-2"
-                      data-testid="slider-shape-count-fixed"
-                    />
+                    <div className="flex items-center gap-2 mt-2">
+                      <Slider
+                        value={[generationSet.shapeCountFixed]}
+                        onValueChange={([value]) => handleShapeCountFixedChange(safeParseNumber(value))}
+                        min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                        max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                        step={1}
+                        className="flex-1"
+                        data-testid="slider-shape-count-fixed"
+                      />
+                      <Input
+                        type="number"
+                        value={generationSet.shapeCountFixed}
+                        onChange={(e) => handleShapeCountFixedChange(safeParseNumber(e.target.value))}
+                        min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                        max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                        className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                          getFieldValidation('shapeCountFixed').hasError ? 'border-red-500' : ''
+                        }`}
+                        data-testid="input-shape-count-fixed"
+                        aria-invalid={getFieldValidation('shapeCountFixed').hasError}
+                        aria-describedby={getFieldValidation('shapeCountFixed').hasError ? 'shape-count-fixed-error' : undefined}
+                      />
+                    </div>
+                    <div id="shape-count-fixed-error" role="alert">
+                      {renderFieldValidation('shapeCountFixed')}
+                    </div>
                   </div>
                 ) : (
                   <div>
                     <Label className="text-slate-300 text-xs">
                       Shape Count Range: {generationSet.shapeCountRange[0]} - {generationSet.shapeCountRange[1]}
                     </Label>
-                    <Slider
-                      value={generationSet.shapeCountRange}
-                      onValueChange={(value) => handleShapeCountRangeChange(value as [number, number])}
-                      min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
-                      max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
-                      step={1}
-                      className="mt-2"
-                      data-testid="slider-shape-count-range"
-                    />
+                    <div className="space-y-2 mt-2">
+                      <Slider
+                        value={generationSet.shapeCountRange}
+                        onValueChange={(value) => handleShapeCountRangeChange(value as [number, number])}
+                        min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                        max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                        step={1}
+                        data-testid="slider-shape-count-range"
+                      />
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Label className="text-xs text-slate-400">Min:</Label>
+                          <Input
+                            type="number"
+                            value={generationSet.shapeCountRange[0]}
+                            onChange={(e) => {
+                              const newMin = safeParseNumber(e.target.value);
+                              handleShapeCountRangeChange([newMin, generationSet.shapeCountRange[1]]);
+                            }}
+                            min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                            max={generationSet.shapeCountRange[1]}
+                            className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                              getFieldValidation('shapeCountRange').hasError ? 'border-red-500' : ''
+                            }`}
+                            data-testid="input-shape-count-range-min"
+                            aria-invalid={getFieldValidation('shapeCountRange').hasError}
+                            aria-label="Minimum shape count"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Label className="text-xs text-slate-400">Max:</Label>
+                          <Input
+                            type="number"
+                            value={generationSet.shapeCountRange[1]}
+                            onChange={(e) => {
+                              const newMax = safeParseNumber(e.target.value);
+                              handleShapeCountRangeChange([generationSet.shapeCountRange[0], newMax]);
+                            }}
+                            min={generationSet.shapeCountRange[0]}
+                            max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                            className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                              getFieldValidation('shapeCountRange').hasError ? 'border-red-500' : ''
+                            }`}
+                            data-testid="input-shape-count-range-max"
+                            aria-invalid={getFieldValidation('shapeCountRange').hasError}
+                            aria-label="Maximum shape count"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div id="shape-count-range-error" role="alert">
+                      {renderFieldValidation('shapeCountRange')}
+                    </div>
                   </div>
                 )}
               </div>
@@ -284,28 +454,40 @@ export function IndividualSetConfig({
 
             {/* Shape Types Selection */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2 justify-between" data-testid="section-shape-types">
                 <div className="flex items-center gap-2">
                   <Palette className="w-4 h-4 text-slate-400" />
-                  <h4 className="text-sm font-medium text-slate-300">Shape Types</h4>
+                  <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-types">Shape Types</h4>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {generationSet.enabledShapeTypes.length} selected
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={generationSet.enabledShapeTypes.length === 0 ? "destructive" : "secondary"} 
+                    className="text-xs"
+                    data-testid="badge-selected-shapes-count"
+                  >
+                    {generationSet.enabledShapeTypes.length} selected
+                  </Badge>
+                  {getFieldValidation('enabledShapeTypes').hasError && (
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                  )}
+                </div>
+              </div>
+              <div id="enabled-shape-types-error" role="alert">
+                {renderFieldValidation('enabledShapeTypes')}
               </div>
 
-              <Accordion type="multiple" className="w-full">
+              <Accordion type="multiple" className="w-full" data-testid="accordion-shape-categories">
                 {Object.entries(SHAPE_CATEGORIES).map(([category, shapes]) => {
                   const enabledInCategory = shapes.filter(shape => 
                     generationSet.enabledShapeTypes.includes(shape)
                   ).length;
                   
                   return (
-                    <AccordionItem key={category} value={category} className="border-slate-700">
-                      <AccordionTrigger className="text-slate-300 hover:text-slate-200">
+                    <AccordionItem key={category} value={category} className="border-slate-700" data-testid={`accordion-item-${category.toLowerCase().replace(/\s+/g, '-')}`}>
+                      <AccordionTrigger className="text-slate-300 hover:text-slate-200" data-testid={`accordion-trigger-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                         <div className="flex items-center gap-2">
                           <span>{category}</span>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs" data-testid={`badge-category-count-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                             {enabledInCategory}/{shapes.length}
                           </Badge>
                         </div>
@@ -316,7 +498,7 @@ export function IndividualSetConfig({
                             variant="outline"
                             size="sm"
                             onClick={() => handleSelectAllShapes(category)}
-                            data-testid={`button-select-all-${category.toLowerCase()}`}
+                            data-testid={`button-select-all-${category.toLowerCase().replace(/\s+/g, '-')}`}
                           >
                             Select All
                           </Button>
@@ -324,7 +506,7 @@ export function IndividualSetConfig({
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeselectAllShapes(category)}
-                            data-testid={`button-deselect-all-${category.toLowerCase()}`}
+                            data-testid={`button-deselect-all-${category.toLowerCase().replace(/\s+/g, '-')}`}
                           >
                             Deselect All
                           </Button>
@@ -343,10 +525,13 @@ export function IndividualSetConfig({
                                   handleShapeTypeToggle(shapeType, checked as boolean)
                                 }
                                 data-testid={`checkbox-shape-${shapeType}`}
+                                aria-describedby={`label-shape-${shapeType}`}
                               />
                               <Label 
+                                id={`label-shape-${shapeType}`}
                                 htmlFor={`shape-${shapeType}`}
                                 className="text-sm text-slate-300 cursor-pointer"
+                                data-testid={`label-shape-${shapeType}`}
                               >
                                 {shapeType.replace('-', ' ')}
                               </Label>
@@ -366,10 +551,10 @@ export function IndividualSetConfig({
 
                 {/* Z-Index Configuration */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-testid="section-zindex-layering">
                     <Layers className="w-4 h-4 text-slate-400" />
-                    <h4 className="text-sm font-medium text-slate-300">Z-Index Layering</h4>
-                    <Info className="w-3 h-3 text-slate-500" />
+                    <h4 className="text-sm font-medium text-slate-300" data-testid="heading-zindex-layering">Z-Index Layering</h4>
+                    <Info className="w-3 h-3 text-slate-500" data-testid="icon-zindex-info" />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
@@ -385,6 +570,7 @@ export function IndividualSetConfig({
                         step={100}
                         className="mt-2"
                         data-testid="slider-zindex-base-offset"
+                        aria-label="Base Z-index offset"
                       />
                       <p className="text-xs text-slate-500 mt-1">
                         Starting z-index for shapes in this set
@@ -403,6 +589,7 @@ export function IndividualSetConfig({
                         step={1}
                         className="mt-2"
                         data-testid="slider-zindex-increment-per-shape"
+                        aria-label="Z-index increment per shape"
                       />
                       <p className="text-xs text-slate-500 mt-1">
                         Z-index increment between shapes in this set
@@ -421,6 +608,7 @@ export function IndividualSetConfig({
                         step={10}
                         className="mt-2"
                         data-testid="slider-zindex-increment-per-generation"
+                        aria-label="Z-index increment per generation"
                       />
                       <p className="text-xs text-slate-500 mt-1">
                         Z-index increment between batch generations
@@ -432,12 +620,12 @@ export function IndividualSetConfig({
             )}
 
             {globalZIndexEnabled && (
-              <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
+              <div className="bg-slate-800 p-4 rounded-lg border border-slate-700" data-testid="alert-global-zindex-enabled">
                 <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-medium text-slate-300">Global Z-Index Enabled</span>
+                  <Info className="w-4 h-4 text-blue-400" data-testid="icon-global-zindex-info" />
+                  <span className="text-sm font-medium text-slate-300" data-testid="text-global-zindex-title">Global Z-Index Enabled</span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500" data-testid="text-global-zindex-description">
                   Z-index settings are controlled globally. Individual set z-index configuration is disabled.
                 </p>
               </div>
@@ -449,22 +637,22 @@ export function IndividualSetConfig({
                 <Separator className="bg-slate-700" />
                 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-testid="section-shape-specific-properties">
                     <Settings className="w-4 h-4 text-slate-400" />
-                    <h4 className="text-sm font-medium text-slate-300">Shape-Specific Properties</h4>
+                    <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-specific-properties">Shape-Specific Properties</h4>
                   </div>
 
-                  <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 bg-slate-800">
+                  <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full" data-testid="tabs-shape-properties">
+                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 bg-slate-800" data-testid="tabs-list-shape-properties">
                       {generationSet.enabledShapeTypes.slice(0, 5).map((shapeType) => (
-                        <TabsTrigger key={shapeType} value={shapeType} className="text-xs">
+                        <TabsTrigger key={shapeType} value={shapeType} className="text-xs" data-testid={`tab-trigger-${shapeType}`}>
                           {shapeType.split('-')[0]}
                         </TabsTrigger>
                       ))}
                     </TabsList>
                     
                     {generationSet.enabledShapeTypes.map((shapeType) => (
-                      <TabsContent key={shapeType} value={shapeType} className="space-y-3">
+                      <TabsContent key={shapeType} value={shapeType} className="space-y-3" data-testid={`tab-content-${shapeType}`}>
                         <div className="bg-slate-800 p-4 rounded-lg">
                           <h5 className="text-sm font-medium text-slate-300 mb-3">
                             {shapeType.replace('-', ' ')} Properties
@@ -730,16 +918,16 @@ export function IndividualSetConfig({
             )}
 
             {/* Validation Errors */}
-            {validationErrors.length > 0 && (
+            {showInlineValidation && currentValidation.errors.length > 0 && (
               <div className="bg-red-900/20 border border-red-700 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <X className="w-4 h-4 text-red-400" />
                   <span className="text-sm font-medium text-red-400">Validation Errors</span>
                 </div>
                 <ul className="space-y-1">
-                  {validationErrors.map((error, index) => (
+                  {currentValidation.errors.map((error, index) => (
                     <li key={index} className="text-sm text-red-300">
-                      • {error}
+                      • {error.message}
                     </li>
                   ))}
                 </ul>
@@ -749,5 +937,6 @@ export function IndividualSetConfig({
         </ScrollArea>
       </CardContent>
     </Card>
+    </SafeSection>
   );
 }

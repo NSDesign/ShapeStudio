@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Plus, 
   Copy, 
@@ -15,7 +16,10 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
-  GripVertical
+  GripVertical,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { 
   GenerationSet, 
@@ -25,6 +29,13 @@ import {
   GenerationSetUtils
 } from '@shared/schema';
 import { IndividualSetConfig } from '@/components/IndividualSetConfig';
+import { 
+  GenerationSetValidator,
+  ValidationResult,
+  ValidationError,
+  ValidationWarning
+} from '@/lib/typedHelpers';
+import { ErrorBoundary, SafeSection } from '@/components/ErrorBoundary';
 
 interface GenerationSetsInterfaceProps {
   generationSets: GenerationSet[];
@@ -32,6 +43,8 @@ interface GenerationSetsInterfaceProps {
   validationErrors?: string[];
   maxSets?: number;
   globalZIndexEnabled?: boolean;
+  showInlineValidation?: boolean;
+  onValidationChange?: (isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => void;
 }
 
 export function GenerationSetsInterface({
@@ -39,11 +52,37 @@ export function GenerationSetsInterface({
   onGenerationSetsChange,
   validationErrors = [],
   maxSets = DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
-  globalZIndexEnabled = false
+  globalZIndexEnabled = false,
+  showInlineValidation = true,
+  onValidationChange
 }: GenerationSetsInterfaceProps) {
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
   const [draggedSetId, setDraggedSetId] = useState<string | null>(null);
   const [dragOverSetId, setDragOverSetId] = useState<string | null>(null);
+  const [setValidations, setSetValidations] = useState<Record<string, ValidationResult>>({});
+
+  // Comprehensive validation for all sets
+  const overallValidation = useMemo(() => {
+    const validation = GenerationSetValidator.validateGenerationSets(generationSets);
+    
+    // Update parent validation state if callback provided
+    if (onValidationChange) {
+      onValidationChange(validation.isValid, validation.errors, validation.warnings);
+    }
+    
+    return validation;
+  }, [generationSets, onValidationChange]);
+  
+  // Individual set validations
+  useEffect(() => {
+    if (!showInlineValidation) return;
+    
+    const newSetValidations: Record<string, ValidationResult> = {};
+    generationSets.forEach(set => {
+      newSetValidations[set.id] = GenerationSetValidator.validateGenerationSet(set);
+    });
+    setSetValidations(newSetValidations);
+  }, [generationSets, showInlineValidation]);
 
   // Auto-select first set if none selected and sets exist
   useEffect(() => {
@@ -200,21 +239,92 @@ export function GenerationSetsInterface({
         : Math.floor((set.shapeCountRange[0] + set.shapeCountRange[1]) / 2);
       return total + count;
     }, 0);
+    
+  // Get validation state for a specific set
+  const getSetValidation = useCallback((setId: string) => {
+    return setValidations[setId] || { isValid: true, errors: [], warnings: [] };
+  }, [setValidations]);
+  
+  // Render set validation indicator
+  const renderSetValidationIndicator = useCallback((setId: string) => {
+    if (!showInlineValidation) return null;
+    
+    const validation = getSetValidation(setId);
+    
+    if (validation.errors.length > 0) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertTriangle 
+                className="w-4 h-4 text-red-400 cursor-help" 
+                data-testid={`validation-error-indicator-${setId}`}
+              />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="space-y-1">
+                <p className="font-medium text-red-400">Errors:</p>
+                {validation.errors.map((error, index) => (
+                  <p key={index} className="text-xs">{error.message}</p>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    if (validation.warnings.length > 0) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertCircle 
+                className="w-4 h-4 text-yellow-400 cursor-help"
+                data-testid={`validation-warning-indicator-${setId}`}
+              />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="space-y-1">
+                <p className="font-medium text-yellow-400">Warnings:</p>
+                {validation.warnings.map((warning, index) => (
+                  <p key={index} className="text-xs">{warning.message}</p>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    return (
+      <CheckCircle 
+        className="w-4 h-4 text-green-400"
+        data-testid={`validation-success-indicator-${setId}`}
+      />
+    );
+  }, [showInlineValidation, getSetValidation]);
 
   const selectedSet = generationSets.find(set => set.id === selectedSetId);
 
   return (
-    <div className="space-y-4" data-testid="generation-sets-interface">
+    <ErrorBoundary
+      resetKeys={[generationSets.length, selectedSetId]}
+      onError={(error, errorInfo) => {
+        console.error('GenerationSetsInterface error:', error, errorInfo);
+      }}
+    >
+      <div className="space-y-4" data-testid="generation-sets-interface">
       {/* Header with summary */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-slate-200">Generation Sets</h3>
+          <h3 className="text-lg font-semibold text-slate-200" data-testid="heading-generation-sets">Generation Sets</h3>
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span>{generationSets.length} sets</span>
+            <span data-testid="text-sets-count">{generationSets.length} sets</span>
             <Separator orientation="vertical" className="h-4" />
-            <span>{generationSets.filter(set => set.enabled).length} enabled</span>
+            <span data-testid="text-enabled-count">{generationSets.filter(set => set.enabled).length} enabled</span>
             <Separator orientation="vertical" className="h-4" />
-            <span>~{totalShapeCount} shapes total</span>
+            <span data-testid="text-total-shapes">~{totalShapeCount} shapes total</span>
           </div>
         </div>
         
@@ -229,24 +339,51 @@ export function GenerationSetsInterface({
         </Button>
       </div>
 
-      {/* Validation errors */}
-      {validationErrors.length > 0 && (
-        <Alert variant="destructive" data-testid="alert-validation-errors">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <ul className="list-disc list-inside space-y-1">
-              {validationErrors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Overall validation summary */}
+        {showInlineValidation && !overallValidation.isValid && (
+          <Alert variant="destructive" data-testid="alert-overall-validation-errors">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-medium">Generation Sets Issues:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {overallValidation.errors.map((error, index) => (
+                    <li key={`error-${index}`}>{error.message}</li>
+                  ))}
+                </ul>
+                {overallValidation.warnings.length > 0 && (
+                  <>
+                    <p className="font-medium text-yellow-400 mt-2">Warnings:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-yellow-400">
+                      {overallValidation.warnings.map((warning, index) => (
+                        <li key={`warning-${index}`}>{warning.message}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Legacy validation errors for backward compatibility */}
+        {validationErrors.length > 0 && (
+          <Alert variant="destructive" data-testid="alert-legacy-validation-errors">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <ul className="list-disc list-inside space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
-          <h4 className="text-sm font-medium text-slate-300 mb-2">Generation Sets List</h4>
+          <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">Generation Sets List</h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
               {generationSets.map((set, index) => (
@@ -269,7 +406,7 @@ export function GenerationSetsInterface({
                 >
                   <CardContent className="p-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <GripVertical className="w-4 h-4 text-slate-500" />
+                      <GripVertical className="w-4 h-4 text-slate-500" data-testid={`handle-drag-${set.id}`} />
                       <Button
                         variant="ghost"
                         size="sm"
@@ -278,40 +415,43 @@ export function GenerationSetsInterface({
                           e.stopPropagation();
                           handleToggleSetEnabled(set.id);
                         }}
-                        data-testid={`button-toggle-set-${set.id}`}
+                        data-testid={`button-toggle-enabled-${set.id}`}
+                        aria-label={set.enabled ? `Disable ${set.name}` : `Enable ${set.name}`}
                       >
                         {set.enabled ? (
-                          <Eye className="w-3 h-3 text-green-400" />
+                          <Eye className="w-3 h-3 text-green-400" data-testid={`icon-enabled-${set.id}`} />
                         ) : (
-                          <EyeOff className="w-3 h-3 text-slate-500" />
+                          <EyeOff className="w-3 h-3 text-slate-500" data-testid={`icon-disabled-${set.id}`} />
                         )}
                       </Button>
-                      <span className="text-xs text-slate-500">#{index + 1}</span>
+                      <span className="text-xs text-slate-500" data-testid={`text-set-order-${set.id}`}>#{index + 1}</span>
+                      {renderSetValidationIndicator(set.id)}
                     </div>
 
-                    <h5 className="font-medium text-slate-200 mb-1 truncate">
+                    <h5 className="font-medium text-slate-200 mb-1 truncate" data-testid={`text-set-name-${set.id}`}>
                       {set.name}
                     </h5>
 
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    <div className="flex flex-wrap gap-1 mb-2" data-testid={`container-shape-types-${set.id}`}>
                       {set.enabledShapeTypes.slice(0, 3).map(shapeType => (
                         <Badge 
                           key={shapeType} 
                           variant="secondary" 
                           className="text-xs"
+                          data-testid={`badge-shape-type-${set.id}-${shapeType}`}
                         >
                           {shapeType}
                         </Badge>
                       ))}
                       {set.enabledShapeTypes.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs" data-testid={`badge-more-shapes-${set.id}`}>
                           +{set.enabledShapeTypes.length - 3}
                         </Badge>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span>
+                      <span data-testid={`text-shape-count-${set.id}`}>
                         {set.shapeCountMode === ShapeCountMode.FIXED 
                           ? `${set.shapeCountFixed} shapes`
                           : `${set.shapeCountRange[0]}-${set.shapeCountRange[1]} shapes`
@@ -328,6 +468,7 @@ export function GenerationSetsInterface({
                           }}
                           disabled={index === 0}
                           data-testid={`button-move-up-${set.id}`}
+                          aria-label={`Move ${set.name} up`}
                         >
                           <ChevronUp className="w-3 h-3" />
                         </Button>
@@ -341,6 +482,7 @@ export function GenerationSetsInterface({
                           }}
                           disabled={index === generationSets.length - 1}
                           data-testid={`button-move-down-${set.id}`}
+                          aria-label={`Move ${set.name} down`}
                         >
                           <ChevronDown className="w-3 h-3" />
                         </Button>
@@ -354,6 +496,7 @@ export function GenerationSetsInterface({
                           }}
                           disabled={generationSets.length >= maxSets}
                           data-testid={`button-duplicate-${set.id}`}
+                          aria-label={`Duplicate ${set.name}`}
                         >
                           <Copy className="w-3 h-3" />
                         </Button>
@@ -367,6 +510,7 @@ export function GenerationSetsInterface({
                           }}
                           disabled={generationSets.length <= 1}
                           data-testid={`button-delete-${set.id}`}
+                          aria-label={`Delete ${set.name}`}
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -388,16 +532,20 @@ export function GenerationSetsInterface({
               globalZIndexEnabled={globalZIndexEnabled}
             />
           ) : (
-            <Card className="bg-slate-900 border-slate-700">
+            <Card className="bg-slate-900 border-slate-700" data-testid="card-no-set-selected">
               <CardContent className="p-8 text-center">
-                <Settings className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-300 mb-2">
+                <Settings className="w-12 h-12 text-slate-500 mx-auto mb-4" data-testid="icon-no-selection" />
+                <h3 className="text-lg font-medium text-slate-300 mb-2" data-testid="heading-no-selection">
                   No Generation Set Selected
                 </h3>
-                <p className="text-slate-500 mb-4">
+                <p className="text-slate-500 mb-4" data-testid="text-no-selection-help">
                   Select a generation set from the list to configure its settings.
                 </p>
-                <Button onClick={handleAddSet} disabled={generationSets.length >= maxSets}>
+                <Button 
+                  onClick={handleAddSet} 
+                  disabled={generationSets.length >= maxSets}
+                  data-testid="button-create-first-set"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Set
                 </Button>
@@ -407,5 +555,6 @@ export function GenerationSetsInterface({
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
