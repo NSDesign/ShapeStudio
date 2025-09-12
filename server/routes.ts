@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API key authentication for external access
   const apiKeyAuth = (req: any, res: any, next: any) => {
     const apiKey = req.headers['x-api-key'];
-    if (apiKey === '3211d3f332fsss4t4tbebw5r653765h6brb4') {
+    if (apiKey === process.env.API_KEY) {
       req.user = {
         claims: {
           sub: 'api-user',
