@@ -9,23 +9,28 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
 
 interface BatchConfigDialogProps {
-  settings: BatchConfigSettings;
-  onSettingsChange: (settings: BatchConfigSettings) => void;
+  settings: BatchConfigSettings | EnhancedBatchConfig;
+  onSettingsChange: (settings: BatchConfigSettings | EnhancedBatchConfig) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  // Support for enhanced batch config mode
+  supportEnhancedMode?: boolean;
 }
 
-export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange }: BatchConfigDialogProps) {
+export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange, supportEnhancedMode = false }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
+  const [enhancedConfig, setEnhancedConfig] = useState<EnhancedBatchConfig | null>(null);
+  const [selectedMode, setSelectedMode] = useState<GenerationSetMode>(GenerationSetMode.SINGLE);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Sync with external control
   useEffect(() => {
@@ -48,11 +53,32 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     console.log('[BatchConfigDialog] Dialog state changed:', { isOpen });
   }, [isOpen]);
 
-  // Initialize currentSettings when settings prop changes
+  // Initialize settings based on mode and input type
   useEffect(() => {
-    const mergedSettings = { ...defaultSettings, ...settings };
-    setCurrentSettings(mergedSettings);
-  }, [settings]);
+    if (supportEnhancedMode && isEnhancedBatchConfig(settings)) {
+      // Handle EnhancedBatchConfig
+      setEnhancedConfig(settings);
+      setSelectedMode(settings.mode);
+      
+      if (settings.mode === GenerationSetMode.SINGLE && settings.legacyBatchConfig) {
+        const mergedSettings = { ...defaultSettings, ...settings.legacyBatchConfig };
+        setCurrentSettings(mergedSettings);
+      } else {
+        setCurrentSettings(defaultSettings);
+      }
+    } else {
+      // Handle legacy BatchConfigSettings
+      const mergedSettings = { ...defaultSettings, ...settings as BatchConfigSettings };
+      setCurrentSettings(mergedSettings);
+      setSelectedMode(GenerationSetMode.SINGLE);
+      setEnhancedConfig(null);
+    }
+  }, [settings, supportEnhancedMode]);
+  
+  // Helper function to check if settings is EnhancedBatchConfig
+  const isEnhancedBatchConfig = (settings: BatchConfigSettings | EnhancedBatchConfig): settings is EnhancedBatchConfig => {
+    return 'mode' in settings && 'globalSettings' in settings;
+  };
 
   const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings>) => {
     console.log('[BatchConfigDialog] Settings update triggered:', {
@@ -108,11 +134,105 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     setCurrentSettings(defaultSettings);
   }, []);
 
+  // Validation for mode restrictions with real-time validation
+  const validateConfiguration = useCallback((): string | null => {
+    if (!supportEnhancedMode || selectedMode === GenerationSetMode.SINGLE) {
+      return null; // No validation needed for legacy mode
+    }
+    
+    // Multi-generation mode validations
+    const restrictions = enhancedConfig?.modeRestrictions || {
+      multiGenerationOnlyForFixedCount: true,
+      maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
+      minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
+      maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
+    };
+    
+    const generationSets = enhancedConfig?.generationSets || [];
+    
+    if (generationSets.length === 0) {
+      return 'Multi-generation mode requires at least one generation set';
+    }
+    
+    if (generationSets.length > restrictions.maxGenerationSets) {
+      return `Maximum ${restrictions.maxGenerationSets} generation sets allowed`;
+    }
+    
+    // Check fixed count requirement if enabled
+    if (restrictions.multiGenerationOnlyForFixedCount) {
+      const hasVariableCount = generationSets.some(set => 
+        set.batchConfig.generationCountMode !== 'fixed'
+      );
+      if (hasVariableCount) {
+        return 'Multi-generation mode requires fixed generation count for all sets';
+      }
+    }
+    
+    // Check shape count limits
+    for (const set of generationSets) {
+      const shapeCount = set.batchConfig.generationCountDefine;
+      if (shapeCount < restrictions.minShapesPerSet || shapeCount > restrictions.maxShapesPerSet) {
+        return `Shape count must be between ${restrictions.minShapesPerSet} and ${restrictions.maxShapesPerSet}`;
+      }
+    }
+    
+    return null;
+  }, [supportEnhancedMode, selectedMode, enhancedConfig]);
+  
+  // Update validation error state when configuration changes
+  useEffect(() => {
+    const error = validateConfiguration();
+    setValidationError(error);
+  }, [validateConfiguration]);
+  
   const applySettings = useCallback(() => {
     console.log('[BatchConfigDialog] Applying settings to parent');
-    onSettingsChange(currentSettings);
+    
+    // Validate configuration before applying
+    const currentValidationError = validateConfiguration();
+    if (currentValidationError) {
+      console.error('[BatchConfigDialog] Validation error:', currentValidationError);
+      // Error is already shown in UI via validationError state
+      return;
+    }
+    
+    if (supportEnhancedMode) {
+      // Create or update EnhancedBatchConfig
+      const now = new Date().toISOString();
+      const updatedEnhancedConfig: EnhancedBatchConfig = {
+        mode: selectedMode,
+        legacyBatchConfig: selectedMode === GenerationSetMode.SINGLE ? currentSettings : undefined,
+        generationSets: enhancedConfig?.generationSets || [],
+        globalSettings: enhancedConfig?.globalSettings || {
+          canvasWidth: 800,
+          canvasHeight: 600,
+          exportFormat: 'png',
+          exportQuality: 90,
+          globalZIndexSettings: {
+            startingZIndex: 1000,
+            setSpacing: 1000,
+            preventOverlap: true,
+            useGlobalSettings: true
+          }
+        },
+        modeRestrictions: enhancedConfig?.modeRestrictions || {
+          multiGenerationOnlyForFixedCount: true,
+          maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
+          minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
+          maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
+        },
+        createdAt: enhancedConfig?.createdAt || now,
+        updatedAt: now,
+        version: '1.0.0'
+      };
+      onSettingsChange(updatedEnhancedConfig);
+    } else {
+      // Legacy mode - return BatchConfigSettings
+      onSettingsChange(currentSettings);
+    }
+    
     setIsOpen(false);
-  }, [currentSettings, onSettingsChange]);
+  }, [currentSettings, selectedMode, enhancedConfig, supportEnhancedMode, onSettingsChange, validateConfiguration]);
 
   const blendModes: BlendMode[] = [
     'source-over', 'multiply', 'screen', 'overlay', 'darken', 
@@ -174,7 +294,97 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
 
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ zIndex: 10001 }}>
-              {/* Collapsible System Behavior Explanation */}
+              
+              {/* Mode Selection (only show if enhanced mode is supported) */}
+              {supportEnhancedMode && (
+                <>
+                  <div className="space-y-3">
+                    <Label className="font-medium text-slate-200">Generation Mode</Label>
+                    <Select 
+                      value={selectedMode}
+                      onValueChange={(value) => {
+                        const newMode = value as GenerationSetMode;
+                        setSelectedMode(newMode);
+                        
+                        // Create default config when switching to MULTI mode with null config
+                        if (newMode === GenerationSetMode.MULTI && !enhancedConfig) {
+                          const now = new Date().toISOString();
+                          const defaultEnhancedConfig: EnhancedBatchConfig = {
+                            mode: GenerationSetMode.MULTI,
+                            legacyBatchConfig: undefined,
+                            generationSets: [],
+                            globalSettings: {
+                              canvasWidth: 800,
+                              canvasHeight: 600,
+                              exportFormat: 'png',
+                              exportQuality: 90,
+                              globalZIndexSettings: {
+                                startingZIndex: 1000,
+                                setSpacing: 1000,
+                                preventOverlap: true,
+                                useGlobalSettings: true
+                              }
+                            },
+                            modeRestrictions: {
+                              multiGenerationOnlyForFixedCount: true,
+                              maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
+                              minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
+                              maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
+                            },
+                            createdAt: now,
+                            updatedAt: now,
+                            version: '1.0.0'
+                          };
+                          setEnhancedConfig(defaultEnhancedConfig);
+                        }
+                      }}
+                      data-testid="select-generation-mode"
+                    >
+                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                        <SelectItem value={GenerationSetMode.SINGLE as string} className="text-slate-200 hover:bg-slate-700">
+                          Single Generation (Legacy)
+                        </SelectItem>
+                        <SelectItem value={GenerationSetMode.MULTI as string} className="text-slate-200 hover:bg-slate-700">
+                          Multi-Generation (Generation Sets)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-400">
+                      {selectedMode === GenerationSetMode.SINGLE 
+                        ? 'Traditional batch generation with single configuration set'
+                        : 'Advanced generation sets with individual configurations per set'
+                      }
+                    </p>
+                  </div>
+                  
+                  <Separator className="bg-slate-600" />
+                </>
+              )}
+              {/* Validation error display */}
+              {validationError && (
+                <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 mb-4" data-testid="validation-error">
+                  <div className="flex items-start space-x-2">
+                    <X className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-red-200">Configuration Error</h4>
+                      <p className="text-sm text-red-300 mt-1">{validationError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Show generation sets UI in multi mode, legacy UI in single mode */}
+              {selectedMode === GenerationSetMode.MULTI ? (
+                <GenerationSetsInterface 
+                  config={enhancedConfig}
+                  onConfigChange={setEnhancedConfig}
+                />
+              ) : (
+                <>
+                  {/* Collapsible System Behavior Explanation */}
               <div className="border border-slate-600 rounded">
                 <Button
                   variant="ghost"
@@ -3311,6 +3521,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   </div>
                 )}
               </div>
+                </>
+              )}
             </div>
             
             {/* Footer */}
@@ -3325,7 +3537,12 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 </Button>
                 <Button 
                   onClick={applySettings}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!!validationError}
+                  className={`${validationError 
+                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                  data-testid="button-apply"
                 >
                   Apply
                 </Button>
@@ -3343,5 +3560,188 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
         document.body
       )}
     </>
+  );
+}
+
+// Generation Sets Interface Component
+interface GenerationSetsInterfaceProps {
+  config: EnhancedBatchConfig | null;
+  onConfigChange: (config: EnhancedBatchConfig) => void;
+}
+
+function GenerationSetsInterface({ config, onConfigChange }: GenerationSetsInterfaceProps) {
+  const addGenerationSet = useCallback(() => {
+    const now = new Date().toISOString();
+    const newSet: GenerationSet = {
+      id: `set_${Date.now()}`,
+      name: `Generation Set ${(config?.generationSets.length || 0) + 1}`,
+      enabled: true,
+      enabledShapeTypes: ['rectangle', 'circle'],
+      shapeCountMode: 'FIXED' as any,
+      shapeCountFixed: 10,
+      shapeCountRange: [5, 15],
+      shapeSpecificProperties: {},
+      zIndexConfig: {
+        baseOffset: 1000,
+        incrementPerShape: 1,
+        incrementPerGeneration: 1000
+      },
+      batchConfig: { ...defaultBatchConfigSettings, generationCountMode: 'fixed', generationCountDefine: 10 },
+      generationOrder: (config?.generationSets.length || 0) + 1,
+      description: 'New generation set'
+    };
+    
+    const updatedConfig: EnhancedBatchConfig = {
+      ...config,
+      mode: GenerationSetMode.MULTI,
+      generationSets: [...(config?.generationSets || []), newSet],
+      globalSettings: config?.globalSettings || {
+        canvasWidth: 800,
+        canvasHeight: 600,
+        exportFormat: 'png',
+        exportQuality: 90,
+        globalZIndexSettings: {
+          startingZIndex: 1000,
+          setSpacing: 1000,
+          preventOverlap: true,
+          useGlobalSettings: true
+        }
+      },
+      modeRestrictions: config?.modeRestrictions || {
+        multiGenerationOnlyForFixedCount: true,
+        maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
+        minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
+        maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
+      },
+      createdAt: config?.createdAt || now,
+      updatedAt: now,
+      version: '1.0.0'
+    };
+    
+    onConfigChange(updatedConfig);
+  }, [config, onConfigChange]);
+  
+  const removeGenerationSet = useCallback((setId: string) => {
+    if (!config) return;
+    
+    const updatedConfig: EnhancedBatchConfig = {
+      ...config,
+      generationSets: config.generationSets.filter(set => set.id !== setId),
+      updatedAt: new Date().toISOString()
+    };
+    
+    onConfigChange(updatedConfig);
+  }, [config, onConfigChange]);
+  
+  const updateGenerationSet = useCallback((setId: string, updates: Partial<GenerationSet>) => {
+    if (!config) return;
+    
+    const updatedConfig: EnhancedBatchConfig = {
+      ...config,
+      generationSets: config.generationSets.map(set => 
+        set.id === setId ? { ...set, ...updates } : set
+      ),
+      updatedAt: new Date().toISOString()
+    };
+    
+    onConfigChange(updatedConfig);
+  }, [config, onConfigChange]);
+  
+  const generationSets = config?.generationSets || [];
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-200">Generation Sets ({generationSets.length})</h3>
+        <Button
+          onClick={addGenerationSet}
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          data-testid="button-add-generation-set"
+        >
+          Add Generation Set
+        </Button>
+      </div>
+      
+      {generationSets.length === 0 ? (
+        <div className="text-center py-8 text-slate-400 border border-slate-600 rounded-lg">
+          <p className="text-sm">No generation sets configured</p>
+          <p className="text-xs mt-1">Click "Add Generation Set" to create your first set</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {generationSets.map((set, index) => (
+            <div key={set.id} className="border border-slate-600 rounded-lg p-4 bg-slate-800/30">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    checked={set.enabled}
+                    onCheckedChange={(checked) => updateGenerationSet(set.id, { enabled: checked as boolean })}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                    data-testid={`checkbox-generation-set-${index}-enabled`}
+                  />
+                  <Input
+                    value={set.name}
+                    onChange={(e) => updateGenerationSet(set.id, { name: e.target.value })}
+                    className="bg-slate-800 border-slate-600 text-slate-200 text-sm font-medium w-48"
+                    data-testid={`input-generation-set-${index}-name`}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-slate-400">#{set.generationOrder}</span>
+                  <Button
+                    onClick={() => removeGenerationSet(set.id)}
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 h-6 w-6 p-0"
+                    data-testid={`button-remove-generation-set-${index}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label className="text-xs text-slate-300">Shape Count</Label>
+                  <Input
+                    type="number"
+                    value={set.batchConfig.generationCountDefine}
+                    onChange={(e) => updateGenerationSet(set.id, {
+                      batchConfig: {
+                        ...set.batchConfig,
+                        generationCountDefine: parseInt(e.target.value) || 1
+                      }
+                    })}
+                    min={1}
+                    max={1000}
+                    className="bg-slate-800 border-slate-600 text-slate-200 mt-1"
+                    data-testid={`input-generation-set-${index}-shape-count`}
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-xs text-slate-300">Enabled Shapes</Label>
+                  <div className="text-xs text-slate-400 mt-1 p-2 bg-slate-900 rounded border border-slate-700">
+                    {set.enabledShapeTypes.join(', ') || 'None selected'}
+                  </div>
+                </div>
+              </div>
+              
+              {set.description && (
+                <div className="mt-3 text-xs text-slate-400 italic">
+                  {set.description}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <div className="text-xs text-slate-400 mt-4 p-3 bg-slate-800/50 rounded border border-slate-600">
+        <p><strong>Multi-Generation Mode:</strong> Each generation set runs independently with its own configuration.</p>
+        <p><strong>Validation:</strong> All sets must use fixed shape counts. Total sets limited to {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}.</p>
+      </div>
+    </div>
   );
 }
