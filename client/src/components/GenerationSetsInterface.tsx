@@ -24,7 +24,7 @@ import {
   DEFAULT_GENERATION_SET_LIMITS,
   GenerationSetUtils
 } from '@shared/schema';
-import { IndividualSetConfig } from './IndividualSetConfig';
+import { IndividualSetConfig } from '@/components/IndividualSetConfig';
 
 interface GenerationSetsInterfaceProps {
   generationSets: GenerationSet[];
@@ -384,7 +384,7 @@ export function GenerationSetsInterface({
           {selectedSet ? (
             <IndividualSetConfig
               generationSet={selectedSet}
-              onUpdate={(updates) => handleUpdateSet(selectedSet.id, updates)}
+              onUpdate={(updates: Partial<GenerationSet>) => handleUpdateSet(selectedSet.id, updates)}
               globalZIndexEnabled={globalZIndexEnabled}
             />
           ) : (

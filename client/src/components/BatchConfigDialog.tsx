@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS, BlendMode } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
 import { validateGenerationSets } from '../lib/generationSetValidation';
 
@@ -391,7 +391,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       });
                     }
                   }}
-                  validationErrors={validateGenerationSets(enhancedConfig?.generationSets || [], enhancedConfig).errors}
+                  validationErrors={validateGenerationSets(enhancedConfig?.generationSets || [], enhancedConfig || undefined).errors}
                   maxSets={enhancedConfig?.modeRestrictions?.maxGenerationSets || DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
                   globalZIndexEnabled={enhancedConfig?.globalSettings?.globalZIndexSettings?.useGlobalSettings || false}
                 />
@@ -941,13 +941,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                       {blendModes.map((mode) => (
                         <div key={mode} className="flex items-center space-x-3 p-2 bg-slate-800 rounded">
                           <Checkbox
-                            checked={currentSettings.enabledBlendModes[mode] !== undefined}
+                            checked={(currentSettings.enabledBlendModes as any)[mode] !== undefined}
                             onCheckedChange={(checked) => {
                               const newBlendModes = { ...currentSettings.enabledBlendModes };
                               if (checked) {
-                                newBlendModes[mode] = 50;
+                                (newBlendModes as any)[mode] = 50;
                               } else {
-                                delete newBlendModes[mode];
+                                delete (newBlendModes as any)[mode];
                               }
                               handleSettingsUpdate({ enabledBlendModes: newBlendModes });
                             }}
@@ -956,20 +956,20 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                           <Label className="text-xs capitalize text-slate-300 flex-1">
                             {mode.replace('-', ' ')}
                           </Label>
-                          {currentSettings.enabledBlendModes[mode] !== undefined && (
+                          {(currentSettings.enabledBlendModes as any)[mode] !== undefined && (
                             <div className="flex items-center space-x-2 flex-1 max-w-24">
                               <Slider
-                                value={[currentSettings.enabledBlendModes[mode] || 50]}
+                                value={[(currentSettings.enabledBlendModes as any)[mode] || 50]}
                                 onValueChange={([value]) => {
                                   const newBlendModes = { ...currentSettings.enabledBlendModes };
-                                  newBlendModes[mode] = value;
+                                  (newBlendModes as any)[mode] = value;
                                   handleSettingsUpdate({ enabledBlendModes: newBlendModes });
                                 }}
                                 max={100}
                                 step={1}
                                 className="h-2"
                               />
-                              <span className="text-xs text-slate-400 w-8">{currentSettings.enabledBlendModes[mode]}%</span>
+                              <span className="text-xs text-slate-400 w-8">{(currentSettings.enabledBlendModes as any)[mode]}%</span>
                             </div>
                           )}
                         </div>
@@ -3573,188 +3573,5 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
         document.body
       )}
     </>
-  );
-}
-
-// Generation Sets Interface Component
-interface GenerationSetsInterfaceProps {
-  config: EnhancedBatchConfig | null;
-  onConfigChange: (config: EnhancedBatchConfig) => void;
-}
-
-function GenerationSetsInterface({ config, onConfigChange }: GenerationSetsInterfaceProps) {
-  const addGenerationSet = useCallback(() => {
-    const now = new Date().toISOString();
-    const newSet: GenerationSet = {
-      id: `set_${Date.now()}`,
-      name: `Generation Set ${(config?.generationSets.length || 0) + 1}`,
-      enabled: true,
-      enabledShapeTypes: ['rectangle', 'circle'],
-      shapeCountMode: 'FIXED' as any,
-      shapeCountFixed: 10,
-      shapeCountRange: [5, 15],
-      shapeSpecificProperties: {},
-      zIndexConfig: {
-        baseOffset: 1000,
-        incrementPerShape: 1,
-        incrementPerGeneration: 1000
-      },
-      batchConfig: { ...defaultBatchConfigSettings, generationCountMode: 'fixed', generationCountDefine: 10 },
-      generationOrder: (config?.generationSets.length || 0) + 1,
-      description: 'New generation set'
-    };
-    
-    const updatedConfig: EnhancedBatchConfig = {
-      ...config,
-      mode: GenerationSetMode.MULTI,
-      generationSets: [...(config?.generationSets || []), newSet],
-      globalSettings: config?.globalSettings || {
-        canvasWidth: 800,
-        canvasHeight: 600,
-        exportFormat: 'png',
-        exportQuality: 90,
-        globalZIndexSettings: {
-          startingZIndex: 1000,
-          setSpacing: 1000,
-          preventOverlap: true,
-          useGlobalSettings: true
-        }
-      },
-      modeRestrictions: config?.modeRestrictions || {
-        multiGenerationOnlyForFixedCount: true,
-        maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
-        minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
-        maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
-      },
-      createdAt: config?.createdAt || now,
-      updatedAt: now,
-      version: '1.0.0'
-    };
-    
-    onConfigChange(updatedConfig);
-  }, [config, onConfigChange]);
-  
-  const removeGenerationSet = useCallback((setId: string) => {
-    if (!config) return;
-    
-    const updatedConfig: EnhancedBatchConfig = {
-      ...config,
-      generationSets: config.generationSets.filter(set => set.id !== setId),
-      updatedAt: new Date().toISOString()
-    };
-    
-    onConfigChange(updatedConfig);
-  }, [config, onConfigChange]);
-  
-  const updateGenerationSet = useCallback((setId: string, updates: Partial<GenerationSet>) => {
-    if (!config) return;
-    
-    const updatedConfig: EnhancedBatchConfig = {
-      ...config,
-      generationSets: config.generationSets.map(set => 
-        set.id === setId ? { ...set, ...updates } : set
-      ),
-      updatedAt: new Date().toISOString()
-    };
-    
-    onConfigChange(updatedConfig);
-  }, [config, onConfigChange]);
-  
-  const generationSets = config?.generationSets || [];
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-200">Generation Sets ({generationSets.length})</h3>
-        <Button
-          onClick={addGenerationSet}
-          size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-          data-testid="button-add-generation-set"
-        >
-          Add Generation Set
-        </Button>
-      </div>
-      
-      {generationSets.length === 0 ? (
-        <div className="text-center py-8 text-slate-400 border border-slate-600 rounded-lg">
-          <p className="text-sm">No generation sets configured</p>
-          <p className="text-xs mt-1">Click "Add Generation Set" to create your first set</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {generationSets.map((set, index) => (
-            <div key={set.id} className="border border-slate-600 rounded-lg p-4 bg-slate-800/30">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    checked={set.enabled}
-                    onCheckedChange={(checked) => updateGenerationSet(set.id, { enabled: checked as boolean })}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                    data-testid={`checkbox-generation-set-${index}-enabled`}
-                  />
-                  <Input
-                    value={set.name}
-                    onChange={(e) => updateGenerationSet(set.id, { name: e.target.value })}
-                    className="bg-slate-800 border-slate-600 text-slate-200 text-sm font-medium w-48"
-                    data-testid={`input-generation-set-${index}-name`}
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-slate-400">#{set.generationOrder}</span>
-                  <Button
-                    onClick={() => removeGenerationSet(set.id)}
-                    size="sm"
-                    variant="ghost"
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 h-6 w-6 p-0"
-                    data-testid={`button-remove-generation-set-${index}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-xs text-slate-300">Shape Count</Label>
-                  <Input
-                    type="number"
-                    value={set.batchConfig.generationCountDefine}
-                    onChange={(e) => updateGenerationSet(set.id, {
-                      batchConfig: {
-                        ...set.batchConfig,
-                        generationCountDefine: parseInt(e.target.value) || 1
-                      }
-                    })}
-                    min={1}
-                    max={1000}
-                    className="bg-slate-800 border-slate-600 text-slate-200 mt-1"
-                    data-testid={`input-generation-set-${index}-shape-count`}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-slate-300">Enabled Shapes</Label>
-                  <div className="text-xs text-slate-400 mt-1 p-2 bg-slate-900 rounded border border-slate-700">
-                    {set.enabledShapeTypes.join(', ') || 'None selected'}
-                  </div>
-                </div>
-              </div>
-              
-              {set.description && (
-                <div className="mt-3 text-xs text-slate-400 italic">
-                  {set.description}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      
-      <div className="text-xs text-slate-400 mt-4 p-3 bg-slate-800/50 rounded border border-slate-600">
-        <p><strong>Multi-Generation Mode:</strong> Each generation set runs independently with its own configuration.</p>
-        <p><strong>Validation:</strong> All sets must use fixed shape counts. Total sets limited to {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}.</p>
-      </div>
-    </div>
   );
 }

@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
-import BatchConfigDialog, { BatchConfigSettings } from './BatchConfigDialog';
+import BatchConfigDialog from './BatchConfigDialog';
+import { BatchConfigSettings, EnhancedBatchConfig } from '@shared/schema';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { Input } from '@/components/ui/input';
@@ -1616,7 +1617,6 @@ export default function Sidebar({
             </div>
           );
         
-        case 'cubic':
         case 'bezier':
         case 'smooth-spline':
           return (
@@ -2461,7 +2461,18 @@ export default function Sidebar({
           </Button>
           <BatchConfigDialog
             settings={generationConfigSettings}
-            onSettingsChange={onUpdateGenerationConfigSettings}
+            onSettingsChange={(settings: BatchConfigSettings | EnhancedBatchConfig) => {
+              // Handle both BatchConfigSettings and EnhancedBatchConfig
+              if ('mode' in settings && 'globalSettings' in settings) {
+                // It's EnhancedBatchConfig - for now, just handle the legacy part
+                if (settings.legacyBatchConfig) {
+                  onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
+                }
+              } else {
+                // It's BatchConfigSettings
+                onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
+              }
+            }}
           />
         </div>
       </div>

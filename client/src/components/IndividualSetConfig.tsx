@@ -17,7 +17,7 @@ import {
   Layers,
   Hash,
   Type,
-  Blur,
+  Target,
   Settings,
   Info,
   Plus,
@@ -636,7 +636,7 @@ export function IndividualSetConfig({
                               <div>
                                 <Label className="text-slate-300 text-xs">Inner Radius Mode</Label>
                                 <Select
-                                  value={generationSet.shapeSpecificProperties[shapeType]?.innerRadiusMode || 'range'}
+                                  value={(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusMode || 'range'}
                                   onValueChange={(value) => 
                                     handleShapeSpecificPropertyChange(shapeType, 'innerRadiusMode', value)
                                   }
@@ -651,13 +651,13 @@ export function IndividualSetConfig({
                                 </Select>
                               </div>
                               
-                              {generationSet.shapeSpecificProperties[shapeType]?.innerRadiusMode === 'fixed' ? (
+                              {(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusMode === 'fixed' ? (
                                 <div>
                                   <Label className="text-slate-300 text-xs">
-                                    Inner Radius: {(generationSet.shapeSpecificProperties[shapeType]?.innerRadiusValue || 0.5).toFixed(2)}
+                                    Inner Radius: {((generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusValue || 0.5).toFixed(2)}
                                   </Label>
                                   <Slider
-                                    value={[generationSet.shapeSpecificProperties[shapeType]?.innerRadiusValue || 0.5]}
+                                    value={[(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusValue || 0.5]}
                                     onValueChange={([value]) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'innerRadiusValue', value)
                                     }
