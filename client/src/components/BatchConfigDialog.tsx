@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
+import { GenerationSetsInterface } from './GenerationSetsInterface';
+import { validateGenerationSets } from '../lib/generationSetValidation';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
@@ -379,8 +381,19 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
               {/* Show generation sets UI in multi mode, legacy UI in single mode */}
               {selectedMode === GenerationSetMode.MULTI ? (
                 <GenerationSetsInterface 
-                  config={enhancedConfig}
-                  onConfigChange={setEnhancedConfig}
+                  generationSets={enhancedConfig?.generationSets || []}
+                  onGenerationSetsChange={(sets) => {
+                    if (enhancedConfig) {
+                      setEnhancedConfig({
+                        ...enhancedConfig,
+                        generationSets: sets,
+                        updatedAt: new Date().toISOString()
+                      });
+                    }
+                  }}
+                  validationErrors={validateGenerationSets(enhancedConfig?.generationSets || [], enhancedConfig).errors}
+                  maxSets={enhancedConfig?.modeRestrictions?.maxGenerationSets || DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
+                  globalZIndexEnabled={enhancedConfig?.globalSettings?.globalZIndexSettings?.useGlobalSettings || false}
                 />
               ) : (
                 <>

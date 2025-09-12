@@ -1,0 +1,753 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { 
+  Palette, 
+  Layers,
+  Hash,
+  Type,
+  Blur,
+  Settings,
+  Info,
+  Plus,
+  X
+} from 'lucide-react';
+import { 
+  GenerationSet, 
+  ShapeCountMode, 
+  SupportedShapeType,
+  DEFAULT_GENERATION_SET_LIMITS,
+  SupportedShapeTypeSchema,
+  BlendMode
+} from '@shared/schema';
+
+interface IndividualSetConfigProps {
+  generationSet: GenerationSet;
+  onUpdate: (updates: Partial<GenerationSet>) => void;
+  globalZIndexEnabled?: boolean;
+}
+
+// Available shape types grouped by category
+const SHAPE_CATEGORIES = {
+  'Basic': ['rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 'ellipse'] as SupportedShapeType[],
+  'Geometric': ['triangle', 'right-triangle', 'pentagon', 'hexagon', 'rhombus', 'parallelogram', 'trapezoid'] as SupportedShapeType[],
+  'Special': ['star', 'polygon', 'heart', 'arrow', 'cross', 'kite', 'semicircle'] as SupportedShapeType[],
+  'Lines & Curves': ['line', 'bezier', 'cubic', 'smooth-spline'] as SupportedShapeType[],
+  'Complex': ['ring', 'blob', 'chunk', 'spline-circle', 'spline-ellipse', 'spline-ring'] as SupportedShapeType[]
+};
+
+const BLEND_MODES: BlendMode[] = [
+  'source-over', 'multiply', 'screen', 'overlay', 'darken', 
+  'lighten', 'color-dodge', 'color-burn', 'hard-light', 
+  'soft-light', 'difference', 'exclusion'
+];
+
+export function IndividualSetConfig({ 
+  generationSet, 
+  onUpdate, 
+  globalZIndexEnabled = false 
+}: IndividualSetConfigProps) {
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Validate the generation set
+  const validateGenerationSet = useCallback(() => {
+    const errors: string[] = [];
+
+    // Validate name
+    if (!generationSet.name.trim()) {
+      errors.push('Set name is required');
+    }
+
+    // Validate shape types
+    if (generationSet.enabledShapeTypes.length === 0) {
+      errors.push('At least one shape type must be selected');
+    }
+
+    // Validate shape count
+    if (generationSet.shapeCountMode === ShapeCountMode.FIXED) {
+      if (generationSet.shapeCountFixed < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet ||
+          generationSet.shapeCountFixed > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet) {
+        errors.push(`Shape count must be between ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet} and ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}`);
+      }
+    } else {
+      const [min, max] = generationSet.shapeCountRange;
+      if (min < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet ||
+          max > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet ||
+          min > max) {
+        errors.push(`Shape count range must be between ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet} and ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet} with min ≤ max`);
+      }
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  }, [generationSet]);
+
+  // Run validation whenever generation set changes
+  useEffect(() => {
+    validateGenerationSet();
+  }, [validateGenerationSet]);
+
+  // Update handlers
+  const handleNameChange = useCallback((name: string) => {
+    onUpdate({ name });
+  }, [onUpdate]);
+
+  const handleDescriptionChange = useCallback((description: string) => {
+    onUpdate({ description: description || undefined });
+  }, [onUpdate]);
+
+  const handleShapeCountModeChange = useCallback((mode: ShapeCountMode) => {
+    onUpdate({ shapeCountMode: mode });
+  }, [onUpdate]);
+
+  const handleShapeCountFixedChange = useCallback((count: number) => {
+    onUpdate({ shapeCountFixed: count });
+  }, [onUpdate]);
+
+  const handleShapeCountRangeChange = useCallback((range: [number, number]) => {
+    onUpdate({ shapeCountRange: range });
+  }, [onUpdate]);
+
+  const handleShapeTypeToggle = useCallback((shapeType: SupportedShapeType, enabled: boolean) => {
+    const currentTypes = generationSet.enabledShapeTypes;
+    const updatedTypes = enabled
+      ? [...currentTypes, shapeType]
+      : currentTypes.filter(type => type !== shapeType);
+    
+    onUpdate({ enabledShapeTypes: updatedTypes });
+  }, [generationSet.enabledShapeTypes, onUpdate]);
+
+  const handleSelectAllShapes = useCallback((category: string) => {
+    const categoryShapes = SHAPE_CATEGORIES[category as keyof typeof SHAPE_CATEGORIES];
+    const allCurrentTypes = new Set(generationSet.enabledShapeTypes);
+    
+    categoryShapes.forEach(shape => allCurrentTypes.add(shape));
+    onUpdate({ enabledShapeTypes: Array.from(allCurrentTypes) });
+  }, [generationSet.enabledShapeTypes, onUpdate]);
+
+  const handleDeselectAllShapes = useCallback((category: string) => {
+    const categoryShapes = SHAPE_CATEGORIES[category as keyof typeof SHAPE_CATEGORIES];
+    const updatedTypes = generationSet.enabledShapeTypes.filter(
+      type => !categoryShapes.includes(type)
+    );
+    onUpdate({ enabledShapeTypes: updatedTypes });
+  }, [generationSet.enabledShapeTypes, onUpdate]);
+
+  const handleZIndexConfigChange = useCallback((field: keyof typeof generationSet.zIndexConfig, value: number) => {
+    onUpdate({
+      zIndexConfig: {
+        ...generationSet.zIndexConfig,
+        [field]: value
+      }
+    });
+  }, [generationSet.zIndexConfig, onUpdate]);
+
+  // Shape-specific property handlers
+  const handleShapeSpecificPropertyChange = useCallback((
+    shapeType: SupportedShapeType,
+    property: string,
+    value: any
+  ) => {
+    const currentProperties = generationSet.shapeSpecificProperties;
+    const shapeProperties = currentProperties[shapeType] || {};
+    
+    onUpdate({
+      shapeSpecificProperties: {
+        ...currentProperties,
+        [shapeType]: {
+          ...shapeProperties,
+          [property]: value
+        }
+      }
+    });
+  }, [generationSet.shapeSpecificProperties, onUpdate]);
+
+  return (
+    <Card className="bg-slate-900 border-slate-700" data-testid="individual-set-config">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-slate-200">
+          <Settings className="w-5 h-5" />
+          Configure Generation Set
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[600px] pr-4">
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Type className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-slate-300">Basic Information</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="set-name" className="text-slate-300">
+                    Set Name
+                  </Label>
+                  <Input
+                    id="set-name"
+                    value={generationSet.name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder="Enter set name"
+                    className="bg-slate-800 border-slate-600"
+                    data-testid="input-set-name"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="set-description" className="text-slate-300">
+                    Description (Optional)
+                  </Label>
+                  <Textarea
+                    id="set-description"
+                    value={generationSet.description || ''}
+                    onChange={(e) => handleDescriptionChange(e.target.value)}
+                    placeholder="Enter optional description"
+                    className="bg-slate-800 border-slate-600"
+                    rows={2}
+                    data-testid="textarea-set-description"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
+
+            {/* Shape Count Configuration */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Hash className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-slate-300">Shape Count</h4>
+              </div>
+
+              <div className="space-y-3">
+                <Select
+                  value={generationSet.shapeCountMode}
+                  onValueChange={(value) => handleShapeCountModeChange(value as ShapeCountMode)}
+                >
+                  <SelectTrigger className="bg-slate-800 border-slate-600" data-testid="select-shape-count-mode">
+                    <SelectValue placeholder="Select count mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ShapeCountMode.FIXED}>Fixed Count</SelectItem>
+                    <SelectItem value={ShapeCountMode.RANGE}>Range</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {generationSet.shapeCountMode === ShapeCountMode.FIXED ? (
+                  <div>
+                    <Label className="text-slate-300 text-xs">
+                      Fixed Shape Count: {generationSet.shapeCountFixed}
+                    </Label>
+                    <Slider
+                      value={[generationSet.shapeCountFixed]}
+                      onValueChange={([value]) => handleShapeCountFixedChange(value)}
+                      min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                      max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                      step={1}
+                      className="mt-2"
+                      data-testid="slider-shape-count-fixed"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-slate-300 text-xs">
+                      Shape Count Range: {generationSet.shapeCountRange[0]} - {generationSet.shapeCountRange[1]}
+                    </Label>
+                    <Slider
+                      value={generationSet.shapeCountRange}
+                      onValueChange={(value) => handleShapeCountRangeChange(value as [number, number])}
+                      min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
+                      max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
+                      step={1}
+                      className="mt-2"
+                      data-testid="slider-shape-count-range"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
+
+            {/* Shape Types Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-slate-400" />
+                  <h4 className="text-sm font-medium text-slate-300">Shape Types</h4>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  {generationSet.enabledShapeTypes.length} selected
+                </Badge>
+              </div>
+
+              <Accordion type="multiple" className="w-full">
+                {Object.entries(SHAPE_CATEGORIES).map(([category, shapes]) => {
+                  const enabledInCategory = shapes.filter(shape => 
+                    generationSet.enabledShapeTypes.includes(shape)
+                  ).length;
+                  
+                  return (
+                    <AccordionItem key={category} value={category} className="border-slate-700">
+                      <AccordionTrigger className="text-slate-300 hover:text-slate-200">
+                        <div className="flex items-center gap-2">
+                          <span>{category}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {enabledInCategory}/{shapes.length}
+                          </Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSelectAllShapes(category)}
+                            data-testid={`button-select-all-${category.toLowerCase()}`}
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeselectAllShapes(category)}
+                            data-testid={`button-deselect-all-${category.toLowerCase()}`}
+                          >
+                            Deselect All
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          {shapes.map((shapeType) => (
+                            <div 
+                              key={shapeType}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`shape-${shapeType}`}
+                                checked={generationSet.enabledShapeTypes.includes(shapeType)}
+                                onCheckedChange={(checked) => 
+                                  handleShapeTypeToggle(shapeType, checked as boolean)
+                                }
+                                data-testid={`checkbox-shape-${shapeType}`}
+                              />
+                              <Label 
+                                htmlFor={`shape-${shapeType}`}
+                                className="text-sm text-slate-300 cursor-pointer"
+                              >
+                                {shapeType.replace('-', ' ')}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </div>
+
+            {!globalZIndexEnabled && (
+              <>
+                <Separator className="bg-slate-700" />
+
+                {/* Z-Index Configuration */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-slate-400" />
+                    <h4 className="text-sm font-medium text-slate-300">Z-Index Layering</h4>
+                    <Info className="w-3 h-3 text-slate-500" />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <Label className="text-slate-300 text-xs">
+                        Base Offset: {generationSet.zIndexConfig.baseOffset}
+                      </Label>
+                      <Slider
+                        value={[generationSet.zIndexConfig.baseOffset]}
+                        onValueChange={([value]) => handleZIndexConfigChange('baseOffset', value)}
+                        min={0}
+                        max={10000}
+                        step={100}
+                        className="mt-2"
+                        data-testid="slider-zindex-base-offset"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Starting z-index for shapes in this set
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="text-slate-300 text-xs">
+                        Increment Per Shape: {generationSet.zIndexConfig.incrementPerShape}
+                      </Label>
+                      <Slider
+                        value={[generationSet.zIndexConfig.incrementPerShape]}
+                        onValueChange={([value]) => handleZIndexConfigChange('incrementPerShape', value)}
+                        min={1}
+                        max={100}
+                        step={1}
+                        className="mt-2"
+                        data-testid="slider-zindex-increment-per-shape"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Z-index increment between shapes in this set
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="text-slate-300 text-xs">
+                        Increment Per Generation: {generationSet.zIndexConfig.incrementPerGeneration}
+                      </Label>
+                      <Slider
+                        value={[generationSet.zIndexConfig.incrementPerGeneration]}
+                        onValueChange={([value]) => handleZIndexConfigChange('incrementPerGeneration', value)}
+                        min={0}
+                        max={1000}
+                        step={10}
+                        className="mt-2"
+                        data-testid="slider-zindex-increment-per-generation"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Z-index increment between batch generations
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {globalZIndexEnabled && (
+              <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-medium text-slate-300">Global Z-Index Enabled</span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Z-index settings are controlled globally. Individual set z-index configuration is disabled.
+                </p>
+              </div>
+            )}
+
+            {/* Shape-Specific Properties */}
+            {generationSet.enabledShapeTypes.length > 0 && (
+              <>
+                <Separator className="bg-slate-700" />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-slate-400" />
+                    <h4 className="text-sm font-medium text-slate-300">Shape-Specific Properties</h4>
+                  </div>
+
+                  <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 bg-slate-800">
+                      {generationSet.enabledShapeTypes.slice(0, 5).map((shapeType) => (
+                        <TabsTrigger key={shapeType} value={shapeType} className="text-xs">
+                          {shapeType.split('-')[0]}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    
+                    {generationSet.enabledShapeTypes.map((shapeType) => (
+                      <TabsContent key={shapeType} value={shapeType} className="space-y-3">
+                        <div className="bg-slate-800 p-4 rounded-lg">
+                          <h5 className="text-sm font-medium text-slate-300 mb-3">
+                            {shapeType.replace('-', ' ')} Properties
+                          </h5>
+                          
+                          {/* Render shape-specific controls based on shape type */}
+                          {(shapeType === 'rounded-rectangle' || shapeType === 'rounded-square') && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Corner Radius Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'cornerRadiusMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Corner Radius: {generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusValue || 5}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusValue || 5]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'cornerRadiusValue', value)
+                                    }
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Corner Radius Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusRange || [0, 10])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusRange || [0, 10])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusRange || [0, 10]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'cornerRadiusRange', value)
+                                    }
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {shapeType === 'polygon' && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Point Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.pointCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'pointCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.pointCountMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Point Count: {generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 6}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 6]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountValue', value)
+                                    }
+                                    min={3}
+                                    max={20}
+                                    step={1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Point Count Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountRange', value)
+                                    }
+                                    min={3}
+                                    max={20}
+                                    step={1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {shapeType === 'star' && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Point Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.pointCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'pointCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <Label className="text-slate-300 text-xs">Inner Radius Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.innerRadiusMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'innerRadiusMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          )}
+
+                          {(shapeType === 'ring' || shapeType === 'spline-ring') && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Inner Radius Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.innerRadiusMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'innerRadiusMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.innerRadiusMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Inner Radius: {(generationSet.shapeSpecificProperties[shapeType]?.innerRadiusValue || 0.5).toFixed(2)}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.innerRadiusValue || 0.5]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'innerRadiusValue', value)
+                                    }
+                                    min={0.1}
+                                    max={0.9}
+                                    step={0.1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Inner Radius Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'innerRadiusRange', value)
+                                    }
+                                    min={0.1}
+                                    max={0.9}
+                                    step={0.1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {(shapeType === 'circle' || shapeType === 'ellipse') && (
+                            <div>
+                              <Label className="text-slate-300 text-xs">
+                                Segment Count Range: {
+                                  (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
+                                } - {
+                                  (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
+                                }
+                              </Label>
+                              <Slider
+                                value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
+                                onValueChange={(value) => 
+                                  handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
+                                }
+                                min={8}
+                                max={64}
+                                step={4}
+                                className="mt-2"
+                              />
+                            </div>
+                          )}
+
+                          {/* Default message for shapes without specific properties */}
+                          {!['rounded-rectangle', 'rounded-square', 'polygon', 'star', 'ring', 'spline-ring', 'circle', 'ellipse'].includes(shapeType) && (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-slate-500">
+                                No specific properties available for {shapeType.replace('-', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </div>
+              </>
+            )}
+
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-900/20 border border-red-700 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <X className="w-4 h-4 text-red-400" />
+                  <span className="text-sm font-medium text-red-400">Validation Errors</span>
+                </div>
+                <ul className="space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="text-sm text-red-300">
+                      • {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}
