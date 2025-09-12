@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, Code2 } from 'lucide-react';
-import { BatchConfigSettings } from './BatchConfigDialog';
+import { BatchConfigSettings } from '@shared/schema';
 import { Artboard, ShapeType, ScatterSettings } from '../lib/shapeTypes';
 
 interface ApiCallGeneratorProps {

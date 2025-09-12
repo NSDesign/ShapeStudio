@@ -7,11 +7,12 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Settings, RotateCcw, X, ChevronDown } from 'lucide-react';
+import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS, BlendMode } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
 import { validateGenerationSets } from '../lib/generationSetValidation';
+import { ValidationError, ValidationWarning } from '../lib/typedHelpers';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
@@ -33,6 +34,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
   const [showExplanation, setShowExplanation] = useState(false);
   const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  // Enhanced validation state tracking
+  const [overallValidationState, setOverallValidationState] = useState<{
+    isValid: boolean;
+    errors: ValidationError[];
+    warnings: ValidationWarning[];
+  }>({ isValid: true, errors: [], warnings: [] });
+  const [showValidationBanner, setShowValidationBanner] = useState(false);
 
   // Sync with external control
   useEffect(() => {
@@ -136,8 +144,16 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     setCurrentSettings(defaultSettings);
   }, []);
 
-  // Validation for mode restrictions with real-time validation
+  // Comprehensive validation callback from GenerationSetsInterface
+  const handleGenerationSetsValidationChange = useCallback((isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => {
+    console.log('[BatchConfigDialog] Generation sets validation changed:', { isValid, errorCount: errors.length, warningCount: warnings.length });
+    setOverallValidationState({ isValid, errors, warnings });
+    setShowValidationBanner(!isValid || warnings.length > 0);
+  }, []);
+
+  // Enhanced validation combining local and generation sets validation
   const validateConfiguration = useCallback((): string | null => {
+    // Legacy validation for single mode
     if (!supportEnhancedMode || selectedMode === GenerationSetMode.SINGLE) {
       return null; // No validation needed for legacy mode
     }
@@ -163,7 +179,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     // Check fixed count requirement if enabled
     if (restrictions.multiGenerationOnlyForFixedCount) {
       const hasVariableCount = generationSets.some(set => 
-        set.batchConfig.generationCountMode !== 'fixed'
+        set.shapeCountMode !== 'fixed'
       );
       if (hasVariableCount) {
         return 'Multi-generation mode requires fixed generation count for all sets';
@@ -172,7 +188,9 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     
     // Check shape count limits
     for (const set of generationSets) {
-      const shapeCount = set.batchConfig.generationCountDefine;
+      const shapeCount = set.shapeCountMode === 'fixed' 
+        ? set.shapeCountFixed 
+        : Math.max(set.shapeCountRange[0], set.shapeCountRange[1]);
       if (shapeCount < restrictions.minShapesPerSet || shapeCount > restrictions.maxShapesPerSet) {
         return `Shape count must be between ${restrictions.minShapesPerSet} and ${restrictions.maxShapesPerSet}`;
       }
@@ -180,6 +198,13 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
     
     return null;
   }, [supportEnhancedMode, selectedMode, enhancedConfig]);
+
+  // Combined validation state for export actions
+  const isExportDisabled = useCallback((): boolean => {
+    const hasLocalValidationError = !!validateConfiguration();
+    const hasGenerationSetsValidationError = !overallValidationState.isValid;
+    return hasLocalValidationError || hasGenerationSetsValidationError;
+  }, [validateConfiguration, overallValidationState.isValid]);
   
   // Update validation error state when configuration changes
   useEffect(() => {
@@ -190,11 +215,17 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
   const applySettings = useCallback(() => {
     console.log('[BatchConfigDialog] Applying settings to parent');
     
-    // Validate configuration before applying
+    // Comprehensive validation check before applying
     const currentValidationError = validateConfiguration();
-    if (currentValidationError) {
-      console.error('[BatchConfigDialog] Validation error:', currentValidationError);
-      // Error is already shown in UI via validationError state
+    const exportBlocked = isExportDisabled();
+    
+    if (currentValidationError || exportBlocked) {
+      console.error('[BatchConfigDialog] Validation failed:', { 
+        localError: currentValidationError, 
+        generationSetsValid: overallValidationState.isValid,
+        errorCount: overallValidationState.errors.length 
+      });
+      // Error is already shown in UI via validation displays
       return;
     }
     
@@ -366,9 +397,78 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   <Separator className="bg-slate-600" />
                 </>
               )}
-              {/* Validation error display */}
+              {/* Global Validation Status Banner */}
+              {showValidationBanner && (
+                <div className={`rounded-lg p-4 mb-4 ${
+                  overallValidationState.errors.length > 0 
+                    ? 'bg-red-900/50 border border-red-500' 
+                    : 'bg-yellow-900/50 border border-yellow-500'
+                }`} data-testid="validation-status-banner">
+                  <div className="flex items-start space-x-3">
+                    {overallValidationState.errors.length > 0 ? (
+                      <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className={`text-sm font-medium ${
+                          overallValidationState.errors.length > 0 
+                            ? 'text-red-200' 
+                            : 'text-yellow-200'
+                        }`}>
+                          Validation Status
+                        </h4>
+                        <button 
+                          onClick={() => setShowValidationBanner(false)}
+                          className={`p-1 rounded hover:bg-black/10 ${
+                            overallValidationState.errors.length > 0 
+                              ? 'text-red-300 hover:text-red-200' 
+                              : 'text-yellow-300 hover:text-yellow-200'
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="mt-2 space-y-2">
+                        {overallValidationState.errors.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-sm text-red-300 font-medium">
+                              {overallValidationState.errors.length} Error{overallValidationState.errors.length !== 1 ? 's' : ''} Found:
+                            </p>
+                            <ul className="text-sm text-red-300 list-disc list-inside space-y-1 max-h-24 overflow-y-auto">
+                              {overallValidationState.errors.map((error, index) => (
+                                <li key={`error-${index}`}>{error.message}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {overallValidationState.warnings.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-sm text-yellow-300 font-medium">
+                              {overallValidationState.warnings.length} Warning{overallValidationState.warnings.length !== 1 ? 's' : ''} Found:
+                            </p>
+                            <ul className="text-sm text-yellow-300 list-disc list-inside space-y-1 max-h-24 overflow-y-auto">
+                              {overallValidationState.warnings.map((warning, index) => (
+                                <li key={`warning-${index}`}>{warning.message}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {overallValidationState.errors.length > 0 && (
+                          <p className="text-xs text-red-400 mt-2 italic">
+                            Export actions are disabled until all errors are resolved.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Legacy validation error display */}
               {validationError && (
-                <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 mb-4" data-testid="validation-error">
+                <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 mb-4" data-testid="validation-error-legacy">
                   <div className="flex items-start space-x-2">
                     <X className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
                     <div>
@@ -395,6 +495,8 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                   validationErrors={validateGenerationSets(enhancedConfig?.generationSets || [], enhancedConfig || undefined).errors}
                   maxSets={enhancedConfig?.modeRestrictions?.maxGenerationSets || DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
                   globalZIndexEnabled={enhancedConfig?.globalSettings?.globalZIndexSettings?.useGlobalSettings || false}
+                  showInlineValidation={true}
+                  onValidationChange={handleGenerationSetsValidationChange}
                 />
               ) : (
                 <>
@@ -3551,14 +3653,22 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
                 </Button>
                 <Button 
                   onClick={applySettings}
-                  disabled={!!validationError}
-                  className={`${validationError 
-                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
+                  disabled={isExportDisabled()}
+                  className={`${
+                    isExportDisabled()
+                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  } transition-colors duration-200`}
                   data-testid="button-apply"
                 >
-                  Apply
+                  <div className="flex items-center space-x-2">
+                    {isExportDisabled() ? (
+                      <AlertTriangle className="w-4 h-4" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4" />
+                    )}
+                    <span>Apply Configuration</span>
+                  </div>
                 </Button>
               </div>
               <Button 

@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected route example
-  app.get("/api/protected", conditionalAuth, async (req, res) => {
+  app.get("/api/protected", conditionalAuth, async (req: any, res) => {
     const userId = req.user?.claims?.sub;
     // Do something with the user id.
     res.json({ message: "This is a protected route", userId });

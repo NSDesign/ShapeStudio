@@ -161,7 +161,7 @@ export interface BaseShape {
   smoothPoints?: boolean[]; // Track which points are smooth (continuous tangents) vs sharp
   closed?: boolean;
   segments?: number; // Number of segments for smooth curves
-  renderType?: 'polygon' | 'bezier' | 'cubic' | 'smooth'; // How to render the shape
+  renderType?: 'polygon' | 'bezier' | 'cubic' | 'smooth' | 'roundRect'; // How to render the shape
 }
 
 export interface ShapeGroup {
