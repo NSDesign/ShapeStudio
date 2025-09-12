@@ -5,7 +5,7 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
-import { BatchConfigSettings, defaultSettings } from '../components/BatchConfigDialog';
+import { BatchConfigSettings, defaultBatchConfigSettings } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
 export const useShapeEditor = () => {
@@ -109,7 +109,7 @@ export const useShapeEditor = () => {
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
 
   // Batch Configuration Settings - using defaults from BatchConfigDialog
-  const [generationConfigSettings, setGenerationConfigSettings] = useState<BatchConfigSettings>(defaultSettings);
+  const [generationConfigSettings, setGenerationConfigSettings] = useState<BatchConfigSettings>(defaultBatchConfigSettings);
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
