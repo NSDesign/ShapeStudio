@@ -2461,6 +2461,7 @@ export default function Sidebar({
           </Button>
           <BatchConfigDialog
             settings={generationConfigSettings}
+            supportEnhancedMode={true}
             onSettingsChange={(settings: BatchConfigSettings | EnhancedBatchConfig) => {
               // Handle both BatchConfigSettings and EnhancedBatchConfig
               if ('mode' in settings && 'globalSettings' in settings) {

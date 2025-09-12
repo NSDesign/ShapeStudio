@@ -258,6 +258,7 @@ export default function BatchConfigDialog({ settings, onSettingsChange, isOpen: 
         size="sm"
         className="h-10 w-10 p-0 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600"
         onClick={() => setIsOpen(true)}
+        data-testid="button-batch-settings"
       >
         <Settings className="w-4 h-4" />
       </Button>
