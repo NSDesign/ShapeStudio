@@ -45,6 +45,60 @@ export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// ===== USER PREFERENCES =====
+// Sidebar section visibility preferences
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // Sidebar section visibility settings
+  sidebarSections: jsonb("sidebar_sections").notNull().default('{}'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Sidebar section configuration type
+export interface SidebarSectionConfig {
+  shapes: boolean;           // Shape Types - enabled by default
+  selection: boolean;        // Selection Modes - disabled by default  
+  layers: boolean;           // Layers - disabled by default
+  properties: boolean;       // Properties - disabled by default
+  composition: boolean;      // Composition - disabled by default
+  'align-distribute': boolean; // Align & Distribute - disabled by default
+  artboards: boolean;        // Artboards - enabled by default
+  colors: boolean;           // Color Manipulation - disabled by default
+  project: boolean;          // Project Management - enabled by default
+  export: boolean;           // Export & Save - enabled by default
+}
+
+// Default sidebar section configuration
+export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
+  shapes: true,              // Shape Types - enabled by default
+  selection: false,          // Selection Modes - disabled by default
+  layers: false,             // Layers - disabled by default
+  properties: false,         // Properties - disabled by default
+  composition: false,        // Composition - disabled by default
+  'align-distribute': false, // Align & Distribute - disabled by default
+  artboards: true,           // Artboards - enabled by default
+  colors: false,             // Color Manipulation - disabled by default
+  project: true,             // Project Management - enabled by default
+  export: true,              // Export & Save - enabled by default
+};
+
+// User preferences schemas
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateUserPreferencesSchema = insertUserPreferencesSchema.partial().omit({
+  userId: true,
+});
+
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type UpdateUserPreferences = z.infer<typeof updateUserPreferencesSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+
 // ===== BATCH CONFIGURATION SETTINGS =====
 // Moved from client/src/components/BatchConfigDialog.tsx to shared for type safety
 

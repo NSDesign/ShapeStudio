@@ -6,6 +6,7 @@ import BatchConfigDialog from './BatchConfigDialog';
 import { BatchConfigSettings, EnhancedBatchConfig } from '@shared/schema';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -220,6 +221,9 @@ export default function Sidebar({
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+
+  // Get user preferences for sidebar section visibility
+  const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -4164,7 +4168,10 @@ export default function Sidebar({
             { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent },
             { id: 'project', name: 'Project Management', icon: FolderOpen, color: 'violet', content: ProjectManagementContent },
             { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent }
-          ].map(section => (
+          ].filter(section => 
+            // Only show sections that are enabled in user preferences
+            sidebarSections[section.id as keyof typeof sidebarSections] === true
+          ).map(section => (
             <Popover 
               key={section.id} 
               open={activePopover === section.id} 
@@ -4226,135 +4233,155 @@ export default function Sidebar({
         <div className="flex-1 overflow-y-auto">
           <Accordion type="multiple" className="w-full px-2 py-1">
             {/* Shape Types Section */}
-            <AccordionItem value="shapes" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Shapes className="w-4 h-4 mr-2" />
-                  Shape Types
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ShapeTypesContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.shapes && (
+              <AccordionItem value="shapes" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Shapes className="w-4 h-4 mr-2" />
+                    Shape Types
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <ShapeTypesContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Selection Modes Section */}
-            <AccordionItem value="selection" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Target className="w-4 h-4 mr-2" />
-                  Selection Modes
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <SelectionModesContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.selection && (
+              <AccordionItem value="selection" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Target className="w-4 h-4 mr-2" />
+                    Selection Modes
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <SelectionModesContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Layers Section */}
-            <AccordionItem value="layers" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Layers3 className="w-4 h-4 mr-2" />
-                  Layers
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <LayersContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.layers && (
+              <AccordionItem value="layers" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Layers3 className="w-4 h-4 mr-2" />
+                    Layers
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <LayersContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Properties Section */}
-            <AccordionItem value="properties" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Properties
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <PropertiesContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.properties && (
+              <AccordionItem value="properties" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Properties
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <PropertiesContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Composition Section */}
-            <AccordionItem value="composition" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Shuffle className="w-4 h-4 mr-2" />
-                  Composition
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <CompositionContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.composition && (
+              <AccordionItem value="composition" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Shuffle className="w-4 h-4 mr-2" />
+                    Composition
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <CompositionContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Align & Distribute Section */}
-            <AccordionItem value="align-distribute" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-indigo-400 hover:text-indigo-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <AlignCenter className="w-4 h-4 mr-2" />
-                  Align & Distribute
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <AlignDistributeContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections['align-distribute'] && (
+              <AccordionItem value="align-distribute" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-indigo-400 hover:text-indigo-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <AlignCenter className="w-4 h-4 mr-2" />
+                    Align & Distribute
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <AlignDistributeContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Artboards Section */}
-            <AccordionItem value="artboards" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-orange-400 hover:text-orange-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Monitor className="w-4 h-4 mr-2" />
-                  Artboards
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ArtboardsContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.artboards && (
+              <AccordionItem value="artboards" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-orange-400 hover:text-orange-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Monitor className="w-4 h-4 mr-2" />
+                    Artboards
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <ArtboardsContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Color Manipulation Section */}
-            <AccordionItem value="colors" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Palette className="w-4 h-4 mr-2" />
-                  Color Manipulation
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ColorManipulationContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.colors && (
+              <AccordionItem value="colors" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Palette className="w-4 h-4 mr-2" />
+                    Color Manipulation
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <ColorManipulationContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Project Management Section */}
-            <AccordionItem value="project" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-violet-400 hover:text-violet-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  Project Management
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ProjectManagementContent />
-                
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.project && (
+              <AccordionItem value="project" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-violet-400 hover:text-violet-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <FolderOpen className="w-4 h-4 mr-2" />
+                    Project Management
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <ProjectManagementContent />
+                  
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             {/* Export & Save Section */}
-            <AccordionItem value="export" className="border-slate-700">
-              <AccordionTrigger className="text-sm text-emerald-400 hover:text-emerald-300 py-3 hover:no-underline">
-                <div className="flex items-center">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export & Save
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <ExportSaveContent />
-              </AccordionContent>
-            </AccordionItem>
+            {sidebarSections.export && (
+              <AccordionItem value="export" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-emerald-400 hover:text-emerald-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export & Save
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <ExportSaveContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
         </div>
       )}

@@ -127,6 +127,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User preferences routes
+  app.get("/api/user/preferences", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (isDevelopment) {
+        // Return mock preferences for development
+        const { DEFAULT_SIDEBAR_SECTIONS } = await import("@shared/schema");
+        res.json({
+          id: `${userId}-preferences`,
+          userId,
+          sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        return;
+      }
+
+      let preferences = await storage.getUserPreferences(userId);
+      
+      // If no preferences exist, create default ones
+      if (!preferences) {
+        preferences = await storage.createDefaultUserPreferences(userId);
+      }
+
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.status(500).json({ message: "Failed to fetch user preferences" });
+    }
+  });
+
+  app.put("/api/user/preferences", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (isDevelopment) {
+        // Mock update for development
+        const mockPreferences = {
+          id: `${userId}-preferences`,
+          userId,
+          sidebarSections: req.body.sidebarSections || {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        res.json(mockPreferences);
+        return;
+      }
+
+      // Validate the request body
+      const { updateUserPreferencesSchema } = await import("@shared/schema");
+      const validatedData = updateUserPreferencesSchema.parse(req.body);
+
+      const preferences = await storage.upsertUserPreferences(userId, validatedData);
+      res.json(preferences);
+    } catch (error: any) {
+      console.error("Error updating user preferences:", error);
+      if (error?.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update user preferences" });
+      }
+    }
+  });
+
   // Register export API routes
   registerExportRoutes(app);
 

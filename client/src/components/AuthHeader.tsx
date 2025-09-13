@@ -9,7 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
+import SidebarSettingsDialog from "./SidebarSettingsDialog";
 
 interface AuthHeaderProps {
   isCollapsed: boolean;
@@ -107,6 +108,16 @@ export default function AuthHeader({ isCollapsed }: AuthHeaderProps) {
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
+          <SidebarSettingsDialog>
+            <DropdownMenuItem 
+              className="text-slate-100 hover:bg-slate-700"
+              data-testid="menu-sidebar-settings"
+              onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Sidebar Settings
+            </DropdownMenuItem>
+          </SidebarSettingsDialog>
           <DropdownMenuSeparator className="bg-slate-700" />
           <DropdownMenuItem 
             className="text-slate-100 hover:bg-slate-700"
