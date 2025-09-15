@@ -193,6 +193,31 @@ export interface DistributionSettings {
   respectBounds: boolean;
 }
 
+// Mode configuration types for line-vector properties
+export type ModeKind = 'values' | 'range' | 'fixed';
+
+export interface ValuesMode<T> { 
+  kind: 'values'; 
+  values: T[]; 
+  selection: 'random' | 'cycle'; 
+  startIndex?: number;
+}
+
+export interface RangeMode<T> { 
+  kind: 'range'; 
+  min: T; 
+  max: T; 
+  step?: T; 
+  distribution?: 'uniform' | 'normal';
+}
+
+export interface FixedMode<T> { 
+  kind: 'fixed'; 
+  value: T;
+}
+
+export type ScalarMode<T> = ValuesMode<T> | RangeMode<T> | FixedMode<T>;
+
 export interface ShapeSpecificSettings {
   polygon: {
     edgeCountRange: [number, number];
@@ -238,23 +263,9 @@ export interface ShapeSpecificSettings {
     strokeCapProbabilities: { round: number; square: number; butt: number };
   };
   'line-vector': {
-    directionMode: 'range' | 'fixed' | 'incremental';
-    directionRange?: [number, number]; // For range mode
-    directionValue?: number; // For fixed mode
-    directionStartValue?: number; // For incremental mode
-    directionIncrement?: number; // For incremental mode
-    
-    lengthMode: 'range' | 'fixed' | 'incremental';
-    lengthRange?: [number, number]; // For range mode (5-500)
-    lengthValue?: number; // For fixed mode
-    lengthStartValue?: number; // For incremental mode
-    lengthIncrement?: number; // For incremental mode
-    
-    centroidMode: 'range' | 'fixed' | 'incremental';
-    centroidRange?: [number, number]; // For range mode (0-1)
-    centroidValue?: number; // For fixed mode
-    centroidStartValue?: number; // For incremental mode
-    centroidIncrement?: number; // For incremental mode
+    direction: ScalarMode<number>;
+    length: ScalarMode<number>;
+    centroid: ScalarMode<number>;
   };
   rectangle: {
     // Standard rectangle with no rounded corners
@@ -581,3 +592,34 @@ export function applyGridDistribution(
     return shape;
   });
 }
+
+// Helper function to resolve scalar mode to actual value
+export const resolveScalar = (config: ScalarMode<number>, index?: number): number => {
+  switch (config.kind) {
+    case 'fixed':
+      return config.value;
+    case 'range':
+      // For now, return random value in range. Can be enhanced with distribution later
+      return Math.random() * (config.max - config.min) + config.min;
+    case 'values':
+      if (config.values.length === 0) return 0;
+      if (config.selection === 'cycle') {
+        const startIdx = config.startIndex || 0;
+        const cycleIndex = ((index || 0) + startIdx) % config.values.length;
+        return config.values[cycleIndex];
+      } else {
+        // random selection
+        const randomIndex = Math.floor(Math.random() * config.values.length);
+        return config.values[randomIndex];
+      }
+    default:
+      return 0;
+  }
+};
+
+// Default configurations for line-vector properties
+export const getDefaultLineVectorConfig = () => ({
+  direction: { kind: 'range' as const, min: 0, max: 360 },
+  length: { kind: 'range' as const, min: 5, max: 500 },
+  centroid: { kind: 'fixed' as const, value: 0.5 }
+});

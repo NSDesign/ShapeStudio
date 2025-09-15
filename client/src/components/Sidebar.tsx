@@ -71,7 +71,8 @@ import {
   Boxes,
   Plus
 } from 'lucide-react';
-import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset } from '@/lib/shapeTypes';
+import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
+import { ModeField } from '@/components/ModeField';
 import { Shape } from '@/lib/shapes';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -1586,115 +1587,64 @@ export default function Sidebar({
           );
         
         case 'line-vector':
+          const lineVectorConfig = scatterSettings.shapeSpecific['line-vector'] || getDefaultLineVectorConfig();
           return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              {/* Direction Controls */}
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Direction Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific['line-vector']?.directionRange?.[0] || 0}°</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific['line-vector']?.directionRange?.[1] || 360}°</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific['line-vector']?.directionRange || [0, 360]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            'line-vector': { 
-                              directionMode: 'range',
-                              lengthMode: 'range',
-                              centroidMode: 'fixed',
-                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
-                              directionRange: [min, max] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={0}
-                    max={360}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
+            <div className="space-y-3">
+              <ModeField
+                label="Direction"
+                config={lineVectorConfig.direction}
+                onChange={(direction) => {
+                  onUpdateScatterSettings({
+                    shapeSpecific: {
+                      ...scatterSettings.shapeSpecific,
+                      'line-vector': {
+                        ...lineVectorConfig,
+                        direction
+                      }
+                    }
+                  });
+                }}
+                bounds={{ min: 0, max: 360 }}
+                unit="°"
+                step={15}
+              />
               
-              {/* Length Controls */}
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Length Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific['line-vector']?.lengthRange?.[0] || 50}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific['line-vector']?.lengthRange?.[1] || 150}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific['line-vector']?.lengthRange || [50, 150]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            'line-vector': { 
-                              directionMode: 'range',
-                              lengthMode: 'range',
-                              centroidMode: 'fixed',
-                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
-                              lengthRange: [min, max] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={5}
-                    max={500}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={5}
-                  />
-                </div>
-              </div>
+              <ModeField
+                label="Length"
+                config={lineVectorConfig.length}
+                onChange={(length) => {
+                  onUpdateScatterSettings({
+                    shapeSpecific: {
+                      ...scatterSettings.shapeSpecific,
+                      'line-vector': {
+                        ...lineVectorConfig,
+                        length
+                      }
+                    }
+                  });
+                }}
+                bounds={{ min: 5, max: 500 }}
+                unit="px"
+                step={5}
+              />
               
-              {/* Centroid Controls */}
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Centroid Position Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Start: {(scatterSettings.shapeSpecific['line-vector']?.centroidRange?.[0] || 0).toFixed(2)}</span>
-                    <span className="text-slate-400">End: {(scatterSettings.shapeSpecific['line-vector']?.centroidRange?.[1] || 1).toFixed(2)}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific['line-vector']?.centroidRange || [0, 1]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            'line-vector': { 
-                              directionMode: 'range',
-                              lengthMode: 'range',
-                              centroidMode: 'fixed',
-                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
-                              centroidRange: [min, max] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    className="w-full"
-                    minStepsBetweenThumbs={0.01}
-                  />
-                </div>
-              </div>
+              <ModeField
+                label="Centroid"
+                config={lineVectorConfig.centroid}
+                onChange={(centroid) => {
+                  onUpdateScatterSettings({
+                    shapeSpecific: {
+                      ...scatterSettings.shapeSpecific,
+                      'line-vector': {
+                        ...lineVectorConfig,
+                        centroid
+                      }
+                    }
+                  });
+                }}
+                bounds={{ min: 0, max: 1 }}
+                step={0.01}
+              />
             </div>
           );
         
