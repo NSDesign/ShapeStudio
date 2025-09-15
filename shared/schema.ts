@@ -1360,7 +1360,7 @@ export const SupportedShapeTypeSchema = z.enum([
   'rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 
   'ellipse', 'triangle', 'right-triangle', 'trapezoid', 'pentagon', 'hexagon', 
   'rhombus', 'parallelogram', 'kite', 'semicircle', 'heart', 'arrow', 'cross',
-  'line', 'polygon', 'star', 'chunk', 'blob', 'ring', 'cubic', 'bezier', 
+  'line-vector', 'line', 'polygon', 'star', 'chunk', 'blob', 'ring', 'cubic', 'bezier', 
   'smooth-spline', 'spline-circle', 'spline-ellipse', 'spline-ring'
 ]);
 
@@ -2010,6 +2010,6 @@ export const SUPPORTED_SHAPE_TYPES: SupportedShapeType[] = [
   'rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 
   'ellipse', 'triangle', 'right-triangle', 'trapezoid', 'pentagon', 'hexagon', 
   'rhombus', 'parallelogram', 'kite', 'semicircle', 'heart', 'arrow', 'cross',
-  'line', 'polygon', 'star', 'chunk', 'blob', 'ring', 'cubic', 'bezier', 
+  'line-vector', 'line', 'polygon', 'star', 'chunk', 'blob', 'ring', 'cubic', 'bezier', 
   'smooth-spline', 'spline-circle', 'spline-ellipse', 'spline-ring'
 ];
