@@ -462,7 +462,7 @@ export default function Sidebar({
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
     const [exportQuality, setExportQuality] = useState(90);
     const [exportScale, setExportScale] = useState(1);
-    const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('selection');
+    const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
     // Local export state (not needed by API generator)
