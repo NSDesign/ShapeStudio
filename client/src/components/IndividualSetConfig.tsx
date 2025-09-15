@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -907,21 +908,27 @@ export function IndividualSetConfig({
                               <div className="space-y-3">
                                 <div>
                                   <Label className="text-slate-300 text-xs">Direction Mode</Label>
-                                  <Select
+                                  <RadioGroup 
                                     value={generationSet.shapeSpecificProperties[shapeType]?.directionMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'directionMode', value)
                                     }
+                                    className="flex space-x-4 mt-2"
+                                    data-testid="select-line-vector-direction-mode"
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-direction-mode">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="range" data-testid="option-line-vector-direction-range">Range</SelectItem>
-                                      <SelectItem value="fixed" data-testid="option-line-vector-direction-fixed">Fixed</SelectItem>
-                                      <SelectItem value="incremental" data-testid="option-line-vector-direction-incremental">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="range" id="direction-range" />
+                                      <Label htmlFor="direction-range" className="text-xs text-slate-300">Range</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="fixed" id="direction-fixed" />
+                                      <Label htmlFor="direction-fixed" className="text-xs text-slate-300">Fixed</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="incremental" id="direction-incremental" />
+                                      <Label htmlFor="direction-incremental" className="text-xs text-slate-300">Incremental</Label>
+                                    </div>
+                                  </RadioGroup>
                                 </div>
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'fixed' ? (
@@ -1004,21 +1011,27 @@ export function IndividualSetConfig({
                               <div className="space-y-3">
                                 <div>
                                   <Label className="text-slate-300 text-xs">Length Mode</Label>
-                                  <Select
+                                  <RadioGroup 
                                     value={generationSet.shapeSpecificProperties[shapeType]?.lengthMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'lengthMode', value)
                                     }
+                                    className="flex space-x-4 mt-2"
+                                    data-testid="select-line-vector-length-mode"
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-length-mode">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="range" data-testid="option-line-vector-length-range">Range</SelectItem>
-                                      <SelectItem value="fixed" data-testid="option-line-vector-length-fixed">Fixed</SelectItem>
-                                      <SelectItem value="incremental" data-testid="option-line-vector-length-incremental">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="range" id="length-range" />
+                                      <Label htmlFor="length-range" className="text-xs text-slate-300">Range</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="fixed" id="length-fixed" />
+                                      <Label htmlFor="length-fixed" className="text-xs text-slate-300">Fixed</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="incremental" id="length-incremental" />
+                                      <Label htmlFor="length-incremental" className="text-xs text-slate-300">Incremental</Label>
+                                    </div>
+                                  </RadioGroup>
                                 </div>
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'fixed' ? (
@@ -1101,21 +1114,27 @@ export function IndividualSetConfig({
                               <div className="space-y-3">
                                 <div>
                                   <Label className="text-slate-300 text-xs">Centroid Mode</Label>
-                                  <Select
+                                  <RadioGroup 
                                     value={generationSet.shapeSpecificProperties[shapeType]?.centroidMode || 'fixed'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'centroidMode', value)
                                     }
+                                    className="flex space-x-4 mt-2"
+                                    data-testid="select-line-vector-centroid-mode"
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-centroid-mode">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="range" data-testid="option-line-vector-centroid-range">Range</SelectItem>
-                                      <SelectItem value="fixed" data-testid="option-line-vector-centroid-fixed">Fixed</SelectItem>
-                                      <SelectItem value="incremental" data-testid="option-line-vector-centroid-incremental">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="range" id="centroid-range" />
+                                      <Label htmlFor="centroid-range" className="text-xs text-slate-300">Range</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="fixed" id="centroid-fixed" />
+                                      <Label htmlFor="centroid-fixed" className="text-xs text-slate-300">Fixed</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="incremental" id="centroid-incremental" />
+                                      <Label htmlFor="centroid-incremental" className="text-xs text-slate-300">Incremental</Label>
+                                    </div>
+                                  </RadioGroup>
                                 </div>
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'fixed' ? (
