@@ -489,6 +489,9 @@ export class Shape {
       case 'line':
         this.generateLinePoints(getPointCount(2, 8), batchConfig);
         break;
+      case 'line-vector':
+        this.generateLineVectorPoints(batchConfig);
+        break;
       case 'cubic':
         this.generateCubicCurvePoints(batchConfig);
         break;
@@ -565,6 +568,95 @@ export class Shape {
         y: yVariation
       });
     }
+  }
+
+  private generateLineVectorPoints(batchConfig?: any): void {
+    this.points = [];
+    
+    // Helper function to get value based on mode (range/fixed/incremental)
+    const getValue = (
+      mode: 'range' | 'fixed' | 'incremental',
+      range?: [number, number],
+      value?: number,
+      startValue?: number,
+      increment?: number,
+      generationIndex: number = 0
+    ): number => {
+      switch (mode) {
+        case 'range':
+          if (range) {
+            const [min, max] = range;
+            return min + Math.random() * (max - min);
+          }
+          return 0;
+        case 'fixed':
+          return value || 0;
+        case 'incremental':
+          return (startValue || 0) + ((increment || 0) * generationIndex);
+        default:
+          return 0;
+      }
+    };
+
+    // Get line-vector properties from batch config or use defaults
+    const lineVectorSettings = batchConfig?.scatterSettings?.shapeSpecific?.['line-vector'] || {};
+    
+    // Direction (0-360 degrees)
+    const directionMode = lineVectorSettings.directionMode || 'range';
+    const direction = getValue(
+      directionMode,
+      lineVectorSettings.directionRange || [0, 360],
+      lineVectorSettings.directionValue || 0,
+      lineVectorSettings.directionStartValue || 0,
+      lineVectorSettings.directionIncrement || 0,
+      batchConfig?.generationIndex || 0
+    );
+    
+    // Length (5-500)
+    const lengthMode = lineVectorSettings.lengthMode || 'range';
+    const length = getValue(
+      lengthMode,
+      lineVectorSettings.lengthRange || [50, 150],
+      lineVectorSettings.lengthValue || 100,
+      lineVectorSettings.lengthStartValue || 100,
+      lineVectorSettings.lengthIncrement || 0,
+      batchConfig?.generationIndex || 0
+    );
+    
+    // Centroid (0-1) - position along line where rotation point is
+    const centroidMode = lineVectorSettings.centroidMode || 'fixed';
+    const centroid = getValue(
+      centroidMode,
+      lineVectorSettings.centroidRange || [0, 1],
+      lineVectorSettings.centroidValue || 0.5,
+      lineVectorSettings.centroidStartValue || 0.5,
+      lineVectorSettings.centroidIncrement || 0,
+      batchConfig?.generationIndex || 0
+    );
+    
+    // Convert direction to radians
+    const angleRadians = (direction * Math.PI) / 180;
+    
+    // Calculate line endpoints based on centroid position
+    // centroid 0 = start point, 0.5 = center, 1 = end point
+    const startDistance = length * centroid;
+    const endDistance = length * (1 - centroid);
+    
+    // Calculate points along the direction vector
+    const startX = -Math.cos(angleRadians) * startDistance;
+    const startY = -Math.sin(angleRadians) * startDistance;
+    const endX = Math.cos(angleRadians) * endDistance;
+    const endY = Math.sin(angleRadians) * endDistance;
+    
+    // Create exactly 2 points for the line vector
+    this.points = [
+      { x: startX, y: startY },
+      { x: endX, y: endY }
+    ];
+    
+    // Set render properties for line vectors
+    this.closed = false;
+    this.renderType = 'polygon'; // Simple line rendering
   }
 
   private generateCurvePoints(numPoints?: number, batchConfig?: any): void {
@@ -1670,6 +1762,9 @@ export class Shape {
       case 'line':
         this.drawLine(ctx);
         break;
+      case 'line-vector':
+        this.drawLine(ctx); // Use same drawing method as regular line
+        break;
       case 'cubic':
         this.drawCubicCurve(ctx);
         break;
@@ -2305,6 +2400,8 @@ export class Shape {
         return this.isPointInRectangle(x, y);
       case 'line':
         return this.isPointOnLine(x, y);
+      case 'line-vector':
+        return this.isPointOnLine(x, y); // Use same hit detection as regular line
       case 'blob':
         return this.isPointInPolygon(x, y);
       default:
