@@ -1042,6 +1042,7 @@ export type SupportedShapeType =
   | 'arrow'
   | 'cross'
   | 'line' 
+  | 'line-vector'
   | 'polygon' 
   | 'star' 
   | 'chunk' 
@@ -1160,6 +1161,27 @@ export interface ShapeSpecificProperties {
       square: number;
       butt: number;
     };
+  };
+  
+  // Line vector properties
+  'line-vector'?: {
+    directionMode?: 'range' | 'fixed' | 'incremental';
+    directionRange?: [number, number]; // For range mode (0-360 degrees)
+    directionValue?: number; // For fixed mode
+    directionStartValue?: number; // For incremental mode
+    directionIncrement?: number; // For incremental mode
+    
+    lengthMode?: 'range' | 'fixed' | 'incremental';
+    lengthRange?: [number, number]; // For range mode (5-500)
+    lengthValue?: number; // For fixed mode
+    lengthStartValue?: number; // For incremental mode
+    lengthIncrement?: number; // For incremental mode
+    
+    centroidMode?: 'range' | 'fixed' | 'incremental';
+    centroidRange?: [number, number]; // For range mode (0-1)
+    centroidValue?: number; // For fixed mode
+    centroidStartValue?: number; // For incremental mode
+    centroidIncrement?: number; // For incremental mode
   };
   
   // Bezier curve properties
