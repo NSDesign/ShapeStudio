@@ -126,9 +126,11 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
   const queryClient = useQueryClient();
 
   // Fetch user preferences
-  const { data: preferences, isLoading: isLoadingPreferences } = useQuery<UserPreferences>({
+  const { data: preferences, isLoading: isLoadingPreferences, error: preferencesError } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
-    enabled: isOpen, // Only fetch when dialog is open
+    staleTime: 5 * 60 * 1000, // Consider preferences fresh for 5 minutes
+    retry: 1, // Reduce retries for faster failure
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
   // Update preferences mutation
@@ -167,7 +169,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
 
   // Initialize local settings when preferences load
   useEffect(() => {
-    if (preferences?.sidebarSections) {
+    if (preferences && preferences.sidebarSections) {
       setLocalSettings(preferences.sidebarSections as SidebarSectionConfig);
     }
   }, [preferences]);
@@ -209,7 +211,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
   };
 
   // Check if settings have changed
-  const hasChanges = localSettings && preferences?.sidebarSections && 
+  const hasChanges = localSettings && preferences && preferences.sidebarSections && 
     JSON.stringify(localSettings) !== JSON.stringify(preferences.sidebarSections);
 
   return (
@@ -217,7 +219,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100 flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-100">
             Sidebar Settings
@@ -227,7 +229,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 flex-1 min-h-0">
           {isLoadingPreferences || !localSettings ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
@@ -235,7 +237,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           ) : (
             <>
-              <ScrollArea className="h-[400px] w-full">
+              <ScrollArea className="h-full max-h-[50vh] w-full">
                 <div className="space-y-6 pr-4">
                   {Object.entries(SECTION_GROUPS).map(([category, sections]) => (
                     <div key={category} className="space-y-3">

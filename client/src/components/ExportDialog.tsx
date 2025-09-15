@@ -35,9 +35,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   const [backgroundColor, setBackgroundColor] = useState('#1e293b');
   
   // Export scope options
-  const [exportScope, setExportScope] = useState<'all' | 'selected' | 'artboard'>(
-    selectedShapes.length > 0 ? 'selected' : 'all'
-  );
+  const [exportScope, setExportScope] = useState<'all' | 'selected' | 'artboard'>('all');
   const [selectedArtboardIds, setSelectedArtboardIds] = useState<string[]>([]);
   
   // Margin options
