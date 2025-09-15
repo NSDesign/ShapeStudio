@@ -1585,6 +1585,119 @@ export default function Sidebar({
             </div>
           );
         
+        case 'line-vector':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              {/* Direction Controls */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Direction Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific['line-vector']?.directionRange?.[0] || 0}°</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific['line-vector']?.directionRange?.[1] || 360}°</span>
+                  </div>
+                  <Slider
+                    value={scatterSettings.shapeSpecific['line-vector']?.directionRange || [0, 360]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            'line-vector': { 
+                              directionMode: 'range',
+                              lengthMode: 'range',
+                              centroidMode: 'fixed',
+                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
+                              directionRange: [min, max] 
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={0}
+                    max={360}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={1}
+                  />
+                </div>
+              </div>
+              
+              {/* Length Controls */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Length Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific['line-vector']?.lengthRange?.[0] || 50}</span>
+                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific['line-vector']?.lengthRange?.[1] || 150}</span>
+                  </div>
+                  <Slider
+                    value={scatterSettings.shapeSpecific['line-vector']?.lengthRange || [50, 150]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            'line-vector': { 
+                              directionMode: 'range',
+                              lengthMode: 'range',
+                              centroidMode: 'fixed',
+                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
+                              lengthRange: [min, max] 
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={5}
+                    max={500}
+                    step={1}
+                    className="w-full"
+                    minStepsBetweenThumbs={5}
+                  />
+                </div>
+              </div>
+              
+              {/* Centroid Controls */}
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Centroid Position Range</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Start: {(scatterSettings.shapeSpecific['line-vector']?.centroidRange?.[0] || 0).toFixed(2)}</span>
+                    <span className="text-slate-400">End: {(scatterSettings.shapeSpecific['line-vector']?.centroidRange?.[1] || 1).toFixed(2)}</span>
+                  </div>
+                  <Slider
+                    value={scatterSettings.shapeSpecific['line-vector']?.centroidRange || [0, 1]}
+                    onValueChange={(value) => {
+                      const [min, max] = value;
+                      setTimeout(() => {
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            'line-vector': { 
+                              directionMode: 'range',
+                              lengthMode: 'range',
+                              centroidMode: 'fixed',
+                              ...(scatterSettings.shapeSpecific['line-vector'] || {}),
+                              centroidRange: [min, max] 
+                            }
+                          }
+                        });
+                      }, 0);
+                    }}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="w-full"
+                    minStepsBetweenThumbs={0.01}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        
         case 'circle':
         case 'ellipse':
           return (
@@ -2282,7 +2395,7 @@ export default function Sidebar({
                 {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
                   const isEnabled = enabledShapeTypes.has(type as ShapeType);
                   const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'rounded-rectangle', 'rounded-square'].includes(type);
+                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(type);
 
                   return (
                     <div key={type} className="space-y-2">
