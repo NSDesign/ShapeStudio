@@ -60,7 +60,7 @@ const SHAPE_CATEGORIES = {
   'Basic': ['rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 'ellipse'] as SupportedShapeType[],
   'Geometric': ['triangle', 'right-triangle', 'pentagon', 'hexagon', 'rhombus', 'parallelogram', 'trapezoid'] as SupportedShapeType[],
   'Special': ['star', 'polygon', 'heart', 'arrow', 'cross', 'kite', 'semicircle'] as SupportedShapeType[],
-  'Lines & Curves': ['line', 'line-vector', 'bezier', 'cubic', 'smooth-spline'] as SupportedShapeType[],
+  'Lines & Curves': ['line-vector', 'line', 'bezier', 'cubic', 'smooth-spline'] as SupportedShapeType[],
   'Complex': ['ring', 'blob', 'chunk', 'spline-circle', 'spline-ellipse', 'spline-ring'] as SupportedShapeType[]
 };
 

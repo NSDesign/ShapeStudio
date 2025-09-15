@@ -98,6 +98,7 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   cross: 'Cross',
   polygon: 'Polygon',
   star: 'Star',
+  'line-vector': 'Line Vector',
   line: 'Line',
   cubic: 'Cubic Curve',
   bezier: 'Bézier Curve',
