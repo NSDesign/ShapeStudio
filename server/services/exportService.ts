@@ -11,6 +11,7 @@ import {
   ZIndexConfig,
   SupportedShapeType
 } from '../../shared/schema';
+import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -110,27 +111,8 @@ export class ExportService {
   }
 
   getDefaultBatchSettings(): BatchExportSettings {
-    return {
-      format: 'png',
-      quality: 92,
-      scale: 1,
-      useCustomSize: false,
-      includeBackground: true,
-      backgroundColor: '#1e293b',
-      useMargins: false,
-      uniformMargins: true,
-      marginTop: 20,
-      marginRight: 20,
-      marginBottom: 20,
-      marginLeft: 20,
-      batchExportCount: 10,
-      batchSaveProjectFiles: false,
-      packageAsZip: false, // Default to individual files
-      includeAdornments: false,
-      includeGrid: false,
-      includeArtboardGeometry: false,
-      includeTypeInName: false
-    };
+    // Use shared defaults to ensure consistency across the application
+    return DEFAULT_BATCH_EXPORT_SETTINGS;
   }
 
   mergeBatchSettings(userSettings: Partial<BatchExportSettings>): BatchExportSettings {
