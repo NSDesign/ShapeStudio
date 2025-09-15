@@ -237,7 +237,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           ) : (
             <>
-              <ScrollArea className="h-full max-h-[50vh] w-full">
+              <ScrollArea className="h-full max-h-[65vh] w-full">
                 <div className="space-y-6 pr-4">
                   {Object.entries(SECTION_GROUPS).map(([category, sections]) => (
                     <div key={category} className="space-y-3">
