@@ -962,24 +962,62 @@ export function IndividualSetConfig({
                           )}
 
                           {(shapeType === 'circle' || shapeType === 'ellipse') && (
-                            <div>
-                              <Label className="text-slate-300 text-xs">
-                                Segment Count Range: {
-                                  (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
-                                } - {
-                                  (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
-                                }
-                              </Label>
-                              <Slider
-                                value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
-                                onValueChange={(value) => 
-                                  handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
-                                }
-                                min={8}
-                                max={64}
-                                step={4}
-                                className="mt-2"
-                              />
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Segment Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'segmentCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count: {generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountValue', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
                             </div>
                           )}
 

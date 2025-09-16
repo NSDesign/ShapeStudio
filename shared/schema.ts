@@ -1084,9 +1084,13 @@ export interface ShapeSpecificProperties {
   // Circle and ellipse properties
   circle?: {
     segmentCountRange?: [number, number];
+    segmentCountMode?: 'range' | 'fixed';
+    segmentCountValue?: number;
   };
   ellipse?: {
     segmentCountRange?: [number, number];
+    segmentCountMode?: 'range' | 'fixed';
+    segmentCountValue?: number;
   };
   
   // Geometric shape properties
@@ -1384,10 +1388,14 @@ export const ShapeSpecificPropertiesSchema = z.object({
     cornerRadiusValue: z.number().optional()
   }).optional(),
   circle: z.object({
-    segmentCountRange: z.tuple([z.number(), z.number()]).optional()
+    segmentCountRange: z.tuple([z.number(), z.number()]).optional(),
+    segmentCountMode: z.enum(['range', 'fixed']).optional(),
+    segmentCountValue: z.number().optional()
   }).optional(),
   ellipse: z.object({
-    segmentCountRange: z.tuple([z.number(), z.number()]).optional()
+    segmentCountRange: z.tuple([z.number(), z.number()]).optional(),
+    segmentCountMode: z.enum(['range', 'fixed']).optional(),
+    segmentCountValue: z.number().optional()
   }).optional(),
   triangle: z.object({}).optional(),
   'right-triangle': z.object({}).optional(),
