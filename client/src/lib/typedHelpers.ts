@@ -426,7 +426,7 @@ export function isValidShapeType(value: string): value is SupportedShapeType {
     'circle', 'ellipse', 'triangle', 'right-triangle', 'pentagon',
     'hexagon', 'rhombus', 'parallelogram', 'trapezoid', 'star',
     'polygon', 'heart', 'arrow', 'cross', 'kite', 'semicircle',
-    'line', 'bezier', 'cubic', 'smooth-spline', 'ring', 'blob',
+    'line', 'line-vector', 'bezier', 'cubic', 'smooth-spline', 'ring', 'blob',
     'chunk', 'spline-circle', 'spline-ellipse', 'spline-ring'
   ];
   return validTypes.includes(value as SupportedShapeType);
