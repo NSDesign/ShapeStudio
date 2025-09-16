@@ -77,7 +77,6 @@ export function IndividualSetConfig({
   showInlineValidation = true,
   validationResult
 }: IndividualSetConfigProps) {
-  console.log('🔧 [DEBUG] IndividualSetConfig component loaded - UI changes should be visible!');
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationError | null>>({});
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, ValidationWarning | null>>({});
   
