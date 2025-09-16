@@ -228,9 +228,6 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
           <DialogTitle className="text-xl font-semibold text-slate-100">
             Sidebar Settings
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Configure which sections are visible in your sidebar. Changes are saved automatically to your account.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -241,7 +238,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           ) : (
             <>
-              <ScrollArea className="h-[50vh] w-full">
+              <ScrollArea className="h-[40vh] w-full">
                 <div className="space-y-6 pr-4">
                   {Object.entries(SECTION_GROUPS).map(([category, sections]) => (
                     <div key={category} className="space-y-3">
