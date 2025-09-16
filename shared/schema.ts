@@ -1242,7 +1242,11 @@ export interface ShapeSpecificProperties {
   };
   'spline-ring'?: {
     innerRadiusRange?: [number, number];
+    innerRadiusMode?: 'range' | 'fixed';
+    innerRadiusValue?: number;
     segmentCountRange?: [number, number];
+    segmentCountMode?: 'range' | 'fixed';
+    segmentCountValue?: number;
   };
 }
 
@@ -1478,7 +1482,11 @@ export const ShapeSpecificPropertiesSchema = z.object({
   }).optional(),
   'spline-ring': z.object({
     innerRadiusRange: z.tuple([z.number(), z.number()]).optional(),
-    segmentCountRange: z.tuple([z.number(), z.number()]).optional()
+    innerRadiusMode: z.enum(['range', 'fixed']).optional(),
+    innerRadiusValue: z.number().optional(),
+    segmentCountRange: z.tuple([z.number(), z.number()]).optional(),
+    segmentCountMode: z.enum(['range', 'fixed']).optional(),
+    segmentCountValue: z.number().optional()
   }).optional()
 });
 
