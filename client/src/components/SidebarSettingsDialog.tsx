@@ -223,7 +223,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100 flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-100">
             Sidebar Settings
@@ -233,7 +233,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 flex-1 min-h-0">
+        <div className="space-y-6">
           {isLoadingPreferences || !localSettings ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
@@ -241,7 +241,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           ) : (
             <>
-              <ScrollArea className="flex-1 min-h-0 w-full">
+              <ScrollArea className="h-[50vh] w-full">
                 <div className="space-y-6 pr-4">
                   {Object.entries(SECTION_GROUPS).map(([category, sections]) => (
                     <div key={category} className="space-y-3">
