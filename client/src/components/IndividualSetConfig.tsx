@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ModeField } from '@/components/ModeField';
-import { ScalarMode } from '@/lib/shapeTypes';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -906,80 +904,187 @@ export function IndividualSetConfig({
                           {shapeType === 'line-vector' && (
                             <div className="space-y-3">
                               {/* Direction Controls */}
-                              <ModeField
-                                label="Direction"
-                                config={{
-                                  kind: (generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.directionMode) || 'range',
-                                  ...(generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'fixed' ? {
-                                    value: generationSet.shapeSpecificProperties[shapeType]?.directionValue || 0
-                                  } : {
-                                    min: (generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360])[0],
-                                    max: (generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360])[1]
-                                  })
-                                } as ScalarMode<number>}
-                                onChange={(config) => {
-                                  if (config.kind === 'fixed') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'directionMode', 'fixed');
-                                    handleShapeSpecificPropertyChange(shapeType, 'directionValue', config.value);
-                                  } else if (config.kind === 'range') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'directionMode', 'range');
-                                    handleShapeSpecificPropertyChange(shapeType, 'directionRange', [config.min, config.max]);
-                                  }
-                                }}
-                                bounds={{ min: 0, max: 360 }}
-                                unit="°"
-                                step={1}
-                              />
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-slate-300 text-xs">Direction Mode</Label>
+                                  <Select
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.directionMode || 'range'}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'directionMode', value)
+                                    }
+                                  >
+                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-direction-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="range" data-testid="option-line-vector-direction-range">Range</SelectItem>
+                                      <SelectItem value="fixed" data-testid="option-line-vector-direction-fixed">Fixed</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                {generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'fixed' ? (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Direction: {generationSet.shapeSpecificProperties[shapeType]?.directionValue || 0}°
+                                    </Label>
+                                    <Slider
+                                      value={[generationSet.shapeSpecificProperties[shapeType]?.directionValue || 0]}
+                                      onValueChange={([value]) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'directionValue', value)
+                                      }
+                                      min={0}
+                                      max={360}
+                                      step={1}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-direction-value"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Direction Range: {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360])[0]
+                                      }° - {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360])[1]
+                                      }°
+                                    </Label>
+                                    <Slider
+                                      value={generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360]}
+                                      onValueChange={(value) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'directionRange', value)
+                                      }
+                                      min={0}
+                                      max={360}
+                                      step={1}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-direction-range"
+                                    />
+                                  </div>
+                                )}
+                              </div>
 
                               {/* Length Controls */}
-                              <ModeField
-                                label="Length"
-                                config={{
-                                  kind: (generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.lengthMode) || 'range',
-                                  ...(generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'fixed' ? {
-                                    value: generationSet.shapeSpecificProperties[shapeType]?.lengthValue || 100
-                                  } : {
-                                    min: (generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150])[0],
-                                    max: (generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150])[1]
-                                  })
-                                } as ScalarMode<number>}
-                                onChange={(config) => {
-                                  if (config.kind === 'fixed') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'lengthMode', 'fixed');
-                                    handleShapeSpecificPropertyChange(shapeType, 'lengthValue', config.value);
-                                  } else if (config.kind === 'range') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'lengthMode', 'range');
-                                    handleShapeSpecificPropertyChange(shapeType, 'lengthRange', [config.min, config.max]);
-                                  }
-                                }}
-                                bounds={{ min: 5, max: 500 }}
-                                step={1}
-                              />
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-slate-300 text-xs">Length Mode</Label>
+                                  <Select
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.lengthMode || 'range'}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'lengthMode', value)
+                                    }
+                                  >
+                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-length-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="range" data-testid="option-line-vector-length-range">Range</SelectItem>
+                                      <SelectItem value="fixed" data-testid="option-line-vector-length-fixed">Fixed</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                {generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'fixed' ? (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Length: {generationSet.shapeSpecificProperties[shapeType]?.lengthValue || 100}
+                                    </Label>
+                                    <Slider
+                                      value={[generationSet.shapeSpecificProperties[shapeType]?.lengthValue || 100]}
+                                      onValueChange={([value]) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'lengthValue', value)
+                                      }
+                                      min={5}
+                                      max={500}
+                                      step={1}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-length-value"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Length Range: {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150])[0]
+                                      } - {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150])[1]
+                                      }
+                                    </Label>
+                                    <Slider
+                                      value={generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150]}
+                                      onValueChange={(value) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'lengthRange', value)
+                                      }
+                                      min={5}
+                                      max={500}
+                                      step={1}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-length-range"
+                                    />
+                                  </div>
+                                )}
+                              </div>
 
                               {/* Centroid Controls */}
-                              <ModeField
-                                label="Centroid"
-                                config={{
-                                  kind: (generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.centroidMode) || 'fixed',
-                                  ...(generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'fixed' ? {
-                                    value: generationSet.shapeSpecificProperties[shapeType]?.centroidValue || 0.5
-                                  } : {
-                                    min: (generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1])[0],
-                                    max: (generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1])[1]
-                                  })
-                                } as ScalarMode<number>}
-                                onChange={(config) => {
-                                  if (config.kind === 'fixed') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'centroidMode', 'fixed');
-                                    handleShapeSpecificPropertyChange(shapeType, 'centroidValue', config.value);
-                                  } else if (config.kind === 'range') {
-                                    handleShapeSpecificPropertyChange(shapeType, 'centroidMode', 'range');
-                                    handleShapeSpecificPropertyChange(shapeType, 'centroidRange', [config.min, config.max]);
-                                  }
-                                }}
-                                bounds={{ min: 0, max: 1 }}
-                                step={0.01}
-                              />
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-slate-300 text-xs">Centroid Mode</Label>
+                                  <Select
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.centroidMode || 'fixed'}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'centroidMode', value)
+                                    }
+                                  >
+                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-centroid-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="range" data-testid="option-line-vector-centroid-range">Range</SelectItem>
+                                      <SelectItem value="fixed" data-testid="option-line-vector-centroid-fixed">Fixed</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                {generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'fixed' ? (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Centroid: {(generationSet.shapeSpecificProperties[shapeType]?.centroidValue || 0.5).toFixed(2)}
+                                    </Label>
+                                    <Slider
+                                      value={[generationSet.shapeSpecificProperties[shapeType]?.centroidValue || 0.5]}
+                                      onValueChange={([value]) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'centroidValue', value)
+                                      }
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-centroid-value"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <Label className="text-slate-300 text-xs">
+                                      Centroid Range: {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1])[0].toFixed(2)
+                                      } - {
+                                        (generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1])[1].toFixed(2)
+                                      }
+                                    </Label>
+                                    <Slider
+                                      value={generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1]}
+                                      onValueChange={(value) => 
+                                        handleShapeSpecificPropertyChange(shapeType, 'centroidRange', value)
+                                      }
+                                      min={0}
+                                      max={1}
+                                      step={0.01}
+                                      className="mt-2"
+                                      data-testid="slider-line-vector-centroid-range"
+                                    />
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
 
