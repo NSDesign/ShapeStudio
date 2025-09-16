@@ -150,7 +150,11 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update local settings with confirmed server response
+      if (data && data.sidebarSections) {
+        setLocalSettings(data.sidebarSections as SidebarSectionConfig);
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/user/preferences'] });
       toast({
         title: 'Settings Saved',
@@ -167,12 +171,12 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
     },
   });
 
-  // Initialize local settings when preferences load
+  // Initialize local settings when preferences load (only if no local changes exist)
   useEffect(() => {
-    if (preferences && preferences.sidebarSections) {
+    if (preferences && preferences.sidebarSections && !localSettings) {
       setLocalSettings(preferences.sidebarSections as SidebarSectionConfig);
     }
-  }, [preferences]);
+  }, [preferences, localSettings]);
 
   // Handle section toggle
   const handleSectionToggle = (sectionKey: keyof SidebarSectionConfig, enabled: boolean) => {
@@ -215,7 +219,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
     JSON.stringify(localSettings) !== JSON.stringify(preferences.sidebarSections);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setLocalSettings(null); }}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -237,7 +241,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           ) : (
             <>
-              <ScrollArea className="h-[50vh] w-full">
+              <ScrollArea className="flex-1 min-h-0 w-full">
                 <div className="space-y-6 pr-4">
                   {Object.entries(SECTION_GROUPS).map(([category, sections]) => (
                     <div key={category} className="space-y-3">
@@ -298,7 +302,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                   className="text-slate-300 border-slate-600 hover:bg-slate-800 hover:text-slate-100"
                   data-testid="button-reset-defaults"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <RotateCcw className="w-4 h-4 mr-1" />
                   Reset to Defaults
                 </Button>
 
@@ -316,12 +320,12 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                   >
                     {updatePreferencesMutation.isPending ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                         Saving...
                       </>
                     ) : (
                       <>
-                        <Save className="w-4 h-4 mr-2" />
+                        <Save className="w-4 h-4 mr-1" />
                         Save Changes
                       </>
                     )}
