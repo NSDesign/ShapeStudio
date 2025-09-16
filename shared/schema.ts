@@ -1236,9 +1236,13 @@ export interface ShapeSpecificProperties {
   // Spline shapes
   'spline-circle'?: {
     segmentCountRange?: [number, number];
+    segmentCountMode?: 'range' | 'fixed';
+    segmentCountValue?: number;
   };
   'spline-ellipse'?: {
     segmentCountRange?: [number, number];
+    segmentCountMode?: 'range' | 'fixed';
+    segmentCountValue?: number;
   };
   'spline-ring'?: {
     innerRadiusRange?: [number, number];
@@ -1475,10 +1479,14 @@ export const ShapeSpecificPropertiesSchema = z.object({
   chunk: z.object({}).optional(),
   blob: z.object({}).optional(),
   'spline-circle': z.object({
-    segmentCountRange: z.tuple([z.number(), z.number()]).optional()
+    segmentCountRange: z.tuple([z.number(), z.number()]).optional(),
+    segmentCountMode: z.enum(['range', 'fixed']).optional(),
+    segmentCountValue: z.number().optional()
   }).optional(),
   'spline-ellipse': z.object({
-    segmentCountRange: z.tuple([z.number(), z.number()]).optional()
+    segmentCountRange: z.tuple([z.number(), z.number()]).optional(),
+    segmentCountMode: z.enum(['range', 'fixed']).optional(),
+    segmentCountValue: z.number().optional()
   }).optional(),
   'spline-ring': z.object({
     innerRadiusRange: z.tuple([z.number(), z.number()]).optional(),

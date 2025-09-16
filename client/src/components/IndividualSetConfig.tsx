@@ -693,6 +693,7 @@ export function IndividualSetConfig({
                                     max={50}
                                     step={1}
                                     className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
                                   />
                                 </div>
                               ) : (
@@ -753,6 +754,7 @@ export function IndividualSetConfig({
                                     max={20}
                                     step={1}
                                     className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
                                   />
                                 </div>
                               ) : (
@@ -935,6 +937,7 @@ export function IndividualSetConfig({
                                     max={0.9}
                                     step={0.1}
                                     className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
                                   />
                                 </div>
                               ) : (
@@ -954,6 +957,68 @@ export function IndividualSetConfig({
                                     min={0.1}
                                     max={0.9}
                                     step={0.1}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Segment Count Controls for spline-ring */}
+                          {shapeType === 'spline-ring' && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Segment Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'segmentCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count: {generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountValue', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
+                                    className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
                                     className="mt-2"
                                   />
                                 </div>
@@ -995,6 +1060,7 @@ export function IndividualSetConfig({
                                     max={64}
                                     step={4}
                                     className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
                                   />
                                 </div>
                               ) : (
@@ -1028,7 +1094,7 @@ export function IndividualSetConfig({
                                 <div>
                                   <Label className="text-slate-300 text-xs">Direction Mode</Label>
                                   <Select
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.directionMode || 'range'}
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.directionMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'directionMode', value)
                                     }
@@ -1089,7 +1155,7 @@ export function IndividualSetConfig({
                                 <div>
                                   <Label className="text-slate-300 text-xs">Length Mode</Label>
                                   <Select
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.lengthMode || 'range'}
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.lengthMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'lengthMode', value)
                                     }
@@ -1150,7 +1216,7 @@ export function IndividualSetConfig({
                                 <div>
                                   <Label className="text-slate-300 text-xs">Centroid Mode</Label>
                                   <Select
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'incremental' ? 'range' : generationSet.shapeSpecificProperties[shapeType]?.centroidMode || 'fixed'}
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.centroidMode || 'fixed'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'centroidMode', value)
                                     }
@@ -1208,8 +1274,133 @@ export function IndividualSetConfig({
                             </div>
                           )}
 
+                          {/* Point Count Controls for Line/Curve shapes */}
+                          {(shapeType === 'line' || shapeType === 'bezier' || shapeType === 'cubic' || shapeType === 'smooth-spline') && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Point Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.pointCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'pointCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600" data-testid={`select-${shapeType}-point-count-mode`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.pointCountMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Point Count: {generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 4}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 4]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountValue', value)
+                                    }
+                                    min={2}
+                                    max={20}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid={`slider-${shapeType}-point-count-value`}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Point Count Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountRange', value)
+                                    }
+                                    min={2}
+                                    max={20}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid={`slider-${shapeType}-point-count-range`}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Segment Count Controls for spline-circle and spline-ellipse */}
+                          {(shapeType === 'spline-circle' || shapeType === 'spline-ellipse') && (
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-slate-300 text-xs">Segment Count Mode</Label>
+                                <Select
+                                  value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode || 'range'}
+                                  onValueChange={(value) => 
+                                    handleShapeSpecificPropertyChange(shapeType, 'segmentCountMode', value)
+                                  }
+                                >
+                                  <SelectTrigger className="bg-slate-700 border-slate-600" data-testid={`select-${shapeType}-segment-count-mode`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="range">Range</SelectItem>
+                                    <SelectItem value="fixed">Fixed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode === 'fixed' ? (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count: {generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24}
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24]}
+                                    onValueChange={([value]) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountValue', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
+                                    className="mt-2"
+                                    data-testid={`slider-${shapeType}-segment-count-value`}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <Label className="text-slate-300 text-xs">
+                                    Segment Count Range: {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
+                                    } - {
+                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
+                                    }
+                                  </Label>
+                                  <Slider
+                                    value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
+                                    onValueChange={(value) => 
+                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
+                                    }
+                                    min={8}
+                                    max={64}
+                                    step={4}
+                                    className="mt-2"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Default message for shapes without specific properties */}
-                          {!['rounded-rectangle', 'rounded-square', 'polygon', 'star', 'ring', 'spline-ring', 'circle', 'ellipse', 'line-vector'].includes(shapeType) && (
+                          {!['rounded-rectangle', 'rounded-square', 'polygon', 'star', 'ring', 'spline-ring', 'circle', 'ellipse', 'line-vector', 'line', 'bezier', 'cubic', 'smooth-spline', 'spline-circle', 'spline-ellipse'].includes(shapeType) && (
                             <div className="text-center py-4">
                               <p className="text-sm text-slate-500">
                                 No specific properties available for {shapeType.replace('-', ' ')}
