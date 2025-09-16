@@ -1210,6 +1210,41 @@ export function IndividualSetConfig({
                                   </div>
                                 )}
                               </div>
+                              
+                              {/* Stroke Cap Probabilities */}
+                              <div className="space-y-3">
+                                <Label className="text-slate-300 text-xs">Stroke Cap Probabilities (%)</Label>
+                                <div className="space-y-2">
+                                  {(['round', 'square', 'butt'] as const).map((cap) => {
+                                    const strokeCaps = generationSet.shapeSpecificProperties[shapeType]?.strokeCapProbabilities ?? { round: 33, square: 33, butt: 34 };
+                                    const currentValue = strokeCaps[cap] ?? 33;
+                                    return (
+                                      <div key={cap} className="space-y-1">
+                                        <div className="flex justify-between text-xs">
+                                          <Label className="text-slate-300 capitalize">{cap}</Label>
+                                          <span className="text-slate-400">{currentValue}%</span>
+                                        </div>
+                                        <Slider
+                                          value={[currentValue]}
+                                          onValueChange={([value]) => {
+                                            const currentCaps = generationSet.shapeSpecificProperties[shapeType]?.strokeCapProbabilities ?? { round: 33, square: 33, butt: 34 };
+                                            const updatedCaps = {
+                                              ...currentCaps,
+                                              [cap]: value
+                                            };
+                                            handleShapeSpecificPropertyChange(shapeType, 'strokeCapProbabilities', updatedCaps);
+                                          }}
+                                          min={0}
+                                          max={100}
+                                          step={1}
+                                          className="mt-1"
+                                          data-testid={`slider-line-vector-${cap}-cap`}
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </div>
                           )}
 

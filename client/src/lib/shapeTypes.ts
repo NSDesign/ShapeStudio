@@ -266,6 +266,7 @@ export interface ShapeSpecificSettings {
     direction: ScalarMode<number>;
     length: ScalarMode<number>;
     centroid: ScalarMode<number>;
+    strokeCapProbabilities: { round: number; square: number; butt: number };
   };
   rectangle: {
     // Standard rectangle with no rounded corners

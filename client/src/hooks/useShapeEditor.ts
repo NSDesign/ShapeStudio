@@ -63,6 +63,12 @@ export const useShapeEditor = () => {
         pointCountRange: [2, 4],
         strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
       },
+      'line-vector': {
+        direction: { kind: 'range' as const, min: 0, max: 360 },
+        length: { kind: 'range' as const, min: 5, max: 500 },
+        centroid: { kind: 'fixed' as const, value: 0.5 },
+        strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
+      },
       rectangle: {
         // Standard rectangle has no special properties
       },

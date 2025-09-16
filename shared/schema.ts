@@ -1186,6 +1186,12 @@ export interface ShapeSpecificProperties {
     centroidValue?: number; // For fixed mode
     centroidStartValue?: number; // For incremental mode
     centroidIncrement?: number; // For incremental mode
+    
+    strokeCapProbabilities?: {
+      round: number;
+      square: number;
+      butt: number;
+    };
   };
   
   // Bezier curve properties
