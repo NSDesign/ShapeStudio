@@ -303,15 +303,10 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                   data-testid="button-reset-defaults"
                 >
                   <RotateCcw className="w-4 h-4 mr-1" />
-                  Reset to Defaults
+                  Defaults
                 </Button>
 
                 <div className="flex items-center gap-2">
-                  {hasChanges ? (
-                    <span className="text-xs text-amber-400">
-                      Unsaved changes
-                    </span>
-                  ) : null}
                   <Button
                     onClick={handleSave}
                     disabled={!hasChanges || updatePreferencesMutation.isPending}
@@ -326,7 +321,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                     ) : (
                       <>
                         <Save className="w-4 h-4 mr-1" />
-                        Save Changes
+                        Save
                       </>
                     )}
                   </Button>
