@@ -46,6 +46,7 @@ import {
   isValidShapeType
 } from '@/lib/typedHelpers';
 import { SafeSection } from '@/components/ErrorBoundary';
+import { StyledModeField, type ModeConfig } from '@/components/StyledModeField';
 
 interface IndividualSetConfigProps {
   generationSet: GenerationSet;
@@ -188,6 +189,56 @@ export function IndividualSetConfig({
     const freshHelper = new ShapeSpecificPropertiesHelper(generationSet.shapeSpecificProperties);
     const updatedProperties = freshHelper.setProperty(shapeType, property, value);
     onUpdate({ shapeSpecificProperties: updatedProperties });
+  }, [generationSet.shapeSpecificProperties, onUpdate]);
+
+  // Helper functions to convert between old format and ModeConfig
+  const convertToModeConfig = useCallback((shapeType: SupportedShapeType, property: string, defaultFixed: number, defaultRange: [number, number]): ModeConfig => {
+    const shapeProps = generationSet.shapeSpecificProperties?.[shapeType] as any;
+    const mode = shapeProps?.[`${property}Mode`] || 'range';
+    
+    switch (mode) {
+      case 'fixed':
+        return { kind: 'fixed', value: shapeProps?.[`${property}Value`] || defaultFixed };
+      case 'range':
+        const range = shapeProps?.[`${property}Range`] || defaultRange;
+        return { kind: 'range', min: range[0], max: range[1] };
+      default:
+        return { kind: 'range', min: defaultRange[0], max: defaultRange[1] };
+    }
+  }, [generationSet.shapeSpecificProperties]);
+
+  const handleModeConfigChange = useCallback((shapeType: SupportedShapeType, property: string, config: ModeConfig) => {
+    const updates: Record<string, any> = {};
+    
+    switch (config.kind) {
+      case 'fixed':
+        updates[`${property}Mode`] = 'fixed';
+        updates[`${property}Value`] = config.value;
+        break;
+      case 'range':
+        updates[`${property}Mode`] = 'range';
+        updates[`${property}Range`] = [config.min, config.max];
+        break;
+      case 'values':
+        // For now, convert values mode to range using first and last values
+        updates[`${property}Mode`] = 'range';
+        updates[`${property}Range`] = [Math.min(...config.values), Math.max(...config.values)];
+        break;
+    }
+
+    // Apply all updates atomically with a single helper operation
+    const currentProperties = generationSet.shapeSpecificProperties || {};
+    const shapeProperties = currentProperties[shapeType] || {};
+    
+    onUpdate({
+      shapeSpecificProperties: {
+        ...currentProperties,
+        [shapeType]: {
+          ...shapeProperties,
+          ...updates
+        }
+      }
+    });
   }, [generationSet.shapeSpecificProperties, onUpdate]);
 
   // Helper to render field validation indicators
@@ -718,64 +769,13 @@ export function IndividualSetConfig({
                           )}
 
                           {shapeType === 'polygon' && (
-                            <div className="space-y-3">
-                              <div>
-                                <Label className="text-slate-300 text-xs">Point Count Mode</Label>
-                                <Select
-                                  value={generationSet.shapeSpecificProperties[shapeType]?.pointCountMode || 'range'}
-                                  onValueChange={(value) => 
-                                    handleShapeSpecificPropertyChange(shapeType, 'pointCountMode', value)
-                                  }
-                                >
-                                  <SelectTrigger className="bg-slate-700 border-slate-600">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="range">Range</SelectItem>
-                                    <SelectItem value="fixed">Fixed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {generationSet.shapeSpecificProperties[shapeType]?.pointCountMode === 'fixed' ? (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Point Count: {generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 6}
-                                  </Label>
-                                  <Slider
-                                    value={[generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 6]}
-                                    onValueChange={([value]) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountValue', value)
-                                    }
-                                    min={3}
-                                    max={20}
-                                    step={1}
-                                    className="mt-2"
-                                    data-testid={`slider-${shapeType}-segment-count-value`}
-                                  />
-                                </div>
-                              ) : (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Point Count Range: {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8])[0]
-                                    } - {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8])[1]
-                                    }
-                                  </Label>
-                                  <Slider
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [3, 8]}
-                                    onValueChange={(value) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountRange', value)
-                                    }
-                                    min={3}
-                                    max={20}
-                                    step={1}
-                                    className="mt-2"
-                                  />
-                                </div>
-                              )}
-                            </div>
+                            <StyledModeField
+                              label="Point Count"
+                              config={convertToModeConfig(shapeType, 'pointCount', 6, [3, 8])}
+                              onChange={(config) => handleModeConfigChange(shapeType, 'pointCount', config)}
+                              bounds={{ min: 3, max: 20 }}
+                              step={1}
+                            />
                           )}
 
                           {shapeType === 'star' && (
