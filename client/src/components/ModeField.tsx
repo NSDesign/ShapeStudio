@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { X, Plus } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { X, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ScalarMode, ModeKind } from "@/lib/shapeTypes";
 
@@ -21,6 +22,7 @@ interface ModeFieldProps {
 
 export function ModeField({ label, config, onChange, bounds, unit = "", step = 1 }: ModeFieldProps) {
   const [newValue, setNewValue] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(config.kind === 'values');
 
   const handleModeChange = (mode: ModeKind) => {
     switch (mode) {
@@ -31,6 +33,7 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
         onChange({ kind: 'range', min: bounds.min, max: bounds.max });
         break;
       case 'values':
+        setShowAdvanced(true); // Auto-expand advanced section
         onChange({ kind: 'values', values: [bounds.min], selection: 'random' });
         break;
     }
@@ -65,9 +68,9 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
         <span className="text-xs text-muted-foreground">{unit}</span>
       </div>
 
-      {/* Mode Selection */}
+      {/* Common Mode Selection */}
       <RadioGroup 
-        value={config.kind} 
+        value={config.kind === 'values' ? '' : config.kind} 
         onValueChange={handleModeChange}
         className="flex space-x-4"
         data-testid={`select-${label.toLowerCase()}-mode`}
@@ -80,11 +83,99 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
           <RadioGroupItem value="range" id={`${label}-range`} />
           <Label htmlFor={`${label}-range`} className="text-xs">Range</Label>
         </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="values" id={`${label}-values`} />
-          <Label htmlFor={`${label}-values`} className="text-xs">Values</Label>
-        </div>
       </RadioGroup>
+
+      {/* Advanced Modes Toggle */}
+      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+            data-testid={`toggle-${label.toLowerCase()}-advanced`}
+          >
+            {showAdvanced ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            Advanced
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2">
+          <RadioGroup 
+            value={config.kind === 'values' ? 'values' : ''}
+            onValueChange={handleModeChange}
+            className="flex space-x-4"
+            data-testid={`select-${label.toLowerCase()}-advanced-mode`}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="values" id={`${label}-values`} />
+              <Label htmlFor={`${label}-values`} className="text-xs">Values</Label>
+            </div>
+          </RadioGroup>
+          
+          {/* Values Controls (only shown when advanced is open) */}
+          {config.kind === 'values' && (
+            <div className="space-y-2">
+              {/* Add new value */}
+              <div className="flex space-x-2">
+                <Input
+                  type="number"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  min={bounds.min}
+                  max={bounds.max}
+                  step={step}
+                  placeholder={`Add value (${bounds.min}-${bounds.max})`}
+                  className="flex-1"
+                  data-testid={`input-${label.toLowerCase()}-values`}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={addValue}
+                  data-testid={`button-add-${label.toLowerCase()}-value`}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Values list */}
+              {config.values.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {config.values.map((value, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="flex items-center gap-1"
+                      data-testid={`badge-${label.toLowerCase()}-value-${index}`}
+                    >
+                      {value}{unit}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => removeValue(index)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Selection strategy */}
+              <div className="flex items-center space-x-2">
+                <Label className="text-xs">Selection:</Label>
+                <Select
+                  value={config.selection}
+                  onValueChange={(selection: 'random' | 'cycle') => onChange({ ...config, selection })}
+                >
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="random">Random</SelectItem>
+                    <SelectItem value="cycle">Cycle</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Mode-specific Controls */}
       {config.kind === 'fixed' && (
@@ -137,68 +228,6 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
         </div>
       )}
 
-      {config.kind === 'values' && (
-        <div className="space-y-2">
-          {/* Add new value */}
-          <div className="flex space-x-2">
-            <Input
-              type="number"
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              min={bounds.min}
-              max={bounds.max}
-              step={step}
-              placeholder={`Add value (${bounds.min}-${bounds.max})`}
-              className="flex-1"
-              data-testid={`input-${label.toLowerCase()}-values`}
-            />
-            <Button 
-              size="sm" 
-              onClick={addValue}
-              data-testid={`button-add-${label.toLowerCase()}-value`}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Values list */}
-          {config.values.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {config.values.map((value, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="flex items-center gap-1"
-                  data-testid={`badge-${label.toLowerCase()}-value-${index}`}
-                >
-                  {value}{unit}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeValue(index)}
-                  />
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Selection strategy */}
-          <div className="flex items-center space-x-2">
-            <Label className="text-xs">Selection:</Label>
-            <Select
-              value={config.selection}
-              onValueChange={(selection: 'random' | 'cycle') => onChange({ ...config, selection })}
-            >
-              <SelectTrigger className="w-20 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="random">Random</SelectItem>
-                <SelectItem value="cycle">Cycle</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
     </Card>
   );
 }
