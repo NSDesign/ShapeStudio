@@ -73,6 +73,7 @@ import {
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
 import { ModeField } from '@/components/ModeField';
+import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -111,6 +112,75 @@ const shapeTypeDisplayNames: Record<ShapeType, string> = {
   'spline-circle': 'Spline Circle',
   'spline-ellipse': 'Spline Ellipse',
   'spline-ring': 'Spline Ring'
+};
+
+// Conversion functions for scatterSettings to ModeConfig format
+const convertScatterToModeConfig = (
+  shapeType: string,
+  property: string,
+  scatterSettings: ScatterSettings,
+  defaultRange: [number, number]
+) => {
+  const shapeData = scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific];
+  
+  switch (property) {
+    case 'edgeCount': // for polygon
+      return {
+        kind: 'range' as const,
+        range: (shapeData as any)?.edgeCountRange || defaultRange
+      };
+    case 'pointCount': // for star, line, bezier, etc.
+      return {
+        kind: 'range' as const,
+        range: (shapeData as any)?.pointCountRange || defaultRange
+      };
+    case 'innerRadius': // for star, ring
+      return {
+        kind: 'range' as const,
+        range: (shapeData as any)?.innerRadiusRange || defaultRange
+      };
+    case 'segmentCount': // for circle, ellipse
+      return {
+        kind: 'range' as const,
+        range: (shapeData as any)?.segmentCountRange || defaultRange
+      };
+    default:
+      return {
+        kind: 'range' as const,
+        range: defaultRange
+      };
+  }
+};
+
+const handleScatterModeConfigChange = (
+  shapeType: string,
+  property: string,
+  config: any,
+  scatterSettings: ScatterSettings,
+  onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void
+) => {
+  const propertyMap = {
+    edgeCount: 'edgeCountRange',
+    pointCount: 'pointCountRange', 
+    innerRadius: 'innerRadiusRange',
+    segmentCount: 'segmentCountRange'
+  };
+  
+  const rangeProp = propertyMap[property as keyof typeof propertyMap];
+  if (!rangeProp) return;
+  
+  // Convert ModeConfig back to range for scatterSettings
+  const range = config.kind === 'range' ? config.range : [config.value, config.value];
+  
+  onUpdateScatterSettings({
+    shapeSpecific: {
+      ...scatterSettings.shapeSpecific,
+      [shapeType]: { 
+        ...(scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific] || {}),
+        [rangeProp]: range
+      }
+    }
+  });
 };
 
 interface SidebarProps {
