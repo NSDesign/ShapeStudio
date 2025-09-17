@@ -1544,6 +1544,19 @@ export default function Sidebar({
   }, []);
 
   function ShapeTypesContent() {
+    // Memoized callback to prevent infinite re-mounting of BatchConfigDialog
+    const handleBatchConfigSettingsChange = useCallback((settings: BatchConfigSettings | EnhancedBatchConfig) => {
+      // Handle both BatchConfigSettings and EnhancedBatchConfig
+      if ('mode' in settings && 'globalSettings' in settings) {
+        // It's EnhancedBatchConfig - for now, just handle the legacy part
+        if (settings.legacyBatchConfig) {
+          onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
+        }
+      } else {
+        // It's BatchConfigSettings
+        onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
+      }
+    }, [onUpdateGenerationConfigSettings]);
 
     const getShapeProperties = (shapeType: string) => {
       switch (shapeType) {
@@ -2530,18 +2543,7 @@ export default function Sidebar({
           <BatchConfigDialog
             settings={generationConfigSettings}
             supportEnhancedMode={true}
-            onSettingsChange={(settings: BatchConfigSettings | EnhancedBatchConfig) => {
-              // Handle both BatchConfigSettings and EnhancedBatchConfig
-              if ('mode' in settings && 'globalSettings' in settings) {
-                // It's EnhancedBatchConfig - for now, just handle the legacy part
-                if (settings.legacyBatchConfig) {
-                  onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
-                }
-              } else {
-                // It's BatchConfigSettings
-                onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
-              }
-            }}
+            onSettingsChange={handleBatchConfigSettingsChange}
           />
         </div>
       </div>
