@@ -1793,6 +1793,7 @@ export default function Sidebar({
                 onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 3, max: 20 }}
                 step={1}
+                allowedModes={['fixed', 'range']}
               />
             </div>
           );
@@ -1892,6 +1893,7 @@ export default function Sidebar({
                 onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 8, max: 64 }}
                 step={4}
+                allowedModes={['fixed', 'range']}
               />
             </div>
           );
@@ -1906,6 +1908,7 @@ export default function Sidebar({
                 onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 3, max: 10 }}
                 step={1}
+                allowedModes={['fixed', 'range']}
               />
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
@@ -1986,6 +1989,7 @@ export default function Sidebar({
                 onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 5, max: 12 }}
                 step={1}
+                allowedModes={['fixed', 'range']}
               />
               
               <Separator className="bg-slate-600" />
@@ -1997,6 +2001,7 @@ export default function Sidebar({
                 bounds={{ min: 10, max: 90 }}
                 step={5}
                 unit="%"
+                allowedModes={['fixed', 'range']}
               />
             </div>
           );
@@ -2011,6 +2016,7 @@ export default function Sidebar({
                 bounds={{ min: 10, max: 90 }}
                 step={5}
                 unit="%"
+                allowedModes={['fixed', 'range']}
               />
             </div>
           );
@@ -2063,6 +2069,7 @@ export default function Sidebar({
                 onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 2, max: 8 }}
                 step={1}
+                allowedModes={['fixed', 'range']}
               />
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
@@ -2117,6 +2124,7 @@ export default function Sidebar({
                 bounds={{ min: 0, max: 50 }}
                 step={1}
                 unit="px"
+                allowedModes={['fixed', 'range']}
               />
             </div>
           );
