@@ -1607,7 +1607,7 @@ export default function Sidebar({
             ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
           };
           return (
-            <div className="space-y-3">
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
               <ModeField
                 label="Direction"
                 config={lineVectorConfig.direction}
