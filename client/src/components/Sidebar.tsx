@@ -125,31 +125,124 @@ const convertScatterToModeConfig = (
   
   switch (property) {
     case 'edgeCount': // for polygon
+      const edgeRange = (shapeData as any)?.edgeCountRange || defaultRange;
       return {
         kind: 'range' as const,
-        range: (shapeData as any)?.edgeCountRange || defaultRange
+        min: edgeRange[0],
+        max: edgeRange[1]
       };
     case 'pointCount': // for star, line, bezier, etc.
+      const pointRange = (shapeData as any)?.pointCountRange || defaultRange;
       return {
         kind: 'range' as const,
-        range: (shapeData as any)?.pointCountRange || defaultRange
+        min: pointRange[0],
+        max: pointRange[1]
       };
-    case 'innerRadius': // for star, ring
+    case 'innerRadius': // for star, ring  
+      const radiusRange = (shapeData as any)?.innerRadiusRange || [defaultRange[0] / 100, defaultRange[1] / 100];
       return {
         kind: 'range' as const,
-        range: (shapeData as any)?.innerRadiusRange || defaultRange
+        min: Math.round(radiusRange[0] * 100),
+        max: Math.round(radiusRange[1] * 100)
       };
     case 'segmentCount': // for circle, ellipse
+      const segmentRange = (shapeData as any)?.segmentCountRange || defaultRange;
       return {
         kind: 'range' as const,
-        range: (shapeData as any)?.segmentCountRange || defaultRange
+        min: segmentRange[0],
+        max: segmentRange[1]
       };
     default:
       return {
         kind: 'range' as const,
-        range: defaultRange
+        min: defaultRange[0],
+        max: defaultRange[1]
       };
   }
+};
+
+// Conversion functions for line-vector ScalarMode to ModeConfig format
+const convertLineVectorToModeConfig = (scalarMode: ScalarMode<number>) => {
+  switch (scalarMode.kind) {
+    case 'fixed':
+      return {
+        kind: 'fixed' as const,
+        value: scalarMode.value
+      };
+    case 'range':
+      return {
+        kind: 'range' as const,
+        min: scalarMode.min,
+        max: scalarMode.max
+      };
+    case 'values':
+      return {
+        kind: 'values' as const,
+        values: scalarMode.values,
+        selection: scalarMode.selection
+      };
+    default:
+      return {
+        kind: 'fixed' as const,
+        value: 0
+      };
+  }
+};
+
+// Conversion functions for line-vector ModeConfig back to ScalarMode format
+const handleLineVectorModeConfigChange = (
+  property: 'direction' | 'length' | 'centroid',
+  modeConfig: any,
+  scatterSettings: ScatterSettings,
+  onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void
+) => {
+  // Convert ModeConfig back to ScalarMode format
+  let newScalarMode: ScalarMode<number>;
+  
+  switch (modeConfig.kind) {
+    case 'fixed':
+      newScalarMode = {
+        kind: 'fixed' as const,
+        value: modeConfig.value
+      };
+      break;
+    case 'range':
+      newScalarMode = {
+        kind: 'range' as const,
+        min: modeConfig.min,
+        max: modeConfig.max
+      };
+      break;
+    case 'values':
+      newScalarMode = {
+        kind: 'values' as const,
+        values: modeConfig.values,
+        selection: modeConfig.selection,
+        startIndex: 0
+      };
+      break;
+    default:
+      newScalarMode = {
+        kind: 'fixed' as const,
+        value: 0
+      };
+  }
+  
+  // Get current line-vector config and merge with the new property
+  const currentLineVectorConfig = { 
+    ...getDefaultLineVectorConfig(), 
+    ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
+  };
+  
+  onUpdateScatterSettings({
+    shapeSpecific: {
+      ...scatterSettings.shapeSpecific,
+      'line-vector': {
+        ...currentLineVectorConfig,
+        [property]: newScalarMode
+      }
+    }
+  });
 };
 
 const handleScatterModeConfigChange = (
@@ -170,7 +263,12 @@ const handleScatterModeConfigChange = (
   if (!rangeProp) return;
   
   // Convert ModeConfig back to range for scatterSettings
-  const range = config.kind === 'range' ? config.range : [config.value, config.value];
+  let range = config.kind === 'range' ? [config.min, config.max] : [config.value, config.value];
+  
+  // Handle percentage scaling for inner radius (convert percentages back to decimals)
+  if (property === 'innerRadius') {
+    range = [range[0] / 100, range[1] / 100];
+  }
   
   onUpdateScatterSettings({
     shapeSpecific: {
@@ -1655,39 +1753,13 @@ export default function Sidebar({
         case 'polygon':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Edge Count Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.polygon?.edgeCountRange?.[0] || 3}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.polygon?.edgeCountRange?.[1] || 20}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific.polygon?.edgeCountRange || [3, 20]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`polygon edges: ${min}-${max}`);
-                      // Use setTimeout to avoid React batching issues with sliders
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            polygon: { 
-                              ...(scatterSettings.shapeSpecific.polygon || {}),
-                              edgeCountRange: [min, max] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={3}
-                    max={20}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Edge Count"
+                config={convertScatterToModeConfig('polygon', 'edgeCount', scatterSettings, [3, 20])}
+                onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 20 }}
+                step={1}
+              />
             </div>
           );
         
@@ -1699,57 +1771,33 @@ export default function Sidebar({
           };
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <ModeField
+              <StyledModeField
                 label="Direction"
-                config={lineVectorConfig.direction}
-                onChange={(direction) => {
-                  onUpdateScatterSettings({
-                    shapeSpecific: {
-                      ...scatterSettings.shapeSpecific,
-                      'line-vector': {
-                        ...lineVectorConfig,
-                        direction
-                      }
-                    }
-                  });
+                config={convertLineVectorToModeConfig(lineVectorConfig.direction)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('direction', modeConfig, scatterSettings, onUpdateScatterSettings);
                 }}
                 bounds={{ min: 0, max: 360 }}
                 unit="°"
                 step={15}
               />
               
-              <ModeField
+              <StyledModeField
                 label="Length"
-                config={lineVectorConfig.length}
-                onChange={(length) => {
-                  onUpdateScatterSettings({
-                    shapeSpecific: {
-                      ...scatterSettings.shapeSpecific,
-                      'line-vector': {
-                        ...lineVectorConfig,
-                        length
-                      }
-                    }
-                  });
+                config={convertLineVectorToModeConfig(lineVectorConfig.length)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
                 }}
                 bounds={{ min: 5, max: 500 }}
                 unit="px"
                 step={5}
               />
               
-              <ModeField
+              <StyledModeField
                 label="Centroid"
-                config={lineVectorConfig.centroid}
-                onChange={(centroid) => {
-                  onUpdateScatterSettings({
-                    shapeSpecific: {
-                      ...scatterSettings.shapeSpecific,
-                      'line-vector': {
-                        ...lineVectorConfig,
-                        centroid
-                      }
-                    }
-                  });
+                config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('centroid', modeConfig, scatterSettings, onUpdateScatterSettings);
                 }}
                 bounds={{ min: 0, max: 1 }}
                 step={0.01}
@@ -1761,36 +1809,13 @@ export default function Sidebar({
         case 'ellipse':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange?.[0] || 8}</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange?.[1] || 64}</span>
-                  </div>
-                  <Slider
-                    value={(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] as any)?.segmentCountRange || [16, 32]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`${shapeType} segments: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'circle' | 'ellipse'] || {}),
-                            segmentCountRange: [min, max] 
-                          }
-                        }
-                      });
-                    }}
-                    min={8}
-                    max={64}
-                    step={4}
-                    className="w-full"
-                    minStepsBetweenThumbs={4}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Segment Count"
+                config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 8, max: 64 }}
+                step={4}
+              />
             </div>
           );
         
@@ -1798,36 +1823,13 @@ export default function Sidebar({
         case 'smooth-spline':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Point Count Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange?.[0] || 3}</span>
-                    <span className="text-slate-400">Max: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange?.[1] || 6}</span>
-                  </div>
-                  <Slider
-                    value={(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.pointCountRange || [3, 6]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`${shapeType} points: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
-                            pointCountRange: [min, max] 
-                          }
-                        }
-                      });
-                    }}
-                    min={3}
-                    max={10}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig(shapeType, 'pointCount', scatterSettings, [3, 6])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 10 }}
+                step={1}
+              />
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
                 <div className="space-y-1">
@@ -1901,128 +1903,36 @@ export default function Sidebar({
         case 'star':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Point Count Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.star?.pointCountRange?.[0] || 5}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.star?.pointCountRange?.[1] || 8}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific.star?.pointCountRange || [5, 8]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`Star points: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          star: { 
-                            pointCountRange: [min, max],
-                            innerRadiusRange: scatterSettings.shapeSpecific.star?.innerRadiusRange || [0.3, 0.7]
-                          }
-                        }
-                      });
-                    }}
-                    min={5}
-                    max={12}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {Math.round((scatterSettings.shapeSpecific.star?.innerRadiusRange?.[0] || 0.3) * 100)}%</span>
-                    <span className="text-slate-400">Max: {Math.round((scatterSettings.shapeSpecific.star?.innerRadiusRange?.[1] || 0.7) * 100)}%</span>
-                  </div>
-                  <Slider
-                    value={[(scatterSettings.shapeSpecific.star?.innerRadiusRange?.[0] || 0.3) * 100, (scatterSettings.shapeSpecific.star?.innerRadiusRange?.[1] || 0.7) * 100]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`Star inner radius: ${min}%-${max}%`);
-                      // Use setTimeout to avoid React batching issues with sliders
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            star: { 
-                              pointCountRange: scatterSettings.shapeSpecific.star?.pointCountRange || [5, 8],
-                              innerRadiusRange: [min / 100, max / 100] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={10}
-                    max={90}
-                    step={5}
-                    className="w-full"
-                    minStepsBetweenThumbs={5}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('star', 'pointCount', scatterSettings, [5, 8])}
+                onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 5, max: 12 }}
+                step={1}
+              />
+              
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
+                onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={5}
+                unit="%"
+              />
             </div>
           );
 
         case 'ring':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {Math.round((scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[0] || 0.2) * 100)}%</span>
-                    <span className="text-slate-400">Max: {Math.round((scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[1] || 0.8) * 100)}%</span>
-                  </div>
-                  <Slider
-                    value={[(scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific.ring?.innerRadiusRange?.[1] || 0.8) * 100]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`${shapeType} inner radius: ${min}%-${max}%`);
-                      // Use setTimeout to avoid React batching issues with sliders
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            ring: { 
-                              innerRadiusRange: [min / 100, max / 100] 
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={10}
-                    max={90}
-                    step={5}
-                    className="w-full"
-                    minStepsBetweenThumbs={5}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Rendering Smoothness (Segments)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: 12</span>
-                    <span className="text-slate-400">Max: 48</span>
-                  </div>
-                  <Slider
-                    value={[16, 32]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`${shapeType} segments: ${min}-${max}`);
-                    }}
-                    min={12}
-                    max={48}
-                    step={4}
-                    className="w-full"
-                    minStepsBetweenThumbs={4}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={5}
+                unit="%"
+              />
             </div>
           );
 
@@ -2068,36 +1978,13 @@ export default function Sidebar({
         case 'line':
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Point Count Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.line?.pointCountRange?.[0] || 2}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.line?.pointCountRange?.[1] || 4}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`Line points: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          line: { 
-                            pointCountRange: [min, max],
-                            strokeCapProbabilities: scatterSettings.shapeSpecific.line?.strokeCapProbabilities || { round: 0, square: 0, butt: 0 } as { round: number; square: number; butt: number }
-                          }
-                        }
-                      });
-                    }}
-                    min={2}
-                    max={8}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('line', 'pointCount', scatterSettings, [2, 4])}
+                onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 2, max: 8 }}
+                step={1}
+              />
               <div className="space-y-2">
                 <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
                 <div className="space-y-2">
