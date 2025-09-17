@@ -67,7 +67,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
   };
 
   return (
-    <div className="space-y-3" data-testid={`styled-mode-field-${idBase}`}>
+    <div className="space-y-4" data-testid={`styled-mode-field-${idBase}`}>
       {/* Label with Pattern 2 Slate Styling */}
       <div className="flex items-baseline justify-between">
         <Label className="text-slate-300 text-xs font-medium">{label}</Label>
@@ -94,7 +94,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
 
       {/* Values Controls with Pattern 2 Styling */}
       {config.kind === 'values' && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Add new value */}
           <div className="flex space-x-2">
             <Input
@@ -176,7 +176,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
       )}
 
       {config.kind === 'range' && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Slider
             value={[config.min, config.max]}
             onValueChange={([min, max]) => onChange({ ...config, min, max })}

@@ -152,6 +152,20 @@ const convertScatterToModeConfig = (
         min: segmentRange[0],
         max: segmentRange[1]
       };
+    case 'curvature': // for cubic curves (percentage)
+      const curvatureRange = (shapeData as any)?.curvatureRange || [defaultRange[0] / 100, defaultRange[1] / 100];
+      return {
+        kind: 'range' as const,
+        min: Math.round(curvatureRange[0] * 100), // Convert back to percentage for UI
+        max: Math.round(curvatureRange[1] * 100)
+      };
+    case 'spread': // for cubic curves (pixels)
+      const spreadRange = (shapeData as any)?.spreadRange || defaultRange;
+      return {
+        kind: 'range' as const,
+        min: spreadRange[0],
+        max: spreadRange[1]
+      };
     case 'cornerRadius': // for rounded-rectangle, rounded-square
       const radiusMode = (shapeData as any)?.cornerRadiusMode || 'range';
       if (radiusMode === 'fixed') {
@@ -290,7 +304,9 @@ const handleScatterModeConfigChange = (
     edgeCount: 'edgeCountRange',
     pointCount: 'pointCountRange', 
     innerRadius: 'innerRadiusRange',
-    segmentCount: 'segmentCountRange'
+    segmentCount: 'segmentCountRange',
+    curvature: 'curvatureRange',
+    spread: 'spreadRange'
   };
   
   const rangeProp = propertyMap[property as keyof typeof propertyMap];
@@ -299,8 +315,8 @@ const handleScatterModeConfigChange = (
   // Convert ModeConfig back to range for scatterSettings
   let range = config.kind === 'range' ? [config.min, config.max] : [config.value, config.value];
   
-  // Handle percentage scaling for inner radius (convert percentages back to decimals)
-  if (property === 'innerRadius') {
+  // Handle percentage scaling for inner radius and curvature (convert percentages back to decimals)
+  if (property === 'innerRadius' || property === 'curvature') {
     range = [range[0] / 100, range[1] / 100];
   }
   
@@ -2023,40 +2039,16 @@ export default function Sidebar({
 
         case 'spline-ring':
           return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Inner Radius Range (%)</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {Math.round((scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[0] || 0.2) * 100)}%</span>
-                    <span className="text-slate-400">Max: {Math.round((scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[1] || 0.8) * 100)}%</span>
-                  </div>
-                  <Slider
-                    value={[(scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific['spline-ring']?.innerRadiusRange?.[1] || 0.8) * 100]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`${shapeType} inner radius: ${min}%-${max}%`);
-                      // Use setTimeout to avoid React batching issues with sliders
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            'spline-ring': { 
-                              innerRadiusRange: [min / 100, max / 100],
-                              segmentCountRange: scatterSettings.shapeSpecific['spline-ring']?.segmentCountRange || [12, 48] as [number, number]
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={10}
-                    max={90}
-                    step={5}
-                    className="w-full"
-                    minStepsBetweenThumbs={5}
-                  />
-                </div>
-              </div>
+            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={5}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
             </div>
           );
 
@@ -2131,112 +2123,43 @@ export default function Sidebar({
           
         case 'cubic':
           return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Point Count Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.cubic?.pointCountRange?.[0] || 3}</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.cubic?.pointCountRange?.[1] || 7}</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      console.log(`Cubic points: ${min}-${max}`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          cubic: { 
-                            pointCountRange: [min, max],
-                            curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                            spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                            patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                            openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
-                          }
-                        }
-                      });
-                    }}
-                    min={3}
-                    max={8}
-                    step={1}
-                    className="w-full"
-                    minStepsBetweenThumbs={1}
-                  />
-                </div>
-              </div>
+            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('cubic', 'pointCount', scatterSettings, [3, 7])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 8 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
               
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Curvature Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {((scatterSettings.shapeSpecific.cubic?.curvatureRange?.[0] || 0.2) * 100).toFixed(0)}%</span>
-                    <span className="text-slate-400">Max: {((scatterSettings.shapeSpecific.cubic?.curvatureRange?.[1] || 0.8) * 100).toFixed(0)}%</span>
-                  </div>
-                  <Slider
-                    value={[(scatterSettings.shapeSpecific.cubic?.curvatureRange?.[0] || 0.2) * 100, (scatterSettings.shapeSpecific.cubic?.curvatureRange?.[1] || 0.8) * 100]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            cubic: { 
-                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                              curvatureRange: [min / 100, max / 100],
-                              spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                              openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={10}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                    minStepsBetweenThumbs={5}
-                  />
-                </div>
-              </div>
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Curvature"
+                config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 100 }}
+                step={5}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Curve Spread"
+                config={convertScatterToModeConfig('cubic', 'spread', scatterSettings, [40, 120])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'spread', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 20, max: 200 }}
+                step={10}
+                unit="px"
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
 
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Curve Spread Range</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Min: {scatterSettings.shapeSpecific.cubic?.spreadRange?.[0] || 40}px</span>
-                    <span className="text-slate-400">Max: {scatterSettings.shapeSpecific.cubic?.spreadRange?.[1] || 120}px</span>
-                  </div>
-                  <Slider
-                    value={scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120]}
-                    onValueChange={(value) => {
-                      const [min, max] = value;
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            cubic: { 
-                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                              curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                              spreadRange: [min, max],
-                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                              openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={20}
-                    max={200}
-                    step={10}
-                    className="w-full"
-                    minStepsBetweenThumbs={10}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-xs text-slate-400">Curve Pattern</Label>
                 <Select 
                   value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
@@ -2255,49 +2178,44 @@ export default function Sidebar({
                     });
                   }}
                 >
-                  <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-600">
-                    <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
-                    <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
-                    <SelectItem value="2" className="text-slate-200 hover:bg-slate-700">Organic</SelectItem>
-                    <SelectItem value="3" className="text-slate-200 hover:bg-slate-700">Arc</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="0">Spiral</SelectItem>
+                    <SelectItem value="1">Wave</SelectItem>
+                    <SelectItem value="2">Organic</SelectItem>
+                    <SelectItem value="3">Arc</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Open Curve Probability</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">{scatterSettings.shapeSpecific.cubic?.openProbability || 85}% Open</span>
-                  </div>
-                  <Slider
-                    value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
-                    onValueChange={(value) => {
-                      const probability = value[0];
-                      setTimeout(() => {
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            cubic: { 
-                              pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                              curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                              spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                              patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                              openProbability: probability
-                            }
-                          }
-                        });
-                      }, 0);
-                    }}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                </div>
+              <Separator className="bg-slate-600" />
+
+              <div className="space-y-3">
+                <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
+                <Slider
+                  value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
+                  onValueChange={(value) => {
+                    const probability = value[0];
+                    onUpdateScatterSettings({
+                      shapeSpecific: {
+                        ...scatterSettings.shapeSpecific,
+                        cubic: { 
+                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                          patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                          openProbability: probability
+                        }
+                      }
+                    });
+                  }}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
               </div>
             </div>
           );
