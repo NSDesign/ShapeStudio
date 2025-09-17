@@ -799,126 +799,24 @@ export function IndividualSetConfig({
                           )}
 
                           {(shapeType === 'ring' || shapeType === 'spline-ring') && (
-                            <div className="space-y-3">
-                              <div>
-                                <Label className="text-slate-300 text-xs">Inner Radius Mode</Label>
-                                <Select
-                                  value={(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusMode || 'range'}
-                                  onValueChange={(value) => 
-                                    handleShapeSpecificPropertyChange(shapeType, 'innerRadiusMode', value)
-                                  }
-                                >
-                                  <SelectTrigger className="bg-slate-700 border-slate-600">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="range">Range</SelectItem>
-                                    <SelectItem value="fixed">Fixed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusMode === 'fixed' ? (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Inner Radius: {((generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusValue || 0.5).toFixed(2)}
-                                  </Label>
-                                  <Slider
-                                    value={[(generationSet.shapeSpecificProperties[shapeType] as any)?.innerRadiusValue || 0.5]}
-                                    onValueChange={([value]) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'innerRadiusValue', value)
-                                    }
-                                    min={0.1}
-                                    max={0.9}
-                                    step={0.1}
-                                    className="mt-2"
-                                    data-testid={`slider-${shapeType}-segment-count-value`}
-                                  />
-                                </div>
-                              ) : (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Inner Radius Range: {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8])[0]
-                                    } - {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8])[1]
-                                    }
-                                  </Label>
-                                  <Slider
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.innerRadiusRange || [0.2, 0.8]}
-                                    onValueChange={(value) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'innerRadiusRange', value)
-                                    }
-                                    min={0.1}
-                                    max={0.9}
-                                    step={0.1}
-                                    className="mt-2"
-                                  />
-                                </div>
-                              )}
-                            </div>
+                            <StyledModeField
+                              label="Inner Radius"
+                              config={convertToModeConfig(shapeType, 'innerRadius', 0.5, [0.2, 0.8])}
+                              onChange={(config) => handleModeConfigChange(shapeType, 'innerRadius', config)}
+                              bounds={{ min: 0.1, max: 0.9 }}
+                              step={0.1}
+                            />
                           )}
 
 
                           {(shapeType === 'circle' || shapeType === 'ellipse') && (
-                            <div className="space-y-3">
-                              <div>
-                                <Label className="text-slate-300 text-xs">Segment Count Mode</Label>
-                                <Select
-                                  value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode || 'range'}
-                                  onValueChange={(value) => 
-                                    handleShapeSpecificPropertyChange(shapeType, 'segmentCountMode', value)
-                                  }
-                                >
-                                  <SelectTrigger className="bg-slate-700 border-slate-600">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="range">Range</SelectItem>
-                                    <SelectItem value="fixed">Fixed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {generationSet.shapeSpecificProperties[shapeType]?.segmentCountMode === 'fixed' ? (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Segment Count: {generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24}
-                                  </Label>
-                                  <Slider
-                                    value={[generationSet.shapeSpecificProperties[shapeType]?.segmentCountValue || 24]}
-                                    onValueChange={([value]) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountValue', value)
-                                    }
-                                    min={8}
-                                    max={64}
-                                    step={4}
-                                    className="mt-2"
-                                    data-testid={`slider-${shapeType}-segment-count-value`}
-                                  />
-                                </div>
-                              ) : (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Segment Count Range: {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[0]
-                                    } - {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32])[1]
-                                    }
-                                  </Label>
-                                  <Slider
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.segmentCountRange || [16, 32]}
-                                    onValueChange={(value) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'segmentCountRange', value)
-                                    }
-                                    min={8}
-                                    max={64}
-                                    step={4}
-                                    className="mt-2"
-                                  />
-                                </div>
-                              )}
-                            </div>
+                            <StyledModeField
+                              label="Segment Count"
+                              config={convertToModeConfig(shapeType, 'segmentCount', 24, [16, 32])}
+                              onChange={(config) => handleModeConfigChange(shapeType, 'segmentCount', config)}
+                              bounds={{ min: 8, max: 64 }}
+                              step={4}
+                            />
                           )}
 
                           {shapeType === 'line-vector' && (
@@ -1145,65 +1043,13 @@ export function IndividualSetConfig({
 
                           {/* Point Count Controls for Line/Curve shapes */}
                           {(shapeType === 'line' || shapeType === 'bezier' || shapeType === 'cubic' || shapeType === 'smooth-spline') && (
-                            <div className="space-y-3">
-                              <div>
-                                <Label className="text-slate-300 text-xs">Point Count Mode</Label>
-                                <Select
-                                  value={generationSet.shapeSpecificProperties[shapeType]?.pointCountMode || 'range'}
-                                  onValueChange={(value) => 
-                                    handleShapeSpecificPropertyChange(shapeType, 'pointCountMode', value)
-                                  }
-                                >
-                                  <SelectTrigger className="bg-slate-700 border-slate-600" data-testid={`select-${shapeType}-point-count-mode`}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="range">Range</SelectItem>
-                                    <SelectItem value="fixed">Fixed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {generationSet.shapeSpecificProperties[shapeType]?.pointCountMode === 'fixed' ? (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Point Count: {generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 4}
-                                  </Label>
-                                  <Slider
-                                    value={[generationSet.shapeSpecificProperties[shapeType]?.pointCountValue || 4]}
-                                    onValueChange={([value]) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountValue', value)
-                                    }
-                                    min={2}
-                                    max={20}
-                                    step={1}
-                                    className="mt-2"
-                                    data-testid={`slider-${shapeType}-point-count-value`}
-                                  />
-                                </div>
-                              ) : (
-                                <div>
-                                  <Label className="text-slate-300 text-xs">
-                                    Point Count Range: {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8])[0]
-                                    } - {
-                                      (generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8])[1]
-                                    }
-                                  </Label>
-                                  <Slider
-                                    value={generationSet.shapeSpecificProperties[shapeType]?.pointCountRange || [2, 8]}
-                                    onValueChange={(value) => 
-                                      handleShapeSpecificPropertyChange(shapeType, 'pointCountRange', value)
-                                    }
-                                    min={2}
-                                    max={20}
-                                    step={1}
-                                    className="mt-2"
-                                    data-testid={`slider-${shapeType}-point-count-range`}
-                                  />
-                                </div>
-                              )}
-                            </div>
+                            <StyledModeField
+                              label="Point Count"
+                              config={convertToModeConfig(shapeType, 'pointCount', 4, [2, 8])}
+                              onChange={(config) => handleModeConfigChange(shapeType, 'pointCount', config)}
+                              bounds={{ min: 2, max: 20 }}
+                              step={1}
+                            />
                           )}
 
 
