@@ -1,0 +1,255 @@
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
+import { useState } from "react";
+
+export type ModeKind = 'fixed' | 'range' | 'values';
+
+export type ModeConfig = 
+  | { kind: 'fixed'; value: number }
+  | { kind: 'range'; min: number; max: number }
+  | { kind: 'values'; values: number[]; selection: 'random' | 'cycle' };
+
+export interface StyledModeFieldProps {
+  label: string;
+  config: ModeConfig;
+  onChange: (config: ModeConfig) => void;
+  bounds: { min: number; max: number };
+  unit?: string;
+  step?: number;
+}
+
+export function StyledModeField({ label, config, onChange, bounds, unit = "", step = 1 }: StyledModeFieldProps) {
+  const [newValue, setNewValue] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(config.kind === 'values');
+  
+  // Create safe ID base for HTML elements
+  const idBase = label.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+
+  const handleModeChange = (mode: ModeKind) => {
+    switch (mode) {
+      case 'fixed':
+        onChange({ kind: 'fixed', value: bounds.min });
+        break;
+      case 'range':
+        onChange({ kind: 'range', min: bounds.min, max: bounds.max });
+        break;
+      case 'values':
+        setShowAdvanced(true); // Auto-expand advanced section
+        onChange({ kind: 'values', values: [bounds.min], selection: 'random' });
+        break;
+    }
+  };
+
+  const addValue = () => {
+    if (config.kind === 'values' && newValue) {
+      const num = parseFloat(newValue);
+      if (!isNaN(num) && num >= bounds.min && num <= bounds.max) {
+        onChange({
+          ...config,
+          values: [...config.values, num]
+        });
+        setNewValue("");
+      }
+    }
+  };
+
+  const removeValue = (index: number) => {
+    if (config.kind === 'values') {
+      onChange({
+        ...config,
+        values: config.values.filter((_, i) => i !== index)
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-3" data-testid={`styled-mode-field-${idBase}`}>
+      {/* Label with Pattern 2 Slate Styling */}
+      <div className="flex items-baseline justify-between">
+        <Label className="text-slate-300 text-xs font-medium">{label}</Label>
+        <span className="text-slate-400 text-xs">{unit}</span>
+      </div>
+
+      {/* Common Mode Selection with Pattern 2 Styling */}
+      <RadioGroup 
+        value={config.kind === 'values' ? undefined : config.kind} 
+        onValueChange={handleModeChange}
+        className="flex space-x-4"
+        data-testid={`select-${idBase}-mode`}
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="fixed" id={`${idBase}-fixed`} />
+          <Label htmlFor={`${idBase}-fixed`} className="text-slate-300 text-xs">Fixed</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="range" id={`${idBase}-range`} />
+          <Label htmlFor={`${idBase}-range`} className="text-slate-300 text-xs">Range</Label>
+        </div>
+      </RadioGroup>
+
+      {/* Advanced Modes Toggle with Pattern 2 Styling */}
+      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-300"
+            data-testid={`toggle-${idBase}-advanced`}
+          >
+            {showAdvanced ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            Advanced
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2">
+          <RadioGroup 
+            value={config.kind === 'values' ? 'values' : undefined}
+            onValueChange={handleModeChange}
+            className="flex space-x-4"
+            data-testid={`select-${idBase}-advanced-mode`}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="values" id={`${idBase}-values`} />
+              <Label htmlFor={`${idBase}-values`} className="text-slate-300 text-xs">Values</Label>
+            </div>
+          </RadioGroup>
+          
+          {/* Values Controls with Pattern 2 Styling */}
+          {config.kind === 'values' && (
+            <div className="space-y-2">
+              {/* Add new value */}
+              <div className="flex space-x-2">
+                <Input
+                  type="number"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  min={bounds.min}
+                  max={bounds.max}
+                  step={step}
+                  placeholder={`Add value (${bounds.min}-${bounds.max})`}
+                  className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
+                  data-testid={`input-${idBase}-values`}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={addValue}
+                  className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                  data-testid={`button-add-${idBase}-value`}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Values list */}
+              {config.values.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {config.values.map((value, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="flex items-center gap-1 bg-slate-700 text-slate-300 border-slate-600"
+                      data-testid={`badge-${idBase}-value-${index}`}
+                    >
+                      {value}{unit}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => removeValue(index)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Selection strategy with Pattern 2 Styling */}
+              <div className="flex items-center space-x-2">
+                <Label className="text-slate-300 text-xs">Selection:</Label>
+                <Select
+                  value={config.selection}
+                  onValueChange={(selection: 'random' | 'cycle') => onChange({ ...config, selection })}
+                >
+                  <SelectTrigger className="w-20 h-8 bg-slate-700 border-slate-600 text-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="random">Random</SelectItem>
+                    <SelectItem value="cycle">Cycle</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Mode-specific Controls with Pattern 2 Styling */}
+      {config.kind === 'fixed' && (
+        <Input
+          type="number"
+          value={config.value}
+          onChange={(e) => {
+            const v = parseFloat(e.target.value);
+            const newValue = Number.isNaN(v) ? config.value : Math.max(bounds.min, Math.min(bounds.max, v));
+            onChange({ ...config, value: newValue });
+          }}
+          min={bounds.min}
+          max={bounds.max}
+          step={step}
+          className="bg-slate-700 border-slate-600 text-slate-300"
+          data-testid={`input-${idBase}-fixed`}
+        />
+      )}
+
+      {config.kind === 'range' && (
+        <div className="space-y-2">
+          <Slider
+            value={[config.min, config.max]}
+            onValueChange={([min, max]) => onChange({ ...config, min, max })}
+            min={bounds.min}
+            max={bounds.max}
+            step={step}
+            className="w-full"
+            data-testid={`slider-${idBase}-range`}
+          />
+          <div className="flex space-x-2">
+            <Input
+              type="number"
+              value={config.min}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                const newMin = Number.isNaN(v) ? config.min : Math.max(bounds.min, Math.min(config.max, v));
+                onChange({ ...config, min: newMin });
+              }}
+              min={bounds.min}
+              max={config.max}
+              step={step}
+              placeholder="Min"
+              className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
+              data-testid={`input-${idBase}-min`}
+            />
+            <Input
+              type="number"
+              value={config.max}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                const newMax = Number.isNaN(v) ? config.max : Math.min(bounds.max, Math.max(config.min, v));
+                onChange({ ...config, max: newMax });
+              }}
+              min={config.min}
+              max={bounds.max}
+              step={step}
+              placeholder="Max"
+              className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
+              data-testid={`input-${idBase}-max`}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
