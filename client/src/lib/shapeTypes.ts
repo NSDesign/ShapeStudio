@@ -622,5 +622,6 @@ export const resolveScalar = (config: ScalarMode<number>, index?: number): numbe
 export const getDefaultLineVectorConfig = () => ({
   direction: { kind: 'range' as const, min: 0, max: 360 },
   length: { kind: 'range' as const, min: 5, max: 500 },
-  centroid: { kind: 'fixed' as const, value: 0.5 }
+  centroid: { kind: 'fixed' as const, value: 0.5 },
+  strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
 });
