@@ -152,6 +152,22 @@ const convertScatterToModeConfig = (
         min: segmentRange[0],
         max: segmentRange[1]
       };
+    case 'cornerRadius': // for rounded-rectangle, rounded-square
+      const radiusMode = (shapeData as any)?.cornerRadiusMode || 'range';
+      if (radiusMode === 'fixed') {
+        const radiusValue = (shapeData as any)?.cornerRadiusValue || defaultRange[0];
+        return {
+          kind: 'fixed' as const,
+          value: radiusValue
+        };
+      } else {
+        const radiusRange = (shapeData as any)?.cornerRadiusRange || defaultRange;
+        return {
+          kind: 'range' as const,
+          min: radiusRange[0],
+          max: radiusRange[1]
+        };
+      }
     default:
       return {
         kind: 'range' as const,
@@ -252,6 +268,24 @@ const handleScatterModeConfigChange = (
   scatterSettings: ScatterSettings,
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void
 ) => {
+  // Handle cornerRadius separately due to different data structure
+  if (property === 'cornerRadius') {
+    const cornerRadiusData = config.kind === 'fixed' 
+      ? { cornerRadiusMode: 'fixed', cornerRadiusValue: config.value }
+      : { cornerRadiusMode: 'range', cornerRadiusRange: [config.min, config.max] };
+    
+    onUpdateScatterSettings({
+      shapeSpecific: {
+        ...scatterSettings.shapeSpecific,
+        [shapeType]: { 
+          ...(scatterSettings.shapeSpecific[shapeType as keyof typeof scatterSettings.shapeSpecific] || {}),
+          ...cornerRadiusData
+        }
+      }
+    });
+    return;
+  }
+
   const propertyMap = {
     edgeCount: 'edgeCountRange',
     pointCount: 'pointCountRange', 
@@ -1782,6 +1816,8 @@ export default function Sidebar({
                 step={15}
               />
               
+              <Separator className="bg-slate-600" />
+              
               <StyledModeField
                 label="Length"
                 config={convertLineVectorToModeConfig(lineVectorConfig.length)}
@@ -1793,6 +1829,8 @@ export default function Sidebar({
                 step={5}
               />
               
+              <Separator className="bg-slate-600" />
+              
               <StyledModeField
                 label="Centroid"
                 config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
@@ -1802,6 +1840,45 @@ export default function Sidebar({
                 bounds={{ min: 0, max: 1 }}
                 step={0.01}
               />
+              
+              <Separator className="bg-slate-600" />
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+                <div className="space-y-2">
+                  {['round', 'square', 'butt'].map((cap) => (
+                    <div key={cap} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-300 capitalize">{cap}</span>
+                        <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
+                      </div>
+                      <Slider
+                        value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
+                        onValueChange={(value) => {
+                          const probability = value[0];
+                          onUpdateScatterSettings({
+                            shapeSpecific: {
+                              ...scatterSettings.shapeSpecific,
+                              'line-vector': { 
+                                ...lineVectorConfig,
+                                strokeCapProbabilities: {
+                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.round || 0),
+                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.square || 0),
+                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.butt || 0)
+                                }
+                              }
+                            }
+                          });
+                        }}
+                        min={0}
+                        max={50}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           );
         
@@ -1911,6 +1988,8 @@ export default function Sidebar({
                 step={1}
               />
               
+              <Separator className="bg-slate-600" />
+              
               <StyledModeField
                 label="Inner Radius"
                 config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
@@ -1998,21 +2077,19 @@ export default function Sidebar({
                         value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
                         onValueChange={(value) => {
                           const probability = value[0];
-                          setTimeout(() => {
-                            onUpdateScatterSettings({
-                              shapeSpecific: {
-                                ...scatterSettings.shapeSpecific,
-                                line: { 
-                                  pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
-                                  strokeCapProbabilities: {
-                                    round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
-                                    square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
-                                    butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
-                                  }
+                          onUpdateScatterSettings({
+                            shapeSpecific: {
+                              ...scatterSettings.shapeSpecific,
+                              line: { 
+                                pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
+                                strokeCapProbabilities: {
+                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
+                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
+                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
                                 }
                               }
-                            });
-                          }, 0);
+                            }
+                          });
                         }}
                         min={0}
                         max={50}
@@ -2031,113 +2108,16 @@ export default function Sidebar({
           
         case 'rounded-rectangle':
         case 'rounded-square':
-          const roundedShapeSettings = scatterSettings.shapeSpecific[shapeType as 'rounded-rectangle' | 'rounded-square'] as any;
-          const radiusMode = roundedShapeSettings?.cornerRadiusMode || 'range';
-          
           return (
             <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              {/* Mode Toggle */}
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Corner Radius Mode</Label>
-                <div className="flex space-x-2">
-                  <Button
-                    variant={radiusMode === 'range' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => {
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...roundedShapeSettings,
-                            cornerRadiusMode: 'range'
-                          }
-                        }
-                      });
-                    }}
-                    className={`text-xs px-2 py-1 h-7 ${radiusMode === 'range' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
-                  >
-                    Range
-                  </Button>
-                  <Button
-                    variant={radiusMode === 'fixed' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => {
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...roundedShapeSettings,
-                            cornerRadiusMode: 'fixed'
-                          }
-                        }
-                      });
-                    }}
-                    className={`text-xs px-2 py-1 h-7 ${radiusMode === 'fixed' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
-                  >
-                    Fixed
-                  </Button>
-                </div>
-              </div>
-
-              {/* Range Mode Controls */}
-              {radiusMode === 'range' && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Corner Radius Range (px)</Label>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Min: {roundedShapeSettings?.cornerRadiusRange?.[0] || 0}px</span>
-                      <span className="text-slate-400">Max: {roundedShapeSettings?.cornerRadiusRange?.[1] || 20}px</span>
-                    </div>
-                    <Slider
-                      value={roundedShapeSettings?.cornerRadiusRange || [0, 20]}
-                      onValueChange={(value) => {
-                        const [min, max] = value;
-                        console.log(`${shapeType} corner radius range: ${min}px-${max}px`);
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            [shapeType]: { 
-                              ...roundedShapeSettings,
-                              cornerRadiusRange: [min, max] 
-                            }
-                          }
-                        });
-                      }}
-                      min={0}
-                      max={50}
-                      step={1}
-                      className="w-full"
-                      minStepsBetweenThumbs={0}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Fixed Mode Controls */}
-              {radiusMode === 'fixed' && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Fixed Corner Radius: {roundedShapeSettings?.cornerRadiusValue || 5}px</Label>
-                  <Slider
-                    value={[roundedShapeSettings?.cornerRadiusValue || 5]}
-                    onValueChange={([value]) => {
-                      console.log(`${shapeType} fixed corner radius: ${value}px`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...roundedShapeSettings,
-                            cornerRadiusValue: value
-                          }
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={50}
-                    step={1}
-                    className="w-full"
-                  />
-                </div>
-              )}
+              <StyledModeField
+                label="Corner Radius"
+                config={convertScatterToModeConfig(shapeType, 'cornerRadius', scatterSettings, [0, 20])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'cornerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 0, max: 50 }}
+                step={1}
+                unit="px"
+              />
             </div>
           );
           
@@ -4321,21 +4301,6 @@ export default function Sidebar({
               </AccordionItem>
             )}
 
-            {/* Properties Section */}
-            {sidebarSections.properties && (
-              <AccordionItem value="properties" className="border-slate-700">
-                <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
-                  <div className="flex items-center">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Properties
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <PropertiesContent />
-                </AccordionContent>
-              </AccordionItem>
-            )}
-
             {/* Composition Section */}
             {sidebarSections.composition && (
               <AccordionItem value="composition" className="border-slate-700">
@@ -4423,6 +4388,21 @@ export default function Sidebar({
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <ExportSaveContent />
+                </AccordionContent>
+              </AccordionItem>
+            )}
+
+            {/* Properties Section - Moved to last position */}
+            {sidebarSections.properties && (
+              <AccordionItem value="properties" className="border-slate-700">
+                <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
+                  <div className="flex items-center">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Properties
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <PropertiesContent />
                 </AccordionContent>
               </AccordionItem>
             )}
