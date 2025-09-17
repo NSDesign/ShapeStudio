@@ -80,11 +80,6 @@ export function IndividualSetConfig({
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationError | null>>({});
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, ValidationWarning | null>>({});
   
-  // Create typed helpers
-  const shapePropertiesHelper = useMemo(() => 
-    new ShapeSpecificPropertiesHelper(generationSet.shapeSpecificProperties), 
-    [generationSet.shapeSpecificProperties]
-  );
 
   // Real-time validation
   const currentValidation = useMemo(() => {
@@ -189,9 +184,11 @@ export function IndividualSetConfig({
       return;
     }
     
-    const updatedProperties = shapePropertiesHelper.setProperty(shapeType, property, value);
+    // Create fresh helper with current properties to avoid stale data race condition
+    const freshHelper = new ShapeSpecificPropertiesHelper(generationSet.shapeSpecificProperties);
+    const updatedProperties = freshHelper.setProperty(shapeType, property, value);
     onUpdate({ shapeSpecificProperties: updatedProperties });
-  }, [shapePropertiesHelper, onUpdate]);
+  }, [generationSet.shapeSpecificProperties, onUpdate]);
 
   // Helper to render field validation indicators
   const renderFieldValidation = useCallback((fieldName: string) => {
