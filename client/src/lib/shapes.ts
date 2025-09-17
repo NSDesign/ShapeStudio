@@ -598,8 +598,33 @@ export class Shape {
       }
     };
 
-    // Get line-vector properties from batch config or use defaults
-    const lineVectorSettings = batchConfig?.scatterSettings?.shapeSpecific?.['line-vector'] || {};
+    // Get line-vector properties from batch config with robust default merging
+    // Import the default config and convert it to flat schema that the generator expects
+    const defaultConfig = { 
+      direction: { kind: 'range' as const, min: 0, max: 360 },
+      length: { kind: 'range' as const, min: 5, max: 500 },
+      centroid: { kind: 'fixed' as const, value: 0.5 },
+      strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
+    };
+    
+    // Convert to flat schema expected by generator with proper defaults
+    const defaultFlatSettings = {
+      directionMode: 'range' as const,
+      directionRange: [0, 360] as [number, number],
+      directionValue: 0,
+      lengthMode: 'range' as const,
+      lengthRange: [50, 150] as [number, number],
+      lengthValue: 100,
+      centroidMode: 'fixed' as const,
+      centroidRange: [0, 1] as [number, number],
+      centroidValue: 0.5,
+      strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
+    };
+    
+    const lineVectorSettings = {
+      ...defaultFlatSettings,
+      ...(batchConfig?.scatterSettings?.shapeSpecific?.['line-vector'] || {})
+    };
     
     // Direction (0-360 degrees)
     const directionMode = lineVectorSettings.directionMode || 'range';

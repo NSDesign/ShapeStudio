@@ -977,7 +977,8 @@ export const useShapeEditor = () => {
     count: number, 
     canvasBounds: { x: number; y: number; width: number; height: number },
     useDistribution: boolean = true,
-    shapeGenerationIndex: number = 0
+    shapeGenerationIndex: number = 0,
+    shapeSpecificPropertiesOverride?: Record<string, any>
   ): Shape[] => {
     const enabledTypes = Array.from(enabledShapeTypes);
 
@@ -1011,9 +1012,28 @@ export const useShapeEditor = () => {
       }
 
       // Combine batch config with scatter settings for complete configuration
+      // Deep merge shape-specific properties override if provided (from generation sets)
+      const enhancedScatterSettings = shapeSpecificPropertiesOverride ? {
+        ...scatterSettings,
+        shapeSpecific: Object.fromEntries(
+          // Get all unique shape type keys from both sources
+          Array.from(new Set([
+            ...Object.keys(scatterSettings.shapeSpecific || {}),
+            ...Object.keys(shapeSpecificPropertiesOverride)
+          ])).map((shapeType: string) => [
+            shapeType,
+            {
+              // Deep merge: existing config + override for this shape type
+              ...(scatterSettings.shapeSpecific?.[shapeType as keyof typeof scatterSettings.shapeSpecific] || {}),
+              ...(shapeSpecificPropertiesOverride[shapeType] || {})
+            }
+          ])
+        )
+      } : scatterSettings;
+
       const combinedConfig = { 
         ...generationConfigSettings, 
-        scatterSettings: scatterSettings 
+        scatterSettings: enhancedScatterSettings 
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
 

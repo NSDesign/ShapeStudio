@@ -130,7 +130,7 @@ interface SidebarProps {
   onToggleShapeType: (type: ShapeType) => void;
   onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
   onGenerateRandomShapes: () => void;
-  onGenerateShapesWithBatchConfig: (count: number, canvasBounds: { x: number; y: number; width: number; height: number }, useDistribution?: boolean, shapeGenerationIndex?: number) => Shape[];
+  onGenerateShapesWithBatchConfig: (count: number, canvasBounds: { x: number; y: number; width: number; height: number }, useDistribution?: boolean, shapeGenerationIndex?: number, shapeSpecificPropertiesOverride?: Record<string, any>) => Shape[];
   onComposeShapes: () => void;
   onSetEditMode: (mode: 'shapes' | 'points' | 'segments') => void;
   onMoveBy: (x: number, y: number) => void;
@@ -1543,20 +1543,21 @@ export default function Sidebar({
     });
   }, []);
 
-  function ShapeTypesContent() {
-    // Memoized callback to prevent infinite re-mounting of BatchConfigDialog
-    const handleBatchConfigSettingsChange = useCallback((settings: BatchConfigSettings | EnhancedBatchConfig) => {
-      // Handle both BatchConfigSettings and EnhancedBatchConfig
-      if ('mode' in settings && 'globalSettings' in settings) {
-        // It's EnhancedBatchConfig - for now, just handle the legacy part
-        if (settings.legacyBatchConfig) {
-          onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
-        }
-      } else {
-        // It's BatchConfigSettings
-        onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
+  // Memoized callback to prevent infinite re-mounting of BatchConfigDialog
+  const handleBatchConfigSettingsChange = useCallback((settings: BatchConfigSettings | EnhancedBatchConfig) => {
+    // Handle both BatchConfigSettings and EnhancedBatchConfig
+    if ('mode' in settings && 'globalSettings' in settings) {
+      // It's EnhancedBatchConfig - for now, just handle the legacy part
+      if (settings.legacyBatchConfig) {
+        onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
       }
-    }, [onUpdateGenerationConfigSettings]);
+    } else {
+      // It's BatchConfigSettings
+      onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
+    }
+  }, [onUpdateGenerationConfigSettings]);
+
+  function ShapeTypesContent() {
 
     const getShapeProperties = (shapeType: string) => {
       switch (shapeType) {
@@ -1600,7 +1601,11 @@ export default function Sidebar({
           );
         
         case 'line-vector':
-          const lineVectorConfig = scatterSettings.shapeSpecific['line-vector'] || getDefaultLineVectorConfig();
+          // Deep merge with defaults to backfill missing fields in legacy configs
+          const lineVectorConfig = { 
+            ...getDefaultLineVectorConfig(), 
+            ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
+          };
           return (
             <div className="space-y-3">
               <ModeField
@@ -2540,11 +2545,6 @@ export default function Sidebar({
               : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
             }
           </Button>
-          <BatchConfigDialog
-            settings={generationConfigSettings}
-            supportEnhancedMode={true}
-            onSettingsChange={handleBatchConfigSettingsChange}
-          />
         </div>
       </div>
     );
@@ -4451,6 +4451,13 @@ export default function Sidebar({
           </Accordion>
         </div>
       )}
+      
+      {/* BatchConfigDialog - Moved to stable location to prevent mount/unmount cycles */}
+      <BatchConfigDialog
+        settings={generationConfigSettings}
+        supportEnhancedMode={true}
+        onSettingsChange={handleBatchConfigSettingsChange}
+      />
     </div>
   );
 }
