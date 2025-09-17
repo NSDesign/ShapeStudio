@@ -1600,6 +1600,27 @@ export default function Sidebar({
   
   // Add state for the shape list accordion to prevent auto-expansion
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>("shape-list");
+  
+  // Scroll position preservation
+  const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      // Store scroll position before state changes that could cause re-renders
+      const preserveScroll = () => {
+        const scrollTop = node.scrollTop;
+        setTimeout(() => {
+          if (node.scrollTop !== scrollTop) {
+            node.scrollTop = scrollTop;
+          }
+        }, 0);
+      };
+      
+      // Preserve scroll on any content changes
+      const observer = new MutationObserver(preserveScroll);
+      observer.observe(node, { childList: true, subtree: true });
+      
+      return () => observer.disconnect();
+    }
+  }, []);
 
   const toggleShapeExpansion = useCallback((shapeType: string) => {
     setExpandedShapes(prev => {
@@ -4366,7 +4387,7 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
           <Accordion type="multiple" className="w-full px-2 py-1">
             {/* Shape Types Section */}
             {sidebarSections.shapes && (
