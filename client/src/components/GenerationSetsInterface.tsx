@@ -314,7 +314,7 @@ export function GenerationSetsInterface({
         console.error('GenerationSetsInterface error:', error, errorInfo);
       }}
     >
-      <div className="space-y-4" data-testid="generation-sets-interface">
+      <div className="space-y-2" data-testid="generation-sets-interface">
       {/* Header with summary */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">

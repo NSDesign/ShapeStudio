@@ -323,12 +323,12 @@ export function IndividualSetConfig({
               <div className="space-y-4">
                 <div className="flex items-center gap-2" data-testid="section-basic-information">
                   <Type className="w-4 h-4 text-slate-400" />
-                  <h4 className="text-sm font-medium text-slate-300" data-testid="heading-basic-information">Basic Information</h4>
+                  <h4 className="text-sm font-medium text-white" data-testid="heading-basic-information">Basic Information</h4>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <Label htmlFor="set-name" className="text-slate-300">
+                    <Label htmlFor="set-name" className="text-white">
                       Set Name
                     </Label>
                     <Input
@@ -336,7 +336,7 @@ export function IndividualSetConfig({
                       value={generationSet.name}
                       onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Enter set name"
-                      className={`bg-slate-800 border-slate-600 ${
+                      className={`bg-slate-800 border-slate-600 text-white ${
                         getFieldValidation('name').hasError ? 'border-red-500' : ''
                       }`}
                       data-testid="input-set-name"
@@ -349,7 +349,7 @@ export function IndividualSetConfig({
                   </div>
                   
                   <div>
-                    <Label htmlFor="set-description" className="text-slate-300">
+                    <Label htmlFor="set-description" className="text-white">
                       Description (Optional)
                     </Label>
                     <Textarea
@@ -357,7 +357,7 @@ export function IndividualSetConfig({
                       value={generationSet.description || ''}
                       onChange={(e) => handleDescriptionChange(e.target.value)}
                       placeholder="Enter optional description"
-                      className="bg-slate-800 border-slate-600"
+                      className="bg-slate-800 border-slate-600 text-white"
                       rows={2}
                       data-testid="textarea-set-description"
                       aria-describedby="set-description-help"
@@ -375,7 +375,7 @@ export function IndividualSetConfig({
             <div className="space-y-4">
               <div className="flex items-center gap-2" data-testid="section-shape-count">
                 <Hash className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-count">Shape Count</h4>
+                <h4 className="text-sm font-medium text-white" data-testid="heading-shape-count">Shape Count</h4>
               </div>
 
               <div className="space-y-3">
@@ -384,7 +384,7 @@ export function IndividualSetConfig({
                   onValueChange={(value) => handleShapeCountModeChange(value as ShapeCountMode)}
                 >
                   <SelectTrigger 
-                    className={`bg-slate-800 border-slate-600 ${
+                    className={`bg-slate-800 border-slate-600 text-white ${
                       getFieldValidation('shapeCountMode').hasError ? 'border-red-500' : ''
                     }`} 
                     data-testid="select-shape-count-mode"
@@ -393,7 +393,7 @@ export function IndividualSetConfig({
                   >
                     <SelectValue placeholder="Select count mode" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-slate-700 border-slate-600 text-white">
                     <SelectItem value={ShapeCountMode.FIXED} data-testid="option-shape-count-fixed">Fixed Count</SelectItem>
                     <SelectItem value={ShapeCountMode.RANGE} data-testid="option-shape-count-range">Range</SelectItem>
                   </SelectContent>
@@ -404,7 +404,7 @@ export function IndividualSetConfig({
 
                 {generationSet.shapeCountMode === ShapeCountMode.FIXED ? (
                   <div>
-                    <Label className="text-slate-300 text-xs">
+                    <Label className="text-white text-xs">
                       Fixed Shape Count: {generationSet.shapeCountFixed}
                     </Label>
                     <div className="flex items-center gap-2 mt-2">
@@ -423,7 +423,7 @@ export function IndividualSetConfig({
                         onChange={(e) => handleShapeCountFixedChange(safeParseNumber(e.target.value))}
                         min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
                         max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
-                        className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                        className={`w-20 bg-slate-800 border-slate-600 text-white text-xs ${
                           getFieldValidation('shapeCountFixed').hasError ? 'border-red-500' : ''
                         }`}
                         data-testid="input-shape-count-fixed"
@@ -437,7 +437,7 @@ export function IndividualSetConfig({
                   </div>
                 ) : (
                   <div>
-                    <Label className="text-slate-300 text-xs">
+                    <Label className="text-white text-xs">
                       Shape Count Range: {generationSet.shapeCountRange[0]} - {generationSet.shapeCountRange[1]}
                     </Label>
                     <div className="space-y-2 mt-2">
@@ -461,7 +461,7 @@ export function IndividualSetConfig({
                             }}
                             min={DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}
                             max={generationSet.shapeCountRange[1]}
-                            className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                            className={`w-20 bg-slate-800 border-slate-600 text-white text-xs ${
                               getFieldValidation('shapeCountRange').hasError ? 'border-red-500' : ''
                             }`}
                             data-testid="input-shape-count-range-min"
@@ -480,7 +480,7 @@ export function IndividualSetConfig({
                             }}
                             min={generationSet.shapeCountRange[0]}
                             max={DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}
-                            className={`w-20 bg-slate-800 border-slate-600 text-xs ${
+                            className={`w-20 bg-slate-800 border-slate-600 text-white text-xs ${
                               getFieldValidation('shapeCountRange').hasError ? 'border-red-500' : ''
                             }`}
                             data-testid="input-shape-count-range-max"
@@ -505,7 +505,7 @@ export function IndividualSetConfig({
               <div className="flex items-center gap-2 justify-between" data-testid="section-shape-types">
                 <div className="flex items-center gap-2">
                   <Palette className="w-4 h-4 text-slate-400" />
-                  <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-types">Shape Types</h4>
+                  <h4 className="text-sm font-medium text-white" data-testid="heading-shape-types">Shape Types</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge 
@@ -532,7 +532,7 @@ export function IndividualSetConfig({
                   
                   return (
                     <AccordionItem key={category} value={category} className="border-slate-700" data-testid={`accordion-item-${category.toLowerCase().replace(/\s+/g, '-')}`}>
-                      <AccordionTrigger className="text-slate-300 hover:text-slate-200" data-testid={`accordion-trigger-${category.toLowerCase().replace(/\s+/g, '-')}`}>
+                      <AccordionTrigger className="text-white hover:text-slate-200" data-testid={`accordion-trigger-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                         <div className="flex items-center gap-2">
                           <span>{category}</span>
                           <Badge variant="outline" className="text-xs" data-testid={`badge-category-count-${category.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -578,7 +578,7 @@ export function IndividualSetConfig({
                               <Label 
                                 id={`label-shape-${shapeType}`}
                                 htmlFor={`shape-${shapeType}`}
-                                className="text-sm text-slate-300 cursor-pointer"
+                                className="text-sm text-white cursor-pointer"
                                 data-testid={`label-shape-${shapeType}`}
                               >
                                 {shapeType.replace('-', ' ')}
@@ -601,13 +601,13 @@ export function IndividualSetConfig({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2" data-testid="section-zindex-layering">
                     <Layers className="w-4 h-4 text-slate-400" />
-                    <h4 className="text-sm font-medium text-slate-300" data-testid="heading-zindex-layering">Z-Index Layering</h4>
+                    <h4 className="text-sm font-medium text-white" data-testid="heading-zindex-layering">Z-Index Layering</h4>
                     <Info className="w-3 h-3 text-slate-500" data-testid="icon-zindex-info" />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <Label className="text-slate-300 text-xs">
+                      <Label className="text-white text-xs">
                         Base Offset: {generationSet.zIndexConfig.baseOffset}
                       </Label>
                       <Slider
@@ -626,7 +626,7 @@ export function IndividualSetConfig({
                     </div>
 
                     <div>
-                      <Label className="text-slate-300 text-xs">
+                      <Label className="text-white text-xs">
                         Increment Per Shape: {generationSet.zIndexConfig.incrementPerShape}
                       </Label>
                       <Slider
@@ -645,7 +645,7 @@ export function IndividualSetConfig({
                     </div>
 
                     <div>
-                      <Label className="text-slate-300 text-xs">
+                      <Label className="text-white text-xs">
                         Increment Per Generation: {generationSet.zIndexConfig.incrementPerGeneration}
                       </Label>
                       <Slider
@@ -671,7 +671,7 @@ export function IndividualSetConfig({
               <div className="bg-slate-800 p-4 rounded-lg border border-slate-700" data-testid="alert-global-zindex-enabled">
                 <div className="flex items-center gap-2 mb-2">
                   <Info className="w-4 h-4 text-blue-400" data-testid="icon-global-zindex-info" />
-                  <span className="text-sm font-medium text-slate-300" data-testid="text-global-zindex-title">Global Z-Index Enabled</span>
+                  <span className="text-sm font-medium text-white" data-testid="text-global-zindex-title">Global Z-Index Enabled</span>
                 </div>
                 <p className="text-xs text-slate-500" data-testid="text-global-zindex-description">
                   Z-index settings are controlled globally. Individual set z-index configuration is disabled.
@@ -687,7 +687,7 @@ export function IndividualSetConfig({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2" data-testid="section-shape-specific-properties">
                     <Settings className="w-4 h-4 text-slate-400" />
-                    <h4 className="text-sm font-medium text-slate-300" data-testid="heading-shape-specific-properties">Shape-Specific Properties</h4>
+                    <h4 className="text-sm font-medium text-white" data-testid="heading-shape-specific-properties">Shape-Specific Properties</h4>
                   </div>
 
                   <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full" data-testid="tabs-shape-properties">
@@ -702,7 +702,7 @@ export function IndividualSetConfig({
                     {generationSet.enabledShapeTypes.map((shapeType) => (
                       <TabsContent key={shapeType} value={shapeType} className="space-y-3" data-testid={`tab-content-${shapeType}`}>
                         <div className="bg-slate-800 p-4 rounded-lg">
-                          <h5 className="text-sm font-medium text-slate-300 mb-3">
+                          <h5 className="text-sm font-medium text-white mb-3">
                             {shapeType.replace('-', ' ')} Properties
                           </h5>
                           
@@ -710,17 +710,17 @@ export function IndividualSetConfig({
                           {(shapeType === 'rounded-rectangle' || shapeType === 'rounded-square') && (
                             <div className="space-y-3">
                               <div>
-                                <Label className="text-slate-300 text-xs">Corner Radius Mode</Label>
+                                <Label className="text-white text-xs">Corner Radius Mode</Label>
                                 <Select
                                   value={generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusMode || 'range'}
                                   onValueChange={(value) => 
                                     handleShapeSpecificPropertyChange(shapeType, 'cornerRadiusMode', value)
                                   }
                                 >
-                                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-slate-700 border-slate-600 text-white">
                                     <SelectItem value="range">Range</SelectItem>
                                     <SelectItem value="fixed">Fixed</SelectItem>
                                   </SelectContent>
@@ -729,7 +729,7 @@ export function IndividualSetConfig({
                               
                               {generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusMode === 'fixed' ? (
                                 <div>
-                                  <Label className="text-slate-300 text-xs">
+                                  <Label className="text-white text-xs">
                                     Corner Radius: {generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusValue || 5}
                                   </Label>
                                   <Slider
@@ -746,7 +746,7 @@ export function IndividualSetConfig({
                                 </div>
                               ) : (
                                 <div>
-                                  <Label className="text-slate-300 text-xs">
+                                  <Label className="text-white text-xs">
                                     Corner Radius Range: {
                                       (generationSet.shapeSpecificProperties[shapeType]?.cornerRadiusRange || [0, 10])[0]
                                     } - {
@@ -824,17 +824,17 @@ export function IndividualSetConfig({
                               {/* Direction Controls */}
                               <div className="space-y-3">
                                 <div>
-                                  <Label className="text-slate-300 text-xs">Direction Mode</Label>
+                                  <Label className="text-white text-xs">Direction Mode</Label>
                                   <Select
                                     value={generationSet.shapeSpecificProperties[shapeType]?.directionMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'directionMode', value)
                                     }
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-direction-mode">
+                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-direction-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
                                       <SelectItem value="range" data-testid="option-line-vector-direction-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-direction-fixed">Fixed</SelectItem>
                                     </SelectContent>
@@ -843,7 +843,7 @@ export function IndividualSetConfig({
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.directionMode === 'fixed' ? (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Direction: {generationSet.shapeSpecificProperties[shapeType]?.directionValue || 0}°
                                     </Label>
                                     <Slider
@@ -860,7 +860,7 @@ export function IndividualSetConfig({
                                   </div>
                                 ) : (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Direction Range: {
                                         (generationSet.shapeSpecificProperties[shapeType]?.directionRange || [0, 360])[0]
                                       }° - {
@@ -885,17 +885,17 @@ export function IndividualSetConfig({
                               {/* Length Controls */}
                               <div className="space-y-3">
                                 <div>
-                                  <Label className="text-slate-300 text-xs">Length Mode</Label>
+                                  <Label className="text-white text-xs">Length Mode</Label>
                                   <Select
                                     value={generationSet.shapeSpecificProperties[shapeType]?.lengthMode || 'range'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'lengthMode', value)
                                     }
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-length-mode">
+                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-length-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
                                       <SelectItem value="range" data-testid="option-line-vector-length-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-length-fixed">Fixed</SelectItem>
                                     </SelectContent>
@@ -904,7 +904,7 @@ export function IndividualSetConfig({
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.lengthMode === 'fixed' ? (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Length: {generationSet.shapeSpecificProperties[shapeType]?.lengthValue || 100}
                                     </Label>
                                     <Slider
@@ -921,7 +921,7 @@ export function IndividualSetConfig({
                                   </div>
                                 ) : (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Length Range: {
                                         (generationSet.shapeSpecificProperties[shapeType]?.lengthRange || [50, 150])[0]
                                       } - {
@@ -946,17 +946,17 @@ export function IndividualSetConfig({
                               {/* Centroid Controls */}
                               <div className="space-y-3">
                                 <div>
-                                  <Label className="text-slate-300 text-xs">Centroid Mode</Label>
+                                  <Label className="text-white text-xs">Centroid Mode</Label>
                                   <Select
                                     value={generationSet.shapeSpecificProperties[shapeType]?.centroidMode || 'fixed'}
                                     onValueChange={(value) => 
                                       handleShapeSpecificPropertyChange(shapeType, 'centroidMode', value)
                                     }
                                   >
-                                    <SelectTrigger className="bg-slate-700 border-slate-600" data-testid="select-line-vector-centroid-mode">
+                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-centroid-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
                                       <SelectItem value="range" data-testid="option-line-vector-centroid-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-centroid-fixed">Fixed</SelectItem>
                                     </SelectContent>
@@ -965,7 +965,7 @@ export function IndividualSetConfig({
                                 
                                 {generationSet.shapeSpecificProperties[shapeType]?.centroidMode === 'fixed' ? (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Centroid: {(generationSet.shapeSpecificProperties[shapeType]?.centroidValue || 0.5).toFixed(2)}
                                     </Label>
                                     <Slider
@@ -982,7 +982,7 @@ export function IndividualSetConfig({
                                   </div>
                                 ) : (
                                   <div>
-                                    <Label className="text-slate-300 text-xs">
+                                    <Label className="text-white text-xs">
                                       Centroid Range: {
                                         (generationSet.shapeSpecificProperties[shapeType]?.centroidRange || [0, 1])[0].toFixed(2)
                                       } - {
@@ -1006,7 +1006,7 @@ export function IndividualSetConfig({
                               
                               {/* Stroke Cap Probabilities */}
                               <div className="space-y-3">
-                                <Label className="text-slate-300 text-xs">Stroke Cap Probabilities (%)</Label>
+                                <Label className="text-white text-xs">Stroke Cap Probabilities (%)</Label>
                                 <div className="space-y-2">
                                   {(['round', 'square', 'butt'] as const).map((cap) => {
                                     const strokeCaps = generationSet.shapeSpecificProperties[shapeType]?.strokeCapProbabilities ?? { round: 33, square: 33, butt: 34 };
@@ -1014,7 +1014,7 @@ export function IndividualSetConfig({
                                     return (
                                       <div key={cap} className="space-y-1">
                                         <div className="flex justify-between text-xs">
-                                          <Label className="text-slate-300 capitalize">{cap}</Label>
+                                          <Label className="text-white capitalize">{cap}</Label>
                                           <span className="text-slate-400">{currentValue}%</span>
                                         </div>
                                         <Slider
