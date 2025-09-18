@@ -100,10 +100,10 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
           value={config.kind}
           onValueChange={handleModeChange}
         >
-          <SelectTrigger className="w-24 h-8 bg-slate-700 border-slate-600 text-slate-300" data-testid={`select-${idBase}-mode`}>
+          <SelectTrigger className="w-24 h-8 bg-slate-700 border-slate-600 text-white" data-testid={`select-${idBase}-mode`}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-slate-700 border-slate-600 text-white z-50">
             {allowedModes.includes('fixed') && <SelectItem value="fixed">Fixed</SelectItem>}
             {allowedModes.includes('range') && <SelectItem value="range">Range</SelectItem>}
             {allowedModes.includes('values') && <SelectItem value="values">Values</SelectItem>}
@@ -164,10 +164,10 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               value={config.selection}
               onValueChange={(selection: 'random' | 'cycle') => onChange({ ...config, selection })}
             >
-              <SelectTrigger className="w-20 h-8 bg-slate-700 border-slate-600 text-slate-300">
+              <SelectTrigger className="w-20 h-8 bg-slate-700 border-slate-600 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-700 border-slate-600 text-white z-50">
                 <SelectItem value="random">Random</SelectItem>
                 <SelectItem value="cycle">Cycle</SelectItem>
               </SelectContent>
