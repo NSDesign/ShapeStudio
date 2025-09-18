@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export type ModeKind = 'fixed' | 'range' | 'values';
 
@@ -26,6 +26,25 @@ export interface StyledModeFieldProps {
 
 export function StyledModeField({ label, config, onChange, bounds, unit = "", step = 1, allowedModes = ['fixed', 'range', 'values'] }: StyledModeFieldProps) {
   const [newValue, setNewValue] = useState("");
+  
+  // Local string state for numeric inputs to prevent focus loss
+  const [fixedValueStr, setFixedValueStr] = useState("");
+  const [minValueStr, setMinValueStr] = useState("");
+  const [maxValueStr, setMaxValueStr] = useState("");
+  
+  // Sync local string state when config changes
+  useEffect(() => {
+    if (config.kind === 'fixed') {
+      setFixedValueStr(config.value.toString());
+    }
+  }, [config.kind === 'fixed' ? config.value : null]);
+  
+  useEffect(() => {
+    if (config.kind === 'range') {
+      setMinValueStr(config.min.toString());
+      setMaxValueStr(config.max.toString());
+    }
+  }, [config.kind === 'range' ? config.min : null, config.kind === 'range' ? config.max : null]);
   
   // Create safe ID base for HTML elements
   const idBase = label.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
@@ -161,25 +180,27 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
       {config.kind === 'fixed' && (
         <Input
           type="number"
-          value={config.value}
+          value={fixedValueStr}
           onChange={(e) => {
-            const inputValue = e.target.value;
-            // Allow empty string and partial inputs while typing
-            if (inputValue === '' || inputValue === '-') {
-              return; // Don't update state for empty or just minus
-            }
-            const v = parseFloat(inputValue);
-            if (!Number.isNaN(v)) {
-              const newValue = Math.max(bounds.min, Math.min(bounds.max, v));
-              onChange({ ...config, value: newValue });
+            setFixedValueStr(e.target.value);
+          }}
+          onBlur={() => {
+            const v = parseFloat(fixedValueStr);
+            if (Number.isNaN(v) || fixedValueStr === '' || fixedValueStr.trim() === '-') {
+              // Reset to current value if invalid
+              const resetValue = config.value;
+              setFixedValueStr(resetValue.toString());
+              onChange({ ...config, value: resetValue });
+            } else {
+              // Clamp to bounds and update
+              const clampedValue = Math.max(bounds.min, Math.min(bounds.max, v));
+              setFixedValueStr(clampedValue.toString());
+              onChange({ ...config, value: clampedValue });
             }
           }}
-          onBlur={(e) => {
-            // Ensure we have a valid value when field loses focus
-            const v = parseFloat(e.target.value);
-            if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
-              // Reset to bounds.min if invalid
-              onChange({ ...config, value: bounds.min });
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
             }
           }}
           min={bounds.min}
@@ -204,23 +225,27 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
           <div className="flex space-x-2">
             <Input
               type="number"
-              value={config.min}
+              value={minValueStr}
               onChange={(e) => {
-                const inputValue = e.target.value;
-                // Allow empty string and partial inputs while typing
-                if (inputValue === '' || inputValue === '-') {
-                  return;
-                }
-                const v = parseFloat(inputValue);
-                if (!Number.isNaN(v)) {
-                  const newMin = Math.max(bounds.min, Math.min(config.max, v));
-                  onChange({ ...config, min: newMin });
+                setMinValueStr(e.target.value);
+              }}
+              onBlur={() => {
+                const v = parseFloat(minValueStr);
+                if (Number.isNaN(v) || minValueStr === '' || minValueStr.trim() === '-') {
+                  // Reset to current value if invalid
+                  const resetValue = config.min;
+                  setMinValueStr(resetValue.toString());
+                  onChange({ ...config, min: resetValue });
+                } else {
+                  // Clamp to bounds and ensure min <= max
+                  const clampedValue = Math.max(bounds.min, Math.min(config.max, v));
+                  setMinValueStr(clampedValue.toString());
+                  onChange({ ...config, min: clampedValue });
                 }
               }}
-              onBlur={(e) => {
-                const v = parseFloat(e.target.value);
-                if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
-                  onChange({ ...config, min: bounds.min });
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
                 }
               }}
               min={bounds.min}
@@ -232,23 +257,27 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
             />
             <Input
               type="number"
-              value={config.max}
+              value={maxValueStr}
               onChange={(e) => {
-                const inputValue = e.target.value;
-                // Allow empty string and partial inputs while typing
-                if (inputValue === '' || inputValue === '-') {
-                  return;
-                }
-                const v = parseFloat(inputValue);
-                if (!Number.isNaN(v)) {
-                  const newMax = Math.min(bounds.max, Math.max(config.min, v));
-                  onChange({ ...config, max: newMax });
+                setMaxValueStr(e.target.value);
+              }}
+              onBlur={() => {
+                const v = parseFloat(maxValueStr);
+                if (Number.isNaN(v) || maxValueStr === '' || maxValueStr.trim() === '-') {
+                  // Reset to current value if invalid
+                  const resetValue = config.max;
+                  setMaxValueStr(resetValue.toString());
+                  onChange({ ...config, max: resetValue });
+                } else {
+                  // Clamp to bounds and ensure max >= min
+                  const clampedValue = Math.min(bounds.max, Math.max(config.min, v));
+                  setMaxValueStr(clampedValue.toString());
+                  onChange({ ...config, max: clampedValue });
                 }
               }}
-              onBlur={(e) => {
-                const v = parseFloat(e.target.value);
-                if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
-                  onChange({ ...config, max: bounds.max });
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
                 }
               }}
               min={config.min}
