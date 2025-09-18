@@ -1393,7 +1393,7 @@ export default function Sidebar({
                 onValueChange={([value]) => setExportQuality(value)}
                 min={10}
                 max={100}
-                step={5}
+                step={1}
                 className="w-full"
               />
               <span className="text-xs text-slate-500">{exportQuality}%</span>
@@ -1914,7 +1914,7 @@ export default function Sidebar({
                 config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
                 onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 8, max: 64 }}
-                step={4}
+                step={1}
                 allowedModes={['fixed', 'range']}
               />
             </div>
@@ -2021,7 +2021,7 @@ export default function Sidebar({
                 config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
                 onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 10, max: 90 }}
-                step={5}
+                step={1}
                 unit="%"
                 allowedModes={['fixed', 'range']}
               />
@@ -2036,7 +2036,7 @@ export default function Sidebar({
                 config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
                 onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 10, max: 90 }}
-                step={5}
+                step={1}
                 unit="%"
                 allowedModes={['fixed', 'range']}
               />
@@ -2051,7 +2051,7 @@ export default function Sidebar({
                 config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
                 onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 10, max: 90 }}
-                step={5}
+                step={1}
                 unit="%"
                 allowedModes={['fixed', 'range']}
               />
@@ -2146,7 +2146,7 @@ export default function Sidebar({
                 config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
                 onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
                 bounds={{ min: 10, max: 100 }}
-                step={5}
+                step={1}
                 unit="%"
                 allowedModes={['fixed', 'range']}
               />
