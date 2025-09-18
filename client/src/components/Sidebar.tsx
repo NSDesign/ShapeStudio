@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -1750,7 +1750,14 @@ export default function Sidebar({
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>("shape-list");
   
   // Scroll position preservation
+  const observerRef = useRef<MutationObserver | null>(null);
   const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    
     if (node) {
       // Store scroll position before state changes that could cause re-renders
       const preserveScroll = () => {
@@ -1765,8 +1772,7 @@ export default function Sidebar({
       // Preserve scroll on any content changes
       const observer = new MutationObserver(preserveScroll);
       observer.observe(node, { childList: true, subtree: true });
-      
-      return () => observer.disconnect();
+      observerRef.current = observer;
     }
   }, []);
 

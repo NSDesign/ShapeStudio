@@ -67,7 +67,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
   };
 
   return (
-    <div className="space-y-4" data-testid={`styled-mode-field-${idBase}`}>
+    <div className="space-y-6" data-testid={`styled-mode-field-${idBase}`}>
       {/* Label with Pattern 2 Slate Styling */}
       <div className="flex items-baseline justify-between">
         <Label className="text-slate-300 text-xs font-medium">{label}</Label>
@@ -94,7 +94,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
 
       {/* Values Controls with Pattern 2 Styling */}
       {config.kind === 'values' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Add new value */}
           <div className="flex space-x-2">
             <Input
@@ -163,9 +163,24 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
           type="number"
           value={config.value}
           onChange={(e) => {
+            const inputValue = e.target.value;
+            // Allow empty string and partial inputs while typing
+            if (inputValue === '' || inputValue === '-') {
+              return; // Don't update state for empty or just minus
+            }
+            const v = parseFloat(inputValue);
+            if (!Number.isNaN(v)) {
+              const newValue = Math.max(bounds.min, Math.min(bounds.max, v));
+              onChange({ ...config, value: newValue });
+            }
+          }}
+          onBlur={(e) => {
+            // Ensure we have a valid value when field loses focus
             const v = parseFloat(e.target.value);
-            const newValue = Number.isNaN(v) ? config.value : Math.max(bounds.min, Math.min(bounds.max, v));
-            onChange({ ...config, value: newValue });
+            if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
+              // Reset to bounds.min if invalid
+              onChange({ ...config, value: bounds.min });
+            }
           }}
           min={bounds.min}
           max={bounds.max}
@@ -176,7 +191,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
       )}
 
       {config.kind === 'range' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Slider
             value={[config.min, config.max]}
             onValueChange={([min, max]) => onChange({ ...config, min, max })}
@@ -191,9 +206,22 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               type="number"
               value={config.min}
               onChange={(e) => {
+                const inputValue = e.target.value;
+                // Allow empty string and partial inputs while typing
+                if (inputValue === '' || inputValue === '-') {
+                  return;
+                }
+                const v = parseFloat(inputValue);
+                if (!Number.isNaN(v)) {
+                  const newMin = Math.max(bounds.min, Math.min(config.max, v));
+                  onChange({ ...config, min: newMin });
+                }
+              }}
+              onBlur={(e) => {
                 const v = parseFloat(e.target.value);
-                const newMin = Number.isNaN(v) ? config.min : Math.max(bounds.min, Math.min(config.max, v));
-                onChange({ ...config, min: newMin });
+                if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
+                  onChange({ ...config, min: bounds.min });
+                }
               }}
               min={bounds.min}
               max={config.max}
@@ -206,9 +234,22 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               type="number"
               value={config.max}
               onChange={(e) => {
+                const inputValue = e.target.value;
+                // Allow empty string and partial inputs while typing
+                if (inputValue === '' || inputValue === '-') {
+                  return;
+                }
+                const v = parseFloat(inputValue);
+                if (!Number.isNaN(v)) {
+                  const newMax = Math.min(bounds.max, Math.max(config.min, v));
+                  onChange({ ...config, max: newMax });
+                }
+              }}
+              onBlur={(e) => {
                 const v = parseFloat(e.target.value);
-                const newMax = Number.isNaN(v) ? config.max : Math.min(bounds.max, Math.max(config.min, v));
-                onChange({ ...config, max: newMax });
+                if (Number.isNaN(v) || e.target.value === '' || e.target.value === '-') {
+                  onChange({ ...config, max: bounds.max });
+                }
               }}
               min={config.min}
               max={bounds.max}
