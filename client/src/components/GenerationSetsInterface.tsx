@@ -63,15 +63,15 @@ export function GenerationSetsInterface({
 
   // Comprehensive validation for all sets
   const overallValidation = useMemo(() => {
-    const validation = GenerationSetValidator.validateGenerationSets(generationSets);
-    
-    // Update parent validation state if callback provided
+    return GenerationSetValidator.validateGenerationSets(generationSets);
+  }, [generationSets]);
+
+  // Update parent validation state when validation changes
+  useEffect(() => {
     if (onValidationChange) {
-      onValidationChange(validation.isValid, validation.errors, validation.warnings);
+      onValidationChange(overallValidation.isValid, overallValidation.errors, overallValidation.warnings);
     }
-    
-    return validation;
-  }, [generationSets, onValidationChange]);
+  }, [overallValidation, onValidationChange]);
   
   // Individual set validations
   useEffect(() => {
