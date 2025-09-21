@@ -730,24 +730,23 @@ export function IndividualSetConfig({
                   </div>
 
                   <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full" data-testid="tabs-shape-properties">
-                    <TabsList 
-                      className={`grid w-full bg-slate-800 ${
-                        generationSet.enabledShapeTypes.length <= 3 ? 'grid-cols-3' :
-                        generationSet.enabledShapeTypes.length <= 5 ? 'grid-cols-5' :
-                        generationSet.enabledShapeTypes.length <= 8 ? 'grid-cols-4 lg:grid-cols-8' :
-                        'grid-cols-3 lg:grid-cols-6'
-                      }`}
-                      data-testid="tabs-list-shape-properties"
-                    >
-                      {generationSet.enabledShapeTypes.map((shapeType) => (
-                        <TabsTrigger key={shapeType} value={shapeType} className="text-xs" data-testid={`tab-trigger-${shapeType}`}>
-                          {getShapeDisplayName(shapeType)}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
+                    <div className="mb-4">
+                      <TabsList className="w-full bg-slate-800 flex flex-wrap justify-start gap-1 p-1 h-auto min-h-[40px]" data-testid="tabs-list-shape-properties">
+                        {generationSet.enabledShapeTypes.map((shapeType) => (
+                          <TabsTrigger 
+                            key={shapeType} 
+                            value={shapeType} 
+                            className="text-xs px-3 py-2 flex-shrink-0" 
+                            data-testid={`tab-trigger-${shapeType}`}
+                          >
+                            {getShapeDisplayName(shapeType)}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </div>
                     
                     {generationSet.enabledShapeTypes.map((shapeType) => (
-                      <TabsContent key={shapeType} value={shapeType} className="space-y-3" data-testid={`tab-content-${shapeType}`}>
+                      <TabsContent key={shapeType} value={shapeType} className="mt-4" data-testid={`tab-content-${shapeType}`}>
                         <div className="bg-slate-800 p-4 rounded-lg">
                           <h5 className="text-sm font-medium text-white mb-3">
                             {shapeType.replace('-', ' ')} Properties
