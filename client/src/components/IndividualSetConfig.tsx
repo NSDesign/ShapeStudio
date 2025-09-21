@@ -65,6 +65,45 @@ const SHAPE_CATEGORIES = {
   'Complex': ['ring', 'blob', 'chunk', 'spline-circle', 'spline-ellipse', 'spline-ring'] as SupportedShapeType[]
 };
 
+// Helper function to get display names for shape types
+const getShapeDisplayName = (shapeType: SupportedShapeType): string => {
+  const displayNames: Record<SupportedShapeType, string> = {
+    'rectangle': 'Rect',
+    'rounded-rectangle': 'Rounded Rect',
+    'square': 'Square', 
+    'rounded-square': 'Rounded Sq',
+    'circle': 'Circle',
+    'ellipse': 'Ellipse',
+    'triangle': 'Triangle',
+    'right-triangle': 'Right Tri',
+    'pentagon': 'Pentagon',
+    'hexagon': 'Hexagon',
+    'rhombus': 'Rhombus',
+    'parallelogram': 'Parallel',
+    'trapezoid': 'Trapezoid',
+    'star': 'Star',
+    'polygon': 'Polygon',
+    'heart': 'Heart',
+    'arrow': 'Arrow',
+    'cross': 'Cross',
+    'kite': 'Kite',
+    'semicircle': 'Semicircle',
+    'line-vector': 'Line Vec',
+    'line': 'Line',
+    'bezier': 'Bezier',
+    'cubic': 'Cubic',
+    'smooth-spline': 'Smooth',
+    'ring': 'Ring',
+    'blob': 'Blob',
+    'chunk': 'Chunk',
+    'spline-circle': 'Spline Cir',
+    'spline-ellipse': 'Spline Ell',
+    'spline-ring': 'Spline Ring'
+  };
+  
+  return displayNames[shapeType] || shapeType.replace('-', ' ');
+};
+
 const BLEND_MODES: BlendMode[] = [
   'source-over', 'multiply', 'screen', 'overlay', 'darken', 
   'lighten', 'color-dodge', 'color-burn', 'hard-light', 
@@ -691,10 +730,18 @@ export function IndividualSetConfig({
                   </div>
 
                   <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full" data-testid="tabs-shape-properties">
-                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 bg-slate-800" data-testid="tabs-list-shape-properties">
-                      {generationSet.enabledShapeTypes.slice(0, 5).map((shapeType) => (
+                    <TabsList 
+                      className={`grid w-full bg-slate-800 ${
+                        generationSet.enabledShapeTypes.length <= 3 ? 'grid-cols-3' :
+                        generationSet.enabledShapeTypes.length <= 5 ? 'grid-cols-5' :
+                        generationSet.enabledShapeTypes.length <= 8 ? 'grid-cols-4 lg:grid-cols-8' :
+                        'grid-cols-3 lg:grid-cols-6'
+                      }`}
+                      data-testid="tabs-list-shape-properties"
+                    >
+                      {generationSet.enabledShapeTypes.map((shapeType) => (
                         <TabsTrigger key={shapeType} value={shapeType} className="text-xs" data-testid={`tab-trigger-${shapeType}`}>
-                          {shapeType.split('-')[0]}
+                          {getShapeDisplayName(shapeType)}
                         </TabsTrigger>
                       ))}
                     </TabsList>
