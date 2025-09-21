@@ -510,7 +510,7 @@ export function IndividualSetConfig({
                 <div className="flex items-center gap-2">
                   <Badge 
                     variant={generationSet.enabledShapeTypes.length === 0 ? "destructive" : "secondary"} 
-                    className="text-xs"
+                    className="text-xs text-blue-500"
                     data-testid="badge-selected-shapes-count"
                   >
                     {generationSet.enabledShapeTypes.length} selected
@@ -535,7 +535,7 @@ export function IndividualSetConfig({
                       <AccordionTrigger className="text-white hover:text-slate-200" data-testid={`accordion-trigger-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                         <div className="flex items-center gap-2">
                           <span>{category}</span>
-                          <Badge variant="outline" className="text-xs" data-testid={`badge-category-count-${category.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <Badge variant="outline" className="text-xs text-blue-500" data-testid={`badge-category-count-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                             {enabledInCategory}/{shapes.length}
                           </Badge>
                         </div>
