@@ -104,6 +104,27 @@ const getShapeDisplayName = (shapeType: SupportedShapeType): string => {
   return displayNames[shapeType] || shapeType.replace('-', ' ');
 };
 
+// Helper function to check if a shape type has configurable properties
+const hasConfigurableProperties = (shapeType: SupportedShapeType): boolean => {
+  const shapesWithProperties: SupportedShapeType[] = [
+    'rounded-rectangle',   // corner radius
+    'rounded-square',      // corner radius
+    'polygon',             // point count
+    'star',                // point count, inner radius
+    'ring',                // inner radius
+    'spline-ring',         // inner radius
+    'circle',              // segment count
+    'ellipse',             // segment count
+    'line-vector',         // direction, length, centroid, stroke caps
+    'line',                // point count
+    'bezier',              // point count
+    'cubic',               // point count
+    'smooth-spline'        // point count
+  ];
+  
+  return shapesWithProperties.includes(shapeType);
+};
+
 const BLEND_MODES: BlendMode[] = [
   'source-over', 'multiply', 'screen', 'overlay', 'darken', 
   'lighten', 'color-dodge', 'color-burn', 'hard-light', 
@@ -729,21 +750,42 @@ export function IndividualSetConfig({
                     <h4 className="text-sm font-medium text-white" data-testid="heading-shape-specific-properties">Shape-Specific Properties</h4>
                   </div>
 
-                  <Tabs defaultValue={generationSet.enabledShapeTypes[0]} className="w-full" data-testid="tabs-shape-properties">
-                    <div className="mb-4">
-                      <TabsList className="w-full bg-slate-800 flex flex-wrap justify-start gap-1 p-1 h-auto min-h-[40px]" data-testid="tabs-list-shape-properties">
-                        {generationSet.enabledShapeTypes.map((shapeType) => (
-                          <TabsTrigger 
-                            key={shapeType} 
-                            value={shapeType} 
-                            className="text-xs px-3 py-2 flex-shrink-0 data-[state=active]:!text-blue-500" 
-                            data-testid={`tab-trigger-${shapeType}`}
-                          >
-                            {getShapeDisplayName(shapeType)}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </div>
+                  <Tabs 
+                    defaultValue={generationSet.enabledShapeTypes.find(hasConfigurableProperties) || generationSet.enabledShapeTypes[0]} 
+                    className="w-full" 
+                    data-testid="tabs-shape-properties"
+                  >
+                    {/* Only show tabs if there are shape types with properties */}
+                    {generationSet.enabledShapeTypes.filter(hasConfigurableProperties).length > 0 && (
+                      <div className="mb-4">
+                        <TabsList className="w-full bg-slate-800 flex flex-wrap justify-start gap-1 p-1 h-auto min-h-[40px]" data-testid="tabs-list-shape-properties">
+                          {generationSet.enabledShapeTypes
+                            .filter(hasConfigurableProperties)
+                            .map((shapeType) => (
+                            <TabsTrigger 
+                              key={shapeType} 
+                              value={shapeType} 
+                              className="text-xs px-3 py-2 flex-shrink-0 data-[state=active]:!text-blue-500" 
+                              data-testid={`tab-trigger-${shapeType}`}
+                            >
+                              {getShapeDisplayName(shapeType)}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                      </div>
+                    )}
+
+                    {/* Show message if no shape types have properties */}
+                    {generationSet.enabledShapeTypes.filter(hasConfigurableProperties).length === 0 && (
+                      <div className="text-center py-8 bg-slate-800 rounded-lg">
+                        <p className="text-sm text-slate-400">
+                          None of the selected shape types have configurable properties.
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Try selecting shapes like circles, polygons, stars, or rounded rectangles.
+                        </p>
+                      </div>
+                    )}
                     
                     {generationSet.enabledShapeTypes.map((shapeType) => (
                       <TabsContent key={shapeType} value={shapeType} className="mt-4" data-testid={`tab-content-${shapeType}`}>
