@@ -214,6 +214,11 @@
     color: hsl(0, 0%, 0%) !important;
   }
 
+  /* Shape-Specific Properties tabs active state */
+  [data-testid="tabs-list-shape-properties"] [data-state="active"] {
+    color: hsl(217, 91%, 60%) !important;
+  }
+
   /* Transparent input increment/decrement buttons */
   .slider-input::-webkit-outer-spin-button,
   .slider-input::-webkit-inner-spin-button {
