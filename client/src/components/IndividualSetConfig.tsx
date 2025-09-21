@@ -736,7 +736,7 @@ export function IndividualSetConfig({
                           <TabsTrigger 
                             key={shapeType} 
                             value={shapeType} 
-                            className="text-xs px-3 py-2 flex-shrink-0" 
+                            className="text-xs px-3 py-2 flex-shrink-0 data-[state=active]:text-blue-500" 
                             data-testid={`tab-trigger-${shapeType}`}
                           >
                             {getShapeDisplayName(shapeType)}
