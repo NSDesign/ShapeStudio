@@ -98,7 +98,7 @@ export function GenerationSetsDropdown({
         </SelectTrigger>
         <SelectContent className="bg-slate-800 border-slate-600">
           {generationSets.length === 0 ? (
-            <SelectItem value="" disabled className="text-slate-400">
+            <SelectItem value="no-sets" disabled className="text-slate-400">
               No sets available
             </SelectItem>
           ) : (
