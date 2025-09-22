@@ -3,7 +3,9 @@ import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
-import { BatchConfigSettings, EnhancedBatchConfig } from '@shared/schema';
+import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
+import { GenerationSetsDropdown } from './GenerationSetsDropdown';
+import { useGenerationSets } from '@/hooks/useGenerationSets';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -381,6 +383,18 @@ interface SidebarProps {
     scatterSettings?: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
   }) => void;
+  
+  // Generation Sets Management
+  generationSets?: GenerationSet[];
+  currentGenerationSetId?: string | null;
+  shapeCountMode?: ShapeCountMode;
+  shapeCountFixed?: number;
+  shapeCountRange?: [number, number];
+  batchExportCount?: number;
+  generationCountMode?: string;
+  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
+  onCurrentGenerationSetChange?: (setId: string | null) => void;
+  onOpenGenerationSetsManager?: () => void;
 }
 
 export default function Sidebar({
@@ -426,7 +440,19 @@ export default function Sidebar({
   onDistributeSelected,
   onApplyBooleanOperation,
   onApplyColorManipulation,
-  onLoadProject
+  onLoadProject,
+  
+  // Generation Sets Management
+  generationSets = [],
+  currentGenerationSetId = null,
+  shapeCountMode = 'fixed' as ShapeCountMode,
+  shapeCountFixed = 10,
+  shapeCountRange = [5, 15] as [number, number],
+  batchExportCount = 1,
+  generationCountMode = 'fixed',
+  onGenerationSetsChange,
+  onCurrentGenerationSetChange,
+  onOpenGenerationSetsManager
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -444,6 +470,77 @@ export default function Sidebar({
 
   // Get user preferences for sidebar section visibility
   const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
+
+  // Generation Sets Management
+  const {
+    generationSets: managedSets,
+    currentSetId: managedCurrentSetId,
+    createSetFromCurrentState,
+    extractUIStateFromSet,
+    deleteSet,
+    areSetsEnabled,
+    updateSets
+  } = useGenerationSets({
+    initialSets: generationSets,
+    onSetsChange: onGenerationSetsChange
+  });
+
+  // Use managed state or fallback to props
+  const effectiveGenerationSets = managedSets.length > 0 ? managedSets : generationSets;
+  const effectiveCurrentSetId = managedCurrentSetId || currentGenerationSetId;
+
+  // Check if generation sets are enabled
+  const setsEnabled = areSetsEnabled(batchExportCount, generationCountMode);
+
+  // Generation sets handlers
+  const handleSetChange = useCallback((setId: string | null) => {
+    onCurrentGenerationSetChange?.(setId);
+    
+    // Load the set's UI state if a set is selected
+    if (setId) {
+      const uiState = extractUIStateFromSet(setId);
+      if (uiState) {
+        // Apply the UI state to current controls
+        // Note: This requires the parent component to handle state restoration
+        // For now, we'll just notify the parent of the set change
+      }
+    }
+  }, [onCurrentGenerationSetChange, extractUIStateFromSet]);
+
+  const handleCreateSet = useCallback((name: string) => {
+    const currentUIState = {
+      enabledShapeTypes,
+      scatterSettings,
+      batchConfigSettings: generationConfigSettings,
+      shapeCountMode,
+      shapeCountFixed,
+      shapeCountRange
+    };
+    
+    const newSetId = createSetFromCurrentState(name, currentUIState);
+    onCurrentGenerationSetChange?.(newSetId);
+  }, [
+    enabledShapeTypes,
+    scatterSettings,
+    generationConfigSettings,
+    shapeCountMode,
+    shapeCountFixed,
+    shapeCountRange,
+    createSetFromCurrentState,
+    onCurrentGenerationSetChange
+  ]);
+
+  const handleDeleteSet = useCallback((setId: string) => {
+    deleteSet(setId);
+    // If we deleted the current set, clear the selection
+    if (effectiveCurrentSetId === setId) {
+      onCurrentGenerationSetChange?.(null);
+    }
+  }, [deleteSet, effectiveCurrentSetId, onCurrentGenerationSetChange]);
+
+  const handleOpenManager = useCallback(() => {
+    onOpenGenerationSetsManager?.();
+  }, [onOpenGenerationSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -4198,6 +4295,28 @@ export default function Sidebar({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
+                  {/* Generation Sets Dropdown */}
+                  <div className="mb-4">
+                    <GenerationSetsDropdown
+                      currentSetId={effectiveCurrentSetId}
+                      generationSets={effectiveGenerationSets}
+                      enabledShapeTypes={enabledShapeTypes}
+                      scatterSettings={scatterSettings}
+                      batchConfigSettings={generationConfigSettings}
+                      shapeCountMode={shapeCountMode}
+                      shapeCountFixed={shapeCountFixed}
+                      shapeCountRange={shapeCountRange}
+                      onSetChange={handleSetChange}
+                      onCreateSet={handleCreateSet}
+                      onDeleteSet={handleDeleteSet}
+                      onOpenManager={handleOpenManager}
+                      enabled={setsEnabled}
+                      size="sm"
+                      showLabel={true}
+                      data-testid="sidebar-generation-sets"
+                    />
+                  </div>
+                  
                   <ShapeTypesContent />
                 </AccordionContent>
               </AccordionItem>
