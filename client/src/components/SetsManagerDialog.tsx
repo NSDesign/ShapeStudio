@@ -12,6 +12,9 @@ interface SetsManagerDialogProps {
   onGenerationSetsChange: (sets: GenerationSet[]) => void;
   globalZIndexEnabled?: boolean;
   showInlineValidation?: boolean;
+  // Bi-directional sync props
+  currentSetId?: string | null;
+  onCurrentSetChange?: (setId: string | null) => void;
 }
 
 export function SetsManagerDialog({
@@ -20,7 +23,10 @@ export function SetsManagerDialog({
   generationSets,
   onGenerationSetsChange,
   globalZIndexEnabled = false,
-  showInlineValidation = true
+  showInlineValidation = true,
+  // Bi-directional sync props
+  currentSetId,
+  onCurrentSetChange
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
@@ -110,6 +116,8 @@ export function SetsManagerDialog({
             globalZIndexEnabled={globalZIndexEnabled}
             showInlineValidation={showInlineValidation}
             onValidationChange={handleValidationChange}
+            currentSetId={currentSetId}
+            onCurrentSetChange={onCurrentSetChange}
           />
         </div>
 

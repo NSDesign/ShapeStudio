@@ -4464,6 +4464,8 @@ export default function Sidebar({
         onGenerationSetsChange={onGenerationSetsChange || (() => {})}
         globalZIndexEnabled={false}
         showInlineValidation={true}
+        currentSetId={effectiveCurrentSetId}
+        onCurrentSetChange={onCurrentGenerationSetChange}
       />
     </div>
   );

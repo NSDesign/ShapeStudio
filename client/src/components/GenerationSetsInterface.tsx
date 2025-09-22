@@ -45,6 +45,9 @@ interface GenerationSetsInterfaceProps {
   globalZIndexEnabled?: boolean;
   showInlineValidation?: boolean;
   onValidationChange?: (isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => void;
+  // Bi-directional sync props
+  currentSetId?: string | null;
+  onCurrentSetChange?: (setId: string | null) => void;
 }
 
 export function GenerationSetsInterface({
@@ -54,9 +57,17 @@ export function GenerationSetsInterface({
   maxSets = DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
   globalZIndexEnabled = false,
   showInlineValidation = true,
-  onValidationChange
+  onValidationChange,
+  // Bi-directional sync props
+  currentSetId,
+  onCurrentSetChange
 }: GenerationSetsInterfaceProps) {
-  const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+  // Use external currentSetId if provided, otherwise fall back to internal state
+  const [internalSelectedSetId, setInternalSelectedSetId] = useState<string | null>(null);
+  const selectedSetId = currentSetId !== undefined ? currentSetId : internalSelectedSetId;
+  const setSelectedSetId = currentSetId !== undefined ? (setId: string | null) => {
+    onCurrentSetChange?.(setId);
+  } : setInternalSelectedSetId;
   const [draggedSetId, setDraggedSetId] = useState<string | null>(null);
   const [dragOverSetId, setDragOverSetId] = useState<string | null>(null);
   const [setValidations, setSetValidations] = useState<Record<string, ValidationResult>>({});
