@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
-import { useGenerationSets } from '@/hooks/useGenerationSets';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -395,6 +394,9 @@ interface SidebarProps {
   onGenerationSetsChange?: (sets: GenerationSet[]) => void;
   onCurrentGenerationSetChange?: (setId: string | null) => void;
   onOpenGenerationSetsManager?: () => void;
+  onBatchExportCountChange?: (count: number) => void;
+  onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
+  onRestoreUIStateFromSet?: (setId: string) => void;
 }
 
 export default function Sidebar({
@@ -471,72 +473,36 @@ export default function Sidebar({
   // Get user preferences for sidebar section visibility
   const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
 
-  // Generation Sets Management
-  const {
-    generationSets: managedSets,
-    currentSetId: managedCurrentSetId,
-    createSetFromCurrentState,
-    extractUIStateFromSet,
-    deleteSet,
-    areSetsEnabled,
-    updateSets
-  } = useGenerationSets({
-    initialSets: generationSets,
-    onSetsChange: onGenerationSetsChange
-  });
+  // Use centralized generation sets state from parent
+  const effectiveGenerationSets = generationSets || [];
+  const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Use managed state or fallback to props
-  const effectiveGenerationSets = managedSets.length > 0 ? managedSets : generationSets;
-  const effectiveCurrentSetId = managedCurrentSetId || currentGenerationSetId;
-
-  // Check if generation sets are enabled
-  const setsEnabled = areSetsEnabled(batchExportCount, generationCountMode);
+  // Check if generation sets are enabled (simple condition - can be enhanced later)
+  const setsEnabled = batchExportCount > 1 && generationCountMode === 'fixed';
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
     onCurrentGenerationSetChange?.(setId);
     
-    // Load the set's UI state if a set is selected
-    if (setId) {
-      const uiState = extractUIStateFromSet(setId);
-      if (uiState) {
-        // Apply the UI state to current controls
-        // Note: This requires the parent component to handle state restoration
-        // For now, we'll just notify the parent of the set change
-      }
+    // Restore UI state if a set is selected
+    if (setId && onRestoreUIStateFromSet) {
+      onRestoreUIStateFromSet(setId);
     }
-  }, [onCurrentGenerationSetChange, extractUIStateFromSet]);
+  }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet]);
 
   const handleCreateSet = useCallback((name: string) => {
-    const currentUIState = {
-      enabledShapeTypes,
-      scatterSettings,
-      batchConfigSettings: generationConfigSettings,
-      shapeCountMode,
-      shapeCountFixed,
-      shapeCountRange
-    };
-    
-    const newSetId = createSetFromCurrentState(name, currentUIState);
-    onCurrentGenerationSetChange?.(newSetId);
-  }, [
-    enabledShapeTypes,
-    scatterSettings,
-    generationConfigSettings,
-    shapeCountMode,
-    shapeCountFixed,
-    shapeCountRange,
-    createSetFromCurrentState,
-    onCurrentGenerationSetChange
-  ]);
+    // For now, this is a placeholder - the actual creation logic will be handled
+    // by the parent component through the centralized state management
+    console.log('Creating generation set:', name);
+    // TODO: Implement centralized set creation
+  }, []);
 
   const handleDeleteSet = useCallback((setId: string) => {
-    deleteSet(setId);
-    // If we deleted the current set, clear the selection
-    if (effectiveCurrentSetId === setId) {
-      onCurrentGenerationSetChange?.(null);
-    }
-  }, [deleteSet, effectiveCurrentSetId, onCurrentGenerationSetChange]);
+    // For now, this is a placeholder - the actual deletion logic will be handled
+    // by the parent component through the centralized state management
+    console.log('Deleting generation set:', setId);
+    // TODO: Implement centralized set deletion
+  }, []);
 
   const handleOpenManager = useCallback(() => {
     onOpenGenerationSetsManager?.();

@@ -5,7 +5,7 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
-import { BatchConfigSettings, defaultBatchConfigSettings } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
 export const useShapeEditor = () => {
@@ -116,6 +116,13 @@ export const useShapeEditor = () => {
 
   // Batch Configuration Settings - using defaults from BatchConfigDialog
   const [generationConfigSettings, setGenerationConfigSettings] = useState<BatchConfigSettings>(defaultBatchConfigSettings);
+  
+  // Generation Sets Management - centralized state for bi-directional sync
+  const [generationSets, setGenerationSets] = useState<GenerationSet[]>([]);
+  const [currentGenerationSetId, setCurrentGenerationSetId] = useState<string | null>(null);
+  const [batchExportCount, setBatchExportCount] = useState(1);
+  const [generationCountMode, setGenerationCountMode] = useState<'fixed' | 'range'>('fixed');
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
@@ -177,6 +184,50 @@ export const useShapeEditor = () => {
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));
   }, []);
+
+  // Generation Sets handlers for bi-directional synchronization
+  const handleGenerationSetsChange = useCallback((sets: GenerationSet[]) => {
+    setGenerationSets(sets);
+  }, []);
+
+  const handleCurrentGenerationSetChange = useCallback((setId: string | null) => {
+    setCurrentGenerationSetId(setId);
+  }, []);
+
+  const handleBatchExportCountChange = useCallback((count: number) => {
+    setBatchExportCount(count);
+  }, []);
+
+  const handleGenerationCountModeChange = useCallback((mode: 'fixed' | 'range') => {
+    setGenerationCountMode(mode);
+  }, []);
+
+  // UI state restoration from generation set
+  const restoreUIStateFromSet = useCallback((setId: string) => {
+    const set = generationSets.find(s => s.id === setId);
+    if (!set) return;
+
+    // Convert SupportedShapeType back to ShapeType Set
+    setEnabledShapeTypes(new Set(set.enabledShapeTypes as ShapeType[]));
+    
+    // Restore scatter settings
+    const restoredScatterSettings: ScatterSettings = {
+      ...scatterSettings,
+      shapeCountMode: set.shapeCountMode,
+      fixedShapeCount: set.shapeCountFixed,
+      count: set.shapeCountFixed,
+      minCount: set.shapeCountRange[0],
+      maxCount: set.shapeCountRange[1],
+      shapeSpecific: {
+        ...scatterSettings.shapeSpecific,
+        ...(set.shapeSpecificProperties as any)
+      }
+    };
+    setScatterSettings(restoredScatterSettings);
+    
+    // Restore batch config settings
+    setGenerationConfigSettings(set.batchConfig);
+  }, [generationSets, scatterSettings]);
 
   const clearSelection = useCallback(() => {
     shapes.forEach(shape => shape.selected = false);
@@ -2590,6 +2641,12 @@ export const useShapeEditor = () => {
     canvasSettings,
     artboards,
     activeArtboard,
+    
+    // Generation Sets state for bi-directional sync
+    generationSets,
+    currentGenerationSetId,
+    batchExportCount,
+    generationCountMode,
     selectedCount: selectedShapes.length + selectedGroups.length,
     selectedPointsCount: selectedPoints.length,
     selectedSegmentsCount: selectedSegments.length,
@@ -2617,6 +2674,13 @@ export const useShapeEditor = () => {
     toggleShapeType,
     updateScatterSettings,
     updateGenerationConfigSettings,
+    
+    // Generation Sets handlers for bi-directional sync
+    handleGenerationSetsChange,
+    handleCurrentGenerationSetChange,
+    handleBatchExportCountChange,
+    handleGenerationCountModeChange,
+    restoreUIStateFromSet,
     generateRandomShapes,
     generateShapesWithBatchConfig,
     scatterOnShape,

@@ -71,7 +71,18 @@ export default function ShapeEditor() {
     updateArtboard,
     applyBooleanOperation,
     applyColorManipulation,
-    onLoadProject
+    onLoadProject,
+    
+    // Generation Sets state and handlers for bi-directional sync
+    generationSets,
+    currentGenerationSetId,
+    batchExportCount,
+    generationCountMode,
+    handleGenerationSetsChange,
+    handleCurrentGenerationSetChange,
+    handleBatchExportCountChange,
+    handleGenerationCountModeChange,
+    restoreUIStateFromSet
   } = useShapeEditor();
 
   // Transform handlers with precise control
@@ -171,6 +182,17 @@ export default function ShapeEditor() {
           onApplyBooleanOperation={applyBooleanOperation}
           onApplyColorManipulation={applyColorManipulation}
           onLoadProject={onLoadProject}
+          
+          // Generation Sets props for bi-directional synchronization
+          generationSets={generationSets}
+          currentGenerationSetId={currentGenerationSetId}
+          batchExportCount={batchExportCount}
+          generationCountMode={generationCountMode}
+          onGenerationSetsChange={handleGenerationSetsChange}
+          onCurrentGenerationSetChange={handleCurrentGenerationSetChange}
+          onBatchExportCountChange={handleBatchExportCountChange}
+          onGenerationCountModeChange={handleGenerationCountModeChange}
+          onRestoreUIStateFromSet={restoreUIStateFromSet}
         />
         <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
           <Canvas

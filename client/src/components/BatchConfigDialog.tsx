@@ -15,7 +15,6 @@ import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import { validateGenerationSets } from '../lib/generationSetValidation';
 import { ValidationError, ValidationWarning } from '../lib/typedHelpers';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
-import { useGenerationSets } from '@/hooks/useGenerationSets';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
@@ -79,74 +78,34 @@ export default function BatchConfigDialog({
   }>({ isValid: true, errors: [], warnings: [] });
   const [showValidationBanner, setShowValidationBanner] = useState(false);
 
-  // Generation Sets Management
-  const {
-    generationSets: managedSets,
-    currentSetId: managedCurrentSetId,
-    createSetFromCurrentState,
-    extractUIStateFromSet,
-    deleteSet,
-    areSetsEnabled,
-    updateSets
-  } = useGenerationSets({
-    initialSets: generationSets,
-    onSetsChange: onGenerationSetsChange
-  });
+  // Use centralized generation sets state from parent
+  const effectiveGenerationSets = generationSets || [];
+  const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Use managed state or fallback to props
-  const effectiveGenerationSets = managedSets.length > 0 ? managedSets : generationSets;
-  const effectiveCurrentSetId = managedCurrentSetId || currentGenerationSetId;
-
-  // Check if generation sets are enabled
-  const setsEnabled = scatterSettings ? areSetsEnabled(batchExportCount, generationCountMode) : false;
+  // Check if generation sets are enabled (simple condition - can be enhanced later)
+  const setsEnabled = scatterSettings ? (batchExportCount > 1 && generationCountMode === 'fixed') : false;
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
     onCurrentGenerationSetChange?.(setId);
     
-    // Load the set's UI state if a set is selected
-    if (setId) {
-      const uiState = extractUIStateFromSet(setId);
-      if (uiState) {
-        // Apply the UI state to current controls
-        // Note: This requires the parent component to handle state restoration
-        // For now, we'll just notify the parent of the set change
-      }
-    }
-  }, [onCurrentGenerationSetChange, extractUIStateFromSet]);
+    // Restore UI state if a set is selected - handled by parent
+    // Parent component will restore state through restoreUIStateFromSet
+  }, [onCurrentGenerationSetChange]);
 
   const handleCreateSet = useCallback((name: string) => {
-    if (!scatterSettings) return;
-    
-    const currentUIState = {
-      enabledShapeTypes,
-      scatterSettings,
-      batchConfigSettings: currentSettings,
-      shapeCountMode,
-      shapeCountFixed,
-      shapeCountRange
-    };
-    
-    const newSetId = createSetFromCurrentState(name, currentUIState);
-    onCurrentGenerationSetChange?.(newSetId);
-  }, [
-    enabledShapeTypes,
-    scatterSettings,
-    currentSettings,
-    shapeCountMode,
-    shapeCountFixed,
-    shapeCountRange,
-    createSetFromCurrentState,
-    onCurrentGenerationSetChange
-  ]);
+    // For now, this is a placeholder - the actual creation logic will be handled
+    // by the parent component through the centralized state management
+    console.log('Creating generation set from BatchConfigDialog:', name);
+    // TODO: Implement centralized set creation
+  }, []);
 
   const handleDeleteSet = useCallback((setId: string) => {
-    deleteSet(setId);
-    // If we deleted the current set, clear the selection
-    if (effectiveCurrentSetId === setId) {
-      onCurrentGenerationSetChange?.(null);
-    }
-  }, [deleteSet, effectiveCurrentSetId, onCurrentGenerationSetChange]);
+    // For now, this is a placeholder - the actual deletion logic will be handled
+    // by the parent component through the centralized state management
+    console.log('Deleting generation set from BatchConfigDialog:', setId);
+    // TODO: Implement centralized set deletion
+  }, []);
 
   const handleOpenManager = useCallback(() => {
     onOpenGenerationSetsManager?.();
