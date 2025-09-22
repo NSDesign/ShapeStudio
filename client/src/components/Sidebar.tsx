@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
+import { SetsManagerDialog } from './SetsManagerDialog';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -478,6 +479,9 @@ export default function Sidebar({
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  
+  // Sets Manager Dialog state
+  const [isSetsManagerOpen, setIsSetsManagerOpen] = useState(false);
 
   // Get user preferences for sidebar section visibility
   const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
@@ -486,10 +490,10 @@ export default function Sidebar({
   const effectiveGenerationSets = generationSets || [];
   const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Compute sets enabled state locally with fallbacks and type normalization
-  const effectiveCount = batchExportCount ?? 1;
+  // Generation sets are enabled when in fixed mode (regardless of batch export count)
+  // This allows users to save/load generation configurations at any time
   const effectiveMode = generationCountMode ?? 'fixed';
-  const setsEnabled = Number(effectiveCount) > 1 && (effectiveMode === 'fixed' || effectiveMode === 'FIXED');
+  const setsEnabled = (effectiveMode === 'fixed' || effectiveMode === 'FIXED');
   
 
   // Generation sets handlers
@@ -516,8 +520,8 @@ export default function Sidebar({
   }, [onDeleteGenerationSet]);
 
   const handleOpenManager = useCallback(() => {
-    onOpenGenerationSetsManager?.();
-  }, [onOpenGenerationSetsManager]);
+    setIsSetsManagerOpen(true);
+  }, []);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -4479,6 +4483,16 @@ export default function Sidebar({
         onGenerationSetsChange={onGenerationSetsChange}
         onCurrentGenerationSetChange={onCurrentGenerationSetChange}
         onOpenGenerationSetsManager={onOpenGenerationSetsManager}
+      />
+      
+      {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
+      <SetsManagerDialog
+        isOpen={isSetsManagerOpen}
+        onOpenChange={setIsSetsManagerOpen}
+        generationSets={effectiveGenerationSets}
+        onGenerationSetsChange={onGenerationSetsChange || (() => {})}
+        globalZIndexEnabled={false}
+        showInlineValidation={true}
       />
     </div>
   );

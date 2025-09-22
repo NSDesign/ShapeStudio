@@ -93,7 +93,7 @@ export function GenerationSetsDropdown({
           data-testid={`${testId}-select-trigger`}
         >
           <SelectValue 
-            placeholder={enabled ? "Select generation set..." : "Enable batch export + fixed count"} 
+            placeholder={enabled ? "Select generation set..." : "Switch to fixed count mode"} 
           />
         </SelectTrigger>
         <SelectContent className="bg-slate-800 border-slate-600">

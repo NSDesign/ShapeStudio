@@ -399,74 +399,6 @@ export default function BatchConfigDialog({
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
               
-              {/* Mode Selection (only show if enhanced mode is supported) */}
-              {supportEnhancedMode && (
-                <>
-                  <div className="space-y-3">
-                    <Label className="font-medium text-slate-200">Generation Mode</Label>
-                    <Select 
-                      value={selectedMode}
-                      onValueChange={(value) => {
-                        const newMode = value as GenerationSetMode;
-                        setSelectedMode(newMode);
-                        
-                        // Create default config when switching to MULTI mode with null config
-                        if (newMode === GenerationSetMode.MULTI && !enhancedConfig) {
-                          const now = new Date().toISOString();
-                          const defaultEnhancedConfig: EnhancedBatchConfig = {
-                            mode: GenerationSetMode.MULTI,
-                            legacyBatchConfig: undefined,
-                            generationSets: [],
-                            globalSettings: {
-                              canvasWidth: 800,
-                              canvasHeight: 600,
-                              exportFormat: 'png',
-                              exportQuality: 90,
-                              globalZIndexSettings: {
-                                startingZIndex: 1000,
-                                setSpacing: 1000,
-                                preventOverlap: true,
-                                useGlobalSettings: true
-                              }
-                            },
-                            modeRestrictions: {
-                              multiGenerationOnlyForFixedCount: true,
-                              maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
-                              minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
-                              maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
-                            },
-                            createdAt: now,
-                            updatedAt: now,
-                            version: '1.0.0'
-                          };
-                          setEnhancedConfig(defaultEnhancedConfig);
-                        }
-                      }}
-                      data-testid="select-generation-mode"
-                    >
-                      <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                        <SelectItem value={GenerationSetMode.SINGLE as string} className="text-slate-200 hover:bg-slate-700">
-                          Single Generation (Legacy)
-                        </SelectItem>
-                        <SelectItem value={GenerationSetMode.MULTI as string} className="text-slate-200 hover:bg-slate-700">
-                          Multi-Generation (Generation Sets)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-slate-400">
-                      {selectedMode === GenerationSetMode.SINGLE 
-                        ? 'Traditional batch generation with single configuration set'
-                        : 'Advanced generation sets with individual configurations per set'
-                      }
-                    </p>
-                  </div>
-                  
-                  <Separator className="bg-slate-600" />
-                </>
-              )}
               {/* Global Validation Status Banner */}
               {showValidationBanner && (
                 <div className={`rounded-lg p-4 mb-4 ${
@@ -549,27 +481,7 @@ export default function BatchConfigDialog({
                 </div>
               )}
 
-              {/* Show generation sets UI in multi mode, legacy UI in single mode */}
-              {selectedMode === GenerationSetMode.MULTI ? (
-                <GenerationSetsInterface 
-                  generationSets={enhancedConfig?.generationSets || []}
-                  onGenerationSetsChange={(sets) => {
-                    if (enhancedConfig) {
-                      setEnhancedConfig({
-                        ...enhancedConfig,
-                        generationSets: sets,
-                        updatedAt: new Date().toISOString()
-                      });
-                    }
-                  }}
-                  validationErrors={validateGenerationSets(enhancedConfig?.generationSets || [], enhancedConfig || undefined).errors}
-                  maxSets={enhancedConfig?.modeRestrictions?.maxGenerationSets || DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
-                  globalZIndexEnabled={enhancedConfig?.globalSettings?.globalZIndexSettings?.useGlobalSettings || false}
-                  showInlineValidation={true}
-                  onValidationChange={handleGenerationSetsValidationChange}
-                />
-              ) : (
-                <>
+              {/* Legacy batch configuration settings */}
                   {/* Collapsible System Behavior Explanation */}
               <div className="border border-slate-600 rounded">
                 <Button
@@ -3707,8 +3619,6 @@ export default function BatchConfigDialog({
                   </div>
                 )}
               </div>
-                </>
-              )}
             </div>
             
             {/* Footer */}
