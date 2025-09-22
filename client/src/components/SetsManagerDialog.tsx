@@ -102,7 +102,7 @@ export function SetsManagerDialog({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           <GenerationSetsInterface
             generationSets={generationSets}
             onGenerationSetsChange={onGenerationSetsChange}
@@ -114,20 +114,9 @@ export function SetsManagerDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-700 bg-slate-900">
+        <div className="flex items-center justify-center p-4 border-t border-slate-700 bg-slate-900">
           <div className="text-xs text-slate-500">
             {generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleClose}
-              className="bg-slate-800 border-slate-600 hover:bg-slate-700"
-              data-testid="close-sets-manager-footer"
-            >
-              Close
-            </Button>
           </div>
         </div>
       </div>

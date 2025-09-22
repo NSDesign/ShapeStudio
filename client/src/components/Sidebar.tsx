@@ -506,12 +506,6 @@ export default function Sidebar({
     }
   }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet]);
 
-  const handleCreateSet = useCallback((name: string) => {
-    // Call the actual handler from parent component
-    const setId = onCreateGenerationSet?.(name);
-    console.log('Created generation set:', name, 'with ID:', setId);
-    return setId;
-  }, [onCreateGenerationSet]);
 
   const handleDeleteSet = useCallback((setId: string) => {
     // Call the actual handler from parent component
@@ -755,6 +749,26 @@ export default function Sidebar({
   const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
+
+  // Generation sets handlers (placed after state declarations)
+  const handleCreateSet = useCallback((name: string) => {
+    // Auto-enable batch export when creating sets
+    if (!exportBatchModeEnabled) {
+      setExportBatchModeEnabled(true);
+      console.log('Auto-enabled batch export for generation sets');
+    }
+    
+    // Set to fixed mode for generation sets
+    if (generationConfigSettings?.generationCountMode !== 'fixed') {
+      onUpdateGenerationConfigSettings({ generationCountMode: 'fixed' });
+      console.log('Auto-set generation count mode to fixed for generation sets');
+    }
+    
+    // Call the actual handler from parent component
+    const setId = onCreateGenerationSet?.(name);
+    console.log('Created generation set:', name, 'with ID:', setId);
+    return setId;
+  }, [onCreateGenerationSet, exportBatchModeEnabled, setExportBatchModeEnabled, generationConfigSettings, onUpdateGenerationConfigSettings]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -1540,7 +1554,9 @@ export default function Sidebar({
             <>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400">Number of Generations per Export</Label>
+                  <Label className="text-xs text-slate-400">
+                    {effectiveGenerationSets.length > 0 ? 'Generation Sets per Export' : 'Generations per Export'}
+                  </Label>
                   <Select 
                     value={generationConfigSettings?.generationCountMode || 'range'} 
                     onValueChange={(value) => {
@@ -2492,27 +2508,6 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Generation Sets Controls */}
-        <div className="space-y-3">
-          <Label className="text-sm text-slate-300 font-medium">Generation Sets</Label>
-          <GenerationSetsDropdown
-            currentSetId={effectiveCurrentSetId}
-            generationSets={effectiveGenerationSets}
-            enabledShapeTypes={enabledShapeTypes}
-            scatterSettings={scatterSettings}
-            batchConfigSettings={generationConfigSettings}
-            shapeCountMode={scatterSettings.shapeCountMode as ShapeCountMode}
-            shapeCountFixed={scatterSettings.fixedShapeCount}
-            shapeCountRange={[scatterSettings.minCount, scatterSettings.maxCount]}
-            onSetChange={handleSetChange}
-            onCreateSet={handleCreateSet}
-            onDeleteSet={handleDeleteSet}
-            onOpenManager={handleOpenManager}
-            enabled={setsEnabled}
-            size="sm"
-            showLabel={false}
-          />
-        </div>
 
         {/* Generate Buttons */}
         <div className="flex gap-2">
@@ -4458,22 +4453,7 @@ export default function Sidebar({
       {/* BatchConfigDialog - Moved to stable location to prevent mount/unmount cycles */}
       <BatchConfigDialog
         settings={generationConfigSettings}
-        supportEnhancedMode={true}
         onSettingsChange={handleBatchConfigSettingsChange}
-        
-        // Generation Sets props for bi-directional synchronization
-        generationSets={effectiveGenerationSets}
-        currentGenerationSetId={effectiveCurrentSetId}
-        enabledShapeTypes={enabledShapeTypes}
-        scatterSettings={scatterSettings}
-        shapeCountMode={shapeCountMode}
-        shapeCountFixed={shapeCountFixed}
-        shapeCountRange={shapeCountRange}
-        batchExportCount={batchExportCount}
-        generationCountMode={generationCountMode}
-        onGenerationSetsChange={onGenerationSetsChange}
-        onCurrentGenerationSetChange={onCurrentGenerationSetChange}
-        onOpenGenerationSetsManager={onOpenGenerationSetsManager}
       />
       
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
