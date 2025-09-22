@@ -7,6 +7,7 @@ import {
   type InsertUserPreferences,
   type UpdateUserPreferences,
   type SidebarSectionConfig,
+  type GenerationSet,
   DEFAULT_SIDEBAR_SECTIONS,
 } from "@shared/schema";
 import { db } from "./db";
@@ -23,6 +24,10 @@ export interface IStorage {
   getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
   upsertUserPreferences(userId: string, preferences: UpdateUserPreferences): Promise<UserPreferences>;
   createDefaultUserPreferences(userId: string): Promise<UserPreferences>;
+  
+  // Generation sets operations
+  saveUserGenerationSets(userId: string, generationSets: GenerationSet[], currentSetId?: string | null): Promise<void>;
+  loadUserGenerationSets(userId: string): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }>;
   
   // Other operations
 }
@@ -95,16 +100,43 @@ export class DatabaseStorage implements IStorage {
         id: `${userId}-preferences`,
         userId,
         sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
+        generationSets: [] as any,
+        currentGenerationSetId: null,
       })
       .onConflictDoUpdate({
         target: userPreferences.userId,
         set: {
           sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
+          generationSets: [] as any,
+          currentGenerationSetId: null,
           updatedAt: new Date(),
         },
       })
       .returning();
     return result;
+  }
+
+  // Generation sets operations
+  async saveUserGenerationSets(
+    userId: string, 
+    generationSets: GenerationSet[], 
+    currentSetId?: string | null
+  ): Promise<void> {
+    await this.upsertUserPreferences(userId, {
+      generationSets: generationSets as any,
+      currentGenerationSetId: currentSetId || null,
+    });
+  }
+
+  async loadUserGenerationSets(
+    userId: string
+  ): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }> {
+    const preferences = await this.getUserPreferences(userId);
+    
+    return {
+      generationSets: (preferences?.generationSets as GenerationSet[]) || [],
+      currentSetId: preferences?.currentGenerationSetId || null,
+    };
   }
 
   // Other operations

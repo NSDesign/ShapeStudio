@@ -198,6 +198,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generation sets routes
+  app.get("/api/user/generation-sets", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (isDevelopment) {
+        // Use real persistence even in development
+        const result = await storage.loadUserGenerationSets(userId);
+        res.json(result);
+        return;
+      }
+
+      const result = await storage.loadUserGenerationSets(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error loading generation sets:", error);
+      res.status(500).json({ message: "Failed to load generation sets" });
+    }
+  });
+
+  app.post("/api/user/generation-sets", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { generationSets, currentSetId } = req.body;
+
+      // Validate request body
+      if (!Array.isArray(generationSets)) {
+        return res.status(400).json({ message: "generationSets must be an array" });
+      }
+      
+      if (currentSetId !== null && currentSetId !== undefined && typeof currentSetId !== 'string') {
+        return res.status(400).json({ message: "currentSetId must be a string or null" });
+      }
+      
+      if (isDevelopment) {
+        // Use real persistence even in development
+        await storage.saveUserGenerationSets(userId, generationSets, currentSetId);
+        res.json({ success: true });
+        return;
+      }
+
+      await storage.saveUserGenerationSets(userId, generationSets, currentSetId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving generation sets:", error);
+      res.status(500).json({ message: "Failed to save generation sets" });
+    }
+  });
+
   // Register export API routes
   registerExportRoutes(app);
 

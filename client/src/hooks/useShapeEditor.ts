@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { CurrentUIState } from './useGenerationSets';
+import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -118,9 +119,51 @@ export const useShapeEditor = () => {
   // Batch Configuration Settings - using defaults from BatchConfigDialog
   const [generationConfigSettings, setGenerationConfigSettings] = useState<BatchConfigSettings>(defaultBatchConfigSettings);
   
+  // Generation Sets persistence
+  const {
+    generationSets: persistedGenerationSets,
+    currentSetId: persistedCurrentSetId,
+    saveGenerationSets,
+    isLoading: isLoadingGenerationSets,
+    isReady: isPersistenceReady,
+  } = useGenerationSetsPersistence();
+
   // Generation Sets Management - centralized state for bi-directional sync
   const [generationSets, setGenerationSets] = useState<GenerationSet[]>([]);
   const [currentGenerationSetId, setCurrentGenerationSetId] = useState<string | null>(null);
+
+  // Track if initial load is complete to prevent save loops
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+  
+  // Sync persisted data to local state when loaded
+  useEffect(() => {
+    if (isPersistenceReady && persistedGenerationSets) {
+      setGenerationSets(persistedGenerationSets);
+      setCurrentGenerationSetId(persistedCurrentSetId);
+      setIsInitialLoadComplete(true);
+      console.log('Loaded generation sets from persistence:', persistedGenerationSets.length, 'sets');
+    }
+  }, [isPersistenceReady, persistedGenerationSets, persistedCurrentSetId]);
+
+  // Auto-save when generation sets or current set changes (only after initial load)
+  useEffect(() => {
+    if (isPersistenceReady && isInitialLoadComplete) {
+      // Check if data actually changed by comparing with persisted data
+      const hasChanged = generationSets !== persistedGenerationSets || 
+                        currentGenerationSetId !== persistedCurrentSetId;
+      
+      if (hasChanged) {
+        // Debounce saves to avoid excessive API calls
+        const timeoutId = setTimeout(() => {
+          console.log('Auto-saving generation sets:', generationSets.length, 'sets');
+          saveGenerationSets(generationSets, currentGenerationSetId)
+            .catch(error => console.error('Failed to auto-save generation sets:', error));
+        }, 1000);
+        
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId]);
   const [batchExportCount, setBatchExportCount] = useState(1);
   const [generationCountMode, setGenerationCountMode] = useState<'fixed' | 'range'>('fixed');
   

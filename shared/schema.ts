@@ -52,6 +52,9 @@ export const userPreferences = pgTable("user_preferences", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   // Sidebar section visibility settings
   sidebarSections: jsonb("sidebar_sections").notNull().default('{}'),
+  // Generation sets persistence
+  generationSets: jsonb("generation_sets").notNull().default('[]'),
+  currentGenerationSetId: varchar("current_generation_set_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
