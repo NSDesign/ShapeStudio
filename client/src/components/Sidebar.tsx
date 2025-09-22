@@ -486,8 +486,19 @@ export default function Sidebar({
   const effectiveGenerationSets = generationSets || [];
   const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Check if generation sets are enabled using centralized logic
-  const setsEnabled = areSetsEnabled ? areSetsEnabled(batchExportCount, generationCountMode) : false;
+  // Compute sets enabled state locally with fallbacks and type normalization
+  const effectiveCount = batchExportCount ?? generationConfigSettings.batchExportCount ?? 1;
+  const effectiveMode = generationCountMode ?? generationConfigSettings.generationCountMode ?? 'fixed';
+  const setsEnabled = Number(effectiveCount) > 1 && (effectiveMode === 'fixed' || effectiveMode === 'FIXED');
+  
+  // Debug logging to verify enablement state
+  console.log('Generation Sets Enablement:', { 
+    batchExportCount, 
+    generationCountMode, 
+    effectiveCount, 
+    effectiveMode, 
+    setsEnabled 
+  });
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
