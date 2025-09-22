@@ -82,7 +82,8 @@ export default function ShapeEditor() {
     handleCurrentGenerationSetChange,
     handleBatchExportCountChange,
     handleGenerationCountModeChange,
-    restoreUIStateFromSet
+    restoreUIStateFromSet,
+    areSetsEnabled
   } = useShapeEditor();
 
   // Transform handlers with precise control
@@ -193,6 +194,7 @@ export default function ShapeEditor() {
           onBatchExportCountChange={handleBatchExportCountChange}
           onGenerationCountModeChange={handleGenerationCountModeChange}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
+          areSetsEnabled={areSetsEnabled}
         />
         <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
           <Canvas

@@ -82,7 +82,7 @@ export default function BatchConfigDialog({
   const effectiveGenerationSets = generationSets || [];
   const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Check if generation sets are enabled (simple condition - can be enhanced later)
+  // Check if generation sets are enabled using centralized logic
   const setsEnabled = scatterSettings ? (batchExportCount > 1 && generationCountMode === 'fixed') : false;
 
   // Generation sets handlers

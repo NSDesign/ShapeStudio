@@ -202,6 +202,14 @@ export const useShapeEditor = () => {
     setGenerationCountMode(mode);
   }, []);
 
+  // Check if generation sets are enabled based on batch export settings
+  const areSetsEnabled = useCallback((
+    batchCount: number = batchExportCount,
+    countMode: string = generationCountMode
+  ): boolean => {
+    return batchCount > 1 && countMode === 'fixed';
+  }, [batchExportCount, generationCountMode]);
+
   // UI state restoration from generation set
   const restoreUIStateFromSet = useCallback((setId: string) => {
     const set = generationSets.find(s => s.id === setId);
@@ -2681,6 +2689,7 @@ export const useShapeEditor = () => {
     handleBatchExportCountChange,
     handleGenerationCountModeChange,
     restoreUIStateFromSet,
+    areSetsEnabled,
     generateRandomShapes,
     generateShapesWithBatchConfig,
     scatterOnShape,

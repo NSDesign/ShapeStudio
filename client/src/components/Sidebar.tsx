@@ -397,6 +397,7 @@ interface SidebarProps {
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
+  areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
 }
 
 export default function Sidebar({
@@ -454,7 +455,11 @@ export default function Sidebar({
   generationCountMode = 'fixed',
   onGenerationSetsChange,
   onCurrentGenerationSetChange,
-  onOpenGenerationSetsManager
+  onOpenGenerationSetsManager,
+  onBatchExportCountChange,
+  onGenerationCountModeChange,
+  onRestoreUIStateFromSet,
+  areSetsEnabled
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -477,8 +482,8 @@ export default function Sidebar({
   const effectiveGenerationSets = generationSets || [];
   const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Check if generation sets are enabled (simple condition - can be enhanced later)
-  const setsEnabled = batchExportCount > 1 && generationCountMode === 'fixed';
+  // Check if generation sets are enabled using centralized logic
+  const setsEnabled = areSetsEnabled ? areSetsEnabled(batchExportCount, generationCountMode) : false;
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
@@ -4432,6 +4437,20 @@ export default function Sidebar({
         settings={generationConfigSettings}
         supportEnhancedMode={true}
         onSettingsChange={handleBatchConfigSettingsChange}
+        
+        // Generation Sets props for bi-directional synchronization
+        generationSets={effectiveGenerationSets}
+        currentGenerationSetId={effectiveCurrentSetId}
+        enabledShapeTypes={enabledShapeTypes}
+        scatterSettings={scatterSettings}
+        shapeCountMode={shapeCountMode}
+        shapeCountFixed={shapeCountFixed}
+        shapeCountRange={shapeCountRange}
+        batchExportCount={batchExportCount}
+        generationCountMode={generationCountMode}
+        onGenerationSetsChange={onGenerationSetsChange}
+        onCurrentGenerationSetChange={onCurrentGenerationSetChange}
+        onOpenGenerationSetsManager={onOpenGenerationSetsManager}
       />
     </div>
   );
