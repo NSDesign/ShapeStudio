@@ -5,7 +5,7 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
-import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
 export const useShapeEditor = () => {
@@ -201,6 +201,52 @@ export const useShapeEditor = () => {
   const handleGenerationCountModeChange = useCallback((mode: 'fixed' | 'range') => {
     setGenerationCountMode(mode);
   }, []);
+
+  // Create a new generation set with incremental naming
+  const handleCreateGenerationSet = useCallback((customName?: string) => {
+    // Generate incremental name if none provided
+    const nextNumber = generationSets.length + 1;
+    const setName = customName || `Set ${nextNumber}`;
+    
+    // Create new generation set with proper types
+    const newSetId = `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newSet: GenerationSet = {
+      id: newSetId,
+      name: setName,
+      enabled: true,
+      enabledShapeTypes: Array.from(enabledShapeTypes) as SupportedShapeType[],
+      shapeCountMode: scatterSettings.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE,
+      shapeCountFixed: scatterSettings.fixedShapeCount,
+      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
+      shapeSpecificProperties: {},
+      zIndexConfig: {
+        baseOffset: 0,
+        incrementPerShape: 1,
+        incrementPerGeneration: 1000
+      },
+      batchConfig: { ...generationConfigSettings },
+      generationOrder: generationSets.length,
+      description: `Generated from current settings on ${new Date().toLocaleString()}`
+    };
+    
+    // Add to generation sets and select it
+    const newSets = [...generationSets, newSet];
+    setGenerationSets(newSets);
+    setCurrentGenerationSetId(newSetId);
+    
+    return newSetId;
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets]);
+
+  // Delete a generation set
+  const handleDeleteGenerationSet = useCallback((setId: string) => {
+    const newSets = generationSets.filter(set => set.id !== setId);
+    setGenerationSets(newSets);
+    
+    // If we deleted the current set, clear selection or select first available
+    if (currentGenerationSetId === setId) {
+      setCurrentGenerationSetId(newSets.length > 0 ? newSets[0].id : null);
+    }
+  }, [generationSets, currentGenerationSetId]);
 
   // Check if generation sets are enabled based on batch export settings
   const areSetsEnabled = useCallback((
@@ -2688,6 +2734,8 @@ export const useShapeEditor = () => {
     handleCurrentGenerationSetChange,
     handleBatchExportCountChange,
     handleGenerationCountModeChange,
+    handleCreateGenerationSet,
+    handleDeleteGenerationSet,
     restoreUIStateFromSet,
     areSetsEnabled,
     generateRandomShapes,

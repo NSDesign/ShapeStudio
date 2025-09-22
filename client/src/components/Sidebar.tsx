@@ -393,6 +393,8 @@ interface SidebarProps {
   generationCountMode?: string;
   onGenerationSetsChange?: (sets: GenerationSet[]) => void;
   onCurrentGenerationSetChange?: (setId: string | null) => void;
+  onCreateGenerationSet?: (customName?: string) => string;
+  onDeleteGenerationSet?: (setId: string) => void;
   onOpenGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
@@ -455,6 +457,8 @@ export default function Sidebar({
   generationCountMode = 'fixed',
   onGenerationSetsChange,
   onCurrentGenerationSetChange,
+  onCreateGenerationSet,
+  onDeleteGenerationSet,
   onOpenGenerationSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
@@ -496,18 +500,17 @@ export default function Sidebar({
   }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet]);
 
   const handleCreateSet = useCallback((name: string) => {
-    // For now, this is a placeholder - the actual creation logic will be handled
-    // by the parent component through the centralized state management
-    console.log('Creating generation set:', name);
-    // TODO: Implement centralized set creation
-  }, []);
+    // Call the actual handler from parent component
+    const setId = onCreateGenerationSet?.(name);
+    console.log('Created generation set:', name, 'with ID:', setId);
+    return setId;
+  }, [onCreateGenerationSet]);
 
   const handleDeleteSet = useCallback((setId: string) => {
-    // For now, this is a placeholder - the actual deletion logic will be handled
-    // by the parent component through the centralized state management
-    console.log('Deleting generation set:', setId);
-    // TODO: Implement centralized set deletion
-  }, []);
+    // Call the actual handler from parent component
+    onDeleteGenerationSet?.(setId);
+    console.log('Deleted generation set:', setId);
+  }, [onDeleteGenerationSet]);
 
   const handleOpenManager = useCallback(() => {
     onOpenGenerationSetsManager?.();

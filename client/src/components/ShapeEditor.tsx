@@ -82,6 +82,8 @@ export default function ShapeEditor() {
     handleCurrentGenerationSetChange,
     handleBatchExportCountChange,
     handleGenerationCountModeChange,
+    handleCreateGenerationSet,
+    handleDeleteGenerationSet,
     restoreUIStateFromSet,
     areSetsEnabled
   } = useShapeEditor();
@@ -193,6 +195,8 @@ export default function ShapeEditor() {
           onCurrentGenerationSetChange={handleCurrentGenerationSetChange}
           onBatchExportCountChange={handleBatchExportCountChange}
           onGenerationCountModeChange={handleGenerationCountModeChange}
+          onCreateGenerationSet={handleCreateGenerationSet}
+          onDeleteGenerationSet={handleDeleteGenerationSet}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
           areSetsEnabled={areSetsEnabled}
         />
