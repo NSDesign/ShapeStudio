@@ -491,14 +491,6 @@ export default function Sidebar({
   const effectiveMode = generationCountMode ?? 'fixed';
   const setsEnabled = Number(effectiveCount) > 1 && (effectiveMode === 'fixed' || effectiveMode === 'FIXED');
   
-  // Debug logging to verify enablement state
-  console.log('Generation Sets Enablement:', { 
-    batchExportCount, 
-    generationCountMode, 
-    effectiveCount, 
-    effectiveMode, 
-    setsEnabled 
-  });
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
