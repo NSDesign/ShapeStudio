@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
@@ -394,7 +395,7 @@ interface SidebarProps {
   generationCountMode?: string;
   onGenerationSetsChange?: (sets: GenerationSet[]) => void;
   onCurrentGenerationSetChange?: (setId: string | null) => void;
-  onCreateGenerationSet?: (customName?: string) => string;
+  onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
   onDeleteGenerationSet?: (setId: string) => void;
   onOpenGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
@@ -764,11 +765,21 @@ export default function Sidebar({
       console.log('Auto-set generation count mode to fixed for generation sets');
     }
     
-    // Call the actual handler from parent component
-    const setId = onCreateGenerationSet?.(name);
-    console.log('Created generation set:', name, 'with ID:', setId);
+    // Capture current UI state for the generation set
+    const currentUIState: CurrentUIState = {
+      enabledShapeTypes,
+      scatterSettings,
+      batchConfigSettings: generationConfigSettings,
+      shapeCountMode,
+      shapeCountFixed,
+      shapeCountRange
+    };
+    
+    // Call the actual handler from parent component with UI state
+    const setId = onCreateGenerationSet?.(name, currentUIState);
+    console.log('Created generation set:', name, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateGenerationSet, exportBatchModeEnabled, setExportBatchModeEnabled, generationConfigSettings, onUpdateGenerationConfigSettings]);
+  }, [onCreateGenerationSet, exportBatchModeEnabled, setExportBatchModeEnabled, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');

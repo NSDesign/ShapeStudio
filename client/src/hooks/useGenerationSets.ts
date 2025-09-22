@@ -21,7 +21,7 @@ const convertToShapeType = (shapeTypes: SupportedShapeType[]): Set<ShapeType> =>
 };
 
 // State interface for current UI values
-interface CurrentUIState {
+export interface CurrentUIState {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
   batchConfigSettings: BatchConfigSettings;

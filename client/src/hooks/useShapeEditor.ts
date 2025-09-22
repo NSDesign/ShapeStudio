@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import type { CurrentUIState } from './useGenerationSets';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -202,11 +203,21 @@ export const useShapeEditor = () => {
     setGenerationCountMode(mode);
   }, []);
 
-  // Create a new generation set with incremental naming
-  const handleCreateGenerationSet = useCallback((customName?: string) => {
+  // Create a new generation set with current UI state
+  const handleCreateGenerationSet = useCallback((customName?: string, currentUIState?: CurrentUIState) => {
     // Generate incremental name if none provided
     const nextNumber = generationSets.length + 1;
     const setName = customName || `Set ${nextNumber}`;
+    
+    // Use currentUIState if provided, otherwise fall back to current component state
+    const uiState = currentUIState || {
+      enabledShapeTypes,
+      scatterSettings,
+      batchConfigSettings: generationConfigSettings,
+      shapeCountMode: scatterSettings.shapeCountMode,
+      shapeCountFixed: scatterSettings.fixedShapeCount,
+      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
+    };
     
     // Create new generation set with proper types
     const newSetId = `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -214,17 +225,26 @@ export const useShapeEditor = () => {
       id: newSetId,
       name: setName,
       enabled: true,
-      enabledShapeTypes: Array.from(enabledShapeTypes) as SupportedShapeType[],
-      shapeCountMode: scatterSettings.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE,
-      shapeCountFixed: scatterSettings.fixedShapeCount,
-      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
-      shapeSpecificProperties: {},
+      enabledShapeTypes: Array.from(uiState.enabledShapeTypes || enabledShapeTypes) as SupportedShapeType[],
+      shapeCountMode: (uiState.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE) || 
+                      (scatterSettings.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE),
+      shapeCountFixed: uiState.shapeCountFixed || scatterSettings.fixedShapeCount,
+      shapeCountRange: uiState.shapeCountRange || [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
+      shapeSpecificProperties: {
+        // Capture current shape-specific scatter settings
+        ...Object.fromEntries(
+          Object.entries(uiState.scatterSettings?.shapeSpecific || scatterSettings.shapeSpecific).map(([shapeType, settings]) => [
+            shapeType,
+            settings
+          ])
+        )
+      },
       zIndexConfig: {
         baseOffset: 0,
         incrementPerShape: 1,
         incrementPerGeneration: 1000
       },
-      batchConfig: { ...generationConfigSettings },
+      batchConfig: { ...(uiState.batchConfigSettings || generationConfigSettings) },
       generationOrder: generationSets.length,
       description: `Generated from current settings on ${new Date().toLocaleString()}`
     };
