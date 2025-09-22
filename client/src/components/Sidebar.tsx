@@ -1866,18 +1866,9 @@ export default function Sidebar({
     });
   }, []);
 
-  // Memoized callback to prevent infinite re-mounting of BatchConfigDialog
-  const handleBatchConfigSettingsChange = useCallback((settings: BatchConfigSettings | EnhancedBatchConfig) => {
-    // Handle both BatchConfigSettings and EnhancedBatchConfig
-    if ('mode' in settings && 'globalSettings' in settings) {
-      // It's EnhancedBatchConfig - for now, just handle the legacy part
-      if (settings.legacyBatchConfig) {
-        onUpdateGenerationConfigSettings(settings.legacyBatchConfig);
-      }
-    } else {
-      // It's BatchConfigSettings
-      onUpdateGenerationConfigSettings(settings as BatchConfigSettings);
-    }
+  // Simplified callback for BatchConfigDialog
+  const handleBatchConfigSettingsChange = useCallback((settings: BatchConfigSettings) => {
+    onUpdateGenerationConfigSettings(settings);
   }, [onUpdateGenerationConfigSettings]);
 
   function ShapeTypesContent() {

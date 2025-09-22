@@ -9,107 +9,32 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, EnhancedBatchConfig, GenerationSetMode, GenerationSet, DEFAULT_GENERATION_SET_LIMITS, BlendMode, ShapeCountMode, SupportedShapeType } from '@shared/schema';
-import { GenerationSetsInterface } from './GenerationSetsInterface';
-import { GenerationSetsDropdown } from './GenerationSetsDropdown';
-import { validateGenerationSets } from '../lib/generationSetValidation';
-import { ValidationError, ValidationWarning } from '../lib/typedHelpers';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
 
 interface BatchConfigDialogProps {
-  settings: BatchConfigSettings | EnhancedBatchConfig;
-  onSettingsChange: (settings: BatchConfigSettings | EnhancedBatchConfig) => void;
+  settings: BatchConfigSettings;
+  onSettingsChange: (settings: BatchConfigSettings) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  // Support for enhanced batch config mode
-  supportEnhancedMode?: boolean;
-  
-  // Generation Sets Management
-  generationSets?: GenerationSet[];
-  currentGenerationSetId?: string | null;
-  enabledShapeTypes?: Set<ShapeType>;
-  scatterSettings?: ScatterSettings;
-  shapeCountMode?: ShapeCountMode;
-  shapeCountFixed?: number;
-  shapeCountRange?: [number, number];
-  batchExportCount?: number;
-  generationCountMode?: string;
-  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
-  onCurrentGenerationSetChange?: (setId: string | null) => void;
-  onOpenGenerationSetsManager?: () => void;
 }
 
 export default function BatchConfigDialog({ 
   settings, 
   onSettingsChange, 
   isOpen: controlledIsOpen, 
-  onOpenChange: controlledOnOpenChange, 
-  supportEnhancedMode = false,
-  
-  // Generation Sets Management
-  generationSets = [],
-  currentGenerationSetId = null,
-  enabledShapeTypes = new Set(),
-  scatterSettings,
-  shapeCountMode = 'fixed' as ShapeCountMode,
-  shapeCountFixed = 10,
-  shapeCountRange = [5, 15] as [number, number],
-  batchExportCount = 1,
-  generationCountMode = 'fixed',
-  onGenerationSetsChange,
-  onCurrentGenerationSetChange,
-  onOpenGenerationSetsManager
+  onOpenChange: controlledOnOpenChange
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
-  const [enhancedConfig, setEnhancedConfig] = useState<EnhancedBatchConfig | null>(null);
-  const [selectedMode, setSelectedMode] = useState<GenerationSetMode>(GenerationSetMode.SINGLE);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  // Enhanced validation state tracking
-  const [overallValidationState, setOverallValidationState] = useState<{
-    isValid: boolean;
-    errors: ValidationError[];
-    warnings: ValidationWarning[];
-  }>({ isValid: true, errors: [], warnings: [] });
-  const [showValidationBanner, setShowValidationBanner] = useState(false);
 
-  // Use centralized generation sets state from parent
-  const effectiveGenerationSets = generationSets || [];
-  const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Check if generation sets are enabled using centralized logic
-  const setsEnabled = scatterSettings ? (batchExportCount > 1 && generationCountMode === 'fixed') : false;
-
-  // Generation sets handlers
-  const handleSetChange = useCallback((setId: string | null) => {
-    onCurrentGenerationSetChange?.(setId);
-    
-    // Restore UI state if a set is selected - handled by parent
-    // Parent component will restore state through restoreUIStateFromSet
-  }, [onCurrentGenerationSetChange]);
-
-  const handleCreateSet = useCallback((name: string) => {
-    // For now, this is a placeholder - the actual creation logic will be handled
-    // by the parent component through the centralized state management
-    console.log('Creating generation set from BatchConfigDialog:', name);
-    // TODO: Implement centralized set creation
-  }, []);
-
-  const handleDeleteSet = useCallback((setId: string) => {
-    // For now, this is a placeholder - the actual deletion logic will be handled
-    // by the parent component through the centralized state management
-    console.log('Deleting generation set from BatchConfigDialog:', setId);
-    // TODO: Implement centralized set deletion
-  }, []);
-
-  const handleOpenManager = useCallback(() => {
-    onOpenGenerationSetsManager?.();
-  }, [onOpenGenerationSetsManager]);
 
   // Sync with external control
   useEffect(() => {
@@ -132,32 +57,11 @@ export default function BatchConfigDialog({
     console.log('[BatchConfigDialog] Dialog state changed:', { isOpen });
   }, [isOpen]);
 
-  // Initialize settings based on mode and input type
+  // Initialize settings 
   useEffect(() => {
-    if (supportEnhancedMode && isEnhancedBatchConfig(settings)) {
-      // Handle EnhancedBatchConfig
-      setEnhancedConfig(settings);
-      setSelectedMode(settings.mode);
-      
-      if (settings.mode === GenerationSetMode.SINGLE && settings.legacyBatchConfig) {
-        const mergedSettings = { ...defaultSettings, ...settings.legacyBatchConfig };
-        setCurrentSettings(mergedSettings);
-      } else {
-        setCurrentSettings(defaultSettings);
-      }
-    } else {
-      // Handle legacy BatchConfigSettings
-      const mergedSettings = { ...defaultSettings, ...settings as BatchConfigSettings };
-      setCurrentSettings(mergedSettings);
-      setSelectedMode(GenerationSetMode.SINGLE);
-      setEnhancedConfig(null);
-    }
-  }, [settings, supportEnhancedMode]);
-  
-  // Helper function to check if settings is EnhancedBatchConfig
-  const isEnhancedBatchConfig = (settings: BatchConfigSettings | EnhancedBatchConfig): settings is EnhancedBatchConfig => {
-    return 'mode' in settings && 'globalSettings' in settings;
-  };
+    const mergedSettings = { ...defaultSettings, ...settings };
+    setCurrentSettings(mergedSettings);
+  }, [settings]);
 
   const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings>) => {
     console.log('[BatchConfigDialog] Settings update triggered:', {
@@ -213,67 +117,15 @@ export default function BatchConfigDialog({
     setCurrentSettings(defaultSettings);
   }, []);
 
-  // Comprehensive validation callback from GenerationSetsInterface
-  const handleGenerationSetsValidationChange = useCallback((isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => {
-    console.log('[BatchConfigDialog] Generation sets validation changed:', { isValid, errorCount: errors.length, warningCount: warnings.length });
-    setOverallValidationState({ isValid, errors, warnings });
-    setShowValidationBanner(!isValid || warnings.length > 0);
+  // Simple validation for legacy mode
+  const validateConfiguration = useCallback((): string | null => {
+    return null; // No validation needed for legacy mode
   }, []);
 
-  // Enhanced validation combining local and generation sets validation
-  const validateConfiguration = useCallback((): string | null => {
-    // Legacy validation for single mode
-    if (!supportEnhancedMode || selectedMode === GenerationSetMode.SINGLE) {
-      return null; // No validation needed for legacy mode
-    }
-    
-    // Multi-generation mode validations
-    const restrictions = enhancedConfig?.modeRestrictions || {
-      multiGenerationOnlyForFixedCount: true,
-      maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
-      minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
-      maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
-    };
-    
-    const generationSets = enhancedConfig?.generationSets || [];
-    
-    if (generationSets.length === 0) {
-      return 'Multi-generation mode requires at least one generation set';
-    }
-    
-    if (generationSets.length > restrictions.maxGenerationSets) {
-      return `Maximum ${restrictions.maxGenerationSets} generation sets allowed`;
-    }
-    
-    // Check fixed count requirement if enabled
-    if (restrictions.multiGenerationOnlyForFixedCount) {
-      const hasVariableCount = generationSets.some(set => 
-        set.shapeCountMode !== 'fixed'
-      );
-      if (hasVariableCount) {
-        return 'Multi-generation mode requires fixed generation count for all sets';
-      }
-    }
-    
-    // Check shape count limits
-    for (const set of generationSets) {
-      const shapeCount = set.shapeCountMode === 'fixed' 
-        ? set.shapeCountFixed 
-        : Math.max(set.shapeCountRange[0], set.shapeCountRange[1]);
-      if (shapeCount < restrictions.minShapesPerSet || shapeCount > restrictions.maxShapesPerSet) {
-        return `Shape count must be between ${restrictions.minShapesPerSet} and ${restrictions.maxShapesPerSet}`;
-      }
-    }
-    
-    return null;
-  }, [supportEnhancedMode, selectedMode, enhancedConfig]);
-
-  // Combined validation state for export actions
+  // Simple export validation
   const isExportDisabled = useCallback((): boolean => {
-    const hasLocalValidationError = !!validateConfiguration();
-    const hasGenerationSetsValidationError = !overallValidationState.isValid;
-    return hasLocalValidationError || hasGenerationSetsValidationError;
-  }, [validateConfiguration, overallValidationState.isValid]);
+    return !!validateConfiguration();
+  }, [validateConfiguration]);
   
   // Update validation error state when configuration changes
   useEffect(() => {
@@ -284,57 +136,21 @@ export default function BatchConfigDialog({
   const applySettings = useCallback(() => {
     console.log('[BatchConfigDialog] Applying settings to parent');
     
-    // Comprehensive validation check before applying
+    // Simple validation check before applying
     const currentValidationError = validateConfiguration();
     const exportBlocked = isExportDisabled();
     
     if (currentValidationError || exportBlocked) {
       console.error('[BatchConfigDialog] Validation failed:', { 
-        localError: currentValidationError, 
-        generationSetsValid: overallValidationState.isValid,
-        errorCount: overallValidationState.errors.length 
+        localError: currentValidationError
       });
-      // Error is already shown in UI via validation displays
       return;
     }
     
-    if (supportEnhancedMode) {
-      // Create or update EnhancedBatchConfig
-      const now = new Date().toISOString();
-      const updatedEnhancedConfig: EnhancedBatchConfig = {
-        mode: selectedMode,
-        legacyBatchConfig: selectedMode === GenerationSetMode.SINGLE ? currentSettings : undefined,
-        generationSets: enhancedConfig?.generationSets || [],
-        globalSettings: enhancedConfig?.globalSettings || {
-          canvasWidth: 800,
-          canvasHeight: 600,
-          exportFormat: 'png',
-          exportQuality: 90,
-          globalZIndexSettings: {
-            startingZIndex: 1000,
-            setSpacing: 1000,
-            preventOverlap: true,
-            useGlobalSettings: true
-          }
-        },
-        modeRestrictions: enhancedConfig?.modeRestrictions || {
-          multiGenerationOnlyForFixedCount: true,
-          maxGenerationSets: DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
-          minShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
-          maxShapesPerSet: DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet
-        },
-        createdAt: enhancedConfig?.createdAt || now,
-        updatedAt: now,
-        version: '1.0.0'
-      };
-      onSettingsChange(updatedEnhancedConfig);
-    } else {
-      // Legacy mode - return BatchConfigSettings
-      onSettingsChange(currentSettings);
-    }
-    
+    // Apply legacy batch config settings
+    onSettingsChange(currentSettings);
     setIsOpen(false);
-  }, [currentSettings, selectedMode, enhancedConfig, supportEnhancedMode, onSettingsChange, validateConfiguration]);
+  }, [currentSettings, onSettingsChange, validateConfiguration, isExportDisabled]);
 
   const blendModes: BlendMode[] = [
     'source-over', 'multiply', 'screen', 'overlay', 'darken', 
