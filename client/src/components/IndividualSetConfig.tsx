@@ -560,8 +560,19 @@ export function IndividualSetConfig({
 
             <Separator className="bg-slate-700" />
 
-            {/* Shape Types Selection */}
-            <div className="space-y-4">
+            {/* Note: Shape Types Selection has been moved to the main generation UI */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4 text-blue-400" />
+                <h4 className="text-sm font-medium text-blue-200">Shape Types Configuration</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                Shape types and their properties are now configured in the main generation UI using the Generation Sets dropdown. 
+                This ensures all current settings are captured when saving or loading generation sets.
+              </p>
+            </div>
+
+            <div className="space-y-4" style={{ display: 'none' }}>
               <div className="flex items-center gap-2 justify-between" data-testid="section-shape-types">
                 <div className="flex items-center gap-2">
                   <Palette className="w-4 h-4 text-slate-400" />
@@ -739,8 +750,20 @@ export function IndividualSetConfig({
               </div>
             )}
 
-            {/* Shape-Specific Properties */}
-            {generationSet.enabledShapeTypes.length > 0 && (
+            {/* Note: Shape-Specific Properties have been moved to the main generation UI */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <Settings className="w-4 h-4 text-blue-400" />
+                <h4 className="text-sm font-medium text-blue-200">Shape-Specific Properties</h4>
+              </div>
+              <p className="text-xs text-slate-400">
+                Shape-specific properties (corner radius, point counts, etc.) are now configured in the main generation UI. 
+                These settings are automatically captured and restored when working with generation sets.
+              </p>
+            </div>
+
+            {/* Shape-Specific Properties - Hidden */}
+            {false && generationSet.enabledShapeTypes.length > 0 && (
               <>
                 <Separator className="bg-slate-700" />
                 

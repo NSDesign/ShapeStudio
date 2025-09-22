@@ -398,30 +398,6 @@ export default function BatchConfigDialog({
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
-              {/* Generation Sets Dropdown */}
-              {scatterSettings && (
-                <div className="space-y-2">
-                  <GenerationSetsDropdown
-                    currentSetId={effectiveCurrentSetId}
-                    generationSets={effectiveGenerationSets}
-                    enabledShapeTypes={enabledShapeTypes}
-                    scatterSettings={scatterSettings}
-                    batchConfigSettings={currentSettings}
-                    shapeCountMode={shapeCountMode}
-                    shapeCountFixed={shapeCountFixed}
-                    shapeCountRange={shapeCountRange}
-                    onSetChange={handleSetChange}
-                    onCreateSet={handleCreateSet}
-                    onDeleteSet={handleDeleteSet}
-                    onOpenManager={handleOpenManager}
-                    enabled={setsEnabled}
-                    size="default"
-                    showLabel={true}
-                    data-testid="batch-config-generation-sets"
-                  />
-                  <Separator className="bg-slate-600" />
-                </div>
-              )}
               
               {/* Mode Selection (only show if enhanced mode is supported) */}
               {supportEnhancedMode && (

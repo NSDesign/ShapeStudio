@@ -487,8 +487,8 @@ export default function Sidebar({
   const effectiveCurrentSetId = currentGenerationSetId;
 
   // Compute sets enabled state locally with fallbacks and type normalization
-  const effectiveCount = batchExportCount ?? generationConfigSettings.batchExportCount ?? 1;
-  const effectiveMode = generationCountMode ?? generationConfigSettings.generationCountMode ?? 'fixed';
+  const effectiveCount = batchExportCount ?? 1;
+  const effectiveMode = generationCountMode ?? 'fixed';
   const setsEnabled = Number(effectiveCount) > 1 && (effectiveMode === 'fixed' || effectiveMode === 'FIXED');
   
   // Debug logging to verify enablement state
@@ -2503,6 +2503,28 @@ export default function Sidebar({
               />
             </div>
           )}
+        </div>
+
+        {/* Generation Sets Controls */}
+        <div className="space-y-3">
+          <Label className="text-sm text-slate-300 font-medium">Generation Sets</Label>
+          <GenerationSetsDropdown
+            currentSetId={effectiveCurrentSetId}
+            generationSets={effectiveGenerationSets}
+            enabledShapeTypes={enabledShapeTypes}
+            scatterSettings={scatterSettings}
+            batchConfigSettings={generationConfigSettings}
+            shapeCountMode={scatterSettings.shapeCountMode as ShapeCountMode}
+            shapeCountFixed={scatterSettings.fixedShapeCount}
+            shapeCountRange={[scatterSettings.minCount, scatterSettings.maxCount]}
+            onSetChange={handleSetChange}
+            onCreateSet={handleCreateSet}
+            onDeleteSet={handleDeleteSet}
+            onOpenManager={handleOpenManager}
+            enabled={setsEnabled}
+            size="sm"
+            showLabel={false}
+          />
         </div>
 
         {/* Generate Buttons */}
