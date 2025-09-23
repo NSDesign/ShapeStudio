@@ -75,37 +75,6 @@ export function SetsManagerDialog({
           </Button>
         </div>
 
-        {/* Validation Status (if needed) */}
-        {(!validationState.isValid || validationState.warnings.length > 0) && (
-          <div className={`p-4 border-b border-slate-700 ${
-            validationState.errors.length > 0 
-              ? 'bg-red-900/20' 
-              : 'bg-yellow-900/20'
-          }`}>
-            <div className="text-sm">
-              {validationState.errors.length > 0 && (
-                <div className="text-red-300 mb-2">
-                  <strong>{validationState.errors.length} Error{validationState.errors.length !== 1 ? 's' : ''}:</strong>
-                  <ul className="list-disc list-inside mt-1">
-                    {validationState.errors.map((error, index) => (
-                      <li key={index}>{error.message}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {validationState.warnings.length > 0 && (
-                <div className="text-yellow-300">
-                  <strong>{validationState.warnings.length} Warning{validationState.warnings.length !== 1 ? 's' : ''}:</strong>
-                  <ul className="list-disc list-inside mt-1">
-                    {validationState.warnings.map((warning, index) => (
-                      <li key={index}>{warning.message}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
