@@ -9,6 +9,7 @@ import {
   DEFAULT_Z_INDEX_CONFIG
 } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
+import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 
 // Convert client ShapeType to shared SupportedShapeType
 const convertToSupportedShapeType = (shapeTypes: Set<ShapeType>): SupportedShapeType[] => {
@@ -81,36 +82,24 @@ export function useGenerationSets({
     };
   }, [generationSets.length]);
 
-  // Generate unique set name with auto-increment
+  // Generate unique set name with auto-increment using shared utility
   const generateUniqueSetName = useCallback((baseName?: string): string => {
-    const base = baseName || 'Set';
-    const existingNames = new Set(generationSets.map(set => set.name));
-    
-    // Find next available number
-    let counter = 1;
-    let candidateName = `${base} ${counter}`;
-    
-    while (existingNames.has(candidateName)) {
-      counter++;
-      candidateName = `${base} ${counter}`;
-    }
-    
-    return candidateName;
+    const existingNames = generationSets.map(set => set.name);
+    return generateUniqueName(existingNames, baseName);
   }, [generationSets]);
 
   // Create a new generation set from current UI state
   const createSetFromCurrentState = useCallback((
-    setName?: string,
-    uiState?: CurrentUIState
+    uiState: CurrentUIState,
+    setName?: string
   ) => {
-    const currentState = uiState || getCurrentUIState();
     const finalName = setName || generateUniqueSetName();
-    const newSet = captureCurrentState(currentState, finalName);
+    const newSet = captureCurrentState(uiState, finalName);
     const newSets = [...generationSets, newSet];
     updateSets(newSets);
     setCurrentSetId(newSet.id);
     return newSet.id;
-  }, [generationSets, captureCurrentState, updateSets, generateUniqueSetName, getCurrentUIState]);
+  }, [generationSets, captureCurrentState, updateSets, generateUniqueSetName]);
 
   // Update existing set with current UI state
   const updateSetWithCurrentState = useCallback((

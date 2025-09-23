@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { CurrentUIState } from './useGenerationSets';
 import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
+import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -247,21 +248,10 @@ export const useShapeEditor = () => {
     setGenerationCountMode(mode);
   }, []);
 
-  // Generate unique set name with auto-increment
+  // Generate unique set name with auto-increment using shared utility
   const generateUniqueSetName = useCallback((baseName?: string): string => {
-    const base = baseName || 'Set';
-    const existingNames = new Set(generationSets.map(set => set.name));
-    
-    // Find next available number
-    let counter = 1;
-    let candidateName = `${base} ${counter}`;
-    
-    while (existingNames.has(candidateName)) {
-      counter++;
-      candidateName = `${base} ${counter}`;
-    }
-    
-    return candidateName;
+    const existingNames = generationSets.map(set => set.name);
+    return generateUniqueName(existingNames, baseName);
   }, [generationSets]);
 
   // Create a new generation set with current UI state
