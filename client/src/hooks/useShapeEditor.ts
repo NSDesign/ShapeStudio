@@ -136,15 +136,45 @@ export const useShapeEditor = () => {
   // Track if initial load is complete to prevent save loops
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
   
+  // Migration function to ensure old sets have new properties
+  const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
+    return sets.map(set => ({
+      ...set,
+      // Add new set-level properties with defaults if they don't exist
+      setVisibility: set.setVisibility || {
+        visible: true,
+        opacity: 1.0,
+        opacityVariance: 0.0
+      },
+      setBlendMode: set.setBlendMode || 'source-over',
+      compositingOperation: set.compositingOperation || 'source-over',
+      setTransform: set.setTransform || {
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        transformOrigin: 'center'
+      },
+      artboardAlignment: set.artboardAlignment || {
+        fitToArtboard: false,
+        alignTo: 'none',
+        alignmentType: 'center',
+        margin: 0
+      }
+    }));
+  }, []);
+
   // Sync persisted data to local state when loaded
   useEffect(() => {
     if (isPersistenceReady && persistedGenerationSets) {
-      setGenerationSets(persistedGenerationSets);
+      const migratedSets = migrateGenerationSets(persistedGenerationSets);
+      setGenerationSets(migratedSets);
       setCurrentGenerationSetId(persistedCurrentSetId);
       setIsInitialLoadComplete(true);
-      console.log('Loaded generation sets from persistence:', persistedGenerationSets.length, 'sets');
+      console.log('Loaded generation sets from persistence:', migratedSets.length, 'sets');
     }
-  }, [isPersistenceReady, persistedGenerationSets, persistedCurrentSetId]);
+  }, [isPersistenceReady, persistedGenerationSets, persistedCurrentSetId, migrateGenerationSets]);
 
   // Auto-save when generation sets or current set changes (only after initial load)
   useEffect(() => {
@@ -296,7 +326,29 @@ export const useShapeEditor = () => {
       },
       batchConfig: { ...(uiState.batchConfigSettings || generationConfigSettings) },
       generationOrder: generationSets.length,
-      description: `Generated from current settings on ${new Date().toLocaleString()}`
+      description: `Generated from current settings on ${new Date().toLocaleString()}`,
+      // New set-level features with sensible defaults
+      setVisibility: {
+        visible: true,
+        opacity: 1.0,
+        opacityVariance: 0.0
+      },
+      setBlendMode: 'source-over',
+      compositingOperation: 'source-over',
+      setTransform: {
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        transformOrigin: 'center'
+      },
+      artboardAlignment: {
+        fitToArtboard: false,
+        alignTo: 'none',
+        alignmentType: 'center',
+        margin: 0
+      }
     };
     
     // Add to generation sets and select it
