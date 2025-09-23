@@ -148,11 +148,12 @@ export const useShapeEditor = () => {
   // Auto-save when generation sets or current set changes (only after initial load)
   useEffect(() => {
     if (isPersistenceReady && isInitialLoadComplete) {
-      // Check if data actually changed by comparing with persisted data
-      const hasChanged = generationSets !== persistedGenerationSets || 
-                        currentGenerationSetId !== persistedCurrentSetId;
+      // Deep comparison for arrays and simple comparison for primitives
+      const setsChanged = generationSets.length !== persistedGenerationSets.length ||
+                         JSON.stringify(generationSets) !== JSON.stringify(persistedGenerationSets);
+      const currentSetChanged = currentGenerationSetId !== persistedCurrentSetId;
       
-      if (hasChanged) {
+      if (setsChanged || currentSetChanged) {
         // Debounce saves to avoid excessive API calls
         const timeoutId = setTimeout(() => {
           console.log('Auto-saving generation sets:', generationSets.length, 'sets');
