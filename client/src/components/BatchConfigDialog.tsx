@@ -33,6 +33,11 @@ export default function BatchConfigDialog({
   const [showExplanation, setShowExplanation] = useState(false);
   const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showValidationBanner, setShowValidationBanner] = useState(false);
+  const [overallValidationState, setOverallValidationState] = useState<{
+    errors: Array<{ message: string }>;
+    warnings: Array<{ message: string }>;
+  }>({ errors: [], warnings: [] });
 
 
 

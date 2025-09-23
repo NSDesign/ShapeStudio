@@ -1,0 +1,29 @@
+When opening the generation configuration dialog I get the following on screen error;
+
+[plugin:runtime-error-plugin] Can't find variable: showValidationBanner
+
+And in the console there are the following errors too;
+
+The above error occurred in the <BatchConfigDialog> component:
+
+BatchConfigDialog@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/BatchConfigDialog.tsx:32:11
+div
+Sidebar@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/Sidebar.tsx:305:20
+div
+div
+ShapeEditor@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/components/ShapeEditor.tsx:102:21
+div
+Home
+Route@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:323:14
+Switch@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js:380:27
+Router@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/src/App.tsx:29:49
+TooltipProviderProvider@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QBKL35SI.js:38:13
+TooltipProvider@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js:64:43
+QueryClientProvider@https://c8603b02-bb36-4e10-b483-caacf3934ec6-00-m4tqd8cyl6tx.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js:2805:9
+App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Can't find variable: showValidationBanner
+
+This might help with understanding the error, I've also put you in build mode to rectify these errors so you better understand the original scope question regarding the set dropdown creation naming and sets manager unique naming that was already implemented and if we can simply use this Implementation if it's in scope for the other areas in the app the set dropdown s are used
