@@ -397,6 +397,7 @@ interface SidebarProps {
   onCurrentGenerationSetChange?: (setId: string | null) => void;
   onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
   onDeleteGenerationSet?: (setId: string) => void;
+  generateUniqueSetName?: (baseName?: string) => string;
   onOpenGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
@@ -461,6 +462,7 @@ export default function Sidebar({
   onCurrentGenerationSetChange,
   onCreateGenerationSet,
   onDeleteGenerationSet,
+  generateUniqueSetName,
   onOpenGenerationSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
@@ -4308,6 +4310,7 @@ export default function Sidebar({
                       shapeCountRange={shapeCountRange}
                       onSetChange={handleSetChange}
                       onCreateSet={handleCreateSet}
+                      generateUniqueSetName={generateUniqueSetName}
                       onDeleteSet={handleDeleteSet}
                       onOpenManager={handleOpenManager}
                       enabled={setsEnabled}

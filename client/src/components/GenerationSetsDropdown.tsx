@@ -24,6 +24,9 @@ interface GenerationSetsDropdownProps {
   onDeleteSet: (setId: string) => void;
   onOpenManager: () => void;
   
+  // Name generation
+  generateUniqueSetName?: (baseName?: string) => string;
+  
   // Conditional enabling
   enabled: boolean;
   
@@ -47,6 +50,7 @@ export function GenerationSetsDropdown({
   onCreateSet,
   onDeleteSet,
   onOpenManager,
+  generateUniqueSetName,
   enabled,
   className = '',
   size = 'default',
@@ -56,12 +60,18 @@ export function GenerationSetsDropdown({
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [newSetName, setNewSetName] = useState('');
 
+  // Pre-populate with auto-generated name when opening create dialog
+  const handleOpenCreate = () => {
+    const suggestedName = generateUniqueSetName ? generateUniqueSetName() : 'Set 1';
+    setNewSetName(suggestedName);
+    setIsCreatingSet(true);
+  };
+
   const handleCreateSet = () => {
-    if (newSetName.trim()) {
-      onCreateSet(newSetName.trim());
-      setNewSetName('');
-      setIsCreatingSet(false);
-    }
+    const finalName = newSetName.trim() || (generateUniqueSetName ? generateUniqueSetName() : 'Set 1');
+    onCreateSet(finalName);
+    setNewSetName('');
+    setIsCreatingSet(false);
   };
 
   const handleDeleteCurrentSet = () => {
@@ -126,7 +136,7 @@ export function GenerationSetsDropdown({
       <Button
         variant="outline"
         size={buttonSize}
-        onClick={() => setIsCreatingSet(true)}
+        onClick={handleOpenCreate}
         disabled={!enabled}
         className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title="Create new generation set"

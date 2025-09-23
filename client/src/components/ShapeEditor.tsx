@@ -84,6 +84,7 @@ export default function ShapeEditor() {
     handleGenerationCountModeChange,
     handleCreateGenerationSet,
     handleDeleteGenerationSet,
+    generateUniqueSetName,
     restoreUIStateFromSet,
     areSetsEnabled
   } = useShapeEditor();
@@ -197,6 +198,7 @@ export default function ShapeEditor() {
           onGenerationCountModeChange={handleGenerationCountModeChange}
           onCreateGenerationSet={handleCreateGenerationSet}
           onDeleteGenerationSet={handleDeleteGenerationSet}
+          generateUniqueSetName={generateUniqueSetName}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
           areSetsEnabled={areSetsEnabled}
         />

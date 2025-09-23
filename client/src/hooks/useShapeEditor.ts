@@ -247,11 +247,27 @@ export const useShapeEditor = () => {
     setGenerationCountMode(mode);
   }, []);
 
+  // Generate unique set name with auto-increment
+  const generateUniqueSetName = useCallback((baseName?: string): string => {
+    const base = baseName || 'Set';
+    const existingNames = new Set(generationSets.map(set => set.name));
+    
+    // Find next available number
+    let counter = 1;
+    let candidateName = `${base} ${counter}`;
+    
+    while (existingNames.has(candidateName)) {
+      counter++;
+      candidateName = `${base} ${counter}`;
+    }
+    
+    return candidateName;
+  }, [generationSets]);
+
   // Create a new generation set with current UI state
   const handleCreateGenerationSet = useCallback((customName?: string, currentUIState?: CurrentUIState) => {
-    // Generate incremental name if none provided
-    const nextNumber = generationSets.length + 1;
-    const setName = customName || `Set ${nextNumber}`;
+    // Generate unique name if none provided
+    const setName = customName || generateUniqueSetName();
     
     // Use currentUIState if provided, otherwise fall back to current component state
     const uiState = currentUIState || {
@@ -299,7 +315,7 @@ export const useShapeEditor = () => {
     setCurrentGenerationSetId(newSetId);
     
     return newSetId;
-  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets]);
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName]);
 
   // Delete a generation set
   const handleDeleteGenerationSet = useCallback((setId: string) => {
@@ -2800,6 +2816,7 @@ export const useShapeEditor = () => {
     handleGenerationCountModeChange,
     handleCreateGenerationSet,
     handleDeleteGenerationSet,
+    generateUniqueSetName,
     restoreUIStateFromSet,
     areSetsEnabled,
     generateRandomShapes,

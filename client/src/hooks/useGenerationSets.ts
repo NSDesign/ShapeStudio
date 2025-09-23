@@ -81,17 +81,36 @@ export function useGenerationSets({
     };
   }, [generationSets.length]);
 
+  // Generate unique set name with auto-increment
+  const generateUniqueSetName = useCallback((baseName?: string): string => {
+    const base = baseName || 'Set';
+    const existingNames = new Set(generationSets.map(set => set.name));
+    
+    // Find next available number
+    let counter = 1;
+    let candidateName = `${base} ${counter}`;
+    
+    while (existingNames.has(candidateName)) {
+      counter++;
+      candidateName = `${base} ${counter}`;
+    }
+    
+    return candidateName;
+  }, [generationSets]);
+
   // Create a new generation set from current UI state
   const createSetFromCurrentState = useCallback((
-    setName: string,
-    uiState: CurrentUIState
+    setName?: string,
+    uiState?: CurrentUIState
   ) => {
-    const newSet = captureCurrentState(uiState, setName);
+    const currentState = uiState || getCurrentUIState();
+    const finalName = setName || generateUniqueSetName();
+    const newSet = captureCurrentState(currentState, finalName);
     const newSets = [...generationSets, newSet];
     updateSets(newSets);
     setCurrentSetId(newSet.id);
     return newSet.id;
-  }, [generationSets, captureCurrentState, updateSets]);
+  }, [generationSets, captureCurrentState, updateSets, generateUniqueSetName, getCurrentUIState]);
 
   // Update existing set with current UI state
   const updateSetWithCurrentState = useCallback((
@@ -198,6 +217,7 @@ export function useGenerationSets({
     
     // Utilities
     areSetsEnabled,
+    generateUniqueSetName,
     
     // Direct set management
     updateSets

@@ -75,22 +75,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUserPreferences(userId: string, preferences: UpdateUserPreferences): Promise<UserPreferences> {
-    const [result] = await db
-      .insert(userPreferences)
-      .values({
-        id: `${userId}-preferences`,
-        userId,
-        ...preferences,
-      })
-      .onConflictDoUpdate({
-        target: userPreferences.userId,
-        set: {
+    const preferencesId = `${userId}-preferences`;
+    
+    // Check if preferences exist
+    const existing = await this.getUserPreferences(userId);
+    
+    if (existing) {
+      // Update existing preferences
+      const [result] = await db
+        .update(userPreferences)
+        .set({
           ...preferences,
           updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return result;
+        })
+        .where(eq(userPreferences.id, preferencesId))
+        .returning();
+      return result;
+    } else {
+      // Insert new preferences
+      const [result] = await db
+        .insert(userPreferences)
+        .values({
+          id: preferencesId,
+          userId,
+          ...preferences,
+        })
+        .returning();
+      return result;
+    }
   }
 
   async createDefaultUserPreferences(userId: string): Promise<UserPreferences> {
@@ -104,7 +116,7 @@ export class DatabaseStorage implements IStorage {
         currentGenerationSetId: null,
       })
       .onConflictDoUpdate({
-        target: userPreferences.userId,
+        target: userPreferences.id,  // Use primary key, not foreign key
         set: {
           sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
           generationSets: [] as any,
