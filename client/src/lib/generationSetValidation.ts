@@ -147,6 +147,86 @@ export function validateGenerationSet(generationSet: GenerationSet): ValidationR
     }
   }
 
+  // Validate set visibility
+  if (generationSet.setVisibility) {
+    const { opacity } = generationSet.setVisibility;
+    
+    if (opacity < 0 || opacity > 1) {
+      errors.push('Set opacity must be between 0 and 1');
+    }
+    
+    if (opacity < 0.1) {
+      warnings.push('Very low set opacity may make shapes nearly invisible');
+    }
+  }
+
+  // Validate set transforms
+  if (generationSet.setTransform) {
+    const { x, y, rotation, scaleX, scaleY } = generationSet.setTransform;
+    
+    // Position validation
+    if (Math.abs(x) > 5000 || Math.abs(y) > 5000) {
+      warnings.push('Extreme set position values may move shapes outside visible area');
+    }
+    
+    // Rotation validation
+    if (Math.abs(rotation) > 360) {
+      warnings.push('Set rotation values beyond ±360° are excessive');
+    }
+    
+    // Scale validation
+    if (scaleX <= 0 || scaleY <= 0) {
+      errors.push('Set scale values must be positive');
+    }
+    
+    if (scaleX < 0.01 || scaleY < 0.01) {
+      warnings.push('Very small set scale values may make shapes invisible');
+    }
+    
+    if (scaleX > 10 || scaleY > 10) {
+      warnings.push('Very large set scale values may cause performance issues');
+    }
+    
+    if (Math.abs(scaleX - scaleY) > 5) {
+      warnings.push('Extreme difference between X and Y scale may cause distortion');
+    }
+  }
+
+  // Validate artboard alignment
+  if (generationSet.artboardAlignment) {
+    const { alignTo, targetSetId, margin } = generationSet.artboardAlignment;
+    
+    // Validate target set ID when aligning to another set
+    if (alignTo === 'set') {
+      if (!targetSetId || targetSetId.trim() === '') {
+        errors.push('Target set ID is required when aligning to another set');
+      }
+      
+      if (targetSetId === generationSet.id) {
+        errors.push('Cannot align a set to itself');
+      }
+    }
+    
+    // Validate margin
+    if (margin < 0) {
+      errors.push('Alignment margin cannot be negative');
+    }
+    
+    if (margin > 500) {
+      warnings.push('Large alignment margin may cause unexpected positioning');
+    }
+  }
+
+  // Validate blend mode and compositing (enum validation handled by TypeScript)
+  // Additional performance warnings for complex blend modes
+  if (generationSet.setBlendMode && generationSet.setBlendMode !== 'source-over') {
+    warnings.push('Non-standard blend modes may impact rendering performance');
+  }
+  
+  if (generationSet.compositingOperation && generationSet.compositingOperation !== 'source-over') {
+    warnings.push('Advanced compositing operations may impact rendering performance');
+  }
+
   return {
     isValid: errors.length === 0,
     errors,

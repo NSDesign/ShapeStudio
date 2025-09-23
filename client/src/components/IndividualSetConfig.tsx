@@ -25,7 +25,15 @@ import {
   X,
   AlertTriangle,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Droplets,
+  Blend,
+  Move,
+  RotateCcw,
+  Maximize2,
+  AlignCenter
 } from 'lucide-react';
 import { 
   GenerationSet, 
@@ -33,7 +41,9 @@ import {
   SupportedShapeType,
   DEFAULT_GENERATION_SET_LIMITS,
   SupportedShapeTypeSchema,
-  BlendMode
+  BlendMode,
+  CompositingOperation,
+  BLEND_MODES
 } from '@shared/schema';
 import {
   ShapeSpecificPropertiesHelper,
@@ -125,11 +135,7 @@ const hasConfigurableProperties = (shapeType: SupportedShapeType): boolean => {
   return shapesWithProperties.includes(shapeType);
 };
 
-const BLEND_MODES: BlendMode[] = [
-  'source-over', 'multiply', 'screen', 'overlay', 'darken', 
-  'lighten', 'color-dodge', 'color-burn', 'hard-light', 
-  'soft-light', 'difference', 'exclusion'
-];
+// BLEND_MODES is now imported from shared schema
 
 export function IndividualSetConfig({ 
   generationSet, 
@@ -621,6 +627,535 @@ export function IndividualSetConfig({
                 </p>
               </div>
             )}
+
+            <Separator className="bg-slate-700" />
+
+            {/* Set Opacity & Visibility Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2" data-testid="section-set-visibility">
+                <Eye className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-white" data-testid="heading-set-visibility">Set Visibility & Opacity</h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {/* Visibility Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-white text-sm">Visible</Label>
+                  <div className="flex items-center space-x-2">
+                    {generationSet.setVisibility.visible ? (
+                      <Eye className="w-4 h-4 text-blue-400" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 text-slate-500" />
+                    )}
+                    <Checkbox
+                      checked={generationSet.setVisibility.visible}
+                      onCheckedChange={(checked) => 
+                        onUpdate({
+                          setVisibility: {
+                            ...generationSet.setVisibility,
+                            visible: checked as boolean
+                          }
+                        })
+                      }
+                      className="border-slate-600 data-[state=checked]:bg-blue-600"
+                      data-testid="checkbox-set-visible"
+                    />
+                  </div>
+                </div>
+
+                {/* Opacity Control */}
+                <div>
+                  <Label className="text-white text-xs">
+                    Opacity: {Math.round(generationSet.setVisibility.opacity * 100)}%
+                  </Label>
+                  <Slider
+                    value={[generationSet.setVisibility.opacity]}
+                    onValueChange={([value]) => 
+                      onUpdate({
+                        setVisibility: {
+                          ...generationSet.setVisibility,
+                          opacity: value
+                        }
+                      })
+                    }
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="mt-2"
+                    data-testid="slider-set-opacity"
+                    aria-label="Set opacity"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Overall opacity applied to all shapes in this set
+                  </p>
+                </div>
+
+                {/* Opacity Variance */}
+                <div>
+                  <Label className="text-white text-xs">
+                    Opacity Variance: {Math.round(generationSet.setVisibility.opacityVariance * 100)}%
+                  </Label>
+                  <Slider
+                    value={[generationSet.setVisibility.opacityVariance]}
+                    onValueChange={([value]) => 
+                      onUpdate({
+                        setVisibility: {
+                          ...generationSet.setVisibility,
+                          opacityVariance: value
+                        }
+                      })
+                    }
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="mt-2"
+                    data-testid="slider-set-opacity-variance"
+                    aria-label="Set opacity variance"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Random variation in opacity across shapes in this set
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
+
+            {/* Compositing & Blend Modes Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2" data-testid="section-compositing-blend">
+                <Blend className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-white" data-testid="heading-compositing-blend">Compositing & Blend Modes</h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {/* Set Blend Mode */}
+                <div>
+                  <Label className="text-white text-xs">Set Blend Mode</Label>
+                  <Select
+                    value={generationSet.setBlendMode}
+                    onValueChange={(value: BlendMode) => 
+                      onUpdate({ setBlendMode: value })
+                    }
+                    data-testid="select-set-blend-mode"
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48">
+                      {BLEND_MODES.map((mode) => (
+                        <SelectItem key={mode} value={mode} className="text-white hover:bg-slate-600">
+                          <div className="flex flex-col">
+                            <span className="capitalize">{mode.replace('-', ' ')}</span>
+                            <span className="text-xs text-slate-400">
+                              {mode === 'source-over' && 'Default - normal blending'}
+                              {mode === 'multiply' && 'Darkens by multiplying colors'}
+                              {mode === 'screen' && 'Lightens by inverting and multiplying'}
+                              {mode === 'overlay' && 'Combines multiply and screen'}
+                              {mode === 'difference' && 'Subtracts colors for contrast'}
+                              {mode === 'exclusion' && 'Similar to difference but softer'}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Blend mode applied to the entire generation set
+                  </p>
+                </div>
+
+                {/* Compositing Operation */}
+                <div>
+                  <Label className="text-white text-xs">Compositing Operation</Label>
+                  <Select
+                    value={generationSet.compositingOperation}
+                    onValueChange={(value: CompositingOperation) => 
+                      onUpdate({ compositingOperation: value })
+                    }
+                    data-testid="select-compositing-operation"
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48">
+                      <SelectItem value="source-over" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Source Over</span>
+                          <span className="text-xs text-slate-400">Draw new on top (default)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="source-in" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Source In</span>
+                          <span className="text-xs text-slate-400">Keep new where it overlaps existing</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="source-out" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Source Out</span>
+                          <span className="text-xs text-slate-400">Keep new where it doesn't overlap</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="destination-in" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Destination In</span>
+                          <span className="text-xs text-slate-400">Keep existing where new overlaps</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="destination-out" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Destination Out</span>
+                          <span className="text-xs text-slate-400">Remove existing where new overlaps</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="xor" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>XOR</span>
+                          <span className="text-xs text-slate-400">Keep where they don't overlap</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Advanced compositing for masking and special effects
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
+
+            {/* Set Positioning & Transforms Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2" data-testid="section-set-transform">
+                <Move className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-white" data-testid="heading-set-transform">Set Positioning & Transforms</h4>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Position Controls */}
+                <div className="space-y-3">
+                  <Label className="text-white text-xs">Position</Label>
+                  
+                  {/* X Position */}
+                  <div>
+                    <Label className="text-white text-xs">
+                      X: {generationSet.setTransform.x}px
+                    </Label>
+                    <Slider
+                      value={[generationSet.setTransform.x]}
+                      onValueChange={([value]) => 
+                        onUpdate({
+                          setTransform: {
+                            ...generationSet.setTransform,
+                            x: value
+                          }
+                        })
+                      }
+                      min={-1000}
+                      max={1000}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-set-transform-x"
+                      aria-label="Set X position"
+                    />
+                  </div>
+
+                  {/* Y Position */}
+                  <div>
+                    <Label className="text-white text-xs">
+                      Y: {generationSet.setTransform.y}px
+                    </Label>
+                    <Slider
+                      value={[generationSet.setTransform.y]}
+                      onValueChange={([value]) => 
+                        onUpdate({
+                          setTransform: {
+                            ...generationSet.setTransform,
+                            y: value
+                          }
+                        })
+                      }
+                      min={-1000}
+                      max={1000}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-set-transform-y"
+                      aria-label="Set Y position"
+                    />
+                  </div>
+                </div>
+
+                {/* Transform Controls */}
+                <div className="space-y-3">
+                  <Label className="text-white text-xs">Transform</Label>
+                  
+                  {/* Rotation */}
+                  <div>
+                    <Label className="text-white text-xs">
+                      Rotation: {generationSet.setTransform.rotation}°
+                    </Label>
+                    <Slider
+                      value={[generationSet.setTransform.rotation]}
+                      onValueChange={([value]) => 
+                        onUpdate({
+                          setTransform: {
+                            ...generationSet.setTransform,
+                            rotation: value
+                          }
+                        })
+                      }
+                      min={-180}
+                      max={180}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-set-transform-rotation"
+                      aria-label="Set rotation"
+                    />
+                  </div>
+
+                  {/* Scale Controls */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-white text-xs">
+                        Scale X: {Math.round(generationSet.setTransform.scaleX * 100)}%
+                      </Label>
+                      <Slider
+                        value={[generationSet.setTransform.scaleX]}
+                        onValueChange={([value]) => 
+                          onUpdate({
+                            setTransform: {
+                              ...generationSet.setTransform,
+                              scaleX: value
+                            }
+                          })
+                        }
+                        min={0.1}
+                        max={3.0}
+                        step={0.01}
+                        className="mt-1"
+                        data-testid="slider-set-transform-scale-x"
+                        aria-label="Set scale X"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-white text-xs">
+                        Scale Y: {Math.round(generationSet.setTransform.scaleY * 100)}%
+                      </Label>
+                      <Slider
+                        value={[generationSet.setTransform.scaleY]}
+                        onValueChange={([value]) => 
+                          onUpdate({
+                            setTransform: {
+                              ...generationSet.setTransform,
+                              scaleY: value
+                            }
+                          })
+                        }
+                        min={0.1}
+                        max={3.0}
+                        step={0.01}
+                        className="mt-1"
+                        data-testid="slider-set-transform-scale-y"
+                        aria-label="Set scale Y"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transform Origin */}
+              <div>
+                <Label className="text-white text-xs">Transform Origin</Label>
+                <Select
+                  value={generationSet.setTransform.transformOrigin}
+                  onValueChange={(value) => 
+                    onUpdate({
+                      setTransform: {
+                        ...generationSet.setTransform,
+                        transformOrigin: value as 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+                      }
+                    })
+                  }
+                  data-testid="select-transform-origin"
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectItem value="center" className="text-white hover:bg-slate-600">Center</SelectItem>
+                    <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
+                    <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
+                    <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
+                    <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Point around which rotation and scaling occurs
+                </p>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
+
+            {/* Artboard & Alignment Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2" data-testid="section-artboard-alignment">
+                <Maximize2 className="w-4 h-4 text-slate-400" />
+                <h4 className="text-sm font-medium text-white" data-testid="heading-artboard-alignment">Artboard & Alignment</h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {/* Fit to Artboard */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-white text-sm">Fit to Artboard</Label>
+                  <Checkbox
+                    checked={generationSet.artboardAlignment.fitToArtboard}
+                    onCheckedChange={(checked) => 
+                      onUpdate({
+                        artboardAlignment: {
+                          ...generationSet.artboardAlignment,
+                          fitToArtboard: checked as boolean
+                        }
+                      })
+                    }
+                    className="border-slate-600 data-[state=checked]:bg-blue-600"
+                    data-testid="checkbox-fit-to-artboard"
+                  />
+                </div>
+
+                {generationSet.artboardAlignment.fitToArtboard && (
+                  <div className="bg-blue-900/20 border border-blue-700 p-3 rounded-lg">
+                    <p className="text-xs text-blue-300">
+                      Shapes will be automatically scaled and positioned to fit within artboard bounds
+                    </p>
+                  </div>
+                )}
+
+                {/* Align To */}
+                <div>
+                  <Label className="text-white text-xs">Align To</Label>
+                  <Select
+                    value={generationSet.artboardAlignment.alignTo}
+                    onValueChange={(value: 'artboard' | 'set' | 'none') => 
+                      onUpdate({
+                        artboardAlignment: {
+                          ...generationSet.artboardAlignment,
+                          alignTo: value,
+                          ...(value !== 'set' && { targetSetId: undefined })
+                        }
+                      })
+                    }
+                    data-testid="select-align-to"
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="none" className="text-white hover:bg-slate-600">None</SelectItem>
+                      <SelectItem value="artboard" className="text-white hover:bg-slate-600">Artboard</SelectItem>
+                      <SelectItem value="set" className="text-white hover:bg-slate-600">Another Set</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Target Set Selection (when aligning to another set) */}
+                {generationSet.artboardAlignment.alignTo === 'set' && (
+                  <div>
+                    <Label className="text-white text-xs">Target Set ID</Label>
+                    <Input
+                      value={generationSet.artboardAlignment.targetSetId || ''}
+                      onChange={(e) => 
+                        onUpdate({
+                          artboardAlignment: {
+                            ...generationSet.artboardAlignment,
+                            targetSetId: e.target.value || undefined
+                          }
+                        })
+                      }
+                      placeholder="Enter target set ID"
+                      className="bg-slate-700 border-slate-600 text-white mt-1"
+                      data-testid="input-target-set-id"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      ID of the generation set to align to
+                    </p>
+                  </div>
+                )}
+
+                {/* Alignment Type */}
+                {generationSet.artboardAlignment.alignTo !== 'none' && (
+                  <div>
+                    <Label className="text-white text-xs">Alignment</Label>
+                    <Select
+                      value={generationSet.artboardAlignment.alignmentType}
+                      onValueChange={(value) => 
+                        onUpdate({
+                          artboardAlignment: {
+                            ...generationSet.artboardAlignment,
+                            alignmentType: value as any
+                          }
+                        })
+                      }
+                      data-testid="select-alignment-type"
+                    >
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-700 border-slate-600">
+                        <SelectItem value="center" className="text-white hover:bg-slate-600">
+                          <div className="flex items-center gap-2">
+                            <AlignCenter className="w-3 h-3" />
+                            <span>Center</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
+                        <SelectItem value="top-center" className="text-white hover:bg-slate-600">Top Center</SelectItem>
+                        <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
+                        <SelectItem value="center-left" className="text-white hover:bg-slate-600">Center Left</SelectItem>
+                        <SelectItem value="center-right" className="text-white hover:bg-slate-600">Center Right</SelectItem>
+                        <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
+                        <SelectItem value="bottom-center" className="text-white hover:bg-slate-600">Bottom Center</SelectItem>
+                        <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Margin */}
+                {generationSet.artboardAlignment.alignTo !== 'none' && (
+                  <div>
+                    <Label className="text-white text-xs">
+                      Margin: {generationSet.artboardAlignment.margin}px
+                    </Label>
+                    <Slider
+                      value={[generationSet.artboardAlignment.margin]}
+                      onValueChange={([value]) => 
+                        onUpdate({
+                          artboardAlignment: {
+                            ...generationSet.artboardAlignment,
+                            margin: value
+                          }
+                        })
+                      }
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="mt-2"
+                      data-testid="slider-alignment-margin"
+                      aria-label="Alignment margin"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Distance from alignment target in pixels
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-slate-700" />
 
             {/* Note: Shape-Specific Properties have been moved to the main generation UI */}
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
