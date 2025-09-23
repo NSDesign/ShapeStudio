@@ -81,6 +81,15 @@ import { Shape } from '@/lib/shapes';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
+// Shape categories for organized display
+const SHAPE_CATEGORIES = {
+  'Basic': ['rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 'ellipse'] as ShapeType[],
+  'Geometric': ['triangle', 'right-triangle', 'pentagon', 'hexagon', 'rhombus', 'parallelogram', 'trapezoid'] as ShapeType[],
+  'Special': ['star', 'polygon', 'heart', 'arrow', 'cross', 'kite', 'semicircle'] as ShapeType[],
+  'Lines & Curves': ['line-vector', 'line', 'bezier', 'cubic', 'smooth-spline'] as ShapeType[],
+  'Complex': ['ring', 'blob', 'chunk', 'spline-circle', 'spline-ellipse', 'spline-ring'] as ShapeType[]
+};
+
 // Shape display names mapping
 const shapeTypeDisplayNames: Record<ShapeType, string> = {
   rectangle: 'Rectangle',
@@ -2348,55 +2357,79 @@ export default function Sidebar({
             </AccordionTrigger>
             <AccordionContent className="pb-2">
               <div className="space-y-3">
-                {Object.entries(shapeTypeDisplayNames).map(([type, displayName]) => {
-                  const isEnabled = enabledShapeTypes.has(type as ShapeType);
-                  const isExpanded = expandedShapes.has(type);
-                  const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(type);
+                {/* Nested accordion for shape categories */}
+                <Accordion type="multiple" className="w-full">
+                  {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
+                    const enabledInCategory = categoryShapes.filter(shapeType => 
+                      enabledShapeTypes.has(shapeType)
+                    ).length;
+                    
+                    return (
+                      <AccordionItem key={categoryName} value={categoryName} className="border-slate-700">
+                        <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <span>{categoryName}</span>
+                            <span className="text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
+                              {enabledInCategory}/{categoryShapes.length}
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2 pt-2">
+                          {categoryShapes.map((shapeType) => {
+                            const displayName = shapeTypeDisplayNames[shapeType];
+                            const isEnabled = enabledShapeTypes.has(shapeType);
+                            const isExpanded = expandedShapes.has(shapeType);
+                            const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(shapeType);
 
-                  return (
-                    <div key={type} className="space-y-2">
-                      {/* Shape Toggle Row */}
-                      <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                        isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-                      }`}>
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-3 h-3 rounded transition-colors ${
-                            isEnabled ? 'bg-blue-400' : 'bg-slate-500'
-                          }`} />
-                          <Label className={`text-sm transition-colors ${
-                            isEnabled ? 'text-blue-200' : 'text-slate-300'
-                          }`}>{displayName}</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {isEnabled && hasProperties && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleShapeExpansion(type)}
-                              className="p-1 h-6 w-6 hover:bg-slate-700"
-                            >
-                              <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
-                                isExpanded ? 'rotate-180' : ''
-                              }`} />
-                            </Button>
-                          )}
-                          <Switch
-                            checked={isEnabled}
-                            onCheckedChange={() => onToggleShapeType(type as ShapeType)}
-                            className="data-[state=checked]:bg-blue-600"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Shape Properties (Accordion Content) */}
-                      {isEnabled && isExpanded && hasProperties && (
-                        <div className="ml-4">
-                          {getShapeProperties(type)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                            return (
+                              <div key={shapeType} className="space-y-2">
+                                {/* Shape Toggle Row */}
+                                <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                                  isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+                                }`}>
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-3 h-3 rounded transition-colors ${
+                                      isEnabled ? 'bg-blue-400' : 'bg-slate-500'
+                                    }`} />
+                                    <Label className={`text-sm transition-colors ${
+                                      isEnabled ? 'text-blue-200' : 'text-slate-300'
+                                    }`}>{displayName}</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {isEnabled && hasProperties && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleShapeExpansion(shapeType)}
+                                        className="p-1 h-6 w-6 hover:bg-slate-700"
+                                      >
+                                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
+                                          isExpanded ? 'rotate-180' : ''
+                                        }`} />
+                                      </Button>
+                                    )}
+                                    <Switch
+                                      checked={isEnabled}
+                                      onCheckedChange={() => onToggleShapeType(shapeType)}
+                                      className="data-[state=checked]:bg-blue-600"
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Shape Properties (Accordion Content) */}
+                                {isEnabled && isExpanded && hasProperties && (
+                                  <div className="ml-4">
+                                    {getShapeProperties(shapeType)}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
                 
                 {/* Separator inside accordion so it disappears when collapsed */}
                 <Separator className="bg-slate-600" />
