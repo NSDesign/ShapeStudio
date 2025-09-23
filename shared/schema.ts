@@ -124,6 +124,48 @@ export type BlendMode =
   | 'color' 
   | 'luminosity';
 
+// Compositing operation type for advanced masking and compositing effects
+export type CompositingOperation = 
+  | 'source-over'     // Default - draw new on top
+  | 'source-in'       // Keep new where it overlaps existing  
+  | 'source-out'      // Keep new where it doesn't overlap existing
+  | 'source-atop'     // Keep new on top of existing only
+  | 'destination-over'  // Draw new behind existing
+  | 'destination-in'    // Keep existing where new overlaps
+  | 'destination-out'   // Remove existing where new overlaps  
+  | 'destination-atop'  // Keep existing on top of new only
+  | 'lighter'         // Add colors together
+  | 'copy'           // Replace with new
+  | 'xor';           // Keep where they don't overlap
+
+// Set transform configuration
+export interface SetTransform {
+  x: number;                    // X position offset
+  y: number;                    // Y position offset  
+  rotation: number;             // Rotation in degrees
+  scaleX: number;               // Scale factor for X axis (1.0 = 100%)
+  scaleY: number;               // Scale factor for Y axis (1.0 = 100%)
+  transformOrigin: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+}
+
+// Artboard alignment configuration  
+export interface ArtboardAlignment {
+  fitToArtboard: boolean;       // Automatically fit set to artboard bounds
+  alignTo: 'artboard' | 'set' | 'none'; // What to align to
+  alignmentType: 'center' | 'top-left' | 'top-center' | 'top-right' | 
+                 'center-left' | 'center-right' | 'bottom-left' | 
+                 'bottom-center' | 'bottom-right';
+  targetSetId?: string;         // ID of set to align to (when alignTo = 'set')
+  margin: number;              // Margin from alignment target in pixels
+}
+
+// Set visibility and opacity configuration
+export interface SetVisibility {
+  visible: boolean;            // Whether this set is visible
+  opacity: number;             // Overall opacity for the set (0-1)
+  opacityVariance: number;     // Random variance in opacity (0-1)
+}
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -1283,6 +1325,21 @@ export interface GenerationSet {
   // Properly typed instead of Record<string, any>
   batchConfig: BatchConfigSettings;
   
+  // SET-LEVEL FEATURES FOR ADVANCED COMPOSITION
+  
+  // Set visibility and opacity controls
+  setVisibility: SetVisibility;
+  
+  // Set-level blend mode and compositing operation
+  setBlendMode: BlendMode;              // Blend mode applied to entire set
+  compositingOperation: CompositingOperation; // Compositing operation for masking effects
+  
+  // Set positioning and transform controls
+  setTransform: SetTransform;           // Position, rotation, scale for the entire set
+  
+  // Artboard alignment and fitting
+  artboardAlignment: ArtboardAlignment; // How this set aligns to artboard or other sets
+  
   // Generation-specific metadata
   generationOrder: number;              // Order in which this set should be generated
   description?: string;                 // Optional description for the set
@@ -1369,6 +1426,39 @@ export const BlendModeSchema = z.enum([
   'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
   'exclusion', 'hue', 'saturation', 'color', 'luminosity'
 ]);
+
+export const CompositingOperationSchema = z.enum([
+  'source-over', 'source-in', 'source-out', 'source-atop',
+  'destination-over', 'destination-in', 'destination-out', 'destination-atop',
+  'lighter', 'copy', 'xor'
+]);
+
+export const SetTransformSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  rotation: z.number(),
+  scaleX: z.number().positive(),
+  scaleY: z.number().positive(),
+  transformOrigin: z.enum(['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'])
+});
+
+export const ArtboardAlignmentSchema = z.object({
+  fitToArtboard: z.boolean(),
+  alignTo: z.enum(['artboard', 'set', 'none']),
+  alignmentType: z.enum([
+    'center', 'top-left', 'top-center', 'top-right',
+    'center-left', 'center-right', 'bottom-left', 
+    'bottom-center', 'bottom-right'
+  ]),
+  targetSetId: z.string().optional(),
+  margin: z.number().min(0)
+});
+
+export const SetVisibilitySchema = z.object({
+  visible: z.boolean(),
+  opacity: z.number().min(0).max(1),
+  opacityVariance: z.number().min(0).max(1)
+});
 
 export const SupportedShapeTypeSchema = z.enum([
   'rectangle', 'rounded-rectangle', 'square', 'rounded-square', 'circle', 
@@ -1889,6 +1979,13 @@ export const GenerationSetSchema = z.object({
   shapeSpecificProperties: ShapeSpecificPropertiesSchema,
   zIndexConfig: ZIndexConfigSchema,
   batchConfig: BatchConfigSettingsSchema, // Fixed: now properly typed instead of z.any()
+  // New set-level features
+  setVisibility: SetVisibilitySchema,
+  setBlendMode: BlendModeSchema,
+  compositingOperation: CompositingOperationSchema,
+  setTransform: SetTransformSchema,
+  artboardAlignment: ArtboardAlignmentSchema,
+  // Metadata
   generationOrder: z.number().min(0),
   description: z.string().optional()
 });
@@ -1949,6 +2046,28 @@ export const GenerationSetUtils = {
     shapeSpecificProperties: {},
     zIndexConfig: { ...DEFAULT_Z_INDEX_CONFIG },
     batchConfig: { ...defaultBatchConfigSettings }, // Fixed: now uses proper default settings
+    // New set-level features with sensible defaults
+    setVisibility: {
+      visible: true,
+      opacity: 1.0,
+      opacityVariance: 0.0
+    },
+    setBlendMode: 'source-over',
+    compositingOperation: 'source-over',
+    setTransform: {
+      x: 0,
+      y: 0,
+      rotation: 0,
+      scaleX: 1.0,
+      scaleY: 1.0,
+      transformOrigin: 'center'
+    },
+    artboardAlignment: {
+      fitToArtboard: false,
+      alignTo: 'none',
+      alignmentType: 'center',
+      margin: 0
+    },
     generationOrder: 0,
     description: undefined
   }),

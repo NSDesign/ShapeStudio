@@ -77,6 +77,28 @@ export function useGenerationSets({
       },
       zIndexConfig: DEFAULT_Z_INDEX_CONFIG,
       batchConfig: { ...uiState.batchConfigSettings },
+      // New set-level features with sensible defaults
+      setVisibility: {
+        visible: true,
+        opacity: 1.0,
+        opacityVariance: 0.0
+      },
+      setBlendMode: 'source-over',
+      compositingOperation: 'source-over',
+      setTransform: {
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        transformOrigin: 'center'
+      },
+      artboardAlignment: {
+        fitToArtboard: false,
+        alignTo: 'none',
+        alignmentType: 'center',
+        margin: 0
+      },
       generationOrder: generationSets.length,
       description: `Generated from current settings on ${new Date().toLocaleString()}`
     };
