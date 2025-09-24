@@ -28,6 +28,7 @@ import {
   DEFAULT_GENERATION_SET_LIMITS,
   GenerationSetUtils
 } from '@shared/schema';
+import { generateUniqueSetName } from '@/utils/nameGeneration';
 import { IndividualSetConfig } from '@/components/IndividualSetConfig';
 import { 
   GenerationSetValidator,
@@ -109,9 +110,13 @@ export function GenerationSetsInterface({
     }
 
     const newId = `generation_set_${Date.now()}`;
+    // Use the generateUniqueSetName utility for consistent naming
+    const existingNames = generationSets.map(set => set.name);
+    const uniqueName = generateUniqueSetName(existingNames, 'Set');
+    
     const newSet = GenerationSetUtils.createDefault(
       newId,
-      `Generation Set ${generationSets.length + 1}`
+      uniqueName
     );
     
     // Set generation order
