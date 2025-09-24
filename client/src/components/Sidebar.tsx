@@ -72,7 +72,8 @@ import {
   FolderOpen,
   Clipboard,
   Boxes,
-  Plus
+  Plus,
+  Minus
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
 import { ModeField } from '@/components/ModeField';
@@ -4340,7 +4341,7 @@ export default function Sidebar({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleCreateSet()}
+                          onClick={() => handleCreateSet('')}
                           disabled={!setsEnabled}
                           className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Create new generation set"
