@@ -163,14 +163,6 @@ export default function BatchConfigDialog({
     'soft-light', 'difference', 'exclusion'
   ];
 
-  const presets = [
-    { value: 'custom', label: 'Custom Settings' },
-    { value: 'minimal', label: 'Minimal Variation' },
-    { value: 'moderate', label: 'Moderate Variation' },
-    { value: 'chaotic', label: 'Chaotic Generation' },
-    { value: 'geometric', label: 'Geometric Patterns' },
-    { value: 'organic', label: 'Organic Shapes' }
-  ];
 
   return (
     <>
@@ -303,86 +295,8 @@ export default function BatchConfigDialog({
               )}
 
               {/* Legacy batch configuration settings */}
-                  {/* Collapsible System Behavior Explanation */}
-              <div className="border border-slate-600 rounded">
-                <Button
-                  variant="ghost"
-                  className="flex items-center justify-between w-full p-3 bg-slate-800 rounded hover:bg-slate-700 text-left"
-                  onClick={() => setShowExplanation(!showExplanation)}
-                >
-                  <Label className="text-sm font-medium text-slate-200">Advanced Noise System Behavior</Label>
-                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${showExplanation ? 'rotate-180' : ''}`} />
-                </Button>
-                {showExplanation && (
-                  <div className="p-3 bg-slate-800 border-t border-slate-600">
-                    <div className="space-y-2 text-xs text-slate-400">
-                      <p><strong>Property Section Targeting:</strong> Enabling property sections (Shape Properties, Fill Properties, etc.) makes those properties targetable by the selected noise algorithm.</p>
-                      <p><strong>Disabled Properties:</strong> Properties in disabled sections use Randomise (standard setting) fallback with probability distributions.</p>
-                      <p><strong>Algorithm-Specific Settings:</strong> Each noise type has unique parameters (Fractal: lacunarity/gain, Worley: distance functions, etc.)</p>
-                      <p><strong>Blend Mode Variation:</strong> When Advanced Noise is enabled AND Blend Mode Control is enabled, noise adds variation to blend mode probability weights.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              <Separator className="bg-slate-600" />
 
-              {/* Presets Dropdown */}
-              <div className="space-y-3">
-                <Label className="font-medium text-slate-200">Configuration Preset</Label>
-                <Select 
-                  value={currentSettings.selectedPreset}
-                  onValueChange={(value) => handleSettingsUpdate({ selectedPreset: value })}
-                >
-                  <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                    {presets.map((preset) => (
-                      <SelectItem key={preset.value} value={preset.value} className="text-slate-200 hover:bg-slate-700">
-                        {preset.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator className="bg-slate-600" />
-
-              {/* Advanced Noise - First configurable section */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={currentSettings.noiseEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ noiseEnabled: checked as boolean })}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="font-medium text-slate-200">Advanced Noise</Label>
-                </div>
-                
-                {currentSettings.noiseEnabled && (
-                  <div className="ml-6 space-y-3">
-                    {/* Algorithm Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-sm text-slate-300">Algorithm</Label>
-                      <Select 
-                        value={currentSettings.noiseAlgorithm}
-                        onValueChange={(value) => handleSettingsUpdate({ noiseAlgorithm: value as any })}
-                      >
-                        <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                          <SelectItem value="randomise" className="text-slate-200 hover:bg-slate-700">Randomise</SelectItem>
-                          <SelectItem value="perlin" className="text-slate-200 hover:bg-slate-700">Perlin</SelectItem>
-                          <SelectItem value="simplex" className="text-slate-200 hover:bg-slate-700">Simplex</SelectItem>
-                          <SelectItem value="fractal" className="text-slate-200 hover:bg-slate-700">Fractal</SelectItem>
-                          <SelectItem value="worley" className="text-slate-200 hover:bg-slate-700">Worley</SelectItem>
-                          <SelectItem value="ridge" className="text-slate-200 hover:bg-slate-700">Ridge</SelectItem>
-                          <SelectItem value="turbulence" className="text-slate-200 hover:bg-slate-700">Turbulence</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
 
                     {/* Common settings for most algorithms (not randomise) */}
                     {currentSettings.noiseAlgorithm !== 'randomise' && (
