@@ -4330,27 +4330,86 @@ export default function Sidebar({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  {/* Generation Sets Dropdown */}
-                  <div className="mb-4">
-                    <GenerationSetsDropdown
-                      currentSetId={effectiveCurrentSetId}
-                      generationSets={effectiveGenerationSets}
-                      enabledShapeTypes={enabledShapeTypes}
-                      scatterSettings={scatterSettings}
-                      batchConfigSettings={generationConfigSettings}
-                      shapeCountMode={shapeCountMode}
-                      shapeCountFixed={shapeCountFixed}
-                      shapeCountRange={shapeCountRange}
-                      onSetChange={handleSetChange}
-                      onCreateSet={handleCreateSet}
-                      generateUniqueSetName={generateUniqueSetName}
-                      onDeleteSet={handleDeleteSet}
-                      onOpenManager={handleOpenManager}
-                      enabled={setsEnabled}
-                      size="sm"
-                      showLabel={true}
-                      data-testid="sidebar-generation-sets"
-                    />
+                  {/* Generation Sets Section */}
+                  <div className="mb-4 space-y-2">
+                    {/* Header Row with Title and Buttons */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-slate-400">Generation Sets</Label>
+                      <div className="flex items-center gap-1">
+                        {/* Add Set Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCreateSet()}
+                          disabled={!setsEnabled}
+                          className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title="Create new generation set"
+                          data-testid="sidebar-generation-sets-add-button"
+                        >
+                          <Plus className="h-3 w-3 text-slate-300" />
+                        </Button>
+
+                        {/* Remove Set Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteSet(effectiveCurrentSetId || '')}
+                          disabled={!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1}
+                          className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={effectiveCurrentSetId && effectiveGenerationSets.length > 1 ? "Delete current generation set" : "Cannot delete - only one set remaining"}
+                          data-testid="sidebar-generation-sets-remove-button"
+                        >
+                          <Minus className="h-3 w-3 text-slate-300" />
+                        </Button>
+
+                        {/* Sets Manager Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenManager()}
+                          disabled={!setsEnabled}
+                          className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title="Open Generation Sets Manager"
+                          data-testid="sidebar-generation-sets-manager-button"
+                        >
+                          <Settings className="h-3 w-3 text-slate-300" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Full Width Dropdown */}
+                    <Select
+                      value={effectiveCurrentSetId || ''}
+                      onValueChange={(value) => handleSetChange(value || null)}
+                      disabled={!setsEnabled}
+                    >
+                      <SelectTrigger 
+                        className={`w-full h-8 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        data-testid="sidebar-generation-sets-select-trigger"
+                      >
+                        <SelectValue 
+                          placeholder={setsEnabled ? "Select generation set..." : "Switch to fixed count mode"} 
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        {effectiveGenerationSets.length === 0 ? (
+                          <SelectItem value="no-sets" disabled className="text-slate-400">
+                            No sets available
+                          </SelectItem>
+                        ) : (
+                          effectiveGenerationSets.map((set) => (
+                            <SelectItem 
+                              key={set.id} 
+                              value={set.id}
+                              className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                              data-testid={`sidebar-generation-sets-option-${set.id}`}
+                            >
+                              {set.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <ShapeTypesContent />
