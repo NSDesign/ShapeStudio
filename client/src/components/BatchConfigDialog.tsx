@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
+import { GenerationSetsDropdown } from './GenerationSetsDropdown';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
@@ -20,13 +22,43 @@ interface BatchConfigDialogProps {
   onSettingsChange: (settings: BatchConfigSettings) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  
+  // Generation Sets Integration
+  generationSets?: GenerationSet[];
+  currentGenerationSetId?: string | null;
+  enabledShapeTypes?: Set<ShapeType>;
+  scatterSettings?: ScatterSettings;
+  shapeCountMode?: ShapeCountMode;
+  shapeCountFixed?: number;
+  shapeCountRange?: [number, number];
+  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
+  onCurrentGenerationSetChange?: (setId: string | null) => void;
+  onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
+  onDeleteGenerationSet?: (setId: string) => void;
+  generateUniqueSetName?: (baseName?: string) => string;
+  onOpenGenerationSetsManager?: () => void;
 }
 
 export default function BatchConfigDialog({ 
   settings, 
   onSettingsChange, 
   isOpen: controlledIsOpen, 
-  onOpenChange: controlledOnOpenChange
+  onOpenChange: controlledOnOpenChange,
+  
+  // Generation Sets Integration props
+  generationSets = [],
+  currentGenerationSetId = null,
+  enabledShapeTypes = new Set<ShapeType>(),
+  scatterSettings,
+  shapeCountMode = 'fixed' as ShapeCountMode,
+  shapeCountFixed = 10,
+  shapeCountRange = [5, 15] as [number, number],
+  onGenerationSetsChange,
+  onCurrentGenerationSetChange,
+  onCreateGenerationSet,
+  onDeleteGenerationSet,
+  generateUniqueSetName,
+  onOpenGenerationSetsManager
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
@@ -211,6 +243,31 @@ export default function BatchConfigDialog({
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
+              {/* Generation Sets Dropdown */}
+              {(generationSets.length > 0 || onCreateGenerationSet) && (
+                <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+                  <Label className="text-sm font-medium text-slate-200 mb-2 block">Generation Sets</Label>
+                  <GenerationSetsDropdown
+                    currentSetId={currentGenerationSetId}
+                    generationSets={generationSets}
+                    enabledShapeTypes={enabledShapeTypes}
+                    scatterSettings={scatterSettings || {} as ScatterSettings}
+                    batchConfigSettings={currentSettings}
+                    shapeCountMode={shapeCountMode}
+                    shapeCountFixed={shapeCountFixed}
+                    shapeCountRange={shapeCountRange}
+                    onSetChange={onCurrentGenerationSetChange || (() => {})}
+                    onCreateSet={onCreateGenerationSet || (() => {})}
+                    onDeleteSet={onDeleteGenerationSet || (() => {})}
+                    onOpenManager={onOpenGenerationSetsManager || (() => {})}
+                    generateUniqueSetName={generateUniqueSetName}
+                    enabled={true}
+                    size="default"
+                    showLabel={false}
+                    data-testid="generation-sets-dropdown-batch-dialog"
+                  />
+                </div>
+              )}
               
               {/* Global Validation Status Banner */}
               {showValidationBanner && (

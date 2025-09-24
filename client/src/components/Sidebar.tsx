@@ -4501,6 +4501,21 @@ export default function Sidebar({
       <BatchConfigDialog
         settings={generationConfigSettings}
         onSettingsChange={handleBatchConfigSettingsChange}
+        
+        // Generation Sets Integration
+        generationSets={generationSets}
+        currentGenerationSetId={currentGenerationSetId}
+        enabledShapeTypes={enabledShapeTypes}
+        scatterSettings={scatterSettings}
+        shapeCountMode={shapeCountMode}
+        shapeCountFixed={shapeCountFixed}
+        shapeCountRange={shapeCountRange}
+        onGenerationSetsChange={onGenerationSetsChange}
+        onCurrentGenerationSetChange={onCurrentGenerationSetChange}
+        onCreateGenerationSet={onCreateGenerationSet}
+        onDeleteGenerationSet={onDeleteGenerationSet}
+        generateUniqueSetName={generateUniqueSetName}
+        onOpenGenerationSetsManager={onOpenGenerationSetsManager}
       />
       
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
