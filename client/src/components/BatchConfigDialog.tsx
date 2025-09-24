@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
@@ -243,29 +243,84 @@ export default function BatchConfigDialog({
             {/* Content with proper scrolling */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
-              {/* Generation Sets Dropdown */}
+              {/* Generation Sets Section */}
               {(generationSets.length > 0 || onCreateGenerationSet) && (
-                <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
-                  <Label className="text-sm font-medium text-slate-200 mb-2 block">Generation Sets</Label>
-                  <GenerationSetsDropdown
-                    currentSetId={currentGenerationSetId}
-                    generationSets={generationSets}
-                    enabledShapeTypes={enabledShapeTypes}
-                    scatterSettings={scatterSettings || {} as ScatterSettings}
-                    batchConfigSettings={currentSettings}
-                    shapeCountMode={shapeCountMode}
-                    shapeCountFixed={shapeCountFixed}
-                    shapeCountRange={shapeCountRange}
-                    onSetChange={onCurrentGenerationSetChange || (() => {})}
-                    onCreateSet={onCreateGenerationSet || (() => {})}
-                    onDeleteSet={onDeleteGenerationSet || (() => {})}
-                    onOpenManager={onOpenGenerationSetsManager || (() => {})}
-                    generateUniqueSetName={generateUniqueSetName}
-                    enabled={true}
-                    size="default"
-                    showLabel={false}
-                    data-testid="generation-sets-dropdown-batch-dialog"
-                  />
+                <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3 space-y-2">
+                  {/* Header Row with Title and Buttons */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-slate-200">Generation Sets</Label>
+                    <div className="flex items-center gap-1">
+                      {/* Add Set Button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onCreateGenerationSet?.('')}
+                        className="px-2 bg-slate-800 border-slate-600 hover:bg-slate-700"
+                        title="Create new generation set"
+                        data-testid="batch-dialog-generation-sets-add-button"
+                      >
+                        <Plus className="h-3 w-3 text-slate-300" />
+                      </Button>
+
+                      {/* Remove Set Button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDeleteGenerationSet?.(currentGenerationSetId || '')}
+                        disabled={!currentGenerationSetId || generationSets.length <= 1}
+                        className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!currentGenerationSetId || generationSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title={currentGenerationSetId && generationSets.length > 1 ? "Delete current generation set" : "Cannot delete - only one set remaining"}
+                        data-testid="batch-dialog-generation-sets-remove-button"
+                      >
+                        <Minus className="h-3 w-3 text-slate-300" />
+                      </Button>
+
+                      {/* Sets Manager Button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onOpenGenerationSetsManager?.()}
+                        className="px-2 bg-slate-800 border-slate-600 hover:bg-slate-700"
+                        title="Open Generation Sets Manager"
+                        data-testid="batch-dialog-generation-sets-manager-button"
+                      >
+                        <Settings className="h-3 w-3 text-slate-300" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Full Width Dropdown */}
+                  <Select
+                    value={currentGenerationSetId || ''}
+                    onValueChange={(value) => onCurrentGenerationSetChange?.(value || null)}
+                  >
+                    <SelectTrigger 
+                      className="w-full h-8"
+                      data-testid="batch-dialog-generation-sets-select-trigger"
+                    >
+                      <SelectValue 
+                        placeholder="Select generation set..." 
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {generationSets.length === 0 ? (
+                        <SelectItem value="no-sets" disabled className="text-slate-400">
+                          No sets available
+                        </SelectItem>
+                      ) : (
+                        generationSets.map((set) => (
+                          <SelectItem 
+                            key={set.id} 
+                            value={set.id}
+                            className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                            data-testid={`batch-dialog-generation-sets-option-${set.id}`}
+                          >
+                            {set.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               

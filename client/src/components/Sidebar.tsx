@@ -4332,7 +4332,7 @@ export default function Sidebar({
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   {/* Generation Sets Section */}
-                  <div className="mb-4 space-y-2">
+                  <div className="mb-4 p-3 border border-slate-600 rounded-lg bg-slate-800/30 space-y-2">
                     {/* Header Row with Title and Buttons */}
                     <div className="flex items-center justify-between">
                       <Label className="text-xs text-slate-400">Generation Sets</Label>
