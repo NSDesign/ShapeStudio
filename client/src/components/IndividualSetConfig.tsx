@@ -641,9 +641,8 @@ export function IndividualSetConfig({
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <div className="grid grid-cols-1 gap-4 pt-2">
-                    <div>
                     {/* Set Blend Mode */}
-                <div>
+                    <div>
                   <Label className="text-white text-xs">Set Blend Mode</Label>
                   <Select
                     value={generationSet.setBlendMode}
@@ -733,6 +732,7 @@ export function IndividualSetConfig({
                   <p className="text-xs text-slate-500 mt-1">
                     Advanced compositing for masking and special effects
                   </p>
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
