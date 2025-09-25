@@ -1,0 +1,105 @@
+Updated Implementation Plan 📋
+Phase 0: Critical Bug Fixes (Priority 1) 🚨
+0.1 Fix Generation Sets Data Capture
+
+Investigation: Why sets show hardcoded shape types instead of actual sidebar settings
+Fix: Ensure captureCurrentState properly saves enabledShapeTypes, scatterSettings, batchConfigSettings
+Verify: Sets display real shape counts and types from current UI state
+0.2 Fix Configure Generation Set Dropdowns
+
+Investigation: Why dropdowns in Sets Manager aren't opening/functioning
+Fix: Dropdown state management and option rendering
+Verify: All configuration dropdowns work properly
+Phase 1: Core Infrastructure Changes
+1.1 Remove Minimum Set Validation
+
+Allow deletion of last set (enable 0 sets)
+Update GenerationSetsInterface.tsx validation logic
+1.2 Map Generation Count Mode Relationship
+
+generationCountMode = "Generation Sets per Export" setting
+Currently: areSetsEnabled = batchExportCount > 1 && generationCountMode === 'fixed'
+Need: Bidirectional sync between this setting and generation sets
+1.3 Create Edge Case Handling Infrastructure
+
+export enum EdgeCaseHandling {
+  HOLD = 'hold',        // Use last set for remaining
+  CYCLE = 'cycle',      // Loop: 1→2→3→1→2→3
+  PING_PONG = 'ping_pong', // Bounce: 1→2→3→2→1→2→3
+  RANDOM = 'random',    // Random selection
+  REDUCE = 'reduce'     // Clamp export count to available sets
+}
+Phase 2: Bidirectional Relationship Implementation
+2.1 Generation Sets → Export Settings
+
+Adding first set: Enable batch export + Set generationCountMode to 'fixed'
+Removing last set: User choice to disable batch export
+2.2 Export Settings → Generation Sets
+
+generationCountMode = 'fixed': Enable generation sets functionality
+generationCountMode = 'range'|'incremental': Disable sets + Show popover message
+Dynamic max sets = batchExportCount value
+2.3 Popover/Notification System
+
+Disabled sets message: "Generation sets require fixed count mode. Switch to fixed mode in Generation Config Settings to enable sets functionality."
+Mismatch warning with default "hold" behavior notification
+Phase 3: Sets Manager Dialog Enhancements
+3.1 Update Set Count Display
+
+Move "X of Y sets" to right-aligned position
+Make Y dynamic based on batchExportCount (instead of hardcoded 20)
+3.2 Add Edge Case Selector
+
+Position: Bottom of Sets Manager dialog
+Options: Hold, Cycle, Ping Pong, Random, Reduce
+Only enabled when: availableSets.length < batchExportCount
+Default: "hold"
+3.3 Add Mismatch Notification
+
+Colored inline message style (like existing validation messages)
+Close button (top right X)
+Message: "You have fewer generation sets (X) than the export count (Y). Using 'hold' method to repeat the last set for remaining exports."
+Only show when mismatch exists
+Phase 4: Edge Case Processing Logic
+4.1 Mismatch Detection
+
+function detectSetCountMismatch(sets: GenerationSet[], exportCount: number): {
+  hasMismatch: boolean;
+  availableCount: number;
+  requiredCount: number;
+  strategy: EdgeCaseHandling;
+}
+4.2 Set Sequence Generation
+
+function generateSetSequence(
+  sets: GenerationSet[], 
+  exportCount: number, 
+  strategy: EdgeCaseHandling
+): GenerationSet[]
+4.3 Export Integration
+
+Apply edge case handling during export
+Pass final set sequence to export service
+Phase 5: User Experience & Persistence
+5.1 Save Edge Case Preference
+
+Add to user preferences schema
+Save/load selected strategy across sessions
+5.2 Real-time Validation
+
+Update mismatch detection when sets or export count changes
+Toggle edge case selector enabled/disabled state
+Show/hide notification message
+Implementation Priority Order 🚀
+Phase 0: Fix critical bugs (sets data capture + dropdowns) - IMMEDIATE
+Phase 1: Infrastructure changes
+Phase 2: Bidirectional sync
+Phase 3: Sets Manager enhancements
+Phase 4: Edge case processing
+Phase 5: Polish and persistence
+Questions for Implementation ❓
+For the mismatch notification: Should it appear immediately when mismatch is detected, or only when user opens Sets Manager dialog?
+
+Edge case tooltips: Should each option (hold/cycle/ping pong/random/reduce) have tooltip explanations?
+
+Validation timing: Should we prevent export when mismatch exists and no edge case strategy is selected, or always default to "hold"?

@@ -293,42 +293,43 @@ export default function BatchConfigDialog({
                     )}
                   </div>
 
-                  {generationSetsEnabled ? (
-                    /* Full Width Dropdown */
-                    <Select
-                      value={currentGenerationSetId || ''}
-                      onValueChange={(value) => onCurrentGenerationSetChange?.(value || null)}
+                  {/* Full Width Dropdown - Always visible, disabled when not enabled */}
+                  <Select
+                    value={currentGenerationSetId || ''}
+                    onValueChange={(value) => onCurrentGenerationSetChange?.(value || null)}
+                    disabled={!generationSetsEnabled}
+                  >
+                    <SelectTrigger 
+                      className={`w-full h-8 ${!generationSetsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      data-testid="batch-dialog-generation-sets-select-trigger"
                     >
-                      <SelectTrigger 
-                        className="w-full h-8"
-                        data-testid="batch-dialog-generation-sets-select-trigger"
-                      >
-                        <SelectValue 
-                          placeholder="Select generation set..." 
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
-                        {generationSets.length === 0 ? (
-                          <SelectItem value="no-sets" disabled className="text-slate-400">
-                            No sets available
+                      <SelectValue 
+                        placeholder={generationSetsEnabled ? "Select generation set..." : "Enable Generation Sets in Export & Save section"} 
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {generationSets.length === 0 ? (
+                        <SelectItem value="no-sets" disabled className="text-slate-400">
+                          No sets available
+                        </SelectItem>
+                      ) : (
+                        generationSets.map((set) => (
+                          <SelectItem 
+                            key={set.id} 
+                            value={set.id}
+                            className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
+                            data-testid={`batch-dialog-generation-sets-option-${set.id}`}
+                          >
+                            {set.name}
                           </SelectItem>
-                        ) : (
-                          generationSets.map((set) => (
-                            <SelectItem 
-                              key={set.id} 
-                              value={set.id}
-                              className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white"
-                              data-testid={`batch-dialog-generation-sets-option-${set.id}`}
-                            >
-                              {set.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    /* Disabled Message */
-                    <div className="flex items-center gap-2 p-2 bg-slate-900/50 border border-slate-600 rounded text-xs text-slate-400">
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Explanatory message when disabled */}
+                  {!generationSetsEnabled && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                       <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
                       <span>Enable Generation Sets in the Export & Save section to use this feature</span>
                     </div>
