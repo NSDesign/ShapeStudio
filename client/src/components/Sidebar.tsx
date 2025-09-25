@@ -1571,7 +1571,9 @@ export default function Sidebar({
               <Switch
                 id="batch-mode"
                 checked={exportSettings.exportBatchModeEnabled}
+                disabled={isLoadingExportSettings}
                 onCheckedChange={(checked) => {
+                  console.log('Batch export toggle clicked:', checked);
                   updateExportSettings.mutate({ exportBatchModeEnabled: checked as boolean });
                 }}
               />
