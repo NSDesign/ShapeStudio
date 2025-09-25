@@ -587,7 +587,7 @@ export function GenerationSetsInterface({
                       )}
                     </div>
 
-                    {/* Generation Settings Summary - Show current UI state */}
+                    {/* Generation Settings Summary - Only show enabled sections */}
                     <div className="text-xs text-slate-500 mb-2 space-y-1" data-testid={`generation-settings-${set.id}`}>
                       {currentUIState ? (
                         <>
@@ -603,6 +603,24 @@ export function GenerationSetsInterface({
                               <span>Colors: {currentUIState.batchConfigSettings.harmonyType}</span>
                             </div>
                           )}
+                          {currentUIState.batchConfigSettings?.blendModeEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
+                              <span>Blending: Enabled</span>
+                            </div>
+                          )}
+                          {currentUIState.batchConfigSettings?.shapePropertiesEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                              <span>Properties: Enabled</span>
+                            </div>
+                          )}
+                          {currentUIState.batchConfigSettings?.physicsEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                              <span>Physics: {currentUIState.batchConfigSettings.physicsType}</span>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <>
@@ -616,6 +634,24 @@ export function GenerationSetsInterface({
                             <div className="flex items-center gap-1">
                               <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
                               <span>Colors: {set.batchConfig.harmonyType}</span>
+                            </div>
+                          )}
+                          {set.batchConfig?.blendModeEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
+                              <span>Blending: Enabled</span>
+                            </div>
+                          )}
+                          {set.batchConfig?.shapePropertiesEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                              <span>Properties: Enabled</span>
+                            </div>
+                          )}
+                          {set.batchConfig?.physicsEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                              <span>Physics: {set.batchConfig.physicsType}</span>
                             </div>
                           )}
                         </>
