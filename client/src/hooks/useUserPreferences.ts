@@ -35,7 +35,7 @@ export function useUserPreferences() {
     },
     onSuccess: (response, variables) => {
       console.log('Export settings update successful:', variables);
-      // Update cache directly with optimistic update
+      // Update cache directly with the new settings
       queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
         if (!oldData) return oldData;
         return {
@@ -46,8 +46,8 @@ export function useUserPreferences() {
           },
         };
       });
-      // Also invalidate to ensure fresh data on next fetch
-      queryClient.invalidateQueries({ queryKey: ['/api/user/preferences'] });
+      // Don't invalidate immediately - this causes the flicker
+      // The cache update above is sufficient for immediate UI update
     },
     onError: (error) => {
       console.error('Export settings update failed:', error);
