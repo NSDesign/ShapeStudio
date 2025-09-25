@@ -82,8 +82,9 @@ export function GenerationSetsInterface({
     return GenerationSetValidator.validateGenerationSets(generationSets);
   }, [generationSets]);
 
-  // Calculate mismatch for export count banner
-  const hasSetsCountMismatch = batchExportCount !== undefined && generationSets.length > 0 && generationSets.length < batchExportCount;
+  // Calculate mismatch for export count banner - use enabled sets count
+  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
+  const hasSetsCountMismatch = batchExportCount !== undefined && batchExportCount > 0 && enabledSetsCount < batchExportCount;
 
   // Update parent validation state when validation changes
   useEffect(() => {
@@ -158,9 +159,10 @@ export function GenerationSetsInterface({
 
   // Delete generation set
   const handleDeleteSet = useCallback((setId: string) => {
-    if (generationSets.length <= 1) {
-      return; // Prevent deleting the last set
-    }
+    // Allow deletion of final set to support 0-set state
+    // if (generationSets.length <= 1) {
+    //   return; // Prevent deleting the last set
+    // }
 
     const updatedSets = generationSets
       .filter(set => set.id !== setId)
@@ -408,7 +410,7 @@ export function GenerationSetsInterface({
           <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
             <AlertDescription className="text-yellow-300">
-              <strong>Generation Sets Mismatch:</strong> You have {generationSets.length} generation set{generationSets.length !== 1 ? 's' : ''} but need {batchExportCount} for export. The system will use "hold" strategy (repeat last set) for remaining exports.
+              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. The system will use "hold" strategy (repeat last set) for remaining exports.
             </AlertDescription>
           </Alert>
         )}

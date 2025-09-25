@@ -75,8 +75,9 @@ export default function BatchConfigDialog({
     warnings: Array<{ message: string }>;
   }>({ errors: [], warnings: [] });
 
-  // Calculate mismatch detection for gear icon warning
-  const hasSetsCountMismatch = generationSets.length > 0 && generationSets.length < batchExportCount;
+  // Calculate mismatch detection for gear icon warning - use enabled sets count
+  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
+  const hasSetsCountMismatch = batchExportCount > 0 && enabledSetsCount < batchExportCount;
 
 
 
