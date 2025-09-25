@@ -211,6 +211,11 @@ export function useGenerationSets({
     return batchExportCount > 1 && generationCountMode === 'fixed';
   }, []);
 
+  // Check if there's a mismatch between available sets and export count
+  const hasSetsCountMismatch = useCallback((batchExportCount: number): boolean => {
+    return generationSets.length > 0 && generationSets.length < batchExportCount;
+  }, [generationSets.length]);
+
   return {
     // State
     generationSets,
@@ -228,6 +233,7 @@ export function useGenerationSets({
     
     // Utilities
     areSetsEnabled,
+    hasSetsCountMismatch,
     generateUniqueSetName,
     
     // Direct set management

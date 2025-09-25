@@ -32,6 +32,7 @@ interface BatchConfigDialogProps {
   shapeCountFixed?: number;
   shapeCountRange?: [number, number];
   generationSetsEnabled?: boolean;
+  batchExportCount?: number;
   onGenerationSetsChange?: (sets: GenerationSet[]) => void;
   onCurrentGenerationSetChange?: (setId: string | null) => void;
   onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
@@ -55,6 +56,7 @@ export default function BatchConfigDialog({
   shapeCountFixed = 10,
   shapeCountRange = [5, 15] as [number, number],
   generationSetsEnabled = false,
+  batchExportCount = 10,
   onGenerationSetsChange,
   onCurrentGenerationSetChange,
   onCreateGenerationSet,
@@ -72,6 +74,9 @@ export default function BatchConfigDialog({
     errors: Array<{ message: string }>;
     warnings: Array<{ message: string }>;
   }>({ errors: [], warnings: [] });
+
+  // Calculate mismatch detection for gear icon warning
+  const hasSetsCountMismatch = generationSets.length > 0 && generationSets.length < batchExportCount;
 
 
 
@@ -287,7 +292,7 @@ export default function BatchConfigDialog({
                           title="Open Generation Sets Manager"
                           data-testid="batch-dialog-generation-sets-manager-button"
                         >
-                          <Settings className="h-3 w-3 text-slate-300" />
+                          <Settings className={`h-3 w-3 ${hasSetsCountMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
                         </Button>
                       </div>
                     )}
