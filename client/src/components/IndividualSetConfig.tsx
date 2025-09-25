@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Palette, 
+ 
   Layers,
   Hash,
   Type,
@@ -438,97 +438,16 @@ export function IndividualSetConfig({
 
             <Separator className="bg-slate-700" />
 
-            {/* Shape Types Selection */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 justify-between" data-testid="section-shape-types">
-                <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-slate-400" />
-                  <h4 className="text-sm font-medium text-white" data-testid="heading-shape-types">Shape Types</h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={generationSet.enabledShapeTypes.length === 0 ? "destructive" : "secondary"} 
-                    className="text-xs text-blue-500"
-                    data-testid="badge-selected-shapes-count"
-                  >
-                    {generationSet.enabledShapeTypes.length} selected
-                  </Badge>
-                  {getFieldValidation('enabledShapeTypes').hasError && (
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
-                  )}
-                </div>
+            {/* Note: Shape Types Selection is managed in the sidebar Generation Sets dropdown */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4 text-blue-400" />
+                <h4 className="text-sm font-medium text-blue-200">Shape Types Configuration</h4>
               </div>
-              <div id="enabled-shape-types-error" role="alert">
-                {renderFieldValidation('enabledShapeTypes')}
-              </div>
-
-              <Accordion type="multiple" className="w-full" data-testid="accordion-shape-categories">
-                {Object.entries(SHAPE_CATEGORIES).map(([category, shapes]) => {
-                  const enabledInCategory = shapes.filter(shape => 
-                    generationSet.enabledShapeTypes.includes(shape)
-                  ).length;
-                  
-                  return (
-                    <AccordionItem key={category} value={category} className="border-slate-700" data-testid={`accordion-item-${category.toLowerCase().replace(/\s+/g, '-')}`}>
-                      <AccordionTrigger className="text-white hover:text-slate-200" data-testid={`accordion-trigger-${category.toLowerCase().replace(/\s+/g, '-')}`}>
-                        <div className="flex items-center gap-2">
-                          <span>{category}</span>
-                          <Badge variant="outline" className="text-xs text-blue-500" data-testid={`badge-category-count-${category.toLowerCase().replace(/\s+/g, '-')}`}>
-                            {enabledInCategory}/{shapes.length}
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="space-y-3">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSelectAllShapes(category)}
-                            data-testid={`button-select-all-${category.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            Select All
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeselectAllShapes(category)}
-                            data-testid={`button-deselect-all-${category.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            Deselect All
-                          </Button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
-                          {shapes.map((shapeType) => (
-                            <div 
-                              key={shapeType}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`shape-${shapeType}`}
-                                checked={generationSet.enabledShapeTypes.includes(shapeType)}
-                                onCheckedChange={(checked) => 
-                                  handleShapeTypeToggle(shapeType, checked as boolean)
-                                }
-                                data-testid={`checkbox-shape-${shapeType}`}
-                                aria-describedby={`label-shape-${shapeType}`}
-                              />
-                              <Label 
-                                id={`label-shape-${shapeType}`}
-                                htmlFor={`shape-${shapeType}`}
-                                className="text-sm text-white cursor-pointer"
-                                data-testid={`label-shape-${shapeType}`}
-                              >
-                                {shapeType.replace('-', ' ')}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+              <p className="text-xs text-slate-400">
+                Shape types are configured in the sidebar Generation Sets dropdown and combined with the advanced settings below. 
+                This dialog manages only the advanced generation settings that apply to the captured shape types.
+              </p>
             </div>
 
             {!globalZIndexEnabled && (
