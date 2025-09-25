@@ -308,8 +308,8 @@ export const useShapeEditor = () => {
       enabledShapeTypes: Array.from(uiState.enabledShapeTypes || enabledShapeTypes) as SupportedShapeType[],
       shapeCountMode: (uiState.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE) || 
                       (scatterSettings.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE),
-      shapeCountFixed: uiState.shapeCountFixed || scatterSettings.fixedShapeCount,
-      shapeCountRange: uiState.shapeCountRange || [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
+      shapeCountFixed: scatterSettings.fixedShapeCount,
+      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
       shapeSpecificProperties: {
         // Capture current shape-specific scatter settings
         ...Object.fromEntries(
