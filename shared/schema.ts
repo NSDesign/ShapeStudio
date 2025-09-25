@@ -55,6 +55,8 @@ export const userPreferences = pgTable("user_preferences", {
   // Generation sets persistence
   generationSets: jsonb("generation_sets").notNull().default('[]'),
   currentGenerationSetId: varchar("current_generation_set_id"),
+  // Export settings persistence
+  exportSettings: jsonb("export_settings").notNull().default('{}'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -85,6 +87,22 @@ export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
   colors: false,             // Color Manipulation - disabled by default
   project: true,             // Project Management - enabled by default
   export: true,              // Export & Save - enabled by default
+};
+
+// Export settings configuration type
+export interface ExportSettingsConfig {
+  exportBatchModeEnabled: boolean;    // Whether batch export mode is enabled
+  generationSetsEnabled: boolean;     // Whether generation sets toggle is enabled
+  batchExportCount: number;           // Current batch export count setting
+  generationCountMode: string;        // Current generation count mode ('fixed', 'range', etc)
+}
+
+// Default export settings configuration
+export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
+  exportBatchModeEnabled: false,      // Batch export disabled by default
+  generationSetsEnabled: false,       // Generation sets disabled by default
+  batchExportCount: 1,                // Single export by default
+  generationCountMode: 'fixed',       // Fixed count mode by default
 };
 
 // User preferences schemas

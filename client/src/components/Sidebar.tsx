@@ -9,7 +9,7 @@ import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useUserPreferences, useExportSettings } from '@/hooks/useUserPreferences';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -414,8 +414,6 @@ interface SidebarProps {
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
-  generationSetsEnabled?: boolean;
-  onGenerationSetsEnabledChange?: (enabled: boolean) => void;
 }
 
 export default function Sidebar({
@@ -480,9 +478,7 @@ export default function Sidebar({
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
-  areSetsEnabled,
-  generationSetsEnabled = false,
-  onGenerationSetsEnabledChange
+  areSetsEnabled
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -503,6 +499,9 @@ export default function Sidebar({
 
   // Get user preferences for sidebar section visibility
   const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
+  
+  // Get export settings from user preferences
+  const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
 
   // Use centralized generation sets state from parent
   const effectiveGenerationSets = generationSets || [];
@@ -511,7 +510,7 @@ export default function Sidebar({
   // Generation sets are enabled when in fixed mode AND the main toggle is enabled
   // This allows users to save/load generation configurations when both conditions are met
   const effectiveMode = generationCountMode ?? 'fixed';
-  const setsEnabled = (effectiveMode === 'fixed' || effectiveMode === 'FIXED') && generationSetsEnabled;
+  const setsEnabled = (effectiveMode === 'fixed' || effectiveMode === 'FIXED') && exportSettings.generationSetsEnabled;
   
 
   // Generation sets handlers
@@ -761,7 +760,6 @@ export default function Sidebar({
   // Export state variables lifted to main component level  
   const [exportShapeCountRange, setExportShapeCountRange] = useState<[number, number]>([5, 15]);
   const [exportBatchCount, setExportBatchCount] = useState(10);
-  const [exportBatchModeEnabled, setExportBatchModeEnabled] = useState(false);
   const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
   // New packaging and selective export settings
   const [packageAsZip, setPackageAsZip] = useState(false);
@@ -771,8 +769,8 @@ export default function Sidebar({
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
     // Auto-enable batch export when creating sets
-    if (!exportBatchModeEnabled) {
-      setExportBatchModeEnabled(true);
+    if (!exportSettings.exportBatchModeEnabled) {
+      updateExportSettings.mutate({ exportBatchModeEnabled: true });
       console.log('Auto-enabled batch export for generation sets');
     }
     
@@ -796,7 +794,7 @@ export default function Sidebar({
     const setId = onCreateGenerationSet?.(name, currentUIState);
     console.log('Created generation set:', name, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateGenerationSet, exportBatchModeEnabled, setExportBatchModeEnabled, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -1139,7 +1137,7 @@ export default function Sidebar({
 
     // NEW BATCH EXPORT WITH ZIP PACKAGING
     const handleBatchExportNew = async () => {
-      if (!exportBatchModeEnabled) return;
+      if (!exportSettings.exportBatchModeEnabled) return;
 
       setIsBatchExporting(true);
       setBatchProgress(0);
@@ -1572,13 +1570,15 @@ export default function Sidebar({
               <Label htmlFor="batch-mode" className="text-xs text-slate-400">Enable</Label>
               <Switch
                 id="batch-mode"
-                checked={exportBatchModeEnabled}
-                onCheckedChange={setExportBatchModeEnabled}
+                checked={exportSettings.exportBatchModeEnabled}
+                onCheckedChange={(checked) => {
+                  updateExportSettings.mutate({ exportBatchModeEnabled: checked as boolean });
+                }}
               />
             </div>
           </div>
 
-          {exportBatchModeEnabled && (
+          {exportSettings.exportBatchModeEnabled && (
             <>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -1697,23 +1697,25 @@ export default function Sidebar({
                     <Label className="text-xs text-slate-300">Generation Sets</Label>
                   </div>
                   <Checkbox
-                    checked={generationSetsEnabled}
-                    onCheckedChange={(checked) => onGenerationSetsEnabledChange?.(checked as boolean)}
-                    disabled={!exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed'}
+                    checked={exportSettings.generationSetsEnabled}
+                    onCheckedChange={(checked) => {
+                      updateExportSettings.mutate({ generationSetsEnabled: checked as boolean });
+                    }}
+                    disabled={!exportSettings.exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed'}
                     className="border-slate-500 data-[state=checked]:bg-blue-600"
                     data-testid="checkbox-generation-sets"
                   />
                 </div>
 
                 {/* Prerequisites messaging */}
-                {(!exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed') && (
+                {(!exportSettings.exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed') && (
                   <div className="text-xs text-slate-500 bg-yellow-900/20 p-2 rounded border border-yellow-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
                       <span className="text-yellow-300 font-medium">Prerequisites Required</span>
                     </div>
                     <div className="space-y-1">
-                      {!exportBatchModeEnabled && (
+                      {!exportSettings.exportBatchModeEnabled && (
                         <div>• Enable batch export mode above</div>
                       )}
                       {generationConfigSettings?.generationCountMode !== 'fixed' && (
@@ -1724,7 +1726,7 @@ export default function Sidebar({
                 )}
 
                 {/* Generation Sets enabled messaging */}
-                {generationSetsEnabled && exportBatchModeEnabled && generationConfigSettings?.generationCountMode === 'fixed' && (
+                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && generationConfigSettings?.generationCountMode === 'fixed' && (
                   <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
@@ -1891,7 +1893,7 @@ export default function Sidebar({
             enabledShapeTypes={enabledShapeTypes}
             scatterSettings={scatterSettings}
             generationConfigSettings={generationConfigSettings}
-            exportBatchModeEnabled={exportBatchModeEnabled}
+            exportBatchModeEnabled={exportSettings.exportBatchModeEnabled}
             exportSaveProjectFiles={exportSaveProjectFiles}
             exportBatchCount={exportBatchCount}
             packageAsZip={packageAsZip}
@@ -4631,7 +4633,7 @@ export default function Sidebar({
         shapeCountMode={shapeCountMode}
         shapeCountFixed={shapeCountFixed}
         shapeCountRange={shapeCountRange}
-        generationSetsEnabled={generationSetsEnabled}
+        generationSetsEnabled={exportSettings.generationSetsEnabled}
         onGenerationSetsChange={onGenerationSetsChange}
         onCurrentGenerationSetChange={onCurrentGenerationSetChange}
         onCreateGenerationSet={onCreateGenerationSet}
