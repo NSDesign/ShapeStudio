@@ -25,13 +25,10 @@ export function useUserPreferences() {
   // Mutation for updating export settings
   const updateExportSettings = useMutation({
     mutationFn: (newExportSettings: Partial<ExportSettingsConfig>) => {
-      return apiRequest('/api/user/preferences', {
-        method: 'PUT',
-        body: {
-          exportSettings: {
-            ...exportSettings,
-            ...newExportSettings,
-          },
+      return apiRequest('PUT', '/api/user/preferences', {
+        exportSettings: {
+          ...exportSettings,
+          ...newExportSettings,
         },
       });
     },
@@ -43,13 +40,10 @@ export function useUserPreferences() {
   // Mutation for updating sidebar sections
   const updateSidebarSections = useMutation({
     mutationFn: (newSidebarSections: Partial<SidebarSectionConfig>) => {
-      return apiRequest('/api/user/preferences', {
-        method: 'PUT',
-        body: {
-          sidebarSections: {
-            ...sidebarSections,
-            ...newSidebarSections,
-          },
+      return apiRequest('PUT', '/api/user/preferences', {
+        sidebarSections: {
+          ...sidebarSections,
+          ...newSidebarSections,
         },
       });
     },
