@@ -49,6 +49,8 @@ interface GenerationSetsInterfaceProps {
   // Bi-directional sync props
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
+  // Mismatch detection for export count
+  batchExportCount?: number;
 }
 
 export function GenerationSetsInterface({
@@ -61,7 +63,9 @@ export function GenerationSetsInterface({
   onValidationChange,
   // Bi-directional sync props
   currentSetId,
-  onCurrentSetChange
+  onCurrentSetChange,
+  // Mismatch detection for export count
+  batchExportCount
 }: GenerationSetsInterfaceProps) {
   // Use external currentSetId if provided, otherwise fall back to internal state
   const [internalSelectedSetId, setInternalSelectedSetId] = useState<string | null>(null);
@@ -77,6 +81,9 @@ export function GenerationSetsInterface({
   const overallValidation = useMemo(() => {
     return GenerationSetValidator.validateGenerationSets(generationSets);
   }, [generationSets]);
+
+  // Calculate mismatch for export count banner
+  const hasSetsCountMismatch = batchExportCount !== undefined && generationSets.length > 0 && generationSets.length < batchExportCount;
 
   // Update parent validation state when validation changes
   useEffect(() => {
@@ -392,6 +399,16 @@ export function GenerationSetsInterface({
                   <li key={index}>{error}</li>
                 ))}
               </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Mismatch notification banner */}
+        {hasSetsCountMismatch && (
+          <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
+            <AlertTriangle className="h-4 w-4 text-yellow-400" />
+            <AlertDescription className="text-yellow-300">
+              <strong>Generation Sets Mismatch:</strong> You have {generationSets.length} generation set{generationSets.length !== 1 ? 's' : ''} but need {batchExportCount} for export. The system will use "hold" strategy (repeat last set) for remaining exports.
             </AlertDescription>
           </Alert>
         )}

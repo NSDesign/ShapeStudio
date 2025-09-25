@@ -246,9 +246,10 @@ export function validateGenerationSets(
   const setSpecificErrors: { [setId: string]: string[] } = {};
 
   // Validate global constraints
-  if (generationSets.length === 0) {
-    globalErrors.push('At least one generation set is required');
-  }
+  // Note: Allow 0 sets for cases where generation sets feature is optional
+  // if (generationSets.length === 0) {
+  //   globalErrors.push('At least one generation set is required');
+  // }
 
   if (generationSets.length > DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets) {
     globalErrors.push(`Cannot have more than ${DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} generation sets`);
