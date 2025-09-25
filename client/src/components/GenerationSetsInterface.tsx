@@ -547,51 +547,93 @@ export function GenerationSetsInterface({
                     </h5>
 
                     <div className="flex flex-wrap gap-1 mb-2" data-testid={`container-shape-types-${set.id}`}>
-                      {set.enabledShapeTypes.slice(0, 3).map(shapeType => (
-                        <Badge 
-                          key={shapeType} 
-                          variant="secondary" 
-                          className="text-xs"
-                          data-testid={`badge-shape-type-${set.id}-${shapeType}`}
-                        >
-                          {shapeType}
-                        </Badge>
-                      ))}
-                      {set.enabledShapeTypes.length > 3 && (
-                        <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
-                          +{set.enabledShapeTypes.length - 3}
-                        </Badge>
+                      {/* Show current UI state instead of stored set data */}
+                      {currentUIState ? (
+                        Array.from(currentUIState.enabledShapeTypes).slice(0, 3).map(shapeType => (
+                          <Badge 
+                            key={shapeType} 
+                            variant="secondary" 
+                            className="text-xs"
+                            data-testid={`badge-shape-type-${set.id}-${shapeType}`}
+                          >
+                            {shapeType}
+                          </Badge>
+                        ))
+                      ) : (
+                        set.enabledShapeTypes.slice(0, 3).map(shapeType => (
+                          <Badge 
+                            key={shapeType} 
+                            variant="secondary" 
+                            className="text-xs"
+                            data-testid={`badge-shape-type-${set.id}-${shapeType}`}
+                          >
+                            {shapeType}
+                          </Badge>
+                        ))
+                      )}
+                      
+                      {currentUIState ? (
+                        currentUIState.enabledShapeTypes.size > 3 && (
+                          <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
+                            +{currentUIState.enabledShapeTypes.size - 3}
+                          </Badge>
+                        )
+                      ) : (
+                        set.enabledShapeTypes.length > 3 && (
+                          <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
+                            +{set.enabledShapeTypes.length - 3}
+                          </Badge>
+                        )
                       )}
                     </div>
 
-                    {/* Generation Settings Summary */}
+                    {/* Generation Settings Summary - Show current UI state */}
                     <div className="text-xs text-slate-500 mb-2 space-y-1" data-testid={`generation-settings-${set.id}`}>
-                      {set.batchConfig?.noiseEnabled && (
-                        <div className="flex items-center gap-1">
-                          <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                          <span>Noise: {set.batchConfig.noiseAlgorithm}</span>
-                        </div>
-                      )}
-                      {set.batchConfig?.distributionLayoutEnabled && (
-                        <div className="flex items-center gap-1">
-                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                          <span>Layout: {set.batchConfig.distributionPattern}</span>
-                        </div>
-                      )}
-                      {set.batchConfig?.colorHarmonyEnabled && (
-                        <div className="flex items-center gap-1">
-                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                          <span>Colors: {set.batchConfig.harmonyType}</span>
-                        </div>
+                      {currentUIState ? (
+                        <>
+                          {currentUIState.batchConfigSettings?.distributionLayoutEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                              <span>Layout: {currentUIState.batchConfigSettings.distributionPattern}</span>
+                            </div>
+                          )}
+                          {currentUIState.batchConfigSettings?.colorHarmonyEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                              <span>Colors: {currentUIState.batchConfigSettings.harmonyType}</span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {set.batchConfig?.distributionLayoutEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                              <span>Layout: {set.batchConfig.distributionPattern}</span>
+                            </div>
+                          )}
+                          {set.batchConfig?.colorHarmonyEnabled && (
+                            <div className="flex items-center gap-1">
+                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                              <span>Colors: {set.batchConfig.harmonyType}</span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span data-testid={`text-shape-count-${set.id}`}>
-                        {set.shapeCountMode === ShapeCountMode.FIXED 
-                          ? `${set.shapeCountFixed} shapes`
-                          : `${set.shapeCountRange[0]}-${set.shapeCountRange[1]} shapes`
-                        }
+                        {/* Show current UI state instead of stored set data */}
+                        {currentUIState ? (
+                          currentUIState.shapeCountMode === ShapeCountMode.FIXED 
+                            ? `${currentUIState.shapeCountFixed} shapes`
+                            : `${currentUIState.shapeCountRange[0]}-${currentUIState.shapeCountRange[1]} shapes`
+                        ) : (
+                          set.shapeCountMode === ShapeCountMode.FIXED 
+                            ? `${set.shapeCountFixed} shapes`
+                            : `${set.shapeCountRange[0]}-${set.shapeCountRange[1]} shapes`
+                        )}
                       </span>
                       <div className="flex gap-1">
                         <Button
