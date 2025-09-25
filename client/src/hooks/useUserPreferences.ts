@@ -25,6 +25,7 @@ export function useUserPreferences() {
   // Mutation for updating export settings
   const updateExportSettings = useMutation({
     mutationFn: (newExportSettings: Partial<ExportSettingsConfig>) => {
+      console.log('Updating export settings:', newExportSettings);
       return apiRequest('PUT', '/api/user/preferences', {
         exportSettings: {
           ...exportSettings,
@@ -32,8 +33,24 @@ export function useUserPreferences() {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
+      console.log('Export settings update successful:', variables);
+      // Update cache directly with optimistic update
+      queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          exportSettings: {
+            ...exportSettings,
+            ...variables,
+          },
+        };
+      });
+      // Also invalidate to ensure fresh data on next fetch
       queryClient.invalidateQueries({ queryKey: ['/api/user/preferences'] });
+    },
+    onError: (error) => {
+      console.error('Export settings update failed:', error);
     },
   });
 
