@@ -95,6 +95,7 @@ export interface ExportSettingsConfig {
   generationSetsEnabled: boolean;     // Whether generation sets toggle is enabled
   batchExportCount: number;           // Current batch export count setting
   generationCountMode: string;        // Current generation count mode ('fixed', 'range', etc)
+  edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';  // Strategy when set count < batch export count
 }
 
 // Default export settings configuration
@@ -103,6 +104,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   generationSetsEnabled: false,       // Generation sets disabled by default
   batchExportCount: 1,                // Single export by default
   generationCountMode: 'fixed',       // Fixed count mode by default
+  edgeCaseStrategy: 'cycle',          // Default edge case strategy
 };
 
 // User preferences schemas

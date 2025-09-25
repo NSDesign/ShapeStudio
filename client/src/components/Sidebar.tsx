@@ -4666,6 +4666,11 @@ export default function Sidebar({
           return setId || '';
         }}
         batchExportCount={batchExportCount}
+        edgeCaseStrategy={exportSettings.edgeCaseStrategy || 'cycle'}
+        onEdgeCaseStrategyChange={(strategy) => {
+          console.log('Edge case strategy changed:', strategy);
+          updateExportSettings.mutate({ edgeCaseStrategy: strategy });
+        }}
       />
     </div>
   );
