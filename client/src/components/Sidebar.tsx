@@ -1696,14 +1696,13 @@ export default function Sidebar({
                     <Boxes className="w-3 h-3 text-slate-400" />
                     <Label className="text-xs text-slate-300">Generation Sets</Label>
                   </div>
-                  <Checkbox
+                  <Switch
                     checked={exportSettings.generationSetsEnabled}
                     onCheckedChange={(checked) => {
                       updateExportSettings.mutate({ generationSetsEnabled: checked as boolean });
                     }}
                     disabled={!exportSettings.exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed'}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                    data-testid="checkbox-generation-sets"
+                    data-testid="toggle-generation-sets"
                   />
                 </div>
 
