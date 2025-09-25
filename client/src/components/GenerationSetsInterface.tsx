@@ -26,7 +26,8 @@ import {
   ShapeCountMode, 
   SupportedShapeType,
   DEFAULT_GENERATION_SET_LIMITS,
-  GenerationSetUtils
+  GenerationSetUtils,
+  BatchConfigSettings
 } from '@shared/schema';
 import { generateUniqueSetName } from '@/utils/nameGeneration';
 import { IndividualSetConfig } from '@/components/IndividualSetConfig';
@@ -37,6 +38,8 @@ import {
   ValidationWarning
 } from '@/lib/typedHelpers';
 import { ErrorBoundary, SafeSection } from '@/components/ErrorBoundary';
+import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 interface GenerationSetsInterfaceProps {
   generationSets: GenerationSet[];
@@ -51,6 +54,9 @@ interface GenerationSetsInterfaceProps {
   onCurrentSetChange?: (setId: string | null) => void;
   // Mismatch detection for export count
   batchExportCount?: number;
+  // Current UI state for data capture
+  currentUIState?: CurrentUIState;
+  onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
 }
 
 export function GenerationSetsInterface({
@@ -65,7 +71,10 @@ export function GenerationSetsInterface({
   currentSetId,
   onCurrentSetChange,
   // Mismatch detection for export count
-  batchExportCount
+  batchExportCount,
+  // Current UI state for data capture
+  currentUIState,
+  onCreateSetFromState
 }: GenerationSetsInterfaceProps) {
   // Use external currentSetId if provided, otherwise fall back to internal state
   const [internalSelectedSetId, setInternalSelectedSetId] = useState<string | null>(null);
@@ -117,11 +126,19 @@ export function GenerationSetsInterface({
       return;
     }
 
-    const newId = `generation_set_${Date.now()}`;
     // Use the generateUniqueSetName utility for consistent naming
     const existingNames = generationSets.map(set => set.name);
     const uniqueName = generateUniqueSetName(existingNames, 'Set');
     
+    // If we have current UI state and a creation handler, use real data
+    if (currentUIState && onCreateSetFromState) {
+      const newSetId = onCreateSetFromState(currentUIState, uniqueName);
+      setSelectedSetId(newSetId);
+      return;
+    }
+    
+    // Fallback to default creation (for backwards compatibility)
+    const newId = `generation_set_${Date.now()}`;
     const newSet = GenerationSetUtils.createDefault(
       newId,
       uniqueName
@@ -133,7 +150,7 @@ export function GenerationSetsInterface({
     const updatedSets = [...generationSets, newSet];
     onGenerationSetsChange(updatedSets);
     setSelectedSetId(newId);
-  }, [generationSets, maxSets, onGenerationSetsChange]);
+  }, [generationSets, maxSets, onGenerationSetsChange, currentUIState, onCreateSetFromState]);
 
   // Duplicate generation set
   const handleDuplicateSet = useCallback((setId: string) => {

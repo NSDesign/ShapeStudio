@@ -4653,6 +4653,19 @@ export default function Sidebar({
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
         onCurrentSetChange={onCurrentGenerationSetChange}
+        currentUIState={{
+          enabledShapeTypes,
+          scatterSettings,
+          batchConfigSettings: generationConfigSettings,
+          shapeCountMode,
+          shapeCountFixed,
+          shapeCountRange
+        }}
+        onCreateSetFromState={(uiState, name) => {
+          const setId = handleCreateSet(name || '');
+          return setId || '';
+        }}
+        batchExportCount={batchExportCount}
       />
     </div>
   );

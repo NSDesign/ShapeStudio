@@ -629,15 +629,19 @@ export function IndividualSetConfig({
 
             <Separator className="bg-slate-700" />
 
-            {/* Compositing & Blend Modes Controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2" data-testid="section-compositing-blend">
-                <Blend className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-white" data-testid="heading-compositing-blend">Compositing & Blend Modes</h4>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {/* Set Blend Mode */}
+            {/* Advanced Configuration Sections */}
+            <Accordion type="multiple" className="space-y-2" defaultValue={["compositing", "transforms", "artboard"]}>
+              {/* Compositing & Blend Modes Controls */}
+              <AccordionItem value="compositing" className="border-slate-700">
+                <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-compositing-blend">
+                  <div className="flex items-center gap-2">
+                    <Blend className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm font-medium">Compositing & Blend Modes</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="grid grid-cols-1 gap-4 pt-2">
+                    {/* Set Blend Mode */}
                 <div>
                   <Label className="text-white text-xs">Set Blend Mode</Label>
                   <Select
@@ -725,23 +729,23 @@ export function IndividualSetConfig({
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Advanced compositing for masking and special effects
-                  </p>
-                </div>
-              </div>
-            </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Advanced compositing for masking and special effects
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            <Separator className="bg-slate-700" />
-
-            {/* Set Positioning & Transforms Controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2" data-testid="section-set-transform">
-                <Move className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-white" data-testid="heading-set-transform">Set Positioning & Transforms</h4>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              {/* Set Positioning & Transforms Controls */}
+              <AccordionItem value="transforms" className="border-slate-700">
+                <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-set-transform">
+                  <div className="flex items-center gap-2">
+                    <Move className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm font-medium">Set Positioning & Transforms</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="grid grid-cols-2 gap-4 pt-2">
                 {/* Position Controls */}
                 <div className="space-y-3">
                   <Label className="text-white text-xs">Position</Label>
@@ -903,19 +907,20 @@ export function IndividualSetConfig({
                 <p className="text-xs text-slate-500 mt-1">
                   Point around which rotation and scaling occurs
                 </p>
-              </div>
-            </div>
-
-            <Separator className="bg-slate-700" />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
             {/* Artboard & Alignment Controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2" data-testid="section-artboard-alignment">
-                <Maximize2 className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-white" data-testid="heading-artboard-alignment">Artboard & Alignment</h4>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
+            <AccordionItem value="artboard" className="border-slate-700">
+              <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-artboard-alignment">
+                <div className="flex items-center gap-2">
+                  <Maximize2 className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-medium">Artboard & Alignment</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="grid grid-cols-1 gap-4 pt-2">
                 {/* Fit to Artboard */}
                 <div className="flex items-center justify-between">
                   <Label className="text-white text-sm">Fit to Artboard</Label>
@@ -1060,8 +1065,10 @@ export function IndividualSetConfig({
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             <Separator className="bg-slate-700" />
 

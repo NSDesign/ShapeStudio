@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
 import { ValidationError, ValidationWarning } from '@/lib/typedHelpers';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 interface SetsManagerDialogProps {
   isOpen: boolean;
@@ -15,6 +16,10 @@ interface SetsManagerDialogProps {
   // Bi-directional sync props
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
+  // Current UI state for data capture
+  currentUIState?: CurrentUIState;
+  onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
+  batchExportCount?: number;
 }
 
 export function SetsManagerDialog({
@@ -26,7 +31,11 @@ export function SetsManagerDialog({
   showInlineValidation = true,
   // Bi-directional sync props
   currentSetId,
-  onCurrentSetChange
+  onCurrentSetChange,
+  // Current UI state for data capture
+  currentUIState,
+  onCreateSetFromState,
+  batchExportCount
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
@@ -87,6 +96,9 @@ export function SetsManagerDialog({
             onValidationChange={handleValidationChange}
             currentSetId={currentSetId}
             onCurrentSetChange={onCurrentSetChange}
+            currentUIState={currentUIState}
+            onCreateSetFromState={onCreateSetFromState}
+            batchExportCount={batchExportCount}
           />
         </div>
 
