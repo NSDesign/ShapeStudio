@@ -413,6 +413,8 @@ interface SidebarProps {
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
+  generationSetsEnabled?: boolean;
+  onGenerationSetsEnabledChange?: (enabled: boolean) => void;
 }
 
 export default function Sidebar({
@@ -477,7 +479,9 @@ export default function Sidebar({
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
-  areSetsEnabled
+  areSetsEnabled,
+  generationSetsEnabled = false,
+  onGenerationSetsEnabledChange
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -1680,6 +1684,52 @@ export default function Sidebar({
                       </>
                     )}
                     <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Generation Sets Toggle */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
+                  <div className="flex items-center space-x-2">
+                    <Boxes className="w-3 h-3 text-slate-400" />
+                    <Label className="text-xs text-slate-300">Generation Sets</Label>
+                  </div>
+                  <Checkbox
+                    checked={generationSetsEnabled}
+                    onCheckedChange={(checked) => onGenerationSetsEnabledChange?.(checked as boolean)}
+                    disabled={!exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed'}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                    data-testid="checkbox-generation-sets"
+                  />
+                </div>
+
+                {/* Prerequisites messaging */}
+                {(!exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed') && (
+                  <div className="text-xs text-slate-500 bg-yellow-900/20 p-2 rounded border border-yellow-500/30">
+                    <div className="flex items-center space-x-1 mb-1">
+                      <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
+                      <span className="text-yellow-300 font-medium">Prerequisites Required</span>
+                    </div>
+                    <div className="space-y-1">
+                      {!exportBatchModeEnabled && (
+                        <div>• Enable batch export mode above</div>
+                      )}
+                      {generationConfigSettings?.generationCountMode !== 'fixed' && (
+                        <div>• Set generation count mode to "Fixed"</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Generation Sets enabled messaging */}
+                {generationSetsEnabled && exportBatchModeEnabled && generationConfigSettings?.generationCountMode === 'fixed' && (
+                  <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
+                    <div className="flex items-center space-x-1 mb-1">
+                      <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                      <span className="text-blue-300 font-medium">Generation Sets Active</span>
+                    </div>
+                    Save and load different generation configurations with specific settings for consistent, repeatable results.
                   </div>
                 )}
               </div>
