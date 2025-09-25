@@ -175,9 +175,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: `${userId}-preferences`,
           userId,
           sidebarSections: req.body.sidebarSections || {},
+          exportSettings: req.body.exportSettings || {},
+          generationSets: req.body.generationSets || [],
+          currentGenerationSetId: req.body.currentGenerationSetId || null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+        console.log('Mock preferences update:', mockPreferences);
         res.json(mockPreferences);
         return;
       }
