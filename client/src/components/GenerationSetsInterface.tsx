@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Label } from '@/components/ui/label';
 import { 
   Plus, 
   Copy, 
@@ -29,6 +30,7 @@ import {
   GenerationSetUtils,
   BatchConfigSettings
 } from '@shared/schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateUniqueSetName } from '@/utils/nameGeneration';
 import { IndividualSetConfig } from '@/components/IndividualSetConfig';
 import { 
@@ -427,9 +429,67 @@ export function GenerationSetsInterface({
           <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
             <AlertDescription className="text-yellow-300">
-              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. The system will use "hold" strategy (repeat last set) for remaining exports.
+              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the edge case strategy below.
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Edge Case Strategy Configuration */}
+        {hasSetsCountMismatch && (
+          <Card className="bg-slate-800 border-slate-700" data-testid="card-edge-case-strategy">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-slate-200">
+                    Edge Case Strategy
+                  </Label>
+                  <p className="text-xs text-slate-400">
+                    How to handle exports when fewer sets than batch count
+                  </p>
+                </div>
+                <div className="w-32">
+                  <Select 
+                    value="cycle" 
+                    onValueChange={(value) => {
+                      // TODO: Implement edge case strategy change
+                      console.log('Edge case strategy changed:', value);
+                    }}
+                    data-testid="select-edge-case-strategy"
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="cycle" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Cycle</span>
+                          <span className="text-xs text-slate-400">Repeat through all sets</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hold" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Hold</span>
+                          <span className="text-xs text-slate-400">Repeat last set only</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="random" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Random</span>
+                          <span className="text-xs text-slate-400">Pick sets randomly</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="stop" className="text-white hover:bg-slate-600">
+                        <div className="flex flex-col">
+                          <span>Stop</span>
+                          <span className="text-xs text-slate-400">Generate only available sets</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

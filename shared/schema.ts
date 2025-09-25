@@ -1388,6 +1388,9 @@ export interface EnhancedBatchConfig {
       backgroundColor: string;
     };
     
+    // Edge case strategy for when generation sets count < batch export count
+    edgeCaseStrategy: 'hold' | 'cycle' | 'random' | 'stop';
+    
     // Export settings
     exportFormat: 'png' | 'svg' | 'json';
     exportQuality: number;            // 0-100 for image formats
@@ -2021,6 +2024,7 @@ export const EnhancedBatchConfigSchema = z.object({
       height: z.number().positive(),
       backgroundColor: z.string()
     }).optional(),
+    edgeCaseStrategy: z.enum(['hold', 'cycle', 'random', 'stop']),
     exportFormat: z.enum(['png', 'svg', 'json']),
     exportQuality: z.number().min(0).max(100),
     globalZIndexSettings: z.object({
