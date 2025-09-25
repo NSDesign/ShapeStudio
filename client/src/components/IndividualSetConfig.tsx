@@ -641,6 +641,7 @@ export function IndividualSetConfig({
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <div className="grid grid-cols-1 gap-4 pt-2">
+                    <div>
                     {/* Set Blend Mode */}
                 <div>
                   <Label className="text-white text-xs">Set Blend Mode</Label>
@@ -729,9 +730,9 @@ export function IndividualSetConfig({
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Advanced compositing for masking and special effects
-                    </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Advanced compositing for masking and special effects
+                  </p>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -745,169 +746,169 @@ export function IndividualSetConfig({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                {/* Position Controls */}
-                <div className="space-y-3">
-                  <Label className="text-white text-xs">Position</Label>
-                  
-                  {/* X Position */}
-                  <div>
-                    <Label className="text-white text-xs">
-                      X: {generationSet.setTransform.x}px
-                    </Label>
-                    <Slider
-                      value={[generationSet.setTransform.x]}
-                      onValueChange={([value]) => 
-                        onUpdate({
-                          setTransform: {
-                            ...generationSet.setTransform,
-                            x: value
-                          }
-                        })
-                      }
-                      min={-1000}
-                      max={1000}
-                      step={1}
-                      className="mt-1"
-                      data-testid="slider-set-transform-x"
-                      aria-label="Set X position"
-                    />
-                  </div>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                        {/* Position Controls */}
+                        <div className="space-y-3">
+                            <Label className="text-white text-xs">Position</Label>
+                            
+                            {/* X Position */}
+                            <div>
+                                <Label className="text-white text-xs">
+                                    X: {generationSet.setTransform.x}px
+                                </Label>
+                                <Slider
+                                    value={[generationSet.setTransform.x]}
+                                    onValueChange={([value]) => 
+                                        onUpdate({
+                                            setTransform: {
+                                                ...generationSet.setTransform,
+                                                x: value
+                                            }
+                                        })
+                                    }
+                                    min={-1000}
+                                    max={1000}
+                                    step={1}
+                                    className="mt-1"
+                                    data-testid="slider-set-transform-x"
+                                    aria-label="Set X position"
+                                />
+                            </div>
 
-                  {/* Y Position */}
-                  <div>
-                    <Label className="text-white text-xs">
-                      Y: {generationSet.setTransform.y}px
-                    </Label>
-                    <Slider
-                      value={[generationSet.setTransform.y]}
-                      onValueChange={([value]) => 
-                        onUpdate({
-                          setTransform: {
-                            ...generationSet.setTransform,
-                            y: value
-                          }
-                        })
-                      }
-                      min={-1000}
-                      max={1000}
-                      step={1}
-                      className="mt-1"
-                      data-testid="slider-set-transform-y"
-                      aria-label="Set Y position"
-                    />
-                  </div>
-                </div>
+                            {/* Y Position */}
+                            <div>
+                                <Label className="text-white text-xs">
+                                    Y: {generationSet.setTransform.y}px
+                                </Label>
+                                <Slider
+                                    value={[generationSet.setTransform.y]}
+                                    onValueChange={([value]) => 
+                                        onUpdate({
+                                            setTransform: {
+                                                ...generationSet.setTransform,
+                                                y: value
+                                            }
+                                        })
+                                    }
+                                    min={-1000}
+                                    max={1000}
+                                    step={1}
+                                    className="mt-1"
+                                    data-testid="slider-set-transform-y"
+                                    aria-label="Set Y position"
+                                />
+                            </div>
+                        </div>
 
-                {/* Transform Controls */}
-                <div className="space-y-3">
-                  <Label className="text-white text-xs">Transform</Label>
-                  
-                  {/* Rotation */}
-                  <div>
-                    <Label className="text-white text-xs">
-                      Rotation: {generationSet.setTransform.rotation}°
-                    </Label>
-                    <Slider
-                      value={[generationSet.setTransform.rotation]}
-                      onValueChange={([value]) => 
-                        onUpdate({
-                          setTransform: {
-                            ...generationSet.setTransform,
-                            rotation: value
-                          }
-                        })
-                      }
-                      min={-180}
-                      max={180}
-                      step={1}
-                      className="mt-1"
-                      data-testid="slider-set-transform-rotation"
-                      aria-label="Set rotation"
-                    />
-                  </div>
+                        {/* Transform Controls */}
+                        <div className="space-y-3">
+                            <Label className="text-white text-xs">Transform</Label>
+                            
+                            {/* Rotation */}
+                            <div>
+                                <Label className="text-white text-xs">
+                                    Rotation: {generationSet.setTransform.rotation}°
+                                </Label>
+                                <Slider
+                                    value={[generationSet.setTransform.rotation]}
+                                    onValueChange={([value]) => 
+                                        onUpdate({
+                                            setTransform: {
+                                                ...generationSet.setTransform,
+                                                rotation: value
+                                            }
+                                        })
+                                    }
+                                    min={-180}
+                                    max={180}
+                                    step={1}
+                                    className="mt-1"
+                                    data-testid="slider-set-transform-rotation"
+                                    aria-label="Set rotation"
+                                />
+                            </div>
 
-                  {/* Scale Controls */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-white text-xs">
-                        Scale X: {Math.round(generationSet.setTransform.scaleX * 100)}%
-                      </Label>
-                      <Slider
-                        value={[generationSet.setTransform.scaleX]}
-                        onValueChange={([value]) => 
-                          onUpdate({
-                            setTransform: {
-                              ...generationSet.setTransform,
-                              scaleX: value
-                            }
-                          })
-                        }
-                        min={0.1}
-                        max={3.0}
-                        step={0.01}
-                        className="mt-1"
-                        data-testid="slider-set-transform-scale-x"
-                        aria-label="Set scale X"
-                      />
+                            {/* Scale Controls */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label className="text-white text-xs">
+                                        Scale X: {Math.round(generationSet.setTransform.scaleX * 100)}%
+                                    </Label>
+                                    <Slider
+                                        value={[generationSet.setTransform.scaleX]}
+                                        onValueChange={([value]) => 
+                                            onUpdate({
+                                                setTransform: {
+                                                    ...generationSet.setTransform,
+                                                    scaleX: value
+                                                }
+                                            })
+                                        }
+                                        min={0.1}
+                                        max={3.0}
+                                        step={0.01}
+                                        className="mt-1"
+                                        data-testid="slider-set-transform-scale-x"
+                                        aria-label="Set scale X"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <Label className="text-white text-xs">
+                                        Scale Y: {Math.round(generationSet.setTransform.scaleY * 100)}%
+                                    </Label>
+                                    <Slider
+                                        value={[generationSet.setTransform.scaleY]}
+                                        onValueChange={([value]) => 
+                                            onUpdate({
+                                                setTransform: {
+                                                    ...generationSet.setTransform,
+                                                    scaleY: value
+                                                }
+                                            })
+                                        }
+                                        min={0.1}
+                                        max={3.0}
+                                        step={0.01}
+                                        className="mt-1"
+                                        data-testid="slider-set-transform-scale-y"
+                                        aria-label="Set scale Y"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div>
-                      <Label className="text-white text-xs">
-                        Scale Y: {Math.round(generationSet.setTransform.scaleY * 100)}%
-                      </Label>
-                      <Slider
-                        value={[generationSet.setTransform.scaleY]}
-                        onValueChange={([value]) => 
-                          onUpdate({
-                            setTransform: {
-                              ...generationSet.setTransform,
-                              scaleY: value
-                            }
-                          })
-                        }
-                        min={0.1}
-                        max={3.0}
-                        step={0.01}
-                        className="mt-1"
-                        data-testid="slider-set-transform-scale-y"
-                        aria-label="Set scale Y"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Transform Origin */}
-              <div>
-                <Label className="text-white text-xs">Transform Origin</Label>
-                <Select
-                  value={generationSet.setTransform.transformOrigin}
-                  onValueChange={(value) => 
-                    onUpdate({
-                      setTransform: {
-                        ...generationSet.setTransform,
-                        transformOrigin: value as 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-                      }
-                    })
-                  }
-                  data-testid="select-transform-origin"
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="center" className="text-white hover:bg-slate-600">Center</SelectItem>
-                    <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
-                    <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
-                    <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
-                    <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500 mt-1">
-                  Point around which rotation and scaling occurs
-                </p>
-                </div>
+                    {/* Transform Origin */}
+                    <div>
+                        <Label className="text-white text-xs">Transform Origin</Label>
+                        <Select
+                            value={generationSet.setTransform.transformOrigin}
+                            onValueChange={(value) => 
+                                onUpdate({
+                                    setTransform: {
+                                        ...generationSet.setTransform,
+                                        transformOrigin: value as 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+                                    }
+                                })
+                            }
+                            data-testid="select-transform-origin"
+                        >
+                            <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="center" className="text-white hover:bg-slate-600">Center</SelectItem>
+                                <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
+                                <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
+                                <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
+                                <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Point around which rotation and scaling occurs
+                        </p>
+                    </div>
               </AccordionContent>
             </AccordionItem>
 
@@ -920,152 +921,152 @@ export function IndividualSetConfig({
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pb-4">
-                <div className="grid grid-cols-1 gap-4 pt-2">
-                {/* Fit to Artboard */}
-                <div className="flex items-center justify-between">
-                  <Label className="text-white text-sm">Fit to Artboard</Label>
-                  <Checkbox
-                    checked={generationSet.artboardAlignment.fitToArtboard}
-                    onCheckedChange={(checked) => 
-                      onUpdate({
-                        artboardAlignment: {
-                          ...generationSet.artboardAlignment,
-                          fitToArtboard: checked as boolean
-                        }
-                      })
-                    }
-                    className="border-slate-600 data-[state=checked]:bg-blue-600"
-                    data-testid="checkbox-fit-to-artboard"
-                  />
-                </div>
+                    <div className="grid grid-cols-1 gap-4 pt-2">
+                        {/* Fit to Artboard */}
+                        <div className="flex items-center justify-between">
+                            <Label className="text-white text-sm">Fit to Artboard</Label>
+                            <Checkbox
+                                checked={generationSet.artboardAlignment.fitToArtboard}
+                                onCheckedChange={(checked) => 
+                                    onUpdate({
+                                        artboardAlignment: {
+                                            ...generationSet.artboardAlignment,
+                                            fitToArtboard: checked as boolean
+                                        }
+                                    })
+                                }
+                                className="border-slate-600 data-[state=checked]:bg-blue-600"
+                                data-testid="checkbox-fit-to-artboard"
+                            />
+                        </div>
 
-                {generationSet.artboardAlignment.fitToArtboard && (
-                  <div className="bg-blue-900/20 border border-blue-700 p-3 rounded-lg">
-                    <p className="text-xs text-blue-300">
-                      Shapes will be automatically scaled and positioned to fit within artboard bounds
-                    </p>
-                  </div>
-                )}
+                        {generationSet.artboardAlignment.fitToArtboard && (
+                            <div className="bg-blue-900/20 border border-blue-700 p-3 rounded-lg">
+                                <p className="text-xs text-blue-300">
+                                    Shapes will be automatically scaled and positioned to fit within artboard bounds
+                                </p>
+                            </div>
+                        )}
 
-                {/* Align To */}
-                <div>
-                  <Label className="text-white text-xs">Align To</Label>
-                  <Select
-                    value={generationSet.artboardAlignment.alignTo}
-                    onValueChange={(value: 'artboard' | 'set' | 'none') => 
-                      onUpdate({
-                        artboardAlignment: {
-                          ...generationSet.artboardAlignment,
-                          alignTo: value,
-                          ...(value !== 'set' && { targetSetId: undefined })
-                        }
-                      })
-                    }
-                    data-testid="select-align-to"
-                  >
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      <SelectItem value="none" className="text-white hover:bg-slate-600">None</SelectItem>
-                      <SelectItem value="artboard" className="text-white hover:bg-slate-600">Artboard</SelectItem>
-                      <SelectItem value="set" className="text-white hover:bg-slate-600">Another Set</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                        {/* Align To */}
+                        <div>
+                            <Label className="text-white text-xs">Align To</Label>
+                            <Select
+                                value={generationSet.artboardAlignment.alignTo}
+                                onValueChange={(value: 'artboard' | 'set' | 'none') => 
+                                    onUpdate({
+                                        artboardAlignment: {
+                                            ...generationSet.artboardAlignment,
+                                            alignTo: value,
+                                            ...(value !== 'set' && { targetSetId: undefined })
+                                        }
+                                    })
+                                }
+                                data-testid="select-align-to"
+                            >
+                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-700 border-slate-600">
+                                    <SelectItem value="none" className="text-white hover:bg-slate-600">None</SelectItem>
+                                    <SelectItem value="artboard" className="text-white hover:bg-slate-600">Artboard</SelectItem>
+                                    <SelectItem value="set" className="text-white hover:bg-slate-600">Another Set</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                {/* Target Set Selection (when aligning to another set) */}
-                {generationSet.artboardAlignment.alignTo === 'set' && (
-                  <div>
-                    <Label className="text-white text-xs">Target Set ID</Label>
-                    <Input
-                      value={generationSet.artboardAlignment.targetSetId || ''}
-                      onChange={(e) => 
-                        onUpdate({
-                          artboardAlignment: {
-                            ...generationSet.artboardAlignment,
-                            targetSetId: e.target.value || undefined
-                          }
-                        })
-                      }
-                      placeholder="Enter target set ID"
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                      data-testid="input-target-set-id"
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      ID of the generation set to align to
-                    </p>
-                  </div>
-                )}
+                        {/* Target Set Selection (when aligning to another set) */}
+                        {generationSet.artboardAlignment.alignTo === 'set' && (
+                            <div>
+                                <Label className="text-white text-xs">Target Set ID</Label>
+                                <Input
+                                    value={generationSet.artboardAlignment.targetSetId || ''}
+                                    onChange={(e) => 
+                                        onUpdate({
+                                            artboardAlignment: {
+                                                ...generationSet.artboardAlignment,
+                                                targetSetId: e.target.value || undefined
+                                            }
+                                        })
+                                    }
+                                    placeholder="Enter target set ID"
+                                    className="bg-slate-700 border-slate-600 text-white mt-1"
+                                    data-testid="input-target-set-id"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    ID of the generation set to align to
+                                </p>
+                            </div>
+                        )}
 
-                {/* Alignment Type */}
-                {generationSet.artboardAlignment.alignTo !== 'none' && (
-                  <div>
-                    <Label className="text-white text-xs">Alignment</Label>
-                    <Select
-                      value={generationSet.artboardAlignment.alignmentType}
-                      onValueChange={(value) => 
-                        onUpdate({
-                          artboardAlignment: {
-                            ...generationSet.artboardAlignment,
-                            alignmentType: value as any
-                          }
-                        })
-                      }
-                      data-testid="select-alignment-type"
-                    >
-                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-700 border-slate-600">
-                        <SelectItem value="center" className="text-white hover:bg-slate-600">
-                          <div className="flex items-center gap-2">
-                            <AlignCenter className="w-3 h-3" />
-                            <span>Center</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
-                        <SelectItem value="top-center" className="text-white hover:bg-slate-600">Top Center</SelectItem>
-                        <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
-                        <SelectItem value="center-left" className="text-white hover:bg-slate-600">Center Left</SelectItem>
-                        <SelectItem value="center-right" className="text-white hover:bg-slate-600">Center Right</SelectItem>
-                        <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
-                        <SelectItem value="bottom-center" className="text-white hover:bg-slate-600">Bottom Center</SelectItem>
-                        <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                        {/* Alignment Type */}
+                        {generationSet.artboardAlignment.alignTo !== 'none' && (
+                            <div>
+                                <Label className="text-white text-xs">Alignment</Label>
+                                <Select
+                                    value={generationSet.artboardAlignment.alignmentType}
+                                    onValueChange={(value) => 
+                                        onUpdate({
+                                            artboardAlignment: {
+                                                ...generationSet.artboardAlignment,
+                                                alignmentType: value as any
+                                            }
+                                        })
+                                    }
+                                    data-testid="select-alignment-type"
+                                >
+                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-700 border-slate-600">
+                                        <SelectItem value="center" className="text-white hover:bg-slate-600">
+                                            <div className="flex items-center gap-2">
+                                                <AlignCenter className="w-3 h-3" />
+                                                <span>Center</span>
+                                            </div>
+                                        </SelectItem>
+                                        <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
+                                        <SelectItem value="top-center" className="text-white hover:bg-slate-600">Top Center</SelectItem>
+                                        <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
+                                        <SelectItem value="center-left" className="text-white hover:bg-slate-600">Center Left</SelectItem>
+                                        <SelectItem value="center-right" className="text-white hover:bg-slate-600">Center Right</SelectItem>
+                                        <SelectItem value="bottom-left" className="text-white hover:bg-slate-600">Bottom Left</SelectItem>
+                                        <SelectItem value="bottom-center" className="text-white hover:bg-slate-600">Bottom Center</SelectItem>
+                                        <SelectItem value="bottom-right" className="text-white hover:bg-slate-600">Bottom Right</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
 
-                {/* Margin */}
-                {generationSet.artboardAlignment.alignTo !== 'none' && (
-                  <div>
-                    <Label className="text-white text-xs">
-                      Margin: {generationSet.artboardAlignment.margin}px
-                    </Label>
-                    <Slider
-                      value={[generationSet.artboardAlignment.margin]}
-                      onValueChange={([value]) => 
-                        onUpdate({
-                          artboardAlignment: {
-                            ...generationSet.artboardAlignment,
-                            margin: value
-                          }
-                        })
-                      }
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="mt-2"
-                      data-testid="slider-alignment-margin"
-                      aria-label="Alignment margin"
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Distance from alignment target in pixels
-                    </p>
-                  </div>
-                )}
-                  </div>
+                        {/* Margin */}
+                        {generationSet.artboardAlignment.alignTo !== 'none' && (
+                            <div>
+                                <Label className="text-white text-xs">
+                                    Margin: {generationSet.artboardAlignment.margin}px
+                                </Label>
+                                <Slider
+                                    value={[generationSet.artboardAlignment.margin]}
+                                    onValueChange={([value]) => 
+                                        onUpdate({
+                                            artboardAlignment: {
+                                                ...generationSet.artboardAlignment,
+                                                margin: value
+                                            }
+                                        })
+                                    }
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid="slider-alignment-margin"
+                                    aria-label="Alignment margin"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Distance from alignment target in pixels
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
