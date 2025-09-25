@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
@@ -20,6 +22,9 @@ interface SetsManagerDialogProps {
   currentUIState?: CurrentUIState;
   onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
   batchExportCount?: number;
+  // Edge case strategy for when set count < batch export count
+  edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';
+  onEdgeCaseStrategyChange?: (strategy: 'hold' | 'cycle' | 'random' | 'stop') => void;
 }
 
 export function SetsManagerDialog({
@@ -35,7 +40,10 @@ export function SetsManagerDialog({
   // Current UI state for data capture
   currentUIState,
   onCreateSetFromState,
-  batchExportCount
+  batchExportCount,
+  // Edge case strategy
+  edgeCaseStrategy = 'cycle',
+  onEdgeCaseStrategyChange
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
@@ -51,6 +59,16 @@ export function SetsManagerDialog({
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
+
+  // Calculate whether edge case strategy should be shown
+  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
+  const shouldShowEdgeCaseStrategy = enabledSetsCount > 0 && batchExportCount && batchExportCount > enabledSetsCount;
+
+  const handleEdgeCaseStrategyChange = useCallback((value: string) => {
+    if (onEdgeCaseStrategyChange) {
+      onEdgeCaseStrategyChange(value as 'hold' | 'cycle' | 'random' | 'stop');
+    }
+  }, [onEdgeCaseStrategyChange]);
 
   if (!isOpen) return null;
 
@@ -103,9 +121,39 @@ export function SetsManagerDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-center p-4 border-t border-slate-700 bg-slate-900">
+        <div className="flex items-center justify-between p-4 border-t border-slate-700 bg-slate-900">
           <div className="text-xs text-slate-500">
             {generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets
+          </div>
+          
+          {shouldShowEdgeCaseStrategy && (
+            <div className="flex items-center gap-3" data-testid="edge-case-strategy-controls">
+              <Label htmlFor="edge-case-strategy" className="text-xs text-slate-400">
+                When fewer sets than exports:
+              </Label>
+              <Select 
+                value={edgeCaseStrategy} 
+                onValueChange={handleEdgeCaseStrategyChange}
+                data-testid="select-edge-case-strategy"
+              >
+                <SelectTrigger className="w-24 h-7 text-xs bg-slate-800 border-slate-600">
+                  <SelectValue placeholder="Strategy" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="cycle" className="text-xs">Cycle</SelectItem>
+                  <SelectItem value="hold" className="text-xs">Hold</SelectItem>
+                  <SelectItem value="random" className="text-xs">Random</SelectItem>
+                  <SelectItem value="stop" className="text-xs">Stop</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-slate-500">
+                ({enabledSetsCount} sets, {batchExportCount} exports)
+              </div>
+            </div>
+          )}
+          
+          <div className="text-xs text-slate-500">
+            {enabledSetsCount} enabled
           </div>
         </div>
       </div>
