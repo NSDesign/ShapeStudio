@@ -257,9 +257,10 @@ export function validateGenerationSets(
 
   // Check for enabled sets
   const enabledSets = generationSets.filter(set => set.enabled);
-  if (enabledSets.length === 0 && generationSets.length > 0) {
-    globalErrors.push('At least one generation set must be enabled');
-  }
+  // Allow no enabled sets when generation sets feature is optional
+  // if (enabledSets.length === 0 && generationSets.length > 0) {
+  //   globalErrors.push('At least one generation set must be enabled');
+  // }
 
   // Validate mode-specific constraints
   if (enhancedConfig?.mode === GenerationSetMode.MULTI && enhancedConfig.modeRestrictions) {

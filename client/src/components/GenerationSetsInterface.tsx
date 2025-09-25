@@ -416,7 +416,9 @@ export function GenerationSetsInterface({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
-          <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">Generation Sets List</h4>
+          <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">
+            Generation Sets List ({generationSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{generationSets.length !== 1 ? 's' : ''})
+          </h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
               {generationSets.map((set, index) => (
