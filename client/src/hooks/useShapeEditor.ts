@@ -217,6 +217,9 @@ export const useShapeEditor = () => {
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
 
+  // Sets Manager Dialog state
+  const [isSetsManagerOpen, setIsSetsManagerOpen] = useState(false);
+
   // Track incremental index for continuous incremental positioning
   const [lastIncrementalIndex, setLastIncrementalIndex] = useState(0);
 
@@ -308,8 +311,8 @@ export const useShapeEditor = () => {
       enabledShapeTypes: Array.from(uiState.enabledShapeTypes || enabledShapeTypes) as SupportedShapeType[],
       shapeCountMode: (uiState.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE) || 
                       (scatterSettings.shapeCountMode === 'fixed' ? ShapeCountMode.FIXED : ShapeCountMode.RANGE),
-      shapeCountFixed: scatterSettings.fixedShapeCount,
-      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
+      shapeCountFixed: uiState.shapeCountFixed || scatterSettings.fixedShapeCount,
+      shapeCountRange: uiState.shapeCountRange || [scatterSettings.minCount, scatterSettings.maxCount] as [number, number],
       shapeSpecificProperties: {
         // Capture current shape-specific scatter settings
         ...Object.fromEntries(
@@ -369,6 +372,11 @@ export const useShapeEditor = () => {
       setCurrentGenerationSetId(newSets.length > 0 ? newSets[0].id : null);
     }
   }, [generationSets, currentGenerationSetId]);
+
+  // Handler to open the Sets Manager Dialog
+  const handleOpenGenerationSetsManager = useCallback(() => {
+    setIsSetsManagerOpen(true);
+  }, []);
 
   // Check if generation sets are enabled based on batch export settings
   const areSetsEnabled = useCallback((
@@ -2858,6 +2866,7 @@ export const useShapeEditor = () => {
     handleGenerationCountModeChange,
     handleCreateGenerationSet,
     handleDeleteGenerationSet,
+    onOpenGenerationSetsManager: handleOpenGenerationSetsManager,
     generateUniqueSetName,
     restoreUIStateFromSet,
     areSetsEnabled,
