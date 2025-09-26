@@ -85,6 +85,9 @@ export default function ShapeEditor() {
     handleCreateGenerationSet,
     handleDeleteGenerationSet,
     generateUniqueSetName,
+    onOpenGenerationSetsManager,
+    isSetsManagerOpen,
+    onCloseGenerationSetsManager,
     restoreUIStateFromSet,
     areSetsEnabled
   } = useShapeEditor();
@@ -199,6 +202,9 @@ export default function ShapeEditor() {
           onCreateGenerationSet={handleCreateGenerationSet}
           onDeleteGenerationSet={handleDeleteGenerationSet}
           generateUniqueSetName={generateUniqueSetName}
+          onOpenGenerationSetsManager={onOpenGenerationSetsManager}
+          isSetsManagerOpen={isSetsManagerOpen}
+          onCloseGenerationSetsManager={onCloseGenerationSetsManager}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
           areSetsEnabled={areSetsEnabled}
         />

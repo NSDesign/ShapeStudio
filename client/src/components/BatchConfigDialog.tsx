@@ -39,6 +39,8 @@ interface BatchConfigDialogProps {
   onDeleteGenerationSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
   onOpenGenerationSetsManager?: () => void;
+  isSetsManagerOpen?: boolean;
+  onCloseGenerationSetsManager?: () => void;
 }
 
 export default function BatchConfigDialog({ 
@@ -62,7 +64,9 @@ export default function BatchConfigDialog({
   onCreateGenerationSet,
   onDeleteGenerationSet,
   generateUniqueSetName,
-  onOpenGenerationSetsManager
+  onOpenGenerationSetsManager,
+  isSetsManagerOpen = false,
+  onCloseGenerationSetsManager
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);

@@ -410,6 +410,8 @@ interface SidebarProps {
   onDeleteGenerationSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
   onOpenGenerationSetsManager?: () => void;
+  isSetsManagerOpen?: boolean;
+  onCloseGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
@@ -475,6 +477,8 @@ export default function Sidebar({
   onDeleteGenerationSet,
   generateUniqueSetName,
   onOpenGenerationSetsManager,
+  isSetsManagerOpen = false,
+  onCloseGenerationSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
@@ -494,8 +498,7 @@ export default function Sidebar({
   const [isExporting, setIsExporting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   
-  // Sets Manager Dialog state
-  const [isSetsManagerOpen, setIsSetsManagerOpen] = useState(false);
+  // Sets Manager Dialog state is now managed centrally via props
 
   // Get user preferences for sidebar section visibility
   const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
@@ -4646,7 +4649,11 @@ export default function Sidebar({
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
       <SetsManagerDialog
         isOpen={isSetsManagerOpen}
-        onOpenChange={setIsSetsManagerOpen}
+        onOpenChange={(open) => {
+          if (!open && onCloseGenerationSetsManager) {
+            onCloseGenerationSetsManager();
+          }
+        }}
         generationSets={effectiveGenerationSets}
         onGenerationSetsChange={onGenerationSetsChange || (() => {})}
         globalZIndexEnabled={false}
