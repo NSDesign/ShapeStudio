@@ -89,6 +89,7 @@ export default function ShapeEditor() {
     isSetsManagerOpen,
     onCloseGenerationSetsManager,
     restoreUIStateFromSet,
+    hasUnsavedChanges,
     areSetsEnabled
   } = useShapeEditor();
 
@@ -206,6 +207,7 @@ export default function ShapeEditor() {
           isSetsManagerOpen={isSetsManagerOpen}
           onCloseGenerationSetsManager={onCloseGenerationSetsManager}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
+          hasUnsavedChanges={hasUnsavedChanges}
           areSetsEnabled={areSetsEnabled}
         />
         <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">

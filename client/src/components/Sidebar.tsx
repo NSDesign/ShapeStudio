@@ -415,6 +415,7 @@ interface SidebarProps {
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
+  hasUnsavedChanges?: (setId: string | null) => boolean;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
 }
 
@@ -482,6 +483,7 @@ export default function Sidebar({
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
+  hasUnsavedChanges,
   areSetsEnabled
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -518,13 +520,30 @@ export default function Sidebar({
 
   // Generation sets handlers
   const handleSetChange = useCallback((setId: string | null) => {
+    console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
+    
+    // Check for unsaved changes before switching
+    if (hasUnsavedChanges && effectiveCurrentSetId && hasUnsavedChanges(effectiveCurrentSetId)) {
+      console.log('🔄 [SET SWITCH] ⚠️ Unsaved changes detected in current set:', effectiveCurrentSetId);
+      
+      // For now, proceed with switch but warn user
+      // TODO: Add user confirmation dialog for unsaved changes
+      const confirmed = window.confirm('You have unsaved changes in the current generation set. Do you want to switch anyway? (Changes will be lost)');
+      if (!confirmed) {
+        console.log('🔄 [SET SWITCH] ❌ User cancelled set switch due to unsaved changes');
+        return;
+      }
+    }
+    
+    console.log('🔄 [SET SWITCH] ✅ Proceeding with set switch to:', setId);
     onCurrentGenerationSetChange?.(setId);
     
     // Restore UI state if a set is selected
     if (setId && onRestoreUIStateFromSet) {
+      console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
       onRestoreUIStateFromSet(setId);
     }
-  }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet]);
+  }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet, hasUnsavedChanges, effectiveCurrentSetId]);
 
 
   const handleDeleteSet = useCallback((setId: string) => {

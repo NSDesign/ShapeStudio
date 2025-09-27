@@ -390,6 +390,41 @@ export const useShapeEditor = () => {
     return batchCount > 1 && countMode === 'fixed';
   }, [batchExportCount, generationCountMode]);
 
+  // Check if current UI state differs from the saved generation set
+  const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
+    if (!setId) return false;
+    
+    const set = generationSets.find(s => s.id === setId);
+    if (!set) return false;
+
+    // Compare current UI state with set's saved state
+    const currentState = captureCurrentState();
+    
+    // Shape types comparison
+    const currentShapeTypes = Array.from(currentState.enabledShapeTypes).sort();
+    const setShapeTypes = Array.from(set.enabledShapeTypes).sort();
+    if (JSON.stringify(currentShapeTypes) !== JSON.stringify(setShapeTypes)) {
+      console.log('🔄 [UNSAVED] Shape types differ:', currentShapeTypes, 'vs', setShapeTypes);
+      return true;
+    }
+    
+    // Shape count settings comparison
+    if (currentState.shapeCountMode !== set.shapeCountMode ||
+        currentState.shapeCountFixed !== set.shapeCountFixed ||
+        JSON.stringify(currentState.shapeCountRange) !== JSON.stringify(set.shapeCountRange)) {
+      console.log('🔄 [UNSAVED] Shape count settings differ');
+      return true;
+    }
+    
+    // Batch config comparison (simplified)
+    if (JSON.stringify(currentState.batchConfig) !== JSON.stringify(set.batchConfig)) {
+      console.log('🔄 [UNSAVED] Batch config differs');
+      return true;
+    }
+    
+    return false;
+  }, [generationSets, captureCurrentState]);
+
   // UI state restoration from generation set
   const restoreUIStateFromSet = useCallback((setId: string) => {
     const set = generationSets.find(s => s.id === setId);
@@ -2888,6 +2923,7 @@ export const useShapeEditor = () => {
     isSetsManagerOpen,
     generateUniqueSetName,
     restoreUIStateFromSet,
+    hasUnsavedChanges,
     areSetsEnabled,
     generateRandomShapes,
     generateShapesWithBatchConfig,
