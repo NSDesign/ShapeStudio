@@ -450,79 +450,6 @@ export function IndividualSetConfig({
               </p>
             </div>
 
-            {!globalZIndexEnabled && (
-              <>
-                <Separator className="bg-slate-700" />
-
-                {/* Z-Index Configuration */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2" data-testid="section-zindex-layering">
-                    <Layers className="w-4 h-4 text-slate-400" />
-                    <h4 className="text-sm font-medium text-white" data-testid="heading-zindex-layering">Z-Index Layering</h4>
-                    <Info className="w-3 h-3 text-slate-500" data-testid="icon-zindex-info" />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label className="text-white text-xs">
-                        Base Offset: {generationSet.zIndexConfig.baseOffset}
-                      </Label>
-                      <Slider
-                        value={[generationSet.zIndexConfig.baseOffset]}
-                        onValueChange={([value]) => handleZIndexConfigChange('baseOffset', value)}
-                        min={0}
-                        max={10000}
-                        step={100}
-                        className="mt-2"
-                        data-testid="slider-zindex-base-offset"
-                        aria-label="Base Z-index offset"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Starting z-index for shapes in this set
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label className="text-white text-xs">
-                        Increment Per Shape: {generationSet.zIndexConfig.incrementPerShape}
-                      </Label>
-                      <Slider
-                        value={[generationSet.zIndexConfig.incrementPerShape]}
-                        onValueChange={([value]) => handleZIndexConfigChange('incrementPerShape', value)}
-                        min={1}
-                        max={100}
-                        step={1}
-                        className="mt-2"
-                        data-testid="slider-zindex-increment-per-shape"
-                        aria-label="Z-index increment per shape"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Z-index increment between shapes in this set
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label className="text-white text-xs">
-                        Increment Per Generation: {generationSet.zIndexConfig.incrementPerGeneration}
-                      </Label>
-                      <Slider
-                        value={[generationSet.zIndexConfig.incrementPerGeneration]}
-                        onValueChange={([value]) => handleZIndexConfigChange('incrementPerGeneration', value)}
-                        min={0}
-                        max={1000}
-                        step={10}
-                        className="mt-2"
-                        data-testid="slider-zindex-increment-per-generation"
-                        aria-label="Z-index increment per generation"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Z-index increment between batch generations
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
 
             {globalZIndexEnabled && (
               <div className="bg-slate-800 p-4 rounded-lg border border-slate-700" data-testid="alert-global-zindex-enabled">
@@ -538,99 +465,173 @@ export function IndividualSetConfig({
 
             <Separator className="bg-slate-700" />
 
-            {/* Set Opacity & Visibility Controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2" data-testid="section-set-visibility">
-                <Eye className="w-4 h-4 text-slate-400" />
-                <h4 className="text-sm font-medium text-white" data-testid="heading-set-visibility">Set Visibility & Opacity</h4>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {/* Visibility Toggle */}
-                <div className="flex items-center justify-between">
-                  <Label className="text-white text-sm">Visible</Label>
-                  <div className="flex items-center space-x-2">
-                    {generationSet.setVisibility.visible ? (
-                      <Eye className="w-4 h-4 text-blue-400" />
-                    ) : (
-                      <EyeOff className="w-4 h-4 text-slate-500" />
-                    )}
-                    <Checkbox
-                      checked={generationSet.setVisibility.visible}
-                      onCheckedChange={(checked) => 
-                        onUpdate({
-                          setVisibility: {
-                            ...generationSet.setVisibility,
-                            visible: checked as boolean
-                          }
-                        })
-                      }
-                      className="border-slate-600 data-[state=checked]:bg-blue-600"
-                      data-testid="checkbox-set-visible"
-                    />
-                  </div>
-                </div>
-
-                {/* Opacity Control */}
-                <div>
-                  <Label className="text-white text-xs">
-                    Opacity: {Math.round(generationSet.setVisibility.opacity * 100)}%
-                  </Label>
-                  <Slider
-                    value={[generationSet.setVisibility.opacity]}
-                    onValueChange={([value]) => 
-                      onUpdate({
-                        setVisibility: {
-                          ...generationSet.setVisibility,
-                          opacity: value
-                        }
-                      })
-                    }
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    className="mt-2"
-                    data-testid="slider-set-opacity"
-                    aria-label="Set opacity"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Overall opacity applied to all shapes in this set
-                  </p>
-                </div>
-
-                {/* Opacity Variance */}
-                <div>
-                  <Label className="text-white text-xs">
-                    Opacity Variance: {Math.round(generationSet.setVisibility.opacityVariance * 100)}%
-                  </Label>
-                  <Slider
-                    value={[generationSet.setVisibility.opacityVariance]}
-                    onValueChange={([value]) => 
-                      onUpdate({
-                        setVisibility: {
-                          ...generationSet.setVisibility,
-                          opacityVariance: value
-                        }
-                      })
-                    }
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    className="mt-2"
-                    data-testid="slider-set-opacity-variance"
-                    aria-label="Set opacity variance"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Random variation in opacity across shapes in this set
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <Separator className="bg-slate-700" />
 
             {/* Advanced Configuration Sections */}
-            <Accordion type="multiple" className="space-y-2" defaultValue={["compositing", "transforms", "artboard"]}>
+            <Accordion type="multiple" className="space-y-2" defaultValue={["visibility", "zindex", "compositing", "transforms", "artboard"]}>
+              {/* Z-Index Layering Controls - only when global z-index is disabled */}
+              {!globalZIndexEnabled && (
+                <AccordionItem value="zindex" className="border-slate-700">
+                  <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-zindex-layering">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm font-medium">Z-Index Layering</span>
+                      <Info className="w-3 h-3 text-slate-500" data-testid="icon-zindex-info" />
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <div className="grid grid-cols-1 gap-4 pt-2">
+                      <div>
+                        <Label className="text-white text-xs">
+                          Base Offset: {generationSet.zIndexConfig.baseOffset}
+                        </Label>
+                        <Slider
+                          value={[generationSet.zIndexConfig.baseOffset]}
+                          onValueChange={([value]) => handleZIndexConfigChange('baseOffset', value)}
+                          min={0}
+                          max={10000}
+                          step={100}
+                          className="mt-2"
+                          data-testid="slider-zindex-base-offset"
+                          aria-label="Base Z-index offset"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Starting z-index for shapes in this set
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label className="text-white text-xs">
+                          Increment Per Shape: {generationSet.zIndexConfig.incrementPerShape}
+                        </Label>
+                        <Slider
+                          value={[generationSet.zIndexConfig.incrementPerShape]}
+                          onValueChange={([value]) => handleZIndexConfigChange('incrementPerShape', value)}
+                          min={1}
+                          max={100}
+                          step={1}
+                          className="mt-2"
+                          data-testid="slider-zindex-increment-per-shape"
+                          aria-label="Z-index increment per shape"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Z-index increment between shapes in this set
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label className="text-white text-xs">
+                          Increment Per Generation: {generationSet.zIndexConfig.incrementPerGeneration}
+                        </Label>
+                        <Slider
+                          value={[generationSet.zIndexConfig.incrementPerGeneration]}
+                          onValueChange={([value]) => handleZIndexConfigChange('incrementPerGeneration', value)}
+                          min={0}
+                          max={1000}
+                          step={10}
+                          className="mt-2"
+                          data-testid="slider-zindex-increment-per-generation"
+                          aria-label="Z-index increment per generation"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Z-index increment between batch generations
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {/* Set Visibility & Opacity Controls */}
+              <AccordionItem value="visibility" className="border-slate-700">
+                <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-set-visibility">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm font-medium">Set Visibility & Opacity</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="grid grid-cols-1 gap-4 pt-2">
+                    {/* Visibility Toggle */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-white text-sm">Visible</Label>
+                      <div className="flex items-center space-x-2">
+                        {generationSet.setVisibility.visible ? (
+                          <Eye className="w-4 h-4 text-blue-400" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 text-slate-500" />
+                        )}
+                        <Checkbox
+                          checked={generationSet.setVisibility.visible}
+                          onCheckedChange={(checked) => 
+                            onUpdate({
+                              setVisibility: {
+                                ...generationSet.setVisibility,
+                                visible: checked as boolean
+                              }
+                            })
+                          }
+                          className="border-slate-600 data-[state=checked]:bg-blue-600"
+                          data-testid="checkbox-set-visible"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Opacity Control */}
+                    <div>
+                      <Label className="text-white text-xs">
+                        Opacity: {Math.round(generationSet.setVisibility.opacity * 100)}%
+                      </Label>
+                      <Slider
+                        value={[generationSet.setVisibility.opacity]}
+                        onValueChange={([value]) => 
+                          onUpdate({
+                            setVisibility: {
+                              ...generationSet.setVisibility,
+                              opacity: value
+                            }
+                          })
+                        }
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        className="mt-2"
+                        data-testid="slider-set-opacity"
+                        aria-label="Set opacity"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Overall opacity applied to all shapes in this set
+                      </p>
+                    </div>
+
+                    {/* Opacity Variance */}
+                    <div>
+                      <Label className="text-white text-xs">
+                        Opacity Variance: {Math.round(generationSet.setVisibility.opacityVariance * 100)}%
+                      </Label>
+                      <Slider
+                        value={[generationSet.setVisibility.opacityVariance]}
+                        onValueChange={([value]) => 
+                          onUpdate({
+                            setVisibility: {
+                              ...generationSet.setVisibility,
+                              opacityVariance: value
+                            }
+                          })
+                        }
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        className="mt-2"
+                        data-testid="slider-set-opacity-variance"
+                        aria-label="Set opacity variance"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Random variation in opacity across shapes in this set
+                      </p>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
               {/* Compositing & Blend Modes Controls */}
               <AccordionItem value="compositing" className="border-slate-700">
                 <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-compositing-blend">
