@@ -126,32 +126,6 @@ export function SetsManagerDialog({
             {generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets
           </div>
           
-          {shouldShowEdgeCaseStrategy && (
-            <div className="flex items-center gap-3" data-testid="edge-case-strategy-controls">
-              <Label htmlFor="edge-case-strategy" className="text-xs text-slate-400">
-                When fewer sets than exports:
-              </Label>
-              <Select 
-                value={edgeCaseStrategy} 
-                onValueChange={handleEdgeCaseStrategyChange}
-                data-testid="select-edge-case-strategy"
-              >
-                <SelectTrigger className="w-24 h-7 text-xs bg-slate-800 border-slate-600">
-                  <SelectValue placeholder="Strategy" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="cycle" className="text-xs">Cycle</SelectItem>
-                  <SelectItem value="hold" className="text-xs">Hold</SelectItem>
-                  <SelectItem value="random" className="text-xs">Random</SelectItem>
-                  <SelectItem value="stop" className="text-xs">Stop</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="text-xs text-slate-500">
-                ({enabledSetsCount} sets, {batchExportCount} exports)
-              </div>
-            </div>
-          )}
-          
           <div className="text-xs text-slate-500">
             {enabledSetsCount} enabled
           </div>
