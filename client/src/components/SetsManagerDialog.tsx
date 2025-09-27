@@ -42,7 +42,7 @@ export function SetsManagerDialog({
   onCreateSetFromState,
   batchExportCount,
   // Edge case strategy
-  edgeCaseStrategy = 'cycle',
+  edgeCaseStrategy = 'hold',
   onEdgeCaseStrategyChange
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{

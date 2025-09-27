@@ -441,7 +441,7 @@ export function GenerationSetsInterface({
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium text-slate-200">
-                    Edge Case Strategy
+                    Mismatch Sets
                   </Label>
                   <p className="text-xs text-slate-400">
                     How to handle exports when fewer sets than batch count
@@ -449,7 +449,7 @@ export function GenerationSetsInterface({
                 </div>
                 <div className="w-32">
                   <Select 
-                    value="cycle" 
+                    value="hold" 
                     onValueChange={(value) => {
                       // TODO: Implement edge case strategy change
                       console.log('Edge case strategy changed:', value);

@@ -1588,7 +1588,7 @@ export default function Sidebar({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">
-                    {effectiveGenerationSets.length > 0 ? 'Generation Sets per Export' : 'Generations per Export'}
+                    {exportSettings.generationSetsEnabled ? 'Generation Sets per Export' : 'Generations per Export'}
                   </Label>
                   <Select 
                     value={generationConfigSettings?.generationCountMode || 'range'} 
@@ -4673,7 +4673,7 @@ export default function Sidebar({
           return setId || '';
         }}
         batchExportCount={exportBatchCount}
-        edgeCaseStrategy={exportSettings.edgeCaseStrategy || 'cycle'}
+        edgeCaseStrategy={exportSettings.edgeCaseStrategy || 'hold'}
         onEdgeCaseStrategyChange={(strategy) => {
           console.log('Edge case strategy changed:', strategy);
           updateExportSettings.mutate({ edgeCaseStrategy: strategy });
