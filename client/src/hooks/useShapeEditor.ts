@@ -393,17 +393,26 @@ export const useShapeEditor = () => {
   // UI state restoration from generation set
   const restoreUIStateFromSet = useCallback((setId: string) => {
     const set = generationSets.find(s => s.id === setId);
-    if (!set) return;
+    if (!set) {
+      console.warn('🔄 [SET RESTORE] Set not found:', setId);
+      return;
+    }
+
+    console.log('🔄 [SET RESTORE] Restoring UI state from set:', set.name, 'ID:', setId);
+    console.log('🔄 [SET RESTORE] Shape types:', set.enabledShapeTypes);
+    console.log('🔄 [SET RESTORE] Count mode:', set.shapeCountMode, 'Fixed:', set.shapeCountFixed, 'Range:', set.shapeCountRange);
 
     // Convert SupportedShapeType back to ShapeType Set
-    setEnabledShapeTypes(new Set(set.enabledShapeTypes as ShapeType[]));
+    const newShapeTypes = new Set(set.enabledShapeTypes as ShapeType[]);
+    setEnabledShapeTypes(newShapeTypes);
+    console.log('🔄 [SET RESTORE] Updated shape types to:', Array.from(newShapeTypes));
     
-    // Restore scatter settings
+    // Restore scatter settings with proper shape count properties
     const restoredScatterSettings: ScatterSettings = {
       ...scatterSettings,
       shapeCountMode: set.shapeCountMode,
       fixedShapeCount: set.shapeCountFixed,
-      count: set.shapeCountFixed,
+      count: set.shapeCountMode === 'fixed' ? set.shapeCountFixed : Math.floor((set.shapeCountRange[0] + set.shapeCountRange[1]) / 2),
       minCount: set.shapeCountRange[0],
       maxCount: set.shapeCountRange[1],
       shapeSpecific: {
@@ -412,9 +421,13 @@ export const useShapeEditor = () => {
       }
     };
     setScatterSettings(restoredScatterSettings);
+    console.log('🔄 [SET RESTORE] Updated scatter settings:', restoredScatterSettings.shapeCountMode, restoredScatterSettings.count);
     
     // Restore batch config settings
     setGenerationConfigSettings(set.batchConfig);
+    console.log('🔄 [SET RESTORE] Updated generation config settings');
+    
+    console.log('🔄 [SET RESTORE] ✅ Successfully restored UI state from set:', set.name);
   }, [generationSets, scatterSettings]);
 
   const clearSelection = useCallback(() => {
