@@ -534,8 +534,8 @@ export default function Sidebar({
   }, [onDeleteGenerationSet]);
 
   const handleOpenManager = useCallback(() => {
-    setIsSetsManagerOpen(true);
-  }, []);
+    onOpenGenerationSetsManager?.();
+  }, [onOpenGenerationSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
