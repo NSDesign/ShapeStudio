@@ -264,14 +264,126 @@ export const useShapeEditor = () => {
     setScatterSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
+  // Capture current UI state for comparison and saving
+  const captureCurrentState = useCallback((): CurrentUIState => {
+    return {
+      enabledShapeTypes,
+      scatterSettings,
+      batchConfig: generationConfigSettings,
+      shapeCountMode: scatterSettings.shapeCountMode,
+      shapeCountFixed: scatterSettings.fixedShapeCount,
+      shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
+    };
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings]);
+
+  // Check if current UI state differs from the saved generation set
+  const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
+    if (!setId) return false;
+    
+    const set = generationSets.find(s => s.id === setId);
+    if (!set) return false;
+
+    // Compare current UI state with set's saved state
+    const currentState = captureCurrentState();
+    
+    // Shape types comparison
+    const currentShapeTypes = Array.from(currentState.enabledShapeTypes).sort();
+    const setShapeTypes = Array.from(set.enabledShapeTypes).sort();
+    if (JSON.stringify(currentShapeTypes) !== JSON.stringify(setShapeTypes)) {
+      console.log('🔄 [UNSAVED] Shape types differ:', currentShapeTypes, 'vs', setShapeTypes);
+      return true;
+    }
+    
+    // Shape count settings comparison
+    if (currentState.shapeCountMode !== set.shapeCountMode ||
+        currentState.shapeCountFixed !== set.shapeCountFixed ||
+        JSON.stringify(currentState.shapeCountRange) !== JSON.stringify(set.shapeCountRange)) {
+      console.log('🔄 [UNSAVED] Shape count settings differ');
+      console.log('🔄 [UNSAVED] Current mode:', currentState.shapeCountMode, 'vs Set mode:', set.shapeCountMode);
+      console.log('🔄 [UNSAVED] Current fixed:', currentState.shapeCountFixed, 'vs Set fixed:', set.shapeCountFixed);
+      console.log('🔄 [UNSAVED] Current range:', JSON.stringify(currentState.shapeCountRange), 'vs Set range:', JSON.stringify(set.shapeCountRange));
+      return true;
+    }
+    
+    // Batch config comparison (simplified)
+    if (JSON.stringify(currentState.batchConfig) !== JSON.stringify(set.batchConfig)) {
+      console.log('🔄 [UNSAVED] Batch config differs');
+      return true;
+    }
+    
+    return false;
+  }, [generationSets, captureCurrentState]);
+
+  // UI state restoration from generation set
+  const restoreUIStateFromSet = useCallback((setId: string) => {
+    const set = generationSets.find(s => s.id === setId);
+    if (!set) {
+      console.warn('🔄 [SET RESTORE] Set not found:', setId);
+      return;
+    }
+
+    console.log('🔄 [SET RESTORE] Restoring UI state from set:', set.name, 'ID:', setId);
+    console.log('🔄 [SET RESTORE] Shape types:', set.enabledShapeTypes);
+    console.log('🔄 [SET RESTORE] Count mode:', set.shapeCountMode, 'Fixed:', set.shapeCountFixed, 'Range:', set.shapeCountRange);
+
+    // Convert SupportedShapeType back to ShapeType Set
+    const newShapeTypes = new Set(set.enabledShapeTypes as ShapeType[]);
+    setEnabledShapeTypes(newShapeTypes);
+    console.log('🔄 [SET RESTORE] Updated shape types to:', Array.from(newShapeTypes));
+    
+    // Restore scatter settings with proper shape count properties
+    const restoredScatterSettings: ScatterSettings = {
+      ...scatterSettings,
+      shapeCountMode: set.shapeCountMode,
+      fixedShapeCount: set.shapeCountFixed,
+      count: set.shapeCountMode === 'fixed' ? set.shapeCountFixed : Math.floor((set.shapeCountRange[0] + set.shapeCountRange[1]) / 2),
+      minCount: set.shapeCountRange[0],
+      maxCount: set.shapeCountRange[1],
+      shapeSpecific: {
+        ...scatterSettings.shapeSpecific,
+        ...(set.shapeSpecificProperties as any)
+      }
+    };
+    setScatterSettings(restoredScatterSettings);
+    console.log('🔄 [SET RESTORE] Updated scatter settings:', restoredScatterSettings.shapeCountMode, restoredScatterSettings.count);
+    
+    // Restore batch config settings
+    setGenerationConfigSettings(set.batchConfig);
+    console.log('🔄 [SET RESTORE] Updated generation config settings');
+    
+    console.log('🔄 [SET RESTORE] ✅ Successfully restored UI state from set:', set.name);
+  }, [generationSets, scatterSettings]);
+
   // Generation Sets handlers for bi-directional synchronization
   const handleGenerationSetsChange = useCallback((sets: GenerationSet[]) => {
     setGenerationSets(sets);
   }, []);
 
   const handleCurrentGenerationSetChange = useCallback((setId: string | null) => {
+    console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
+    
+    // Check for unsaved changes before switching
+    if (currentGenerationSetId && hasUnsavedChanges(currentGenerationSetId)) {
+      console.log('🔄 [SET SWITCH] ⚠️ Unsaved changes detected in current set:', currentGenerationSetId);
+      
+      // For now, proceed with switch but warn user
+      // TODO: Add user confirmation dialog for unsaved changes
+      const confirmed = window.confirm('You have unsaved changes in the current generation set. Do you want to switch anyway? (Changes will be lost)');
+      if (!confirmed) {
+        console.log('🔄 [SET SWITCH] ❌ User cancelled set switch due to unsaved changes');
+        return;
+      }
+    }
+    
+    console.log('🔄 [SET SWITCH] ✅ Proceeding with set switch to:', setId);
     setCurrentGenerationSetId(setId);
-  }, []);
+    
+    // Restore UI state if a set is selected
+    if (setId) {
+      console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
+      restoreUIStateFromSet(setId);
+    }
+  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet]);
 
   const handleBatchExportCountChange = useCallback((count: number) => {
     setBatchExportCount(count);
@@ -296,7 +408,7 @@ export const useShapeEditor = () => {
     const uiState = currentUIState || {
       enabledShapeTypes,
       scatterSettings,
-      batchConfigSettings: generationConfigSettings,
+      batchConfig: generationConfigSettings,
       shapeCountMode: scatterSettings.shapeCountMode,
       shapeCountFixed: scatterSettings.fixedShapeCount,
       shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
@@ -327,7 +439,7 @@ export const useShapeEditor = () => {
         incrementPerShape: 1,
         incrementPerGeneration: 1000
       },
-      batchConfig: { ...(uiState.batchConfigSettings || generationConfigSettings) },
+      batchConfig: { ...(uiState.batchConfig || generationConfigSettings) },
       generationOrder: generationSets.length,
       description: `Generated from current settings on ${new Date().toLocaleString()}`,
       // New set-level features with sensible defaults
@@ -389,81 +501,6 @@ export const useShapeEditor = () => {
   ): boolean => {
     return batchCount > 1 && countMode === 'fixed';
   }, [batchExportCount, generationCountMode]);
-
-  // Check if current UI state differs from the saved generation set
-  const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
-    if (!setId) return false;
-    
-    const set = generationSets.find(s => s.id === setId);
-    if (!set) return false;
-
-    // Compare current UI state with set's saved state
-    const currentState = captureCurrentState();
-    
-    // Shape types comparison
-    const currentShapeTypes = Array.from(currentState.enabledShapeTypes).sort();
-    const setShapeTypes = Array.from(set.enabledShapeTypes).sort();
-    if (JSON.stringify(currentShapeTypes) !== JSON.stringify(setShapeTypes)) {
-      console.log('🔄 [UNSAVED] Shape types differ:', currentShapeTypes, 'vs', setShapeTypes);
-      return true;
-    }
-    
-    // Shape count settings comparison
-    if (currentState.shapeCountMode !== set.shapeCountMode ||
-        currentState.shapeCountFixed !== set.shapeCountFixed ||
-        JSON.stringify(currentState.shapeCountRange) !== JSON.stringify(set.shapeCountRange)) {
-      console.log('🔄 [UNSAVED] Shape count settings differ');
-      return true;
-    }
-    
-    // Batch config comparison (simplified)
-    if (JSON.stringify(currentState.batchConfig) !== JSON.stringify(set.batchConfig)) {
-      console.log('🔄 [UNSAVED] Batch config differs');
-      return true;
-    }
-    
-    return false;
-  }, [generationSets, captureCurrentState]);
-
-  // UI state restoration from generation set
-  const restoreUIStateFromSet = useCallback((setId: string) => {
-    const set = generationSets.find(s => s.id === setId);
-    if (!set) {
-      console.warn('🔄 [SET RESTORE] Set not found:', setId);
-      return;
-    }
-
-    console.log('🔄 [SET RESTORE] Restoring UI state from set:', set.name, 'ID:', setId);
-    console.log('🔄 [SET RESTORE] Shape types:', set.enabledShapeTypes);
-    console.log('🔄 [SET RESTORE] Count mode:', set.shapeCountMode, 'Fixed:', set.shapeCountFixed, 'Range:', set.shapeCountRange);
-
-    // Convert SupportedShapeType back to ShapeType Set
-    const newShapeTypes = new Set(set.enabledShapeTypes as ShapeType[]);
-    setEnabledShapeTypes(newShapeTypes);
-    console.log('🔄 [SET RESTORE] Updated shape types to:', Array.from(newShapeTypes));
-    
-    // Restore scatter settings with proper shape count properties
-    const restoredScatterSettings: ScatterSettings = {
-      ...scatterSettings,
-      shapeCountMode: set.shapeCountMode,
-      fixedShapeCount: set.shapeCountFixed,
-      count: set.shapeCountMode === 'fixed' ? set.shapeCountFixed : Math.floor((set.shapeCountRange[0] + set.shapeCountRange[1]) / 2),
-      minCount: set.shapeCountRange[0],
-      maxCount: set.shapeCountRange[1],
-      shapeSpecific: {
-        ...scatterSettings.shapeSpecific,
-        ...(set.shapeSpecificProperties as any)
-      }
-    };
-    setScatterSettings(restoredScatterSettings);
-    console.log('🔄 [SET RESTORE] Updated scatter settings:', restoredScatterSettings.shapeCountMode, restoredScatterSettings.count);
-    
-    // Restore batch config settings
-    setGenerationConfigSettings(set.batchConfig);
-    console.log('🔄 [SET RESTORE] Updated generation config settings');
-    
-    console.log('🔄 [SET RESTORE] ✅ Successfully restored UI state from set:', set.name);
-  }, [generationSets, scatterSettings]);
 
   const clearSelection = useCallback(() => {
     shapes.forEach(shape => shape.selected = false);

@@ -518,32 +518,12 @@ export default function Sidebar({
   const setsEnabled = exportSettings.generationSetsEnabled;
   
 
-  // Generation sets handlers
+  // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
-    console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
-    
-    // Check for unsaved changes before switching
-    if (hasUnsavedChanges && effectiveCurrentSetId && hasUnsavedChanges(effectiveCurrentSetId)) {
-      console.log('🔄 [SET SWITCH] ⚠️ Unsaved changes detected in current set:', effectiveCurrentSetId);
-      
-      // For now, proceed with switch but warn user
-      // TODO: Add user confirmation dialog for unsaved changes
-      const confirmed = window.confirm('You have unsaved changes in the current generation set. Do you want to switch anyway? (Changes will be lost)');
-      if (!confirmed) {
-        console.log('🔄 [SET SWITCH] ❌ User cancelled set switch due to unsaved changes');
-        return;
-      }
-    }
-    
-    console.log('🔄 [SET SWITCH] ✅ Proceeding with set switch to:', setId);
+    // The enhanced validation and state restoration logic is now handled centrally
+    // in useShapeEditor's handleCurrentGenerationSetChange function
     onCurrentGenerationSetChange?.(setId);
-    
-    // Restore UI state if a set is selected
-    if (setId && onRestoreUIStateFromSet) {
-      console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
-      onRestoreUIStateFromSet(setId);
-    }
-  }, [onCurrentGenerationSetChange, onRestoreUIStateFromSet, hasUnsavedChanges, effectiveCurrentSetId]);
+  }, [onCurrentGenerationSetChange]);
 
 
   const handleDeleteSet = useCallback((setId: string) => {
