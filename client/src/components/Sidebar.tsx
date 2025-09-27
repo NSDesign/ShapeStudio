@@ -510,10 +510,10 @@ export default function Sidebar({
   const effectiveGenerationSets = generationSets || [];
   const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Generation sets are enabled when in fixed mode AND the main toggle is enabled
-  // This allows users to save/load generation configurations when both conditions are met
+  // Generation sets are enabled when the main toggle is enabled
+  // This allows users to save/load generation configurations with any count mode
   const effectiveMode = generationCountMode ?? 'fixed';
-  const setsEnabled = (effectiveMode === 'fixed' || effectiveMode === 'FIXED') && exportSettings.generationSetsEnabled;
+  const setsEnabled = exportSettings.generationSetsEnabled;
   
 
   // Generation sets handlers
@@ -777,11 +777,6 @@ export default function Sidebar({
       console.log('Auto-enabled batch export for generation sets');
     }
     
-    // Set to fixed mode for generation sets
-    if (generationConfigSettings?.generationCountMode !== 'fixed') {
-      onUpdateGenerationConfigSettings({ generationCountMode: 'fixed' });
-      console.log('Auto-set generation count mode to fixed for generation sets');
-    }
     
     // Capture current UI state for the generation set
     const currentUIState: CurrentUIState = {
@@ -1706,31 +1701,26 @@ export default function Sidebar({
                     onCheckedChange={(checked) => {
                       updateExportSettings.mutate({ generationSetsEnabled: checked as boolean });
                     }}
-                    disabled={!exportSettings.exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed'}
+                    disabled={!exportSettings.exportBatchModeEnabled}
                     data-testid="toggle-generation-sets"
                   />
                 </div>
 
                 {/* Prerequisites messaging */}
-                {(!exportSettings.exportBatchModeEnabled || generationConfigSettings?.generationCountMode !== 'fixed') && (
+                {!exportSettings.exportBatchModeEnabled && (
                   <div className="text-xs text-slate-500 bg-yellow-900/20 p-2 rounded border border-yellow-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
                       <span className="text-yellow-300 font-medium">Prerequisites Required</span>
                     </div>
                     <div className="space-y-1">
-                      {!exportSettings.exportBatchModeEnabled && (
-                        <div>• Enable batch export mode above</div>
-                      )}
-                      {generationConfigSettings?.generationCountMode !== 'fixed' && (
-                        <div>• Set generation count mode to "Fixed"</div>
-                      )}
+                      <div>• Enable batch export mode above</div>
                     </div>
                   </div>
                 )}
 
                 {/* Generation Sets enabled messaging */}
-                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && generationConfigSettings?.generationCountMode === 'fixed' && (
+                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
                   <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
@@ -4449,7 +4439,7 @@ export default function Sidebar({
                           data-testid="sidebar-generation-sets-select-trigger"
                         >
                           <SelectValue 
-                            placeholder={setsEnabled ? "Select generation set..." : "Switch to fixed count mode"} 
+                            placeholder={setsEnabled ? "Select generation set..." : "Enable generation sets to select"} 
                           />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600">
