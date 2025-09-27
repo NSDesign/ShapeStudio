@@ -132,6 +132,8 @@ export const useShapeEditor = () => {
   // Generation Sets Management - centralized state for bi-directional sync
   const [generationSets, setGenerationSets] = useState<GenerationSet[]>([]);
   const [currentGenerationSetId, setCurrentGenerationSetId] = useState<string | null>(null);
+  const [hasManualChangesAfterRestore, setHasManualChangesAfterRestore] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Track if initial load is complete to prevent save loops
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
@@ -262,7 +264,11 @@ export const useShapeEditor = () => {
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));
-  }, []);
+    // Mark as manually changed only if not during restore operation
+    if (!isRestoring) {
+      setHasManualChangesAfterRestore(true);
+    }
+  }, [isRestoring]);
 
   // Capture current UI state for comparison and saving
   const captureCurrentState = useCallback((): CurrentUIState => {
@@ -276,43 +282,24 @@ export const useShapeEditor = () => {
     };
   }, [enabledShapeTypes, scatterSettings, generationConfigSettings]);
 
-  // Check if current UI state differs from the saved generation set
+  // Check if there are manual changes after the last set restore
   const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
     if (!setId) return false;
     
     const set = generationSets.find(s => s.id === setId);
     if (!set) return false;
 
-    // Compare current UI state with set's saved state
-    const currentState = captureCurrentState();
+    console.log('🔄 [UNSAVED CHECK] Checking for manual changes in set:', set.name, 'ID:', setId);
+    console.log('🔄 [UNSAVED CHECK] Has manual changes after restore:', hasManualChangesAfterRestore);
     
-    // Shape types comparison
-    const currentShapeTypes = Array.from(currentState.enabledShapeTypes).sort();
-    const setShapeTypes = Array.from(set.enabledShapeTypes).sort();
-    if (JSON.stringify(currentShapeTypes) !== JSON.stringify(setShapeTypes)) {
-      console.log('🔄 [UNSAVED] Shape types differ:', currentShapeTypes, 'vs', setShapeTypes);
-      return true;
-    }
-    
-    // Shape count settings comparison
-    if (currentState.shapeCountMode !== set.shapeCountMode ||
-        currentState.shapeCountFixed !== set.shapeCountFixed ||
-        JSON.stringify(currentState.shapeCountRange) !== JSON.stringify(set.shapeCountRange)) {
-      console.log('🔄 [UNSAVED] Shape count settings differ');
-      console.log('🔄 [UNSAVED] Current mode:', currentState.shapeCountMode, 'vs Set mode:', set.shapeCountMode);
-      console.log('🔄 [UNSAVED] Current fixed:', currentState.shapeCountFixed, 'vs Set fixed:', set.shapeCountFixed);
-      console.log('🔄 [UNSAVED] Current range:', JSON.stringify(currentState.shapeCountRange), 'vs Set range:', JSON.stringify(set.shapeCountRange));
-      return true;
-    }
-    
-    // Batch config comparison (simplified)
-    if (JSON.stringify(currentState.batchConfig) !== JSON.stringify(set.batchConfig)) {
-      console.log('🔄 [UNSAVED] Batch config differs');
+    // Simply check if user has made manual changes after the last restore
+    if (hasManualChangesAfterRestore) {
+      console.log('🔄 [UNSAVED] User has made manual changes since last restore');
       return true;
     }
     
     return false;
-  }, [generationSets, captureCurrentState]);
+  }, [generationSets, hasManualChangesAfterRestore]);
 
   // UI state restoration from generation set
   const restoreUIStateFromSet = useCallback((setId: string) => {
@@ -323,6 +310,9 @@ export const useShapeEditor = () => {
     }
 
     console.log('🔄 [SET RESTORE] Restoring UI state from set:', set.name, 'ID:', setId);
+    
+    // Set restoring flag to prevent manual change tracking during restore
+    setIsRestoring(true);
     console.log('🔄 [SET RESTORE] Shape types:', set.enabledShapeTypes);
     console.log('🔄 [SET RESTORE] Count mode:', set.shapeCountMode, 'Fixed:', set.shapeCountFixed, 'Range:', set.shapeCountRange);
 
@@ -351,6 +341,14 @@ export const useShapeEditor = () => {
     setGenerationConfigSettings(set.batchConfig);
     console.log('🔄 [SET RESTORE] Updated generation config settings');
     
+    // Reset manual changes flag since we just restored the set
+    setHasManualChangesAfterRestore(false);
+    console.log('🔄 [SET RESTORE] Reset manual changes flag');
+    
+    // Clear restoring flag
+    setIsRestoring(false);
+    console.log('🔄 [SET RESTORE] Cleared restoring flag');
+    
     console.log('🔄 [SET RESTORE] ✅ Successfully restored UI state from set:', set.name);
   }, [generationSets, scatterSettings]);
 
@@ -361,6 +359,7 @@ export const useShapeEditor = () => {
 
   const handleCurrentGenerationSetChange = useCallback((setId: string | null) => {
     console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
+    console.log('🔄 [SET SWITCH] Current set ID:', currentGenerationSetId);
     
     // Check for unsaved changes before switching
     if (currentGenerationSetId && hasUnsavedChanges(currentGenerationSetId)) {
@@ -2816,7 +2815,11 @@ export const useShapeEditor = () => {
 
   const updateGenerationConfigSettings = useCallback((updates: Partial<BatchConfigSettings>) => {
     setGenerationConfigSettings(prev => ({ ...prev, ...updates }));
-  }, []);
+    // Mark as manually changed only if not during restore operation
+    if (!isRestoring) {
+      setHasManualChangesAfterRestore(true);
+    }
+  }, [isRestoring]);
 
   // Project loading functionality
   const onLoadProject = useCallback((data: {
@@ -3157,6 +3160,12 @@ export const useShapeEditor = () => {
     setGroups,
     setCanvasSettings,
     setScatterSettings,
-    setEnabledShapeTypes
+    setEnabledShapeTypes: useCallback((value: Set<ShapeType> | ((prev: Set<ShapeType>) => Set<ShapeType>)) => {
+      setEnabledShapeTypes(value);
+      // Mark as manually changed only if not during restore operation
+      if (!isRestoring) {
+        setHasManualChangesAfterRestore(true);
+      }
+    }, [isRestoring])
   };
 };
