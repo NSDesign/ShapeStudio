@@ -429,14 +429,14 @@ export function GenerationSetsInterface({
           <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
             <AlertDescription className="text-yellow-300">
-              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the edge case strategy below.
+              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Edge Case Strategy Configuration */}
+        {/* Mismatch Sets Configuration */}
         {hasSetsCountMismatch && (
-          <Card className="bg-slate-800 border-slate-700" data-testid="card-edge-case-strategy">
+          <Card className="bg-slate-800 border-slate-700" data-testid="card-mismatch-sets-strategy">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -451,10 +451,10 @@ export function GenerationSetsInterface({
                   <Select 
                     value="hold" 
                     onValueChange={(value) => {
-                      // TODO: Implement edge case strategy change
-                      console.log('Edge case strategy changed:', value);
+                      // TODO: Implement mismatch sets strategy change
+                      console.log('Mismatch sets strategy changed:', value);
                     }}
-                    data-testid="select-edge-case-strategy"
+                    data-testid="select-mismatch-sets-strategy"
                   >
                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                       <SelectValue />

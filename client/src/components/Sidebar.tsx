@@ -1743,6 +1743,7 @@ export default function Sidebar({
                   max={100}
                   step={1}
                   className="w-full"
+                  data-testid="slider-export-batch-count"
                 />
               </div>
 
