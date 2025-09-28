@@ -1916,6 +1916,9 @@ export default function Sidebar({
   // Add state for main sidebar accordion sections to prevent collapse on value changes
   const [openAccordionSections, setOpenAccordionSections] = useState<string[]>([]);
   
+  // Add state for shape categories accordion to prevent collapse when shapes are toggled
+  const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
+  
   // Scroll position preservation - disabled to prevent auto-scroll to top issues
   const observerRef = useRef<MutationObserver | null>(null);
   const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
@@ -2389,7 +2392,12 @@ export default function Sidebar({
             <AccordionContent className="pb-2">
               <div className="space-y-3">
                 {/* Nested accordion for shape categories */}
-                <Accordion type="multiple" className="w-full">
+                <Accordion 
+                  type="multiple" 
+                  className="w-full"
+                  value={openShapeCategories}
+                  onValueChange={setOpenShapeCategories}
+                >
                   {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
                     const enabledInCategory = categoryShapes.filter(shapeType => 
                       enabledShapeTypes.has(shapeType)

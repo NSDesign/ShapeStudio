@@ -317,7 +317,7 @@ export default function BatchConfigDialog({
                         placeholder={generationSetsEnabled ? "Select generation set..." : "Enable Generation Sets in Export & Save section"} 
                       />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                       {generationSets.length === 0 ? (
                         <SelectItem value="no-sets" disabled className="text-slate-400">
                           No sets available
