@@ -2005,33 +2005,88 @@ export const useShapeEditor = () => {
   }, [enabledShapeTypes, scatterSettings, canvasSettings, generationConfigSettings]);
 
   const generateRandomShapes = useCallback(() => {
-    const count = scatterSettings.shapeCountMode === 'fixed' 
-      ? (scatterSettings.fixedShapeCount || 10)
-      : Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+    // Check if generation sets are enabled and have enabled sets
+    const enabledGenerationSets = generationSets.filter(set => set.enabled);
+    const useGenerationSets = enabledGenerationSets.length > 0;
 
-    console.log(`🔍 generateRandomShapes: count=${count}, mode=${scatterSettings.shapeCountMode || 'range'}, using unified generation function`);
+    let newShapes: Shape[] = [];
 
-    if (enabledShapeTypes.size === 0) {
-      console.log(`❌ No enabled shape types, returning early`);
-      return;
+    if (useGenerationSets) {
+      console.log(`🔍 generateRandomShapes: Using ${enabledGenerationSets.length} enabled generation sets`);
+      
+      // Use current artboard bounds for shape placement
+      const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+      const canvasBounds = currentArtboard ? {
+        x: currentArtboard.x,
+        y: currentArtboard.y,
+        width: currentArtboard.width,
+        height: currentArtboard.height
+      } : {
+        x: -200,
+        y: -200,
+        width: 400,
+        height: 400
+      };
+
+      // Generate shapes for each enabled generation set
+      const allNewShapes: Shape[] = [];
+      
+      enabledGenerationSets.forEach((set, setIndex) => {
+        // Calculate shape count for this set
+        const setCount = set.shapeCountMode === 'fixed' 
+          ? set.shapeCountFixed
+          : Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
+
+        console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
+
+        // Generate shapes for this set - use batch config from generation set
+        const setShapes = generateShapesWithBatchConfig(
+          setCount,
+          canvasBounds,
+          true,
+          setIndex
+        );
+
+        // Apply set-specific z-index offset
+        setShapes.forEach(shape => {
+          shape.properties.zIndex += setIndex * 1000; // Space sets apart in z-index
+        });
+
+        allNewShapes.push(...setShapes);
+      });
+
+      console.log(`✅ Generated total of ${allNewShapes.length} shapes from ${enabledGenerationSets.length} generation sets`);
+      newShapes = allNewShapes;
+    } else {
+      // Fallback to scatter settings when no generation sets are enabled
+      const count = scatterSettings.shapeCountMode === 'fixed' 
+        ? (scatterSettings.fixedShapeCount || 10)
+        : Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+
+      console.log(`🔍 generateRandomShapes: count=${count}, mode=${scatterSettings.shapeCountMode || 'range'}, using scatter settings (no generation sets)`);
+
+      if (enabledShapeTypes.size === 0) {
+        console.log(`❌ No enabled shape types, returning early`);
+        return;
+      }
+
+      // Use current artboard bounds for shape placement
+      const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+      const canvasBounds = currentArtboard ? {
+        x: currentArtboard.x,
+        y: currentArtboard.y,
+        width: currentArtboard.width,
+        height: currentArtboard.height
+      } : {
+        x: -200,
+        y: -200,
+        width: 400,
+        height: 400
+      };
+
+      // Generate shapes using the unified function
+      newShapes = generateShapesWithBatchConfig(count, canvasBounds, true, 0);
     }
-
-    // Use current artboard bounds for shape placement
-    const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
-    const canvasBounds = currentArtboard ? {
-      x: currentArtboard.x,
-      y: currentArtboard.y,
-      width: currentArtboard.width,
-      height: currentArtboard.height
-    } : {
-      x: -200,
-      y: -200,
-      width: 400,
-      height: 400
-    };
-
-    // Generate shapes using the unified function
-    const newShapes = generateShapesWithBatchConfig(count, canvasBounds, true, 0);
 
     if (newShapes.length === 0) {
       console.log(`❌ No shapes generated, returning early`);
@@ -2061,7 +2116,7 @@ export const useShapeEditor = () => {
         !generationConfigSettings.incrementalResetPerBatch) {
       setLastIncrementalIndex(prev => prev + newShapes.length);
     }
-  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, generationConfigSettings]);
+  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, generationConfigSettings, generationSets]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
