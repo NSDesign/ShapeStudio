@@ -806,6 +806,8 @@ export default function Sidebar({
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchTotalSteps, setBatchTotalSteps] = useState(0);
     const [batchStatus, setBatchStatus] = useState('');
+    const [showBatchResult, setShowBatchResult] = useState(false);
+    const [batchResultMessage, setBatchResultMessage] = useState('');
 
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
@@ -1485,13 +1487,16 @@ export default function Sidebar({
           throw new Error(`Failed to trigger download: ${downloadError instanceof Error ? downloadError.message : 'Unknown download error'}`);
         }
         
-        // Keep success message visible for 3 seconds before clearing
-        await new Promise(resolve => {
-          setTimeout(() => {
-            console.log(`⏳ Success message display completed`);
-            resolve(undefined);
-          }, 3000);
-        });
+        // Show persistent success message
+        setBatchResultMessage(`✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+        setShowBatchResult(true);
+        
+        // Keep success message visible for 10 seconds
+        setTimeout(() => {
+          setShowBatchResult(false);
+          setBatchResultMessage('');
+          console.log(`⏳ Success message display completed`);
+        }, 10000);
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
@@ -1509,13 +1514,16 @@ export default function Sidebar({
           enabledShapeTypes: Array.from(enabledShapeTypes)
         });
         
-        // Keep error message visible for 5 seconds so user can read it
-        await new Promise(resolve => {
-          setTimeout(() => {
-            console.log(`⏳ Error message display completed`);
-            resolve(undefined);
-          }, 5000);
-        });
+        // Show persistent error message
+        setBatchResultMessage(`❌ Export failed: ${errorMessage}`);
+        setShowBatchResult(true);
+        
+        // Keep error message visible for 15 seconds so user can read it
+        setTimeout(() => {
+          setShowBatchResult(false);
+          setBatchResultMessage('');
+          console.log(`⏳ Error message display completed`);
+        }, 15000);
         
       } finally {
         onClearAll?.();
@@ -1951,6 +1959,24 @@ export default function Sidebar({
                   <div className="text-xs text-purple-400">
                     {batchStatus || 'Processing...'}
                   </div>
+                </div>
+              )}
+              
+              {showBatchResult && (
+                <div className="space-y-2 p-3 bg-slate-900/50 rounded border border-gray-500/30">
+                  <div className="text-sm text-white whitespace-pre-wrap break-words">
+                    {batchResultMessage}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowBatchResult(false);
+                      setBatchResultMessage('');
+                    }}
+                    className="text-xs text-gray-400 hover:text-white underline"
+                    data-testid="dismiss-batch-result"
+                  >
+                    Dismiss
+                  </button>
                 </div>
               )}
 
