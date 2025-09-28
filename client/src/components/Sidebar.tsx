@@ -1164,6 +1164,7 @@ export default function Sidebar({
       console.log(`📐 Using bounds: ${generationBounds.width}x${generationBounds.height} at (${generationBounds.x}, ${generationBounds.y})`);
       
       try {
+        setBatchStatus('Initializing ZIP archive...');
         const zip = new JSZip();
         const timestamp = Date.now();
         
@@ -1290,7 +1291,11 @@ export default function Sidebar({
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            if (ctx) {
+            if (!ctx) {
+              throw new Error(`Failed to get canvas context for export ${i + 1}`);
+            }
+            
+            try {
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
@@ -1369,8 +1374,8 @@ export default function Sidebar({
                 
                 console.log(`💾 Added project file ${projectFilename} to ZIP`);
               }
-            } else {
-              console.error(`❌ Canvas context failed for export ${i + 1}`);
+            } catch (canvasError) {
+              throw new Error(`Canvas rendering failed for export ${i + 1}: ${canvasError instanceof Error ? canvasError.message : 'Unknown canvas error'}`);
             }
           } else {
             console.error(`❌ No shapes generated for export ${i + 1}`);
@@ -1395,7 +1400,27 @@ export default function Sidebar({
         
         const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
         console.log(`📦 Creating ZIP file with ${exportBatchCount} images${projectFilesText}`);
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        
+        let zipBlob;
+        try {
+          setBatchStatus('Generating ZIP file...');
+          
+          // Use compression level 1 for better mobile compatibility (faster, less memory-intensive)
+          zipBlob = await zip.generateAsync({ 
+            type: 'blob',
+            compression: 'DEFLATE',
+            compressionOptions: { level: 1 }
+          });
+          
+          console.log(`✅ ZIP blob generated successfully, size: ${zipBlob.size} bytes`);
+          
+          // Check if blob is too large for mobile browsers (warn if > 100MB)
+          if (zipBlob.size > 100 * 1024 * 1024) {
+            console.warn(`⚠️ Large ZIP file (${Math.round(zipBlob.size / 1024 / 1024)}MB) - may cause issues on mobile`);
+          }
+        } catch (zipError) {
+          throw new Error(`Failed to generate ZIP file: ${zipError instanceof Error ? zipError.message : 'Unknown ZIP error'}`);
+        }
         
         setBatchStatus('Downloading ZIP file...');
         setBatchProgress(currentStep);
@@ -1410,13 +1435,55 @@ export default function Sidebar({
           }, 1000);
         });
         
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(zipBlob);
-        link.download = `batch-export-${timestamp}.zip`;
-        link.click();
-        
-        setBatchStatus('Download complete!');
-        console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+        try {
+          setBatchStatus('Triggering download...');
+          console.log(`📥 Creating download link for ZIP file (${zipBlob.size} bytes)`);
+          
+          const link = document.createElement('a');
+          const blobUrl = URL.createObjectURL(zipBlob);
+          
+          // Enhanced mobile compatibility settings
+          link.href = blobUrl;
+          link.download = `batch-export-${timestamp}.zip`;
+          link.style.display = 'none';
+          link.target = '_blank'; // Helps with some mobile browsers
+          
+          // Add to DOM temporarily for better mobile compatibility
+          document.body.appendChild(link);
+          
+          // Use multiple methods for better mobile compatibility
+          try {
+            link.click();
+            console.log(`📱 Primary download method triggered`);
+          } catch (clickError) {
+            console.warn(`⚠️ Primary download failed, trying fallback:`, clickError);
+            // Fallback: try to trigger download event manually
+            const event = new MouseEvent('click', {
+              view: window,
+              bubbles: true,
+              cancelable: true
+            });
+            link.dispatchEvent(event);
+          }
+          
+          // Clean up DOM
+          setTimeout(() => {
+            if (document.body.contains(link)) {
+              document.body.removeChild(link);
+            }
+          }, 1000);
+          
+          // Clean up blob URL after a delay
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            console.log(`🧹 Cleaned up blob URL`);
+          }, 10000);
+          
+          setBatchStatus('Download initiated!');
+          console.log(`🎉 ZIP COMPLETE: Download initiated for batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+        } catch (downloadError) {
+          throw new Error(`Failed to trigger download: ${downloadError instanceof Error ? downloadError.message : 'Unknown download error'}`);
+        }
         
         // Keep success message visible for 3 seconds before clearing
         await new Promise(resolve => {
@@ -1428,14 +1495,26 @@ export default function Sidebar({
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
-        setBatchStatus('Export failed - check console for details');
         
-        // Keep error message visible for 3 seconds before clearing
+        // Create a more detailed error message for mobile users who can't check console
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const detailedError = `Export failed: ${errorMessage}`;
+        
+        setBatchStatus(detailedError);
+        console.error('❌ DETAILED ERROR:', {
+          error: errorMessage,
+          timestamp: new Date().toISOString(),
+          exportBatchCount,
+          exportFormat,
+          enabledShapeTypes: Array.from(enabledShapeTypes)
+        });
+        
+        // Keep error message visible for 5 seconds so user can read it
         await new Promise(resolve => {
           setTimeout(() => {
             console.log(`⏳ Error message display completed`);
             resolve(undefined);
-          }, 3000);
+          }, 5000);
         });
         
       } finally {
