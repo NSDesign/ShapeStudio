@@ -361,16 +361,27 @@ export const useShapeEditor = () => {
     console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
     console.log('🔄 [SET SWITCH] Current set ID:', currentGenerationSetId);
     
-    // Check for unsaved changes before switching
+    // Auto-save current state before switching (if there's a current set)
     if (currentGenerationSetId && hasUnsavedChanges(currentGenerationSetId)) {
-      console.log('🔄 [SET SWITCH] ⚠️ Unsaved changes detected in current set:', currentGenerationSetId);
+      console.log('🔄 [SET SWITCH] Auto-saving current set before switch:', currentGenerationSetId);
       
-      // For now, proceed with switch but warn user
-      // TODO: Add user confirmation dialog for unsaved changes
-      const confirmed = window.confirm('You have unsaved changes in the current generation set. Do you want to switch anyway? (Changes will be lost)');
-      if (!confirmed) {
-        console.log('🔄 [SET SWITCH] ❌ User cancelled set switch due to unsaved changes');
-        return;
+      // Capture current state and update the set
+      const currentState = captureCurrentState();
+      const setIndex = generationSets.findIndex(s => s.id === currentGenerationSetId);
+      if (setIndex !== -1) {
+        const updatedSet = {
+          ...generationSets[setIndex],
+          enabledShapeTypes: Array.from(currentState.enabledShapeTypes) as SupportedShapeType[],
+          shapeCountMode: currentState.shapeCountMode,
+          shapeCountFixed: currentState.shapeCountFixed,
+          shapeCountRange: currentState.shapeCountRange,
+          batchConfig: currentState.batchConfig
+        };
+        
+        const newSets = [...generationSets];
+        newSets[setIndex] = updatedSet;
+        setGenerationSets(newSets);
+        console.log('🔄 [SET SWITCH] ✅ Auto-saved current set changes');
       }
     }
     
@@ -382,7 +393,7 @@ export const useShapeEditor = () => {
       console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
       restoreUIStateFromSet(setId);
     }
-  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet]);
+  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet, captureCurrentState, generationSets]);
 
   const handleBatchExportCountChange = useCallback((count: number) => {
     setBatchExportCount(count);
