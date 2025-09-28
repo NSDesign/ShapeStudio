@@ -1417,8 +1417,27 @@ export default function Sidebar({
         
         setBatchStatus('Download complete!');
         console.log(`🎉 ZIP COMPLETE: Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+        
+        // Keep success message visible for 3 seconds before clearing
+        await new Promise(resolve => {
+          setTimeout(() => {
+            console.log(`⏳ Success message display completed`);
+            resolve(undefined);
+          }, 3000);
+        });
+        
       } catch (error) {
         console.error('❌ Batch export error:', error);
+        setBatchStatus('Export failed - check console for details');
+        
+        // Keep error message visible for 3 seconds before clearing
+        await new Promise(resolve => {
+          setTimeout(() => {
+            console.log(`⏳ Error message display completed`);
+            resolve(undefined);
+          }, 3000);
+        });
+        
       } finally {
         onClearAll?.();
         setIsBatchExporting(false);
