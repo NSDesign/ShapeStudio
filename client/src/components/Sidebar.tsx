@@ -1911,36 +1911,16 @@ export default function Sidebar({
   const [expandedShapes, setExpandedShapes] = useState<Set<string>>(new Set());
   
   // Add state for the shape list accordion to prevent auto-expansion
-  const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>("shape-list");
+  const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>(undefined);
   
   // Add state for main sidebar accordion sections to prevent collapse on value changes
-  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>(["shapes"]);
+  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>([]);
   
-  // Scroll position preservation
+  // Scroll position preservation - disabled to prevent auto-scroll to top issues
   const observerRef = useRef<MutationObserver | null>(null);
   const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
-    // Clean up previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-      observerRef.current = null;
-    }
-    
-    if (node) {
-      // Store scroll position before state changes that could cause re-renders
-      const preserveScroll = () => {
-        const scrollTop = node.scrollTop;
-        setTimeout(() => {
-          if (node.scrollTop !== scrollTop) {
-            node.scrollTop = scrollTop;
-          }
-        }, 0);
-      };
-      
-      // Preserve scroll on any content changes
-      const observer = new MutationObserver(preserveScroll);
-      observer.observe(node, { childList: true, subtree: true });
-      observerRef.current = observer;
-    }
+    // Disabled problematic scroll preservation that was causing auto-scroll to top
+    // on sidebar interactions. Users can manually scroll to maintain context.
   }, []);
 
   const toggleShapeExpansion = useCallback((shapeType: string) => {
