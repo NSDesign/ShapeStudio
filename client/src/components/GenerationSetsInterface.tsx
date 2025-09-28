@@ -459,7 +459,7 @@ export function GenerationSetsInterface({
                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
                       <SelectItem value="cycle" className="text-white hover:bg-slate-600">
                         <div className="flex flex-col">
                           <span>Cycle</span>

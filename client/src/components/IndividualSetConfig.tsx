@@ -655,7 +655,7 @@ export function IndividualSetConfig({
                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48">
+                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48" style={{ zIndex: 10002 }}>
                       {BLEND_MODES.map((mode) => (
                         <SelectItem key={mode} value={mode} className="text-white hover:bg-slate-600">
                           <div className="flex flex-col">
@@ -691,7 +691,7 @@ export function IndividualSetConfig({
                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48">
+                    <SelectContent className="bg-slate-700 border-slate-600 max-h-48" style={{ zIndex: 10002 }}>
                       <SelectItem value="source-over" className="text-white hover:bg-slate-600">
                         <div className="flex flex-col">
                           <span>Source Over</span>
@@ -898,7 +898,7 @@ export function IndividualSetConfig({
                             <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
+                            <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="center" className="text-white hover:bg-slate-600">Center</SelectItem>
                                 <SelectItem value="top-left" className="text-white hover:bg-slate-600">Top Left</SelectItem>
                                 <SelectItem value="top-right" className="text-white hover:bg-slate-600">Top Right</SelectItem>
@@ -968,7 +968,7 @@ export function IndividualSetConfig({
                                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
                                     <SelectItem value="none" className="text-white hover:bg-slate-600">None</SelectItem>
                                     <SelectItem value="artboard" className="text-white hover:bg-slate-600">Artboard</SelectItem>
                                     <SelectItem value="set" className="text-white hover:bg-slate-600">Another Set</SelectItem>
@@ -1019,7 +1019,7 @@ export function IndividualSetConfig({
                                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600">
+                                    <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
                                         <SelectItem value="center" className="text-white hover:bg-slate-600">
                                             <div className="flex items-center gap-2">
                                                 <AlignCenter className="w-3 h-3" />
@@ -1155,7 +1155,7 @@ export function IndividualSetConfig({
                                   <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-slate-700 border-slate-600 text-white">
+                                  <SelectContent className="bg-slate-700 border-slate-600 text-white" style={{ zIndex: 10002 }}>
                                     <SelectItem value="range">Range</SelectItem>
                                     <SelectItem value="fixed">Fixed</SelectItem>
                                   </SelectContent>
@@ -1269,7 +1269,7 @@ export function IndividualSetConfig({
                                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-direction-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white" style={{ zIndex: 10002 }}>
                                       <SelectItem value="range" data-testid="option-line-vector-direction-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-direction-fixed">Fixed</SelectItem>
                                     </SelectContent>
@@ -1330,7 +1330,7 @@ export function IndividualSetConfig({
                                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-length-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white" style={{ zIndex: 10002 }}>
                                       <SelectItem value="range" data-testid="option-line-vector-length-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-length-fixed">Fixed</SelectItem>
                                     </SelectContent>
@@ -1391,7 +1391,7 @@ export function IndividualSetConfig({
                                     <SelectTrigger className="bg-slate-700 border-slate-600 text-white" data-testid="select-line-vector-centroid-mode">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600 text-white">
+                                    <SelectContent className="bg-slate-700 border-slate-600 text-white" style={{ zIndex: 10002 }}>
                                       <SelectItem value="range" data-testid="option-line-vector-centroid-range">Range</SelectItem>
                                       <SelectItem value="fixed" data-testid="option-line-vector-centroid-fixed">Fixed</SelectItem>
                                     </SelectContent>
