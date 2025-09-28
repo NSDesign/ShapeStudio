@@ -198,7 +198,7 @@ export default function BatchConfigDialog({
     
     // Apply legacy batch config settings
     onSettingsChange(currentSettings);
-    setIsOpen(false);
+    // Removed setIsOpen(false) - Apply button should not close dialog
   }, [currentSettings, onSettingsChange, validateConfiguration, isExportDisabled]);
 
   const blendModes: BlendMode[] = [
