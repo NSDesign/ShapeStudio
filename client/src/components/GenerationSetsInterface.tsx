@@ -587,89 +587,67 @@ export function GenerationSetsInterface({
                       )}
                     </div>
 
-                    {/* Generation Settings Summary - Only show enabled sections */}
+                    {/* Generation Settings Summary - Show each set's unique stored settings */}
                     <div className="text-xs text-slate-500 mb-2 space-y-1" data-testid={`generation-settings-${set.id}`}>
-                      {currentUIState ? (
-                        <>
-                          {currentUIState.batchConfigSettings?.distributionLayoutEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                              <span>Layout: {currentUIState.batchConfigSettings.distributionPattern}</span>
-                            </div>
-                          )}
-                          {currentUIState.batchConfigSettings?.colorHarmonyEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                              <span>Colors: {currentUIState.batchConfigSettings.harmonyType}</span>
-                            </div>
-                          )}
-                          {currentUIState.batchConfigSettings?.blendModeEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-                              <span>Blending: Enabled</span>
-                            </div>
-                          )}
-                          {currentUIState.batchConfigSettings?.shapePropertiesEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                              <span>Properties: Enabled</span>
-                            </div>
-                          )}
-                          {currentUIState.batchConfigSettings?.physicsEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-red-400 rounded-full"></span>
-                              <span>Physics: {currentUIState.batchConfigSettings.physicsType}</span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {set.batchConfig?.distributionLayoutEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                              <span>Layout: {set.batchConfig.distributionPattern}</span>
-                            </div>
-                          )}
-                          {set.batchConfig?.colorHarmonyEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                              <span>Colors: {set.batchConfig.harmonyType}</span>
-                            </div>
-                          )}
-                          {set.batchConfig?.blendModeEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-                              <span>Blending: Enabled</span>
-                            </div>
-                          )}
-                          {set.batchConfig?.shapePropertiesEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-                              <span>Properties: Enabled</span>
-                            </div>
-                          )}
-                          {set.batchConfig?.physicsEnabled && (
-                            <div className="flex items-center gap-1">
-                              <span className="w-2 h-2 bg-red-400 rounded-full"></span>
-                              <span>Physics: {set.batchConfig.physicsType}</span>
-                            </div>
-                          )}
-                        </>
+                      {set.batchConfig?.distributionLayoutEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                          <span>Layout: {set.batchConfig.distributionPattern}</span>
+                        </div>
                       )}
+                      {set.batchConfig?.colorHarmonyEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                          <span>Colors: {set.batchConfig.harmonyType}</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.blendModeEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
+                          <span>Blending: Enabled</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.shapePropertiesEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                          <span>Properties: Enabled</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.physicsEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                          <span>Physics: {set.batchConfig.physicsType}</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.transformsEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                          <span>Transforms: Enabled</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.noiseEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                          <span>Noise: {set.batchConfig.noiseType}</span>
+                        </div>
+                      )}
+                      {set.batchConfig?.filterEnabled && (
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-pink-400 rounded-full"></span>
+                          <span>Filters: Enabled</span>
+                        </div>
+                      )}
+                      {/* Set-specific configuration indicator */}
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                        <span>Count: {set.shapeCountMode === 'fixed' ? `${set.shapeCountFixed}` : `${set.shapeCountRange[0]}-${set.shapeCountRange[1]}`}</span>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span data-testid={`text-shape-count-${set.id}`}>
-                        {/* Show current UI state instead of stored set data */}
-                        {currentUIState ? (
-                          currentUIState.shapeCountMode === ShapeCountMode.FIXED 
-                            ? `${currentUIState.shapeCountFixed} shapes`
-                            : `${currentUIState.shapeCountRange[0]}-${currentUIState.shapeCountRange[1]} shapes`
-                        ) : (
-                          set.shapeCountMode === ShapeCountMode.FIXED 
-                            ? `${set.shapeCountFixed} shapes`
-                            : `${set.shapeCountRange[0]}-${set.shapeCountRange[1]} shapes`
-                        )}
+                        {/* Show set's unique stored data */}
+                        {set.enabledShapeTypes.length} shape type{set.enabledShapeTypes.length !== 1 ? 's' : ''}
                       </span>
                       <div className="flex gap-1">
                         <Button
