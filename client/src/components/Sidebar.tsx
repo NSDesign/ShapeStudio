@@ -1913,6 +1913,9 @@ export default function Sidebar({
   // Add state for the shape list accordion to prevent auto-expansion
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>("shape-list");
   
+  // Add state for main sidebar accordion sections to prevent collapse on value changes
+  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>(["shapes"]);
+  
   // Scroll position preservation
   const observerRef = useRef<MutationObserver | null>(null);
   const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
@@ -4367,7 +4370,12 @@ export default function Sidebar({
       {!isCollapsed && (
         /* Expanded sidebar with full content */
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-          <Accordion type="multiple" className="w-full px-2 py-1">
+          <Accordion 
+            type="multiple" 
+            value={openAccordionSections} 
+            onValueChange={setOpenAccordionSections}
+            className="w-full px-2 py-1"
+          >
             {/* Shape Types Section */}
             {sidebarSections.shapes && (
               <AccordionItem value="shapes" className="border-slate-700">
