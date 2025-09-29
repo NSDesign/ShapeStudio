@@ -1555,8 +1555,11 @@ export default function Sidebar({
               
               console.log(`✅ Downloaded ${filename}`);
               
-              // Small delay between downloads to avoid overwhelming the browser
-              await new Promise(resolve => setTimeout(resolve, 500));
+              // Larger delay for mobile devices to prevent "start new download" modal interruption
+              const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+              const delayMs = isMobile ? 2000 : 500; // 2 seconds for mobile, 500ms for desktop
+              console.log(`⏳ Waiting ${delayMs}ms before next download (${isMobile ? 'mobile' : 'desktop'} detected)`);
+              await new Promise(resolve => setTimeout(resolve, delayMs));
             } catch (downloadError) {
               console.error(`❌ Failed to download ${filename}:`, downloadError);
               // Continue with other files even if one fails
@@ -1601,7 +1604,8 @@ export default function Sidebar({
         
       } finally {
         onClearAll?.();
-        setIsBatchExporting(false);
+        // Keep the progress dialog visible until manually dismissed by user
+        // setIsBatchExporting(false); // Removed to prevent auto-dismiss
         setBatchProgress(0);
         setBatchStatus('');
       }
@@ -2061,6 +2065,23 @@ export default function Sidebar({
                       ? 'Images will be packaged into a single ZIP file'
                       : 'Individual image files will be downloaded'
                   )}
+                  
+                  {(() => {
+                    // Mobile device detection for helpful UX message
+                    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    const imageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
+                    const showMobileWarning = isMobile && !packageAsZip && imageCount > 1;
+                    
+                    return showMobileWarning ? (
+                      <div className="mt-2 p-2 bg-blue-900/20 rounded border border-blue-500/30">
+                        <div className="text-blue-300 font-medium text-xs mb-1">📱 Mobile Tip</div>
+                        <div className="text-blue-200 text-xs">
+                          Individual downloads have 2-second delays on mobile to prevent download interruptions. 
+                          Consider enabling "Package as ZIP" for faster download.
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
@@ -2088,6 +2109,7 @@ export default function Sidebar({
                     onClick={() => {
                       setShowBatchResult(false);
                       setBatchResultMessage('');
+                      setIsBatchExporting(false); // Close the entire progress dialog when manually dismissed
                     }}
                     className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
                     data-testid="close-batch-result"
