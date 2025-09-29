@@ -95,7 +95,9 @@ export function GenerationSetsInterface({
 
   // Calculate mismatch for export count banner - use enabled sets count
   const enabledSetsCount = generationSets.filter(set => set.enabled).length;
-  const hasSetsCountMismatch = batchExportCount !== undefined && batchExportCount > 0 && enabledSetsCount < batchExportCount;
+  // FIX: Don't compare enabled sets to total export images - only show warning when generation sets mode is actually enabled
+  // TODO: This should compare to actual "Generation Sets per Export" value, not total batch export count
+  const hasSetsCountMismatch = false; // Disable incorrect warning until proper logic is implemented
 
   // Update parent validation state when validation changes
   useEffect(() => {
