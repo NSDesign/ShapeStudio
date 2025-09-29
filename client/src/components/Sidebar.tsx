@@ -1178,7 +1178,7 @@ export default function Sidebar({
         const timestamp = Date.now();
         const individualFiles: Array<{blob: Blob, filename: string}> = [];
         
-        let currentStep = 0;
+        let currentStep = 1; // Start at 1 to avoid initial 0% display
         
         // Determine which images to export based on exportAllImages setting
         const imagesToExport = exportAllImages 
@@ -1202,7 +1202,7 @@ export default function Sidebar({
             setTimeout(() => {
               console.log(`⏳ Shape generation delay completed for artwork ${i + 1} - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
-            }, 500);
+            }, 200); // Reduced delay for better responsiveness
           });
           
           currentStep++;
@@ -1264,7 +1264,7 @@ export default function Sidebar({
               setTimeout(() => {
                 console.log(`⏳ Image creation delay completed for artwork ${i + 1} - Progress: ${currentStep}/${totalSteps}`);
                 resolve(undefined);
-              }, 500);
+              }, 200); // Reduced delay for better responsiveness
             });
             
             currentStep++;
@@ -1454,7 +1454,7 @@ export default function Sidebar({
             setTimeout(() => {
               console.log(`⏳ ZIP creation delay completed - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
-            }, 1000);
+            }, 300); // Reduced delay for better responsiveness
           });
           
           currentStep++;
@@ -1492,7 +1492,7 @@ export default function Sidebar({
             setTimeout(() => {
               console.log(`⏳ Download preparation delay completed - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
-            }, 1000);
+            }, 300); // Reduced delay for better responsiveness
           });
           
           currentStep++;
