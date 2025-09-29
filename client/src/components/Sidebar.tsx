@@ -1528,8 +1528,20 @@ export default function Sidebar({
           setBatchStatus('Downloading individual files...');
           console.log(`📁 INDIVIDUAL FILES: Starting ${individualFiles.length} individual downloads`);
           
+          // Detect mobile device once for the entire download session
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          const delayMs = isMobile ? 3000 : 800; // 3 seconds for mobile, 800ms for desktop
+          console.log(`📱 Device detected: ${isMobile ? 'mobile' : 'desktop'} - using ${delayMs}ms delays between downloads`);
+          
           for (let fileIndex = 0; fileIndex < individualFiles.length; fileIndex++) {
             const { blob, filename } = individualFiles[fileIndex];
+            
+            // Add delay BEFORE each download (including the first one) to let browser settle
+            if (fileIndex > 0 || isMobile) {
+              setBatchStatus(`Preparing download ${fileIndex + 1}/${individualFiles.length} - waiting for browser...`);
+              console.log(`⏳ Pre-download delay (${delayMs}ms) before ${filename}`);
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
             
             setBatchStatus(`Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
             setBatchProgress(currentStep);
@@ -1556,14 +1568,15 @@ export default function Sidebar({
               
               console.log(`✅ Downloaded ${filename}`);
               
-              // Larger delay for mobile devices to prevent "start new download" modal interruption
-              const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-              const delayMs = isMobile ? 2000 : 500; // 2 seconds for mobile, 500ms for desktop
-              console.log(`⏳ Waiting ${delayMs}ms before next download (${isMobile ? 'mobile' : 'desktop'} detected)`);
-              await new Promise(resolve => setTimeout(resolve, delayMs));
             } catch (downloadError) {
               console.error(`❌ Failed to download ${filename}:`, downloadError);
               // Continue with other files even if one fails
+            }
+            
+            // ALWAYS add delay after each download, regardless of success/failure
+            if (fileIndex < individualFiles.length - 1) { // Don't delay after the last file
+              console.log(`⏳ Post-download delay (${delayMs}ms) after ${filename}`);
+              await new Promise(resolve => setTimeout(resolve, delayMs));
             }
           }
           
@@ -1607,8 +1620,9 @@ export default function Sidebar({
         onClearAll?.();
         // Keep the progress dialog visible until manually dismissed by user
         // setIsBatchExporting(false); // Removed to prevent auto-dismiss
-        setBatchProgress(0);
-        setBatchStatus('');
+        // setBatchProgress(0); // Keep progress visible
+        // setBatchStatus(''); // Keep final status visible
+        console.log(`🔄 Export process completed - progress dialog remains visible for manual dismiss`);
       }
     };
 
