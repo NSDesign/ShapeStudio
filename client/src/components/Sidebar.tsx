@@ -1575,12 +1575,7 @@ export default function Sidebar({
         setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
-        // Keep success message visible for 10 seconds
-        setTimeout(() => {
-          setShowBatchResult(false);
-          setBatchResultMessage('');
-          console.log(`⏳ Success message display completed`);
-        }, 10000);
+        console.log(`✅ Success message displayed - manual dismiss required`);
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
@@ -1602,12 +1597,7 @@ export default function Sidebar({
         setBatchResultMessage(`❌ Export failed: ${errorMessage}`);
         setShowBatchResult(true);
         
-        // Keep error message visible for 15 seconds so user can read it
-        setTimeout(() => {
-          setShowBatchResult(false);
-          setBatchResultMessage('');
-          console.log(`⏳ Error message display completed`);
-        }, 15000);
+        console.log(`❌ Error message displayed - manual dismiss required`);
         
       } finally {
         onClearAll?.();
@@ -2093,20 +2083,21 @@ export default function Sidebar({
               )}
               
               {showBatchResult && (
-                <div className="space-y-2 p-3 bg-slate-900/50 rounded border border-gray-500/30">
-                  <div className="text-sm text-white whitespace-pre-wrap break-words">
-                    {batchResultMessage}
-                  </div>
+                <div className="relative space-y-2 p-3 bg-slate-900/50 rounded border border-gray-500/30">
                   <button 
                     onClick={() => {
                       setShowBatchResult(false);
                       setBatchResultMessage('');
                     }}
-                    className="text-xs text-gray-400 hover:text-white underline"
-                    data-testid="dismiss-batch-result"
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white hover:bg-slate-700/50 rounded-full transition-colors"
+                    data-testid="close-batch-result"
+                    title="Close"
                   >
-                    Dismiss
+                    <X className="w-4 h-4" />
                   </button>
+                  <div className="text-sm text-white whitespace-pre-wrap break-words pr-8">
+                    {batchResultMessage}
+                  </div>
                 </div>
               )}
 
