@@ -1140,13 +1140,16 @@ export default function Sidebar({
 
       setIsBatchExporting(true);
       setBatchProgress(0);
-      // Calculate total steps based on packaging mode
+      // Calculate actual number of images to export for step calculation
+      const actualImageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
+      
+      // Calculate total steps based on packaging mode and actual image count
       const totalSteps = packageAsZip 
-        ? (exportBatchCount * 2) + 2 // 2 steps per image + zip creation + download
-        : (exportBatchCount * 3); // 2 steps per image + individual download per image
+        ? (actualImageCount * 2) + 2 // 2 steps per image + zip creation + download
+        : (actualImageCount * 3); // 2 steps per image + individual download per image
       setBatchTotalSteps(totalSteps);
       setBatchStatus('Initializing batch export...');
-      console.log(`🚀 BATCH EXPORT: Starting ${exportBatchCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'})`);
+      console.log(`🚀 BATCH EXPORT: Starting ${actualImageCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'}) - ${exportAllImages ? 'All images' : 'Selected images'}`);
       
       // Get the target artboard for shape generation
       const targetArtboard = exportMode === 'artboard' && selectedArtboardForExport 
@@ -1176,7 +1179,15 @@ export default function Sidebar({
         
         let currentStep = 0;
         
-        for (let i = 0; i < exportBatchCount; i++) {
+        // Determine which images to export based on exportAllImages setting
+        const imagesToExport = exportAllImages 
+          ? Array.from({ length: exportBatchCount }, (_, i) => i)
+          : selectedImageIndices;
+        
+        console.log(`🎯 Export selection: ${exportAllImages ? 'All images' : 'Selected images'} - Processing indices: [${imagesToExport.join(', ')}]`);
+        
+        for (let loopIndex = 0; loopIndex < imagesToExport.length; loopIndex++) {
+          const i = imagesToExport[loopIndex];
           console.log(`🎨 Creating artwork ${i + 1} of ${exportBatchCount}`);
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${exportBatchCount} exports`);
           
@@ -1556,7 +1567,8 @@ export default function Sidebar({
           console.log(`🎉 INDIVIDUAL FILES COMPLETE: Downloaded ${individualFiles.length} files`);
         }
         
-        // Show persistent success message
+        // Show persistent success message  
+        const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
         const successMessage = packageAsZip 
           ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`
           : `✅ Success! Downloaded ${individualFiles.length} individual files`;
