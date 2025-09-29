@@ -1936,16 +1936,38 @@ export default function Sidebar({
                 />
               </div>
 
-              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
-                <div className="flex items-center space-x-2">
-                  <Save className="w-3 h-3 text-slate-400" />
-                  <Label className="text-xs text-slate-300">Export Project Files</Label>
-                </div>
-                <Switch
-                  checked={exportSaveProjectFiles}
-                  onCheckedChange={setExportSaveProjectFiles}
-                />
-              </div>
+              {(() => {
+                // Calculate if project files option should be disabled
+                const imageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
+                const isDisabled = imageCount === 0;
+                
+                return (
+                  <div className={`flex items-center justify-between p-2 rounded border ${
+                    isDisabled 
+                      ? 'bg-slate-900/50 border-slate-700 opacity-50' 
+                      : 'bg-slate-800/30 border-slate-600'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      <Save className={`w-3 h-3 ${isDisabled ? 'text-slate-500' : 'text-slate-400'}`} />
+                      <div className="flex flex-col">
+                        <Label className={`text-xs ${isDisabled ? 'text-slate-500' : 'text-slate-300'}`}>
+                          Export Project Files
+                        </Label>
+                        {isDisabled && (
+                          <span className="text-xs text-slate-600">
+                            No images selected for export
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Switch
+                      checked={exportSaveProjectFiles}
+                      onCheckedChange={setExportSaveProjectFiles}
+                      disabled={isDisabled}
+                    />
+                  </div>
+                );
+              })()}
 
               {exportSaveProjectFiles && (
                 <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
