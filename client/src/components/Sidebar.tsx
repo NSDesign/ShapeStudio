@@ -1434,6 +1434,12 @@ export default function Sidebar({
               }
             } catch (canvasError) {
               throw new Error(`Canvas rendering failed for export ${i + 1}: ${canvasError instanceof Error ? canvasError.message : 'Unknown canvas error'}`);
+            } finally {
+              // Immediate canvas cleanup to prevent memory leaks
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              canvas.width = 0;
+              canvas.height = 0;
+              console.log(`🧹 Cleaned up canvas for image ${i + 1}`);
             }
           } else {
             console.error(`❌ No shapes generated for export ${i + 1}`);
@@ -1535,11 +1541,11 @@ export default function Sidebar({
             }
           }, 1000);
           
-          // Clean up blob URL after a delay
+          // Clean up blob URL immediately after download starts
           setTimeout(() => {
             URL.revokeObjectURL(blobUrl);
             console.log(`🧹 Cleaned up blob URL`);
-          }, 10000);
+          }, 2000); // Reduced from 10 seconds to 2 seconds for better performance
           
             setBatchStatus('Download initiated!');
             console.log(`🎉 ZIP COMPLETE: Download initiated for batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
