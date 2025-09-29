@@ -99,7 +99,7 @@ export function useGenerationSets({
         alignmentType: 'center',
         margin: 0
       },
-      generationOrder: generationSets.length,
+      generationOrder: generationSets.length > 0 ? Math.max(...generationSets.map(s => s.generationOrder)) + 1 : 0,
       description: `Generated from current settings on ${new Date().toLocaleString()}`
     };
   }, [generationSets.length]);
