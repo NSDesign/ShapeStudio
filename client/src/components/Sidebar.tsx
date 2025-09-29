@@ -1220,8 +1220,9 @@ export default function Sidebar({
             generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
             console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
           } else if (generationConfigSettings?.generationCountMode === 'range') {
+            // Use user's configured range from UI slider (exportShapeCountRange controlled by user)
             generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
-            console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]})`);
+            console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]} from user range slider)`);
           } else {
             // Fallback to default
             generationCallsCount = 5;
