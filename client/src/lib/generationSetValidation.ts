@@ -313,10 +313,15 @@ export function validateGenerationSets(
         const rangeA = zIndexRanges[i];
         const rangeB = zIndexRanges[j];
         
-        // Check for overlap
-        if ((rangeA.minZ <= rangeB.maxZ && rangeA.maxZ >= rangeB.minZ)) {
+        // Check for significant overlap (allow minor edge overlaps)
+        const overlapSize = Math.min(rangeA.maxZ, rangeB.maxZ) - Math.max(rangeA.minZ, rangeB.minZ);
+        const minRangeSize = Math.min(rangeA.maxZ - rangeA.minZ, rangeB.maxZ - rangeB.minZ);
+        const overlapRatio = overlapSize / minRangeSize;
+        
+        // Only warn about significant overlaps (more than 25% of the smaller range)
+        if (overlapSize > 0 && overlapRatio > 0.25) {
           globalWarnings.push(
-            `Potential z-index overlap between "${rangeA.setName}" and "${rangeB.setName}"`
+            `Z-index ranges may overlap between "${rangeA.setName}" and "${rangeB.setName}"`
           );
         }
       }
