@@ -1212,17 +1212,36 @@ export default function Sidebar({
           await new Promise(resolve => setTimeout(resolve, 200));
 
           // Generate shapes for this export using batch configuration
-          // Random Shape Range determines how many times to call the generation function (like pressing the button multiple times)
-          const generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
-          console.log(`🔢 Will make ${generationCallsCount} generation calls for export ${i + 1} (simulating ${generationCallsCount} button presses)`);
+          // Use user's configured generations per export and shape count values
+          let generationCallsCount: number;
+          
+          // Determine generations per export based on user's mode setting
+          if (generationConfigSettings?.generationCountMode === 'fixed') {
+            generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
+            console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
+          } else if (generationConfigSettings?.generationCountMode === 'range') {
+            generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
+            console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]})`);
+          } else {
+            // Fallback to default
+            generationCallsCount = 5;
+            console.log(`🔢 Using DEFAULT generations per export: ${generationCallsCount} (fallback)`);
+          }
 
-          // Simulate multiple button presses - each call generates shapes based on scatterSettings.minCount to maxCount
+          // Simulate multiple button presses - each call generates shapes based on user's shape count settings
           const currentExportShapes: Shape[] = [];
           
           for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
-            // Each call generates a random number of shapes based on the scatter settings (like a single button press)
-            const shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
-            console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes`);
+            let shapesFromThisCall: number;
+            
+            // Determine shapes per generation based on user's shape count mode
+            if (scatterSettings.shapeCountMode === 'fixed') {
+              shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
+              console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED user configured)`);
+            } else {
+              shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+              console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${scatterSettings.minCount}-${scatterSettings.maxCount})`);
+            }
             
             const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
             currentExportShapes.push(...newShapes);
