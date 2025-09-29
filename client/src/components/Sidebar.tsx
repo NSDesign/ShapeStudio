@@ -1140,11 +1140,13 @@ export default function Sidebar({
 
       setIsBatchExporting(true);
       setBatchProgress(0);
-      // Calculate total steps: shape generation + image creation + zip creation + download
-      const totalSteps = (exportBatchCount * 2) + 2; // 2 steps per image + zip creation + download
+      // Calculate total steps based on packaging mode
+      const totalSteps = packageAsZip 
+        ? (exportBatchCount * 2) + 2 // 2 steps per image + zip creation + download
+        : (exportBatchCount * 3); // 2 steps per image + individual download per image
       setBatchTotalSteps(totalSteps);
       setBatchStatus('Initializing batch export...');
-      console.log(`🚀 ZIP BATCH EXPORT: Starting ${exportBatchCount} exports`);
+      console.log(`🚀 BATCH EXPORT: Starting ${exportBatchCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'})`);
       
       // Get the target artboard for shape generation
       const targetArtboard = exportMode === 'artboard' && selectedArtboardForExport 
@@ -1166,9 +1168,11 @@ export default function Sidebar({
       console.log(`📐 Using bounds: ${generationBounds.width}x${generationBounds.height} at (${generationBounds.x}, ${generationBounds.y})`);
       
       try {
-        setBatchStatus('Initializing ZIP archive...');
-        const zip = new JSZip();
+        // Initialize packaging based on user setting
+        setBatchStatus(packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
+        const zip = packageAsZip ? new JSZip() : null;
         const timestamp = Date.now();
+        const individualFiles: Array<{blob: Blob, filename: string}> = [];
         
         let currentStep = 0;
         
@@ -1320,7 +1324,13 @@ export default function Sidebar({
                 });
                 pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvasWidth / exportScale, canvasHeight / exportScale);
                 const pdfBlob = pdf.output('blob');
-                zip.file(filename, pdfBlob);
+                if (packageAsZip && zip) {
+                  zip.file(filename, pdfBlob);
+                  console.log(`📦 Added ${filename} to ZIP`);
+                } else {
+                  individualFiles.push({ blob: pdfBlob, filename });
+                  console.log(`📁 Prepared ${filename} for individual download`);
+                }
               } else {
                 // Handle raster formats
                 let dataURL: string;
@@ -1343,12 +1353,19 @@ export default function Sidebar({
                     break;
                 }
                 
-                // Extract base64 data from data URL
-                const base64Data = dataURL.split(',')[1];
-                zip.file(filename, base64Data, { base64: true });
+                if (packageAsZip && zip) {
+                  // Extract base64 data from data URL for ZIP
+                  const base64Data = dataURL.split(',')[1];
+                  zip.file(filename, base64Data, { base64: true });
+                  console.log(`📦 Added ${filename} to ZIP`);
+                } else {
+                  // Convert data URL to blob for individual download
+                  const response = await fetch(dataURL);
+                  const blob = await response.blob();
+                  individualFiles.push({ blob, filename });
+                  console.log(`📁 Prepared ${filename} for individual download`);
+                }
               }
-              
-              console.log(`📦 Added ${filename} to ZIP`);
 
               // Save project file if enabled
               if (exportSaveProjectFiles) {
@@ -1372,9 +1389,15 @@ export default function Sidebar({
                 };
                 
                 const projectJson = JSON.stringify(projectData, null, 2);
-                zip.file(projectFilename, projectJson);
                 
-                console.log(`💾 Added project file ${projectFilename} to ZIP`);
+                if (packageAsZip && zip) {
+                  zip.file(projectFilename, projectJson);
+                  console.log(`💾 Added project file ${projectFilename} to ZIP`);
+                } else {
+                  const projectBlob = new Blob([projectJson], { type: 'application/json' });
+                  individualFiles.push({ blob: projectBlob, filename: projectFilename });
+                  console.log(`📁 Prepared project file ${projectFilename} for individual download`);
+                }
               }
             } catch (canvasError) {
               throw new Error(`Canvas rendering failed for export ${i + 1}: ${canvasError instanceof Error ? canvasError.message : 'Unknown canvas error'}`);
@@ -1386,72 +1409,74 @@ export default function Sidebar({
           // Progress already updated after image creation step
         }
         
-        // FINAL STEP: ZIP Creation and Download
-        setBatchStatus('Creating ZIP file...');
-        setBatchProgress(currentStep);
-        console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
-        currentStep++;
-        
-        // Force UI update with much longer delay for ZIP creation
-        await new Promise(resolve => {
-          setTimeout(() => {
-            console.log(`⏳ ZIP creation delay completed`);
-            resolve(undefined);
-          }, 2000);
-        });
-        
-        const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
-        console.log(`📦 Creating ZIP file with ${exportBatchCount} images${projectFilesText}`);
-        
-        let zipBlob;
-        try {
-          setBatchStatus('Generating ZIP file...');
+        // FINAL STEP: Package and Download
+        if (packageAsZip && zip) {
+          // ZIP Creation and Download
+          setBatchStatus('Creating ZIP file...');
+          setBatchProgress(currentStep);
+          console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
+          currentStep++;
           
-          // Use compression level 1 for better mobile compatibility (faster, less memory-intensive)
-          zipBlob = await zip.generateAsync({ 
-            type: 'blob',
-            compression: 'DEFLATE',
-            compressionOptions: { level: 1 }
+          // Force UI update with delay for ZIP creation
+          await new Promise(resolve => {
+            setTimeout(() => {
+              console.log(`⏳ ZIP creation delay completed`);
+              resolve(undefined);
+            }, 2000);
           });
           
-          console.log(`✅ ZIP blob generated successfully, size: ${zipBlob.size} bytes`);
+          const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
+          console.log(`📦 Creating ZIP file with ${exportBatchCount} images${projectFilesText}`);
           
-          // Check if blob is too large for mobile browsers (warn if > 100MB)
-          if (zipBlob.size > 100 * 1024 * 1024) {
-            console.warn(`⚠️ Large ZIP file (${Math.round(zipBlob.size / 1024 / 1024)}MB) - may cause issues on mobile`);
+          let zipBlob;
+          try {
+            setBatchStatus('Generating ZIP file...');
+            
+            // Use compression level 1 for better mobile compatibility (faster, less memory-intensive)
+            zipBlob = await zip.generateAsync({ 
+              type: 'blob',
+              compression: 'DEFLATE',
+              compressionOptions: { level: 1 }
+            });
+            
+            console.log(`✅ ZIP blob generated successfully, size: ${zipBlob.size} bytes`);
+            
+            // Check if blob is too large for mobile browsers (warn if > 100MB)
+            if (zipBlob.size > 100 * 1024 * 1024) {
+              console.warn(`⚠️ Large ZIP file (${Math.round(zipBlob.size / 1024 / 1024)}MB) - may cause issues on mobile`);
+            }
+          } catch (zipError) {
+            throw new Error(`Failed to generate ZIP file: ${zipError instanceof Error ? zipError.message : 'Unknown ZIP error'}`);
           }
-        } catch (zipError) {
-          throw new Error(`Failed to generate ZIP file: ${zipError instanceof Error ? zipError.message : 'Unknown ZIP error'}`);
-        }
         
-        setBatchStatus('Downloading ZIP file...');
-        setBatchProgress(currentStep);
-        console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
-        currentStep++;
-        
-        // Force UI update before download
-        await new Promise(resolve => {
-          setTimeout(() => {
-            console.log(`⏳ Download preparation delay completed`);
-            resolve(undefined);
-          }, 1000);
-        });
-        
-        try {
-          setBatchStatus('Triggering download...');
-          console.log(`📥 Creating download link for ZIP file (${zipBlob.size} bytes)`);
+          setBatchStatus('Downloading ZIP file...');
+          setBatchProgress(currentStep);
+          console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
+          currentStep++;
           
-          const link = document.createElement('a');
-          const blobUrl = URL.createObjectURL(zipBlob);
+          // Force UI update before download
+          await new Promise(resolve => {
+            setTimeout(() => {
+              console.log(`⏳ Download preparation delay completed`);
+              resolve(undefined);
+            }, 1000);
+          });
           
-          // Enhanced mobile compatibility settings
-          link.href = blobUrl;
-          link.download = `batch-export-${timestamp}.zip`;
-          link.style.display = 'none';
-          link.target = '_blank'; // Helps with some mobile browsers
-          
-          // Add to DOM temporarily for better mobile compatibility
-          document.body.appendChild(link);
+          try {
+            setBatchStatus('Triggering download...');
+            console.log(`📥 Creating download link for ZIP file (${zipBlob.size} bytes)`);
+            
+            const link = document.createElement('a');
+            const blobUrl = URL.createObjectURL(zipBlob);
+            
+            // Enhanced mobile compatibility settings
+            link.href = blobUrl;
+            link.download = `batch-export-${timestamp}.zip`;
+            link.style.display = 'none';
+            link.target = '_blank'; // Helps with some mobile browsers
+            
+            // Add to DOM temporarily for better mobile compatibility
+            document.body.appendChild(link);
           
           // Use multiple methods for better mobile compatibility
           try {
@@ -1481,14 +1506,61 @@ export default function Sidebar({
             console.log(`🧹 Cleaned up blob URL`);
           }, 10000);
           
-          setBatchStatus('Download initiated!');
-          console.log(`🎉 ZIP COMPLETE: Download initiated for batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
-        } catch (downloadError) {
-          throw new Error(`Failed to trigger download: ${downloadError instanceof Error ? downloadError.message : 'Unknown download error'}`);
+            setBatchStatus('Download initiated!');
+            console.log(`🎉 ZIP COMPLETE: Download initiated for batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+          } catch (downloadError) {
+            throw new Error(`Failed to trigger download: ${downloadError instanceof Error ? downloadError.message : 'Unknown download error'}`);
+          }
+        } else {
+          // Individual File Downloads
+          setBatchStatus('Downloading individual files...');
+          console.log(`📁 INDIVIDUAL FILES: Starting ${individualFiles.length} individual downloads`);
+          
+          for (let fileIndex = 0; fileIndex < individualFiles.length; fileIndex++) {
+            const { blob, filename } = individualFiles[fileIndex];
+            
+            setBatchStatus(`Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
+            setBatchProgress(currentStep);
+            console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ${filename}`);
+            currentStep++;
+            
+            try {
+              const link = document.createElement('a');
+              const blobUrl = URL.createObjectURL(blob);
+              
+              link.href = blobUrl;
+              link.download = filename;
+              link.style.display = 'none';
+              link.target = '_blank';
+              
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              // Clean up blob URL after a delay
+              setTimeout(() => {
+                URL.revokeObjectURL(blobUrl);
+              }, 5000);
+              
+              console.log(`✅ Downloaded ${filename}`);
+              
+              // Small delay between downloads to avoid overwhelming the browser
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (downloadError) {
+              console.error(`❌ Failed to download ${filename}:`, downloadError);
+              // Continue with other files even if one fails
+            }
+          }
+          
+          setBatchStatus('All downloads completed!');
+          console.log(`🎉 INDIVIDUAL FILES COMPLETE: Downloaded ${individualFiles.length} files`);
         }
         
         // Show persistent success message
-        setBatchResultMessage(`✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`);
+        const successMessage = packageAsZip 
+          ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`
+          : `✅ Success! Downloaded ${individualFiles.length} individual files`;
+        setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
         // Keep success message visible for 10 seconds
