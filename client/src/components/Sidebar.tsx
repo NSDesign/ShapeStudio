@@ -1196,15 +1196,16 @@ export default function Sidebar({
           setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
           setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
-          currentStep++;
           
-          // Force UI update with longer delay
+          // Force UI update before incrementing step
           await new Promise(resolve => {
             setTimeout(() => {
-              console.log(`⏳ Shape generation delay completed for artwork ${i + 1}`);
+              console.log(`⏳ Shape generation delay completed for artwork ${i + 1} - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
-            }, 1000);
+            }, 500);
           });
+          
+          currentStep++;
           
           // Clear canvas and generate fresh shapes
           onClearAll?.();
@@ -1238,15 +1239,16 @@ export default function Sidebar({
             setBatchStatus(`Creating image for artwork ${i + 1}...`);
             setBatchProgress(currentStep);
             console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating image for artwork ${i + 1}`);
-            currentStep++;
             
-            // Force UI update with longer delay
+            // Force UI update before incrementing step
             await new Promise(resolve => {
               setTimeout(() => {
-                console.log(`⏳ Image creation delay completed for artwork ${i + 1}`);
+                console.log(`⏳ Image creation delay completed for artwork ${i + 1} - Progress: ${currentStep}/${totalSteps}`);
                 resolve(undefined);
-              }, 1000);
+              }, 500);
             });
+            
+            currentStep++;
             
             console.log(`🖼️ Processing ${currentExportShapes.length} shapes for ${filename}`);
             
@@ -1427,15 +1429,16 @@ export default function Sidebar({
           setBatchStatus('Creating ZIP file...');
           setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
-          currentStep++;
           
-          // Force UI update with delay for ZIP creation
+          // Force UI update before incrementing step
           await new Promise(resolve => {
             setTimeout(() => {
-              console.log(`⏳ ZIP creation delay completed`);
+              console.log(`⏳ ZIP creation delay completed - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
-            }, 2000);
+            }, 1000);
           });
+          
+          currentStep++;
           
           const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
           console.log(`📦 Creating ZIP file with ${exportBatchCount} images${projectFilesText}`);
@@ -1464,15 +1467,16 @@ export default function Sidebar({
           setBatchStatus('Downloading ZIP file...');
           setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
-          currentStep++;
           
           // Force UI update before download
           await new Promise(resolve => {
             setTimeout(() => {
-              console.log(`⏳ Download preparation delay completed`);
+              console.log(`⏳ Download preparation delay completed - Progress: ${currentStep}/${totalSteps}`);
               resolve(undefined);
             }, 1000);
           });
+          
+          currentStep++;
           
           try {
             setBatchStatus('Triggering download...');
@@ -1584,6 +1588,10 @@ export default function Sidebar({
           console.log(`🎉 INDIVIDUAL FILES COMPLETE: Downloaded ${individualFiles.length} files`);
         }
         
+        // Mark progress as complete
+        setBatchProgress(totalSteps);
+        setBatchStatus('Export completed successfully!');
+        
         // Show persistent success message  
         const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
         const successMessage = packageAsZip 
@@ -1592,7 +1600,7 @@ export default function Sidebar({
         setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
-        console.log(`✅ Success message displayed - manual dismiss required`);
+        console.log(`✅ Export complete - Progress: ${totalSteps}/${totalSteps} (100%) - Manual dismiss required`);
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
@@ -1610,11 +1618,14 @@ export default function Sidebar({
           enabledShapeTypes: Array.from(enabledShapeTypes)
         });
         
+        // Mark progress as failed but visible
+        setBatchStatus(`Export failed: ${errorMessage}`);
+        
         // Show persistent error message
         setBatchResultMessage(`❌ Export failed: ${errorMessage}`);
         setShowBatchResult(true);
         
-        console.log(`❌ Error message displayed - manual dismiss required`);
+        console.log(`❌ Export failed - Progress: ${batchProgress}/${totalSteps} - Manual dismiss required`);
         
       } finally {
         onClearAll?.();
@@ -2104,17 +2115,24 @@ export default function Sidebar({
                 <div className="space-y-2 p-3 bg-purple-900/20 rounded border border-purple-500/30">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-purple-300 font-medium">Batch Export Progress</span>
-                    <span className="text-purple-200">{batchProgress}/{batchTotalSteps}</span>
+                    <span className="text-purple-200">
+                      {batchProgress}/{batchTotalSteps} ({Math.round((batchProgress / Math.max(batchTotalSteps, 1)) * 100)}%)
+                    </span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div 
                       className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(batchProgress / batchTotalSteps) * 100}%` }}
+                      style={{ width: `${Math.min((batchProgress / Math.max(batchTotalSteps, 1)) * 100, 100)}%` }}
                     ></div>
                   </div>
                   <div className="text-xs text-purple-400">
                     {batchStatus || 'Processing...'}
                   </div>
+                  {batchProgress >= batchTotalSteps && (
+                    <div className="text-xs text-green-400 font-medium">
+                      ✅ Export process completed - Use X button above to close
+                    </div>
+                  )}
                 </div>
               )}
               
