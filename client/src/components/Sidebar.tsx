@@ -1969,17 +1969,41 @@ export default function Sidebar({
                 />
               </div>
 
-              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
-                <div className="flex items-center space-x-2">
-                  <Package className="w-3 h-3 text-slate-400" />
-                  <Label className="text-xs text-slate-300">Package as ZIP</Label>
-                </div>
-                <Switch
-                  checked={packageAsZip}
-                  onCheckedChange={setPackageAsZip}
-                  data-testid="toggle-package-as-zip"
-                />
-              </div>
+              {(() => {
+                // Calculate total items to export for Package as ZIP logic
+                const imageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
+                const projectFileCount = exportSaveProjectFiles ? imageCount : 0;
+                const totalItems = imageCount + projectFileCount;
+                const isDisabled = totalItems <= 1;
+                
+                return (
+                  <div className={`flex items-center justify-between p-2 rounded border ${
+                    isDisabled 
+                      ? 'bg-slate-900/50 border-slate-700 opacity-50' 
+                      : 'bg-slate-800/30 border-slate-600'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      <Package className={`w-3 h-3 ${isDisabled ? 'text-slate-500' : 'text-slate-400'}`} />
+                      <div className="flex flex-col">
+                        <Label className={`text-xs ${isDisabled ? 'text-slate-500' : 'text-slate-300'}`}>
+                          Package as ZIP
+                        </Label>
+                        {isDisabled && (
+                          <span className="text-xs text-slate-600">
+                            Only 1 item - no ZIP needed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Switch
+                      checked={packageAsZip}
+                      onCheckedChange={setPackageAsZip}
+                      disabled={isDisabled}
+                      data-testid="toggle-package-as-zip"
+                    />
+                  </div>
+                );
+              })()}
 
               {!exportAllImages && (
                 <div className="space-y-2 p-3 bg-orange-900/20 rounded border border-orange-500/30" data-testid="accordion-selective-export">
