@@ -11,6 +11,13 @@ import { NoiseSystem } from '../lib/noiseSystem';
 import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
+// Interface for overriding UI state during generation (used for generation sets)
+export interface GenerationContextOverrides {
+  enabledShapeTypes?: Set<ShapeType>;
+  batchConfig?: BatchConfigSettings;
+  scatterSettings?: Partial<ScatterSettings>;
+}
+
 export const useShapeEditor = () => {
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [groups, setGroups] = useState<ShapeGroupClass[]>([]);
@@ -275,8 +282,8 @@ export const useShapeEditor = () => {
     return {
       enabledShapeTypes,
       scatterSettings,
-      batchConfig: generationConfigSettings,
-      shapeCountMode: scatterSettings.shapeCountMode,
+      batchConfigSettings: generationConfigSettings,
+      shapeCountMode: scatterSettings.shapeCountMode as ShapeCountMode,
       shapeCountFixed: scatterSettings.fixedShapeCount,
       shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
     };
@@ -375,7 +382,7 @@ export const useShapeEditor = () => {
           shapeCountMode: currentState.shapeCountMode,
           shapeCountFixed: currentState.shapeCountFixed,
           shapeCountRange: currentState.shapeCountRange,
-          batchConfig: currentState.batchConfig
+          batchConfig: currentState.batchConfigSettings
         };
         
         const newSets = [...generationSets];
@@ -449,7 +456,7 @@ export const useShapeEditor = () => {
         incrementPerShape: 1,
         incrementPerGeneration: 1000
       },
-      batchConfig: { ...(uiState.batchConfig || generationConfigSettings) },
+      batchConfig: { ...((uiState as any).batchConfigSettings || (uiState as any).batchConfig || generationConfigSettings) },
       generationOrder: generationSets.length,
       description: `Generated from current settings on ${new Date().toLocaleString()}`,
       // New set-level features with sensible defaults
@@ -1312,13 +1319,23 @@ export const useShapeEditor = () => {
     canvasBounds: { x: number; y: number; width: number; height: number },
     useDistribution: boolean = true,
     shapeGenerationIndex: number = 0,
-    shapeSpecificPropertiesOverride?: Record<string, any>
+    shapeSpecificPropertiesOverride?: Record<string, any>,
+    overrides?: GenerationContextOverrides
   ): Shape[] => {
-    const enabledTypes = Array.from(enabledShapeTypes);
+    // Use overrides if provided, otherwise fall back to UI state
+    const effectiveEnabledTypes = overrides?.enabledShapeTypes 
+      ? Array.from(overrides.enabledShapeTypes) 
+      : Array.from(enabledShapeTypes);
+    
+    const effectiveBatchConfig = overrides?.batchConfig ?? generationConfigSettings;
+    
+    const effectiveScatterSettings = overrides?.scatterSettings 
+      ? { ...scatterSettings, ...overrides.scatterSettings }
+      : scatterSettings;
 
-    console.log(`🔍 generateShapesWithBatchConfig: count=${count}, enabledTypes=${enabledTypes.length}, types=${enabledTypes.join(',')}`);
+    console.log(`🔍 generateShapesWithBatchConfig: count=${count}, enabledTypes=${effectiveEnabledTypes.length}, types=${effectiveEnabledTypes.join(',')}, hasOverrides=${!!overrides}`);
 
-    if (enabledTypes.length === 0) {
+    if (effectiveEnabledTypes.length === 0) {
       console.log(`❌ No enabled shape types, returning empty array`);
       return [];
     }
@@ -1326,47 +1343,47 @@ export const useShapeEditor = () => {
     const positions = useDistribution ? SmartDistributionAlgorithm.generatePositions(
       count,
       canvasBounds,
-      scatterSettings.distribution
+      effectiveScatterSettings.distribution
     ) : Array.from({ length: count }, (_, i) => ({
       x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
       y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
     }));
 
     const newShapes = positions.map((position, index) => {
-      const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
+      const randomType = effectiveEnabledTypes[Math.floor(Math.random() * effectiveEnabledTypes.length)];
 
       // Apply position from batch config if properties are enabled
       let shapeX = position.x;
       let shapeY = position.y;
 
-      if (generationConfigSettings.propertiesEnabled && generationConfigSettings.shapePropertiesEnabled) {
+      if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
         // Enhanced position calculation based on mode
-        shapeX = calculatePositionX(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
-        shapeY = calculatePositionY(generationConfigSettings, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeX = calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeY = calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       }
 
       // Combine batch config with scatter settings for complete configuration
       // Deep merge shape-specific properties override if provided (from generation sets)
       const enhancedScatterSettings = shapeSpecificPropertiesOverride ? {
-        ...scatterSettings,
+        ...effectiveScatterSettings,
         shapeSpecific: Object.fromEntries(
           // Get all unique shape type keys from both sources
           Array.from(new Set([
-            ...Object.keys(scatterSettings.shapeSpecific || {}),
+            ...Object.keys(effectiveScatterSettings.shapeSpecific || {}),
             ...Object.keys(shapeSpecificPropertiesOverride)
           ])).map((shapeType: string) => [
             shapeType,
             {
               // Deep merge: existing config + override for this shape type
-              ...(scatterSettings.shapeSpecific?.[shapeType as keyof typeof scatterSettings.shapeSpecific] || {}),
+              ...(effectiveScatterSettings.shapeSpecific?.[shapeType as keyof typeof effectiveScatterSettings.shapeSpecific] || {}),
               ...(shapeSpecificPropertiesOverride[shapeType] || {})
             }
           ])
         )
-      } : scatterSettings;
+      } : effectiveScatterSettings;
 
       const combinedConfig = { 
-        ...generationConfigSettings, 
+        ...effectiveBatchConfig, 
         scatterSettings: enhancedScatterSettings 
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
