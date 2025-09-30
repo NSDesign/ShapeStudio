@@ -1,0 +1,63 @@
+Testing generation sets batch exporting with the following settings;
+
+Export and save section in the sidebar.
+Batch export = enabled
+Generation sets = enabled
+Generation sets per export option = fixed, numeric value = 2.
+Number of exports = 5
+Export Project Files = enabled
+Export All Images = enabled
+Package as ZIP = enabled
+
+Set 3, ID = 1
+Shape types enabled in the sidebar
+5 of 6 basic shapes = enabled
+
+rectangle
+rounded rectangle
+square
+rounded square
+circle
+1 of 7 special shapes = enabled
+polygon
+Total of 6 shape types enabled.
+Shape count option = range
+Shape count min = 14
+Shape count max = 33
+No settings defined via the generation configuration settings dialog for the shape types enabled in set 3
+Set 4, ID = 2
+shape types enabled in the sidebar
+1 of 6 complex shapes enabled
+
+organic blob
+Shape count option = fixed
+Shape count = 1
+Settings defined via generation configuration settings dialog for the shape types enabled in set 4;
+distribution layout = disabled
+properties = enabled
+Fill Properties = enabled
+solid fill probability = 100
+solid colour option = define
+colour = red
+gradient fill = disabled
+fill opacity option = fixed
+opacity = 100
+stroke properties = disabled
+shape transforms = disabled
+shape effects = disabled
+colour harmony = disabled
+Generation sets manager dialog;
+Set 3 selected to define settings via the configure generation set;
+For brevity I'm only including the enabled settings and specifically defined settings.
+Compositing & Blend Modes
+
+compositing operations = source-in
+Artboard & Alignment
+fit to artboard = enabled
+Align to = Artboard
+Alignment = Center
+Based on these setting we should export 5 images
+The first set, set 3 should generate a number of shapes based on the random number defined by the shape count range and shape types enabled. These shapes will be randomly coloured with fill colour and gradient colour also stroke colour and stroke width, etc due to no settings defined for this set via the generation configuration settings dialog.
+Set 4 basically creates 1 shape type and based on the set manager configuring the set it should scale the shape fit to the artboard and Center the shape in the artboard.
+
+In stead we get 2 red organic blobs for each image. Which is the result of the issue seen in the set manager where by selecting the any set card the shape types are displayed the same for each. See attached. The settings defined by set 3 are overridden by set4. Also the settings configured for set 4 alignment and fit to artboard does get applied at all, I think that none of the settings defined via the configure generation set have been implemented

@@ -549,43 +549,22 @@ export function GenerationSetsInterface({
                     </h5>
 
                     <div className="flex flex-wrap gap-1 mb-2" data-testid={`container-shape-types-${set.id}`}>
-                      {/* Show current UI state instead of stored set data */}
-                      {currentUIState ? (
-                        Array.from(currentUIState.enabledShapeTypes).slice(0, 3).map(shapeType => (
-                          <Badge 
-                            key={shapeType} 
-                            variant="secondary" 
-                            className="text-xs"
-                            data-testid={`badge-shape-type-${set.id}-${shapeType}`}
-                          >
-                            {shapeType}
-                          </Badge>
-                        ))
-                      ) : (
-                        set.enabledShapeTypes.slice(0, 3).map(shapeType => (
-                          <Badge 
-                            key={shapeType} 
-                            variant="secondary" 
-                            className="text-xs"
-                            data-testid={`badge-shape-type-${set.id}-${shapeType}`}
-                          >
-                            {shapeType}
-                          </Badge>
-                        ))
-                      )}
+                      {/* Show each set's own stored shape types */}
+                      {set.enabledShapeTypes.slice(0, 3).map(shapeType => (
+                        <Badge 
+                          key={shapeType} 
+                          variant="secondary" 
+                          className="text-xs"
+                          data-testid={`badge-shape-type-${set.id}-${shapeType}`}
+                        >
+                          {shapeType}
+                        </Badge>
+                      ))}
                       
-                      {currentUIState ? (
-                        currentUIState.enabledShapeTypes.size > 3 && (
-                          <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
-                            +{currentUIState.enabledShapeTypes.size - 3}
-                          </Badge>
-                        )
-                      ) : (
-                        set.enabledShapeTypes.length > 3 && (
-                          <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
-                            +{set.enabledShapeTypes.length - 3}
-                          </Badge>
-                        )
+                      {set.enabledShapeTypes.length > 3 && (
+                        <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-200 border-slate-500" data-testid={`badge-more-shapes-${set.id}`}>
+                          +{set.enabledShapeTypes.length - 3}
+                        </Badge>
                       )}
                     </div>
 
