@@ -1294,7 +1294,14 @@ export default function Sidebar({
                     set.shapeSpecificProperties,
                     overrides
                   );
+                  
+                  // Tag shapes with set layer index for proper rendering order
+                  newShapes.forEach(shape => {
+                    shape.properties.setLayerIndex = setIndex;
+                  });
+                  
                   currentExportShapes.push(...newShapes);
+                  console.log(`🎨 Tagged ${newShapes.length} shapes with setLayerIndex=${setIndex} for "${set.name}"`);
                 }
               }
               
@@ -1451,7 +1458,21 @@ export default function Sidebar({
               ctx.scale(exportScale, exportScale);
               ctx.translate(translateX, translateY);
 
-              const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+              // Sort shapes: setLayerIndex first (Set 1 bottom, Set 2 above, etc.), then zIndex within each set
+              const sortedShapes = [...currentExportShapes].sort((a, b) => {
+                // If both shapes have setLayerIndex, sort by it first
+                const aSetLayer = a.properties.setLayerIndex ?? -1;
+                const bSetLayer = b.properties.setLayerIndex ?? -1;
+                
+                if (aSetLayer !== bSetLayer) {
+                  return aSetLayer - bSetLayer; // Lower setLayerIndex renders first (bottom)
+                }
+                
+                // Within same set (or both undefined), sort by zIndex
+                return a.properties.zIndex - b.properties.zIndex;
+              });
+              
+              console.log(`🎨 Rendering ${sortedShapes.length} shapes with layer ordering (sets → z-index)`);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
               // Convert canvas to blob and add to ZIP

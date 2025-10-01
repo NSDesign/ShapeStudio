@@ -95,6 +95,7 @@ export interface ShapeProperties {
   strokeOpacity: number;
   blendMode: BlendMode;
   zIndex: number;
+  setLayerIndex?: number; // For Shape Sets layer ordering (Set 1 = 0, Set 2 = 1, etc.)
   blurRadius: number; // 0 = no blur, >0 = blur in pixels
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
