@@ -1216,24 +1216,6 @@ export default function Sidebar({
           await new Promise(resolve => setTimeout(resolve, 200));
 
           // Generate shapes for this export using batch configuration
-          // Use user's configured generations per export and shape count values
-          let generationCallsCount: number;
-          
-          // Determine generations per export based on user's mode setting
-          if (generationConfigSettings?.generationCountMode === 'fixed') {
-            generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
-            console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
-          } else if (generationConfigSettings?.generationCountMode === 'range') {
-            // Use user's configured range from UI slider (exportShapeCountRange controlled by user)
-            generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
-            console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]} from user range slider)`);
-          } else {
-            // Fallback to default
-            generationCallsCount = 5;
-            console.log(`🔢 Using DEFAULT generations per export: ${generationCallsCount} (fallback)`);
-          }
-
-          // Simulate multiple button presses - each call generates shapes based on user's shape count settings
           const currentExportShapes: Shape[] = [];
           
           // Check if shape sets mode is enabled
@@ -1241,7 +1223,17 @@ export default function Sidebar({
             const enabledSets = shapeSets.filter(set => set.enabled);
             
             if (enabledSets.length > 0) {
-              console.log(`🎯 GENERATION SETS MODE: Using ${enabledSets.length} enabled sets`);
+              // Use shapeSetsCount state instead of generationCallsCount
+              let shapeSetsCount: number;
+              if (shapeSetsCountMode === 'fixed') {
+                shapeSetsCount = shapeSetsCountFixed;
+                console.log(`🔢 SHAPE SETS MODE: Using FIXED sets per export: ${shapeSetsCount}`);
+              } else {
+                shapeSetsCount = Math.floor(Math.random() * (shapeSetsCountRange[1] - shapeSetsCountRange[0] + 1)) + shapeSetsCountRange[0];
+                console.log(`🔢 SHAPE SETS MODE: Using RANGE sets per export: ${shapeSetsCount} (random ${shapeSetsCountRange[0]}-${shapeSetsCountRange[1]})`);
+              }
+              
+              console.log(`🎯 SHAPE SETS MODE: Using ${enabledSets.length} enabled sets, generating ${shapeSetsCount} time(s)`);
               
               // DIAGNOSTIC: Log each set's batchConfig on load
               enabledSets.forEach((set, idx) => {
@@ -1255,9 +1247,9 @@ export default function Sidebar({
                 });
               });
               
-              // Loop through each generation call
-              for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
-                // Generate shapes for each enabled set
+              // FIX: Loop shapeSetsCount times, each iteration generates all enabled sets once
+              for (let setsIteration = 0; setsIteration < shapeSetsCount; setsIteration++) {
+                // Generate shapes for each enabled set (once per iteration)
                 for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
                   const set = enabledSets[setIndex];
                   
@@ -1266,10 +1258,10 @@ export default function Sidebar({
                   const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
                   if (isFixedMode) {
                     shapesFromThisCall = set.shapeCountFixed || 10;
-                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
+                    console.log(`📞 [${set.name}] Sets iteration ${setsIteration + 1}/${shapeSetsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
                   } else {
                     shapesFromThisCall = Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
-                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
+                    console.log(`📞 [${set.name}] Sets iteration ${setsIteration + 1}/${shapeSetsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
                   }
                   
                   // Create overrides from set configuration
@@ -1298,36 +1290,58 @@ export default function Sidebar({
                     shapesFromThisCall, 
                     generationBounds, 
                     true, 
-                    i + callIndex * 1000 + setIndex, 
+                    i + setsIteration * 1000 + setIndex, 
                     set.shapeSpecificProperties,
                     overrides
                   );
                   currentExportShapes.push(...newShapes);
                 }
               }
+              
+              console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${shapeSetsCount} sets iteration(s) × ${enabledSets.length} enabled sets for export ${i + 1}`);
             } else {
               console.log(`⚠️ No enabled shape sets, using current UI state as fallback`);
-              // Fallback to current UI state
+              // Fallback: Use Generations per Export when no sets enabled
+              let generationCallsCount: number;
+              if (generationConfigSettings?.generationCountMode === 'fixed') {
+                generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
+              } else if (generationConfigSettings?.generationCountMode === 'range') {
+                generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
+              } else {
+                generationCallsCount = 5;
+              }
+              
               for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
                 let shapesFromThisCall: number;
                 if (scatterSettings.shapeCountMode === 'fixed') {
                   shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
-                  console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED user configured)`);
                 } else {
                   shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
-                  console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${scatterSettings.minCount}-${scatterSettings.maxCount})`);
                 }
                 const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
                 currentExportShapes.push(...newShapes);
               }
+              console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls (fallback mode) for export ${i + 1}`);
             }
           } else {
-            // Generation sets disabled - use current UI state
+            // Shape sets disabled - use Generations per Export from batch config
+            let generationCallsCount: number;
+            
+            if (generationConfigSettings?.generationCountMode === 'fixed') {
+              generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
+              console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
+            } else if (generationConfigSettings?.generationCountMode === 'range') {
+              generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
+              console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]} from user range slider)`);
+            } else {
+              generationCallsCount = 5;
+              console.log(`🔢 Using DEFAULT generations per export: ${generationCallsCount} (fallback)`);
+            }
+            
             console.log(`🎯 NORMAL MODE: Using current UI state`);
             for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
               let shapesFromThisCall: number;
               
-              // Determine shapes per generation based on user's shape count mode
               if (scatterSettings.shapeCountMode === 'fixed') {
                 shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
                 console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED user configured)`);
@@ -1339,9 +1353,8 @@ export default function Sidebar({
               const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
               currentExportShapes.push(...newShapes);
             }
+            console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
           }
-          
-          console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
 
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image
