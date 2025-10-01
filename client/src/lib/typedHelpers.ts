@@ -5,7 +5,7 @@
 import { 
   SupportedShapeType, 
   BlendMode, 
-  GenerationSet,
+  ShapeSet,
   BatchConfigSettings,
   ShapeSpecificProperties
 } from '@shared/schema';
@@ -208,14 +208,14 @@ export interface ValidationWarning {
   code: string;
 }
 
-// Generation set validator
-export class GenerationSetValidator {
-  static validateGenerationSet(generationSet: GenerationSet): ValidationResult {
+// Shape set validator
+export class ShapeSetValidator {
+  static validateShapeSet(shapeSet: ShapeSet): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
     // Validate name
-    if (!generationSet.name?.trim()) {
+    if (!shapeSet.name?.trim()) {
       errors.push({
         field: 'name',
         message: 'Set name is required',
@@ -223,7 +223,7 @@ export class GenerationSetValidator {
       });
     }
 
-    if (generationSet.name?.trim().length > 50) {
+    if (shapeSet.name?.trim().length > 50) {
       warnings.push({
         field: 'name',
         message: 'Set name is quite long and may be truncated in displays',
@@ -232,7 +232,7 @@ export class GenerationSetValidator {
     }
 
     // Validate shape types
-    if (generationSet.enabledShapeTypes.length === 0) {
+    if (shapeSet.enabledShapeTypes.length === 0) {
       errors.push({
         field: 'enabledShapeTypes',
         message: 'At least one shape type must be selected',
@@ -241,8 +241,8 @@ export class GenerationSetValidator {
     }
 
     // Validate shape count
-    if (generationSet.shapeCountMode === 'fixed') {
-      if (generationSet.shapeCountFixed < 1 || generationSet.shapeCountFixed > 1000) {
+    if (shapeSet.shapeCountMode === 'fixed') {
+      if (shapeSet.shapeCountFixed < 1 || shapeSet.shapeCountFixed > 1000) {
         errors.push({
           field: 'shapeCountFixed',
           message: 'Shape count must be between 1 and 1000',
@@ -250,7 +250,7 @@ export class GenerationSetValidator {
         });
       }
     } else {
-      const [min, max] = generationSet.shapeCountRange;
+      const [min, max] = shapeSet.shapeCountRange;
       if (min < 1 || max > 1000 || min > max) {
         errors.push({
           field: 'shapeCountRange',
@@ -261,7 +261,7 @@ export class GenerationSetValidator {
     }
 
     // Validate z-index configuration
-    const zConfig = generationSet.zIndexConfig;
+    const zConfig = shapeSet.zIndexConfig;
     if (zConfig.baseOffset < -1000 || zConfig.baseOffset > 1000) {
       warnings.push({
         field: 'zIndexConfig.baseOffset',
@@ -285,14 +285,14 @@ export class GenerationSetValidator {
     };
   }
 
-  // Validate multiple generation sets for conflicts
-  static validateGenerationSets(generationSets: GenerationSet[]): ValidationResult {
+  // Validate multiple shape sets for conflicts
+  static validateShapeSets(shapeSets: ShapeSet[]): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
     // Check for duplicate names
     const nameMap = new Map<string, number>();
-    generationSets.forEach((set, index) => {
+    shapeSets.forEach((set, index) => {
       const name = set.name.trim().toLowerCase();
       if (nameMap.has(name)) {
         errors.push({
@@ -306,7 +306,7 @@ export class GenerationSetValidator {
 
     // Check for generation order conflicts
     const orderMap = new Map<number, number>();
-    generationSets.forEach((set, index) => {
+    shapeSets.forEach((set, index) => {
       if (orderMap.has(set.generationOrder)) {
         errors.push({
           field: `sets.${index}.generationOrder`,
@@ -318,7 +318,7 @@ export class GenerationSetValidator {
     });
 
     // Check for z-index conflicts (only warn)
-    const enabledSets = generationSets.filter(set => set.enabled);
+    const enabledSets = shapeSets.filter(set => set.enabled);
     
     // Check for overlapping z-index ranges between sets
     for (let i = 0; i < enabledSets.length; i++) {
@@ -349,8 +349,8 @@ export class GenerationSetValidator {
     }
 
     // Individual set validation
-    generationSets.forEach((set, index) => {
-      const setValidation = this.validateGenerationSet(set);
+    shapeSets.forEach((set, index) => {
+      const setValidation = this.validateShapeSet(set);
       setValidation.errors.forEach(error => {
         errors.push({
           ...error,

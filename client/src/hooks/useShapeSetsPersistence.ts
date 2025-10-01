@@ -1,51 +1,51 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import type { GenerationSet } from '@shared/schema';
+import type { ShapeSet } from '@shared/schema';
 
-export interface GenerationSetsData {
-  generationSets: GenerationSet[];
+export interface ShapeSetsData {
+  shapeSets: ShapeSet[];
   currentSetId: string | null;
 }
 
-export function useGenerationSetsPersistence() {
-  // Load generation sets from server
-  const { data, isLoading, error } = useQuery<GenerationSetsData>({
-    queryKey: ['/api/user/generation-sets'],
+export function useShapeSetsPersistence() {
+  // Load shape sets from server
+  const { data, isLoading, error } = useQuery<ShapeSetsData>({
+    queryKey: ['/api/user/shape-sets'],
     retry: 2,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
-  // Save generation sets to server
+  // Save shape sets to server
   const saveMutation = useMutation({
-    mutationFn: async (data: GenerationSetsData) => {
-      const response = await apiRequest('POST', '/api/user/generation-sets', data);
+    mutationFn: async (data: ShapeSetsData) => {
+      const response = await apiRequest('POST', '/api/user/shape-sets', data);
       return response.json();
     },
     onSuccess: (result, variables) => {
       // Update cache directly instead of invalidating to prevent refetch loops
-      queryClient.setQueryData(['/api/user/generation-sets'], variables);
+      queryClient.setQueryData(['/api/user/shape-sets'], variables);
     },
     onError: (error) => {
-      console.error('Failed to save generation sets:', error);
+      console.error('Failed to save shape sets:', error);
     },
   });
 
   // Auto-save function that can be called from components
-  const saveGenerationSets = async (generationSets: GenerationSet[], currentSetId?: string | null) => {
+  const saveShapeSets = async (shapeSets: ShapeSet[], currentSetId?: string | null) => {
     try {
       await saveMutation.mutateAsync({
-        generationSets,
+        shapeSets,
         currentSetId: currentSetId || null,
       });
     } catch (error) {
-      console.error('Error saving generation sets:', error);
+      console.error('Error saving shape sets:', error);
       throw error;
     }
   };
 
   return {
     // Data
-    generationSets: data?.generationSets || [],
+    shapeSets: data?.shapeSets || [],
     currentSetId: data?.currentSetId || null,
     
     // Loading states
@@ -57,7 +57,7 @@ export function useGenerationSetsPersistence() {
     saveError: saveMutation.error,
     
     // Actions
-    saveGenerationSets,
+    saveShapeSets,
     
     // Utility
     isReady: !isLoading && !error,

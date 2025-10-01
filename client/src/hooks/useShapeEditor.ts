@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { CurrentUIState } from './useGenerationSets';
-import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
+import type { CurrentUIState } from './useShapeSets';
+import { useShapeSetsPersistence } from './useShapeSetsPersistence';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
@@ -8,10 +8,10 @@ import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { NoiseSystem } from '../lib/noiseSystem';
-import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, ShapeSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 
-// Interface for overriding UI state during generation (used for generation sets)
+// Interface for overriding UI state during generation (used for shape sets)
 export interface GenerationContextOverrides {
   enabledShapeTypes?: Set<ShapeType>;
   batchConfig?: BatchConfigSettings;
@@ -129,15 +129,15 @@ export const useShapeEditor = () => {
   
   // Generation Sets persistence
   const {
-    generationSets: persistedGenerationSets,
+    shapeSets: persistedGenerationSets,
     currentSetId: persistedCurrentSetId,
-    saveGenerationSets,
+    saveShapeSets: saveGenerationSets,
     isLoading: isLoadingGenerationSets,
     isReady: isPersistenceReady,
-  } = useGenerationSetsPersistence();
+  } = useShapeSetsPersistence();
 
   // Generation Sets Management - centralized state for bi-directional sync
-  const [generationSets, setGenerationSets] = useState<GenerationSet[]>([]);
+  const [generationSets, setGenerationSets] = useState<ShapeSet[]>([]);
   const [currentGenerationSetId, setCurrentGenerationSetId] = useState<string | null>(null);
   const [hasManualChangesAfterRestore, setHasManualChangesAfterRestore] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -146,7 +146,7 @@ export const useShapeEditor = () => {
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
   
   // Migration function to ensure old sets have new properties
-  const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
+  const migrateGenerationSets = useCallback((sets: ShapeSet[]): ShapeSet[] => {
     return sets.map(set => ({
       ...set,
       // Add new set-level properties with defaults if they don't exist
@@ -360,7 +360,7 @@ export const useShapeEditor = () => {
   }, [generationSets, scatterSettings]);
 
   // Generation Sets handlers for bi-directional synchronization
-  const handleGenerationSetsChange = useCallback((sets: GenerationSet[]) => {
+  const handleGenerationSetsChange = useCallback((sets: ShapeSet[]) => {
     setGenerationSets(sets);
   }, []);
 
@@ -433,7 +433,7 @@ export const useShapeEditor = () => {
     
     // Create new generation set with proper types
     const newSetId = `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newSet: GenerationSet = {
+    const newSet: ShapeSet = {
       id: newSetId,
       name: setName,
       enabled: true,

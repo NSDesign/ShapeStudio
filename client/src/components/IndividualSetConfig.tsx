@@ -36,10 +36,10 @@ import {
   AlignCenter
 } from 'lucide-react';
 import { 
-  GenerationSet, 
+  ShapeSet, 
   ShapeCountMode, 
   SupportedShapeType,
-  DEFAULT_GENERATION_SET_LIMITS,
+  DEFAULT_SHAPE_SET_LIMITS,
   SupportedShapeTypeSchema,
   BlendMode,
   CompositingOperation,
@@ -48,7 +48,7 @@ import {
 import {
   ShapeSpecificPropertiesHelper,
   BlendModeHelper,
-  GenerationSetValidator,
+  ShapeSetValidator,
   ValidationResult,
   ValidationError,
   ValidationWarning,
@@ -59,8 +59,8 @@ import { SafeSection } from '@/components/ErrorBoundary';
 import { StyledModeField, type ModeConfig } from '@/components/StyledModeField';
 
 interface IndividualSetConfigProps {
-  generationSet: GenerationSet;
-  onUpdate: (updates: Partial<GenerationSet>) => void;
+  generationSet: ShapeSet;
+  onUpdate: (updates: Partial<ShapeSet>) => void;
   globalZIndexEnabled?: boolean;
   showInlineValidation?: boolean;
   validationResult?: ValidationResult;
@@ -153,7 +153,7 @@ export function IndividualSetConfig({
     if (validationResult) {
       return validationResult;
     }
-    return GenerationSetValidator.validateGenerationSet(generationSet);
+    return ShapeSetValidator.validateShapeSet(generationSet);
   }, [generationSet, validationResult]);
 
   // Update field-level errors and warnings

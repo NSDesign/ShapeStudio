@@ -7,7 +7,7 @@ import {
   type InsertUserPreferences,
   type UpdateUserPreferences,
   type SidebarSectionConfig,
-  type GenerationSet,
+  type ShapeSet,
   DEFAULT_SIDEBAR_SECTIONS,
 } from "@shared/schema";
 import { db } from "./db";
@@ -25,9 +25,9 @@ export interface IStorage {
   upsertUserPreferences(userId: string, preferences: UpdateUserPreferences): Promise<UserPreferences>;
   createDefaultUserPreferences(userId: string): Promise<UserPreferences>;
   
-  // Generation sets operations
-  saveUserGenerationSets(userId: string, generationSets: GenerationSet[], currentSetId?: string | null): Promise<void>;
-  loadUserGenerationSets(userId: string): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }>;
+  // Shape sets operations
+  saveUserShapeSets(userId: string, shapeSets: ShapeSet[], currentSetId?: string | null): Promise<void>;
+  loadUserShapeSets(userId: string): Promise<{ shapeSets: ShapeSet[], currentSetId?: string | null }>;
   
   // Other operations
 }
@@ -112,15 +112,15 @@ export class DatabaseStorage implements IStorage {
         id: `${userId}-preferences`,
         userId,
         sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
-        generationSets: [] as any,
-        currentGenerationSetId: null,
+        shapeSets: [] as any,
+        currentShapeSetId: null,
       })
       .onConflictDoUpdate({
         target: userPreferences.id,  // Use primary key, not foreign key
         set: {
           sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
-          generationSets: [] as any,
-          currentGenerationSetId: null,
+          shapeSets: [] as any,
+          currentShapeSetId: null,
           updatedAt: new Date(),
         },
       })
@@ -128,26 +128,26 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  // Generation sets operations
-  async saveUserGenerationSets(
+  // Shape sets operations
+  async saveUserShapeSets(
     userId: string, 
-    generationSets: GenerationSet[], 
+    shapeSets: ShapeSet[], 
     currentSetId?: string | null
   ): Promise<void> {
     await this.upsertUserPreferences(userId, {
-      generationSets: generationSets as any,
-      currentGenerationSetId: currentSetId || null,
+      shapeSets: shapeSets as any,
+      currentShapeSetId: currentSetId || null,
     });
   }
 
-  async loadUserGenerationSets(
+  async loadUserShapeSets(
     userId: string
-  ): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }> {
+  ): Promise<{ shapeSets: ShapeSet[], currentSetId?: string | null }> {
     const preferences = await this.getUserPreferences(userId);
     
     return {
-      generationSets: (preferences?.generationSets as GenerationSet[]) || [],
-      currentSetId: preferences?.currentGenerationSetId || null,
+      shapeSets: (preferences?.shapeSets as ShapeSet[]) || [],
+      currentSetId: preferences?.currentShapeSetId || null,
     };
   }
 

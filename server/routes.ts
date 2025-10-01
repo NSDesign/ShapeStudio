@@ -176,8 +176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           sidebarSections: req.body.sidebarSections || {},
           exportSettings: req.body.exportSettings || {},
-          generationSets: req.body.generationSets || [],
-          currentGenerationSetId: req.body.currentGenerationSetId || null,
+          shapeSets: req.body.shapeSets || [],
+          currentShapeSetId: req.body.currentShapeSetId || null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -202,8 +202,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generation sets routes
-  app.get("/api/user/generation-sets", conditionalAuth, async (req: any, res) => {
+  // Shape sets routes
+  app.get("/api/user/shape-sets", conditionalAuth, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
@@ -212,31 +212,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (isDevelopment) {
         // Use real persistence even in development
-        const result = await storage.loadUserGenerationSets(userId);
+        const result = await storage.loadUserShapeSets(userId);
         res.json(result);
         return;
       }
 
-      const result = await storage.loadUserGenerationSets(userId);
+      const result = await storage.loadUserShapeSets(userId);
       res.json(result);
     } catch (error) {
-      console.error("Error loading generation sets:", error);
-      res.status(500).json({ message: "Failed to load generation sets" });
+      console.error("Error loading shape sets:", error);
+      res.status(500).json({ message: "Failed to load shape sets" });
     }
   });
 
-  app.post("/api/user/generation-sets", conditionalAuth, async (req: any, res) => {
+  app.post("/api/user/shape-sets", conditionalAuth, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const { generationSets, currentSetId } = req.body;
+      const { shapeSets, currentSetId } = req.body;
 
       // Validate request body
-      if (!Array.isArray(generationSets)) {
-        return res.status(400).json({ message: "generationSets must be an array" });
+      if (!Array.isArray(shapeSets)) {
+        return res.status(400).json({ message: "shapeSets must be an array" });
       }
       
       if (currentSetId !== null && currentSetId !== undefined && typeof currentSetId !== 'string') {
@@ -245,16 +245,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (isDevelopment) {
         // Use real persistence even in development
-        await storage.saveUserGenerationSets(userId, generationSets, currentSetId);
+        await storage.saveUserShapeSets(userId, shapeSets, currentSetId);
         res.json({ success: true });
         return;
       }
 
-      await storage.saveUserGenerationSets(userId, generationSets, currentSetId);
+      await storage.saveUserShapeSets(userId, shapeSets, currentSetId);
       res.json({ success: true });
     } catch (error) {
-      console.error("Error saving generation sets:", error);
-      res.status(500).json({ message: "Failed to save generation sets" });
+      console.error("Error saving shape sets:", error);
+      res.status(500).json({ message: "Failed to save shape sets" });
     }
   });
 

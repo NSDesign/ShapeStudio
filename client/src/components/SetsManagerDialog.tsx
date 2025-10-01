@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
-import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
-import { GenerationSetsInterface } from './GenerationSetsInterface';
+import { ShapeSet, DEFAULT_SHAPE_SET_LIMITS } from '@shared/schema';
+import { ShapeSetsInterface } from './ShapeSetsInterface';
 import { ValidationError, ValidationWarning } from '@/lib/typedHelpers';
-import type { CurrentUIState } from '@/hooks/useGenerationSets';
+import type { CurrentUIState } from '@/hooks/useShapeSets';
 
 interface SetsManagerDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  generationSets: GenerationSet[];
-  onGenerationSetsChange: (sets: GenerationSet[]) => void;
+  shapeSets: ShapeSet[];
+  onShapeSetsChange: (sets: ShapeSet[]) => void;
   globalZIndexEnabled?: boolean;
   showInlineValidation?: boolean;
   // Bi-directional sync props
@@ -30,8 +30,8 @@ interface SetsManagerDialogProps {
 export function SetsManagerDialog({
   isOpen,
   onOpenChange,
-  generationSets,
-  onGenerationSetsChange,
+  shapeSets,
+  onShapeSetsChange,
   globalZIndexEnabled = false,
   showInlineValidation = true,
   // Bi-directional sync props
@@ -51,7 +51,7 @@ export function SetsManagerDialog({
     warnings: ValidationWarning[];
   }>({ isValid: true, errors: [], warnings: [] });
 
-  // Validation callback from GenerationSetsInterface
+  // Validation callback from ShapeSetsInterface
   const handleValidationChange = useCallback((isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => {
     setValidationState({ isValid, errors, warnings });
   }, []);
@@ -61,7 +61,7 @@ export function SetsManagerDialog({
   }, [onOpenChange]);
 
   // Calculate whether edge case strategy should be shown
-  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
+  const enabledSetsCount = shapeSets.filter(set => set.enabled).length;
   const shouldShowEdgeCaseStrategy = enabledSetsCount > 0 && batchExportCount && batchExportCount > enabledSetsCount;
 
   const handleEdgeCaseStrategyChange = useCallback((value: string) => {
@@ -86,9 +86,9 @@ export function SetsManagerDialog({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900">
           <div>
-            <h3 className="text-lg font-semibold text-slate-200">Generation Sets Manager</h3>
+            <h3 className="text-lg font-semibold text-slate-200">Shape Sets Manager</h3>
             <p className="text-sm text-slate-400">
-              Create, organize, and manage your generation set configurations
+              Create, organize, and manage your shape set configurations
             </p>
           </div>
           <Button 
@@ -105,10 +105,10 @@ export function SetsManagerDialog({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <GenerationSetsInterface
-            generationSets={generationSets}
-            onGenerationSetsChange={onGenerationSetsChange}
-            maxSets={DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
+          <ShapeSetsInterface
+            shapeSets={shapeSets}
+            onShapeSetsChange={onShapeSetsChange}
+            maxSets={DEFAULT_SHAPE_SET_LIMITS.maxShapeSets}
             globalZIndexEnabled={globalZIndexEnabled}
             showInlineValidation={showInlineValidation}
             onValidationChange={handleValidationChange}
@@ -123,7 +123,7 @@ export function SetsManagerDialog({
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-slate-700 bg-slate-900">
           <div className="text-xs text-slate-500">
-            {generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets
+            {shapeSets.length} of {DEFAULT_SHAPE_SET_LIMITS.maxShapeSets} sets
           </div>
           
           <div className="text-xs text-slate-500">

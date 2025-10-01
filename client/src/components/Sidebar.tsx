@@ -4,9 +4,9 @@ import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
-import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
-import type { CurrentUIState } from '@/hooks/useGenerationSets';
-import { GenerationSetsDropdown } from './GenerationSetsDropdown';
+import { BatchConfigSettings, EnhancedBatchConfig, ShapeSet, ShapeCountMode } from '@shared/schema';
+import type { CurrentUIState } from '@/hooks/useShapeSets';
+import { ShapeSetsDropdown } from './ShapeSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { useUserPreferences, useExportSettings } from '@/hooks/useUserPreferences';
@@ -397,22 +397,22 @@ interface SidebarProps {
     enabledShapeTypes: Set<ShapeType>;
   }) => void;
   
-  // Generation Sets Management
-  generationSets?: GenerationSet[];
-  currentGenerationSetId?: string | null;
+  // Shape Sets Management
+  shapeSets?: ShapeSet[];
+  currentShapeSetId?: string | null;
   shapeCountMode?: ShapeCountMode;
   shapeCountFixed?: number;
   shapeCountRange?: [number, number];
   batchExportCount?: number;
   generationCountMode?: string;
-  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
-  onCurrentGenerationSetChange?: (setId: string | null) => void;
-  onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
-  onDeleteGenerationSet?: (setId: string) => void;
+  onShapeSetsChange?: (sets: ShapeSet[]) => void;
+  onCurrentShapeSetChange?: (setId: string | null) => void;
+  onCreateShapeSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
+  onDeleteShapeSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
-  onOpenGenerationSetsManager?: () => void;
+  onOpenShapeSetsManager?: () => void;
   isSetsManagerOpen?: boolean;
-  onCloseGenerationSetsManager?: () => void;
+  onCloseShapeSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
@@ -465,22 +465,22 @@ export default function Sidebar({
   onApplyColorManipulation,
   onLoadProject,
   
-  // Generation Sets Management
-  generationSets = [],
-  currentGenerationSetId = null,
+  // Shape Sets Management
+  shapeSets = [],
+  currentShapeSetId = null,
   shapeCountMode = 'fixed' as ShapeCountMode,
   shapeCountFixed = 10,
   shapeCountRange = [5, 15] as [number, number],
   batchExportCount = 1,
   generationCountMode = 'fixed',
-  onGenerationSetsChange,
-  onCurrentGenerationSetChange,
-  onCreateGenerationSet,
-  onDeleteGenerationSet,
+  onShapeSetsChange,
+  onCurrentShapeSetChange,
+  onCreateShapeSet,
+  onDeleteShapeSet,
   generateUniqueSetName,
-  onOpenGenerationSetsManager,
+  onOpenShapeSetsManager,
   isSetsManagerOpen = false,
-  onCloseGenerationSetsManager,
+  onCloseShapeSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
@@ -509,33 +509,33 @@ export default function Sidebar({
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
 
-  // Use centralized generation sets state from parent
-  const effectiveGenerationSets = generationSets || [];
-  const effectiveCurrentSetId = currentGenerationSetId;
+  // Use centralized shape sets state from parent
+  const effectiveShapeSets = shapeSets || [];
+  const effectiveCurrentSetId = currentShapeSetId;
 
-  // Generation sets are enabled when the main toggle is enabled
-  // This allows users to save/load generation configurations with any count mode
+  // Shape sets are enabled when the main toggle is enabled
+  // This allows users to save/load shape configurations with any count mode
   const effectiveMode = generationCountMode ?? 'fixed';
-  const setsEnabled = exportSettings.generationSetsEnabled;
+  const setsEnabled = exportSettings.shapeSetsEnabled;
   
 
-  // Generation sets handlers - now simplified since validation logic is centralized
+  // Shape sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
     // The enhanced validation and state restoration logic is now handled centrally
-    // in useShapeEditor's handleCurrentGenerationSetChange function
-    onCurrentGenerationSetChange?.(setId);
-  }, [onCurrentGenerationSetChange]);
+    // in useShapeEditor's handleCurrentShapeSetChange function
+    onCurrentShapeSetChange?.(setId);
+  }, [onCurrentShapeSetChange]);
 
 
   const handleDeleteSet = useCallback((setId: string) => {
     // Call the actual handler from parent component
-    onDeleteGenerationSet?.(setId);
-    console.log('Deleted generation set:', setId);
-  }, [onDeleteGenerationSet]);
+    onDeleteShapeSet?.(setId);
+    console.log('Deleted shape set:', setId);
+  }, [onDeleteShapeSet]);
 
   const handleOpenManager = useCallback(() => {
-    onOpenGenerationSetsManager?.();
-  }, [onOpenGenerationSetsManager]);
+    onOpenShapeSetsManager?.();
+  }, [onOpenShapeSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -774,7 +774,7 @@ export default function Sidebar({
     // Auto-enable batch export when creating sets
     if (!exportSettings.exportBatchModeEnabled) {
       updateExportSettings.mutate({ exportBatchModeEnabled: true });
-      console.log('Auto-enabled batch export for generation sets');
+      console.log('Auto-enabled batch export for shape sets');
     }
     
     
@@ -789,10 +789,10 @@ export default function Sidebar({
     };
     
     // Call the actual handler from parent component with UI state
-    const setId = onCreateGenerationSet?.(name, currentUIState);
-    console.log('Created generation set:', name, 'with ID:', setId, 'from current UI state');
+    const setId = onCreateShapeSet?.(name, currentUIState);
+    console.log('Created shape set:', name, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [onCreateShapeSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -1232,9 +1232,9 @@ export default function Sidebar({
           // Simulate multiple button presses - each call generates shapes based on user's shape count settings
           const currentExportShapes: Shape[] = [];
           
-          // Check if generation sets mode is enabled
-          if (exportSettings.generationSetsEnabled && generationSets && generationSets.length > 0) {
-            const enabledSets = generationSets.filter(set => set.enabled);
+          // Check if shape sets mode is enabled
+          if (exportSettings.shapeSetsEnabled && shapeSets && shapeSets.length > 0) {
+            const enabledSets = shapeSets.filter(set => set.enabled);
             
             if (enabledSets.length > 0) {
               console.log(`🎯 GENERATION SETS MODE: Using ${enabledSets.length} enabled sets`);
@@ -1302,7 +1302,7 @@ export default function Sidebar({
                 }
               }
             } else {
-              console.log(`⚠️ No enabled generation sets, using current UI state as fallback`);
+              console.log(`⚠️ No enabled shape sets, using current UI state as fallback`);
               // Fallback to current UI state
               for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
                 let shapesFromThisCall: number;
@@ -1907,7 +1907,7 @@ export default function Sidebar({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">
-                    {exportSettings.generationSetsEnabled ? 'Generation Sets per Export' : 'Generations per Export'}
+                    {exportSettings.shapeSetsEnabled ? 'Shape Sets per Export' : 'Generations per Export'}
                   </Label>
                   <Select 
                     value={generationConfigSettings?.generationCountMode || 'range'} 
@@ -2013,17 +2013,17 @@ export default function Sidebar({
                 )}
               </div>
 
-              {/* Generation Sets Toggle */}
+              {/* Shape Sets Toggle */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
                   <div className="flex items-center space-x-2">
                     <Boxes className="w-3 h-3 text-slate-400" />
-                    <Label className="text-xs text-slate-300">Generation Sets</Label>
+                    <Label className="text-xs text-slate-300">Shape Sets</Label>
                   </div>
                   <Switch
-                    checked={exportSettings.generationSetsEnabled}
+                    checked={exportSettings.shapeSetsEnabled}
                     onCheckedChange={(checked) => {
-                      updateExportSettings.mutate({ generationSetsEnabled: checked as boolean });
+                      updateExportSettings.mutate({ shapeSetsEnabled: checked as boolean });
                     }}
                     disabled={!exportSettings.exportBatchModeEnabled}
                     data-testid="toggle-generation-sets"
@@ -2043,12 +2043,12 @@ export default function Sidebar({
                   </div>
                 )}
 
-                {/* Generation Sets enabled messaging */}
-                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
+                {/* Shape Sets enabled messaging */}
+                {exportSettings.shapeSetsEnabled && exportSettings.exportBatchModeEnabled && (
                   <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                      <span className="text-blue-300 font-medium">Generation Sets Active</span>
+                      <span className="text-blue-300 font-medium">Shape Sets Active</span>
                     </div>
                     Save and load different generation configurations with specific settings for consistent, repeatable results.
                   </div>
@@ -4789,11 +4789,11 @@ export default function Sidebar({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  {/* Generation Sets Section */}
+                  {/* Shape Sets Section */}
                   <div className="mb-4 p-3 border border-slate-600 rounded-lg bg-slate-800/30 space-y-2">
                     {/* Header Row with Title and Buttons */}
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-slate-400">Generation Sets</Label>
+                      <Label className="text-xs text-slate-400">Shape Sets</Label>
                       {setsEnabled && (
                         <div className="flex items-center gap-1">
                           {/* Add Set Button */}
@@ -4803,7 +4803,7 @@ export default function Sidebar({
                             onClick={() => handleCreateSet('')}
                             disabled={!setsEnabled}
                             className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Create new generation set"
+                            title="Create new shape set"
                             data-testid="sidebar-generation-sets-add-button"
                           >
                             <Plus className="h-3 w-3 text-slate-300" />
@@ -4814,9 +4814,9 @@ export default function Sidebar({
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteSet(effectiveCurrentSetId || '')}
-                            disabled={!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1}
-                            className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title={effectiveCurrentSetId && effectiveGenerationSets.length > 1 ? "Delete current generation set" : "Cannot delete - only one set remaining"}
+                            disabled={!setsEnabled || !effectiveCurrentSetId || effectiveShapeSets.length <= 1}
+                            className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!setsEnabled || !effectiveCurrentSetId || effectiveShapeSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title={effectiveCurrentSetId && effectiveShapeSets.length > 1 ? "Delete current shape set" : "Cannot delete - only one set remaining"}
                             data-testid="sidebar-generation-sets-remove-button"
                           >
                             <Minus className="h-3 w-3 text-slate-300" />
@@ -4829,7 +4829,7 @@ export default function Sidebar({
                             onClick={() => handleOpenManager()}
                             disabled={!setsEnabled}
                             className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Open Generation Sets Manager"
+                            title="Open Shape Sets Manager"
                             data-testid="sidebar-generation-sets-manager-button"
                           >
                             <Settings className="h-3 w-3 text-slate-300" />
@@ -4850,16 +4850,16 @@ export default function Sidebar({
                           data-testid="sidebar-generation-sets-select-trigger"
                         >
                           <SelectValue 
-                            placeholder={setsEnabled ? "Select generation set..." : "Enable generation sets to select"} 
+                            placeholder={setsEnabled ? "Select shape set..." : "Enable shape sets to select"} 
                           />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600">
-                          {effectiveGenerationSets.length === 0 ? (
+                          {effectiveShapeSets.length === 0 ? (
                             <SelectItem value="no-sets" disabled className="text-slate-400">
                               No sets available
                             </SelectItem>
                           ) : (
-                            effectiveGenerationSets.map((set) => (
+                            effectiveShapeSets.map((set) => (
                               <SelectItem 
                                 key={set.id} 
                                 value={set.id}
@@ -4876,7 +4876,7 @@ export default function Sidebar({
                       /* Disabled Message */
                       <div className="flex items-center gap-2 p-2 bg-slate-900/50 border border-slate-600 rounded text-xs text-slate-400">
                         <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                        <span>Enable Generation Sets in the Export & Save section to use this feature</span>
+                        <span>Enable Shape Sets in the Export & Save section to use this feature</span>
                       </div>
                     )}
                   </div>
@@ -5030,37 +5030,37 @@ export default function Sidebar({
         settings={generationConfigSettings}
         onSettingsChange={handleBatchConfigSettingsChange}
         
-        // Generation Sets Integration
-        generationSets={generationSets}
-        currentGenerationSetId={currentGenerationSetId}
+        // Shape Sets Integration
+        shapeSets={shapeSets}
+        currentShapeSetId={currentShapeSetId}
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         shapeCountMode={shapeCountMode}
         shapeCountFixed={shapeCountFixed}
         shapeCountRange={shapeCountRange}
-        generationSetsEnabled={exportSettings.generationSetsEnabled}
-        onGenerationSetsChange={onGenerationSetsChange}
-        onCurrentGenerationSetChange={onCurrentGenerationSetChange}
-        onCreateGenerationSet={onCreateGenerationSet}
-        onDeleteGenerationSet={onDeleteGenerationSet}
+        shapeSetsEnabled={exportSettings.shapeSetsEnabled}
+        onShapeSetsChange={onShapeSetsChange}
+        onCurrentShapeSetChange={onCurrentShapeSetChange}
+        onCreateShapeSet={onCreateShapeSet}
+        onDeleteShapeSet={onDeleteShapeSet}
         generateUniqueSetName={generateUniqueSetName}
-        onOpenGenerationSetsManager={onOpenGenerationSetsManager}
+        onOpenShapeSetsManager={onOpenShapeSetsManager}
       />
       
-      {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
+      {/* Sets Manager Dialog - Separate dialog for managing shape sets */}
       <SetsManagerDialog
         isOpen={isSetsManagerOpen}
         onOpenChange={(open) => {
-          if (!open && onCloseGenerationSetsManager) {
-            onCloseGenerationSetsManager();
+          if (!open && onCloseShapeSetsManager) {
+            onCloseShapeSetsManager();
           }
         }}
-        generationSets={effectiveGenerationSets}
-        onGenerationSetsChange={onGenerationSetsChange || (() => {})}
+        shapeSets={effectiveShapeSets}
+        onShapeSetsChange={onShapeSetsChange || (() => {})}
         globalZIndexEnabled={false}
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
-        onCurrentSetChange={onCurrentGenerationSetChange}
+        onCurrentSetChange={onCurrentShapeSetChange}
         currentUIState={{
           enabledShapeTypes,
           scatterSettings,
