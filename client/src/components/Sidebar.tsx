@@ -781,6 +781,8 @@ export default function Sidebar({
       console.log('Auto-enabled batch export for shape sets');
     }
     
+    // Generate unique name if empty
+    const finalName = name || generateUniqueSetName?.('Shape Set') || `Shape Set ${Date.now()}`;
     
     // Capture current UI state for the generation set
     const currentUIState: CurrentUIState = {
@@ -793,10 +795,10 @@ export default function Sidebar({
     };
     
     // Call the actual handler from parent component with UI state
-    const setId = onCreateShapeSet?.(name, currentUIState);
-    console.log('Created shape set:', name, 'with ID:', setId, 'from current UI state');
+    const setId = onCreateShapeSet?.(finalName, currentUIState);
+    console.log('Created shape set:', finalName, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateShapeSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [onCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
