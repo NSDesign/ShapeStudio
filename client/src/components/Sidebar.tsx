@@ -474,8 +474,8 @@ export default function Sidebar({
   onLoadProject,
   
   // Shape Sets Management
-  shapeSets = [],
-  currentShapeSetId = null,
+  shapeSets,
+  currentShapeSetId,
   shapeCountMode = 'fixed' as ShapeCountMode,
   shapeCountFixed = 10,
   shapeCountRange = [5, 15] as [number, number],
