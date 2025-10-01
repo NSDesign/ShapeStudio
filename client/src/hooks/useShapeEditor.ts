@@ -2077,12 +2077,17 @@ export const useShapeEditor = () => {
 
         console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
 
-        // Generate shapes for this set - use batch config from generation set
+        // Generate shapes for this set - pass set's configuration as overrides
         const setShapes = generateShapesWithBatchConfig(
           setCount,
           canvasBounds,
           true,
-          setIndex
+          setIndex,
+          set.shapeSpecificProperties,
+          {
+            enabledShapeTypes: new Set(set.enabledShapeTypes),
+            batchConfig: set.batchConfig
+          }
         );
 
         // Apply set-specific z-index offset

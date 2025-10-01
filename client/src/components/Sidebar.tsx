@@ -1244,8 +1244,8 @@ export default function Sidebar({
           const currentExportShapes: Shape[] = [];
           
           // Check if shape sets mode is enabled
-          if (exportSettings.shapeSetsEnabled && shapeSets && shapeSets.length > 0) {
-            const enabledSets = shapeSets.filter(set => set.enabled);
+          if (exportSettings.shapeSetsEnabled && effectiveShapeSets && effectiveShapeSets.length > 0) {
+            const enabledSets = effectiveShapeSets.filter(set => set.enabled);
             
             if (enabledSets.length > 0) {
               // Use shapeSetsCount state instead of generationCallsCount
