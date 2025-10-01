@@ -1381,6 +1381,126 @@ export default function Sidebar({
                     console.log(`🔧 Applied transforms to "${set.name}": pos=(${set.setTransform.x}, ${set.setTransform.y}), rot=${set.setTransform.rotation}°, scale=(${set.setTransform.scaleX}, ${set.setTransform.scaleY}), origin=${set.setTransform.transformOrigin}`);
                   }
                   
+                  // Apply artboard alignment and fit-to-artboard
+                  if (targetArtboard && set.artboardAlignment && 
+                      (set.artboardAlignment.fitToArtboard || set.artboardAlignment.alignTo !== 'none')) {
+                    
+                    // Calculate current bounding box of all shapes in this set (after transforms)
+                    let setMinX = Infinity, setMinY = Infinity, setMaxX = -Infinity, setMaxY = -Infinity;
+                    newShapes.forEach(shape => {
+                      const bounds = shape.getBounds();
+                      setMinX = Math.min(setMinX, bounds.x);
+                      setMinY = Math.min(setMinY, bounds.y);
+                      setMaxX = Math.max(setMaxX, bounds.x + bounds.width);
+                      setMaxY = Math.max(setMaxY, bounds.y + bounds.height);
+                    });
+                    
+                    const setWidth = setMaxX - setMinX;
+                    const setHeight = setMaxY - setMinY;
+                    const setCenterX = (setMinX + setMaxX) / 2;
+                    const setCenterY = (setMinY + setMaxY) / 2;
+                    
+                    // Apply fit-to-artboard scaling
+                    if (set.artboardAlignment.fitToArtboard) {
+                      const margin = set.artboardAlignment.margin || 0;
+                      const availableWidth = targetArtboard.width - (margin * 2);
+                      const availableHeight = targetArtboard.height - (margin * 2);
+                      
+                      const scaleX = setWidth > 0 ? availableWidth / setWidth : 1;
+                      const scaleY = setHeight > 0 ? availableHeight / setHeight : 1;
+                      const fitScale = Math.min(scaleX, scaleY); // Uniform scale to fit
+                      
+                      if (fitScale < 1 || fitScale > 1) {
+                        // Scale all shapes around set center
+                        newShapes.forEach(shape => {
+                          const relX = shape.transform.x - setCenterX;
+                          const relY = shape.transform.y - setCenterY;
+                          
+                          shape.transform.x = setCenterX + relX * fitScale;
+                          shape.transform.y = setCenterY + relY * fitScale;
+                          shape.transform.scaleX *= fitScale;
+                          shape.transform.scaleY *= fitScale;
+                        });
+                        
+                        // Update bounding box after scaling
+                        setMinX = setCenterX - (setWidth / 2) * fitScale;
+                        setMinY = setCenterY - (setHeight / 2) * fitScale;
+                        setMaxX = setCenterX + (setWidth / 2) * fitScale;
+                        setMaxY = setCenterY + (setHeight / 2) * fitScale;
+                        
+                        console.log(`📏 Fit to artboard: scaled "${set.name}" by ${fitScale.toFixed(3)}×`);
+                      }
+                    }
+                    
+                    // Apply alignment
+                    if (set.artboardAlignment.alignTo === 'artboard') {
+                      const margin = set.artboardAlignment.margin || 0;
+                      const artboardMinX = targetArtboard.x + margin;
+                      const artboardMinY = targetArtboard.y + margin;
+                      const artboardMaxX = targetArtboard.x + targetArtboard.width - margin;
+                      const artboardMaxY = targetArtboard.y + targetArtboard.height - margin;
+                      const artboardCenterX = targetArtboard.x + targetArtboard.width / 2;
+                      const artboardCenterY = targetArtboard.y + targetArtboard.height / 2;
+                      
+                      let targetX: number, targetY: number;
+                      
+                      switch (set.artboardAlignment.alignmentType) {
+                        case 'center':
+                          targetX = artboardCenterX;
+                          targetY = artboardCenterY;
+                          break;
+                        case 'top-left':
+                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
+                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
+                          break;
+                        case 'top-center':
+                          targetX = artboardCenterX;
+                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
+                          break;
+                        case 'top-right':
+                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
+                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
+                          break;
+                        case 'center-left':
+                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
+                          targetY = artboardCenterY;
+                          break;
+                        case 'center-right':
+                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
+                          targetY = artboardCenterY;
+                          break;
+                        case 'bottom-left':
+                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
+                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
+                          break;
+                        case 'bottom-center':
+                          targetX = artboardCenterX;
+                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
+                          break;
+                        case 'bottom-right':
+                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
+                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
+                          break;
+                        default:
+                          targetX = setCenterX;
+                          targetY = setCenterY;
+                      }
+                      
+                      const currentCenterX = (setMinX + setMaxX) / 2;
+                      const currentCenterY = (setMinY + setMaxY) / 2;
+                      const offsetX = targetX - currentCenterX;
+                      const offsetY = targetY - currentCenterY;
+                      
+                      // Apply alignment offset to all shapes
+                      newShapes.forEach(shape => {
+                        shape.transform.x += offsetX;
+                        shape.transform.y += offsetY;
+                      });
+                      
+                      console.log(`📍 Aligned "${set.name}" to artboard ${set.artboardAlignment.alignmentType}: offset=(${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
+                    }
+                  }
+                  
                   currentExportShapes.push(...newShapes);
                   console.log(`🎨 Tagged ${newShapes.length} shapes with setLayerIndex=${setIndex} for "${set.name}"`);
                 }
