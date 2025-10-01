@@ -768,6 +768,10 @@ export default function Sidebar({
   const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
+  // Shape Sets per Export state (separate from Generations per Export)
+  const [shapeSetsCountMode, setShapeSetsCountMode] = useState<'fixed' | 'range'>('fixed');
+  const [shapeSetsCountFixed, setShapeSetsCountFixed] = useState(1);
+  const [shapeSetsCountRange, setShapeSetsCountRange] = useState<[number, number]>([1, 3]);
 
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
@@ -1904,114 +1908,176 @@ export default function Sidebar({
 
           {exportSettings.exportBatchModeEnabled && (
             <>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Label className="text-xs text-slate-400">
-                    {exportSettings.shapeSetsEnabled ? 'Shape Sets per Export' : 'Generations per Export'}
-                  </Label>
-                  <Select 
-                    value={generationConfigSettings?.generationCountMode || 'range'} 
-                    onValueChange={(value) => {
-                      console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
-                      onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
-                    }}
-                  >
-                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
-                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                      <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {generationConfigSettings?.generationCountMode === 'range' && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
-                      <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
-                    </div>
-                    <Slider
-                      value={exportShapeCountRange}
-                      onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
-                      min={1}
-                      max={20}
-                      step={1}
-                      className="w-full"
-                      minStepsBetweenThumbs={1}
-                    />
+              {/* Conditional rendering: Show either "Generations per Export" OR "Sets per Export" */}
+              {!exportSettings.shapeSetsEnabled ? (
+                /* Generations per Export - shown when Shape Sets disabled */
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400">
+                      Generations per Export
+                    </Label>
+                    <Select 
+                      value={generationConfigSettings?.generationCountMode || 'range'} 
+                      onValueChange={(value) => {
+                        console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
+                        onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
+                      }}
+                    >
+                      <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                        <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-                
-                {generationConfigSettings?.generationCountMode === 'fixed' && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
-                    <Slider
-                      value={[generationConfigSettings?.generationCountDefine || 5]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
-                      min={1}
-                      max={20}
-                      step={1}
-                      className="[&_[role=slider]]:bg-blue-600"
-                    />
-                  </div>
-                )}
-                
-                {generationConfigSettings?.generationCountMode === 'incremental' && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
-                    <Slider
-                      value={[generationConfigSettings?.generationCountStartValue || 1]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
-                      min={1}
-                      max={15}
-                      step={1}
-                      className="[&_[role=slider]]:bg-blue-600"
-                    />
-                    <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
-                    <Slider
-                      value={[generationConfigSettings?.generationCountIncrement || 1]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
-                      min={1}
-                      max={5}
-                      step={1}
-                      className="[&_[role=slider]]:bg-blue-600"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={generationConfigSettings?.generationCountResetPerBatch || false}
-                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
-                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  
+                  {generationConfigSettings?.generationCountMode === 'range' && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
+                        <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
+                      </div>
+                      <Slider
+                        value={exportShapeCountRange}
+                        onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
+                        min={1}
+                        max={20}
+                        step={1}
+                        className="w-full"
+                        minStepsBetweenThumbs={1}
                       />
-                      <Label className="text-xs text-slate-300">Reset per batch</Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={generationConfigSettings?.generationCountModulationEnabled || false}
-                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
-                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  )}
+                  
+                  {generationConfigSettings?.generationCountMode === 'fixed' && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
+                      <Slider
+                        value={[generationConfigSettings?.generationCountDefine || 5]}
+                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
+                        min={1}
+                        max={20}
+                        step={1}
+                        className="[&_[role=slider]]:bg-blue-600"
                       />
-                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
                     </div>
-                    {generationConfigSettings?.generationCountModulationEnabled && (
-                      <>
-                        <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
-                        <Slider
-                          value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
-                          onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
-                          min={1}
-                          max={10}
-                          step={1}
-                          className="[&_[role=slider]]:bg-blue-600"
+                  )}
+                  
+                  {generationConfigSettings?.generationCountMode === 'incremental' && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
+                      <Slider
+                        value={[generationConfigSettings?.generationCountStartValue || 1]}
+                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
+                        min={1}
+                        max={15}
+                        step={1}
+                        className="[&_[role=slider]]:bg-blue-600"
+                      />
+                      <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
+                      <Slider
+                        value={[generationConfigSettings?.generationCountIncrement || 1]}
+                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
+                        min={1}
+                        max={5}
+                        step={1}
+                        className="[&_[role=slider]]:bg-blue-600"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={generationConfigSettings?.generationCountResetPerBatch || false}
+                          onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-blue-600"
                         />
-                      </>
-                    )}
-                    <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
+                        <Label className="text-xs text-slate-300">Reset per batch</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={generationConfigSettings?.generationCountModulationEnabled || false}
+                          onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-blue-600"
+                        />
+                        <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                      </div>
+                      {generationConfigSettings?.generationCountModulationEnabled && (
+                        <>
+                          <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
+                          <Slider
+                            value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
+                            onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
+                            min={1}
+                            max={10}
+                            step={1}
+                            className="[&_[role=slider]]:bg-blue-600"
+                          />
+                        </>
+                      )}
+                      <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Sets per Export - shown when Shape Sets enabled */
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-xs text-slate-400">
+                      Sets per Export
+                    </Label>
+                    <Select 
+                      value={shapeSetsCountMode} 
+                      onValueChange={(value) => {
+                        console.log('Updating shapeSetsCountMode to:', value);
+                        setShapeSetsCountMode(value as 'fixed' | 'range');
+                      }}
+                    >
+                      <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                        <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
+                  
+                  {shapeSetsCountMode === 'fixed' && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-300">Fixed Value: {shapeSetsCountFixed}</Label>
+                      <Slider
+                        value={[shapeSetsCountFixed]}
+                        onValueChange={([value]) => setShapeSetsCountFixed(value)}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="[&_[role=slider]]:bg-blue-600"
+                      />
+                      <p className="text-xs text-slate-400">Generate shapes from all enabled sets {shapeSetsCountFixed} time(s) per export</p>
+                    </div>
+                  )}
+                  
+                  {shapeSetsCountMode === 'range' && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Min: {shapeSetsCountRange[0]}</span>
+                        <span className="text-slate-400">Max: {shapeSetsCountRange[1]}</span>
+                      </div>
+                      <Slider
+                        value={shapeSetsCountRange}
+                        onValueChange={(value) => setShapeSetsCountRange(value as [number, number])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="w-full"
+                        minStepsBetweenThumbs={1}
+                      />
+                      <p className="text-xs text-slate-400">Generate shapes from all enabled sets randomly between {shapeSetsCountRange[0]}-{shapeSetsCountRange[1]} times per export</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Shape Sets Toggle */}
               <div className="space-y-2">
