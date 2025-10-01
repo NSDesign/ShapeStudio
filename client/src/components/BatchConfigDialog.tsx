@@ -230,7 +230,7 @@ export default function BatchConfigDialog({
           }}
         >
           <div
-            className="w-[95vw] max-w-[900px] bg-slate-900 border-slate-700 border rounded-lg overflow-hidden max-h-[90vh] shadow-2xl flex flex-col"
+            className="w-[95vw] max-w-[900px] bg-slate-900 border-slate-700 border rounded-lg overflow-hidden h-[90vh] shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
             style={{ zIndex: 10000 }}
           >
@@ -252,8 +252,8 @@ export default function BatchConfigDialog({
               </Button>
             </div>
 
-            {/* Content with proper scrolling */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
+            {/* Content with proper scrolling - min-h-0 allows flex child to shrink and enable scrolling */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
               {/* Shape Sets Section */}
               {(shapeSets.length > 0 || onCreateShapeSet) && (

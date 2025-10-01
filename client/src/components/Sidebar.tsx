@@ -525,9 +525,17 @@ export default function Sidebar({
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
 
-  // Use centralized shape sets state from parent
-  const effectiveShapeSets = shapeSets || [];
-  const effectiveCurrentSetId = currentShapeSetId;
+  // Use centralized shape sets state from parent - with fallback for prop name compatibility
+  const effectiveShapeSets = shapeSets ?? generationSets ?? [];
+  const effectiveCurrentSetId = currentShapeSetId ?? currentGenerationSetId ?? null;
+  
+  // Create effective handlers with fallback for prop name compatibility
+  const effectiveOnShapeSetsChange = onShapeSetsChange ?? onGenerationSetsChange;
+  const effectiveOnCurrentShapeSetChange = onCurrentShapeSetChange ?? onCurrentGenerationSetChange;
+  const effectiveOnCreateShapeSet = onCreateShapeSet ?? onCreateGenerationSet;
+  const effectiveOnDeleteShapeSet = onDeleteShapeSet ?? onDeleteGenerationSet;
+  const effectiveOnOpenShapeSetsManager = onOpenShapeSetsManager ?? onOpenGenerationSetsManager;
+  const effectiveOnCloseShapeSetsManager = onCloseShapeSetsManager ?? onCloseGenerationSetsManager;
 
   // Shape sets are enabled when the main toggle is enabled
   // This allows users to save/load shape configurations with any count mode
@@ -539,23 +547,18 @@ export default function Sidebar({
   const handleSetChange = useCallback((setId: string | null) => {
     // The enhanced validation and state restoration logic is now handled centrally
     // in useShapeEditor's handleCurrentShapeSetChange function
-    onCurrentShapeSetChange?.(setId);
-  }, [onCurrentShapeSetChange]);
+    effectiveOnCurrentShapeSetChange?.(setId);
+  }, [effectiveOnCurrentShapeSetChange]);
 
 
   const handleDeleteSet = useCallback((setId: string) => {
-    // Call the actual handler from parent component
-    // Use onDeleteGenerationSet (from ShapeEditor) or fallback to onDeleteShapeSet
-    const deleteFn = onDeleteGenerationSet || onDeleteShapeSet;
-    deleteFn?.(setId);
+    effectiveOnDeleteShapeSet?.(setId);
     console.log('Deleted shape set:', setId);
-  }, [onDeleteGenerationSet, onDeleteShapeSet]);
+  }, [effectiveOnDeleteShapeSet]);
 
   const handleOpenManager = useCallback(() => {
-    // Use onOpenGenerationSetsManager (from ShapeEditor) or fallback to onOpenShapeSetsManager
-    const openFn = onOpenGenerationSetsManager || onOpenShapeSetsManager;
-    openFn?.();
-  }, [onOpenGenerationSetsManager, onOpenShapeSetsManager]);
+    effectiveOnOpenShapeSetsManager?.();
+  }, [effectiveOnOpenShapeSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -815,12 +818,10 @@ export default function Sidebar({
     };
     
     // Call the actual handler from parent component with UI state
-    // Use onCreateGenerationSet (from ShapeEditor) or fallback to onCreateShapeSet
-    const createFn = onCreateGenerationSet || onCreateShapeSet;
-    const setId = createFn?.(finalName, currentUIState);
+    const setId = effectiveOnCreateShapeSet?.(finalName, currentUIState);
     console.log('Created shape set:', finalName, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateGenerationSet, onCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [effectiveOnCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -5377,21 +5378,22 @@ export default function Sidebar({
         settings={generationConfigSettings}
         onSettingsChange={handleBatchConfigSettingsChange}
         
-        // Shape Sets Integration
-        shapeSets={shapeSets}
-        currentShapeSetId={currentShapeSetId}
+        // Shape Sets Integration - use effective handlers with fallback compatibility
+        shapeSets={effectiveShapeSets}
+        currentShapeSetId={effectiveCurrentSetId}
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         shapeCountMode={shapeCountMode}
         shapeCountFixed={shapeCountFixed}
         shapeCountRange={shapeCountRange}
         shapeSetsEnabled={exportSettings.shapeSetsEnabled}
-        onShapeSetsChange={onShapeSetsChange}
-        onCurrentShapeSetChange={onCurrentShapeSetChange}
-        onCreateShapeSet={onCreateShapeSet}
-        onDeleteShapeSet={onDeleteShapeSet}
+        batchExportCount={exportSettings.batchExportCount}
+        onShapeSetsChange={effectiveOnShapeSetsChange}
+        onCurrentShapeSetChange={effectiveOnCurrentShapeSetChange}
+        onCreateShapeSet={effectiveOnCreateShapeSet}
+        onDeleteShapeSet={effectiveOnDeleteShapeSet}
         generateUniqueSetName={generateUniqueSetName}
-        onOpenShapeSetsManager={onOpenShapeSetsManager}
+        onOpenShapeSetsManager={effectiveOnOpenShapeSetsManager}
       />
       
       {/* Sets Manager Dialog - Separate dialog for managing shape sets */}
@@ -5399,17 +5401,15 @@ export default function Sidebar({
         isOpen={isSetsManagerOpen}
         onOpenChange={(open) => {
           if (!open) {
-            // Use onCloseGenerationSetsManager (from ShapeEditor) or fallback to onCloseShapeSetsManager
-            const closeFn = onCloseGenerationSetsManager || onCloseShapeSetsManager;
-            closeFn?.();
+            effectiveOnCloseShapeSetsManager?.();
           }
         }}
         shapeSets={effectiveShapeSets}
-        onShapeSetsChange={onShapeSetsChange || (() => {})}
+        onShapeSetsChange={effectiveOnShapeSetsChange ?? (() => {})}
         globalZIndexEnabled={false}
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
-        onCurrentSetChange={onCurrentShapeSetChange}
+        onCurrentSetChange={effectiveOnCurrentShapeSetChange}
         currentUIState={{
           enabledShapeTypes,
           scatterSettings,
