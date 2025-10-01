@@ -1334,6 +1334,16 @@ export const useShapeEditor = () => {
       : scatterSettings;
 
     console.log(`🔍 generateShapesWithBatchConfig: count=${count}, enabledTypes=${effectiveEnabledTypes.length}, types=${effectiveEnabledTypes.join(',')}, hasOverrides=${!!overrides}`);
+    
+    // DIAGNOSTIC: Log effectiveBatchConfig being used
+    console.log(`🔍 [DIAGNOSTIC] effectiveBatchConfig in generateShapes:`, {
+      source: overrides?.batchConfig ? 'FROM_OVERRIDES' : 'FROM_GLOBAL_UI',
+      propertiesEnabled: effectiveBatchConfig.propertiesEnabled,
+      fillColorMode: effectiveBatchConfig.fillColorMode,
+      fillColorDefine: effectiveBatchConfig.fillColorDefine,
+      fillOpacityDefine: effectiveBatchConfig.fillOpacityDefine,
+      fillStyleProbability: effectiveBatchConfig.fillStyleProbability
+    });
 
     if (effectiveEnabledTypes.length === 0) {
       console.log(`❌ No enabled shape types, returning empty array`);

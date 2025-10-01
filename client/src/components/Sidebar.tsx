@@ -1239,6 +1239,18 @@ export default function Sidebar({
             if (enabledSets.length > 0) {
               console.log(`🎯 GENERATION SETS MODE: Using ${enabledSets.length} enabled sets`);
               
+              // DIAGNOSTIC: Log each set's batchConfig on load
+              enabledSets.forEach((set, idx) => {
+                console.log(`🔍 [DIAGNOSTIC] Set ${idx + 1} "${set.name}" batchConfig:`, {
+                  hasConfig: !!set.batchConfig,
+                  propertiesEnabled: set.batchConfig?.propertiesEnabled,
+                  fillColorMode: set.batchConfig?.fillColorMode,
+                  fillColorDefine: set.batchConfig?.fillColorDefine,
+                  fillOpacityDefine: set.batchConfig?.fillOpacityDefine,
+                  fillStyleProbability: set.batchConfig?.fillStyleProbability
+                });
+              });
+              
               // Loop through each generation call
               for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
                 // Generate shapes for each enabled set
@@ -1268,6 +1280,15 @@ export default function Sidebar({
                       shapeSpecific: set.shapeSpecificProperties
                     }
                   };
+                  
+                  // DIAGNOSTIC: Log overrides being passed
+                  console.log(`🔍 [DIAGNOSTIC] Passing overrides for "${set.name}":`, {
+                    hasOverrides: !!overrides,
+                    hasBatchConfig: !!overrides.batchConfig,
+                    fillColorMode: overrides.batchConfig?.fillColorMode,
+                    fillColorDefine: overrides.batchConfig?.fillColorDefine,
+                    propertiesEnabled: overrides.batchConfig?.propertiesEnabled
+                  });
                   
                   const newShapes = onGenerateShapesWithBatchConfig(
                     shapesFromThisCall, 
