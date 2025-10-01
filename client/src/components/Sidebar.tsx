@@ -405,19 +405,27 @@ interface SidebarProps {
   shapeCountRange?: [number, number];
   batchExportCount?: number;
   generationCountMode?: string;
+  generationSets?: ShapeSet[];
+  currentGenerationSetId?: string | null;
+  areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
   onShapeSetsChange?: (sets: ShapeSet[]) => void;
+  onGenerationSetsChange?: (sets: ShapeSet[]) => void;
   onCurrentShapeSetChange?: (setId: string | null) => void;
+  onCurrentGenerationSetChange?: (setId: string | null) => void;
   onCreateShapeSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
+  onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
   onDeleteShapeSet?: (setId: string) => void;
+  onDeleteGenerationSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
   onOpenShapeSetsManager?: () => void;
+  onOpenGenerationSetsManager?: () => void;
   isSetsManagerOpen?: boolean;
   onCloseShapeSetsManager?: () => void;
+  onCloseGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
   hasUnsavedChanges?: (setId: string | null) => boolean;
-  areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
 }
 
 export default function Sidebar({
@@ -473,19 +481,27 @@ export default function Sidebar({
   shapeCountRange = [5, 15] as [number, number],
   batchExportCount = 1,
   generationCountMode = 'fixed',
+  generationSets,
+  currentGenerationSetId,
+  areSetsEnabled,
   onShapeSetsChange,
+  onGenerationSetsChange,
   onCurrentShapeSetChange,
+  onCurrentGenerationSetChange,
   onCreateShapeSet,
+  onCreateGenerationSet,
   onDeleteShapeSet,
+  onDeleteGenerationSet,
   generateUniqueSetName,
   onOpenShapeSetsManager,
+  onOpenGenerationSetsManager,
   isSetsManagerOpen = false,
   onCloseShapeSetsManager,
+  onCloseGenerationSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
-  hasUnsavedChanges,
-  areSetsEnabled
+  hasUnsavedChanges
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -529,13 +545,17 @@ export default function Sidebar({
 
   const handleDeleteSet = useCallback((setId: string) => {
     // Call the actual handler from parent component
-    onDeleteShapeSet?.(setId);
+    // Use onDeleteGenerationSet (from ShapeEditor) or fallback to onDeleteShapeSet
+    const deleteFn = onDeleteGenerationSet || onDeleteShapeSet;
+    deleteFn?.(setId);
     console.log('Deleted shape set:', setId);
-  }, [onDeleteShapeSet]);
+  }, [onDeleteGenerationSet, onDeleteShapeSet]);
 
   const handleOpenManager = useCallback(() => {
-    onOpenShapeSetsManager?.();
-  }, [onOpenShapeSetsManager]);
+    // Use onOpenGenerationSetsManager (from ShapeEditor) or fallback to onOpenShapeSetsManager
+    const openFn = onOpenGenerationSetsManager || onOpenShapeSetsManager;
+    openFn?.();
+  }, [onOpenGenerationSetsManager, onOpenShapeSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -795,10 +815,12 @@ export default function Sidebar({
     };
     
     // Call the actual handler from parent component with UI state
-    const setId = onCreateShapeSet?.(finalName, currentUIState);
+    // Use onCreateGenerationSet (from ShapeEditor) or fallback to onCreateShapeSet
+    const createFn = onCreateGenerationSet || onCreateShapeSet;
+    const setId = createFn?.(finalName, currentUIState);
     console.log('Created shape set:', finalName, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [onCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [onCreateGenerationSet, onCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -5376,8 +5398,10 @@ export default function Sidebar({
       <SetsManagerDialog
         isOpen={isSetsManagerOpen}
         onOpenChange={(open) => {
-          if (!open && onCloseShapeSetsManager) {
-            onCloseShapeSetsManager();
+          if (!open) {
+            // Use onCloseGenerationSetsManager (from ShapeEditor) or fallback to onCloseShapeSetsManager
+            const closeFn = onCloseGenerationSetsManager || onCloseShapeSetsManager;
+            closeFn?.();
           }
         }}
         shapeSets={effectiveShapeSets}
