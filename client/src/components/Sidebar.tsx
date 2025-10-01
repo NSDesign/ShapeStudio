@@ -1300,6 +1300,87 @@ export default function Sidebar({
                     shape.properties.setLayerIndex = setIndex;
                   });
                   
+                  // Apply per-set transforms to all shapes in this set
+                  if (set.setTransform && (set.setTransform.x !== 0 || set.setTransform.y !== 0 || 
+                      set.setTransform.rotation !== 0 || set.setTransform.scaleX !== 1 || set.setTransform.scaleY !== 1)) {
+                    
+                    // Calculate bounding box of all shapes in this set to determine transform origin
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    newShapes.forEach(shape => {
+                      const bounds = shape.getBounds();
+                      minX = Math.min(minX, bounds.x);
+                      minY = Math.min(minY, bounds.y);
+                      maxX = Math.max(maxX, bounds.x + bounds.width);
+                      maxY = Math.max(maxY, bounds.y + bounds.height);
+                    });
+                    
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
+                    
+                    // Determine transform origin point
+                    let originX: number, originY: number;
+                    switch (set.setTransform.transformOrigin) {
+                      case 'top-left':
+                        originX = minX;
+                        originY = minY;
+                        break;
+                      case 'top-right':
+                        originX = maxX;
+                        originY = minY;
+                        break;
+                      case 'bottom-left':
+                        originX = minX;
+                        originY = maxY;
+                        break;
+                      case 'bottom-right':
+                        originX = maxX;
+                        originY = maxY;
+                        break;
+                      case 'center':
+                      default:
+                        originX = centerX;
+                        originY = centerY;
+                        break;
+                    }
+                    
+                    // Apply transforms to each shape
+                    newShapes.forEach(shape => {
+                      // 1. Translate shape position relative to transform origin
+                      const relX = shape.transform.x - originX;
+                      const relY = shape.transform.y - originY;
+                      
+                      // 2. Apply rotation
+                      if (set.setTransform.rotation !== 0) {
+                        const angleRad = (set.setTransform.rotation * Math.PI) / 180;
+                        const cos = Math.cos(angleRad);
+                        const sin = Math.sin(angleRad);
+                        
+                        const rotatedX = relX * cos - relY * sin;
+                        const rotatedY = relX * sin + relY * cos;
+                        
+                        shape.transform.x = rotatedX * set.setTransform.scaleX;
+                        shape.transform.y = rotatedY * set.setTransform.scaleY;
+                        
+                        // Apply rotation to shape itself
+                        shape.transform.rotation += set.setTransform.rotation;
+                      } else {
+                        // 3. Apply scale without rotation
+                        shape.transform.x = relX * set.setTransform.scaleX;
+                        shape.transform.y = relY * set.setTransform.scaleY;
+                      }
+                      
+                      // 4. Scale the shape itself
+                      shape.transform.scaleX *= set.setTransform.scaleX;
+                      shape.transform.scaleY *= set.setTransform.scaleY;
+                      
+                      // 5. Translate back from origin + apply position offset
+                      shape.transform.x += originX + set.setTransform.x;
+                      shape.transform.y += originY + set.setTransform.y;
+                    });
+                    
+                    console.log(`🔧 Applied transforms to "${set.name}": pos=(${set.setTransform.x}, ${set.setTransform.y}), rot=${set.setTransform.rotation}°, scale=(${set.setTransform.scaleX}, ${set.setTransform.scaleY}), origin=${set.setTransform.transformOrigin}`);
+                  }
+                  
                   currentExportShapes.push(...newShapes);
                   console.log(`🎨 Tagged ${newShapes.length} shapes with setLayerIndex=${setIndex} for "${set.name}"`);
                 }
