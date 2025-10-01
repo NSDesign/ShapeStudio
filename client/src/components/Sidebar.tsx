@@ -1501,6 +1501,28 @@ export default function Sidebar({
                     }
                   }
                   
+                  // Apply set-level opacity
+                  if (set.setVisibility && (set.setVisibility.opacity < 1 || set.setVisibility.opacityVariance > 0)) {
+                    const baseOpacity = set.setVisibility.opacity ?? 1;
+                    const variance = set.setVisibility.opacityVariance ?? 0;
+                    
+                    newShapes.forEach(shape => {
+                      // Calculate opacity with variance (random variation)
+                      const randomVariance = variance > 0 ? (Math.random() * 2 - 1) * variance : 0;
+                      const setOpacity = Math.max(0, Math.min(1, baseOpacity + randomVariance));
+                      
+                      // Apply set opacity to shape's fill and stroke opacity
+                      if (shape.properties.fillOpacity !== undefined) {
+                        shape.properties.fillOpacity *= setOpacity;
+                      }
+                      if (shape.properties.strokeOpacity !== undefined) {
+                        shape.properties.strokeOpacity *= setOpacity;
+                      }
+                    });
+                    
+                    console.log(`👁️ Applied opacity to "${set.name}": base=${(baseOpacity * 100).toFixed(0)}%, variance=±${(variance * 100).toFixed(0)}%`);
+                  }
+                  
                   currentExportShapes.push(...newShapes);
                   console.log(`🎨 Tagged ${newShapes.length} shapes with setLayerIndex=${setIndex} for "${set.name}"`);
                 }
