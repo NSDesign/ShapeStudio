@@ -944,7 +944,7 @@ export function IndividualSetConfig({
                         {generationSet.artboardAlignment.fitToArtboard && (
                             <div className="bg-blue-900/20 border border-blue-700 p-3 rounded-lg">
                                 <p className="text-xs text-blue-300">
-                                    Shapes will be automatically scaled and positioned to fit within artboard bounds
+                                    Scales and centers shapes to fit within artboard bounds with margin
                                 </p>
                             </div>
                         )}
