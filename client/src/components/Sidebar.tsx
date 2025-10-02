@@ -768,10 +768,6 @@ export default function Sidebar({
   const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
-  // Shape Sets per Export state variables
-  const [shapeSetCountMode, setShapeSetCountMode] = useState<'fixed' | 'range'>('fixed');
-  const [shapeSetCountFixed, setShapeSetCountFixed] = useState(2);
-  const [shapeSetCountRange, setShapeSetCountRange] = useState<[number, number]>([2, 5]);
 
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
@@ -2067,8 +2063,8 @@ export default function Sidebar({
                     <div className="flex items-center space-x-2">
                       <Label className="text-xs text-slate-400">Shape Sets per Export</Label>
                       <Select 
-                        value={shapeSetCountMode} 
-                        onValueChange={(value) => setShapeSetCountMode(value as 'fixed' | 'range')}
+                        value={exportSettings.shapeSetCountMode || 'fixed'} 
+                        onValueChange={(value) => updateExportSettings.mutate({ shapeSetCountMode: value as 'fixed' | 'range' })}
                       >
                         <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
                           <SelectValue />
@@ -2080,12 +2076,12 @@ export default function Sidebar({
                       </Select>
                     </div>
                     
-                    {shapeSetCountMode === 'fixed' && (
+                    {exportSettings.shapeSetCountMode === 'fixed' && (
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-300">Fixed Value: {shapeSetCountFixed}</Label>
+                        <Label className="text-xs text-slate-300">Fixed Value: {exportSettings.shapeSetCountFixed || 2}</Label>
                         <Slider
-                          value={[shapeSetCountFixed]}
-                          onValueChange={([value]) => setShapeSetCountFixed(value)}
+                          value={[exportSettings.shapeSetCountFixed || 2]}
+                          onValueChange={([value]) => updateExportSettings.mutate({ shapeSetCountFixed: value })}
                           min={1}
                           max={20}
                           step={1}
@@ -2094,15 +2090,15 @@ export default function Sidebar({
                       </div>
                     )}
                     
-                    {shapeSetCountMode === 'range' && (
+                    {exportSettings.shapeSetCountMode === 'range' && (
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Min: {shapeSetCountRange[0]}</span>
-                          <span className="text-slate-400">Max: {shapeSetCountRange[1]}</span>
+                          <span className="text-slate-400">Min: {exportSettings.shapeSetCountMin || 1}</span>
+                          <span className="text-slate-400">Max: {exportSettings.shapeSetCountMax || 5}</span>
                         </div>
                         <Slider
-                          value={shapeSetCountRange}
-                          onValueChange={(value) => setShapeSetCountRange(value as [number, number])}
+                          value={[exportSettings.shapeSetCountMin || 1, exportSettings.shapeSetCountMax || 5]}
+                          onValueChange={([min, max]) => updateExportSettings.mutate({ shapeSetCountMin: min, shapeSetCountMax: max })}
                           min={1}
                           max={20}
                           step={1}

@@ -96,6 +96,10 @@ export interface ExportSettingsConfig {
   batchExportCount: number;           // Current batch export count setting
   generationCountMode: string;        // Current generation count mode ('fixed', 'range', etc)
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';  // Strategy when set count < batch export count
+  shapeSetCountMode?: 'fixed' | 'range';  // Mode for shape sets per export count
+  shapeSetCountFixed?: number;        // Fixed value for shape sets per export
+  shapeSetCountMin?: number;          // Min value for shape sets per export range
+  shapeSetCountMax?: number;          // Max value for shape sets per export range
 }
 
 // Default export settings configuration
@@ -105,6 +109,10 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   batchExportCount: 1,                // Single export by default
   generationCountMode: 'fixed',       // Fixed count mode by default
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
+  shapeSetCountMode: 'fixed',         // Fixed mode for shape sets per export by default
+  shapeSetCountFixed: 2,              // Default to 2 shape sets per export
+  shapeSetCountMin: 1,                // Default min for range mode
+  shapeSetCountMax: 5,                // Default max for range mode
 };
 
 // User preferences schemas
