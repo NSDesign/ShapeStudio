@@ -1240,7 +1240,9 @@ export default function Sidebar({
           
           // Check if generation sets mode is enabled
           if (exportSettings.generationSetsEnabled && generationSets && generationSets.length > 0) {
-            const enabledSets = generationSets.filter(set => set.enabled);
+            const enabledSets = generationSets
+              .filter(set => set.enabled)
+              .sort((a, b) => a.generationOrder - b.generationOrder); // Sort by generationOrder
             
             if (enabledSets.length > 0) {
               console.log(`🎯 GENERATION SETS MODE: Using ${enabledSets.length} enabled sets`);
@@ -1284,7 +1286,9 @@ export default function Sidebar({
                       minCount: set.shapeCountRange[0],
                       maxCount: set.shapeCountRange[1],
                       shapeSpecific: set.shapeSpecificProperties
-                    }
+                    },
+                    setTransform: set.setTransform,
+                    artboardAlignment: set.artboardAlignment
                   };
                   
                   // DIAGNOSTIC: Log overrides being passed
@@ -1304,6 +1308,42 @@ export default function Sidebar({
                     set.shapeSpecificProperties,
                     overrides
                   );
+                  
+                  // Apply set-specific post-processing
+                  // Apply z-index offset based on set order (generationOrder, not loop index)
+                  const setOrderIndex = enabledSets[setIndex].generationOrder || setIndex;
+                  newShapes.forEach(shape => {
+                    shape.properties.zIndex += setOrderIndex * 1000;
+                  });
+                  
+                  // Apply blend modes and compositing operations
+                  const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
+                    ? set.compositingOperation
+                    : set.setBlendMode;
+                  
+                  if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
+                    newShapes.forEach(shape => {
+                      shape.properties.blendMode = effectiveBlendMode as any;
+                    });
+                  }
+                  
+                  // Apply visibility and opacity
+                  if (set.setVisibility) {
+                    if (!set.setVisibility.visible) {
+                      // Skip adding these shapes if set is not visible
+                      continue;
+                    }
+                    if (set.setVisibility.opacity !== undefined && set.setVisibility.opacity < 1.0) {
+                      const variance = set.setVisibility.opacityVariance || 0;
+                      newShapes.forEach(shape => {
+                        const randomVariance = (Math.random() - 0.5) * 2 * variance;
+                        const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + randomVariance));
+                        shape.properties.fillOpacity *= finalOpacity;
+                        shape.properties.strokeOpacity *= finalOpacity;
+                      });
+                    }
+                  }
+                  
                   currentExportShapes.push(...newShapes);
                 }
               }
