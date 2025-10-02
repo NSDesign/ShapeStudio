@@ -1310,10 +1310,9 @@ export default function Sidebar({
                   );
                   
                   // Apply set-specific post-processing
-                  // Apply z-index offset based on set order (generationOrder, not loop index)
-                  const setOrderIndex = enabledSets[setIndex].generationOrder || setIndex;
+                  // Apply z-index based on generation order (simpler, more intuitive)
                   newShapes.forEach(shape => {
-                    shape.properties.zIndex += setOrderIndex * 1000;
+                    shape.properties.zIndex += set.generationOrder;
                   });
                   
                   // Apply blend modes and compositing operations
