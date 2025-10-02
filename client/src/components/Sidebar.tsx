@@ -2018,6 +2018,8 @@ export default function Sidebar({
                 )}
               </div>
 
+              <Separator className="bg-slate-700" />
+
               {/* Shape Sets Toggle */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
