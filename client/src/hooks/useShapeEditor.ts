@@ -1635,9 +1635,13 @@ export const useShapeEditor = () => {
             shape.properties.fillColor = 'transparent';
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using ${gradientType.toUpperCase()} GRADIENT, fillColor set to transparent`);
 
-            // Apply fill opacity range for gradient
-            const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
-            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            // Apply fill opacity based on mode
+            if (effectiveBatchConfig.fillOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
+              shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
+              shape.properties.fillOpacity = effectiveBatchConfig.fillOpacityDefine / 100;
+            }
 
           } else if (shouldHaveSolidFill) {
             // Create solid fill (only if no gradient)
@@ -1658,9 +1662,13 @@ export const useShapeEditor = () => {
             shape.properties.fillColor = fillColor;
             console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${effectiveBatchConfig.fillColorMode}"`);
 
-            // Apply fill opacity range for solid fill
-            const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
-            shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            // Apply fill opacity based on mode
+            if (effectiveBatchConfig.fillOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
+              shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
+              shape.properties.fillOpacity = effectiveBatchConfig.fillOpacityDefine / 100;
+            }
 
           } else {
             // This should not happen in the new system - every shape gets either solid or gradient
