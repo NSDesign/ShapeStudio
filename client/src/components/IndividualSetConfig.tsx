@@ -371,7 +371,7 @@ export function IndividualSetConfig({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-slate-200">
             <Settings className="w-5 h-5" />
-            Configure Generation Set
+            Configure Shape Set
             {!currentValidation.isValid && (
               <Badge variant="destructive" className="ml-2" data-testid="badge-validation-status">
                 Issues
@@ -438,15 +438,15 @@ export function IndividualSetConfig({
 
             <Separator className="bg-slate-700" />
 
-            {/* Note: Shape Types Selection is managed in the sidebar Generation Sets dropdown */}
+            {/* Note: Shape Types Selection is managed in the sidebar Shape Sets dropdown */}
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
               <div className="flex items-center gap-2 mb-2">
                 <Info className="w-4 h-4 text-blue-400" />
                 <h4 className="text-sm font-medium text-blue-200">Shape Types Configuration</h4>
               </div>
               <p className="text-xs text-slate-400">
-                Shape types are configured in the sidebar Generation Sets dropdown and combined with the advanced settings below. 
-                This dialog manages only the advanced generation settings that apply to the captured shape types.
+                Shape types are configured in the sidebar Shape Sets dropdown and combined with the advanced settings below. 
+                This dialog manages only the advanced shape settings that apply to the captured shape types.
               </p>
             </div>
 
@@ -521,7 +521,7 @@ export function IndividualSetConfig({
 
                       <div>
                         <Label className="text-white text-xs">
-                          Increment Per Generation: {generationSet.zIndexConfig.incrementPerGeneration}
+                          Increment Per Shape Set: {generationSet.zIndexConfig.incrementPerGeneration}
                         </Label>
                         <Slider
                           value={[generationSet.zIndexConfig.incrementPerGeneration]}
@@ -534,7 +534,7 @@ export function IndividualSetConfig({
                           aria-label="Z-index increment per generation"
                         />
                         <p className="text-xs text-slate-500 mt-1">
-                          Z-index increment between batch generations
+                          Z-index increment between batch shape sets
                         </p>
                       </div>
                     </div>
@@ -674,7 +674,7 @@ export function IndividualSetConfig({
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-slate-500 mt-1">
-                    Blend mode applied to the entire generation set
+                    Blend mode applied to the entire shape set
                   </p>
                 </div>
 
@@ -1082,7 +1082,7 @@ export function IndividualSetConfig({
               </div>
               <p className="text-xs text-slate-400">
                 Shape-specific properties (corner radius, point counts, etc.) are now configured in the main generation UI. 
-                These settings are automatically captured and restored when working with generation sets.
+                These settings are automatically captured and restored when working with shape sets.
               </p>
             </div>
 

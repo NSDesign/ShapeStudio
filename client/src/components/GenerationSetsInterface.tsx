@@ -364,7 +364,7 @@ export function GenerationSetsInterface({
       {/* Header with summary */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-slate-200" data-testid="heading-generation-sets">Generation Sets</h3>
+          <h3 className="text-lg font-semibold text-slate-200" data-testid="heading-generation-sets">Shape Sets</h3>
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <span data-testid="text-sets-count">{generationSets.length} sets</span>
             <Separator orientation="vertical" className="h-4" />
@@ -391,7 +391,7 @@ export function GenerationSetsInterface({
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
-                <p className="font-medium">Generation Sets Issues:</p>
+                <p className="font-medium">Shape Sets Issues:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {overallValidation.errors.map((error, index) => (
                     <li key={`error-${index}`}>{error.message}</li>
@@ -498,7 +498,7 @@ export function GenerationSetsInterface({
         {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
           <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">
-            Generation Sets List ({generationSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{generationSets.length !== 1 ? 's' : ''})
+            Shape Sets List ({generationSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{generationSets.length !== 1 ? 's' : ''})
           </h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
