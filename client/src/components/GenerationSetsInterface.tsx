@@ -609,13 +609,7 @@ export function GenerationSetsInterface({
                       {set.batchConfig?.noiseEnabled && (
                         <div className="flex items-center gap-1">
                           <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                          <span>Noise: {set.batchConfig.noiseType}</span>
-                        </div>
-                      )}
-                      {set.batchConfig?.filterEnabled && (
-                        <div className="flex items-center gap-1">
-                          <span className="w-2 h-2 bg-pink-400 rounded-full"></span>
-                          <span>Filters: Enabled</span>
+                          <span>Noise: {set.batchConfig.noiseAlgorithm}</span>
                         </div>
                       )}
                       {/* Set-specific configuration indicator */}
