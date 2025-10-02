@@ -2382,12 +2382,32 @@ export default function Sidebar({
   // Add state for shape categories accordion to prevent collapse when shapes are toggled
   const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
   
-  // Scroll position preservation - disabled to prevent auto-scroll to top issues
-  const observerRef = useRef<MutationObserver | null>(null);
-  const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
-    // Disabled problematic scroll preservation that was causing auto-scroll to top
-    // on sidebar interactions. Users can manually scroll to maintain context.
+  // Scroll position preservation
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const savedScrollPosition = useRef<number>(0);
+  
+  // Save scroll position before state updates
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const handleScroll = () => {
+        savedScrollPosition.current = container.scrollTop;
+      };
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
   }, []);
+  
+  // Restore scroll position after re-renders
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container && savedScrollPosition.current > 0) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        container.scrollTop = savedScrollPosition.current;
+      });
+    }
+  });
 
   const toggleShapeExpansion = useCallback((shapeType: string) => {
     setExpandedShapes(prev => {
