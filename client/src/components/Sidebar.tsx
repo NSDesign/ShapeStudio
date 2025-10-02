@@ -768,6 +768,10 @@ export default function Sidebar({
   const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
+  // Shape Sets per Export state variables
+  const [shapeSetCountMode, setShapeSetCountMode] = useState<'fixed' | 'range'>('fixed');
+  const [shapeSetCountFixed, setShapeSetCountFixed] = useState(2);
+  const [shapeSetCountRange, setShapeSetCountRange] = useState<[number, number]>([2, 5]);
 
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
