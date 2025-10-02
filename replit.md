@@ -44,6 +44,8 @@ Preferred communication style: Simple, everyday language.
 - **Fill Opacity Mode Implementation**: Fully functional fillOpacityMode with 'define' and 'range' modes - fillOpacityDefine value is correctly applied when mode is set to 'define', matching stroke opacity behavior.
 - **Set Transform Implementation**: Complete implementation of setTransform feature allowing translation (x, y), rotation, and scaling (scaleX, scaleY) to be applied to all shapes within a Shape Set during live generation.
 - **Artboard Alignment Implementation**: Full artboard alignment system with fitToArtboard (scales shapes to fit within artboard bounds with margin) and alignTo with 9-point alignment (top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right) for precise Shape Set positioning.
+- **Blend Modes and Compositing Operations**: Full implementation of set-level blend modes (multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity) and compositing operations (source-in, source-out, source-atop, destination-over, destination-in, destination-out, destination-atop, lighter, copy, xor) for advanced masking and visual effects. Compositing operations take precedence over blend modes when both are set.
+- **Set Visibility Controls**: Implemented visibility toggle and opacity controls with variance for Shape Sets - allows hiding sets or applying opacity multiplier with randomization to all shapes in a set.
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
