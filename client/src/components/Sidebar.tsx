@@ -1310,9 +1310,9 @@ export default function Sidebar({
                   );
                   
                   // Apply set-specific post-processing
-                  // Apply z-index based on generation order (simpler, more intuitive)
+                  // Apply z-index offset based on generation order (1000x spacing ensures sets never overlap)
                   newShapes.forEach(shape => {
-                    shape.properties.zIndex += set.generationOrder;
+                    shape.properties.zIndex += set.generationOrder * 1000;
                   });
                   
                   // Apply blend modes and compositing operations
