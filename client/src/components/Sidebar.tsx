@@ -1908,10 +1908,10 @@ export default function Sidebar({
 
           {exportSettings.exportBatchModeEnabled && (
             <>
-              <div className="space-y-2">
+              <div className={`space-y-2 ${exportSettings.generationSetsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">
-                    {exportSettings.generationSetsEnabled ? 'Shape Sets per Export' : 'Generations per Export'}
+                    Generations per Export
                   </Label>
                   <Select 
                     value={generationConfigSettings?.generationCountMode || 'range'} 
@@ -1919,6 +1919,7 @@ export default function Sidebar({
                       console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
                       onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
                     }}
+                    disabled={exportSettings.generationSetsEnabled}
                   >
                     <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
                       <SelectValue />
