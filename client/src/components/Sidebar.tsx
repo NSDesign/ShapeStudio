@@ -2057,6 +2057,59 @@ export default function Sidebar({
                     Save and load different generation configurations with specific settings for consistent, repeatable results.
                   </div>
                 )}
+
+                {/* Shape Sets per Export Control - Only visible when Shape Sets is enabled */}
+                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
+                  <div className="space-y-2 p-2 bg-slate-800/30 rounded border border-slate-600">
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-xs text-slate-400">Shape Sets per Export</Label>
+                      <Select 
+                        value={shapeSetCountMode} 
+                        onValueChange={(value) => setShapeSetCountMode(value as 'fixed' | 'range')}
+                      >
+                        <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600">
+                          <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                          <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {shapeSetCountMode === 'fixed' && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-300">Fixed Value: {shapeSetCountFixed}</Label>
+                        <Slider
+                          value={[shapeSetCountFixed]}
+                          onValueChange={([value]) => setShapeSetCountFixed(value)}
+                          min={1}
+                          max={20}
+                          step={1}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </div>
+                    )}
+                    
+                    {shapeSetCountMode === 'range' && (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Min: {shapeSetCountRange[0]}</span>
+                          <span className="text-slate-400">Max: {shapeSetCountRange[1]}</span>
+                        </div>
+                        <Slider
+                          value={shapeSetCountRange}
+                          onValueChange={(value) => setShapeSetCountRange(value as [number, number])}
+                          min={1}
+                          max={20}
+                          step={1}
+                          className="w-full"
+                          minStepsBetweenThumbs={1}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
