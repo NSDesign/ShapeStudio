@@ -3278,7 +3278,7 @@ export default function BatchConfigDialog({
                     ) : (
                       <CheckCircle className="w-4 h-4" />
                     )}
-                    <span>Apply</span>
+                    <span>Apply Configuration</span>
                   </div>
                 </Button>
               </div>
