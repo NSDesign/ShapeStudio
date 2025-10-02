@@ -22,7 +22,7 @@ export interface GenerationContextOverrides {
     rotation: number;
     scaleX: number;
     scaleY: number;
-    transformOrigin: 'center' | 'top-left';
+    transformOrigin: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   };
   artboardAlignment?: {
     fitToArtboard: boolean;
@@ -2074,7 +2074,9 @@ export const useShapeEditor = () => {
 
   const generateRandomShapes = useCallback(() => {
     // Check if generation sets are enabled and have enabled sets
-    const enabledGenerationSets = generationSets.filter(set => set.enabled);
+    const enabledGenerationSets = generationSets
+      .filter(set => set.enabled)
+      .sort((a, b) => a.generationOrder - b.generationOrder); // Sort by generationOrder
     const useGenerationSets = enabledGenerationSets.length > 0;
 
     let newShapes: Shape[] = [];
@@ -2107,12 +2109,20 @@ export const useShapeEditor = () => {
 
         console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
 
-        // Generate shapes for this set - use batch config from generation set
+        // Generate shapes for this set - pass set's configuration as overrides
         const setShapes = generateShapesWithBatchConfig(
           setCount,
           canvasBounds,
           true,
-          setIndex
+          setIndex,
+          set.shapeSpecificProperties,
+          {
+            enabledShapeTypes: new Set(set.enabledShapeTypes),
+            batchConfig: set.batchConfig,
+            scatterSettings: {},
+            setTransform: set.setTransform,
+            artboardAlignment: set.artboardAlignment
+          }
         );
 
         // Apply set-specific z-index offset
