@@ -1911,7 +1911,7 @@ export default function Sidebar({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Label className="text-xs text-slate-400">
-                    {exportSettings.generationSetsEnabled ? 'Generation Sets per Export' : 'Generations per Export'}
+                    {exportSettings.generationSetsEnabled ? 'Shape Sets per Export' : 'Generations per Export'}
                   </Label>
                   <Select 
                     value={generationConfigSettings?.generationCountMode || 'range'} 
@@ -2017,12 +2017,12 @@ export default function Sidebar({
                 )}
               </div>
 
-              {/* Generation Sets Toggle */}
+              {/* Shape Sets Toggle */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
                   <div className="flex items-center space-x-2">
                     <Boxes className="w-3 h-3 text-slate-400" />
-                    <Label className="text-xs text-slate-300">Generation Sets</Label>
+                    <Label className="text-xs text-slate-300">Shape Sets</Label>
                   </div>
                   <Switch
                     checked={exportSettings.generationSetsEnabled}
@@ -2047,12 +2047,12 @@ export default function Sidebar({
                   </div>
                 )}
 
-                {/* Generation Sets enabled messaging */}
+                {/* Shape Sets enabled messaging */}
                 {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
                   <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                      <span className="text-blue-300 font-medium">Generation Sets Active</span>
+                      <span className="text-blue-300 font-medium">Shape Sets Active</span>
                     </div>
                     Save and load different generation configurations with specific settings for consistent, repeatable results.
                   </div>
@@ -4793,11 +4793,11 @@ export default function Sidebar({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  {/* Generation Sets Section */}
+                  {/* Shape Sets Section */}
                   <div className="mb-4 p-3 border border-slate-600 rounded-lg bg-slate-800/30 space-y-2">
                     {/* Header Row with Title and Buttons */}
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-slate-400">Generation Sets</Label>
+                      <Label className="text-xs text-slate-400">Shape Sets</Label>
                       {setsEnabled && (
                         <div className="flex items-center gap-1">
                           {/* Add Set Button */}
@@ -4880,7 +4880,7 @@ export default function Sidebar({
                       /* Disabled Message */
                       <div className="flex items-center gap-2 p-2 bg-slate-900/50 border border-slate-600 rounded text-xs text-slate-400">
                         <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                        <span>Enable Generation Sets in the Export & Save section to use this feature</span>
+                        <span>Enable Shape Sets in the Export & Save section to use this feature</span>
                       </div>
                     )}
                   </div>
