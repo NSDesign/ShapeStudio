@@ -483,13 +483,18 @@ export const useShapeEditor = () => {
       }
     };
     
-    // Add to generation sets and select it
+    // Add to generation sets
     const newSets = [...generationSets, newSet];
     setGenerationSets(newSets);
-    setCurrentGenerationSetId(newSetId);
+    
+    // Only auto-select if this is the first set (no current set exists)
+    // This allows independent UI state for creating multiple sets with different configurations
+    if (!currentGenerationSetId) {
+      setCurrentGenerationSetId(newSetId);
+    }
     
     return newSetId;
-  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName]);
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName, currentGenerationSetId]);
 
   // Delete a generation set
   const handleDeleteGenerationSet = useCallback((setId: string) => {
