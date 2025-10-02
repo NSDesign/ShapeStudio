@@ -5,8 +5,8 @@ import { CanvasSettings, Artboard } from '../../client/src/lib/shapeTypes';
 import { 
   BatchConfigSettings, 
   EnhancedBatchConfig, 
-  ShapeSet, 
-  ShapeSetMode, 
+  GenerationSet, 
+  GenerationSetMode, 
   ShapeCountMode,
   ZIndexConfig,
   SupportedShapeType
@@ -85,11 +85,11 @@ export interface BatchExportResult {
   }>;
 }
 
-// Enhanced batch export result for shape sets
+// Enhanced batch export result for generation sets
 export interface EnhancedBatchExportResult extends BatchExportResult {
-  mode: ShapeSetMode;
-  shapeSetsProcessed?: number;
-  totalShapeSets?: number;
+  mode: GenerationSetMode;
+  generationSetsProcessed?: number;
+  totalGenerationSets?: number;
 }
 
 export class ExportService {
@@ -555,8 +555,8 @@ export class ExportService {
       return false;
     }
     
-    // Check for shapeSets array (required for enhanced config)
-    if (!('shapeSets' in config) || !Array.isArray(config.shapeSets)) {
+    // Check for generationSets array (required for enhanced config)
+    if (!('generationSets' in config) || !Array.isArray(config.generationSets)) {
       return false;
     }
     
@@ -575,17 +575,17 @@ export class ExportService {
 
   // Validation for mode restrictions
   private validateModeRestrictions(config: EnhancedBatchConfig): void {
-    if (config.mode === ShapeSetMode.MULTI) {
+    if (config.mode === GenerationSetMode.MULTI) {
       const { modeRestrictions } = config;
       
-      // Check maximum shape sets
-      if (config.shapeSets.length > modeRestrictions.maxShapeSets) {
-        throw new Error(`Too many shape sets: ${config.shapeSets.length} exceeds maximum of ${modeRestrictions.maxShapeSets}`);
+      // Check maximum generation sets
+      if (config.generationSets.length > modeRestrictions.maxGenerationSets) {
+        throw new Error(`Too many generation sets: ${config.generationSets.length} exceeds maximum of ${modeRestrictions.maxGenerationSets}`);
       }
       
       // Check if multi-generation is restricted to fixed count only
       if (modeRestrictions.multiGenerationOnlyForFixedCount) {
-        for (const set of config.shapeSets) {
+        for (const set of config.generationSets) {
           if (set.enabled && set.shapeCountMode !== ShapeCountMode.FIXED) {
             throw new Error(`Multi-generation mode restricted to fixed shape count only. Set "${set.name}" uses ${set.shapeCountMode} mode.`);
           }
@@ -593,7 +593,7 @@ export class ExportService {
       }
       
       // Check shape count limits per set
-      for (const set of config.shapeSets) {
+      for (const set of config.generationSets) {
         if (!set.enabled) continue;
         
         const shapeCount = set.shapeCountMode === ShapeCountMode.FIXED 
@@ -613,7 +613,7 @@ export class ExportService {
   
   // Calculate total images for enhanced config
   private calculateTotalImages(config: EnhancedBatchConfig, settings: BatchExportSettings): number {
-    if (config.mode === ShapeSetMode.SINGLE) {
+    if (config.mode === GenerationSetMode.SINGLE) {
       return settings.batchExportCount;
     } else {
       // For multi-generation, we still use the batch export count as total images to generate
@@ -738,7 +738,7 @@ export class ExportService {
     );
     
     // Calculate additional metadata for enhanced result
-    const enabledSets = enhancedConfig.shapeSets.filter(set => set.enabled);
+    const enabledSets = enhancedConfig.generationSets.filter(set => set.enabled);
     
     // Return appropriate response based on packaging mode
     const baseResult = {
@@ -747,8 +747,8 @@ export class ExportService {
       estimatedDuration: this.calculateEstimatedDuration(totalImages),
       totalImages,
       mode: enhancedConfig.mode,
-      shapeSetsProcessed: enabledSets.length,
-      totalShapeSets: enhancedConfig.shapeSets.length
+      generationSetsProcessed: enabledSets.length,
+      totalGenerationSets: enhancedConfig.generationSets.length
     };
     
     if (settings.packageAsZip) {
@@ -788,8 +788,8 @@ export class ExportService {
         throw new Error('Enhanced configuration is required but not provided');
       }
       
-      if (!enhancedConfig.shapeSets || !Array.isArray(enhancedConfig.shapeSets)) {
-        throw new Error('Enhanced configuration must contain valid shapeSets array');
+      if (!enhancedConfig.generationSets || !Array.isArray(enhancedConfig.generationSets)) {
+        throw new Error('Enhanced configuration must contain valid generationSets array');
       }
       
       if (!enhancedConfig.globalSettings) {
@@ -822,7 +822,7 @@ export class ExportService {
         throw new Error('Enhanced configuration mode is required');
       }
       
-      if (enhancedConfig.mode === ShapeSetMode.SINGLE) {
+      if (enhancedConfig.mode === GenerationSetMode.SINGLE) {
         // Single mode: use legacy batch configuration
         await this.processSingleMode(
           exportId, 
@@ -971,8 +971,8 @@ export class ExportService {
       throw new Error('batchExportCount must be greater than 0');
     }
     
-    // Filter enabled shape sets and sort by generation order
-    const enabledSets = enhancedConfig.shapeSets
+    // Filter enabled generation sets and sort by generation order
+    const enabledSets = enhancedConfig.generationSets
       .filter(set => set.enabled)
       .sort((a, b) => a.generationOrder - b.generationOrder);
       
@@ -1056,7 +1056,7 @@ export class ExportService {
         compositeShapes, 
         compositeGroups, 
         canvasSettings, 
-        enhancedConfig.shapeSets[0]?.batchConfig, // Use first set's config for export settings
+        enhancedConfig.generationSets[0]?.batchConfig, // Use first set's config for export settings
         settings, 
         zip, 
         exportDir, 
@@ -1071,10 +1071,10 @@ export class ExportService {
     }
   }
 
-  // Apply z-index layering to shapes based on shape set configuration
+  // Apply z-index layering to shapes based on generation set configuration
   private applyZIndexLayering(
     shapes: Shape[], 
-    generationSet: ShapeSet, 
+    generationSet: GenerationSet, 
     setIndex: number,
     globalZIndexSettings: any
   ): Shape[] {
@@ -1130,8 +1130,8 @@ export class ExportService {
     });
   }
 
-  // Apply shape count restrictions for a shape set
-  private applyShapeCountRestrictions(shapes: Shape[], generationSet: ShapeSet): Shape[] {
+  // Apply shape count restrictions for a generation set
+  private applyShapeCountRestrictions(shapes: Shape[], generationSet: GenerationSet): Shape[] {
     if (!shapes || !Array.isArray(shapes)) {
       throw new Error('Invalid shapes array provided to applyShapeCountRestrictions');
     }

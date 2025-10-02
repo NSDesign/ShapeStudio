@@ -52,9 +52,9 @@ export const userPreferences = pgTable("user_preferences", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   // Sidebar section visibility settings
   sidebarSections: jsonb("sidebar_sections").notNull().default('{}'),
-  // Shape sets persistence
-  shapeSets: jsonb("shape_sets").notNull().default('[]'),
-  currentShapeSetId: varchar("current_shape_set_id"),
+  // Generation sets persistence
+  generationSets: jsonb("generation_sets").notNull().default('[]'),
+  currentGenerationSetId: varchar("current_generation_set_id"),
   // Export settings persistence
   exportSettings: jsonb("export_settings").notNull().default('{}'),
   createdAt: timestamp("created_at").defaultNow(),
@@ -92,7 +92,7 @@ export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
 // Export settings configuration type
 export interface ExportSettingsConfig {
   exportBatchModeEnabled: boolean;    // Whether batch export mode is enabled
-  shapeSetsEnabled: boolean;          // Whether shape sets toggle is enabled
+  generationSetsEnabled: boolean;     // Whether generation sets toggle is enabled
   batchExportCount: number;           // Current batch export count setting
   generationCountMode: string;        // Current generation count mode ('fixed', 'range', etc)
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';  // Strategy when set count < batch export count
@@ -101,7 +101,7 @@ export interface ExportSettingsConfig {
 // Default export settings configuration
 export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   exportBatchModeEnabled: false,      // Batch export disabled by default
-  shapeSetsEnabled: false,            // Shape sets disabled by default
+  generationSetsEnabled: false,       // Generation sets disabled by default
   batchExportCount: 1,                // Single export by default
   generationCountMode: 'fixed',       // Fixed count mode by default
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
@@ -1065,15 +1065,15 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   }
 };
 
-// ===== SHAPE SETS DATA STRUCTURES =====
+// ===== GENERATION SETS DATA STRUCTURES =====
 
-// Mode enumeration for shape sets
-export enum ShapeSetMode {
+// Mode enumeration for generation sets
+export enum GenerationSetMode {
   SINGLE = "single",
   MULTI = "multi"
 }
 
-// Shape count mode for individual shape sets
+// Shape count mode for individual generation sets
 export enum ShapeCountMode {
   FIXED = "fixed",
   RANGE = "range"
@@ -1081,9 +1081,9 @@ export enum ShapeCountMode {
 
 // Z-index management for layering
 export interface ZIndexConfig {
-  baseOffset: number;           // Base z-index offset for this shape set
+  baseOffset: number;           // Base z-index offset for this generation set
   incrementPerShape: number;    // Z-index increment between shapes within set
-  incrementPerGeneration: number; // Z-index increment between shape sets
+  incrementPerGeneration: number; // Z-index increment between generation sets
 }
 
 // Updated shape types to match client ShapeType from lib/shapeTypes.ts (complete coverage)
@@ -1318,13 +1318,13 @@ export interface ShapeSpecificProperties {
   };
 }
 
-// Individual shape set configuration
-export interface ShapeSet {
+// Individual generation set configuration
+export interface GenerationSet {
   id: string;                           // Unique identifier for the set
   name: string;                         // Display name for the set
   enabled: boolean;                     // Whether this set is active
   
-  // Shape types enabled for this shape set (JSON-serializable array)
+  // Shape types enabled for this generation set (JSON-serializable array)
   enabledShapeTypes: SupportedShapeType[]; // e.g., ['rectangle', 'circle', 'polygon']
   
   // Shape count configuration
@@ -1332,7 +1332,7 @@ export interface ShapeSet {
   shapeCountFixed: number;              // Fixed number of shapes (when mode is FIXED)
   shapeCountRange: [number, number];    // Min/max shapes (when mode is RANGE)
   
-  // Shape-specific properties for this shape set
+  // Shape-specific properties for this generation set
   shapeSpecificProperties: ShapeSpecificProperties;
   
   // Z-index configuration for layering (per-set customization)
@@ -1341,7 +1341,7 @@ export interface ShapeSet {
   // this configuration is ignored in favor of global settings.
   zIndexConfig: ZIndexConfig;
   
-  // Complete batch configuration settings for this shape set
+  // Complete batch configuration settings for this generation set
   // Properly typed instead of Record<string, any>
   batchConfig: BatchConfigSettings;
   
@@ -1368,17 +1368,17 @@ export interface ShapeSet {
 // Enhanced batch configuration supporting both single and multi-generation modes
 export interface EnhancedBatchConfig {
   // Mode selection
-  mode: ShapeSetMode;                   // Single or multi-generation mode
+  mode: GenerationSetMode;              // Single or multi-generation mode
   
   // Backward compatibility: single generation settings
   // When mode is SINGLE, these settings are used directly
   legacyBatchConfig?: BatchConfigSettings; // Properly typed instead of Record<string, any>
   
   // Multi-generation settings
-  // When mode is MULTI, these settings control the shape sets
-  shapeSets: ShapeSet[];                // Array of shape sets
+  // When mode is MULTI, these settings control the generation sets
+  generationSets: GenerationSet[];     // Array of generation sets
   
-  // Global settings that apply to all shape sets
+  // Global settings that apply to all generation sets
   globalSettings: {
     // Canvas and artboard settings
     canvasWidth: number;
@@ -1390,7 +1390,7 @@ export interface EnhancedBatchConfig {
       backgroundColor: string;
     };
     
-    // Edge case strategy for when shape sets count < batch export count
+    // Edge case strategy for when generation sets count < batch export count
     edgeCaseStrategy: 'hold' | 'cycle' | 'random' | 'stop';
     
     // Export settings
@@ -1399,10 +1399,10 @@ export interface EnhancedBatchConfig {
     
     // Global z-index management (single source of truth)
     // NOTE: This is the authoritative z-index configuration.
-    // Individual ShapeSet.zIndexConfig is for per-set customization only.
+    // Individual GenerationSet.zIndexConfig is for per-set customization only.
     globalZIndexSettings: {
       startingZIndex: number;         // Base z-index to start from
-      setSpacing: number;             // Z-index spacing between shape sets
+      setSpacing: number;             // Z-index spacing between generation sets
       preventOverlap: boolean;        // Ensure sets don't overlap in z-space
       useGlobalSettings: boolean;     // If true, ignore per-set zIndexConfig
     };
@@ -1412,9 +1412,9 @@ export interface EnhancedBatchConfig {
   modeRestrictions: {
     // Multi-generation mode restrictions
     multiGenerationOnlyForFixedCount: boolean;  // Restrict multi-generation to fixed count only
-    maxShapeSets: number;                       // Maximum allowed shape sets
-    minShapesPerSet: number;                    // Minimum shapes per shape set
-    maxShapesPerSet: number;                    // Maximum shapes per shape set
+    maxGenerationSets: number;                  // Maximum allowed generation sets
+    minShapesPerSet: number;                    // Minimum shapes per generation set
+    maxShapesPerSet: number;                    // Maximum shapes per generation set
   };
   
   // Metadata (using ISO string timestamps for JSON serialization)
@@ -1425,15 +1425,15 @@ export interface EnhancedBatchConfig {
 
 // ===== HELPER TYPES AND UTILITIES =====
 
-// Default values for shape set configuration
+// Default values for generation set configuration
 export const DEFAULT_Z_INDEX_CONFIG: ZIndexConfig = {
   baseOffset: 1000,
   incrementPerShape: 1,
   incrementPerGeneration: 1000
 };
 
-export const DEFAULT_SHAPE_SET_LIMITS = {
-  maxShapeSets: 20,
+export const DEFAULT_GENERATION_SET_LIMITS = {
+  maxGenerationSets: 20,
   minShapesPerSet: 1,
   maxShapesPerSet: 1000,
   defaultShapesPerSet: 10
@@ -1441,7 +1441,7 @@ export const DEFAULT_SHAPE_SET_LIMITS = {
 
 // ===== VALIDATION SCHEMAS USING ZOD =====
 
-export const ShapeSetModeSchema = z.nativeEnum(ShapeSetMode);
+export const GenerationSetModeSchema = z.nativeEnum(GenerationSetMode);
 export const ShapeCountModeSchema = z.nativeEnum(ShapeCountMode);
 
 export const BlendModeSchema = z.enum([
@@ -1991,7 +1991,7 @@ export const BatchConfigSettingsSchema = z.object({
   })
 });
 
-export const ShapeSetSchema = z.object({
+export const GenerationSetSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   enabled: z.boolean(),
@@ -2014,9 +2014,9 @@ export const ShapeSetSchema = z.object({
 });
 
 export const EnhancedBatchConfigSchema = z.object({
-  mode: ShapeSetModeSchema,
+  mode: GenerationSetModeSchema,
   legacyBatchConfig: BatchConfigSettingsSchema.optional(), // Fixed: now properly typed instead of z.any()
-  shapeSets: z.array(ShapeSetSchema),
+  generationSets: z.array(GenerationSetSchema),
   globalSettings: z.object({
     canvasWidth: z.number().positive(),
     canvasHeight: z.number().positive(),
@@ -2038,7 +2038,7 @@ export const EnhancedBatchConfigSchema = z.object({
   }),
   modeRestrictions: z.object({
     multiGenerationOnlyForFixedCount: z.boolean(),
-    maxShapeSets: z.number().positive(),
+    maxGenerationSets: z.number().positive(),
     minShapesPerSet: z.number().positive(),
     maxShapesPerSet: z.number().positive()
   }),
@@ -2047,25 +2047,25 @@ export const EnhancedBatchConfigSchema = z.object({
   version: z.string()
 }).refine((data) => {
   // Validation refinement: Multi-generation mode requires fixed generation count when restriction is enabled
-  if (data.mode === ShapeSetMode.MULTI && data.modeRestrictions.multiGenerationOnlyForFixedCount) {
-    return data.shapeSets.every(set => set.shapeCountMode === ShapeCountMode.FIXED);
+  if (data.mode === GenerationSetMode.MULTI && data.modeRestrictions.multiGenerationOnlyForFixedCount) {
+    return data.generationSets.every(set => set.shapeCountMode === ShapeCountMode.FIXED);
   }
   return true;
 }, {
-  message: "Multi-generation mode with multiGenerationOnlyForFixedCount restriction requires all shape sets to use fixed shape count mode",
-  path: ["shapeSets"]
+  message: "Multi-generation mode with multiGenerationOnlyForFixedCount restriction requires all generation sets to use fixed shape count mode",
+  path: ["generationSets"]
 });
 
-// Utility functions for working with shape sets
-export const ShapeSetUtils = {
-  // Create a new shape set with default values
-  createDefault: (id: string, name: string): ShapeSet => ({
+// Utility functions for working with generation sets
+export const GenerationSetUtils = {
+  // Create a new generation set with default values
+  createDefault: (id: string, name: string): GenerationSet => ({
     id,
     name,
     enabled: true,
     enabledShapeTypes: ['rectangle', 'circle'], // Fixed: now uses array instead of Set
     shapeCountMode: ShapeCountMode.FIXED,
-    shapeCountFixed: DEFAULT_SHAPE_SET_LIMITS.defaultShapesPerSet,
+    shapeCountFixed: DEFAULT_GENERATION_SET_LIMITS.defaultShapesPerSet,
     shapeCountRange: [1, 10],
     shapeSpecificProperties: {},
     zIndexConfig: { ...DEFAULT_Z_INDEX_CONFIG },
@@ -2097,20 +2097,20 @@ export const ShapeSetUtils = {
   }),
 
   // Validate shape count settings
-  validateShapeCount: (set: ShapeSet): boolean => {
+  validateShapeCount: (set: GenerationSet): boolean => {
     if (set.shapeCountMode === ShapeCountMode.FIXED) {
-      return set.shapeCountFixed >= DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet &&
-             set.shapeCountFixed <= DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet;
+      return set.shapeCountFixed >= DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet &&
+             set.shapeCountFixed <= DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet;
     } else {
       const [min, max] = set.shapeCountRange;
-      return min >= DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet &&
-             max <= DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet &&
+      return min >= DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet &&
+             max <= DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet &&
              min <= max;
     }
   },
 
-  // Calculate total z-index range for a shape set
-  calculateZIndexRange: (set: ShapeSet): [number, number] => {
+  // Calculate total z-index range for a generation set
+  calculateZIndexRange: (set: GenerationSet): [number, number] => {
     const maxShapes = set.shapeCountMode === ShapeCountMode.FIXED 
       ? set.shapeCountFixed 
       : set.shapeCountRange[1];
@@ -2122,7 +2122,7 @@ export const ShapeSetUtils = {
   },
 
   // Get actual shape count for generation (handles range mode)
-  getShapeCount: (set: ShapeSet, randomSeed?: number): number => {
+  getShapeCount: (set: GenerationSet, randomSeed?: number): number => {
     if (set.shapeCountMode === ShapeCountMode.FIXED) {
       return set.shapeCountFixed;
     }
@@ -2150,7 +2150,7 @@ export const ShapeSetUtils = {
 };
 
 // Type exports for external usage
-export type ShapeSetType = z.infer<typeof ShapeSetSchema>;
+export type GenerationSetType = z.infer<typeof GenerationSetSchema>;
 export type EnhancedBatchConfigType = z.infer<typeof EnhancedBatchConfigSchema>;
 export type ZIndexConfigType = z.infer<typeof ZIndexConfigSchema>;
 export type ShapeSpecificPropertiesType = z.infer<typeof ShapeSpecificPropertiesSchema>;

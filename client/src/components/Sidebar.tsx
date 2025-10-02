@@ -4,9 +4,9 @@ import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
-import { BatchConfigSettings, EnhancedBatchConfig, ShapeSet, ShapeCountMode } from '@shared/schema';
-import type { CurrentUIState } from '@/hooks/useShapeSets';
-import { ShapeSetsDropdown } from './ShapeSetsDropdown';
+import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
+import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { useUserPreferences, useExportSettings } from '@/hooks/useUserPreferences';
@@ -397,35 +397,27 @@ interface SidebarProps {
     enabledShapeTypes: Set<ShapeType>;
   }) => void;
   
-  // Shape Sets Management
-  shapeSets?: ShapeSet[];
-  currentShapeSetId?: string | null;
+  // Generation Sets Management
+  generationSets?: GenerationSet[];
+  currentGenerationSetId?: string | null;
   shapeCountMode?: ShapeCountMode;
   shapeCountFixed?: number;
   shapeCountRange?: [number, number];
   batchExportCount?: number;
   generationCountMode?: string;
-  generationSets?: ShapeSet[];
-  currentGenerationSetId?: string | null;
-  areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
-  onShapeSetsChange?: (sets: ShapeSet[]) => void;
-  onGenerationSetsChange?: (sets: ShapeSet[]) => void;
-  onCurrentShapeSetChange?: (setId: string | null) => void;
+  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
   onCurrentGenerationSetChange?: (setId: string | null) => void;
-  onCreateShapeSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
   onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
-  onDeleteShapeSet?: (setId: string) => void;
   onDeleteGenerationSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
-  onOpenShapeSetsManager?: () => void;
   onOpenGenerationSetsManager?: () => void;
   isSetsManagerOpen?: boolean;
-  onCloseShapeSetsManager?: () => void;
   onCloseGenerationSetsManager?: () => void;
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
   hasUnsavedChanges?: (setId: string | null) => boolean;
+  areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
 }
 
 export default function Sidebar({
@@ -473,35 +465,27 @@ export default function Sidebar({
   onApplyColorManipulation,
   onLoadProject,
   
-  // Shape Sets Management
-  shapeSets,
-  currentShapeSetId,
+  // Generation Sets Management
+  generationSets = [],
+  currentGenerationSetId = null,
   shapeCountMode = 'fixed' as ShapeCountMode,
   shapeCountFixed = 10,
   shapeCountRange = [5, 15] as [number, number],
   batchExportCount = 1,
   generationCountMode = 'fixed',
-  generationSets,
-  currentGenerationSetId,
-  areSetsEnabled,
-  onShapeSetsChange,
   onGenerationSetsChange,
-  onCurrentShapeSetChange,
   onCurrentGenerationSetChange,
-  onCreateShapeSet,
   onCreateGenerationSet,
-  onDeleteShapeSet,
   onDeleteGenerationSet,
   generateUniqueSetName,
-  onOpenShapeSetsManager,
   onOpenGenerationSetsManager,
   isSetsManagerOpen = false,
-  onCloseShapeSetsManager,
   onCloseGenerationSetsManager,
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
-  hasUnsavedChanges
+  hasUnsavedChanges,
+  areSetsEnabled
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -525,40 +509,33 @@ export default function Sidebar({
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
 
-  // Use centralized shape sets state from parent - with fallback for prop name compatibility
-  const effectiveShapeSets = shapeSets ?? generationSets ?? [];
-  const effectiveCurrentSetId = currentShapeSetId ?? currentGenerationSetId ?? null;
-  
-  // Create effective handlers with fallback for prop name compatibility
-  const effectiveOnShapeSetsChange = onShapeSetsChange ?? onGenerationSetsChange;
-  const effectiveOnCurrentShapeSetChange = onCurrentShapeSetChange ?? onCurrentGenerationSetChange;
-  const effectiveOnCreateShapeSet = onCreateShapeSet ?? onCreateGenerationSet;
-  const effectiveOnDeleteShapeSet = onDeleteShapeSet ?? onDeleteGenerationSet;
-  const effectiveOnOpenShapeSetsManager = onOpenShapeSetsManager ?? onOpenGenerationSetsManager;
-  const effectiveOnCloseShapeSetsManager = onCloseShapeSetsManager ?? onCloseGenerationSetsManager;
+  // Use centralized generation sets state from parent
+  const effectiveGenerationSets = generationSets || [];
+  const effectiveCurrentSetId = currentGenerationSetId;
 
-  // Shape sets are enabled when the main toggle is enabled
-  // This allows users to save/load shape configurations with any count mode
+  // Generation sets are enabled when the main toggle is enabled
+  // This allows users to save/load generation configurations with any count mode
   const effectiveMode = generationCountMode ?? 'fixed';
-  const setsEnabled = exportSettings.shapeSetsEnabled;
+  const setsEnabled = exportSettings.generationSetsEnabled;
   
 
-  // Shape sets handlers - now simplified since validation logic is centralized
+  // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
     // The enhanced validation and state restoration logic is now handled centrally
-    // in useShapeEditor's handleCurrentShapeSetChange function
-    effectiveOnCurrentShapeSetChange?.(setId);
-  }, [effectiveOnCurrentShapeSetChange]);
+    // in useShapeEditor's handleCurrentGenerationSetChange function
+    onCurrentGenerationSetChange?.(setId);
+  }, [onCurrentGenerationSetChange]);
 
 
   const handleDeleteSet = useCallback((setId: string) => {
-    effectiveOnDeleteShapeSet?.(setId);
-    console.log('Deleted shape set:', setId);
-  }, [effectiveOnDeleteShapeSet]);
+    // Call the actual handler from parent component
+    onDeleteGenerationSet?.(setId);
+    console.log('Deleted generation set:', setId);
+  }, [onDeleteGenerationSet]);
 
   const handleOpenManager = useCallback(() => {
-    effectiveOnOpenShapeSetsManager?.();
-  }, [effectiveOnOpenShapeSetsManager]);
+    onOpenGenerationSetsManager?.();
+  }, [onOpenGenerationSetsManager]);
 
   // Define handlePopoverToggle function
   const handlePopoverToggle = (sectionId: string) => {
@@ -791,21 +768,15 @@ export default function Sidebar({
   const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
-  // Shape Sets per Export state (separate from Generations per Export)
-  const [shapeSetsCountMode, setShapeSetsCountMode] = useState<'fixed' | 'range'>('fixed');
-  const [shapeSetsCountFixed, setShapeSetsCountFixed] = useState(1);
-  const [shapeSetsCountRange, setShapeSetsCountRange] = useState<[number, number]>([1, 3]);
 
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
     // Auto-enable batch export when creating sets
     if (!exportSettings.exportBatchModeEnabled) {
       updateExportSettings.mutate({ exportBatchModeEnabled: true });
-      console.log('Auto-enabled batch export for shape sets');
+      console.log('Auto-enabled batch export for generation sets');
     }
     
-    // Generate unique name if empty
-    const finalName = name || generateUniqueSetName?.('Shape Set') || `Shape Set ${Date.now()}`;
     
     // Capture current UI state for the generation set
     const currentUIState: CurrentUIState = {
@@ -818,10 +789,10 @@ export default function Sidebar({
     };
     
     // Call the actual handler from parent component with UI state
-    const setId = effectiveOnCreateShapeSet?.(finalName, currentUIState);
-    console.log('Created shape set:', finalName, 'with ID:', setId, 'from current UI state');
+    const setId = onCreateGenerationSet?.(name, currentUIState);
+    console.log('Created generation set:', name, 'with ID:', setId, 'from current UI state');
     return setId;
-  }, [effectiveOnCreateShapeSet, generateUniqueSetName, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -1241,24 +1212,32 @@ export default function Sidebar({
           await new Promise(resolve => setTimeout(resolve, 200));
 
           // Generate shapes for this export using batch configuration
+          // Use user's configured generations per export and shape count values
+          let generationCallsCount: number;
+          
+          // Determine generations per export based on user's mode setting
+          if (generationConfigSettings?.generationCountMode === 'fixed') {
+            generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
+            console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
+          } else if (generationConfigSettings?.generationCountMode === 'range') {
+            // Use user's configured range from UI slider (exportShapeCountRange controlled by user)
+            generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
+            console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]} from user range slider)`);
+          } else {
+            // Fallback to default
+            generationCallsCount = 5;
+            console.log(`🔢 Using DEFAULT generations per export: ${generationCallsCount} (fallback)`);
+          }
+
+          // Simulate multiple button presses - each call generates shapes based on user's shape count settings
           const currentExportShapes: Shape[] = [];
           
-          // Check if shape sets mode is enabled
-          if (exportSettings.shapeSetsEnabled && effectiveShapeSets && effectiveShapeSets.length > 0) {
-            const enabledSets = effectiveShapeSets.filter(set => set.enabled);
+          // Check if generation sets mode is enabled
+          if (exportSettings.generationSetsEnabled && generationSets && generationSets.length > 0) {
+            const enabledSets = generationSets.filter(set => set.enabled);
             
             if (enabledSets.length > 0) {
-              // Use shapeSetsCount state instead of generationCallsCount
-              let shapeSetsCount: number;
-              if (shapeSetsCountMode === 'fixed') {
-                shapeSetsCount = shapeSetsCountFixed;
-                console.log(`🔢 SHAPE SETS MODE: Using FIXED sets per export: ${shapeSetsCount}`);
-              } else {
-                shapeSetsCount = Math.floor(Math.random() * (shapeSetsCountRange[1] - shapeSetsCountRange[0] + 1)) + shapeSetsCountRange[0];
-                console.log(`🔢 SHAPE SETS MODE: Using RANGE sets per export: ${shapeSetsCount} (random ${shapeSetsCountRange[0]}-${shapeSetsCountRange[1]})`);
-              }
-              
-              console.log(`🎯 SHAPE SETS MODE: Using ${enabledSets.length} enabled sets, generating ${shapeSetsCount} time(s)`);
+              console.log(`🎯 GENERATION SETS MODE: Using ${enabledSets.length} enabled sets`);
               
               // DIAGNOSTIC: Log each set's batchConfig on load
               enabledSets.forEach((set, idx) => {
@@ -1272,9 +1251,9 @@ export default function Sidebar({
                 });
               });
               
-              // FIX: Loop shapeSetsCount times, each iteration generates all enabled sets once
-              for (let setsIteration = 0; setsIteration < shapeSetsCount; setsIteration++) {
-                // Generate shapes for each enabled set (once per iteration)
+              // Loop through each generation call
+              for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
+                // Generate shapes for each enabled set
                 for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
                   const set = enabledSets[setIndex];
                   
@@ -1283,10 +1262,10 @@ export default function Sidebar({
                   const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
                   if (isFixedMode) {
                     shapesFromThisCall = set.shapeCountFixed || 10;
-                    console.log(`📞 [${set.name}] Sets iteration ${setsIteration + 1}/${shapeSetsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
+                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
                   } else {
                     shapesFromThisCall = Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
-                    console.log(`📞 [${set.name}] Sets iteration ${setsIteration + 1}/${shapeSetsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
+                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
                   }
                   
                   // Create overrides from set configuration
@@ -1315,288 +1294,36 @@ export default function Sidebar({
                     shapesFromThisCall, 
                     generationBounds, 
                     true, 
-                    i + setsIteration * 1000 + setIndex, 
+                    i + callIndex * 1000 + setIndex, 
                     set.shapeSpecificProperties,
                     overrides
                   );
-                  
-                  // Tag shapes with set layer index for proper rendering order
-                  newShapes.forEach(shape => {
-                    shape.properties.setLayerIndex = setIndex;
-                  });
-                  
-                  // Apply per-set transforms to all shapes in this set
-                  if (set.setTransform && (set.setTransform.x !== 0 || set.setTransform.y !== 0 || 
-                      set.setTransform.rotation !== 0 || set.setTransform.scaleX !== 1 || set.setTransform.scaleY !== 1)) {
-                    
-                    // Calculate bounding box of all shapes in this set to determine transform origin
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                    newShapes.forEach(shape => {
-                      const bounds = shape.getBounds();
-                      minX = Math.min(minX, bounds.x);
-                      minY = Math.min(minY, bounds.y);
-                      maxX = Math.max(maxX, bounds.x + bounds.width);
-                      maxY = Math.max(maxY, bounds.y + bounds.height);
-                    });
-                    
-                    const centerX = (minX + maxX) / 2;
-                    const centerY = (minY + maxY) / 2;
-                    
-                    // Determine transform origin point
-                    let originX: number, originY: number;
-                    switch (set.setTransform.transformOrigin) {
-                      case 'top-left':
-                        originX = minX;
-                        originY = minY;
-                        break;
-                      case 'top-right':
-                        originX = maxX;
-                        originY = minY;
-                        break;
-                      case 'bottom-left':
-                        originX = minX;
-                        originY = maxY;
-                        break;
-                      case 'bottom-right':
-                        originX = maxX;
-                        originY = maxY;
-                        break;
-                      case 'center':
-                      default:
-                        originX = centerX;
-                        originY = centerY;
-                        break;
-                    }
-                    
-                    // Apply transforms to each shape
-                    newShapes.forEach(shape => {
-                      // 1. Translate shape position relative to transform origin
-                      const relX = shape.transform.x - originX;
-                      const relY = shape.transform.y - originY;
-                      
-                      // 2. Apply rotation
-                      if (set.setTransform.rotation !== 0) {
-                        const angleRad = (set.setTransform.rotation * Math.PI) / 180;
-                        const cos = Math.cos(angleRad);
-                        const sin = Math.sin(angleRad);
-                        
-                        const rotatedX = relX * cos - relY * sin;
-                        const rotatedY = relX * sin + relY * cos;
-                        
-                        shape.transform.x = rotatedX * set.setTransform.scaleX;
-                        shape.transform.y = rotatedY * set.setTransform.scaleY;
-                        
-                        // Apply rotation to shape itself
-                        shape.transform.rotation += set.setTransform.rotation;
-                      } else {
-                        // 3. Apply scale without rotation
-                        shape.transform.x = relX * set.setTransform.scaleX;
-                        shape.transform.y = relY * set.setTransform.scaleY;
-                      }
-                      
-                      // 4. Scale the shape itself
-                      shape.transform.scaleX *= set.setTransform.scaleX;
-                      shape.transform.scaleY *= set.setTransform.scaleY;
-                      
-                      // 5. Translate back from origin + apply position offset
-                      shape.transform.x += originX + set.setTransform.x;
-                      shape.transform.y += originY + set.setTransform.y;
-                    });
-                    
-                    console.log(`🔧 Applied transforms to "${set.name}": pos=(${set.setTransform.x}, ${set.setTransform.y}), rot=${set.setTransform.rotation}°, scale=(${set.setTransform.scaleX}, ${set.setTransform.scaleY}), origin=${set.setTransform.transformOrigin}`);
-                  }
-                  
-                  // Apply artboard alignment and fit-to-artboard
-                  if (targetArtboard && set.artboardAlignment && 
-                      (set.artboardAlignment.fitToArtboard || set.artboardAlignment.alignTo !== 'none')) {
-                    
-                    // Calculate current bounding box of all shapes in this set (after transforms)
-                    let setMinX = Infinity, setMinY = Infinity, setMaxX = -Infinity, setMaxY = -Infinity;
-                    newShapes.forEach(shape => {
-                      const bounds = shape.getBounds();
-                      setMinX = Math.min(setMinX, bounds.x);
-                      setMinY = Math.min(setMinY, bounds.y);
-                      setMaxX = Math.max(setMaxX, bounds.x + bounds.width);
-                      setMaxY = Math.max(setMaxY, bounds.y + bounds.height);
-                    });
-                    
-                    const setWidth = setMaxX - setMinX;
-                    const setHeight = setMaxY - setMinY;
-                    const setCenterX = (setMinX + setMaxX) / 2;
-                    const setCenterY = (setMinY + setMaxY) / 2;
-                    
-                    // Apply fit-to-artboard scaling
-                    if (set.artboardAlignment.fitToArtboard) {
-                      const margin = set.artboardAlignment.margin || 0;
-                      const availableWidth = targetArtboard.width - (margin * 2);
-                      const availableHeight = targetArtboard.height - (margin * 2);
-                      
-                      const scaleX = setWidth > 0 ? availableWidth / setWidth : 1;
-                      const scaleY = setHeight > 0 ? availableHeight / setHeight : 1;
-                      const fitScale = Math.min(scaleX, scaleY); // Uniform scale to fit
-                      
-                      if (fitScale < 1 || fitScale > 1) {
-                        // Scale all shapes around set center
-                        newShapes.forEach(shape => {
-                          const relX = shape.transform.x - setCenterX;
-                          const relY = shape.transform.y - setCenterY;
-                          
-                          shape.transform.x = setCenterX + relX * fitScale;
-                          shape.transform.y = setCenterY + relY * fitScale;
-                          shape.transform.scaleX *= fitScale;
-                          shape.transform.scaleY *= fitScale;
-                        });
-                        
-                        // Update bounding box after scaling
-                        setMinX = setCenterX - (setWidth / 2) * fitScale;
-                        setMinY = setCenterY - (setHeight / 2) * fitScale;
-                        setMaxX = setCenterX + (setWidth / 2) * fitScale;
-                        setMaxY = setCenterY + (setHeight / 2) * fitScale;
-                        
-                        console.log(`📏 Fit to artboard: scaled "${set.name}" by ${fitScale.toFixed(3)}×`);
-                      }
-                    }
-                    
-                    // Apply alignment
-                    if (set.artboardAlignment.alignTo === 'artboard') {
-                      const margin = set.artboardAlignment.margin || 0;
-                      const artboardMinX = targetArtboard.x + margin;
-                      const artboardMinY = targetArtboard.y + margin;
-                      const artboardMaxX = targetArtboard.x + targetArtboard.width - margin;
-                      const artboardMaxY = targetArtboard.y + targetArtboard.height - margin;
-                      const artboardCenterX = targetArtboard.x + targetArtboard.width / 2;
-                      const artboardCenterY = targetArtboard.y + targetArtboard.height / 2;
-                      
-                      let targetX: number, targetY: number;
-                      
-                      switch (set.artboardAlignment.alignmentType) {
-                        case 'center':
-                          targetX = artboardCenterX;
-                          targetY = artboardCenterY;
-                          break;
-                        case 'top-left':
-                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
-                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
-                          break;
-                        case 'top-center':
-                          targetX = artboardCenterX;
-                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
-                          break;
-                        case 'top-right':
-                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
-                          targetY = artboardMinY + (setMaxY - setMinY) / 2;
-                          break;
-                        case 'center-left':
-                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
-                          targetY = artboardCenterY;
-                          break;
-                        case 'center-right':
-                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
-                          targetY = artboardCenterY;
-                          break;
-                        case 'bottom-left':
-                          targetX = artboardMinX + (setMaxX - setMinX) / 2;
-                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
-                          break;
-                        case 'bottom-center':
-                          targetX = artboardCenterX;
-                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
-                          break;
-                        case 'bottom-right':
-                          targetX = artboardMaxX - (setMaxX - setMinX) / 2;
-                          targetY = artboardMaxY - (setMaxY - setMinY) / 2;
-                          break;
-                        default:
-                          targetX = setCenterX;
-                          targetY = setCenterY;
-                      }
-                      
-                      const currentCenterX = (setMinX + setMaxX) / 2;
-                      const currentCenterY = (setMinY + setMaxY) / 2;
-                      const offsetX = targetX - currentCenterX;
-                      const offsetY = targetY - currentCenterY;
-                      
-                      // Apply alignment offset to all shapes
-                      newShapes.forEach(shape => {
-                        shape.transform.x += offsetX;
-                        shape.transform.y += offsetY;
-                      });
-                      
-                      console.log(`📍 Aligned "${set.name}" to artboard ${set.artboardAlignment.alignmentType}: offset=(${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
-                    }
-                  }
-                  
-                  // Apply set-level opacity
-                  if (set.setVisibility && (set.setVisibility.opacity < 1 || set.setVisibility.opacityVariance > 0)) {
-                    const baseOpacity = set.setVisibility.opacity ?? 1;
-                    const variance = set.setVisibility.opacityVariance ?? 0;
-                    
-                    newShapes.forEach(shape => {
-                      // Calculate opacity with variance (random variation)
-                      const randomVariance = variance > 0 ? (Math.random() * 2 - 1) * variance : 0;
-                      const setOpacity = Math.max(0, Math.min(1, baseOpacity + randomVariance));
-                      
-                      // Apply set opacity to shape's fill and stroke opacity
-                      if (shape.properties.fillOpacity !== undefined) {
-                        shape.properties.fillOpacity *= setOpacity;
-                      }
-                      if (shape.properties.strokeOpacity !== undefined) {
-                        shape.properties.strokeOpacity *= setOpacity;
-                      }
-                    });
-                    
-                    console.log(`👁️ Applied opacity to "${set.name}": base=${(baseOpacity * 100).toFixed(0)}%, variance=±${(variance * 100).toFixed(0)}%`);
-                  }
-                  
                   currentExportShapes.push(...newShapes);
-                  console.log(`🎨 Tagged ${newShapes.length} shapes with setLayerIndex=${setIndex} for "${set.name}"`);
                 }
               }
-              
-              console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${shapeSetsCount} sets iteration(s) × ${enabledSets.length} enabled sets for export ${i + 1}`);
             } else {
-              console.log(`⚠️ No enabled shape sets, using current UI state as fallback`);
-              // Fallback: Use Generations per Export when no sets enabled
-              let generationCallsCount: number;
-              if (generationConfigSettings?.generationCountMode === 'fixed') {
-                generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
-              } else if (generationConfigSettings?.generationCountMode === 'range') {
-                generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
-              } else {
-                generationCallsCount = 5;
-              }
-              
+              console.log(`⚠️ No enabled generation sets, using current UI state as fallback`);
+              // Fallback to current UI state
               for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
                 let shapesFromThisCall: number;
                 if (scatterSettings.shapeCountMode === 'fixed') {
                   shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
+                  console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED user configured)`);
                 } else {
                   shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+                  console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${scatterSettings.minCount}-${scatterSettings.maxCount})`);
                 }
                 const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
                 currentExportShapes.push(...newShapes);
               }
-              console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls (fallback mode) for export ${i + 1}`);
             }
           } else {
-            // Shape sets disabled - use Generations per Export from batch config
-            let generationCallsCount: number;
-            
-            if (generationConfigSettings?.generationCountMode === 'fixed') {
-              generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
-              console.log(`🔢 Using FIXED generations per export: ${generationCallsCount} (user configured)`);
-            } else if (generationConfigSettings?.generationCountMode === 'range') {
-              generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
-              console.log(`🔢 Using RANGE generations per export: ${generationCallsCount} (random ${exportShapeCountRange[0]}-${exportShapeCountRange[1]} from user range slider)`);
-            } else {
-              generationCallsCount = 5;
-              console.log(`🔢 Using DEFAULT generations per export: ${generationCallsCount} (fallback)`);
-            }
-            
+            // Generation sets disabled - use current UI state
             console.log(`🎯 NORMAL MODE: Using current UI state`);
             for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
               let shapesFromThisCall: number;
               
+              // Determine shapes per generation based on user's shape count mode
               if (scatterSettings.shapeCountMode === 'fixed') {
                 shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
                 console.log(`📞 Generation call ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED user configured)`);
@@ -1608,8 +1335,9 @@ export default function Sidebar({
               const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, i + callIndex * 1000);
               currentExportShapes.push(...newShapes);
             }
-            console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
           }
+          
+          console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
 
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image
@@ -1706,21 +1434,7 @@ export default function Sidebar({
               ctx.scale(exportScale, exportScale);
               ctx.translate(translateX, translateY);
 
-              // Sort shapes: setLayerIndex first (Set 1 bottom, Set 2 above, etc.), then zIndex within each set
-              const sortedShapes = [...currentExportShapes].sort((a, b) => {
-                // If both shapes have setLayerIndex, sort by it first
-                const aSetLayer = a.properties.setLayerIndex ?? -1;
-                const bSetLayer = b.properties.setLayerIndex ?? -1;
-                
-                if (aSetLayer !== bSetLayer) {
-                  return aSetLayer - bSetLayer; // Lower setLayerIndex renders first (bottom)
-                }
-                
-                // Within same set (or both undefined), sort by zIndex
-                return a.properties.zIndex - b.properties.zIndex;
-              });
-              
-              console.log(`🎨 Rendering ${sortedShapes.length} shapes with layer ordering (sets → z-index)`);
+              const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
               sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
               // Convert canvas to blob and add to ZIP
@@ -2190,188 +1904,126 @@ export default function Sidebar({
 
           {exportSettings.exportBatchModeEnabled && (
             <>
-              {/* Conditional rendering: Show either "Generations per Export" OR "Sets per Export" */}
-              {!exportSettings.shapeSetsEnabled ? (
-                /* Generations per Export - shown when Shape Sets disabled */
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400">
-                      Generations per Export
-                    </Label>
-                    <Select 
-                      value={generationConfigSettings?.generationCountMode || 'range'} 
-                      onValueChange={(value) => {
-                        console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
-                        onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
-                      }}
-                    >
-                      <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
-                        <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                        <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {generationConfigSettings?.generationCountMode === 'range' && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
-                        <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
-                      </div>
-                      <Slider
-                        value={exportShapeCountRange}
-                        onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
-                        min={1}
-                        max={20}
-                        step={1}
-                        className="w-full"
-                        minStepsBetweenThumbs={1}
-                      />
-                    </div>
-                  )}
-                  
-                  {generationConfigSettings?.generationCountMode === 'fixed' && (
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
-                      <Slider
-                        value={[generationConfigSettings?.generationCountDefine || 5]}
-                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
-                        min={1}
-                        max={20}
-                        step={1}
-                        className="[&_[role=slider]]:bg-blue-600"
-                      />
-                    </div>
-                  )}
-                  
-                  {generationConfigSettings?.generationCountMode === 'incremental' && (
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
-                      <Slider
-                        value={[generationConfigSettings?.generationCountStartValue || 1]}
-                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
-                        min={1}
-                        max={15}
-                        step={1}
-                        className="[&_[role=slider]]:bg-blue-600"
-                      />
-                      <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
-                      <Slider
-                        value={[generationConfigSettings?.generationCountIncrement || 1]}
-                        onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
-                        min={1}
-                        max={5}
-                        step={1}
-                        className="[&_[role=slider]]:bg-blue-600"
-                      />
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={generationConfigSettings?.generationCountResetPerBatch || false}
-                          onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-xs text-slate-300">Reset per batch</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={generationConfigSettings?.generationCountModulationEnabled || false}
-                          onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                      </div>
-                      {generationConfigSettings?.generationCountModulationEnabled && (
-                        <>
-                          <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
-                          <Slider
-                            value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
-                            onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
-                            min={1}
-                            max={10}
-                            step={1}
-                            className="[&_[role=slider]]:bg-blue-600"
-                          />
-                        </>
-                      )}
-                      <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
-                    </div>
-                  )}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Label className="text-xs text-slate-400">
+                    {exportSettings.generationSetsEnabled ? 'Generation Sets per Export' : 'Generations per Export'}
+                  </Label>
+                  <Select 
+                    value={generationConfigSettings?.generationCountMode || 'range'} 
+                    onValueChange={(value) => {
+                      console.log('Updating generationCountMode to:', value, 'Current enabledShapeTypes size:', enabledShapeTypes.size);
+                      onUpdateGenerationConfigSettings({ generationCountMode: value as 'range' | 'fixed' | 'incremental' });
+                    }}
+                  >
+                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                      <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) : (
-                /* Sets per Export - shown when Shape Sets enabled */
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-xs text-slate-400">
-                      Sets per Export
-                    </Label>
-                    <Select 
-                      value={shapeSetsCountMode} 
-                      onValueChange={(value) => {
-                        console.log('Updating shapeSetsCountMode to:', value);
-                        setShapeSetsCountMode(value as 'fixed' | 'range');
-                      }}
-                    >
-                      <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
-                        <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                        <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                      </SelectContent>
-                    </Select>
+                
+                {generationConfigSettings?.generationCountMode === 'range' && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
+                      <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
+                    </div>
+                    <Slider
+                      value={exportShapeCountRange}
+                      onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="w-full"
+                      minStepsBetweenThumbs={1}
+                    />
                   </div>
-                  
-                  {shapeSetsCountMode === 'fixed' && (
-                    <div className="space-y-2">
-                      <Label className="text-xs text-slate-300">Fixed Value: {shapeSetsCountFixed}</Label>
-                      <Slider
-                        value={[shapeSetsCountFixed]}
-                        onValueChange={([value]) => setShapeSetsCountFixed(value)}
-                        min={1}
-                        max={10}
-                        step={1}
-                        className="[&_[role=slider]]:bg-blue-600"
+                )}
+                
+                {generationConfigSettings?.generationCountMode === 'fixed' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
+                    <Slider
+                      value={[generationConfigSettings?.generationCountDefine || 5]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
+                      min={1}
+                      max={20}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                  </div>
+                )}
+                
+                {generationConfigSettings?.generationCountMode === 'incremental' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
+                    <Slider
+                      value={[generationConfigSettings?.generationCountStartValue || 1]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
+                      min={1}
+                      max={15}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                    <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
+                    <Slider
+                      value={[generationConfigSettings?.generationCountIncrement || 1]}
+                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
+                      min={1}
+                      max={5}
+                      step={1}
+                      className="[&_[role=slider]]:bg-blue-600"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={generationConfigSettings?.generationCountResetPerBatch || false}
+                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountResetPerBatch: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
-                      <p className="text-xs text-slate-400">Generate shapes from all enabled sets {shapeSetsCountFixed} time(s) per export</p>
+                      <Label className="text-xs text-slate-300">Reset per batch</Label>
                     </div>
-                  )}
-                  
-                  {shapeSetsCountMode === 'range' && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Min: {shapeSetsCountRange[0]}</span>
-                        <span className="text-slate-400">Max: {shapeSetsCountRange[1]}</span>
-                      </div>
-                      <Slider
-                        value={shapeSetsCountRange}
-                        onValueChange={(value) => setShapeSetsCountRange(value as [number, number])}
-                        min={1}
-                        max={10}
-                        step={1}
-                        className="w-full"
-                        minStepsBetweenThumbs={1}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={generationConfigSettings?.generationCountModulationEnabled || false}
+                        onCheckedChange={(checked) => onUpdateGenerationConfigSettings({ generationCountModulationEnabled: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
                       />
-                      <p className="text-xs text-slate-400">Generate shapes from all enabled sets randomly between {shapeSetsCountRange[0]}-{shapeSetsCountRange[1]} times per export</p>
+                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
                     </div>
-                  )}
-                </div>
-              )}
+                    {generationConfigSettings?.generationCountModulationEnabled && (
+                      <>
+                        <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
+                        <Slider
+                          value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
+                          onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
+                          min={1}
+                          max={10}
+                          step={1}
+                          className="[&_[role=slider]]:bg-blue-600"
+                        />
+                      </>
+                    )}
+                    <p className="text-xs text-slate-400">Stepped generation count (start + export × increment, with optional modulation)</p>
+                  </div>
+                )}
+              </div>
 
-              {/* Shape Sets Toggle */}
+              {/* Generation Sets Toggle */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded border border-slate-600">
                   <div className="flex items-center space-x-2">
                     <Boxes className="w-3 h-3 text-slate-400" />
-                    <Label className="text-xs text-slate-300">Shape Sets</Label>
+                    <Label className="text-xs text-slate-300">Generation Sets</Label>
                   </div>
                   <Switch
-                    checked={exportSettings.shapeSetsEnabled}
+                    checked={exportSettings.generationSetsEnabled}
                     onCheckedChange={(checked) => {
-                      updateExportSettings.mutate({ shapeSetsEnabled: checked as boolean });
+                      updateExportSettings.mutate({ generationSetsEnabled: checked as boolean });
                     }}
                     disabled={!exportSettings.exportBatchModeEnabled}
                     data-testid="toggle-generation-sets"
@@ -2391,12 +2043,12 @@ export default function Sidebar({
                   </div>
                 )}
 
-                {/* Shape Sets enabled messaging */}
-                {exportSettings.shapeSetsEnabled && exportSettings.exportBatchModeEnabled && (
+                {/* Generation Sets enabled messaging */}
+                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
                   <div className="text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                     <div className="flex items-center space-x-1 mb-1">
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                      <span className="text-blue-300 font-medium">Shape Sets Active</span>
+                      <span className="text-blue-300 font-medium">Generation Sets Active</span>
                     </div>
                     Save and load different generation configurations with specific settings for consistent, repeatable results.
                   </div>
@@ -5137,11 +4789,11 @@ export default function Sidebar({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  {/* Shape Sets Section */}
+                  {/* Generation Sets Section */}
                   <div className="mb-4 p-3 border border-slate-600 rounded-lg bg-slate-800/30 space-y-2">
                     {/* Header Row with Title and Buttons */}
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-slate-400">Shape Sets</Label>
+                      <Label className="text-xs text-slate-400">Generation Sets</Label>
                       {setsEnabled && (
                         <div className="flex items-center gap-1">
                           {/* Add Set Button */}
@@ -5151,7 +4803,7 @@ export default function Sidebar({
                             onClick={() => handleCreateSet('')}
                             disabled={!setsEnabled}
                             className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Create new shape set"
+                            title="Create new generation set"
                             data-testid="sidebar-generation-sets-add-button"
                           >
                             <Plus className="h-3 w-3 text-slate-300" />
@@ -5162,9 +4814,9 @@ export default function Sidebar({
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteSet(effectiveCurrentSetId || '')}
-                            disabled={!setsEnabled || !effectiveCurrentSetId || effectiveShapeSets.length <= 1}
-                            className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!setsEnabled || !effectiveCurrentSetId || effectiveShapeSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title={effectiveCurrentSetId && effectiveShapeSets.length > 1 ? "Delete current shape set" : "Cannot delete - only one set remaining"}
+                            disabled={!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1}
+                            className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!setsEnabled || !effectiveCurrentSetId || effectiveGenerationSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title={effectiveCurrentSetId && effectiveGenerationSets.length > 1 ? "Delete current generation set" : "Cannot delete - only one set remaining"}
                             data-testid="sidebar-generation-sets-remove-button"
                           >
                             <Minus className="h-3 w-3 text-slate-300" />
@@ -5177,7 +4829,7 @@ export default function Sidebar({
                             onClick={() => handleOpenManager()}
                             disabled={!setsEnabled}
                             className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!setsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Open Shape Sets Manager"
+                            title="Open Generation Sets Manager"
                             data-testid="sidebar-generation-sets-manager-button"
                           >
                             <Settings className="h-3 w-3 text-slate-300" />
@@ -5198,16 +4850,16 @@ export default function Sidebar({
                           data-testid="sidebar-generation-sets-select-trigger"
                         >
                           <SelectValue 
-                            placeholder={setsEnabled ? "Select shape set..." : "Enable shape sets to select"} 
+                            placeholder={setsEnabled ? "Select generation set..." : "Enable generation sets to select"} 
                           />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600">
-                          {effectiveShapeSets.length === 0 ? (
+                          {effectiveGenerationSets.length === 0 ? (
                             <SelectItem value="no-sets" disabled className="text-slate-400">
                               No sets available
                             </SelectItem>
                           ) : (
-                            effectiveShapeSets.map((set) => (
+                            effectiveGenerationSets.map((set) => (
                               <SelectItem 
                                 key={set.id} 
                                 value={set.id}
@@ -5224,7 +4876,7 @@ export default function Sidebar({
                       /* Disabled Message */
                       <div className="flex items-center gap-2 p-2 bg-slate-900/50 border border-slate-600 rounded text-xs text-slate-400">
                         <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                        <span>Enable Shape Sets in the Export & Save section to use this feature</span>
+                        <span>Enable Generation Sets in the Export & Save section to use this feature</span>
                       </div>
                     )}
                   </div>
@@ -5378,38 +5030,37 @@ export default function Sidebar({
         settings={generationConfigSettings}
         onSettingsChange={handleBatchConfigSettingsChange}
         
-        // Shape Sets Integration - use effective handlers with fallback compatibility
-        shapeSets={effectiveShapeSets}
-        currentShapeSetId={effectiveCurrentSetId}
+        // Generation Sets Integration
+        generationSets={generationSets}
+        currentGenerationSetId={currentGenerationSetId}
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         shapeCountMode={shapeCountMode}
         shapeCountFixed={shapeCountFixed}
         shapeCountRange={shapeCountRange}
-        shapeSetsEnabled={exportSettings.shapeSetsEnabled}
-        batchExportCount={exportSettings.batchExportCount}
-        onShapeSetsChange={effectiveOnShapeSetsChange}
-        onCurrentShapeSetChange={effectiveOnCurrentShapeSetChange}
-        onCreateShapeSet={effectiveOnCreateShapeSet}
-        onDeleteShapeSet={effectiveOnDeleteShapeSet}
+        generationSetsEnabled={exportSettings.generationSetsEnabled}
+        onGenerationSetsChange={onGenerationSetsChange}
+        onCurrentGenerationSetChange={onCurrentGenerationSetChange}
+        onCreateGenerationSet={onCreateGenerationSet}
+        onDeleteGenerationSet={onDeleteGenerationSet}
         generateUniqueSetName={generateUniqueSetName}
-        onOpenShapeSetsManager={effectiveOnOpenShapeSetsManager}
+        onOpenGenerationSetsManager={onOpenGenerationSetsManager}
       />
       
-      {/* Sets Manager Dialog - Separate dialog for managing shape sets */}
+      {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
       <SetsManagerDialog
         isOpen={isSetsManagerOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            effectiveOnCloseShapeSetsManager?.();
+          if (!open && onCloseGenerationSetsManager) {
+            onCloseGenerationSetsManager();
           }
         }}
-        shapeSets={effectiveShapeSets}
-        onShapeSetsChange={effectiveOnShapeSetsChange ?? (() => {})}
+        generationSets={effectiveGenerationSets}
+        onGenerationSetsChange={onGenerationSetsChange || (() => {})}
         globalZIndexEnabled={false}
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
-        onCurrentSetChange={effectiveOnCurrentShapeSetChange}
+        onCurrentSetChange={onCurrentGenerationSetChange}
         currentUIState={{
           enabledShapeTypes,
           scatterSettings,

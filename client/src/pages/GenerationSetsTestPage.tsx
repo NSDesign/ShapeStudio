@@ -51,7 +51,7 @@ import {
 
 // Import actual UI components for integration testing
 import { BatchConfigDialog } from '@/components/BatchConfigDialog';
-import { ShapeSetsInterface } from '@/components/ShapeSetsInterface';
+import { GenerationSetsInterface } from '@/components/GenerationSetsInterface';
 
 import { useToast } from '@/hooks/use-toast';
 

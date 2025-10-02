@@ -1,10 +1,10 @@
 import { 
-  ShapeSet, 
+  GenerationSet, 
   EnhancedBatchConfig, 
-  ShapeSetMode,
+  GenerationSetMode,
   ShapeCountMode,
-  DEFAULT_SHAPE_SET_LIMITS,
-  ShapeSetUtils
+  DEFAULT_GENERATION_SET_LIMITS,
+  GenerationSetUtils
 } from '@shared/schema';
 
 export interface ValidationResult {
@@ -13,59 +13,59 @@ export interface ValidationResult {
   warnings: string[];
 }
 
-export interface ShapeSetValidationResult extends ValidationResult {
+export interface GenerationSetValidationResult extends ValidationResult {
   setSpecificErrors: { [setId: string]: string[] };
 }
 
 /**
- * Validates individual shape set configuration
+ * Validates individual generation set configuration
  */
-export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
+export function validateGenerationSet(generationSet: GenerationSet): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Validate basic information
-  if (!shapeSet.name?.trim()) {
+  if (!generationSet.name?.trim()) {
     errors.push('Set name is required');
   }
 
-  if (shapeSet.name && shapeSet.name.length > 50) {
+  if (generationSet.name && generationSet.name.length > 50) {
     warnings.push('Set name is quite long, consider shortening it');
   }
 
-  if (shapeSet.description && shapeSet.description.length > 200) {
+  if (generationSet.description && generationSet.description.length > 200) {
     warnings.push('Set description is quite long, consider shortening it');
   }
 
   // Validate shape types
-  if (!shapeSet.enabledShapeTypes || shapeSet.enabledShapeTypes.length === 0) {
+  if (!generationSet.enabledShapeTypes || generationSet.enabledShapeTypes.length === 0) {
     errors.push('At least one shape type must be selected');
   }
 
-  if (shapeSet.enabledShapeTypes && shapeSet.enabledShapeTypes.length > 15) {
+  if (generationSet.enabledShapeTypes && generationSet.enabledShapeTypes.length > 15) {
     warnings.push('Many shape types selected - this may reduce performance');
   }
 
   // Validate shape count
-  if (shapeSet.shapeCountMode === ShapeCountMode.FIXED) {
-    const count = shapeSet.shapeCountFixed;
-    if (count < DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet) {
-      errors.push(`Shape count must be at least ${DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet}`);
+  if (generationSet.shapeCountMode === ShapeCountMode.FIXED) {
+    const count = generationSet.shapeCountFixed;
+    if (count < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet) {
+      errors.push(`Shape count must be at least ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}`);
     }
-    if (count > DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet) {
-      errors.push(`Shape count cannot exceed ${DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet}`);
+    if (count > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet) {
+      errors.push(`Shape count cannot exceed ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}`);
     }
     if (count > 100) {
       warnings.push('High shape count may impact performance');
     }
-  } else if (shapeSet.shapeCountMode === ShapeCountMode.RANGE) {
-    const [min, max] = shapeSet.shapeCountRange;
+  } else if (generationSet.shapeCountMode === ShapeCountMode.RANGE) {
+    const [min, max] = generationSet.shapeCountRange;
     
-    if (min < DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet) {
-      errors.push(`Minimum shape count must be at least ${DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet}`);
+    if (min < DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet) {
+      errors.push(`Minimum shape count must be at least ${DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet}`);
     }
-    if (max > DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet) {
-      errors.push(`Maximum shape count cannot exceed ${DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet}`);
+    if (max > DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet) {
+      errors.push(`Maximum shape count cannot exceed ${DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet}`);
     }
     if (min > max) {
       errors.push('Minimum shape count cannot be greater than maximum');
@@ -76,8 +76,8 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
   }
 
   // Validate z-index configuration
-  if (shapeSet.zIndexConfig) {
-    const { baseOffset, incrementPerShape, incrementPerGeneration } = shapeSet.zIndexConfig;
+  if (generationSet.zIndexConfig) {
+    const { baseOffset, incrementPerShape, incrementPerGeneration } = generationSet.zIndexConfig;
     
     if (baseOffset < 0) {
       errors.push('Base z-index offset cannot be negative');
@@ -90,9 +90,9 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
     }
     
     // Check for potential z-index overflow
-    const maxShapes = shapeSet.shapeCountMode === ShapeCountMode.FIXED 
-      ? shapeSet.shapeCountFixed 
-      : shapeSet.shapeCountRange[1];
+    const maxShapes = generationSet.shapeCountMode === ShapeCountMode.FIXED 
+      ? generationSet.shapeCountFixed 
+      : generationSet.shapeCountRange[1];
       
     const maxZIndex = baseOffset + (maxShapes * incrementPerShape) + (incrementPerGeneration * 10); // Assume max 10 generations
     if (maxZIndex > 999999) {
@@ -101,9 +101,9 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
   }
 
   // Validate shape-specific properties
-  if (shapeSet.shapeSpecificProperties) {
-    for (const [shapeType, properties] of Object.entries(shapeSet.shapeSpecificProperties)) {
-      if (!shapeSet.enabledShapeTypes.includes(shapeType as any)) {
+  if (generationSet.shapeSpecificProperties) {
+    for (const [shapeType, properties] of Object.entries(generationSet.shapeSpecificProperties)) {
+      if (!generationSet.enabledShapeTypes.includes(shapeType as any)) {
         warnings.push(`Shape-specific properties defined for disabled shape type: ${shapeType}`);
       }
 
@@ -148,8 +148,8 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
   }
 
   // Validate set visibility
-  if (shapeSet.setVisibility) {
-    const { opacity } = shapeSet.setVisibility;
+  if (generationSet.setVisibility) {
+    const { opacity } = generationSet.setVisibility;
     
     if (opacity < 0 || opacity > 1) {
       errors.push('Set opacity must be between 0 and 1');
@@ -161,8 +161,8 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
   }
 
   // Validate set transforms
-  if (shapeSet.setTransform) {
-    const { x, y, rotation, scaleX, scaleY } = shapeSet.setTransform;
+  if (generationSet.setTransform) {
+    const { x, y, rotation, scaleX, scaleY } = generationSet.setTransform;
     
     // Position validation
     if (Math.abs(x) > 5000 || Math.abs(y) > 5000) {
@@ -193,8 +193,8 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
   }
 
   // Validate artboard alignment
-  if (shapeSet.artboardAlignment) {
-    const { alignTo, targetSetId, margin } = shapeSet.artboardAlignment;
+  if (generationSet.artboardAlignment) {
+    const { alignTo, targetSetId, margin } = generationSet.artboardAlignment;
     
     // Validate target set ID when aligning to another set
     if (alignTo === 'set') {
@@ -202,7 +202,7 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
         errors.push('Target set ID is required when aligning to another set');
       }
       
-      if (targetSetId === shapeSet.id) {
+      if (targetSetId === generationSet.id) {
         errors.push('Cannot align a set to itself');
       }
     }
@@ -219,11 +219,11 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
 
   // Validate blend mode and compositing (enum validation handled by TypeScript)
   // Additional performance warnings for complex blend modes
-  if (shapeSet.setBlendMode && shapeSet.setBlendMode !== 'source-over') {
+  if (generationSet.setBlendMode && generationSet.setBlendMode !== 'source-over') {
     warnings.push('Non-standard blend modes may impact rendering performance');
   }
   
-  if (shapeSet.compositingOperation && shapeSet.compositingOperation !== 'source-over') {
+  if (generationSet.compositingOperation && generationSet.compositingOperation !== 'source-over') {
     warnings.push('Advanced compositing operations may impact rendering performance');
   }
 
@@ -235,35 +235,35 @@ export function validateShapeSet(shapeSet: ShapeSet): ValidationResult {
 }
 
 /**
- * Validates the entire shape sets configuration
+ * Validates the entire generation sets configuration
  */
-export function validateShapeSets(
-  shapeSets: ShapeSet[], 
+export function validateGenerationSets(
+  generationSets: GenerationSet[], 
   enhancedConfig?: EnhancedBatchConfig
-): ShapeSetValidationResult {
+): GenerationSetValidationResult {
   const globalErrors: string[] = [];
   const globalWarnings: string[] = [];
   const setSpecificErrors: { [setId: string]: string[] } = {};
 
   // Validate global constraints
-  // Note: Allow 0 sets for cases where shape sets feature is optional
-  // if (shapeSets.length === 0) {
-  //   globalErrors.push('At least one shape set is required');
+  // Note: Allow 0 sets for cases where generation sets feature is optional
+  // if (generationSets.length === 0) {
+  //   globalErrors.push('At least one generation set is required');
   // }
 
-  if (shapeSets.length > DEFAULT_SHAPE_SET_LIMITS.maxShapeSets) {
-    globalErrors.push(`Cannot have more than ${DEFAULT_SHAPE_SET_LIMITS.maxShapeSets} shape sets`);
+  if (generationSets.length > DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets) {
+    globalErrors.push(`Cannot have more than ${DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} generation sets`);
   }
 
   // Check for enabled sets
-  const enabledSets = shapeSets.filter(set => set.enabled);
-  // Allow no enabled sets when shape sets feature is optional
-  // if (enabledSets.length === 0 && shapeSets.length > 0) {
-  //   globalErrors.push('At least one shape set must be enabled');
+  const enabledSets = generationSets.filter(set => set.enabled);
+  // Allow no enabled sets when generation sets feature is optional
+  // if (enabledSets.length === 0 && generationSets.length > 0) {
+  //   globalErrors.push('At least one generation set must be enabled');
   // }
 
   // Validate mode-specific constraints
-  if (enhancedConfig?.mode === ShapeSetMode.MULTI && enhancedConfig.modeRestrictions) {
+  if (enhancedConfig?.mode === GenerationSetMode.MULTI && enhancedConfig.modeRestrictions) {
     const { multiGenerationOnlyForFixedCount } = enhancedConfig.modeRestrictions;
     
     if (multiGenerationOnlyForFixedCount) {
@@ -275,8 +275,8 @@ export function validateShapeSets(
   }
 
   // Validate individual sets
-  for (const set of shapeSets) {
-    const setValidation = validateShapeSet(set);
+  for (const set of generationSets) {
+    const setValidation = validateGenerationSet(set);
     if (!setValidation.isValid) {
       setSpecificErrors[set.id] = setValidation.errors;
     }
@@ -288,23 +288,23 @@ export function validateShapeSets(
   }
 
   // Validate unique names
-  const names = shapeSets.map(set => set.name.trim().toLowerCase());
+  const names = generationSets.map(set => set.name.trim().toLowerCase());
   const duplicateNames = names.filter((name, index) => names.indexOf(name) !== index);
   if (duplicateNames.length > 0) {
-    globalErrors.push('Shape set names must be unique');
+    globalErrors.push('Generation set names must be unique');
   }
 
   // Validate generation order consistency
-  const orders = shapeSets.map(set => set.generationOrder);
+  const orders = generationSets.map(set => set.generationOrder);
   const uniqueOrders = new Set(orders);
-  if (uniqueOrders.size !== shapeSets.length) {
+  if (uniqueOrders.size !== generationSets.length) {
     globalWarnings.push('Generation order values should be unique - auto-correcting recommended');
   }
 
   // Check for potential z-index conflicts
   if (!enhancedConfig?.globalSettings?.globalZIndexSettings?.useGlobalSettings) {
-    const zIndexRanges = shapeSets.map(set => {
-      const [minZ, maxZ] = ShapeSetUtils.calculateZIndexRange(set);
+    const zIndexRanges = generationSets.map(set => {
+      const [minZ, maxZ] = GenerationSetUtils.calculateZIndexRange(set);
       return { setId: set.id, setName: set.name, minZ, maxZ };
     });
 
@@ -353,45 +353,45 @@ export function validateShapeSets(
 }
 
 /**
- * Auto-fix common issues in shape sets
+ * Auto-fix common issues in generation sets
  */
-export function autoFixShapeSets(shapeSets: ShapeSet[]): ShapeSet[] {
-  return shapeSets.map((set, index) => ({
+export function autoFixGenerationSets(generationSets: GenerationSet[]): GenerationSet[] {
+  return generationSets.map((set, index) => ({
     ...set,
     // Fix generation order
     generationOrder: index,
     // Ensure name is not empty
-    name: set.name.trim() || `Shape Set ${index + 1}`,
+    name: set.name.trim() || `Generation Set ${index + 1}`,
     // Ensure at least one shape type is enabled
     enabledShapeTypes: set.enabledShapeTypes.length > 0 ? set.enabledShapeTypes : ['rectangle'],
     // Fix shape count ranges
     shapeCountRange: set.shapeCountMode === ShapeCountMode.RANGE 
       ? [
-          Math.max(DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet, Math.min(set.shapeCountRange[0], set.shapeCountRange[1])),
-          Math.min(DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet, Math.max(set.shapeCountRange[0], set.shapeCountRange[1]))
+          Math.max(DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet, Math.min(set.shapeCountRange[0], set.shapeCountRange[1])),
+          Math.min(DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet, Math.max(set.shapeCountRange[0], set.shapeCountRange[1]))
         ] as [number, number]
       : set.shapeCountRange,
     // Fix fixed shape count
     shapeCountFixed: set.shapeCountMode === ShapeCountMode.FIXED
       ? Math.max(
-          DEFAULT_SHAPE_SET_LIMITS.minShapesPerSet,
-          Math.min(DEFAULT_SHAPE_SET_LIMITS.maxShapesPerSet, set.shapeCountFixed)
+          DEFAULT_GENERATION_SET_LIMITS.minShapesPerSet,
+          Math.min(DEFAULT_GENERATION_SET_LIMITS.maxShapesPerSet, set.shapeCountFixed)
         )
       : set.shapeCountFixed
   }));
 }
 
 /**
- * Generate a summary of the current shape sets configuration
+ * Generate a summary of the current generation sets configuration
  */
-export function generateShapeSetsSummary(shapeSets: ShapeSet[]): {
+export function generateGenerationSetsSummary(generationSets: GenerationSet[]): {
   totalSets: number;
   enabledSets: number;
   totalShapeTypes: number;
   estimatedShapes: number;
   zIndexRange: [number, number];
 } {
-  const enabledSets = shapeSets.filter(set => set.enabled);
+  const enabledSets = generationSets.filter(set => set.enabled);
   const allShapeTypes = new Set<string>();
   
   enabledSets.forEach(set => {
@@ -410,7 +410,7 @@ export function generateShapeSetsSummary(shapeSets: ShapeSet[]): {
   let maxZ = -Infinity;
   
   enabledSets.forEach(set => {
-    const [setMinZ, setMaxZ] = ShapeSetUtils.calculateZIndexRange(set);
+    const [setMinZ, setMaxZ] = GenerationSetUtils.calculateZIndexRange(set);
     minZ = Math.min(minZ, setMinZ);
     maxZ = Math.max(maxZ, setMaxZ);
   });
@@ -421,7 +421,7 @@ export function generateShapeSetsSummary(shapeSets: ShapeSet[]): {
   }
 
   return {
-    totalSets: shapeSets.length,
+    totalSets: generationSets.length,
     enabledSets: enabledSets.length,
     totalShapeTypes: allShapeTypes.size,
     estimatedShapes,

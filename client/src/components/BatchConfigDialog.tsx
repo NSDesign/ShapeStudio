@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, ShapeSet } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
-import { ShapeSetsDropdown } from './ShapeSetsDropdown';
-import type { CurrentUIState } from '@/hooks/useShapeSets';
+import { GenerationSetsDropdown } from './GenerationSetsDropdown';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
@@ -23,24 +23,24 @@ interface BatchConfigDialogProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   
-  // Shape Sets Integration
-  shapeSets?: ShapeSet[];
-  currentShapeSetId?: string | null;
+  // Generation Sets Integration
+  generationSets?: GenerationSet[];
+  currentGenerationSetId?: string | null;
   enabledShapeTypes?: Set<ShapeType>;
   scatterSettings?: ScatterSettings;
   shapeCountMode?: ShapeCountMode;
   shapeCountFixed?: number;
   shapeCountRange?: [number, number];
-  shapeSetsEnabled?: boolean;
+  generationSetsEnabled?: boolean;
   batchExportCount?: number;
-  onShapeSetsChange?: (sets: ShapeSet[]) => void;
-  onCurrentShapeSetChange?: (setId: string | null) => void;
-  onCreateShapeSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
-  onDeleteShapeSet?: (setId: string) => void;
+  onGenerationSetsChange?: (sets: GenerationSet[]) => void;
+  onCurrentGenerationSetChange?: (setId: string | null) => void;
+  onCreateGenerationSet?: (customName?: string, currentUIState?: CurrentUIState) => string;
+  onDeleteGenerationSet?: (setId: string) => void;
   generateUniqueSetName?: (baseName?: string) => string;
-  onOpenShapeSetsManager?: () => void;
+  onOpenGenerationSetsManager?: () => void;
   isSetsManagerOpen?: boolean;
-  onCloseShapeSetsManager?: () => void;
+  onCloseGenerationSetsManager?: () => void;
 }
 
 export default function BatchConfigDialog({ 
@@ -49,24 +49,24 @@ export default function BatchConfigDialog({
   isOpen: controlledIsOpen, 
   onOpenChange: controlledOnOpenChange,
   
-  // Shape Sets Integration props
-  shapeSets = [],
-  currentShapeSetId = null,
+  // Generation Sets Integration props
+  generationSets = [],
+  currentGenerationSetId = null,
   enabledShapeTypes = new Set<ShapeType>(),
   scatterSettings,
   shapeCountMode = 'fixed' as ShapeCountMode,
   shapeCountFixed = 10,
   shapeCountRange = [5, 15] as [number, number],
-  shapeSetsEnabled = false,
+  generationSetsEnabled = false,
   batchExportCount = 10,
-  onShapeSetsChange,
-  onCurrentShapeSetChange,
-  onCreateShapeSet,
-  onDeleteShapeSet,
+  onGenerationSetsChange,
+  onCurrentGenerationSetChange,
+  onCreateGenerationSet,
+  onDeleteGenerationSet,
   generateUniqueSetName,
-  onOpenShapeSetsManager,
+  onOpenGenerationSetsManager,
   isSetsManagerOpen = false,
-  onCloseShapeSetsManager
+  onCloseGenerationSetsManager
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
@@ -80,7 +80,7 @@ export default function BatchConfigDialog({
   }>({ errors: [], warnings: [] });
 
   // Calculate mismatch detection for gear icon warning - use enabled sets count
-  const enabledSetsCount = shapeSets.filter(set => set.enabled).length;
+  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
   const hasSetsCountMismatch = batchExportCount > 0 && enabledSetsCount < batchExportCount;
 
 
@@ -230,7 +230,7 @@ export default function BatchConfigDialog({
           }}
         >
           <div
-            className="w-[95vw] max-w-[900px] bg-slate-900 border-slate-700 border rounded-lg overflow-hidden h-[90vh] shadow-2xl flex flex-col"
+            className="w-[95vw] max-w-[900px] bg-slate-900 border-slate-700 border rounded-lg overflow-hidden max-h-[90vh] shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
             style={{ zIndex: 10000 }}
           >
@@ -252,24 +252,24 @@ export default function BatchConfigDialog({
               </Button>
             </div>
 
-            {/* Content with proper scrolling - min-h-0 allows flex child to shrink and enable scrolling */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
+            {/* Content with proper scrolling */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ zIndex: 10001 }}>
               
-              {/* Shape Sets Section */}
-              {(shapeSets.length > 0 || onCreateShapeSet) && (
+              {/* Generation Sets Section */}
+              {(generationSets.length > 0 || onCreateGenerationSet) && (
                 <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3 space-y-2">
                   {/* Header Row with Title and Buttons */}
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium text-slate-200">Shape Sets</Label>
-                    {shapeSetsEnabled && (
+                    <Label className="text-sm font-medium text-slate-200">Generation Sets</Label>
+                    {generationSetsEnabled && (
                       <div className="flex items-center gap-1">
                         {/* Add Set Button */}
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onCreateShapeSet?.('')}
+                          onClick={() => onCreateGenerationSet?.('')}
                           className="px-2 bg-slate-800 border-slate-600 hover:bg-slate-700"
-                          title="Create new shape set"
+                          title="Create new generation set"
                           data-testid="batch-dialog-generation-sets-add-button"
                         >
                           <Plus className="h-3 w-3 text-slate-300" />
@@ -279,10 +279,10 @@ export default function BatchConfigDialog({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onDeleteShapeSet?.(currentShapeSetId || '')}
-                          disabled={!currentShapeSetId || shapeSets.length <= 1}
-                          className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!currentShapeSetId || shapeSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          title={currentShapeSetId && shapeSets.length > 1 ? "Delete current shape set" : "Cannot delete - only one set remaining"}
+                          onClick={() => onDeleteGenerationSet?.(currentGenerationSetId || '')}
+                          disabled={!currentGenerationSetId || generationSets.length <= 1}
+                          className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!currentGenerationSetId || generationSets.length <= 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={currentGenerationSetId && generationSets.length > 1 ? "Delete current generation set" : "Cannot delete - only one set remaining"}
                           data-testid="batch-dialog-generation-sets-remove-button"
                         >
                           <Minus className="h-3 w-3 text-slate-300" />
@@ -292,9 +292,9 @@ export default function BatchConfigDialog({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onOpenShapeSetsManager?.()}
+                          onClick={() => onOpenGenerationSetsManager?.()}
                           className="px-2 bg-slate-800 border-slate-600 hover:bg-slate-700"
-                          title="Open Shape Sets Manager"
+                          title="Open Generation Sets Manager"
                           data-testid="batch-dialog-generation-sets-manager-button"
                         >
                           <Settings className={`h-3 w-3 ${hasSetsCountMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
@@ -305,25 +305,25 @@ export default function BatchConfigDialog({
 
                   {/* Full Width Dropdown - Always visible, disabled when not enabled */}
                   <Select
-                    value={currentShapeSetId || ''}
-                    onValueChange={(value) => onCurrentShapeSetChange?.(value || null)}
-                    disabled={!shapeSetsEnabled}
+                    value={currentGenerationSetId || ''}
+                    onValueChange={(value) => onCurrentGenerationSetChange?.(value || null)}
+                    disabled={!generationSetsEnabled}
                   >
                     <SelectTrigger 
-                      className={`w-full h-8 ${!shapeSetsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full h-8 ${!generationSetsEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                       data-testid="batch-dialog-generation-sets-select-trigger"
                     >
                       <SelectValue 
-                        placeholder={shapeSetsEnabled ? "Select shape set..." : "Enable Shape Sets in Export & Save section"} 
+                        placeholder={generationSetsEnabled ? "Select generation set..." : "Enable Generation Sets in Export & Save section"} 
                       />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                      {shapeSets.length === 0 ? (
+                      {generationSets.length === 0 ? (
                         <SelectItem value="no-sets" disabled className="text-slate-400">
                           No sets available
                         </SelectItem>
                       ) : (
-                        shapeSets.map((set) => (
+                        generationSets.map((set) => (
                           <SelectItem 
                             key={set.id} 
                             value={set.id}
@@ -338,10 +338,10 @@ export default function BatchConfigDialog({
                   </Select>
                   
                   {/* Explanatory message when disabled */}
-                  {!shapeSetsEnabled && (
+                  {!generationSetsEnabled && (
                     <div className="flex items-center gap-2 text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                       <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                      <span>Enable Shape Sets in the Export & Save section to use this feature</span>
+                      <span>Enable Generation Sets in the Export & Save section to use this feature</span>
                     </div>
                   )}
                 </div>

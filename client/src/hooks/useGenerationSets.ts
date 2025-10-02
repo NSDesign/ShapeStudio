@@ -1,10 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { 
-  ShapeSet, 
+  GenerationSet, 
   ShapeCountMode, 
   SupportedShapeType, 
   BatchConfigSettings,
-  DEFAULT_SHAPE_SET_LIMITS,
+  DEFAULT_GENERATION_SET_LIMITS,
   ZIndexConfig,
   DEFAULT_Z_INDEX_CONFIG
 } from '@shared/schema';
@@ -32,30 +32,30 @@ export interface CurrentUIState {
 }
 
 // Props interface for the hook
-interface UseShapeSetsProps {
-  initialSets?: ShapeSet[];
-  onSetsChange?: (sets: ShapeSet[]) => void;
+interface UseGenerationSetsProps {
+  initialSets?: GenerationSet[];
+  onSetsChange?: (sets: GenerationSet[]) => void;
 }
 
-export function useShapeSets({ 
+export function useGenerationSets({ 
   initialSets = [], 
   onSetsChange 
-}: UseShapeSetsProps = {}) {
-  const [shapeSets, setShapeSets] = useState<ShapeSet[]>(initialSets);
+}: UseGenerationSetsProps = {}) {
+  const [generationSets, setGenerationSets] = useState<GenerationSet[]>(initialSets);
   const [currentSetId, setCurrentSetId] = useState<string | null>(null);
 
   // Update parent when sets change
-  const updateSets = useCallback((newSets: ShapeSet[]) => {
-    setShapeSets(newSets);
+  const updateSets = useCallback((newSets: GenerationSet[]) => {
+    setGenerationSets(newSets);
     onSetsChange?.(newSets);
   }, [onSetsChange]);
 
-  // Capture current UI state into a ShapeSet
+  // Capture current UI state into a GenerationSet
   const captureCurrentState = useCallback((
     uiState: CurrentUIState,
     setName: string,
     setId?: string
-  ): ShapeSet => {
+  ): GenerationSet => {
     const id = setId || `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     return {
@@ -67,7 +67,7 @@ export function useShapeSets({
       shapeCountFixed: uiState.shapeCountFixed,
       shapeCountRange: uiState.shapeCountRange,
       shapeSpecificProperties: {
-        // Convert scatterSettings.shapeSpecific to ShapeSet format
+        // Convert scatterSettings.shapeSpecific to GenerationSet format
         ...Object.fromEntries(
           Object.entries(uiState.scatterSettings.shapeSpecific).map(([shapeType, settings]) => [
             shapeType,
@@ -99,42 +99,42 @@ export function useShapeSets({
         alignmentType: 'center',
         margin: 0
       },
-      generationOrder: shapeSets.length > 0 ? Math.max(...shapeSets.map(s => s.generationOrder)) + 1 : 0,
+      generationOrder: generationSets.length > 0 ? Math.max(...generationSets.map(s => s.generationOrder)) + 1 : 0,
       description: `Generated from current settings on ${new Date().toLocaleString()}`
     };
-  }, [shapeSets.length]);
+  }, [generationSets.length]);
 
   // Generate unique set name with auto-increment using shared utility
   const generateUniqueSetName = useCallback((baseName?: string): string => {
-    const existingNames = shapeSets.map(set => set.name);
+    const existingNames = generationSets.map(set => set.name);
     return generateUniqueName(existingNames, baseName);
-  }, [shapeSets]);
+  }, [generationSets]);
 
-  // Create a new shape set from current UI state
+  // Create a new generation set from current UI state
   const createSetFromCurrentState = useCallback((
     uiState: CurrentUIState,
     setName?: string
   ) => {
     const finalName = setName || generateUniqueSetName();
     const newSet = captureCurrentState(uiState, finalName);
-    const newSets = [...shapeSets, newSet];
+    const newSets = [...generationSets, newSet];
     updateSets(newSets);
     setCurrentSetId(newSet.id);
     return newSet.id;
-  }, [shapeSets, captureCurrentState, updateSets, generateUniqueSetName]);
+  }, [generationSets, captureCurrentState, updateSets, generateUniqueSetName]);
 
   // Update existing set with current UI state
   const updateSetWithCurrentState = useCallback((
     setId: string,
     uiState: CurrentUIState
   ) => {
-    const setIndex = shapeSets.findIndex(set => set.id === setId);
+    const setIndex = generationSets.findIndex(set => set.id === setId);
     if (setIndex === -1) return;
 
-    const existingSet = shapeSets[setIndex];
+    const existingSet = generationSets[setIndex];
     const updatedSet = captureCurrentState(uiState, existingSet.name, setId);
     
-    const newSets = [...shapeSets];
+    const newSets = [...generationSets];
     newSets[setIndex] = {
       ...updatedSet,
       generationOrder: existingSet.generationOrder,
@@ -142,11 +142,11 @@ export function useShapeSets({
     };
     
     updateSets(newSets);
-  }, [shapeSets, captureCurrentState, updateSets]);
+  }, [generationSets, captureCurrentState, updateSets]);
 
-  // Extract UI state from a shape set
+  // Extract UI state from a generation set
   const extractUIStateFromSet = useCallback((setId: string): CurrentUIState | null => {
-    const set = shapeSets.find(s => s.id === setId);
+    const set = generationSets.find(s => s.id === setId);
     if (!set) return null;
 
     return {
@@ -161,32 +161,32 @@ export function useShapeSets({
       shapeCountFixed: set.shapeCountFixed,
       shapeCountRange: set.shapeCountRange
     };
-  }, [shapeSets]);
+  }, [generationSets]);
 
-  // Delete a shape set
+  // Delete a generation set
   const deleteSet = useCallback((setId: string) => {
-    const newSets = shapeSets.filter(set => set.id !== setId);
+    const newSets = generationSets.filter(set => set.id !== setId);
     updateSets(newSets);
     
     // If we deleted the current set, clear selection or select first available
     if (currentSetId === setId) {
       setCurrentSetId(newSets.length > 0 ? newSets[0].id : null);
     }
-  }, [shapeSets, currentSetId, updateSets]);
+  }, [generationSets, currentSetId, updateSets]);
 
-  // Rename a shape set
+  // Rename a generation set
   const renameSet = useCallback((setId: string, newName: string) => {
-    const setIndex = shapeSets.findIndex(set => set.id === setId);
+    const setIndex = generationSets.findIndex(set => set.id === setId);
     if (setIndex === -1) return;
 
-    const newSets = [...shapeSets];
+    const newSets = [...generationSets];
     newSets[setIndex] = { ...newSets[setIndex], name: newName };
     updateSets(newSets);
-  }, [shapeSets, updateSets]);
+  }, [generationSets, updateSets]);
 
-  // Reorder shape sets
+  // Reorder generation sets
   const reorderSets = useCallback((fromIndex: number, toIndex: number) => {
-    const newSets = [...shapeSets];
+    const newSets = [...generationSets];
     const [movedSet] = newSets.splice(fromIndex, 1);
     newSets.splice(toIndex, 0, movedSet);
     
@@ -196,12 +196,12 @@ export function useShapeSets({
     });
     
     updateSets(newSets);
-  }, [shapeSets, updateSets]);
+  }, [generationSets, updateSets]);
 
   // Get current set
   const currentSet = useMemo(() => {
-    return shapeSets.find(set => set.id === currentSetId) || null;
-  }, [shapeSets, currentSetId]);
+    return generationSets.find(set => set.id === currentSetId) || null;
+  }, [generationSets, currentSetId]);
 
   // Check if sets are enabled (based on batch export settings)
   const areSetsEnabled = useCallback((
@@ -213,12 +213,12 @@ export function useShapeSets({
 
   // Check if there's a mismatch between available sets and export count
   const hasSetsCountMismatch = useCallback((batchExportCount: number): boolean => {
-    return shapeSets.length > 0 && shapeSets.length < batchExportCount;
-  }, [shapeSets.length]);
+    return generationSets.length > 0 && generationSets.length < batchExportCount;
+  }, [generationSets.length]);
 
   return {
     // State
-    shapeSets,
+    generationSets,
     currentSetId,
     currentSet,
     

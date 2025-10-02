@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Minus, Settings } from 'lucide-react';
-import { ShapeSet, ShapeCountMode, SupportedShapeType, BatchConfigSettings } from '@shared/schema';
+import { GenerationSet, ShapeCountMode, SupportedShapeType, BatchConfigSettings } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
 
-interface ShapeSetsDropdownProps {
+interface GenerationSetsDropdownProps {
   // Current state to capture/restore
   currentSetId: string | null;
-  shapeSets: ShapeSet[];
+  generationSets: GenerationSet[];
   
   // Current UI state that gets captured
   enabledShapeTypes: Set<ShapeType>;
@@ -40,9 +40,9 @@ interface ShapeSetsDropdownProps {
   'data-testid'?: string;
 }
 
-export function ShapeSetsDropdown({
+export function GenerationSetsDropdown({
   currentSetId,
-  shapeSets,
+  generationSets,
   enabledShapeTypes,
   scatterSettings,
   batchConfigSettings,
@@ -60,7 +60,7 @@ export function ShapeSetsDropdown({
   size = 'default',
   showLabel = false,
   'data-testid': testId
-}: ShapeSetsDropdownProps) {
+}: GenerationSetsDropdownProps) {
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [newSetName, setNewSetName] = useState('');
 
@@ -84,8 +84,8 @@ export function ShapeSetsDropdown({
     }
   };
 
-  const currentSet = shapeSets.find(set => set.id === currentSetId);
-  const canDelete = currentSetId && shapeSets.length > 1;
+  const currentSet = generationSets.find(set => set.id === currentSetId);
+  const canDelete = currentSetId && generationSets.length > 1;
 
   const buttonSize = size === 'sm' ? 'sm' : 'default';
   const selectHeight = size === 'sm' ? 'h-8' : 'h-10';
@@ -107,16 +107,16 @@ export function ShapeSetsDropdown({
           data-testid={`${testId}-select-trigger`}
         >
           <SelectValue 
-            placeholder={enabled ? "Select shape set..." : "Switch to fixed count mode"} 
+            placeholder={enabled ? "Select generation set..." : "Switch to fixed count mode"} 
           />
         </SelectTrigger>
         <SelectContent className="bg-slate-800 border-slate-600">
-          {shapeSets.length === 0 ? (
+          {generationSets.length === 0 ? (
             <SelectItem value="no-sets" disabled className="text-slate-400">
               No sets available
             </SelectItem>
           ) : (
-            shapeSets.map((set) => (
+            generationSets.map((set) => (
               <SelectItem 
                 key={set.id} 
                 value={set.id}
@@ -143,7 +143,7 @@ export function ShapeSetsDropdown({
         onClick={handleOpenCreate}
         disabled={!enabled}
         className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title="Create new shape set"
+        title="Create new generation set"
         data-testid={`${testId}-add-button`}
       >
         <Plus className="h-4 w-4 text-slate-300" />
@@ -156,7 +156,7 @@ export function ShapeSetsDropdown({
         onClick={handleDeleteCurrentSet}
         disabled={!enabled || !canDelete}
         className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${(!enabled || !canDelete) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title={canDelete ? "Delete current shape set" : "Cannot delete - only one set remaining"}
+        title={canDelete ? "Delete current generation set" : "Cannot delete - only one set remaining"}
         data-testid={`${testId}-remove-button`}
       >
         <Minus className="h-4 w-4 text-slate-300" />
@@ -169,7 +169,7 @@ export function ShapeSetsDropdown({
         onClick={onOpenManager}
         disabled={!enabled}
         className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title="Open Shape Sets Manager"
+        title="Open Generation Sets Manager"
         data-testid={`${testId}-manager-button`}
       >
         <Settings className={`h-4 w-4 ${hasMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
@@ -179,7 +179,7 @@ export function ShapeSetsDropdown({
       {isCreatingSet && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 w-80">
-            <h3 className="text-white font-medium mb-3">Create Shape Set</h3>
+            <h3 className="text-white font-medium mb-3">Create Generation Set</h3>
             <input
               type="text"
               value={newSetName}

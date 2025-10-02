@@ -23,29 +23,29 @@ import {
   Info
 } from 'lucide-react';
 import { 
-  ShapeSet, 
+  GenerationSet, 
   ShapeCountMode, 
   SupportedShapeType,
-  DEFAULT_SHAPE_SET_LIMITS,
-  ShapeSetUtils,
+  DEFAULT_GENERATION_SET_LIMITS,
+  GenerationSetUtils,
   BatchConfigSettings
 } from '@shared/schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateUniqueSetName } from '@/utils/nameGeneration';
 import { IndividualSetConfig } from '@/components/IndividualSetConfig';
 import { 
-  ShapeSetValidator,
+  GenerationSetValidator,
   ValidationResult,
   ValidationError,
   ValidationWarning
 } from '@/lib/typedHelpers';
 import { ErrorBoundary, SafeSection } from '@/components/ErrorBoundary';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
-import type { CurrentUIState } from '@/hooks/useShapeSets';
+import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
-interface ShapeSetsInterfaceProps {
-  shapeSets: ShapeSet[];
-  onShapeSetsChange: (sets: ShapeSet[]) => void;
+interface GenerationSetsInterfaceProps {
+  generationSets: GenerationSet[];
+  onGenerationSetsChange: (sets: GenerationSet[]) => void;
   validationErrors?: string[];
   maxSets?: number;
   globalZIndexEnabled?: boolean;
@@ -61,11 +61,11 @@ interface ShapeSetsInterfaceProps {
   onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
 }
 
-export function ShapeSetsInterface({
-  shapeSets,
-  onShapeSetsChange,
+export function GenerationSetsInterface({
+  generationSets,
+  onGenerationSetsChange,
   validationErrors = [],
-  maxSets = DEFAULT_SHAPE_SET_LIMITS.maxShapeSets,
+  maxSets = DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets,
   globalZIndexEnabled = false,
   showInlineValidation = true,
   onValidationChange,
@@ -77,7 +77,7 @@ export function ShapeSetsInterface({
   // Current UI state for data capture
   currentUIState,
   onCreateSetFromState
-}: ShapeSetsInterfaceProps) {
+}: GenerationSetsInterfaceProps) {
   // Use external currentSetId if provided, otherwise fall back to internal state
   const [internalSelectedSetId, setInternalSelectedSetId] = useState<string | null>(null);
   const selectedSetId = currentSetId !== undefined ? currentSetId : internalSelectedSetId;
@@ -90,11 +90,11 @@ export function ShapeSetsInterface({
 
   // Comprehensive validation for all sets
   const overallValidation = useMemo(() => {
-    return ShapeSetValidator.validateShapeSets(shapeSets);
-  }, [shapeSets]);
+    return GenerationSetValidator.validateGenerationSets(generationSets);
+  }, [generationSets]);
 
   // Calculate mismatch for export count banner - use enabled sets count
-  const enabledSetsCount = shapeSets.filter(set => set.enabled).length;
+  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
   // FIX: Don't compare enabled sets to total export images - only show warning when generation sets mode is actually enabled
   // TODO: This should compare to actual "Generation Sets per Export" value, not total batch export count
   const hasSetsCountMismatch = false; // Disable incorrect warning until proper logic is implemented
@@ -111,27 +111,27 @@ export function ShapeSetsInterface({
     if (!showInlineValidation) return;
     
     const newSetValidations: Record<string, ValidationResult> = {};
-    shapeSets.forEach(set => {
-      newSetValidations[set.id] = ShapeSetValidator.validateShapeSet(set);
+    generationSets.forEach(set => {
+      newSetValidations[set.id] = GenerationSetValidator.validateGenerationSet(set);
     });
     setSetValidations(newSetValidations);
-  }, [shapeSets, showInlineValidation]);
+  }, [generationSets, showInlineValidation]);
 
   // Auto-select first set if none selected and sets exist
   useEffect(() => {
-    if (!selectedSetId && shapeSets.length > 0) {
-      setSelectedSetId(shapeSets[0].id);
+    if (!selectedSetId && generationSets.length > 0) {
+      setSelectedSetId(generationSets[0].id);
     }
-  }, [selectedSetId, shapeSets]);
+  }, [selectedSetId, generationSets]);
 
-  // Add new shape set
+  // Add new generation set
   const handleAddSet = useCallback(() => {
-    if (shapeSets.length >= maxSets) {
+    if (generationSets.length >= maxSets) {
       return;
     }
 
     // Use the generateUniqueSetName utility for consistent naming
-    const existingNames = shapeSets.map(set => set.name);
+    const existingNames = generationSets.map(set => set.name);
     const uniqueName = generateUniqueSetName(existingNames, 'Set');
     
     // If we have current UI state and a creation handler, use real data
@@ -143,87 +143,87 @@ export function ShapeSetsInterface({
     
     // Fallback to default creation (for backwards compatibility)
     const newId = `generation_set_${Date.now()}`;
-    const newSet = ShapeSetUtils.createDefault(
+    const newSet = GenerationSetUtils.createDefault(
       newId,
       uniqueName
     );
     
     // Set generation order
-    newSet.generationOrder = shapeSets.length;
+    newSet.generationOrder = generationSets.length;
     
-    const updatedSets = [...shapeSets, newSet];
-    onShapeSetsChange(updatedSets);
+    const updatedSets = [...generationSets, newSet];
+    onGenerationSetsChange(updatedSets);
     setSelectedSetId(newId);
-  }, [shapeSets, maxSets, onShapeSetsChange, currentUIState, onCreateSetFromState]);
+  }, [generationSets, maxSets, onGenerationSetsChange, currentUIState, onCreateSetFromState]);
 
-  // Duplicate shape set
+  // Duplicate generation set
   const handleDuplicateSet = useCallback((setId: string) => {
-    if (shapeSets.length >= maxSets) {
+    if (generationSets.length >= maxSets) {
       return;
     }
 
-    const setToDuplicate = shapeSets.find(set => set.id === setId);
+    const setToDuplicate = generationSets.find(set => set.id === setId);
     if (!setToDuplicate) return;
 
     const newId = `generation_set_${Date.now()}`;
-    const duplicatedSet: ShapeSet = {
+    const duplicatedSet: GenerationSet = {
       ...setToDuplicate,
       id: newId,
       name: `${setToDuplicate.name} (Copy)`,
-      generationOrder: shapeSets.length
+      generationOrder: generationSets.length
     };
 
-    const updatedSets = [...shapeSets, duplicatedSet];
-    onShapeSetsChange(updatedSets);
+    const updatedSets = [...generationSets, duplicatedSet];
+    onGenerationSetsChange(updatedSets);
     setSelectedSetId(newId);
-  }, [shapeSets, maxSets, onShapeSetsChange]);
+  }, [generationSets, maxSets, onGenerationSetsChange]);
 
   // Delete generation set
   const handleDeleteSet = useCallback((setId: string) => {
     // Allow deletion of final set to support 0-set state
-    // if (shapeSets.length <= 1) {
+    // if (generationSets.length <= 1) {
     //   return; // Prevent deleting the last set
     // }
 
-    const updatedSets = shapeSets
+    const updatedSets = generationSets
       .filter(set => set.id !== setId)
       .map((set, index) => ({
         ...set,
         generationOrder: index
       }));
 
-    onShapeSetsChange(updatedSets);
+    onGenerationSetsChange(updatedSets);
 
     // Update selection if deleted set was selected
     if (selectedSetId === setId) {
       setSelectedSetId(updatedSets.length > 0 ? updatedSets[0].id : null);
     }
-  }, [shapeSets, onShapeSetsChange, selectedSetId]);
+  }, [generationSets, onGenerationSetsChange, selectedSetId]);
 
   // Update specific generation set
-  const handleUpdateSet = useCallback((setId: string, updates: Partial<ShapeSet>) => {
-    const updatedSets = shapeSets.map(set =>
+  const handleUpdateSet = useCallback((setId: string, updates: Partial<GenerationSet>) => {
+    const updatedSets = generationSets.map(set =>
       set.id === setId ? { ...set, ...updates } : set
     );
-    onShapeSetsChange(updatedSets);
-  }, [shapeSets, onShapeSetsChange]);
+    onGenerationSetsChange(updatedSets);
+  }, [generationSets, onGenerationSetsChange]);
 
   // Toggle set enabled state
   const handleToggleSetEnabled = useCallback((setId: string) => {
     handleUpdateSet(setId, { 
-      enabled: !shapeSets.find(set => set.id === setId)?.enabled 
+      enabled: !generationSets.find(set => set.id === setId)?.enabled 
     });
-  }, [shapeSets, handleUpdateSet]);
+  }, [generationSets, handleUpdateSet]);
 
   // Move set up/down in order
   const handleMoveSet = useCallback((setId: string, direction: 'up' | 'down') => {
-    const currentIndex = shapeSets.findIndex(set => set.id === setId);
+    const currentIndex = generationSets.findIndex(set => set.id === setId);
     if (currentIndex === -1) return;
 
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= shapeSets.length) return;
+    if (newIndex < 0 || newIndex >= generationSets.length) return;
 
-    const updatedSets = [...shapeSets];
+    const updatedSets = [...generationSets];
     [updatedSets[currentIndex], updatedSets[newIndex]] = 
     [updatedSets[newIndex], updatedSets[currentIndex]];
 
@@ -232,8 +232,8 @@ export function ShapeSetsInterface({
       set.generationOrder = index;
     });
 
-    onShapeSetsChange(updatedSets);
-  }, [shapeSets, onShapeSetsChange]);
+    onGenerationSetsChange(updatedSets);
+  }, [generationSets, onGenerationSetsChange]);
 
   // Drag and drop handlers
   const handleDragStart = useCallback((e: React.DragEvent, setId: string) => {
@@ -257,12 +257,12 @@ export function ShapeSetsInterface({
     
     if (!draggedSetId || draggedSetId === targetSetId) return;
 
-    const draggedIndex = shapeSets.findIndex(set => set.id === draggedSetId);
-    const targetIndex = shapeSets.findIndex(set => set.id === targetSetId);
+    const draggedIndex = generationSets.findIndex(set => set.id === draggedSetId);
+    const targetIndex = generationSets.findIndex(set => set.id === targetSetId);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
-    const updatedSets = [...shapeSets];
+    const updatedSets = [...generationSets];
     const draggedSet = updatedSets.splice(draggedIndex, 1)[0];
     updatedSets.splice(targetIndex, 0, draggedSet);
 
@@ -271,13 +271,13 @@ export function ShapeSetsInterface({
       set.generationOrder = index;
     });
 
-    onShapeSetsChange(updatedSets);
+    onGenerationSetsChange(updatedSets);
     setDraggedSetId(null);
     setDragOverSetId(null);
-  }, [draggedSetId, shapeSets, onShapeSetsChange]);
+  }, [draggedSetId, generationSets, onGenerationSetsChange]);
 
   // Calculate total shape count across all enabled sets
-  const totalShapeCount = shapeSets
+  const totalShapeCount = generationSets
     .filter(set => set.enabled)
     .reduce((total, set) => {
       const count = set.shapeCountMode === ShapeCountMode.FIXED 
@@ -351,11 +351,11 @@ export function ShapeSetsInterface({
     );
   }, [showInlineValidation, getSetValidation]);
 
-  const selectedSet = shapeSets.find(set => set.id === selectedSetId);
+  const selectedSet = generationSets.find(set => set.id === selectedSetId);
 
   return (
     <ErrorBoundary
-      resetKeys={[shapeSets.length, selectedSetId]}
+      resetKeys={[generationSets.length, selectedSetId]}
       onError={(error, errorInfo) => {
         console.error('GenerationSetsInterface error:', error, errorInfo);
       }}
@@ -364,11 +364,11 @@ export function ShapeSetsInterface({
       {/* Header with summary */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-slate-200" data-testid="heading-generation-sets">Shape Sets</h3>
+          <h3 className="text-lg font-semibold text-slate-200" data-testid="heading-generation-sets">Generation Sets</h3>
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span data-testid="text-sets-count">{shapeSets.length} sets</span>
+            <span data-testid="text-sets-count">{generationSets.length} sets</span>
             <Separator orientation="vertical" className="h-4" />
-            <span data-testid="text-enabled-count">{shapeSets.filter(set => set.enabled).length} enabled</span>
+            <span data-testid="text-enabled-count">{generationSets.filter(set => set.enabled).length} enabled</span>
             <Separator orientation="vertical" className="h-4" />
             <span data-testid="text-total-shapes">~{totalShapeCount} shapes total</span>
           </div>
@@ -376,7 +376,7 @@ export function ShapeSetsInterface({
         
         <Button
           onClick={handleAddSet}
-          disabled={shapeSets.length >= maxSets}
+          disabled={generationSets.length >= maxSets}
           size="sm"
           data-testid="button-add-generation-set"
         >
@@ -391,7 +391,7 @@ export function ShapeSetsInterface({
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
-                <p className="font-medium">Shape Sets Issues:</p>
+                <p className="font-medium">Generation Sets Issues:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {overallValidation.errors.map((error, index) => (
                     <li key={`error-${index}`}>{error.message}</li>
@@ -431,7 +431,7 @@ export function ShapeSetsInterface({
           <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
             <AlertDescription className="text-yellow-300">
-              <strong>Shape Sets Mismatch:</strong> You have {enabledSetsCount} enabled shape set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
+              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
             </AlertDescription>
           </Alert>
         )}
@@ -495,14 +495,14 @@ export function ShapeSetsInterface({
         )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Shape Sets List */}
+        {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
           <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">
-            Shape Sets List ({shapeSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{shapeSets.length !== 1 ? 's' : ''})
+            Generation Sets List ({generationSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{generationSets.length !== 1 ? 's' : ''})
           </h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
-              {shapeSets.map((set, index) => (
+              {generationSets.map((set, index) => (
                 <Card 
                   key={set.id}
                   className={`cursor-pointer transition-all border-slate-700 ${
@@ -653,7 +653,7 @@ export function ShapeSetsInterface({
                             e.stopPropagation();
                             handleMoveSet(set.id, 'down');
                           }}
-                          disabled={index === shapeSets.length - 1}
+                          disabled={index === generationSets.length - 1}
                           data-testid={`button-move-down-${set.id}`}
                           aria-label={`Move ${set.name} down`}
                         >
@@ -667,7 +667,7 @@ export function ShapeSetsInterface({
                             e.stopPropagation();
                             handleDuplicateSet(set.id);
                           }}
-                          disabled={shapeSets.length >= maxSets}
+                          disabled={generationSets.length >= maxSets}
                           data-testid={`button-duplicate-${set.id}`}
                           aria-label={`Duplicate ${set.name}`}
                         >
@@ -681,7 +681,7 @@ export function ShapeSetsInterface({
                             e.stopPropagation();
                             handleDeleteSet(set.id);
                           }}
-                          disabled={shapeSets.length <= 1}
+                          disabled={generationSets.length <= 1}
                           data-testid={`button-delete-${set.id}`}
                           aria-label={`Delete ${set.name}`}
                         >
@@ -701,7 +701,7 @@ export function ShapeSetsInterface({
           {selectedSet ? (
             <IndividualSetConfig
               generationSet={selectedSet}
-              onUpdate={(updates: Partial<ShapeSet>) => handleUpdateSet(selectedSet.id, updates)}
+              onUpdate={(updates: Partial<GenerationSet>) => handleUpdateSet(selectedSet.id, updates)}
               globalZIndexEnabled={globalZIndexEnabled}
             />
           ) : (
@@ -716,7 +716,7 @@ export function ShapeSetsInterface({
                 </p>
                 <Button 
                   onClick={handleAddSet} 
-                  disabled={shapeSets.length >= maxSets}
+                  disabled={generationSets.length >= maxSets}
                   data-testid="button-create-first-set"
                 >
                   <Plus className="w-4 h-4 mr-2" />
