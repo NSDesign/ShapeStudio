@@ -36,6 +36,12 @@ export interface CanonicalBatchExportSettings {
   batchSaveProjectFiles: boolean;
   packageAsZip: boolean;
   
+  // Shape Sets per Export settings
+  shapeSetCountMode: 'fixed' | 'range';
+  shapeSetCountFixed: number;
+  shapeSetCountMin?: number;
+  shapeSetCountMax?: number;
+  
   // Additional options
   includeAdornments: boolean;
   includeGrid: boolean;
