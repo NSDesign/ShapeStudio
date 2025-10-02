@@ -2125,9 +2125,9 @@ export const useShapeEditor = () => {
           }
         );
 
-        // Apply set-specific z-index offset
+        // Apply z-index based on generation order (simpler, more intuitive)
         setShapes.forEach(shape => {
-          shape.properties.zIndex += setIndex * 1000; // Space sets apart in z-index
+          shape.properties.zIndex += set.generationOrder;
         });
 
         // Apply set-level blend mode and compositing operation
