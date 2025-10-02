@@ -431,7 +431,7 @@ export function GenerationSetsInterface({
           <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
             <AlertTriangle className="h-4 w-4 text-yellow-400" />
             <AlertDescription className="text-yellow-300">
-              <strong>Generation Sets Mismatch:</strong> You have {enabledSetsCount} enabled generation set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
+              <strong>Shape Sets Mismatch:</strong> You have {enabledSetsCount} enabled shape set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
             </AlertDescription>
           </Alert>
         )}
@@ -703,10 +703,10 @@ export function GenerationSetsInterface({
               <CardContent className="p-8 text-center">
                 <Settings className="w-12 h-12 text-slate-500 mx-auto mb-4" data-testid="icon-no-selection" />
                 <h3 className="text-lg font-medium text-slate-300 mb-2" data-testid="heading-no-selection">
-                  No Generation Set Selected
+                  No Shape Set Selected
                 </h3>
                 <p className="text-slate-500 mb-4" data-testid="text-no-selection-help">
-                  Select a generation set from the list to configure its settings.
+                  Select a shape set from the list to configure its settings.
                 </p>
                 <Button 
                   onClick={handleAddSet} 
