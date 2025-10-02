@@ -2053,60 +2053,7 @@ export default function Sidebar({
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
                       <span className="text-blue-300 font-medium">Shape Sets Active</span>
                     </div>
-                    Save and load different generation configurations with specific settings for consistent, repeatable results.
-                  </div>
-                )}
-
-                {/* Shape Sets per Export Control - Only visible when Shape Sets is enabled */}
-                {exportSettings.generationSetsEnabled && exportSettings.exportBatchModeEnabled && (
-                  <div className="space-y-2 p-2 bg-slate-800/30 rounded border border-slate-600">
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-xs text-slate-400">Shape Sets per Export</Label>
-                      <Select 
-                        value={exportSettings.shapeSetCountMode || 'fixed'} 
-                        onValueChange={(value) => updateExportSettings.mutate({ shapeSetCountMode: value as 'fixed' | 'range' })}
-                      >
-                        <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600">
-                          <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                          <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {exportSettings.shapeSetCountMode === 'fixed' && (
-                      <div className="space-y-2">
-                        <Label className="text-xs text-slate-300">Fixed Value: {exportSettings.shapeSetCountFixed || 2}</Label>
-                        <Slider
-                          value={[exportSettings.shapeSetCountFixed || 2]}
-                          onValueChange={([value]) => updateExportSettings.mutate({ shapeSetCountFixed: value })}
-                          min={1}
-                          max={20}
-                          step={1}
-                          className="[&_[role=slider]]:bg-blue-600"
-                        />
-                      </div>
-                    )}
-                    
-                    {exportSettings.shapeSetCountMode === 'range' && (
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Min: {exportSettings.shapeSetCountMin || 1}</span>
-                          <span className="text-slate-400">Max: {exportSettings.shapeSetCountMax || 5}</span>
-                        </div>
-                        <Slider
-                          value={[exportSettings.shapeSetCountMin || 1, exportSettings.shapeSetCountMax || 5]}
-                          onValueChange={([min, max]) => updateExportSettings.mutate({ shapeSetCountMin: min, shapeSetCountMax: max })}
-                          min={1}
-                          max={20}
-                          step={1}
-                          className="w-full"
-                          minStepsBetweenThumbs={1}
-                        />
-                      </div>
-                    )}
+                    Each enabled generation set will generate exactly its configured number of shapes per export. Total shapes = sum of all enabled sets.
                   </div>
                 )}
               </div>

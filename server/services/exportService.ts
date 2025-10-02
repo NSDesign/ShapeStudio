@@ -44,12 +44,6 @@ export interface BatchExportSettings {
   batchSaveProjectFiles?: boolean;
   packageAsZip?: boolean; // New: Whether to package files in ZIP (default: false)
   
-  // Shape Sets per Export settings
-  shapeSetCountMode?: 'fixed' | 'range';
-  shapeSetCountFixed?: number;
-  shapeSetCountMin?: number;
-  shapeSetCountMax?: number;
-  
   // Additional options
   includeAdornments?: boolean;
   includeGrid?: boolean;
@@ -1000,19 +994,8 @@ export class ExportService {
       const compositeShapes: Shape[] = [];
       const compositeGroups: ShapeGroupClass[] = [];
       
-      // Determine how many times to run through the enabled sets
-      let setsRunCount = 1; // Default to 1 run through all sets
-      if (settings.shapeSetCountMode === 'fixed' && settings.shapeSetCountFixed) {
-        setsRunCount = settings.shapeSetCountFixed;
-      } else if (settings.shapeSetCountMode === 'range' && settings.shapeSetCountMin && settings.shapeSetCountMax) {
-        // Pick random value between min and max (inclusive)
-        setsRunCount = Math.floor(Math.random() * (settings.shapeSetCountMax - settings.shapeSetCountMin + 1)) + settings.shapeSetCountMin;
-      }
-      
-      // Run through the enabled sets multiple times based on setsRunCount
-      for (let runIndex = 0; runIndex < setsRunCount; runIndex++) {
-        // Process each generation set
-        for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
+      // Process each generation set ONCE - each set generates exactly its defined shape count
+      for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
         const generationSet = enabledSets[setIndex];
         
         if (!generationSet) {
@@ -1059,7 +1042,6 @@ export class ExportService {
         // Add to composite
         compositeShapes.push(...finalShapes);
         compositeGroups.push(...setGroups);
-        }
       }
       
       currentStep++;
