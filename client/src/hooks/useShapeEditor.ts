@@ -2120,6 +2120,39 @@ export const useShapeEditor = () => {
           shape.properties.zIndex += setIndex * 1000; // Space sets apart in z-index
         });
 
+        // Apply set-level blend mode and compositing operation
+        // compositingOperation takes precedence over setBlendMode if not default
+        const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
+          ? set.compositingOperation
+          : set.setBlendMode;
+        
+        if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
+          console.log(`🎨 Applying blend/compositing mode "${effectiveBlendMode}" to set "${set.name}"`);
+          setShapes.forEach(shape => {
+            shape.properties.blendMode = effectiveBlendMode as BlendMode;
+          });
+        }
+
+        // Apply set visibility and opacity
+        if (set.setVisibility) {
+          if (!set.setVisibility.visible) {
+            console.log(`👁️ Set "${set.name}" is hidden, skipping render`);
+            return; // Skip this set entirely if not visible
+          }
+          
+          if (set.setVisibility.opacity < 1 || set.setVisibility.opacityVariance > 0) {
+            console.log(`🌫️ Applying set opacity ${set.setVisibility.opacity} with variance ${set.setVisibility.opacityVariance} to set "${set.name}"`);
+            setShapes.forEach(shape => {
+              const variance = (Math.random() - 0.5) * 2 * set.setVisibility.opacityVariance;
+              const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + variance));
+              
+              // Apply to both fill and stroke opacity
+              shape.properties.fillOpacity *= finalOpacity;
+              shape.properties.strokeOpacity *= finalOpacity;
+            });
+          }
+        }
+
         // Apply setTransform if configured
         if (set.setTransform && (set.setTransform.x !== 0 || set.setTransform.y !== 0 || 
             set.setTransform.rotation !== 0 || set.setTransform.scaleX !== 1 || set.setTransform.scaleY !== 1)) {
