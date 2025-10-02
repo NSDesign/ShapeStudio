@@ -86,9 +86,9 @@ export function SetsManagerDialog({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900">
           <div>
-            <h3 className="text-lg font-semibold text-slate-200">Generation Sets Manager</h3>
+            <h3 className="text-lg font-semibold text-slate-200">Shape Sets Manager</h3>
             <p className="text-sm text-slate-400">
-              Create, organize, and manage your generation set configurations
+              Create, organize, and manage your shape set configurations
             </p>
           </div>
           <Button 
