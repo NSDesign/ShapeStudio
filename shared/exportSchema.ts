@@ -66,6 +66,10 @@ export const DEFAULT_BATCH_EXPORT_SETTINGS: CanonicalBatchExportSettings = {
   batchExportCount: 10,
   batchSaveProjectFiles: false,
   packageAsZip: false, // Default to individual files
+  shapeSetCountMode: 'fixed',
+  shapeSetCountFixed: 2,
+  shapeSetCountMin: 1,
+  shapeSetCountMax: 5,
   includeAdornments: false,
   includeGrid: false,
   includeArtboardGeometry: false,
