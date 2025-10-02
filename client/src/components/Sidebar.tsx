@@ -2053,7 +2053,7 @@ export default function Sidebar({
                       <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
                       <span className="text-blue-300 font-medium">Shape Sets Active</span>
                     </div>
-                    Each enabled generation set will generate exactly its configured number of shapes per export. Total shapes = sum of all enabled sets.
+                    All enabled shape sets combine to create each export. Manage sets in the Shape Sets Manager.
                   </div>
                 )}
               </div>
