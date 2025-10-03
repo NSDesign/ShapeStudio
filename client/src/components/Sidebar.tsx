@@ -815,8 +815,19 @@ export default function Sidebar({
       const originalSelected = shape.selected;
       shape.selected = false;
 
+      // Save current context state
+      ctx.save();
+      
+      // Apply blend mode or compositing operation if set
+      if (shape.properties.blendMode && shape.properties.blendMode !== 'source-over') {
+        ctx.globalCompositeOperation = shape.properties.blendMode as GlobalCompositeOperation;
+      }
+
       // Use the Shape class's render method for export
       shape.render(ctx);
+
+      // Restore context state (including blend mode)
+      ctx.restore();
 
       // Restore original selection state
       shape.selected = originalSelected;
