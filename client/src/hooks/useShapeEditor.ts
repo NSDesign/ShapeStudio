@@ -2063,6 +2063,149 @@ export const useShapeEditor = () => {
       console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);
     }
 
+    // Apply setTransform if provided in overrides
+    if (overrides?.setTransform) {
+      const setTransform = overrides.setTransform;
+      if (setTransform.x !== 0 || setTransform.y !== 0 || 
+          setTransform.rotation !== 0 || setTransform.scaleX !== 1 || setTransform.scaleY !== 1) {
+        console.log(`🔄 Applying setTransform from overrides: x=${setTransform.x}, y=${setTransform.y}, rotation=${setTransform.rotation}, scaleX=${setTransform.scaleX}, scaleY=${setTransform.scaleY}`);
+        
+        finalShapes.forEach(shape => {
+          shape.transform.x += setTransform.x;
+          shape.transform.y += setTransform.y;
+          shape.transform.rotation += setTransform.rotation;
+          shape.transform.scaleX *= setTransform.scaleX;
+          shape.transform.scaleY *= setTransform.scaleY;
+        });
+      }
+    }
+
+    // Apply artboard alignment if provided in overrides
+    if (overrides?.artboardAlignment) {
+      const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+      
+      if (overrides.artboardAlignment.fitToArtboard && currentArtboard && finalShapes.length > 0) {
+        console.log(`📐 Applying fitToArtboard from overrides`);
+        
+        // Calculate bounding box of all shapes
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        finalShapes.forEach(shape => {
+          const x = shape.transform.x;
+          const y = shape.transform.y;
+          const halfWidth = (shape.width || 50) / 2;
+          const halfHeight = (shape.height || 50) / 2;
+          
+          minX = Math.min(minX, x - halfWidth);
+          minY = Math.min(minY, y - halfHeight);
+          maxX = Math.max(maxX, x + halfWidth);
+          maxY = Math.max(maxY, y + halfHeight);
+        });
+        
+        const setBoundsWidth = maxX - minX;
+        const setBoundsHeight = maxY - minY;
+        const setCenterX = (minX + maxX) / 2;
+        const setCenterY = (minY + maxY) / 2;
+        
+        // Calculate scale to fit within artboard with margin
+        const margin = overrides.artboardAlignment.margin || 0;
+        const availableWidth = currentArtboard.width - (margin * 2);
+        const availableHeight = currentArtboard.height - (margin * 2);
+        
+        const scaleX = availableWidth / setBoundsWidth;
+        const scaleY = availableHeight / setBoundsHeight;
+        const fitScale = Math.min(scaleX, scaleY, 1);
+        
+        // Apply scale and center to artboard
+        finalShapes.forEach(shape => {
+          const relX = shape.transform.x - setCenterX;
+          const relY = shape.transform.y - setCenterY;
+          
+          shape.transform.x = currentArtboard.x + currentArtboard.width / 2 + (relX * fitScale);
+          shape.transform.y = currentArtboard.y + currentArtboard.height / 2 + (relY * fitScale);
+          shape.transform.scaleX *= fitScale;
+          shape.transform.scaleY *= fitScale;
+        });
+        
+        console.log(`✅ Fitted shapes to artboard with scale=${fitScale.toFixed(2)}`);
+      } else if (overrides.artboardAlignment.alignTo !== 'none' && currentArtboard && finalShapes.length > 0) {
+        console.log(`🎯 Applying alignment from overrides: ${overrides.artboardAlignment.alignmentType}`);
+        
+        // Calculate bounding box center
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        finalShapes.forEach(shape => {
+          const x = shape.transform.x;
+          const y = shape.transform.y;
+          const halfWidth = (shape.width || 50) / 2;
+          const halfHeight = (shape.height || 50) / 2;
+          
+          minX = Math.min(minX, x - halfWidth);
+          minY = Math.min(minY, y - halfHeight);
+          maxX = Math.max(maxX, x + halfWidth);
+          maxY = Math.max(maxY, y + halfHeight);
+        });
+        
+        const setCenterX = (minX + maxX) / 2;
+        const setCenterY = (minY + maxY) / 2;
+        const margin = overrides.artboardAlignment.margin || 0;
+        
+        // Calculate target position based on alignment type
+        let targetX = currentArtboard.x + currentArtboard.width / 2;
+        let targetY = currentArtboard.y + currentArtboard.height / 2;
+        
+        switch (overrides.artboardAlignment.alignmentType) {
+          case 'top-left':
+            targetX = currentArtboard.x + margin;
+            targetY = currentArtboard.y + margin;
+            break;
+          case 'top-center':
+            targetX = currentArtboard.x + currentArtboard.width / 2;
+            targetY = currentArtboard.y + margin;
+            break;
+          case 'top-right':
+            targetX = currentArtboard.x + currentArtboard.width - margin;
+            targetY = currentArtboard.y + margin;
+            break;
+          case 'center-left':
+            targetX = currentArtboard.x + margin;
+            targetY = currentArtboard.y + currentArtboard.height / 2;
+            break;
+          case 'center':
+            targetX = currentArtboard.x + currentArtboard.width / 2;
+            targetY = currentArtboard.y + currentArtboard.height / 2;
+            break;
+          case 'center-right':
+            targetX = currentArtboard.x + currentArtboard.width - margin;
+            targetY = currentArtboard.y + currentArtboard.height / 2;
+            break;
+          case 'bottom-left':
+            targetX = currentArtboard.x + margin;
+            targetY = currentArtboard.y + currentArtboard.height - margin;
+            break;
+          case 'bottom-center':
+            targetX = currentArtboard.x + currentArtboard.width / 2;
+            targetY = currentArtboard.y + currentArtboard.height - margin;
+            break;
+          case 'bottom-right':
+            targetX = currentArtboard.x + currentArtboard.width - margin;
+            targetY = currentArtboard.y + currentArtboard.height - margin;
+            break;
+        }
+        
+        // Calculate offset and apply to all shapes
+        const offsetX = targetX - setCenterX;
+        const offsetY = targetY - setCenterY;
+        
+        finalShapes.forEach(shape => {
+          shape.transform.x += offsetX;
+          shape.transform.y += offsetY;
+        });
+        
+        console.log(`✅ Aligned shapes to ${overrides.artboardAlignment.alignmentType} with offset (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
+      }
+    }
+
     // Log all final z-indices before adding to state
     console.log(`🔍 [FINAL Z-INDEX] All new shapes z-indices: [${finalShapes.map(s => s.properties.zIndex).join(', ')}]`);
     console.log(`🔍 [FINAL Z-INDEX] Existing shapes count: ${shapes.length}, New shapes count: ${finalShapes.length}`);
