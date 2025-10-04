@@ -2326,21 +2326,17 @@ export const useShapeEditor = () => {
         if (set.artboardAlignment && set.artboardAlignment.fitToArtboard && currentArtboard) {
           console.log(`📐 Applying fitToArtboard for set "${set.name}"`);
           
-          // Calculate bounding box of all shapes in this set
+          // Calculate bounding box of all shapes in this set using world bounds
           if (setShapes.length > 0) {
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             
             setShapes.forEach(shape => {
-              const x = shape.transform.x;
-              const y = shape.transform.y;
-              // Calculate actual visual bounds accounting for scale transforms
-              const halfWidth = ((shape.width || 50) * shape.transform.scaleX) / 2;
-              const halfHeight = ((shape.height || 50) * shape.transform.scaleY) / 2;
+              const worldBounds = shape.getWorldBounds();
               
-              minX = Math.min(minX, x - halfWidth);
-              minY = Math.min(minY, y - halfHeight);
-              maxX = Math.max(maxX, x + halfWidth);
-              maxY = Math.max(maxY, y + halfHeight);
+              minX = Math.min(minX, worldBounds.x);
+              minY = Math.min(minY, worldBounds.y);
+              maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
+              maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
             });
             
             const setBoundsWidth = maxX - minX;
