@@ -2537,29 +2537,51 @@ export default function Sidebar({
   // Add state for shape categories accordion to prevent collapse when shapes are toggled
   const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
   
-  // Scroll position preservation
+  // Scroll position preservation with better control
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const savedScrollPosition = useRef<number>(0);
+  const isUserScrolling = useRef<boolean>(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Save scroll position before state updates
+  // Save scroll position and track user-initiated scrolls
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
       const handleScroll = () => {
+        // Mark as user scrolling
+        isUserScrolling.current = true;
         savedScrollPosition.current = container.scrollTop;
+        
+        // Clear previous timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        // Reset user scrolling flag after a brief delay
+        scrollTimeoutRef.current = setTimeout(() => {
+          isUserScrolling.current = false;
+        }, 150);
       };
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
+      
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+      };
     }
   }, []);
   
-  // Restore scroll position after re-renders
+  // Restore scroll position after re-renders only if not currently scrolling
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (container && savedScrollPosition.current > 0) {
+    if (container && savedScrollPosition.current > 0 && !isUserScrolling.current) {
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
-        container.scrollTop = savedScrollPosition.current;
+        if (container && !isUserScrolling.current) {
+          container.scrollTop = savedScrollPosition.current;
+        }
       });
     }
   });
@@ -4995,7 +5017,11 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+        <div 
+          ref={scrollContainerRef} 
+          className="flex-1 overflow-y-auto"
+          style={{ scrollBehavior: 'auto', overflowAnchor: 'none' }}
+        >
           <Accordion 
             type="multiple" 
             value={openAccordionSections} 
