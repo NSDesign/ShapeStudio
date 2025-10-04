@@ -1486,8 +1486,8 @@ export default function Sidebar({
             // Use artboard bounds for export dimensions when in artboard mode
             let canvasWidth, canvasHeight, translateX, translateY;
             
-            if (exportMode === 'artboard' && targetArtboard) {
-              // Use exact artboard dimensions
+            if (targetArtboard) {
+              // Use exact artboard dimensions (batch export always uses artboard)
               canvasWidth = targetArtboard.width * exportScale;
               canvasHeight = targetArtboard.height * exportScale;
               translateX = -targetArtboard.x;
@@ -1550,8 +1550,8 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              // Use artboard background color if in artboard mode, otherwise white
-              const exportBackgroundColor = (exportMode === 'artboard' && targetArtboard) 
+              // Use artboard background color if targetArtboard exists (batch export always uses artboard)
+              const exportBackgroundColor = targetArtboard 
                 ? (targetArtboard.backgroundColor || '#ffffff')
                 : '#ffffff';
               ctx.fillStyle = exportBackgroundColor;
