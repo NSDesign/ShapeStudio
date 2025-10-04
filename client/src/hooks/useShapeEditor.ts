@@ -2093,8 +2093,8 @@ export const useShapeEditor = () => {
         finalShapes.forEach(shape => {
           const x = shape.transform.x;
           const y = shape.transform.y;
-          const halfWidth = (shape.width || 50) / 2;
-          const halfHeight = (shape.height || 50) / 2;
+          const halfWidth = ((shape.width || 50) * shape.transform.scaleX) / 2;
+          const halfHeight = ((shape.height || 50) * shape.transform.scaleY) / 2;
           
           minX = Math.min(minX, x - halfWidth);
           minY = Math.min(minY, y - halfHeight);
