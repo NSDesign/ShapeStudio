@@ -2114,7 +2114,7 @@ export const useShapeEditor = () => {
         
         const scaleX = availableWidth / setBoundsWidth;
         const scaleY = availableHeight / setBoundsHeight;
-        const fitScale = Math.min(scaleX, scaleY, 1);
+        const fitScale = Math.min(scaleX, scaleY);
         
         // Apply scale and center to artboard
         finalShapes.forEach(shape => {
@@ -2358,7 +2358,7 @@ export const useShapeEditor = () => {
             
             const scaleX = availableWidth / setBoundsWidth;
             const scaleY = availableHeight / setBoundsHeight;
-            const fitScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+            const fitScale = Math.min(scaleX, scaleY);
             
             // Apply scale and center to artboard
             setShapes.forEach(shape => {
