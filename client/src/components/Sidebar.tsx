@@ -756,6 +756,72 @@ export default function Sidebar({
             </div>
           )}
         </div>
+
+        {/* Active Artboard Settings */}
+        {(() => {
+          const currentArtboard = artboards.find(a => a.id === activeArtboard);
+          if (!currentArtboard) return null;
+          
+          return (
+            <div className="space-y-2 p-3 bg-teal-900/20 border border-teal-500/30 rounded-lg">
+              <Label className="text-xs text-teal-300">Active Artboard Settings</Label>
+              
+              <div className="space-y-2">
+                {/* Background Color */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Background Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={currentArtboard.backgroundColor || '#ffffff'}
+                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
+                      className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                      data-testid="input-artboard-background-color"
+                    />
+                    <Input
+                      type="text"
+                      value={currentArtboard.backgroundColor || '#ffffff'}
+                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
+                      placeholder="#ffffff"
+                      className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                      data-testid="input-artboard-background-hex"
+                    />
+                  </div>
+                </div>
+
+                {/* Display Grid Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Grid</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayGrid !== false}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayGrid: checked })}
+                      data-testid="switch-artboard-display-grid"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayGrid !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Display Border Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Border</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayBorder !== false}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayBorder: checked })}
+                      data-testid="switch-artboard-display-border"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayBorder !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
