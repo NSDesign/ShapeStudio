@@ -207,16 +207,42 @@ export default function Canvas({
       // Draw active artboard
       const currentArtboard = artboards.find(a => a.id === activeArtboard);
       if (currentArtboard) {
+        // Draw artboard background
         ctx.fillStyle = currentArtboard.backgroundColor || '#ffffff';
         ctx.fillRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
         
-        ctx.strokeStyle = '#0066cc';
-        ctx.lineWidth = 2 / effectiveZoom;
-        ctx.strokeRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
+        // Draw artboard grid if enabled
+        if (currentArtboard.displayGrid !== false) {
+          const gridSize = 50; // Grid cell size
+          const adjustedGridSize = gridSize / effectiveZoom;
+          
+          ctx.strokeStyle = '#cccccc';
+          ctx.lineWidth = 0.5 / effectiveZoom;
+          ctx.globalAlpha = 0.3;
+          
+          ctx.beginPath();
+          for (let x = currentArtboard.x; x <= currentArtboard.x + currentArtboard.width; x += adjustedGridSize) {
+            ctx.moveTo(x, currentArtboard.y);
+            ctx.lineTo(x, currentArtboard.y + currentArtboard.height);
+          }
+          for (let y = currentArtboard.y; y <= currentArtboard.y + currentArtboard.height; y += adjustedGridSize) {
+            ctx.moveTo(currentArtboard.x, y);
+            ctx.lineTo(currentArtboard.x + currentArtboard.width, y);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
         
-        ctx.fillStyle = '#0066cc';
-        ctx.font = `${12 / effectiveZoom}px Arial`;
-        ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / effectiveZoom);
+        // Draw artboard border if enabled (default true for visibility)
+        if (currentArtboard.displayBorder !== false) {
+          ctx.strokeStyle = '#0066cc';
+          ctx.lineWidth = 2 / effectiveZoom;
+          ctx.strokeRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
+          
+          ctx.fillStyle = '#0066cc';
+          ctx.font = `${12 / effectiveZoom}px Arial`;
+          ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / effectiveZoom);
+        }
       }
 
       // Draw shapes in z-index order (lowest z-index first, highest on top)

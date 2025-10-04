@@ -1484,7 +1484,11 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              ctx.fillStyle = '#ffffff';
+              // Use artboard background color if in artboard mode, otherwise white
+              const exportBackgroundColor = (exportMode === 'artboard' && targetArtboard) 
+                ? (targetArtboard.backgroundColor || '#ffffff')
+                : '#ffffff';
+              ctx.fillStyle = exportBackgroundColor;
               ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
               ctx.scale(exportScale, exportScale);

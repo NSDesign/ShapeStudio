@@ -3222,6 +3222,9 @@ export const useShapeEditor = () => {
       y: centerY,
       width: preset.width,
       height: preset.height,
+      backgroundColor: '#ffffff',
+      displayGrid: true,
+      displayBorder: false,
       preset: preset.name,
       category: preset.category
     };

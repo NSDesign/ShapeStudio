@@ -328,6 +328,8 @@ export interface Artboard {
   width: number;
   height: number;
   backgroundColor?: string;
+  displayGrid?: boolean;
+  displayBorder?: boolean;
   preset?: string;
   category?: string;
 }
