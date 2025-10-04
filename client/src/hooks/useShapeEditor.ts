@@ -2087,19 +2087,16 @@ export const useShapeEditor = () => {
       if (overrides.artboardAlignment.fitToArtboard && currentArtboard && finalShapes.length > 0) {
         console.log(`📐 Applying fitToArtboard from overrides`);
         
-        // Calculate bounding box of all shapes
+        // Calculate bounding box of all shapes using world bounds
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         
         finalShapes.forEach(shape => {
-          const x = shape.transform.x;
-          const y = shape.transform.y;
-          const halfWidth = ((shape.width || 50) * shape.transform.scaleX) / 2;
-          const halfHeight = ((shape.height || 50) * shape.transform.scaleY) / 2;
+          const worldBounds = shape.getWorldBounds();
           
-          minX = Math.min(minX, x - halfWidth);
-          minY = Math.min(minY, y - halfHeight);
-          maxX = Math.max(maxX, x + halfWidth);
-          maxY = Math.max(maxY, y + halfHeight);
+          minX = Math.min(minX, worldBounds.x);
+          minY = Math.min(minY, worldBounds.y);
+          maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
+          maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
         });
         
         const setBoundsWidth = maxX - minX;
