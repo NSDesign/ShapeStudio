@@ -1229,16 +1229,21 @@ export default function Sidebar({
       setBatchStatus('Initializing batch export...');
       console.log(`🚀 BATCH EXPORT: Starting ${actualImageCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'}) - ${exportAllImages ? 'All images' : 'Selected images'}`);
       
-      // Get the target artboard for shape generation
-      const targetArtboard = exportMode === 'artboard' && selectedArtboardForExport 
-        ? artboards.find(ab => ab.id === selectedArtboardForExport)
-        : artboards.find(ab => ab.id === activeArtboard);
+      // Get artboard for background color (used in all modes when available)
+      const backgroundArtboard = artboards.find(ab => ab.id === activeArtboard);
       
-      const generationBounds = targetArtboard ? {
-        x: targetArtboard.x,
-        y: targetArtboard.y,
-        width: targetArtboard.width,
-        height: targetArtboard.height
+      // Get the target artboard for dimensions (only when exportMode is 'artboard')
+      const targetArtboard = exportMode === 'artboard' 
+        ? (selectedArtboardForExport 
+            ? artboards.find(ab => ab.id === selectedArtboardForExport)
+            : backgroundArtboard)
+        : null;
+      
+      const generationBounds = backgroundArtboard ? {
+        x: backgroundArtboard.x,
+        y: backgroundArtboard.y,
+        width: backgroundArtboard.width,
+        height: backgroundArtboard.height
       } : {
         x: -200,
         y: -200,
@@ -1550,9 +1555,9 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              // Use artboard background color if targetArtboard exists (batch export always uses artboard)
-              const exportBackgroundColor = targetArtboard 
-                ? (targetArtboard.backgroundColor || '#ffffff')
+              // Use artboard background color if backgroundArtboard exists (applies in all export modes)
+              const exportBackgroundColor = backgroundArtboard 
+                ? (backgroundArtboard.backgroundColor || '#ffffff')
                 : '#ffffff';
               ctx.fillStyle = exportBackgroundColor;
               ctx.fillRect(0, 0, canvasWidth, canvasHeight);
