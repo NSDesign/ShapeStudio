@@ -1490,8 +1490,82 @@ export default function Sidebar({
               ctx.scale(exportScale, exportScale);
               ctx.translate(translateX, translateY);
 
-              const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-              sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+              // Check if we need set-based rendering (for compositing operations)
+              const hasCompositingOperations = exportSettings.generationSetsEnabled && 
+                generationSets?.some(set => set.enabled && set.compositingOperation && set.compositingOperation !== 'source-over');
+
+              if (hasCompositingOperations && exportSettings.generationSetsEnabled && generationSets) {
+                // SET-BASED RENDERING: Group shapes by generation set and use offscreen canvases for proper compositing
+                console.log('🎨 Using set-based rendering with offscreen canvases for compositing operations');
+                
+                const enabledSets = generationSets
+                  .filter(set => set.enabled)
+                  .sort((a, b) => a.generationOrder - b.generationOrder);
+                
+                // Group shapes by set using z-index ranges (sets use 1000x multiplier)
+                const shapesBySet: Map<number, Shape[]> = new Map();
+                currentExportShapes.forEach(shape => {
+                  const setIndex = Math.floor(shape.properties.zIndex / 1000);
+                  if (!shapesBySet.has(setIndex)) {
+                    shapesBySet.set(setIndex, []);
+                  }
+                  shapesBySet.get(setIndex)!.push(shape);
+                });
+                
+                // Render each set to an offscreen canvas, then composite onto main canvas
+                enabledSets.forEach((set, idx) => {
+                  const setShapes = shapesBySet.get(set.generationOrder) || [];
+                  if (setShapes.length === 0) return;
+                  
+                  console.log(`🖼️ Rendering set "${set.name}" (${setShapes.length} shapes) to offscreen canvas`);
+                  
+                  // Create offscreen canvas for this set
+                  const setCanvas = document.createElement('canvas');
+                  setCanvas.width = canvas.width;
+                  setCanvas.height = canvas.height;
+                  const setCtx = setCanvas.getContext('2d');
+                  
+                  if (!setCtx) {
+                    console.error(`Failed to create context for set "${set.name}"`);
+                    return;
+                  }
+                  
+                  // Apply same transform as main canvas
+                  setCtx.scale(exportScale, exportScale);
+                  setCtx.translate(translateX, translateY);
+                  
+                  // Render shapes for this set (sorted by z-index within set)
+                  const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+                  sortedSetShapes.forEach(shape => renderShapeForExport(setCtx, shape));
+                  
+                  // Composite set canvas onto main canvas with appropriate blend mode/compositing
+                  ctx.save();
+                  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
+                  
+                  const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
+                    ? set.compositingOperation
+                    : set.setBlendMode;
+                  
+                  if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
+                    ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+                    console.log(`🎨 Applying ${effectiveBlendMode} to set "${set.name}"`);
+                  }
+                  
+                  // Draw the set canvas onto main canvas
+                  ctx.drawImage(setCanvas, 0, 0);
+                  ctx.restore();
+                  
+                  // Cleanup
+                  setCtx.clearRect(0, 0, setCanvas.width, setCanvas.height);
+                  setCanvas.width = 0;
+                  setCanvas.height = 0;
+                });
+              } else {
+                // STANDARD RENDERING: Render all shapes directly to main canvas (no compositing operations)
+                console.log('🎨 Using standard per-shape rendering');
+                const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+                sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+              }
 
               // Convert canvas to blob and add to ZIP
               if (exportFormat === 'pdf') {
