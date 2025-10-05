@@ -162,6 +162,9 @@ export const useShapeEditor = () => {
   // Track if initial load is complete to prevent save loops
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
   
+  // Track if initial UI state has been restored to prevent multiple restores
+  const hasRestoredInitialUI = useRef(false);
+  
   // Migration function to ensure old sets have new properties
   const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
     return sets.map(set => ({
@@ -222,6 +225,24 @@ export const useShapeEditor = () => {
       }
     }
   }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId]);
+  
+  // Restore UI state for the current set after initial load
+  useEffect(() => {
+    // Guard: only run once on initial load when all conditions are met
+    if (!hasRestoredInitialUI.current && 
+        isInitialLoadComplete && 
+        currentGenerationSetId && 
+        generationSets.length > 0) {
+      // Verify the current set exists in the loaded sets
+      const hasSet = generationSets.some(s => s.id === currentGenerationSetId);
+      if (hasSet) {
+        console.log('🔄 [INITIAL LOAD] Restoring UI state for current set:', currentGenerationSetId);
+        restoreUIStateFromSet(currentGenerationSetId);
+        hasRestoredInitialUI.current = true; // Mark as restored to prevent re-runs
+      }
+    }
+  }, [isInitialLoadComplete, currentGenerationSetId, generationSets]); // restoreUIStateFromSet is stable (useCallback), omitted per exhaustive-deps
+  
   const [batchExportCount, setBatchExportCount] = useState(1);
   const [generationCountMode, setGenerationCountMode] = useState<'fixed' | 'range'>('fixed');
   
