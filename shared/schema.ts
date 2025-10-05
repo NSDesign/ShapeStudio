@@ -57,6 +57,8 @@ export const userPreferences = pgTable("user_preferences", {
   currentGenerationSetId: varchar("current_generation_set_id"),
   // Export settings persistence
   exportSettings: jsonb("export_settings").notNull().default('{}'),
+  // App settings defaults (export format, artboard dimensions, etc.)
+  appSettingsDefaults: jsonb("app_settings_defaults"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -105,6 +107,35 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   batchExportCount: 1,                // Single export by default
   generationCountMode: 'fixed',       // Fixed count mode by default
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
+};
+
+// App settings defaults configuration type
+export interface AppSettingsDefaults {
+  // Export settings
+  exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf';
+  exportQuality: number;              // 10-100 for lossy formats
+  exportScale: number;                // 0.5-4x scaling
+  exportMode: 'selection' | 'artboard' | 'all';
+  
+  // Artboard settings
+  artboardWidth: number;
+  artboardHeight: number;
+  artboardBackgroundColor: string;
+  artboardDisplayGrid: boolean;
+  artboardDisplayBorder: boolean;
+}
+
+// Default app settings
+export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
+  exportFormat: 'png',
+  exportQuality: 90,
+  exportScale: 1,
+  exportMode: 'all',
+  artboardWidth: 400,
+  artboardHeight: 400,
+  artboardBackgroundColor: '#ffffff',
+  artboardDisplayGrid: false,
+  artboardDisplayBorder: true,
 };
 
 // User preferences schemas
