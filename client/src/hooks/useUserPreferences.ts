@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import type { UserPreferences, SidebarSectionConfig, ExportSettingsConfig } from '@shared/schema';
-import { DEFAULT_SIDEBAR_SECTIONS, DEFAULT_EXPORT_SETTINGS } from '@shared/schema';
+import type { UserPreferences, SidebarSectionConfig, ExportSettingsConfig, AppSettingsDefaults } from '@shared/schema';
+import { DEFAULT_SIDEBAR_SECTIONS, DEFAULT_EXPORT_SETTINGS, DEFAULT_APP_SETTINGS } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
 export function useUserPreferences() {
@@ -21,6 +21,9 @@ export function useUserPreferences() {
     ...DEFAULT_EXPORT_SETTINGS,
     ...(preferences?.exportSettings as ExportSettingsConfig || {}),
   };
+
+  // Extract app settings defaults
+  const appSettingsDefaults: AppSettingsDefaults | null = preferences?.appSettingsDefaults as AppSettingsDefaults || null;
 
   // Mutation for updating export settings
   const updateExportSettings = useMutation({
@@ -69,14 +72,40 @@ export function useUserPreferences() {
     },
   });
 
+  // Mutation for saving app settings defaults
+  const saveAppSettings = useMutation({
+    mutationFn: (newAppSettings: AppSettingsDefaults) => {
+      console.log('Saving app settings defaults:', newAppSettings);
+      return apiRequest('PUT', '/api/user/preferences', {
+        appSettingsDefaults: newAppSettings,
+      });
+    },
+    onSuccess: (response, variables) => {
+      console.log('App settings saved successfully:', variables);
+      // Update cache directly
+      queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          appSettingsDefaults: variables,
+        };
+      });
+    },
+    onError: (error) => {
+      console.error('App settings save failed:', error);
+    },
+  });
+
   return {
     preferences,
     sidebarSections,
     exportSettings,
+    appSettingsDefaults,
     isLoading,
     error,
     updateExportSettings,
     updateSidebarSections,
+    saveAppSettings,
   };
 }
 
