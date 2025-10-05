@@ -511,10 +511,16 @@ export default function Sidebar({
   const [isExporting, setIsExporting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   
+  // Export settings state (lifted from ExportSaveContent for persistence)
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
+  const [exportQuality, setExportQuality] = useState(90);
+  const [exportScale, setExportScale] = useState(1);
+  const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
+  
   // Sets Manager Dialog state is now managed centrally via props
 
   // Get user preferences for sidebar section visibility
-  const { sidebarSections, isLoading: isLoadingPreferences } = useUserPreferences();
+  const { sidebarSections, isLoading: isLoadingPreferences, appSettingsDefaults, saveAppSettings } = useUserPreferences();
   
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
@@ -528,6 +534,75 @@ export default function Sidebar({
   const effectiveMode = generationCountMode ?? 'fixed';
   const setsEnabled = exportSettings.generationSetsEnabled;
   
+  // Auto-load app settings on mount
+  useEffect(() => {
+    if (appSettingsDefaults && !isLoadingPreferences) {
+      console.log('Auto-loading app settings:', appSettingsDefaults);
+      setExportFormat(appSettingsDefaults.exportFormat);
+      setExportQuality(appSettingsDefaults.exportQuality);
+      setExportScale(appSettingsDefaults.exportScale);
+      setExportMode(appSettingsDefaults.exportMode);
+      
+      // Apply artboard settings to the active artboard
+      const activeBoard = artboards.find(a => a.id === activeArtboard);
+      if (activeBoard && onUpdateArtboard) {
+        onUpdateArtboard(activeArtboard, {
+          width: appSettingsDefaults.artboardWidth,
+          height: appSettingsDefaults.artboardHeight,
+          backgroundColor: appSettingsDefaults.artboardBackgroundColor,
+          displayGrid: appSettingsDefaults.artboardDisplayGrid,
+          displayBorder: appSettingsDefaults.artboardDisplayBorder
+        });
+      }
+    }
+  }, [appSettingsDefaults, isLoadingPreferences]);
+
+  // Save app settings handler
+  const handleSaveAppSettings = useCallback(async () => {
+    const activeBoard = artboards.find(a => a.id === activeArtboard);
+    if (!activeBoard) {
+      console.error('No active artboard found');
+      return;
+    }
+    
+    const settings = {
+      exportFormat,
+      exportQuality,
+      exportScale,
+      exportMode,
+      artboardWidth: activeBoard.width,
+      artboardHeight: activeBoard.height,
+      artboardBackgroundColor: activeBoard.backgroundColor || '#ffffff',
+      artboardDisplayGrid: activeBoard.displayGrid || false,
+      artboardDisplayBorder: activeBoard.displayBorder !== undefined ? activeBoard.displayBorder : true
+    };
+    
+    console.log('Saving app settings:', settings);
+    await saveAppSettings.mutateAsync(settings);
+  }, [exportFormat, exportQuality, exportScale, exportMode, artboards, activeArtboard, saveAppSettings]);
+
+  // Load app settings handler
+  const handleLoadAppSettings = useCallback(() => {
+    if (appSettingsDefaults) {
+      console.log('Loading app settings:', appSettingsDefaults);
+      setExportFormat(appSettingsDefaults.exportFormat);
+      setExportQuality(appSettingsDefaults.exportQuality);
+      setExportScale(appSettingsDefaults.exportScale);
+      setExportMode(appSettingsDefaults.exportMode);
+      
+      // Apply artboard settings to the active artboard
+      const activeBoard = artboards.find(a => a.id === activeArtboard);
+      if (activeBoard && onUpdateArtboard) {
+        onUpdateArtboard(activeArtboard, {
+          width: appSettingsDefaults.artboardWidth,
+          height: appSettingsDefaults.artboardHeight,
+          backgroundColor: appSettingsDefaults.artboardBackgroundColor,
+          displayGrid: appSettingsDefaults.artboardDisplayGrid,
+          displayBorder: appSettingsDefaults.artboardDisplayBorder
+        });
+      }
+    }
+  }, [appSettingsDefaults, artboards, activeArtboard, onUpdateArtboard]);
 
   // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
@@ -871,10 +946,8 @@ export default function Sidebar({
   }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
-    const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
-    const [exportQuality, setExportQuality] = useState(90);
-    const [exportScale, setExportScale] = useState(1);
-    const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
+    // Export settings now use lifted state from main Sidebar component
+    // exportFormat, exportQuality, exportScale, exportMode are already defined at the component level
     const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
 
     // Local export state (not needed by API generator)
@@ -4158,16 +4231,14 @@ export default function Sidebar({
           <Label className="text-xs text-slate-300">App Settings</Label>
           <div className="grid grid-cols-2 gap-2">
             <Button
-              onClick={() => {
-                if (onSaveAppSettings) onSaveAppSettings();
-              }}
+              onClick={handleSaveAppSettings}
               variant="secondary"
               size="sm"
               className="text-xs"
-              disabled={appSettingsStatus.isSaving}
+              disabled={saveAppSettings.isPending}
               data-testid="button-save-app-settings"
             >
-              {appSettingsStatus.isSaving ? (
+              {saveAppSettings.isPending ? (
                 <>
                   <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
                   Saving...
@@ -4180,26 +4251,14 @@ export default function Sidebar({
               )}
             </Button>
             <Button
-              onClick={() => {
-                if (onLoadAppSettings) onLoadAppSettings();
-              }}
+              onClick={handleLoadAppSettings}
               variant="secondary"
               size="sm"
               className="text-xs"
-              disabled={appSettingsStatus.isLoading}
               data-testid="button-load-app-settings"
             >
-              {appSettingsStatus.isLoading ? (
-                <>
-                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <FolderOpen className="w-3 h-3 mr-1" />
-                  Load
-                </>
-              )}
+              <FolderOpen className="w-3 h-3 mr-1" />
+              Load
             </Button>
           </div>
         </div>
