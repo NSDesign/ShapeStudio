@@ -2270,18 +2270,10 @@ export const useShapeEditor = () => {
           shape.properties.zIndex += set.generationOrder * 1000;
         });
 
-        // Apply set-level blend mode and compositing operation
-        // compositingOperation takes precedence over setBlendMode if not default
-        const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
-          ? set.compositingOperation
-          : set.setBlendMode;
-        
-        if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-          console.log(`🎨 Applying blend/compositing mode "${effectiveBlendMode}" to set "${set.name}"`);
-          setShapes.forEach(shape => {
-            shape.properties.blendMode = effectiveBlendMode as BlendMode;
-          });
-        }
+        // NOTE: Do NOT assign set's compositing operation to individual shapes
+        // Compositing operations should only be applied BETWEEN sets, not WITHIN sets
+        // Shapes within a set should always use 'source-over' to combine properly
+        // The set-level compositing is handled during rendering (Canvas.tsx for live, Sidebar.tsx for batch)
 
         // Apply set visibility and opacity
         if (set.setVisibility) {

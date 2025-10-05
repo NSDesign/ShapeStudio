@@ -229,6 +229,7 @@ export default function ShapeEditor() {
             isMultiTouch={isMultiTouch}
             selectedShapes={selectedShapes}
             selectedGroups={selectedGroups}
+            generationSets={generationSets}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}

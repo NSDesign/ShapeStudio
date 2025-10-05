@@ -5,6 +5,7 @@ import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
+import { GenerationSet } from '@shared/schema';
 
 
 interface CanvasProps {
@@ -25,6 +26,7 @@ interface CanvasProps {
   isMultiTouch: boolean;
   selectedShapes: Shape[];
   selectedGroups: ShapeGroupClass[];
+  generationSets?: GenerationSet[];
   onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -70,6 +72,7 @@ export default function Canvas({
   isMultiTouch,
   selectedShapes,
   selectedGroups,
+  generationSets,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -319,11 +322,93 @@ export default function Canvas({
       ctx.scale(effectiveZoom, effectiveZoom);
       ctx.translate(effectivePanX, effectivePanY);
 
-      // Draw shapes in z-index order
-      const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-      sortedShapes.forEach(shape => {
-        shape.render(ctx);
-      });
+      // Check if we need set-based rendering with compositing operations
+      const hasCompositingOperations = generationSets && generationSets.some(set => 
+        set.enabled && ((set.compositingOperation && set.compositingOperation !== 'source-over') || 
+        (set.setBlendMode && set.setBlendMode !== 'source-over'))
+      );
+
+      if (hasCompositingOperations && generationSets) {
+        // SET-BASED RENDERING: Group shapes by set and apply compositing between sets
+        
+        // Group shapes by set using z-index ranges (sets use 1000x multiplier)
+        const shapesBySet: Map<number, typeof shapes> = new Map();
+        shapes.forEach(shape => {
+          const setIndex = Math.floor(shape.properties.zIndex / 1000);
+          if (!shapesBySet.has(setIndex)) {
+            shapesBySet.set(setIndex, []);
+          }
+          shapesBySet.get(setIndex)!.push(shape);
+        });
+
+        const enabledSets = generationSets
+          .filter(set => set.enabled)
+          .sort((a, b) => a.generationOrder - b.generationOrder);
+
+        // Render each set to an offscreen canvas, then composite onto main canvas
+        enabledSets.forEach((set) => {
+          const setShapes = shapesBySet.get(set.generationOrder) || [];
+          if (setShapes.length === 0) return;
+
+          // Create offscreen canvas for this set (same size as main canvas)
+          const setCanvas = document.createElement('canvas');
+          setCanvas.width = canvas.width;
+          setCanvas.height = canvas.height;
+          const setCtx = setCanvas.getContext('2d');
+
+          if (!setCtx) {
+            console.error(`Failed to create context for set "${set.name}"`);
+            return;
+          }
+
+          // Apply same transform as main canvas
+          setCtx.save();
+          setCtx.translate(displayWidth / 2, displayHeight / 2);
+          setCtx.scale(effectiveZoom, effectiveZoom);
+          setCtx.translate(effectivePanX, effectivePanY);
+
+          // Render shapes for this set (sorted by z-index within set) using source-over
+          const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+          sortedSetShapes.forEach(shape => {
+            shape.render(setCtx);
+          });
+
+          setCtx.restore();
+
+          // Composite set canvas onto main canvas with appropriate blend mode/compositing
+          const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
+            ? set.compositingOperation
+            : set.setBlendMode;
+
+          ctx.save();
+          if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
+            ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+          }
+
+          // Draw the set canvas onto main canvas (at untransformed coordinates)
+          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
+          ctx.drawImage(setCanvas, 0, 0);
+          ctx.restore();
+
+          // Cleanup
+          setCtx.clearRect(0, 0, setCanvas.width, setCanvas.height);
+          setCanvas.width = 0;
+          setCanvas.height = 0;
+        });
+
+        // Restore transform for UI elements (handles, marquee, etc.)
+        ctx.restore();
+        ctx.save();
+        ctx.translate(displayWidth / 2, displayHeight / 2);
+        ctx.scale(effectiveZoom, effectiveZoom);
+        ctx.translate(effectivePanX, effectivePanY);
+      } else {
+        // STANDARD RENDERING: Draw shapes in z-index order (no compositing)
+        const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+        sortedShapes.forEach(shape => {
+          shape.render(ctx);
+        });
+      }
 
       // Draw group handles
       groups.forEach(group => {
