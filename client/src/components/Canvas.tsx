@@ -350,10 +350,36 @@ export default function Canvas({
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
-          // Create offscreen canvas for this set (same size as main canvas)
+          // Calculate bounding box for this set's shapes in world coordinates
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          setShapes.forEach(shape => {
+            const bounds = shape.getBounds();
+            minX = Math.min(minX, bounds.x);
+            minY = Math.min(minY, bounds.y);
+            maxX = Math.max(maxX, bounds.x + bounds.width);
+            maxY = Math.max(maxY, bounds.y + bounds.height);
+          });
+
+          // Add padding to avoid clipping
+          const padding = 10;
+          minX -= padding;
+          minY -= padding;
+          maxX += padding;
+          maxY += padding;
+
+          // Transform bounds to screen coordinates
+          const screenMinX = (minX + effectivePanX) * effectiveZoom + displayWidth / 2;
+          const screenMinY = (minY + effectivePanY) * effectiveZoom + displayHeight / 2;
+          const screenMaxX = (maxX + effectivePanX) * effectiveZoom + displayWidth / 2;
+          const screenMaxY = (maxY + effectivePanY) * effectiveZoom + displayHeight / 2;
+          
+          const boundsWidth = Math.ceil(screenMaxX - screenMinX);
+          const boundsHeight = Math.ceil(screenMaxY - screenMinY);
+
+          // Create offscreen canvas sized to bounds
           const setCanvas = document.createElement('canvas');
-          setCanvas.width = canvas.width;
-          setCanvas.height = canvas.height;
+          setCanvas.width = boundsWidth;
+          setCanvas.height = boundsHeight;
           const setCtx = setCanvas.getContext('2d');
 
           if (!setCtx) {
@@ -361,13 +387,13 @@ export default function Canvas({
             return;
           }
 
-          // Apply same transform as main canvas
+          // Apply transform relative to bounds origin
           setCtx.save();
-          setCtx.translate(displayWidth / 2, displayHeight / 2);
+          setCtx.translate(-screenMinX + displayWidth / 2, -screenMinY + displayHeight / 2);
           setCtx.scale(effectiveZoom, effectiveZoom);
           setCtx.translate(effectivePanX, effectivePanY);
 
-          // Render shapes for this set (sorted by z-index within set) using source-over
+          // Render shapes for this set with their individual blend modes/comp ops
           const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
           sortedSetShapes.forEach(shape => {
             shape.render(setCtx);
@@ -375,23 +401,26 @@ export default function Canvas({
 
           setCtx.restore();
 
-          // Composite set canvas onto main canvas with appropriate blend mode/compositing
+          // Composite set canvas onto main canvas with set-level blend mode/compositing
           const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
             ? set.compositingOperation
             : set.setBlendMode;
 
           ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to screen coordinates
+          
           if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
             ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
           }
 
-          // Draw the set canvas onto main canvas (at untransformed coordinates)
-          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
-          ctx.drawImage(setCanvas, 0, 0);
+          // Draw the bounded set canvas at correct screen position
+          ctx.drawImage(setCanvas, screenMinX, screenMinY);
+          
+          // Reset composite operation for next set
+          ctx.globalCompositeOperation = 'source-over';
           ctx.restore();
 
           // Cleanup
-          setCtx.clearRect(0, 0, setCanvas.width, setCanvas.height);
           setCanvas.width = 0;
           setCanvas.height = 0;
         });

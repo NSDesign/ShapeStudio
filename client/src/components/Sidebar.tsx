@@ -1480,16 +1480,8 @@ export default function Sidebar({
                     shape.properties.zIndex += set.generationOrder * 1000;
                   });
                   
-                  // Apply blend modes and compositing operations
-                  const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
-                    ? set.compositingOperation
-                    : set.setBlendMode;
-                  
-                  if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-                    newShapes.forEach(shape => {
-                      shape.properties.blendMode = effectiveBlendMode as any;
-                    });
-                  }
+                  // NOTE: Set-level blend modes and compositing operations are applied during rendering,
+                  // not to individual shapes. Shapes keep their own blend modes.
                   
                   // Apply visibility and opacity
                   if (set.setVisibility) {
@@ -1685,10 +1677,36 @@ export default function Sidebar({
                   
                   console.log(`🖼️ Rendering set "${set.name}" (${setShapes.length} shapes) to offscreen canvas`);
                   
-                  // Create offscreen canvas for this set
+                  // Calculate bounding box for this set's shapes (in world coordinates before transform)
+                  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                  setShapes.forEach(shape => {
+                    const bounds = shape.getBounds();
+                    minX = Math.min(minX, bounds.x);
+                    minY = Math.min(minY, bounds.y);
+                    maxX = Math.max(maxX, bounds.x + bounds.width);
+                    maxY = Math.max(maxY, bounds.y + bounds.height);
+                  });
+
+                  // Add padding to avoid clipping
+                  const padding = 10;
+                  minX -= padding;
+                  minY -= padding;
+                  maxX += padding;
+                  maxY += padding;
+
+                  // Transform bounds to canvas coordinates (accounting for exportScale and translate)
+                  const canvasMinX = (minX + translateX) * exportScale;
+                  const canvasMinY = (minY + translateY) * exportScale;
+                  const canvasMaxX = (maxX + translateX) * exportScale;
+                  const canvasMaxY = (maxY + translateY) * exportScale;
+                  
+                  const boundsWidth = Math.ceil(canvasMaxX - canvasMinX);
+                  const boundsHeight = Math.ceil(canvasMaxY - canvasMinY);
+
+                  // Create offscreen canvas sized to bounds
                   const setCanvas = document.createElement('canvas');
-                  setCanvas.width = compositingCanvas.width;
-                  setCanvas.height = compositingCanvas.height;
+                  setCanvas.width = boundsWidth;
+                  setCanvas.height = boundsHeight;
                   const setCtx = setCanvas.getContext('2d');
                   
                   if (!setCtx) {
@@ -1696,17 +1714,17 @@ export default function Sidebar({
                     return;
                   }
                   
-                  // Apply same transform as compositing canvas
+                  // Apply transform relative to bounds origin
                   setCtx.scale(exportScale, exportScale);
-                  setCtx.translate(translateX, translateY);
+                  setCtx.translate(translateX - minX, translateY - minY);
                   
-                  // Render shapes for this set (sorted by z-index within set)
+                  // Render shapes for this set with their individual blend modes/comp ops
                   const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
                   sortedSetShapes.forEach(shape => renderShapeForExport(setCtx, shape));
                   
-                  // Composite set canvas onto compositing canvas with appropriate blend mode/compositing
+                  // Composite set canvas onto compositing canvas with set-level blend mode/compositing
                   compositingCtx.save();
-                  compositingCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
+                  compositingCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset to pixel coordinates
                   
                   const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
                     ? set.compositingOperation
@@ -1717,12 +1735,14 @@ export default function Sidebar({
                     console.log(`🎨 Applying ${effectiveBlendMode} to set "${set.name}"`);
                   }
                   
-                  // Draw the set canvas onto compositing canvas
-                  compositingCtx.drawImage(setCanvas, 0, 0);
+                  // Draw the bounded set canvas at correct position
+                  compositingCtx.drawImage(setCanvas, canvasMinX, canvasMinY);
+                  
+                  // Reset composite operation for next set
+                  compositingCtx.globalCompositeOperation = 'source-over';
                   compositingCtx.restore();
                   
                   // Cleanup
-                  setCtx.clearRect(0, 0, setCanvas.width, setCanvas.height);
                   setCanvas.width = 0;
                   setCanvas.height = 0;
                 });
