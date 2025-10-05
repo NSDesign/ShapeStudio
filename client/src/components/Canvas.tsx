@@ -345,63 +345,42 @@ export default function Canvas({
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
 
-        // Render each set to an offscreen canvas, then composite onto main canvas
+        // Calculate SHARED canvas dimensions from ALL shapes (across all sets)
+        // This ensures all offscreen canvases are the same size, maintaining relative positions
+        let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
+        shapes.forEach(shape => {
+          const worldBounds = shape.getWorldBounds();
+          globalMinX = Math.min(globalMinX, worldBounds.x);
+          globalMinY = Math.min(globalMinY, worldBounds.y);
+          globalMaxX = Math.max(globalMaxX, worldBounds.x + worldBounds.width);
+          globalMaxY = Math.max(globalMaxY, worldBounds.y + worldBounds.height);
+        });
+
+        // Add padding
+        const padding = 50;
+        globalMinX -= padding;
+        globalMinY -= padding;
+        globalMaxX += padding;
+        globalMaxY += padding;
+
+        // Transform to screen coordinates
+        const screenMinX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
+        const screenMinY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
+        const screenMaxX = (globalMaxX + effectivePanX) * effectiveZoom + displayWidth / 2;
+        const screenMaxY = (globalMaxY + effectivePanY) * effectiveZoom + displayHeight / 2;
+        
+        const sharedWidth = Math.ceil(screenMaxX - screenMinX);
+        const sharedHeight = Math.ceil(screenMaxY - screenMinY);
+
+        // Render each set to an offscreen canvas (all same size), then composite onto main canvas
         enabledSets.forEach((set) => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
-          // For single shapes, render directly (no need for offscreen canvas)
-          if (setShapes.length === 1) {
-            const shape = setShapes[0];
-            
-            // Apply set-level blend mode/compositing if needed
-            const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
-              ? set.compositingOperation
-              : set.setBlendMode;
-
-            ctx.save();
-            if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-              ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
-            }
-            
-            shape.render(ctx);
-            
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.restore();
-            return;
-          }
-
-          // For multiple shapes, use bounded offscreen canvas
-          // Calculate bounding box using world-space bounds (handles scale, rotation, skew, translation)
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-          setShapes.forEach(shape => {
-            const worldBounds = shape.getWorldBounds();
-            minX = Math.min(minX, worldBounds.x);
-            minY = Math.min(minY, worldBounds.y);
-            maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
-            maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
-          });
-
-          // Add generous padding to avoid clipping after transforms
-          const padding = 50;
-          minX -= padding;
-          minY -= padding;
-          maxX += padding;
-          maxY += padding;
-
-          // Transform bounds to screen coordinates
-          const screenMinX = (minX + effectivePanX) * effectiveZoom + displayWidth / 2;
-          const screenMinY = (minY + effectivePanY) * effectiveZoom + displayHeight / 2;
-          const screenMaxX = (maxX + effectivePanX) * effectiveZoom + displayWidth / 2;
-          const screenMaxY = (maxY + effectivePanY) * effectiveZoom + displayHeight / 2;
-          
-          const boundsWidth = Math.ceil(screenMaxX - screenMinX);
-          const boundsHeight = Math.ceil(screenMaxY - screenMinY);
-
-          // Create offscreen canvas sized to bounds
+          // Create offscreen canvas with SHARED dimensions (same for all sets)
           const setCanvas = document.createElement('canvas');
-          setCanvas.width = boundsWidth;
-          setCanvas.height = boundsHeight;
+          setCanvas.width = sharedWidth;
+          setCanvas.height = sharedHeight;
           const setCtx = setCanvas.getContext('2d');
 
           if (!setCtx) {
@@ -409,7 +388,7 @@ export default function Canvas({
             return;
           }
 
-          // Apply transform relative to bounds origin
+          // Apply standard transform - shapes maintain their world positions
           setCtx.save();
           setCtx.translate(-screenMinX + displayWidth / 2, -screenMinY + displayHeight / 2);
           setCtx.scale(effectiveZoom, effectiveZoom);
@@ -435,7 +414,7 @@ export default function Canvas({
             ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
           }
 
-          // Draw the bounded set canvas at correct screen position
+          // Draw the set canvas at the SAME screen position for all sets
           ctx.drawImage(setCanvas, screenMinX, screenMinY);
           
           // Reset composite operation for next set

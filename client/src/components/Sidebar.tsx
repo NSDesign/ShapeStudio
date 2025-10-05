@@ -1670,65 +1670,46 @@ export default function Sidebar({
                   shapesBySet.get(setIndex)!.push(shape);
                 });
                 
-                // Render each set to an offscreen canvas, then composite onto compositing canvas
+                // Calculate SHARED canvas dimensions from ALL shapes (across all sets)
+                // This ensures all offscreen canvases are the same size, maintaining relative positions
+                let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
+                currentExportShapes.forEach(shape => {
+                  const worldBounds = shape.getWorldBounds();
+                  globalMinX = Math.min(globalMinX, worldBounds.x);
+                  globalMinY = Math.min(globalMinY, worldBounds.y);
+                  globalMaxX = Math.max(globalMaxX, worldBounds.x + worldBounds.width);
+                  globalMaxY = Math.max(globalMaxY, worldBounds.y + worldBounds.height);
+                });
+
+                // Add padding
+                const padding = 50;
+                globalMinX -= padding;
+                globalMinY -= padding;
+                globalMaxX += padding;
+                globalMaxY += padding;
+
+                // Transform to canvas coordinates
+                const canvasMinX = (globalMinX + translateX) * exportScale;
+                const canvasMinY = (globalMinY + translateY) * exportScale;
+                const canvasMaxX = (globalMaxX + translateX) * exportScale;
+                const canvasMaxY = (globalMaxY + translateY) * exportScale;
+                
+                const sharedWidth = Math.ceil(canvasMaxX - canvasMinX);
+                const sharedHeight = Math.ceil(canvasMaxY - canvasMinY);
+
+                console.log(`📐 Shared canvas dimensions: ${sharedWidth}x${sharedHeight} for all sets`);
+                
+                // Render each set to an offscreen canvas (all same size), then composite onto compositing canvas
                 enabledSets.forEach((set, idx) => {
                   const setShapes = shapesBySet.get(set.generationOrder) || [];
                   if (setShapes.length === 0) return;
                   
-                  console.log(`🖼️ Rendering set "${set.name}" (${setShapes.length} shapes) to offscreen canvas`);
+                  console.log(`🖼️ Rendering set "${set.name}" (${setShapes.length} shapes) to shared-size offscreen canvas`);
                   
-                  // For single shapes, render directly (no need for offscreen canvas)
-                  if (setShapes.length === 1) {
-                    const shape = setShapes[0];
-                    
-                    // Apply set-level blend mode/compositing if needed
-                    const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
-                      ? set.compositingOperation
-                      : set.setBlendMode;
-
-                    compositingCtx.save();
-                    if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-                      compositingCtx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
-                      console.log(`🎨 Applying ${effectiveBlendMode} to single-shape set "${set.name}"`);
-                    }
-                    
-                    renderShapeForExport(compositingCtx, shape);
-                    
-                    compositingCtx.globalCompositeOperation = 'source-over';
-                    compositingCtx.restore();
-                    return;
-                  }
-                  
-                  // For multiple shapes, calculate bounding box using world-space bounds (handles scale, rotation, skew, translation)
-                  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                  setShapes.forEach(shape => {
-                    const worldBounds = shape.getWorldBounds();
-                    minX = Math.min(minX, worldBounds.x);
-                    minY = Math.min(minY, worldBounds.y);
-                    maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
-                    maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
-                  });
-
-                  // Add generous padding to avoid clipping after transforms
-                  const padding = 50;
-                  minX -= padding;
-                  minY -= padding;
-                  maxX += padding;
-                  maxY += padding;
-
-                  // Transform bounds to canvas coordinates (accounting for exportScale and translate)
-                  const canvasMinX = (minX + translateX) * exportScale;
-                  const canvasMinY = (minY + translateY) * exportScale;
-                  const canvasMaxX = (maxX + translateX) * exportScale;
-                  const canvasMaxY = (maxY + translateY) * exportScale;
-                  
-                  const boundsWidth = Math.ceil(canvasMaxX - canvasMinX);
-                  const boundsHeight = Math.ceil(canvasMaxY - canvasMinY);
-
-                  // Create offscreen canvas sized to bounds
+                  // Create offscreen canvas with SHARED dimensions (same for all sets)
                   const setCanvas = document.createElement('canvas');
-                  setCanvas.width = boundsWidth;
-                  setCanvas.height = boundsHeight;
+                  setCanvas.width = sharedWidth;
+                  setCanvas.height = sharedHeight;
                   const setCtx = setCanvas.getContext('2d');
                   
                   if (!setCtx) {
@@ -1736,9 +1717,9 @@ export default function Sidebar({
                     return;
                   }
                   
-                  // Apply transform relative to bounds origin
+                  // Apply standard transform - shapes maintain their world positions
                   setCtx.scale(exportScale, exportScale);
-                  setCtx.translate(translateX - minX, translateY - minY);
+                  setCtx.translate(translateX - globalMinX, translateY - globalMinY);
                   
                   // Render shapes for this set with their individual blend modes/comp ops
                   const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
@@ -1757,7 +1738,7 @@ export default function Sidebar({
                     console.log(`🎨 Applying ${effectiveBlendMode} to set "${set.name}"`);
                   }
                   
-                  // Draw the bounded set canvas at correct position
+                  // Draw the set canvas at the SAME position for all sets
                   compositingCtx.drawImage(setCanvas, canvasMinX, canvasMinY);
                   
                   // Reset composite operation for next set
