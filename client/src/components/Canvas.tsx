@@ -350,18 +350,49 @@ export default function Canvas({
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
-          // Calculate bounding box for this set's shapes in world coordinates
+          // For single shapes, render directly (no need for offscreen canvas)
+          if (setShapes.length === 1) {
+            const shape = setShapes[0];
+            
+            // Apply set-level blend mode/compositing if needed
+            const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
+              ? set.compositingOperation
+              : set.setBlendMode;
+
+            ctx.save();
+            if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
+              ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+            }
+            
+            shape.render(ctx);
+            
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.restore();
+            return;
+          }
+
+          // For multiple shapes, use bounded offscreen canvas
+          // Calculate bounding box using ACTUAL transformed positions
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
           setShapes.forEach(shape => {
             const bounds = shape.getBounds();
-            minX = Math.min(minX, bounds.x);
-            minY = Math.min(minY, bounds.y);
-            maxX = Math.max(maxX, bounds.x + bounds.width);
-            maxY = Math.max(maxY, bounds.y + bounds.height);
+            const scaleX = shape.transform.scaleX;
+            const scaleY = shape.transform.scaleY;
+            
+            // Get actual world-space bounds
+            const worldMinX = shape.transform.x + bounds.x * scaleX;
+            const worldMinY = shape.transform.y + bounds.y * scaleY;
+            const worldMaxX = shape.transform.x + (bounds.x + bounds.width) * scaleX;
+            const worldMaxY = shape.transform.y + (bounds.y + bounds.height) * scaleY;
+            
+            minX = Math.min(minX, worldMinX);
+            minY = Math.min(minY, worldMinY);
+            maxX = Math.max(maxX, worldMaxX);
+            maxY = Math.max(maxY, worldMaxY);
           });
 
-          // Add padding to avoid clipping
-          const padding = 10;
+          // Add generous padding to avoid clipping after transforms
+          const padding = 50;
           minX -= padding;
           minY -= padding;
           maxX += padding;
