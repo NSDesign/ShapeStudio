@@ -418,6 +418,11 @@ interface SidebarProps {
   onRestoreUIStateFromSet?: (setId: string) => void;
   hasUnsavedChanges?: (setId: string | null) => boolean;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
+  
+  // App Settings Management
+  onSaveAppSettings?: () => void;
+  onLoadAppSettings?: () => void;
+  appSettingsStatus?: { isSaving?: boolean; isLoading?: boolean; hasSaved?: boolean; hasLoaded?: boolean };
 }
 
 export default function Sidebar({
@@ -485,7 +490,12 @@ export default function Sidebar({
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
   hasUnsavedChanges,
-  areSetsEnabled
+  areSetsEnabled,
+  
+  // App Settings Management
+  onSaveAppSettings,
+  onLoadAppSettings,
+  appSettingsStatus = {}
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -4127,6 +4137,59 @@ export default function Sidebar({
               disabled={isLoadingProject}
             >
               {isLoadingProject ? (
+                <>
+                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FolderOpen className="w-3 h-3 mr-1" />
+                  Load
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <Separator className="bg-slate-700" />
+
+        {/* App Settings */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">App Settings</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => {
+                if (onSaveAppSettings) onSaveAppSettings();
+              }}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={appSettingsStatus.isSaving}
+              data-testid="button-save-app-settings"
+            >
+              {appSettingsStatus.isSaving ? (
+                <>
+                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-3 h-3 mr-1" />
+                  Save
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={() => {
+                if (onLoadAppSettings) onLoadAppSettings();
+              }}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={appSettingsStatus.isLoading}
+              data-testid="button-load-app-settings"
+            >
+              {appSettingsStatus.isLoading ? (
                 <>
                   <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
                   Loading...
