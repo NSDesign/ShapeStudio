@@ -1699,23 +1699,14 @@ export default function Sidebar({
                     return;
                   }
                   
-                  // For multiple shapes, calculate bounding box using ACTUAL transformed positions
+                  // For multiple shapes, calculate bounding box using world-space bounds (handles scale, rotation, skew, translation)
                   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                   setShapes.forEach(shape => {
-                    const bounds = shape.getBounds();
-                    const scaleX = shape.transform.scaleX;
-                    const scaleY = shape.transform.scaleY;
-                    
-                    // Get actual world-space bounds
-                    const worldMinX = shape.transform.x + bounds.x * scaleX;
-                    const worldMinY = shape.transform.y + bounds.y * scaleY;
-                    const worldMaxX = shape.transform.x + (bounds.x + bounds.width) * scaleX;
-                    const worldMaxY = shape.transform.y + (bounds.y + bounds.height) * scaleY;
-                    
-                    minX = Math.min(minX, worldMinX);
-                    minY = Math.min(minY, worldMinY);
-                    maxX = Math.max(maxX, worldMaxX);
-                    maxY = Math.max(maxY, worldMaxY);
+                    const worldBounds = shape.getWorldBounds();
+                    minX = Math.min(minX, worldBounds.x);
+                    minY = Math.min(minY, worldBounds.y);
+                    maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
+                    maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
                   });
 
                   // Add generous padding to avoid clipping after transforms
