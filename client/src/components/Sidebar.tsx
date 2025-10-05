@@ -1688,14 +1688,9 @@ export default function Sidebar({
                 globalMaxX += padding;
                 globalMaxY += padding;
 
-                // Transform to canvas coordinates
-                const canvasMinX = (globalMinX + translateX) * exportScale;
-                const canvasMinY = (globalMinY + translateY) * exportScale;
-                const canvasMaxX = (globalMaxX + translateX) * exportScale;
-                const canvasMaxY = (globalMaxY + translateY) * exportScale;
-                
-                const sharedWidth = Math.ceil(canvasMaxX - canvasMinX);
-                const sharedHeight = Math.ceil(canvasMaxY - canvasMinY);
+                // Calculate shared canvas dimensions in world coordinates (no translation yet)
+                const sharedWidth = Math.ceil((globalMaxX - globalMinX) * exportScale);
+                const sharedHeight = Math.ceil((globalMaxY - globalMinY) * exportScale);
 
                 console.log(`📐 Shared canvas dimensions: ${sharedWidth}x${sharedHeight} for all sets`);
                 
@@ -1717,9 +1712,9 @@ export default function Sidebar({
                     return;
                   }
                   
-                  // Apply standard transform - shapes maintain their world positions
+                  // Apply transform for world coordinates (translate to align with global bounds)
                   setCtx.scale(exportScale, exportScale);
-                  setCtx.translate(translateX - globalMinX, translateY - globalMinY);
+                  setCtx.translate(-globalMinX, -globalMinY);
                   
                   // Render shapes for this set with their individual blend modes/comp ops
                   const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
@@ -1738,8 +1733,10 @@ export default function Sidebar({
                     console.log(`🎨 Applying ${effectiveBlendMode} to set "${set.name}"`);
                   }
                   
-                  // Draw the set canvas at the SAME position for all sets
-                  compositingCtx.drawImage(setCanvas, canvasMinX, canvasMinY);
+                  // Draw at world coordinates - compositingCtx already has scale/translate applied
+                  const canvasX = (globalMinX + translateX) * exportScale;
+                  const canvasY = (globalMinY + translateY) * exportScale;
+                  compositingCtx.drawImage(setCanvas, canvasX, canvasY);
                   
                   // Reset composite operation for next set
                   compositingCtx.globalCompositeOperation = 'source-over';

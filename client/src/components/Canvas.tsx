@@ -328,6 +328,18 @@ export default function Canvas({
         (set.setBlendMode && set.setBlendMode !== 'source-over'))
       );
 
+      console.log('🔍 [COMPOSITING CHECK]', {
+        hasGenerationSets: !!generationSets,
+        generationSetsCount: generationSets?.length || 0,
+        hasCompositingOperations,
+        sets: generationSets?.map(s => ({
+          name: s.name,
+          enabled: s.enabled,
+          compositingOp: s.compositingOperation,
+          blendMode: s.setBlendMode
+        }))
+      });
+
       if (hasCompositingOperations && generationSets) {
         // SET-BASED RENDERING: Group shapes by set and apply compositing between sets
         
@@ -363,19 +375,18 @@ export default function Canvas({
         globalMaxX += padding;
         globalMaxY += padding;
 
-        // Transform to screen coordinates
-        const screenMinX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
-        const screenMinY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
-        const screenMaxX = (globalMaxX + effectivePanX) * effectiveZoom + displayWidth / 2;
-        const screenMaxY = (globalMaxY + effectivePanY) * effectiveZoom + displayHeight / 2;
-        
-        const sharedWidth = Math.ceil(screenMaxX - screenMinX);
-        const sharedHeight = Math.ceil(screenMaxY - screenMinY);
+        // Calculate shared canvas dimensions in world coordinates
+        const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveZoom);
+        const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveZoom);
+
+        console.log('📐 [LIVE GEN] Shared canvas dimensions:', sharedWidth, 'x', sharedHeight);
 
         // Render each set to an offscreen canvas (all same size), then composite onto main canvas
         enabledSets.forEach((set) => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
+
+          console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes');
 
           // Create offscreen canvas with SHARED dimensions (same for all sets)
           const setCanvas = document.createElement('canvas');
@@ -388,11 +399,10 @@ export default function Canvas({
             return;
           }
 
-          // Apply standard transform - shapes maintain their world positions
+          // Apply transform for world coordinates (translate to align with global bounds)
           setCtx.save();
-          setCtx.translate(-screenMinX + displayWidth / 2, -screenMinY + displayHeight / 2);
           setCtx.scale(effectiveZoom, effectiveZoom);
-          setCtx.translate(effectivePanX, effectivePanY);
+          setCtx.translate(-globalMinX, -globalMinY);
 
           // Render shapes for this set with their individual blend modes/comp ops
           const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
@@ -412,10 +422,15 @@ export default function Canvas({
           
           if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
             ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
           }
 
+          // Calculate screen position from world coordinates
+          const screenX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
+          const screenY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
+          
           // Draw the set canvas at the SAME screen position for all sets
-          ctx.drawImage(setCanvas, screenMinX, screenMinY);
+          ctx.drawImage(setCanvas, screenX, screenY);
           
           // Reset composite operation for next set
           ctx.globalCompositeOperation = 'source-over';
