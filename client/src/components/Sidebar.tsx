@@ -1555,23 +1555,31 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              // Use artboard background color if backgroundArtboard exists (applies in all export modes)
+              // Store background color for later (applied AFTER compositing)
               const exportBackgroundColor = backgroundArtboard 
                 ? (backgroundArtboard.backgroundColor || '#ffffff')
                 : '#ffffff';
-              ctx.fillStyle = exportBackgroundColor;
-              ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-              ctx.scale(exportScale, exportScale);
-              ctx.translate(translateX, translateY);
 
               // Check if we need set-based rendering (for compositing operations)
               const hasCompositingOperations = exportSettings.generationSetsEnabled && 
                 generationSets?.some(set => set.enabled && set.compositingOperation && set.compositingOperation !== 'source-over');
 
               if (hasCompositingOperations && exportSettings.generationSetsEnabled && generationSets) {
-                // SET-BASED RENDERING: Group shapes by generation set and use offscreen canvases for proper compositing
-                console.log('🎨 Using set-based rendering with offscreen canvases for compositing operations');
+                // SET-BASED RENDERING WITH COMPOSITING: Use offscreen canvas to avoid background interference
+                console.log('🎨 Using set-based rendering with offscreen compositing (background applied last)');
+                
+                // Create offscreen canvas for compositing (transparent background)
+                const compositingCanvas = document.createElement('canvas');
+                compositingCanvas.width = canvasWidth;
+                compositingCanvas.height = canvasHeight;
+                const compositingCtx = compositingCanvas.getContext('2d');
+                
+                if (!compositingCtx) {
+                  throw new Error('Failed to create compositing canvas context');
+                }
+                
+                compositingCtx.scale(exportScale, exportScale);
+                compositingCtx.translate(translateX, translateY);
                 
                 const enabledSets = generationSets
                   .filter(set => set.enabled)
@@ -1587,7 +1595,7 @@ export default function Sidebar({
                   shapesBySet.get(setIndex)!.push(shape);
                 });
                 
-                // Render each set to an offscreen canvas, then composite onto main canvas
+                // Render each set to an offscreen canvas, then composite onto compositing canvas
                 enabledSets.forEach((set, idx) => {
                   const setShapes = shapesBySet.get(set.generationOrder) || [];
                   if (setShapes.length === 0) return;
@@ -1596,8 +1604,8 @@ export default function Sidebar({
                   
                   // Create offscreen canvas for this set
                   const setCanvas = document.createElement('canvas');
-                  setCanvas.width = canvas.width;
-                  setCanvas.height = canvas.height;
+                  setCanvas.width = compositingCanvas.width;
+                  setCanvas.height = compositingCanvas.height;
                   const setCtx = setCanvas.getContext('2d');
                   
                   if (!setCtx) {
@@ -1605,7 +1613,7 @@ export default function Sidebar({
                     return;
                   }
                   
-                  // Apply same transform as main canvas
+                  // Apply same transform as compositing canvas
                   setCtx.scale(exportScale, exportScale);
                   setCtx.translate(translateX, translateY);
                   
@@ -1613,31 +1621,46 @@ export default function Sidebar({
                   const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
                   sortedSetShapes.forEach(shape => renderShapeForExport(setCtx, shape));
                   
-                  // Composite set canvas onto main canvas with appropriate blend mode/compositing
-                  ctx.save();
-                  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
+                  // Composite set canvas onto compositing canvas with appropriate blend mode/compositing
+                  compositingCtx.save();
+                  compositingCtx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to draw at pixel coordinates
                   
                   const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
                     ? set.compositingOperation
                     : set.setBlendMode;
                   
                   if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-                    ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+                    compositingCtx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
                     console.log(`🎨 Applying ${effectiveBlendMode} to set "${set.name}"`);
                   }
                   
-                  // Draw the set canvas onto main canvas
-                  ctx.drawImage(setCanvas, 0, 0);
-                  ctx.restore();
+                  // Draw the set canvas onto compositing canvas
+                  compositingCtx.drawImage(setCanvas, 0, 0);
+                  compositingCtx.restore();
                   
                   // Cleanup
                   setCtx.clearRect(0, 0, setCanvas.width, setCanvas.height);
                   setCanvas.width = 0;
                   setCanvas.height = 0;
                 });
+                
+                // NOW draw background to final canvas FIRST
+                ctx.fillStyle = exportBackgroundColor;
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Then draw composited shapes OVER background (using destination-over would put shapes behind)
+                ctx.drawImage(compositingCanvas, 0, 0);
+                
+                console.log('✅ Background applied after compositing, preventing interference');
               } else {
-                // STANDARD RENDERING: Render all shapes directly to main canvas (no compositing operations)
-                console.log('🎨 Using standard per-shape rendering');
+                // STANDARD RENDERING: Draw background first, then shapes (no compositing issues)
+                console.log('🎨 Using standard per-shape rendering (background first)');
+                ctx.fillStyle = exportBackgroundColor;
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
+                ctx.scale(exportScale, exportScale);
+                ctx.translate(translateX, translateY);
+                
                 const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
                 sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
               }

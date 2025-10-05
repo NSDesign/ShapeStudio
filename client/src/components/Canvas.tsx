@@ -85,32 +85,41 @@ export default function Canvas({
   canvasRef,
 }: CanvasProps) {
   const animationFrameRef = useRef<number>();
+  const infiniteCanvasRef = useRef<HTMLCanvasElement>(null);
+  const artboardCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Set canvas size to match container with proper pixel density
+  // Set canvas size to match container with proper pixel density for all three layers
   useEffect(() => {
     let resizeTimeoutId: number;
     
     const resizeCanvas = () => {
-      if (canvasRef.current) {
-        const canvas = canvasRef.current;
+      const canvases = [infiniteCanvasRef.current, artboardCanvasRef.current, canvasRef.current];
+      const canvas = canvasRef.current;
+      
+      if (canvas) {
         const container = canvas.parentElement;
         if (container) {
           const rect = container.getBoundingClientRect();
           const dpr = window.devicePixelRatio || 1;
           
-          // Set actual canvas size in memory (accounting for device pixel ratio)
-          canvas.width = rect.width * dpr;
-          canvas.height = rect.height * dpr;
-          
-          // Set display size via CSS
-          canvas.style.width = rect.width + 'px';
-          canvas.style.height = rect.height + 'px';
-          
-          // Scale the drawing context so everything draws at the correct size
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.scale(dpr, dpr);
-          }
+          // Apply same sizing to all three canvas layers
+          canvases.forEach(c => {
+            if (c) {
+              // Set actual canvas size in memory (accounting for device pixel ratio)
+              c.width = rect.width * dpr;
+              c.height = rect.height * dpr;
+              
+              // Set display size via CSS
+              c.style.width = rect.width + 'px';
+              c.style.height = rect.height + 'px';
+              
+              // Scale the drawing context so everything draws at the correct size
+              const ctx = c.getContext('2d');
+              if (ctx) {
+                ctx.scale(dpr, dpr);
+              }
+            }
+          });
         }
       }
     };
@@ -138,10 +147,11 @@ export default function Canvas({
     };
   }, []);
 
-  // Main render loop
+  // Main render loop - three separate layers
   useEffect(() => {
-    const renderCanvas = () => {
-      const canvas = canvasRef.current;
+    // Layer 1: Infinite Canvas (background + grid)
+    const renderInfiniteCanvas = () => {
+      const canvas = infiniteCanvasRef.current;
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
@@ -158,7 +168,6 @@ export default function Canvas({
       let effectivePanY = canvasSettings.panY;
       
       if (effectiveZoom < 0.05) {
-        console.warn('Using fallback zoom due to invalid value:', effectiveZoom);
         effectiveZoom = 1.0;
         effectivePanX = 0;
         effectivePanY = 0;
@@ -167,7 +176,6 @@ export default function Canvas({
       // Apply transformations
       ctx.save();
       
-      // Get display dimensions (not pixel dimensions)
       const displayWidth = canvas.clientWidth;
       const displayHeight = canvas.clientHeight;
       
@@ -175,7 +183,7 @@ export default function Canvas({
       ctx.scale(effectiveZoom, effectiveZoom);
       ctx.translate(effectivePanX, effectivePanY);
 
-      // Draw grid
+      // Draw infinite canvas grid
       if (canvasSettings.showGrid) {
         const gridSize = 20;
         const adjustedGridSize = gridSize / effectiveZoom;
@@ -204,6 +212,39 @@ export default function Canvas({
         ctx.globalAlpha = 1;
       }
 
+      ctx.restore();
+    };
+
+    // Layer 2: Artboard (background + grid + border)
+    const renderArtboard = () => {
+      const canvas = artboardCanvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Clear canvas (transparent)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let effectiveZoom = canvasSettings.zoom;
+      let effectivePanX = canvasSettings.panX;
+      let effectivePanY = canvasSettings.panY;
+      
+      if (effectiveZoom < 0.05) {
+        effectiveZoom = 1.0;
+        effectivePanX = 0;
+        effectivePanY = 0;
+      }
+
+      ctx.save();
+      
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      
+      ctx.translate(displayWidth / 2, displayHeight / 2);
+      ctx.scale(effectiveZoom, effectiveZoom);
+      ctx.translate(effectivePanX, effectivePanY);
+
       // Draw active artboard
       const currentArtboard = artboards.find(a => a.id === activeArtboard);
       if (currentArtboard) {
@@ -213,7 +254,7 @@ export default function Canvas({
         
         // Draw artboard grid if enabled
         if (currentArtboard.displayGrid !== false) {
-          const gridSize = 50; // Grid cell size
+          const gridSize = 50;
           const adjustedGridSize = gridSize / effectiveZoom;
           
           ctx.strokeStyle = '#cccccc';
@@ -233,7 +274,7 @@ export default function Canvas({
           ctx.globalAlpha = 1;
         }
         
-        // Draw artboard border if enabled (default true for visibility)
+        // Draw artboard border if enabled
         if (currentArtboard.displayBorder !== false) {
           ctx.strokeStyle = '#0066cc';
           ctx.lineWidth = 2 / effectiveZoom;
@@ -245,7 +286,40 @@ export default function Canvas({
         }
       }
 
-      // Draw shapes in z-index order (lowest z-index first, highest on top)
+      ctx.restore();
+    };
+
+    // Layer 3: Shapes (transparent background, compositing happens here)
+    const renderShapes = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Clear canvas (transparent background)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let effectiveZoom = canvasSettings.zoom;
+      let effectivePanX = canvasSettings.panX;
+      let effectivePanY = canvasSettings.panY;
+      
+      if (effectiveZoom < 0.05) {
+        effectiveZoom = 1.0;
+        effectivePanX = 0;
+        effectivePanY = 0;
+      }
+
+      ctx.save();
+      
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      
+      ctx.translate(displayWidth / 2, displayHeight / 2);
+      ctx.scale(effectiveZoom, effectiveZoom);
+      ctx.translate(effectivePanX, effectivePanY);
+
+      // Draw shapes in z-index order
       const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
       sortedShapes.forEach(shape => {
         shape.render(ctx);
@@ -280,7 +354,6 @@ export default function Canvas({
               const isSelected = selectedPoints.some(sp => sp.shapeId === shape.id && sp.pointIndex === index);
               ctx.fillStyle = isSelected ? '#ff6b6b' : '#4dabf7';
               
-              // Transform point coordinates to match shape position
               const transformedX = point.x + shape.transform.x;
               const transformedY = point.y + shape.transform.y;
               
@@ -300,7 +373,6 @@ export default function Canvas({
               const point1 = shape.points[i];
               const point2 = shape.points[i + 1];
               
-              // Transform segment coordinates to match shape position
               const midX = (point1.x + point2.x) / 2 + shape.transform.x;
               const midY = (point1.y + point2.y) / 2 + shape.transform.y;
               
@@ -318,7 +390,9 @@ export default function Canvas({
     };
 
     const animate = () => {
-      renderCanvas();
+      renderInfiniteCanvas();
+      renderArtboard();
+      renderShapes();
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -412,8 +486,23 @@ export default function Canvas({
         </div>
       </div>
       
-      {/* Canvas Container */}
+      {/* Canvas Container - Three Layered Canvases */}
       <div className="flex-1 relative bg-slate-900">
+        {/* Layer 1: Infinite Canvas (background + grid) */}
+        <canvas
+          ref={infiniteCanvasRef}
+          className="absolute inset-0"
+          style={{ pointerEvents: 'none' }}
+        />
+        
+        {/* Layer 2: Artboard (artboard background + border + grid) */}
+        <canvas
+          ref={artboardCanvasRef}
+          className="absolute inset-0"
+          style={{ pointerEvents: 'none' }}
+        />
+        
+        {/* Layer 3: Shapes (transparent, compositing happens here, receives all interactions) */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 cursor-crosshair"
