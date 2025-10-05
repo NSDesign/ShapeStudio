@@ -1,0 +1,79 @@
+Concrete Example: 3 Shape Sets with Mixed Operations
+Shape Set 1 (z-index offset: 0)
+Set-level: blend mode = multiply, comp op = source-over
+Shape A (circle): blend mode = source-over, comp op = source-over, opacity = 0.8
+Shape B (square): blend mode = overlay, comp op = source-over, opacity = 1.0
+Shape C (triangle): blend mode = source-over, comp op = destination-out, opacity = 0.5
+Shape Set 2 (z-index offset: 1000)
+Set-level: blend mode = source-over, comp op = destination-in
+Shape D (blob): blend mode = screen, comp op = source-over, opacity = 0.9
+Shape E (polygon): blend mode = source-over, comp op = source-over, opacity = 0.7
+Shape Set 3 (z-index offset: 2000)
+Set-level: blend mode = color-dodge, comp op = source-over
+Shape F (star): blend mode = source-over, comp op = source-over, opacity = 1.0
+Correct Rendering Process:
+Stage 1: Build Set 1's Canvas
+// Create offscreen canvas for Set 1
+const set1Canvas = createOffscreenCanvas();
+const set1Ctx = set1Canvas.getContext('2d');
+// Draw Shape A: uses its own blend mode and comp op
+set1Ctx.globalAlpha = 0.8;
+set1Ctx.globalCompositeOperation = 'source-over'; // Shape A's comp op
+// (blend mode is part of the comp op for individual shapes)
+drawCircle(set1Ctx);
+// Draw Shape B: uses its own blend mode and comp op
+set1Ctx.globalAlpha = 1.0;
+set1Ctx.globalCompositeOperation = 'overlay'; // Shape B's blend mode
+drawSquare(set1Ctx);
+// Draw Shape C: uses its own comp op
+set1Ctx.globalAlpha = 0.5;
+set1Ctx.globalCompositeOperation = 'destination-out'; // Shape C's comp op (cuts a hole!)
+drawTriangle(set1Ctx);
+// Result: Set 1 canvas has circle with square overlayed, triangle cut out
+Stage 2: Composite Set 1 onto Main Canvas
+// Main canvas starts empty (or with background)
+const mainCtx = mainCanvas.getContext('2d');
+// Apply SET 1's set-level operations when compositing
+mainCtx.globalCompositeOperation = 'multiply'; // Set 1's set-level blend mode
+mainCtx.globalAlpha = 1.0; // Set-level opacity (if we had one)
+mainCtx.drawImage(set1Canvas, 0, 0);
+// Reset for next set
+mainCtx.globalCompositeOperation = 'source-over';
+Stage 3: Build Set 2's Canvas
+const set2Canvas = createOffscreenCanvas();
+const set2Ctx = set2Canvas.getContext('2d');
+// Draw Shape D: uses its own blend mode
+set2Ctx.globalAlpha = 0.9;
+set2Ctx.globalCompositeOperation = 'screen'; // Shape D's blend mode
+drawBlob(set2Ctx);
+// Draw Shape E: uses default
+set2Ctx.globalAlpha = 0.7;
+set2Ctx.globalCompositeOperation = 'source-over'; // Shape E's comp op
+drawPolygon(set2Ctx);
+// Result: Set 2 canvas has blob and polygon combined
+Stage 4: Composite Set 2 onto Main Canvas
+// Apply SET 2's set-level compositing operation
+mainCtx.globalCompositeOperation = 'destination-in'; // Set 2's set-level comp op!
+mainCtx.globalAlpha = 1.0;
+mainCtx.drawImage(set2Canvas, 0, 0);
+// THIS is where destination-in masks: Set 2 shapes mask against Set 1 shapes
+// Only pixels where Set 2 overlaps Set 1 remain
+mainCtx.globalCompositeOperation = 'source-over'; // Reset
+Stage 5: Build Set 3's Canvas
+const set3Canvas = createOffscreenCanvas();
+const set3Ctx = set3Canvas.getContext('2d');
+set3Ctx.globalAlpha = 1.0;
+set3Ctx.globalCompositeOperation = 'source-over'; // Shape F's comp op
+drawStar(set3Ctx);
+Stage 6: Composite Set 3 onto Main Canvas
+// Apply SET 3's set-level blend mode
+mainCtx.globalCompositeOperation = 'color-dodge'; // Set 3's set-level blend mode
+mainCtx.globalAlpha = 1.0;
+mainCtx.drawImage(set3Canvas, 0, 0);
+// Final image: star color-dodges against the masked result of Sets 1 and 2
+Key Principles:
+Within each set's canvas: Individual shapes use their own blendMode or compositingOperation properties
+Between sets: The set-level blendMode or compositingOperation is applied when drawing the completed set canvas onto the main canvas
+Priority: If a shape has both blend mode and comp op set, comp op takes precedence (as per Canvas API)
+Reset after each set: Always reset main context to source-over after compositing each set
+Does this clarify the architecture? The bug is that we're currently applying Set 2's destination-in WHILE drawing shapes into Set 2's canvas, instead of WHEN drawing Set 2's canvas onto the main canvas.
