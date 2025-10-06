@@ -341,8 +341,8 @@ export default function Canvas({
       });
 
       if (hasCompositingOperations && generationSets) {
-        // SET-BASED RENDERING: Group shapes by set and apply compositing between sets
-        console.log('🎨 [LIVE GEN] Using set-based rendering with compositing');
+        // SET-BASED RENDERING WITH COMPOSITING: Use intermediate transparent canvas
+        console.log('🎨 [LIVE GEN] Using set-based rendering with intermediate compositing canvas');
         
         // Group shapes by set using z-index ranges (sets use 1000x multiplier)
         const shapesBySet: Map<number, typeof shapes> = new Map();
@@ -379,16 +379,27 @@ export default function Canvas({
         const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveZoom);
         const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveZoom);
 
-        console.log('📐 [LIVE GEN] Bounded canvas:', sharedWidth, 'x', sharedHeight, 'from bounds:', {globalMinX, globalMinY, globalMaxX, globalMaxY});
+        console.log('📐 [LIVE GEN] Bounded canvas:', sharedWidth, 'x', sharedHeight);
 
-        // Render each set to a BOUNDED offscreen canvas (same size for all sets)
+        // Create INTERMEDIATE COMPOSITING CANVAS (transparent, same size as bounded area)
+        const compositingCanvas = document.createElement('canvas');
+        compositingCanvas.width = sharedWidth;
+        compositingCanvas.height = sharedHeight;
+        const compositingCtx = compositingCanvas.getContext('2d');
+
+        if (!compositingCtx) {
+          console.error('Failed to create compositing canvas context');
+          return;
+        }
+
+        // Render each set to a bounded offscreen canvas, then composite onto compositing canvas
         enabledSets.forEach((set) => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
           console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes');
 
-          // Create offscreen canvas with BOUNDED dimensions (like batch export)
+          // Create offscreen canvas with BOUNDED dimensions
           const setCanvas = document.createElement('canvas');
           setCanvas.width = sharedWidth;
           setCanvas.height = sharedHeight;
@@ -399,7 +410,7 @@ export default function Canvas({
             return;
           }
 
-          // Apply WORLD-SPACE transform (not viewport transform - that's already on main canvas)
+          // Apply WORLD-SPACE transform
           setCtx.save();
           setCtx.scale(effectiveZoom, effectiveZoom);
           setCtx.translate(-globalMinX, -globalMinY);
@@ -412,37 +423,45 @@ export default function Canvas({
 
           setCtx.restore();
 
-          // Composite set canvas onto main canvas with set-level blend mode/compositing
+          // Composite set canvas onto COMPOSITING CANVAS (not main canvas yet)
           const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
             ? set.compositingOperation
             : set.setBlendMode;
 
-          ctx.save();
-          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to pixel coordinates
+          compositingCtx.save();
           
           if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-            ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
-            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
+            compositingCtx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name, 'on compositing canvas');
           }
 
-          // Calculate screen position from world bounds (accounting for viewport transform)
-          // World coords -> Screen coords: (world + pan) * zoom + center
-          const screenX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
-          const screenY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
-          
-          console.log('📍 [LIVE GEN] Drawing set at screen position:', {screenX, screenY});
-
-          // Draw bounded offscreen canvas at calculated screen position
-          ctx.drawImage(setCanvas, screenX, screenY);
+          // Draw set canvas at 0,0 on compositing canvas (all sets draw to same position)
+          compositingCtx.drawImage(setCanvas, 0, 0);
           
           // Reset composite operation for next set
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.restore();
+          compositingCtx.globalCompositeOperation = 'source-over';
+          compositingCtx.restore();
 
           // Cleanup
           setCanvas.width = 0;
           setCanvas.height = 0;
         });
+
+        // NOW draw the FINAL composited result to main canvas at calculated screen position
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to pixel coordinates
+        
+        const screenX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
+        const screenY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
+        
+        console.log('📍 [LIVE GEN] Drawing final composited result at:', {screenX, screenY});
+        ctx.drawImage(compositingCanvas, screenX, screenY);
+        
+        ctx.restore();
+
+        // Cleanup compositing canvas
+        compositingCanvas.width = 0;
+        compositingCanvas.height = 0;
 
         // Restore transform for UI elements (handles, marquee, etc.)
         ctx.restore();
