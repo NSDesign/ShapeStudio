@@ -344,6 +344,18 @@ export default function Canvas({
         // SET-BASED RENDERING WITH COMPOSITING: Use intermediate transparent canvas
         console.log('🎨 [LIVE GEN] Using set-based rendering with intermediate compositing canvas');
         
+        // Guard: Skip if no shapes exist
+        if (shapes.length === 0) {
+          console.log('⚠️ [LIVE GEN] No shapes to render, skipping compositing');
+          // Restore transform for UI elements
+          ctx.restore();
+          ctx.save();
+          ctx.translate(displayWidth / 2, displayHeight / 2);
+          ctx.scale(effectiveZoom, effectiveZoom);
+          ctx.translate(effectivePanX, effectivePanY);
+          return;
+        }
+        
         // Group shapes by set using z-index ranges (sets use 1000x multiplier)
         const shapesBySet: Map<number, typeof shapes> = new Map();
         shapes.forEach(shape => {
@@ -378,6 +390,18 @@ export default function Canvas({
         // Calculate bounded canvas dimensions in world coordinates
         const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveZoom);
         const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveZoom);
+
+        // Validate canvas dimensions are valid numbers
+        if (!isFinite(sharedWidth) || !isFinite(sharedHeight) || sharedWidth <= 0 || sharedHeight <= 0) {
+          console.error('⚠️ [LIVE GEN] Invalid canvas dimensions:', {sharedWidth, sharedHeight, globalMinX, globalMinY, globalMaxX, globalMaxY});
+          // Restore transform for UI elements
+          ctx.restore();
+          ctx.save();
+          ctx.translate(displayWidth / 2, displayHeight / 2);
+          ctx.scale(effectiveZoom, effectiveZoom);
+          ctx.translate(effectivePanX, effectivePanY);
+          return;
+        }
 
         console.log('📐 [LIVE GEN] Bounded canvas:', sharedWidth, 'x', sharedHeight);
 
