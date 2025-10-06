@@ -341,18 +341,12 @@ export default function Canvas({
       });
 
       if (hasCompositingOperations && generationSets) {
-        // SET-BASED RENDERING WITH COMPOSITING: Use intermediate transparent canvas
-        console.log('🎨 [LIVE GEN] Using set-based rendering with intermediate compositing canvas');
+        // SET-BASED RENDERING WITH DIRECT COMPOSITING: Render shapes directly with compositing operations
+        console.log('🎨 [LIVE GEN] Using set-based rendering with direct compositing (no offscreen canvases)');
         
         // Guard: Skip if no shapes exist
         if (shapes.length === 0) {
           console.log('⚠️ [LIVE GEN] No shapes to render, skipping compositing');
-          // Restore transform for UI elements
-          ctx.restore();
-          ctx.save();
-          ctx.translate(displayWidth / 2, displayHeight / 2);
-          ctx.scale(effectiveZoom, effectiveZoom);
-          ctx.translate(effectivePanX, effectivePanY);
           return;
         }
         
@@ -370,129 +364,33 @@ export default function Canvas({
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
 
-        // Calculate SHARED bounded canvas dimensions from ALL shapes (like batch export)
-        let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
-        shapes.forEach(shape => {
-          const worldBounds = shape.getWorldBounds();
-          globalMinX = Math.min(globalMinX, worldBounds.x);
-          globalMinY = Math.min(globalMinY, worldBounds.y);
-          globalMaxX = Math.max(globalMaxX, worldBounds.x + worldBounds.width);
-          globalMaxY = Math.max(globalMaxY, worldBounds.y + worldBounds.height);
-        });
-
-        // Add padding
-        const padding = 50;
-        globalMinX -= padding;
-        globalMinY -= padding;
-        globalMaxX += padding;
-        globalMaxY += padding;
-
-        // Calculate bounded canvas dimensions in world coordinates
-        const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveZoom);
-        const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveZoom);
-
-        // Validate canvas dimensions are valid numbers
-        if (!isFinite(sharedWidth) || !isFinite(sharedHeight) || sharedWidth <= 0 || sharedHeight <= 0) {
-          console.error('⚠️ [LIVE GEN] Invalid canvas dimensions:', {sharedWidth, sharedHeight, globalMinX, globalMinY, globalMaxX, globalMaxY});
-          // Restore transform for UI elements
-          ctx.restore();
-          ctx.save();
-          ctx.translate(displayWidth / 2, displayHeight / 2);
-          ctx.scale(effectiveZoom, effectiveZoom);
-          ctx.translate(effectivePanX, effectivePanY);
-          return;
-        }
-
-        console.log('📐 [LIVE GEN] Bounded canvas:', sharedWidth, 'x', sharedHeight);
-
-        // Create INTERMEDIATE COMPOSITING CANVAS (transparent, same size as bounded area)
-        const compositingCanvas = document.createElement('canvas');
-        compositingCanvas.width = sharedWidth;
-        compositingCanvas.height = sharedHeight;
-        const compositingCtx = compositingCanvas.getContext('2d');
-
-        if (!compositingCtx) {
-          console.error('Failed to create compositing canvas context');
-          return;
-        }
-
-        // Render each set to a bounded offscreen canvas, then composite onto compositing canvas
+        // Render each set directly to main canvas with compositing operations
         enabledSets.forEach((set) => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
           console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes');
 
-          // Create offscreen canvas with BOUNDED dimensions
-          const setCanvas = document.createElement('canvas');
-          setCanvas.width = sharedWidth;
-          setCanvas.height = sharedHeight;
-          const setCtx = setCanvas.getContext('2d');
-
-          if (!setCtx) {
-            console.error(`Failed to create context for set "${set.name}"`);
-            return;
-          }
-
-          // Apply WORLD-SPACE transform
-          setCtx.save();
-          setCtx.scale(effectiveZoom, effectiveZoom);
-          setCtx.translate(-globalMinX, -globalMinY);
-
-          // Render shapes for this set with their individual blend modes/comp ops
-          const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-          sortedSetShapes.forEach(shape => {
-            shape.render(setCtx);
-          });
-
-          setCtx.restore();
-
-          // Composite set canvas onto COMPOSITING CANVAS (not main canvas yet)
+          // Apply compositing operation for this set
           const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
             ? set.compositingOperation
             : set.setBlendMode;
 
-          compositingCtx.save();
+          ctx.save();
           
           if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-            compositingCtx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
-            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name, 'on compositing canvas');
+            ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
+            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
           }
 
-          // Draw set canvas at 0,0 on compositing canvas (all sets draw to same position)
-          compositingCtx.drawImage(setCanvas, 0, 0);
-          
-          // Reset composite operation for next set
-          compositingCtx.globalCompositeOperation = 'source-over';
-          compositingCtx.restore();
+          // Render shapes for this set in z-index order
+          const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
+          sortedSetShapes.forEach(shape => {
+            shape.render(ctx);
+          });
 
-          // Cleanup
-          setCanvas.width = 0;
-          setCanvas.height = 0;
+          ctx.restore();
         });
-
-        // NOW draw the FINAL composited result to main canvas at calculated screen position
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to pixel coordinates
-        
-        const screenX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
-        const screenY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
-        
-        console.log('📍 [LIVE GEN] Drawing final composited result at:', {screenX, screenY});
-        ctx.drawImage(compositingCanvas, screenX, screenY);
-        
-        ctx.restore();
-
-        // Cleanup compositing canvas
-        compositingCanvas.width = 0;
-        compositingCanvas.height = 0;
-
-        // Restore transform for UI elements (handles, marquee, etc.)
-        ctx.restore();
-        ctx.save();
-        ctx.translate(displayWidth / 2, displayHeight / 2);
-        ctx.scale(effectiveZoom, effectiveZoom);
-        ctx.translate(effectivePanX, effectivePanY);
       } else {
         // STANDARD RENDERING: Draw shapes in z-index order (no compositing)
         const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
