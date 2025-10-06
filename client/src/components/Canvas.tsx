@@ -358,18 +358,40 @@ export default function Canvas({
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
 
-        // Render each set to a FULL-SIZE offscreen canvas (same size as viewport)
-        // Then composite them together with set-level operations
+        // Calculate SHARED bounded canvas dimensions from ALL shapes (like batch export)
+        let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
+        shapes.forEach(shape => {
+          const worldBounds = shape.getWorldBounds();
+          globalMinX = Math.min(globalMinX, worldBounds.x);
+          globalMinY = Math.min(globalMinY, worldBounds.y);
+          globalMaxX = Math.max(globalMaxX, worldBounds.x + worldBounds.width);
+          globalMaxY = Math.max(globalMaxY, worldBounds.y + worldBounds.height);
+        });
+
+        // Add padding
+        const padding = 50;
+        globalMinX -= padding;
+        globalMinY -= padding;
+        globalMaxX += padding;
+        globalMaxY += padding;
+
+        // Calculate bounded canvas dimensions in world coordinates
+        const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveZoom);
+        const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveZoom);
+
+        console.log('📐 [LIVE GEN] Bounded canvas:', sharedWidth, 'x', sharedHeight, 'from bounds:', {globalMinX, globalMinY, globalMaxX, globalMaxY});
+
+        // Render each set to a BOUNDED offscreen canvas (same size for all sets)
         enabledSets.forEach((set) => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return;
 
           console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes');
 
-          // Create offscreen canvas at FULL viewport size
+          // Create offscreen canvas with BOUNDED dimensions (like batch export)
           const setCanvas = document.createElement('canvas');
-          setCanvas.width = displayWidth;
-          setCanvas.height = displayHeight;
+          setCanvas.width = sharedWidth;
+          setCanvas.height = sharedHeight;
           const setCtx = setCanvas.getContext('2d');
 
           if (!setCtx) {
@@ -377,11 +399,10 @@ export default function Canvas({
             return;
           }
 
-          // Apply the SAME viewport transform as main canvas
+          // Apply WORLD-SPACE transform (not viewport transform - that's already on main canvas)
           setCtx.save();
-          setCtx.translate(displayWidth / 2, displayHeight / 2);
           setCtx.scale(effectiveZoom, effectiveZoom);
-          setCtx.translate(effectivePanX, effectivePanY);
+          setCtx.translate(-globalMinX, -globalMinY);
 
           // Render shapes for this set with their individual blend modes/comp ops
           const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
@@ -404,8 +425,15 @@ export default function Canvas({
             console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
           }
 
-          // Draw the full-size offscreen canvas at 0,0 (covers entire viewport)
-          ctx.drawImage(setCanvas, 0, 0);
+          // Calculate screen position from world bounds (accounting for viewport transform)
+          // World coords -> Screen coords: (world + pan) * zoom + center
+          const screenX = (globalMinX + effectivePanX) * effectiveZoom + displayWidth / 2;
+          const screenY = (globalMinY + effectivePanY) * effectiveZoom + displayHeight / 2;
+          
+          console.log('📍 [LIVE GEN] Drawing set at screen position:', {screenX, screenY});
+
+          // Draw bounded offscreen canvas at calculated screen position
+          ctx.drawImage(setCanvas, screenX, screenY);
           
           // Reset composite operation for next set
           ctx.globalCompositeOperation = 'source-over';
