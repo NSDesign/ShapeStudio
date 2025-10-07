@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
 import { GenerationSet } from '@shared/schema';
+import { renderSetToOffscreenCanvas, compositeSetCanvases } from '@/lib/offscreenRenderer';
 
 
 interface CanvasProps {
@@ -347,8 +348,8 @@ export default function Canvas({
       });
 
       if (hasCompositingOperations && generationSets && shapes.length > 0) {
-        // SET-BASED RENDERING WITH DIRECT COMPOSITING: Render shapes directly with compositing operations
-        console.log('🎨 [LIVE GEN] Using set-based rendering with direct compositing (no offscreen canvases)');
+        // OFFSCREEN RENDERING PIPELINE: Render each set to isolated canvas, then composite
+        console.log('🎨 [LIVE GEN] Using offscreen rendering pipeline for set-level compositing');
         
         // Group shapes by set using z-index ranges (sets use 1000x multiplier)
         const shapesBySet: Map<number, typeof shapes> = new Map();
@@ -364,32 +365,39 @@ export default function Canvas({
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
 
-        // Render each set directly to main canvas with compositing operations
-        enabledSets.forEach((set) => {
+        // Create render context for offscreen canvases
+        const renderContext = {
+          width: displayWidth,
+          height: displayHeight,
+          dpr: window.devicePixelRatio || 1,
+          panX: effectivePanX,
+          panY: effectivePanY,
+          zoom: effectiveZoom
+        };
+
+        // Render each set to its own offscreen canvas
+        const setCanvases = enabledSets.map(set => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
-          if (setShapes.length === 0) return;
+          if (setShapes.length === 0) return null;
 
-          console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes');
+          console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes to offscreen canvas');
 
-          // Apply compositing operation for this set
-          const effectiveBlendMode = (set.compositingOperation && set.compositingOperation !== 'source-over')
-            ? set.compositingOperation
-            : set.setBlendMode;
+          const offscreenCanvas = renderSetToOffscreenCanvas(set, setShapes, renderContext);
+          return { canvas: offscreenCanvas, set };
+        }).filter(Boolean) as Array<{ canvas: HTMLCanvasElement; set: GenerationSet }>;
 
-          // Set compositing operation directly - no save/restore to allow it to persist across sets
-          if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
-            ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
-            console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
-          } else {
-            ctx.globalCompositeOperation = 'source-over';
-          }
-
-          // Render shapes for this set in z-index order
-          const sortedSetShapes = [...setShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
-          sortedSetShapes.forEach(shape => {
-            shape.render(ctx);
-          });
-        });
+        // Save current context state (preserving transforms applied above)
+        ctx.save();
+        
+        // Reset to identity transform for compositing
+        // The offscreen canvases already have transforms baked in
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
+        // Composite all set canvases onto main canvas with set-level operations
+        compositeSetCanvases(ctx, setCanvases);
+        
+        // Restore context state (to apply transforms for UI elements below)
+        ctx.restore();
       } else {
         // STANDARD RENDERING: Draw shapes in z-index order (no compositing)
         const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
