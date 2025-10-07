@@ -370,11 +370,12 @@ export default function Canvas({
             ? set.compositingOperation
             : set.setBlendMode;
 
-          ctx.save();
-          
+          // Set compositing operation directly - no save/restore to allow it to persist across sets
           if (effectiveBlendMode && effectiveBlendMode !== 'source-over') {
             ctx.globalCompositeOperation = effectiveBlendMode as GlobalCompositeOperation;
             console.log('🎨 [LIVE GEN] Applying', effectiveBlendMode, 'to set', set.name);
+          } else {
+            ctx.globalCompositeOperation = 'source-over';
           }
 
           // Render shapes for this set in z-index order
@@ -382,8 +383,6 @@ export default function Canvas({
           sortedSetShapes.forEach(shape => {
             shape.render(ctx);
           });
-
-          ctx.restore();
         });
       } else {
         // STANDARD RENDERING: Draw shapes in z-index order (no compositing)
