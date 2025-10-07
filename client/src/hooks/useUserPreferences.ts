@@ -44,7 +44,7 @@ export function useUserPreferences() {
         return {
           ...oldData,
           exportSettings: {
-            ...exportSettings,
+            ...(oldData.exportSettings as ExportSettingsConfig || {}),
             ...variables,
           },
         };
@@ -76,7 +76,7 @@ export function useUserPreferences() {
         return {
           ...oldData,
           sidebarSections: {
-            ...sidebarSections,
+            ...(oldData.sidebarSections as SidebarSectionConfig || {}),
             ...variables,
           },
         };
