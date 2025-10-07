@@ -34,10 +34,13 @@ export function renderSetToOffscreenCanvas(
     throw new Error('Failed to get 2D context from offscreen canvas');
   }
   
-  // Apply device pixel ratio scaling
+  // Apply device pixel ratio scaling (matches main canvas init)
   ctx.scale(dpr, dpr);
   
-  // Apply canvas transforms (zoom and pan)
+  // Center the canvas (matches main canvas render loop)
+  ctx.translate(width / 2, height / 2);
+  
+  // Apply zoom and pan transforms (matches main canvas render loop)
   ctx.scale(zoom, zoom);
   ctx.translate(panX, panY);
   
