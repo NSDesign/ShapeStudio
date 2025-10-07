@@ -2263,12 +2263,14 @@ export const useShapeEditor = () => {
       const allNewShapes: Shape[] = [];
       
       enabledGenerationSets.forEach((set, setIndex) => {
+        console.log(`🔍 [LOOP] Processing set "${set.name}" (generationOrder: ${set.generationOrder})`);
+        
         // Calculate shape count for this set
         const setCount = set.shapeCountMode === 'fixed' 
           ? set.shapeCountFixed
           : Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
 
-        console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
+        console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode, setIndex=${setIndex})`);
 
         // Generate shapes for this set - pass set's configuration as overrides
         const setShapes = generateShapesWithBatchConfig(

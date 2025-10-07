@@ -354,9 +354,17 @@ export default function Canvas({
           shapesBySet.get(setIndex)!.push(shape);
         });
 
+        console.log('🔍 [SHAPE GROUPING]', {
+          totalShapes: shapes.length,
+          shapeZIndices: shapes.map(s => s.properties.zIndex),
+          groupedSets: Array.from(shapesBySet.entries()).map(([setIdx, shapes]) => ({ setIdx, count: shapes.length }))
+        });
+
         const enabledSets = generationSets
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
+        
+        console.log('🔍 [ENABLED SETS]', enabledSets.map(s => ({ name: s.name, generationOrder: s.generationOrder })));
 
         // Render each set directly to main canvas with compositing operations
         enabledSets.forEach((set) => {
