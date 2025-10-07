@@ -340,15 +340,9 @@ export default function Canvas({
         }))
       });
 
-      if (hasCompositingOperations && generationSets) {
+      if (hasCompositingOperations && generationSets && shapes.length > 0) {
         // SET-BASED RENDERING WITH DIRECT COMPOSITING: Render shapes directly with compositing operations
         console.log('🎨 [LIVE GEN] Using set-based rendering with direct compositing (no offscreen canvases)');
-        
-        // Guard: Skip if no shapes exist
-        if (shapes.length === 0) {
-          console.log('⚠️ [LIVE GEN] No shapes to render, skipping compositing');
-          return;
-        }
         
         // Group shapes by set using z-index ranges (sets use 1000x multiplier)
         const shapesBySet: Map<number, typeof shapes> = new Map();
