@@ -360,17 +360,9 @@ export default function Canvas({
           shapesBySet.get(setIndex)!.push(shape);
         });
 
-        console.log('🔍 [SHAPE GROUPING]', {
-          totalShapes: shapes.length,
-          shapeZIndices: shapes.map(s => s.properties.zIndex),
-          groupedSets: Array.from(shapesBySet.entries()).map(([setIdx, shapes]) => ({ setIdx, count: shapes.length }))
-        });
-
         const enabledSets = generationSets
           .filter(set => set.enabled)
           .sort((a, b) => a.generationOrder - b.generationOrder);
-        
-        console.log('🔍 [ENABLED SETS]', enabledSets.map(s => ({ name: s.name, generationOrder: s.generationOrder })));
 
         // Render each set directly to main canvas with compositing operations
         enabledSets.forEach((set) => {
@@ -495,7 +487,7 @@ export default function Canvas({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments]);
+  }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, generationSets]);
 
   // Mark canvas as dirty whenever state changes - this triggers a re-render
   useEffect(() => {
