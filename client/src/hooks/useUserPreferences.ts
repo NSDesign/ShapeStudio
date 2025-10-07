@@ -60,6 +60,7 @@ export function useUserPreferences() {
   // Mutation for updating sidebar sections
   const updateSidebarSections = useMutation({
     mutationFn: (newSidebarSections: Partial<SidebarSectionConfig>) => {
+      console.log('Updating sidebar sections:', newSidebarSections);
       return apiRequest('PUT', '/api/user/preferences', {
         sidebarSections: {
           ...sidebarSections,
@@ -67,8 +68,24 @@ export function useUserPreferences() {
         },
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/preferences'] });
+    onSuccess: (response, variables) => {
+      console.log('Sidebar sections update successful:', variables);
+      // Update cache directly with the new settings
+      queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          sidebarSections: {
+            ...sidebarSections,
+            ...variables,
+          },
+        };
+      });
+      // Don't invalidate immediately - this causes race conditions
+      // The cache update above is sufficient for immediate UI update
+    },
+    onError: (error) => {
+      console.error('Sidebar sections update failed:', error);
     },
   });
 
