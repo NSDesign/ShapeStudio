@@ -106,7 +106,7 @@ export interface ExportSettingsConfig {
 export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   exportBatchModeEnabled: false,      // Batch export disabled by default
   generationSetsEnabled: false,       // Generation sets disabled by default
-  batchExportCount: 1,                // Single export by default
+  batchExportCount: 10,               // 10 exports by default
   generationCountMode: 'fixed',       // Fixed count mode by default
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
   exportSaveProjectFiles: false,      // Project files disabled by default
