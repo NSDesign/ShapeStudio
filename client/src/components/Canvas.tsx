@@ -502,6 +502,42 @@ export default function Canvas({
     dirtyRef.current = true;
   }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, generationSets]);
 
+  // Wrap interaction handlers to set dirty flag for immediate visual feedback
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onMouseDown(e);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onMouseMove(e);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onMouseUp(e);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onTouchStart(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onTouchMove(e);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    dirtyRef.current = true;
+    onTouchEnd(e);
+  };
+
+  const handleWheel = (e: WheelEvent) => {
+    dirtyRef.current = true;
+    onWheel(e);
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       {/* Toolbar */}
@@ -603,13 +639,13 @@ export default function Canvas({
         <canvas
           ref={canvasRef}
           className="absolute inset-0 cursor-crosshair"
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onWheel={(e) => onWheel(e.nativeEvent)}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onWheel={(e) => handleWheel(e.nativeEvent)}
         />
         
         {/* Overlay Messages */}
