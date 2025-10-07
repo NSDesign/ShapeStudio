@@ -90,6 +90,8 @@ export default function Canvas({
   const animationFrameRef = useRef<number>();
   const infiniteCanvasRef = useRef<HTMLCanvasElement>(null);
   const artboardCanvasRef = useRef<HTMLCanvasElement>(null);
+  const dirtyRef = useRef<boolean>(true); // Track if canvas needs re-render
+  const isAnimatingRef = useRef<boolean>(false); // Track if animation loop is active
 
   // Set canvas size to match container with proper pixel density for all three layers
   useEffect(() => {
@@ -130,11 +132,15 @@ export default function Canvas({
     const debouncedResizeCanvas = () => {
       clearTimeout(resizeTimeoutId);
       resizeTimeoutId = window.setTimeout(() => {
-        requestAnimationFrame(resizeCanvas);
+        requestAnimationFrame(() => {
+          resizeCanvas();
+          dirtyRef.current = true; // Mark as dirty after resize
+        });
       }, 16); // ~60fps debouncing
     };
 
     resizeCanvas();
+    dirtyRef.current = true; // Mark as dirty on mount
     
     const resizeObserver = new ResizeObserver(debouncedResizeCanvas);
     if (canvasRef.current?.parentElement) {
@@ -465,20 +471,36 @@ export default function Canvas({
     };
 
     const animate = () => {
-      renderInfiniteCanvas();
-      renderArtboard();
-      renderShapes();
+      // Only render if dirty flag is set
+      if (dirtyRef.current) {
+        renderInfiniteCanvas();
+        renderArtboard();
+        renderShapes();
+        dirtyRef.current = false; // Reset dirty flag after rendering
+      }
+      
+      // Always schedule next frame to check for changes
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    // Start animation loop if not already running
+    if (!isAnimatingRef.current) {
+      isAnimatingRef.current = true;
+      animate();
+    }
 
     return () => {
+      isAnimatingRef.current = false;
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments]);
+
+  // Mark canvas as dirty whenever state changes - this triggers a re-render
+  useEffect(() => {
+    dirtyRef.current = true;
+  }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, generationSets]);
 
   return (
     <div className="flex-1 flex flex-col">
