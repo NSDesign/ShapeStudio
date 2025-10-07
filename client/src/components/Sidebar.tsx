@@ -913,10 +913,24 @@ export default function Sidebar({
 
   // Export state variables lifted to main component level  
   const [exportShapeCountRange, setExportShapeCountRange] = useState<[number, number]>([5, 15]);
-  const [exportBatchCount, setExportBatchCount] = useState(10);
-  const [exportSaveProjectFiles, setExportSaveProjectFiles] = useState(false);
+  
+  // Use persisted export settings instead of local state
+  const exportBatchCount = exportSettings.batchExportCount;
+  const setExportBatchCount = (count: number) => {
+    updateExportSettings.mutate({ batchExportCount: count });
+  };
+  
+  const exportSaveProjectFiles = exportSettings.exportSaveProjectFiles;
+  const setExportSaveProjectFiles = (enabled: boolean) => {
+    updateExportSettings.mutate({ exportSaveProjectFiles: enabled });
+  };
+  
+  const packageAsZip = exportSettings.packageAsZip;
+  const setPackageAsZip = (enabled: boolean) => {
+    updateExportSettings.mutate({ packageAsZip: enabled });
+  };
+  
   // New packaging and selective export settings
-  const [packageAsZip, setPackageAsZip] = useState(false);
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
 

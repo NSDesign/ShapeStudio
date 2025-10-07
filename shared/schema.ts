@@ -98,15 +98,19 @@ export interface ExportSettingsConfig {
   batchExportCount: number;           // Current batch export count setting
   generationCountMode: string;        // Current generation count mode ('fixed', 'range', etc)
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';  // Strategy when set count < batch export count
+  exportSaveProjectFiles: boolean;    // Whether to export project files (.json) alongside images
+  packageAsZip: boolean;              // Whether to package exports as ZIP file
 }
 
 // Default export settings configuration
 export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   exportBatchModeEnabled: false,      // Batch export disabled by default
   generationSetsEnabled: false,       // Generation sets disabled by default
-  batchExportCount: 1,                // Single export by default
+  batchExportCount: 10,               // 10 exports by default
   generationCountMode: 'fixed',       // Fixed count mode by default
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
+  exportSaveProjectFiles: false,      // Project files disabled by default
+  packageAsZip: false,                // ZIP packaging disabled by default
 };
 
 // App settings defaults configuration type
