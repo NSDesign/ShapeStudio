@@ -135,19 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      if (isDevelopment) {
-        // Return mock preferences for development
-        const { DEFAULT_SIDEBAR_SECTIONS } = await import("@shared/schema");
-        res.json({
-          id: `${userId}-preferences`,
-          userId,
-          sidebarSections: DEFAULT_SIDEBAR_SECTIONS,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-        return;
-      }
-
+      // Use real storage for both development and production
       let preferences = await storage.getUserPreferences(userId);
       
       // If no preferences exist, create default ones
