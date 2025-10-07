@@ -2475,11 +2475,9 @@ export default function Sidebar({
               </div>
 
               {(() => {
-                // Calculate total items to export for Package as ZIP logic
+                // Package as ZIP is enabled when there are multiple images to export
                 const imageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
-                const projectFileCount = exportSaveProjectFiles ? imageCount : 0;
-                const totalItems = imageCount + projectFileCount;
-                const isDisabled = totalItems <= 1;
+                const isDisabled = imageCount <= 1;
                 
                 return (
                   <div className={`flex items-center justify-between p-2 rounded border ${
