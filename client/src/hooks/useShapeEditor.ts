@@ -2502,16 +2502,18 @@ export const useShapeEditor = () => {
 
     // Add shapes to state
     setShapes(prev => {
-      // Calculate the correct base z-index from the current state
       const currentMaxZIndex = prev.length > 0 ? Math.max(...prev.map(s => s.properties.zIndex)) : 0;
       console.log(`🔍 [STATE UPDATE] Current shapes: ${prev.length}, currentMaxZIndex: ${currentMaxZIndex}`);
 
-      // Fix z-indices for the new shapes based on current state
-      const shapesWithFixedZIndex = newShapes.map((shape, index) => {
-        // Directly modify the existing Shape instance instead of creating a plain object
-        shape.properties.zIndex = currentMaxZIndex + index + 1;
-        return shape;
-      });
+      // When using generation sets, preserve the z-index offsets (1000x spacing for set grouping)
+      // When NOT using generation sets, assign sequential z-indices
+      const shapesWithFixedZIndex = enabledGenerationSets.length > 0 
+        ? newShapes // Keep z-indices as-is (already have 1000x offset from generation sets)
+        : newShapes.map((shape, index) => {
+            // Reset z-indices sequentially only when NOT using generation sets
+            shape.properties.zIndex = currentMaxZIndex + index + 1;
+            return shape;
+          });
 
       const updatedShapes = [...prev, ...shapesWithFixedZIndex];
       console.log(`🔍 [AFTER ADD] Total shapes: ${updatedShapes.length}, New z-indices: [${shapesWithFixedZIndex.map(s => s.properties.zIndex).join(', ')}]`);
