@@ -7,7 +7,7 @@ export function useUserPreferences() {
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
     retry: 2,
-    staleTime: 5 * 60 * 1000, // Consider preferences fresh for 5 minutes
+    staleTime: 0, // Always refetch when invalidated
   });
 
   // Extract sidebar sections with fallback to defaults

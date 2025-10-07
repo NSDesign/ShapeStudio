@@ -128,7 +128,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
   // Fetch user preferences
   const { data: preferences, isLoading: isLoadingPreferences, error: preferencesError } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
-    staleTime: 5 * 60 * 1000, // Consider preferences fresh for 5 minutes
+    staleTime: 0, // Always refetch when invalidated
     retry: 1, // Reduce retries for faster failure
     refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
