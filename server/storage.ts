@@ -81,24 +81,47 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getUserPreferences(userId);
     
     if (existing) {
-      // Update existing preferences
+      // Merge incoming partial updates with existing data
+      const mergedPreferences = {
+        sidebarSections: preferences.sidebarSections !== undefined 
+          ? { ...existing.sidebarSections as any, ...preferences.sidebarSections as any }
+          : existing.sidebarSections,
+        exportSettings: preferences.exportSettings !== undefined
+          ? { ...existing.exportSettings as any, ...preferences.exportSettings as any }
+          : existing.exportSettings,
+        generationSets: preferences.generationSets !== undefined
+          ? preferences.generationSets
+          : existing.generationSets,
+        currentGenerationSetId: preferences.currentGenerationSetId !== undefined
+          ? preferences.currentGenerationSetId
+          : existing.currentGenerationSetId,
+        appSettingsDefaults: preferences.appSettingsDefaults !== undefined
+          ? preferences.appSettingsDefaults
+          : existing.appSettingsDefaults,
+      };
+      
+      // Update existing preferences with merged data
       const [result] = await db
         .update(userPreferences)
         .set({
-          ...preferences,
+          ...mergedPreferences,
           updatedAt: new Date(),
         })
         .where(eq(userPreferences.id, preferencesId))
         .returning();
       return result;
     } else {
-      // Insert new preferences
+      // Insert new preferences with defaults for undefined fields
       const [result] = await db
         .insert(userPreferences)
         .values({
           id: preferencesId,
           userId,
-          ...preferences,
+          sidebarSections: preferences.sidebarSections || DEFAULT_SIDEBAR_SECTIONS,
+          exportSettings: preferences.exportSettings || {},
+          generationSets: preferences.generationSets || [],
+          currentGenerationSetId: preferences.currentGenerationSetId || null,
+          appSettingsDefaults: preferences.appSettingsDefaults || null,
         })
         .returning();
       return result;

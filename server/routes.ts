@@ -170,19 +170,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (isDevelopment) {
-        // Mock update for development
-        const mockPreferences = {
-          id: `${userId}-preferences`,
-          userId,
-          sidebarSections: req.body.sidebarSections || {},
-          exportSettings: req.body.exportSettings || {},
-          generationSets: req.body.generationSets || [],
-          currentGenerationSetId: req.body.currentGenerationSetId || null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        console.log('Mock preferences update:', mockPreferences);
-        res.json(mockPreferences);
+        // In development, use real storage to properly merge preferences
+        const { updateUserPreferencesSchema } = await import("@shared/schema");
+        const validatedData = updateUserPreferencesSchema.parse(req.body);
+        
+        const preferences = await storage.upsertUserPreferences(userId, validatedData);
+        console.log('Mock preferences update:', preferences);
+        res.json(preferences);
         return;
       }
 
