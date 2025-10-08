@@ -406,6 +406,44 @@ export default function Canvas({
         });
       }
 
+      // Draw selection bounding boxes on top of composited result
+      selectedShapes.forEach(shape => {
+        ctx.save();
+        
+        // Apply shape transform to position the bounding box correctly
+        ctx.translate(shape.transform.x, shape.transform.y);
+        ctx.rotate(shape.transform.rotation * Math.PI / 180);
+        ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
+        ctx.transform(1, shape.transform.skewX, shape.transform.skewY, 1, 0, 0);
+        
+        // Draw selection bounding box
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2 / effectiveZoom;
+        ctx.setLineDash([5 / effectiveZoom, 5 / effectiveZoom]);
+        
+        const bounds = shape.getBounds();
+        ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        
+        // Add corner indicators for better visibility
+        const cornerSize = 6 / effectiveZoom;
+        const corners = [
+          [bounds.x, bounds.y],
+          [bounds.x + bounds.width, bounds.y],
+          [bounds.x + bounds.width, bounds.y + bounds.height],
+          [bounds.x, bounds.y + bounds.height]
+        ];
+        
+        ctx.fillStyle = '#2563EB';
+        corners.forEach(([x, y]) => {
+          ctx.fillRect(x - cornerSize/2, y - cornerSize/2, cornerSize, cornerSize);
+        });
+        
+        ctx.setLineDash([]);
+        ctx.restore();
+      });
+
       // Draw group handles
       groups.forEach(group => {
         if (selectedGroups.includes(group)) {
