@@ -1,6 +1,6 @@
 import { Shape } from './shapes';
 
-export function renderShape(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number): void {
+export function renderShape(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number, skipSelectionAdornments = false): void {
   if (!shape.points || shape.points.length === 0) {
     return;
   }
@@ -19,8 +19,8 @@ export function renderShape(ctx: CanvasRenderingContext2D, shape: Shape, zoom: n
   // Draw shape
   drawShape(ctx, shape);
   
-  // Draw selection indicator
-  if (shape.selected) {
+  // Draw selection indicator (skip when rendering to offscreen canvas for compositing)
+  if (shape.selected && !skipSelectionAdornments) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.strokeStyle = '#2563EB';
