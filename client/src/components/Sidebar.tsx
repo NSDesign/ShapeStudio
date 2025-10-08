@@ -5158,7 +5158,6 @@ export default function Sidebar({
         <div 
           ref={scrollContainerRef} 
           className="flex-1 overflow-y-auto"
-          style={{ scrollBehavior: 'auto', overflowAnchor: 'none' }}
         >
           <Accordion 
             type="multiple" 
