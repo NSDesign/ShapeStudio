@@ -3172,20 +3172,7 @@ export default function Sidebar({
                             </span>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="space-y-2 pt-2" ref={(el) => {
-                          // Store scroll position preservation for shape properties
-                          if (el && categoryName === 'Lines & Curves') {
-                            const scrollableParent = el.closest('[data-radix-scroll-area-viewport]') || el.closest('.overflow-y-auto') || el.parentElement;
-                            if (scrollableParent && scrollableParent instanceof HTMLElement) {
-                              const currentScroll = scrollableParent.scrollTop;
-                              requestAnimationFrame(() => {
-                                if (scrollableParent.scrollTop !== currentScroll) {
-                                  scrollableParent.scrollTop = currentScroll;
-                                }
-                              });
-                            }
-                          }
-                        }}>
+                        <AccordionContent className="space-y-2 pt-2">
                           {categoryShapes.map((shapeType) => {
                             const displayName = shapeTypeDisplayNames[shapeType];
                             const isEnabled = enabledShapeTypes.has(shapeType);
