@@ -71,8 +71,6 @@ export default function BatchConfigDialog({
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
-  const [showCompositingExplanation, setShowCompositingExplanation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showValidationBanner, setShowValidationBanner] = useState(false);
   const [overallValidationState, setOverallValidationState] = useState<{
@@ -652,26 +650,11 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.blendModeEnabled && !currentSettings.compositingOperationsEnabled && (
                   <div className="ml-6 space-y-3">
-                    <div className="border border-slate-600 rounded">
-                      <Button
-                        variant="ghost"
-                        className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
-                        onClick={() => setShowBlendModeExplanation(!showBlendModeExplanation)}
-                      >
-                        <Label className="text-xs text-slate-300">Blend Mode Behavior</Label>
-                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showBlendModeExplanation ? 'rotate-180' : ''}`} />
-                      </Button>
-                      {showBlendModeExplanation && (
-                        <div className="p-2 bg-slate-800 border-t border-slate-600">
-                          <p className="text-xs text-slate-400">
-                            Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-xs text-slate-400 border border-slate-600 rounded p-3">
+                      Each enabled blend mode has a 0-100% probability weight. System randomly selects modes based on these weights.
+                    </p>
                     
-                    <Label className="text-sm text-slate-300">Active Blend Modes</Label>
-                    <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-2">
                       {blendModes.map((mode) => (
                         <div key={mode} className="flex items-center space-x-3 p-2 bg-slate-800 rounded">
                           <Checkbox
@@ -687,11 +670,11 @@ export default function BatchConfigDialog({
                             }}
                             className="border-slate-500 data-[state=checked]:bg-blue-600"
                           />
-                          <Label className="text-xs capitalize text-slate-300 flex-1">
+                          <Label className="text-xs capitalize text-slate-300 w-28">
                             {mode.replace(/-/g, ' ')}
                           </Label>
                           {(currentSettings.enabledBlendModes as any)[mode] !== undefined && (
-                            <div className="flex items-center space-x-2 flex-1 max-w-24">
+                            <div className="flex items-center space-x-2 flex-1">
                               <Slider
                                 value={[(currentSettings.enabledBlendModes as any)[mode] || 50]}
                                 onValueChange={([value]) => {
@@ -703,7 +686,7 @@ export default function BatchConfigDialog({
                                 step={1}
                                 className="h-2"
                               />
-                              <span className="text-xs text-slate-400 w-8">{(currentSettings.enabledBlendModes as any)[mode]}%</span>
+                              <span className="text-xs text-slate-400 w-10 text-right">{(currentSettings.enabledBlendModes as any)[mode]}%</span>
                             </div>
                           )}
                         </div>
@@ -738,26 +721,11 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.compositingOperationsEnabled && !currentSettings.blendModeEnabled && (
                   <div className="ml-6 space-y-3">
-                    <div className="border border-slate-600 rounded">
-                      <Button
-                        variant="ghost"
-                        className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
-                        onClick={() => setShowCompositingExplanation(!showCompositingExplanation)}
-                      >
-                        <Label className="text-xs text-slate-300">Compositing Operation Behavior</Label>
-                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showCompositingExplanation ? 'rotate-180' : ''}`} />
-                      </Button>
-                      {showCompositingExplanation && (
-                        <div className="p-2 bg-slate-800 border-t border-slate-600">
-                          <p className="text-xs text-slate-400">
-                            Each enabled compositing operation has a 0-100% probability weight. System randomly selects operations based on these weights for masking and transparency effects.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-xs text-slate-400 border border-slate-600 rounded p-3">
+                      Each enabled compositing operation has a 0-100% probability weight. System randomly selects operations based on these weights for masking and transparency effects.
+                    </p>
                     
-                    <Label className="text-sm text-slate-300">Active Compositing Operations</Label>
-                    <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                    <div className="grid grid-cols-1 gap-2">
                       {compositingOperations.map((op) => (
                         <div key={op} className="flex items-center space-x-3 p-2 bg-slate-800 rounded">
                           <Checkbox
@@ -773,11 +741,11 @@ export default function BatchConfigDialog({
                             }}
                             className="border-slate-500 data-[state=checked]:bg-blue-600"
                           />
-                          <Label className="text-xs capitalize text-slate-300 flex-1">
+                          <Label className="text-xs capitalize text-slate-300 w-28">
                             {op.replace(/-/g, ' ')}
                           </Label>
                           {(currentSettings.enabledCompositingOperations as any)?.[op] !== undefined && (
-                            <div className="flex items-center space-x-2 flex-1 max-w-24">
+                            <div className="flex items-center space-x-2 flex-1">
                               <Slider
                                 value={[(currentSettings.enabledCompositingOperations as any)[op] || 50]}
                                 onValueChange={([value]) => {
@@ -789,7 +757,7 @@ export default function BatchConfigDialog({
                                 step={1}
                                 className="h-2"
                               />
-                              <span className="text-xs text-slate-400 w-8">{(currentSettings.enabledCompositingOperations as any)[op]}%</span>
+                              <span className="text-xs text-slate-400 w-10 text-right">{(currentSettings.enabledCompositingOperations as any)[op]}%</span>
                             </div>
                           )}
                         </div>
