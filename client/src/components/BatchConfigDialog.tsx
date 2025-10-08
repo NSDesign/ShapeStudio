@@ -72,6 +72,7 @@ export default function BatchConfigDialog({
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showBlendModeExplanation, setShowBlendModeExplanation] = useState(false);
+  const [showCompositingExplanation, setShowCompositingExplanation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showValidationBanner, setShowValidationBanner] = useState(false);
   const [overallValidationState, setOverallValidationState] = useState<{
@@ -204,7 +205,14 @@ export default function BatchConfigDialog({
   const blendModes: BlendMode[] = [
     'source-over', 'multiply', 'screen', 'overlay', 'darken', 
     'lighten', 'color-dodge', 'color-burn', 'hard-light', 
-    'soft-light', 'difference', 'exclusion'
+    'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 
+    'color', 'luminosity'
+  ];
+
+  const compositingOperations = [
+    'source-in', 'source-out', 'source-atop', 'destination-over',
+    'destination-in', 'destination-out', 'destination-atop', 
+    'lighter', 'copy', 'xor'
   ];
 
 
@@ -621,18 +629,28 @@ export default function BatchConfigDialog({
 
               <Separator className="bg-slate-600" />
 
-              {/* Blend Mode Control - NOT IMPLEMENTED */}
-              <div className="space-y-1 opacity-30 pointer-events-none">
+              {/* Blending Modes */}
+              <div className={`space-y-1 ${currentSettings.compositingOperationsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
-                    checked={false}
-                    disabled={true}
+                    checked={currentSettings.blendModeEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ blendModeEnabled: checked as boolean })}
+                    disabled={currentSettings.compositingOperationsEnabled}
                     className="border-slate-500 data-[state=checked]:bg-blue-600"
                   />
-                  <Label className="font-medium text-slate-400">Blend Mode Control <span className="text-xs text-red-400">(NOT IMPLEMENTED)</span></Label>
+                  <Label className="font-medium text-slate-200">Blending Modes</Label>
                 </div>
                 
-                {currentSettings.blendModeEnabled && (
+                {currentSettings.compositingOperationsEnabled && (
+                  <div className="ml-6 mt-2">
+                    <p className="text-xs text-amber-400 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Disabled when Compositing is active. Blend modes and compositing operations cannot be combined on individual shapes.
+                    </p>
+                  </div>
+                )}
+                
+                {currentSettings.blendModeEnabled && !currentSettings.compositingOperationsEnabled && (
                   <div className="ml-6 space-y-3">
                     <div className="border border-slate-600 rounded">
                       <Button
@@ -670,7 +688,7 @@ export default function BatchConfigDialog({
                             className="border-slate-500 data-[state=checked]:bg-blue-600"
                           />
                           <Label className="text-xs capitalize text-slate-300 flex-1">
-                            {mode.replace('-', ' ')}
+                            {mode.replace(/-/g, ' ')}
                           </Label>
                           {(currentSettings.enabledBlendModes as any)[mode] !== undefined && (
                             <div className="flex items-center space-x-2 flex-1 max-w-24">
@@ -686,6 +704,92 @@ export default function BatchConfigDialog({
                                 className="h-2"
                               />
                               <span className="text-xs text-slate-400 w-8">{(currentSettings.enabledBlendModes as any)[mode]}%</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              {/* Compositing Operations */}
+              <div className={`space-y-1 ${currentSettings.blendModeEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={currentSettings.compositingOperationsEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ compositingOperationsEnabled: checked as boolean })}
+                    disabled={currentSettings.blendModeEnabled}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="font-medium text-slate-200">Compositing</Label>
+                </div>
+                
+                {currentSettings.blendModeEnabled && (
+                  <div className="ml-6 mt-2">
+                    <p className="text-xs text-amber-400 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Disabled when Blending Modes is active. Blend modes and compositing operations cannot be combined on individual shapes.
+                    </p>
+                  </div>
+                )}
+                
+                {currentSettings.compositingOperationsEnabled && !currentSettings.blendModeEnabled && (
+                  <div className="ml-6 space-y-3">
+                    <div className="border border-slate-600 rounded">
+                      <Button
+                        variant="ghost"
+                        className="flex items-center justify-between w-full p-2 bg-slate-800 rounded hover:bg-slate-700 text-left"
+                        onClick={() => setShowCompositingExplanation(!showCompositingExplanation)}
+                      >
+                        <Label className="text-xs text-slate-300">Compositing Operation Behavior</Label>
+                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${showCompositingExplanation ? 'rotate-180' : ''}`} />
+                      </Button>
+                      {showCompositingExplanation && (
+                        <div className="p-2 bg-slate-800 border-t border-slate-600">
+                          <p className="text-xs text-slate-400">
+                            Each enabled compositing operation has a 0-100% probability weight. System randomly selects operations based on these weights for masking and transparency effects.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Label className="text-sm text-slate-300">Active Compositing Operations</Label>
+                    <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                      {compositingOperations.map((op) => (
+                        <div key={op} className="flex items-center space-x-3 p-2 bg-slate-800 rounded">
+                          <Checkbox
+                            checked={(currentSettings.enabledCompositingOperations as any)?.[op] !== undefined}
+                            onCheckedChange={(checked) => {
+                              const newOps = { ...currentSettings.enabledCompositingOperations };
+                              if (checked) {
+                                (newOps as any)[op] = 50;
+                              } else {
+                                delete (newOps as any)[op];
+                              }
+                              handleSettingsUpdate({ enabledCompositingOperations: newOps });
+                            }}
+                            className="border-slate-500 data-[state=checked]:bg-blue-600"
+                          />
+                          <Label className="text-xs capitalize text-slate-300 flex-1">
+                            {op.replace(/-/g, ' ')}
+                          </Label>
+                          {(currentSettings.enabledCompositingOperations as any)?.[op] !== undefined && (
+                            <div className="flex items-center space-x-2 flex-1 max-w-24">
+                              <Slider
+                                value={[(currentSettings.enabledCompositingOperations as any)[op] || 50]}
+                                onValueChange={([value]) => {
+                                  const newOps = { ...currentSettings.enabledCompositingOperations };
+                                  (newOps as any)[op] = value;
+                                  handleSettingsUpdate({ enabledCompositingOperations: newOps });
+                                }}
+                                max={100}
+                                step={1}
+                                className="h-2"
+                              />
+                              <span className="text-xs text-slate-400 w-8">{(currentSettings.enabledCompositingOperations as any)[op]}%</span>
                             </div>
                           )}
                         </div>
