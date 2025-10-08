@@ -410,24 +410,30 @@ export default function Canvas({
       selectedShapes.forEach(shape => {
         ctx.save();
         
+        // Calculate total scale factor (canvas zoom × shape scale)
+        // This ensures constant visual stroke width regardless of zoom or transform scaling
+        const totalScaleX = effectiveZoom * Math.abs(shape.transform.scaleX);
+        const totalScaleY = effectiveZoom * Math.abs(shape.transform.scaleY);
+        const avgScale = (totalScaleX + totalScaleY) / 2;
+        
         // Apply shape transform to position the bounding box correctly
         ctx.translate(shape.transform.x, shape.transform.y);
         ctx.rotate(shape.transform.rotation * Math.PI / 180);
         ctx.scale(shape.transform.scaleX, shape.transform.scaleY);
         ctx.transform(1, shape.transform.skewX, shape.transform.skewY, 1, 0, 0);
         
-        // Draw selection bounding box
+        // Draw selection bounding box with constant stroke width
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
         ctx.strokeStyle = '#2563EB';
-        ctx.lineWidth = 2 / effectiveZoom;
-        ctx.setLineDash([5 / effectiveZoom, 5 / effectiveZoom]);
+        ctx.lineWidth = 2 / avgScale;
+        ctx.setLineDash([5 / avgScale, 5 / avgScale]);
         
         const bounds = shape.getBounds();
         ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
         
-        // Add corner indicators for better visibility
-        const cornerSize = 6 / effectiveZoom;
+        // Add corner indicators with constant size
+        const cornerSize = 6 / avgScale;
         const corners = [
           [bounds.x, bounds.y],
           [bounds.x + bounds.width, bounds.y],
