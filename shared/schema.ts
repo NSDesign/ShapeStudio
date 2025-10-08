@@ -398,6 +398,7 @@ export interface BatchConfigSettings {
   // Fill Color Settings (for solid fills)
   fillColorMode: 'range' | 'palette' | 'define';
   fillColorRange: [string, string]; // For range mode (HSL interpolation)
+  fillColorRangeFlip: boolean; // Toggle to flip color range direction (short vs long path around hue wheel)
   fillColorPalette: string[]; // For palette mode
   fillColorDefine: string; // For define mode
   // Additional HSL controls for range mode
@@ -413,6 +414,7 @@ export interface BatchConfigSettings {
   
   fillGradientColorMode: 'range' | 'palette' | 'define';
   fillGradientColorRange: [string, string]; // For range mode (HSL interpolation)
+  fillGradientColorRangeFlip: boolean; // Toggle to flip color range direction (short vs long path around hue wheel)
   fillGradientColorPalette: string[]; // For palette mode
   fillGradientColorDefine: string[]; // For define mode - array based on max stops
   // Additional HSL controls for range mode
@@ -478,6 +480,7 @@ export interface BatchConfigSettings {
   // Stroke Color Settings
   strokeColorMode: 'range' | 'palette' | 'define';
   strokeColorRange: [string, string]; // For range mode (HSL interpolation)
+  strokeColorRangeFlip: boolean; // Toggle to flip color range direction (short vs long path around hue wheel)
   strokeColorPalette: string[]; // For palette mode
   strokeColorDefine: string; // For define mode
   // Additional HSL controls for range mode
@@ -835,6 +838,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // Fill Color Settings
   fillColorMode: 'range',
   fillColorRange: ['#3b82f6', '#8b5cf6'],
+  fillColorRangeFlip: false,
   fillColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
   fillColorDefine: '#3b82f6',
   // HSL range controls for range mode
@@ -849,6 +853,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientConicProbability: 10,  // 10% of gradients are conic
   fillGradientColorMode: 'range',
   fillGradientColorRange: ['#3b82f6', '#8b5cf6'],
+  fillGradientColorRangeFlip: false,
   fillGradientColorPalette: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'],
   fillGradientColorDefine: ['#3b82f6', '#8b5cf6', '#ef4444'],
   // HSL range controls for range mode
@@ -915,6 +920,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // Stroke Color Settings
   strokeColorMode: 'range',
   strokeColorRange: ['#ef4444', '#f59e0b'],
+  strokeColorRangeFlip: false,
   strokeColorPalette: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981', '#3b82f6'],
   strokeColorDefine: '#ef4444',
   // HSL range controls for range mode
@@ -1787,6 +1793,7 @@ export const BatchConfigSettingsSchema = z.object({
   fillStyleProbability: z.number(),
   fillColorMode: z.enum(['range', 'palette', 'define']),
   fillColorRange: z.tuple([z.string(), z.string()]),
+  fillColorRangeFlip: z.boolean(),
   fillColorPalette: z.array(z.string()),
   fillColorDefine: z.string(),
   fillColorSaturationRange: z.tuple([z.number(), z.number()]),
@@ -1799,6 +1806,7 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientConicProbability: z.number(),
   fillGradientColorMode: z.enum(['range', 'palette', 'define']),
   fillGradientColorRange: z.tuple([z.string(), z.string()]),
+  fillGradientColorRangeFlip: z.boolean(),
   fillGradientColorPalette: z.array(z.string()),
   fillGradientColorDefine: z.array(z.string()),
   fillGradientColorSaturationRange: z.tuple([z.number(), z.number()]),
@@ -1858,6 +1866,7 @@ export const BatchConfigSettingsSchema = z.object({
   strokeProbability: z.number(),
   strokeColorMode: z.enum(['range', 'palette', 'define']),
   strokeColorRange: z.tuple([z.string(), z.string()]),
+  strokeColorRangeFlip: z.boolean(),
   strokeColorPalette: z.array(z.string()),
   strokeColorDefine: z.string(),
   strokeColorSaturationRange: z.tuple([z.number(), z.number()]),

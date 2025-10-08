@@ -206,31 +206,32 @@ export function interpolateRGB(color1: string, color2: string, t: number): strin
 }
 
 /**
- * Interpolate between two colors using full spectrum HSL interpolation
- * Always takes the long path around the hue wheel for maximum color variety
+ * Interpolate between two colors using HSL interpolation with optional flip
+ * @param color1 - First color in hex format
+ * @param color2 - Second color in hex format
+ * @param t - Interpolation value between 0 and 1
+ * @param flip - If true, goes the long way around the hue wheel for full spectrum; if false, uses shortest path
  */
-export function interpolateHSLFullSpectrum(color1: string, color2: string, t: number): string {
+export function interpolateHSLWithFlip(color1: string, color2: string, t: number, flip: boolean = false): string {
   const hsl1 = hexToHSL(color1);
   const hsl2 = hexToHSL(color2);
   
-  // Always go the long way around the hue wheel for full spectrum
-  let hueDistance = Math.abs(hsl2.h - hsl1.h);
-  
-  // If colors are close together (< 180° apart), go the long way
   let newHue;
-  if (hueDistance < 180) {
-    // Go the long way (360° - the short distance)
-    const longDistance = 360 - hueDistance;
-    if (hsl2.h > hsl1.h) {
-      // Go backwards (counterclockwise)
-      newHue = hsl1.h - (longDistance * t);
-    } else {
-      // Go forwards (clockwise)  
-      newHue = hsl1.h + (longDistance * t);
-    }
+  
+  if (flip) {
+    // Flip mode: go the long way around the hue wheel
+    const hueInfo = getHueDistance(hsl1.h, hsl2.h);
+    
+    // To go the long way, we need to go in the opposite direction
+    // The long way distance is 360 - shortest distance
+    const longDistance = 360 - hueInfo.distance;
+    const longDirection = -hueInfo.direction; // Opposite direction
+    
+    newHue = hsl1.h + (longDirection * longDistance * t);
   } else {
-    // Colors are already far apart, use normal interpolation
-    newHue = hsl1.h + (hsl2.h - hsl1.h) * t;
+    // Normal mode: use shortest path (color wheel logic)
+    const hueInfo = getHueDistance(hsl1.h, hsl2.h);
+    newHue = hsl1.h + (hueInfo.direction * hueInfo.distance * t);
   }
   
   // Normalize hue to 0-360
@@ -248,6 +249,15 @@ export function interpolateHSLFullSpectrum(color1: string, color2: string, t: nu
 }
 
 /**
+ * @deprecated Use interpolateHSLWithFlip instead
+ * Interpolate between two colors using full spectrum HSL interpolation
+ * Always takes the long path around the hue wheel for maximum color variety
+ */
+export function interpolateHSLFullSpectrum(color1: string, color2: string, t: number): string {
+  return interpolateHSLWithFlip(color1, color2, t, true);
+}
+
+/**
  * Generate color based on mode (range, palette, define, hsl)
  */
 export function generateColor(
@@ -259,16 +269,19 @@ export function generateColor(
   rangeSettings?: {
     saturationRange?: [number, number];
     lightnessRange?: [number, number];
+    flip?: boolean;
   }
 ): string {
   switch (mode) {
     case 'range':
       if (!range || range.length !== 2) return '#3b82f6';
       
+      const flip = rangeSettings?.flip || false;
+      
       // If we have saturation/lightness ranges, use them to modify the interpolated color
       if (rangeSettings?.saturationRange || rangeSettings?.lightnessRange) {
-        // First interpolate using full spectrum HSL
-        const baseColor = interpolateHSLFullSpectrum(range[0], range[1], Math.random());
+        // First interpolate using HSL with flip setting
+        const baseColor = interpolateHSLWithFlip(range[0], range[1], Math.random(), flip);
         const hsl = hexToHSL(baseColor);
         
         // Override saturation if range is provided
@@ -285,8 +298,8 @@ export function generateColor(
         
         return hslToHex(hsl);
       } else {
-        // Use full spectrum HSL interpolation for maximum color variety
-        return interpolateHSLFullSpectrum(range[0], range[1], Math.random());
+        // Use HSL interpolation with flip setting
+        return interpolateHSLWithFlip(range[0], range[1], Math.random(), flip);
       }
       
     case 'palette':
@@ -325,7 +338,8 @@ export function generateGradientColors(
     hueDefine?: number;
     saturationDefine?: number;
     lightnessDefine?: number;
-  }
+  },
+  flip?: boolean
 ): string[] {
   switch (mode) {
     case 'range':
@@ -333,7 +347,7 @@ export function generateGradientColors(
       const colors: string[] = [];
       for (let i = 0; i < stopCount; i++) {
         const t = stopCount === 1 ? 0 : i / (stopCount - 1);
-        colors.push(interpolateHSLFullSpectrum(range[0], range[1], t));
+        colors.push(interpolateHSLWithFlip(range[0], range[1], t, flip || false));
       }
       return colors;
       

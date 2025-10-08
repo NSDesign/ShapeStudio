@@ -1653,7 +1653,8 @@ export const useShapeEditor = () => {
                   index + i,
                   effectiveBatchConfig.fillGradientColorMode === 'range' ? {
                     saturationRange: effectiveBatchConfig.fillGradientColorSaturationRange,
-                    lightnessRange: effectiveBatchConfig.fillGradientColorLightnessRange
+                    lightnessRange: effectiveBatchConfig.fillGradientColorLightnessRange,
+                    flip: effectiveBatchConfig.fillGradientColorRangeFlip
                   } : undefined
                 );
               }
@@ -1694,7 +1695,8 @@ export const useShapeEditor = () => {
               index,
               effectiveBatchConfig.fillColorMode === 'range' ? {
                 saturationRange: effectiveBatchConfig.fillColorSaturationRange,
-                lightnessRange: effectiveBatchConfig.fillColorLightnessRange
+                lightnessRange: effectiveBatchConfig.fillColorLightnessRange,
+                flip: effectiveBatchConfig.fillColorRangeFlip
               } : undefined
             );
             shape.properties.fillColor = fillColor;
@@ -1750,7 +1752,8 @@ export const useShapeEditor = () => {
               index,
               effectiveBatchConfig.strokeColorMode === 'range' ? {
                 saturationRange: effectiveBatchConfig.strokeColorSaturationRange,
-                lightnessRange: effectiveBatchConfig.strokeColorLightnessRange
+                lightnessRange: effectiveBatchConfig.strokeColorLightnessRange,
+                flip: effectiveBatchConfig.strokeColorRangeFlip
               } : undefined
             );
             shape.properties.strokeColor = strokeColor;

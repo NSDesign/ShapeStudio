@@ -1467,6 +1467,17 @@ export default function BatchConfigDialog({
                                           </div>
                                         </div>
                                         
+                                        {/* Flip Colour Range Toggle */}
+                                        <div className="flex items-center space-x-2">
+                                          <Checkbox 
+                                            checked={currentSettings.fillColorRangeFlip || false}
+                                            onCheckedChange={(checked) => handleSettingsUpdate({ fillColorRangeFlip: checked as boolean })}
+                                            className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                            data-testid="checkbox-fill-color-range-flip"
+                                          />
+                                          <Label className="text-xs text-slate-300">Flip Colour Range</Label>
+                                        </div>
+                                        
                                         {/* Saturation Range */}
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillColorSaturationRange?.[0] || 50}% - {currentSettings.fillColorSaturationRange?.[1] || 100}%</Label>
@@ -1657,6 +1668,17 @@ export default function BatchConfigDialog({
                                               className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
                                             />
                                           </div>
+                                        </div>
+                                        
+                                        {/* Flip Colour Range Toggle */}
+                                        <div className="flex items-center space-x-2">
+                                          <Checkbox 
+                                            checked={currentSettings.fillGradientColorRangeFlip || false}
+                                            onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientColorRangeFlip: checked as boolean })}
+                                            className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                            data-testid="checkbox-fill-gradient-color-range-flip"
+                                          />
+                                          <Label className="text-xs text-slate-300">Flip Colour Range</Label>
                                         </div>
                                         
                                         {/* Saturation Range */}
@@ -2257,6 +2279,17 @@ export default function BatchConfigDialog({
                                       className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                     />
                                   </div>
+                                </div>
+                                
+                                {/* Flip Colour Range Toggle */}
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    checked={currentSettings.strokeColorRangeFlip || false}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ strokeColorRangeFlip: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    data-testid="checkbox-stroke-color-range-flip"
+                                  />
+                                  <Label className="text-xs text-slate-300">Flip Colour Range</Label>
                                 </div>
                                 
                                 {/* Saturation Range */}
