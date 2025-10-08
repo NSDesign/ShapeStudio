@@ -288,6 +288,10 @@ export interface BatchConfigSettings {
   blendModeEnabled: boolean;
   enabledBlendModes: { [key in BlendMode]?: number }; // weight 0-100
   
+  // Compositing Operations Control
+  compositingOperationsEnabled: boolean;
+  enabledCompositingOperations: { [key: string]: number }; // weight 0-100
+  
   // Properties Section
   propertiesEnabled: boolean;
   
@@ -722,6 +726,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   blendModeEnabled: false,
   enabledBlendModes: { 'source-over': 100 },
+  
+  compositingOperationsEnabled: false,
+  enabledCompositingOperations: {},
   
   propertiesEnabled: false,
   
@@ -1691,6 +1698,10 @@ export const BatchConfigSettingsSchema = z.object({
   // Blend modes
   blendModeEnabled: z.boolean(),
   enabledBlendModes: z.record(BlendModeSchema, z.number().min(0).max(100)).optional(),
+  
+  // Compositing operations
+  compositingOperationsEnabled: z.boolean(),
+  enabledCompositingOperations: z.record(z.string(), z.number().min(0).max(100)).optional(),
   
   // Properties
   propertiesEnabled: z.boolean(),
