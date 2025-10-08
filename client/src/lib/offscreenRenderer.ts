@@ -48,8 +48,9 @@ export function renderSetToOffscreenCanvas(
   const sortedShapes = [...shapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
   
   // Render each shape with its individual blend mode
+  // Skip selection adornments to prevent them from being included in compositing operations
   sortedShapes.forEach(shape => {
-    shape.render(ctx);
+    shape.render(ctx, true);
   });
   
   return offscreenCanvas;
