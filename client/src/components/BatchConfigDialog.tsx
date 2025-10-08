@@ -77,6 +77,7 @@ export default function BatchConfigDialog({
     errors: Array<{ message: string }>;
     warnings: Array<{ message: string }>;
   }>({ errors: [], warnings: [] });
+  const [isApplying, setIsApplying] = useState(false);
 
   // Calculate mismatch detection for gear icon warning - use enabled sets count
   const enabledSetsCount = generationSets.filter(set => set.enabled).length;
@@ -181,7 +182,7 @@ export default function BatchConfigDialog({
     setValidationError(error);
   }, [validateConfiguration]);
   
-  const applySettings = useCallback(() => {
+  const applySettings = useCallback(async () => {
     console.log('[BatchConfigDialog] Applying settings to parent');
     
     // Simple validation check before applying
@@ -195,9 +196,18 @@ export default function BatchConfigDialog({
       return;
     }
     
-    // Apply legacy batch config settings
-    onSettingsChange(currentSettings);
-    // Removed setIsOpen(false) - Apply button should not close dialog
+    // Set applying state
+    setIsApplying(true);
+    
+    try {
+      // Apply legacy batch config settings
+      onSettingsChange(currentSettings);
+      
+      // Keep loading state visible for 1000ms for user feedback
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } finally {
+      setIsApplying(false);
+    }
   }, [currentSettings, onSettingsChange, validateConfiguration, isExportDisabled]);
 
   const blendModes: BlendMode[] = [
@@ -3336,10 +3346,12 @@ export default function BatchConfigDialog({
                 </Button>
                 <Button 
                   onClick={applySettings}
-                  disabled={isExportDisabled()}
+                  disabled={isExportDisabled() || isApplying}
                   className={`${
                     isExportDisabled()
-                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
+                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                      : isApplying
+                      ? 'bg-green-600 text-white cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   } transition-colors duration-200`}
                   data-testid="button-apply"
@@ -3347,10 +3359,17 @@ export default function BatchConfigDialog({
                   <div className="flex items-center space-x-2">
                     {isExportDisabled() ? (
                       <AlertTriangle className="w-4 h-4" />
+                    ) : isApplying ? (
+                      <>
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Applying...</span>
+                      </>
                     ) : (
-                      <CheckCircle className="w-4 h-4" />
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Apply</span>
+                      </>
                     )}
-                    <span>Apply Configuration</span>
                   </div>
                 </Button>
               </div>
