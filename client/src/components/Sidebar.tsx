@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Accordion,
@@ -3386,7 +3385,7 @@ export default function Sidebar({
 
   function CompositionContent() {
     return (
-      <ScrollArea className="h-[400px] w-full">
+      <div className="h-[400px] w-full overflow-y-auto">
         <div className="space-y-3 pr-4">
           <Button 
             onClick={onComposeShapes}
@@ -3473,13 +3472,13 @@ export default function Sidebar({
             </Button>
           </div>
         </div>
-      </ScrollArea>
+      </div>
     );
   }
 
   function PropertiesContent() {
     return (
-      <ScrollArea className="h-[400px] w-full">
+      <div className="h-[400px] w-full overflow-y-auto">
         <div className="space-y-4 pr-4">
           <div className="text-sm text-slate-400">
             Selected: <span className="text-white font-medium">{selectedCount}</span> {selectedCount === 1 ? 'shape' : 'shapes'}
@@ -3792,7 +3791,7 @@ export default function Sidebar({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     );
   }
 
