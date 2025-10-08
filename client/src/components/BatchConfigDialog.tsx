@@ -276,7 +276,7 @@ export default function BatchConfigDialog({
                 <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3 space-y-2">
                   {/* Header Row with Title and Buttons */}
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium text-slate-200">Generation Sets</Label>
+                    <Label className="text-sm font-medium text-slate-200">Shape Sets</Label>
                     {generationSetsEnabled && (
                       <div className="flex items-center gap-1">
                         {/* Add Set Button */}
@@ -310,10 +310,10 @@ export default function BatchConfigDialog({
                           size="sm"
                           onClick={() => onOpenGenerationSetsManager?.()}
                           className="px-2 bg-slate-800 border-slate-600 hover:bg-slate-700"
-                          title="Open Generation Sets Manager"
+                          title="Open Shape Sets Manager"
                           data-testid="batch-dialog-generation-sets-manager-button"
                         >
-                          <Settings className={`h-3 w-3 ${hasSetsCountMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
+                          <Settings className="h-3 w-3 text-slate-300" />
                         </Button>
                       </div>
                     )}
@@ -330,7 +330,7 @@ export default function BatchConfigDialog({
                       data-testid="batch-dialog-generation-sets-select-trigger"
                     >
                       <SelectValue 
-                        placeholder={generationSetsEnabled ? "Select generation set..." : "Enable Generation Sets in Export & Save section"} 
+                        placeholder={generationSetsEnabled ? "Select shape set..." : "Enable Shape Sets in Export & Save section"} 
                       />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -357,7 +357,7 @@ export default function BatchConfigDialog({
                   {!generationSetsEnabled && (
                     <div className="flex items-center gap-2 text-xs text-slate-500 bg-blue-900/20 p-2 rounded border border-blue-500/30">
                       <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                      <span>Enable Generation Sets in the Export & Save section to use this feature</span>
+                      <span>Enable Shape Sets in the Export & Save section to use this feature</span>
                     </div>
                   )}
                 </div>
