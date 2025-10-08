@@ -5456,7 +5456,8 @@ export default function Sidebar({
           shapeCountRange
         }}
         onCreateSetFromState={(uiState, name) => {
-          const setId = handleCreateSet(name || '');
+          // Use the passed uiState instead of re-capturing to ensure accurate state capture
+          const setId = onCreateGenerationSet?.(name || '', uiState);
           return setId || '';
         }}
         batchExportCount={exportBatchCount}

@@ -426,7 +426,19 @@ export const useShapeEditor = () => {
         const newSets = [...generationSets];
         newSets[setIndex] = updatedSet;
         setGenerationSets(newSets);
-        console.log('🔄 [SET SWITCH] ✅ Auto-saved current set changes');
+        
+        // Reset manual changes flag after saving
+        setHasManualChangesAfterRestore(false);
+        
+        // Immediately persist to server (bypass debounce)
+        if (isPersistenceReady) {
+          console.log('💾 [SET SWITCH] Immediately saving changes to server');
+          saveGenerationSets(newSets, currentGenerationSetId)
+            .then(() => console.log('✅ [SET SWITCH] Successfully saved to server'))
+            .catch(error => console.error('❌ [SET SWITCH] Failed to save to server:', error));
+        }
+        
+        console.log('🔄 [SET SWITCH] ✅ Auto-saved current set changes and reset manual changes flag');
       }
     }
     
@@ -438,7 +450,7 @@ export const useShapeEditor = () => {
       console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
       restoreUIStateFromSet(setId);
     }
-  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet, captureCurrentState, generationSets]);
+  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet, captureCurrentState, generationSets, isPersistenceReady, saveGenerationSets]);
 
   const handleBatchExportCountChange = useCallback((count: number) => {
     setBatchExportCount(count);
@@ -456,10 +468,33 @@ export const useShapeEditor = () => {
 
   // Create a new generation set with current UI state
   const handleCreateGenerationSet = useCallback((customName?: string, currentUIState?: CurrentUIState) => {
-    // Generate unique name if none provided
+    console.log('📝 [CREATE SET] Starting set creation with name:', customName);
+    
+    // STEP 1: Save any manual changes to the current set before creating a new one
+    if (currentGenerationSetId && hasManualChangesAfterRestore) {
+      console.log('💾 [CREATE SET] Saving manual changes to current set before creating new one');
+      const currentState = captureCurrentState();
+      const updatedSets = generationSets.map(set => 
+        set.id === currentGenerationSetId 
+          ? {
+              ...set,
+              enabledShapeTypes: Array.from(currentState.enabledShapeTypes) as SupportedShapeType[],
+              shapeCountMode: currentState.shapeCountMode,
+              shapeCountFixed: currentState.shapeCountFixed,
+              shapeCountRange: currentState.shapeCountRange,
+              batchConfig: { ...currentState.batchConfigSettings }
+            }
+          : set
+      );
+      setGenerationSets(updatedSets);
+      setHasManualChangesAfterRestore(false);
+      console.log('✅ [CREATE SET] Saved changes to current set');
+    }
+    
+    // STEP 2: Generate unique name if none provided
     const setName = customName || generateUniqueSetName();
     
-    // Use currentUIState if provided, otherwise fall back to current component state
+    // STEP 3: Use currentUIState if provided, otherwise fall back to current component state
     const uiState = currentUIState || {
       enabledShapeTypes,
       scatterSettings,
@@ -469,7 +504,14 @@ export const useShapeEditor = () => {
       shapeCountRange: [scatterSettings.minCount, scatterSettings.maxCount] as [number, number]
     };
     
-    // Create new generation set with proper types
+    console.log('📋 [CREATE SET] Captured UI state:', {
+      shapeTypes: Array.from(uiState.enabledShapeTypes),
+      countMode: uiState.shapeCountMode,
+      countFixed: uiState.shapeCountFixed,
+      countRange: uiState.shapeCountRange
+    });
+    
+    // STEP 4: Create new generation set with proper types
     const newSetId = `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const newSet: GenerationSet = {
       id: newSetId,
@@ -521,18 +563,29 @@ export const useShapeEditor = () => {
       }
     };
     
-    // Add to generation sets
+    // STEP 5: Add to generation sets
     const newSets = [...generationSets, newSet];
     setGenerationSets(newSets);
     
-    // Only auto-select if this is the first set (no current set exists)
-    // This allows independent UI state for creating multiple sets with different configurations
-    if (!currentGenerationSetId) {
-      setCurrentGenerationSetId(newSetId);
+    // STEP 6: ALWAYS auto-select the newly created set (removed conditional check)
+    // This ensures the UI immediately reflects the new set and prevents confusion
+    console.log('🎯 [CREATE SET] Auto-selecting new set:', newSetId);
+    setCurrentGenerationSetId(newSetId);
+    
+    // STEP 7: Reset manual changes flag for the new set
+    setHasManualChangesAfterRestore(false);
+    
+    // STEP 8: Immediately persist to server (bypass debounce) to ensure data is saved
+    if (isPersistenceReady) {
+      console.log('💾 [CREATE SET] Immediately saving to server');
+      saveGenerationSets(newSets, newSetId)
+        .then(() => console.log('✅ [CREATE SET] Successfully saved to server'))
+        .catch(error => console.error('❌ [CREATE SET] Failed to save to server:', error));
     }
     
+    console.log('✅ [CREATE SET] Created and selected new set:', setName);
     return newSetId;
-  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName, currentGenerationSetId]);
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName, currentGenerationSetId, hasManualChangesAfterRestore, captureCurrentState, isPersistenceReady, saveGenerationSets]);
 
   // Delete a generation set
   const handleDeleteGenerationSet = useCallback((setId: string) => {
