@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ArrowUp, ArrowDown } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export type ModeKind = 'fixed' | 'range' | 'values';
@@ -178,37 +178,67 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
 
       {/* Mode-specific Controls with Pattern 2 Styling */}
       {config.kind === 'fixed' && (
-        <Input
-          type="number"
-          value={fixedValueStr}
-          onChange={(e) => {
-            setFixedValueStr(e.target.value);
-          }}
-          onBlur={() => {
-            const v = parseFloat(fixedValueStr);
-            if (Number.isNaN(v) || fixedValueStr === '' || fixedValueStr.trim() === '-') {
-              // Reset to current value if invalid
-              const resetValue = config.value;
-              setFixedValueStr(resetValue.toString());
-              onChange({ ...config, value: resetValue });
-            } else {
-              // Clamp to bounds and update
-              const clampedValue = Math.max(bounds.min, Math.min(bounds.max, v));
-              setFixedValueStr(clampedValue.toString());
-              onChange({ ...config, value: clampedValue });
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.currentTarget.blur();
-            }
-          }}
-          min={bounds.min}
-          max={bounds.max}
-          step={step}
-          className="bg-slate-700 border-slate-600 text-slate-300"
-          data-testid={`input-${idBase}-fixed`}
-        />
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            value={fixedValueStr}
+            onChange={(e) => {
+              setFixedValueStr(e.target.value);
+            }}
+            onBlur={() => {
+              const v = parseFloat(fixedValueStr);
+              if (Number.isNaN(v) || fixedValueStr === '' || fixedValueStr.trim() === '-') {
+                // Reset to current value if invalid
+                const resetValue = config.value;
+                setFixedValueStr(resetValue.toString());
+                onChange({ ...config, value: resetValue });
+              } else {
+                // Clamp to bounds and update
+                const clampedValue = Math.max(bounds.min, Math.min(bounds.max, v));
+                setFixedValueStr(clampedValue.toString());
+                onChange({ ...config, value: clampedValue });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            min={bounds.min}
+            max={bounds.max}
+            step={step}
+            className="bg-slate-700 border-slate-600 text-slate-300 flex-1"
+            data-testid={`input-${idBase}-fixed`}
+          />
+          <div className="flex flex-col gap-0.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-4 w-6 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              onClick={() => {
+                const newValue = Math.min(bounds.max, config.value + step);
+                setFixedValueStr(newValue.toString());
+                onChange({ ...config, value: newValue });
+              }}
+              data-testid={`button-${idBase}-increment`}
+            >
+              <ArrowUp className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-4 w-6 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
+              onClick={() => {
+                const newValue = Math.max(bounds.min, config.value - step);
+                setFixedValueStr(newValue.toString());
+                onChange({ ...config, value: newValue });
+              }}
+              data-testid={`button-${idBase}-decrement`}
+            >
+              <ArrowDown className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {config.kind === 'range' && (
