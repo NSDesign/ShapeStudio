@@ -1588,7 +1588,7 @@ export class Shape {
     this.segments = this.closed ? pointCount : pointCount - 1;
   }
 
-  render(ctx: CanvasRenderingContext2D): void {
+  render(ctx: CanvasRenderingContext2D, skipSelectionAdornments = false): void {
     if (!this.points || this.points.length === 0) {
       return;
     }
@@ -1612,8 +1612,8 @@ export class Shape {
       this.drawShape(ctx);
     }
     
-    // Draw selection indicator
-    if (this.selected) {
+    // Draw selection indicator (skip when rendering to offscreen canvas for compositing)
+    if (this.selected && !skipSelectionAdornments) {
       ctx.globalCompositeOperation = 'source-over'; // Reset blend mode for selection
       ctx.globalAlpha = 1;
       ctx.strokeStyle = '#2563EB';
