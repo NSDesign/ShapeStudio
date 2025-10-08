@@ -2051,6 +2051,49 @@ export const useShapeEditor = () => {
       console.log(`✅ [POST-NOISE] Shape ${index}: AFTER noise processing, final fillColor="${shape.properties.fillColor}"`);
       console.log(`📊 [SUMMARY] Shape ${index}: ${shape.properties.fillColor === 'transparent' ? '❌ TRANSPARENT LOST' : '✅ Color preserved'}`);
 
+      // Apply blend modes or compositing operations based on probabilities
+      if (effectiveBatchConfig.propertiesEnabled) {
+        if (effectiveBatchConfig.blendModeEnabled && effectiveBatchConfig.enabledBlendModes) {
+          // Select blend mode based on probability weights
+          const enabledModes = Object.entries(effectiveBatchConfig.enabledBlendModes) as [BlendMode, number][];
+          if (enabledModes.length > 0) {
+            const totalWeight = enabledModes.reduce((sum, [_, weight]) => sum + weight, 0);
+            if (totalWeight > 0) {
+              const random = Math.random() * totalWeight;
+              let cumulative = 0;
+              
+              for (const [mode, weight] of enabledModes) {
+                cumulative += weight;
+                if (random < cumulative) {
+                  shape.properties.blendMode = mode;
+                  console.log(`🎭 [BLEND MODE] Shape ${index}: Applied blend mode="${mode}" (weight=${weight}%)`);
+                  break;
+                }
+              }
+            }
+          }
+        } else if (effectiveBatchConfig.compositingOperationsEnabled && effectiveBatchConfig.enabledCompositingOperations) {
+          // Select compositing operation based on probability weights
+          const enabledOps = Object.entries(effectiveBatchConfig.enabledCompositingOperations);
+          if (enabledOps.length > 0) {
+            const totalWeight = enabledOps.reduce((sum, [_, weight]) => sum + weight, 0);
+            if (totalWeight > 0) {
+              const random = Math.random() * totalWeight;
+              let cumulative = 0;
+              
+              for (const [op, weight] of enabledOps) {
+                cumulative += weight;
+                if (random < cumulative) {
+                  shape.properties.blendMode = op as BlendMode;
+                  console.log(`🎭 [COMPOSITING] Shape ${index}: Applied compositing operation="${op}" (weight=${weight}%)`);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
       return shape;
     });
 
