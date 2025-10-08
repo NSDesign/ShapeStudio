@@ -163,6 +163,49 @@ export function interpolateHSLColorWheel(color1: string, color2: string, t: numb
 }
 
 /**
+ * Convert hex color to RGB
+ */
+export function hexToRGB(hex: string): RGB {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  return {
+    r: parseInt(hex.substr(0, 2), 16),
+    g: parseInt(hex.substr(2, 2), 16),
+    b: parseInt(hex.substr(4, 2), 16)
+  };
+}
+
+/**
+ * Convert RGB to hex color
+ */
+export function rgbToHex(rgb: RGB): string {
+  const toHex = (c: number): string => {
+    const hex = Math.round(c).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+}
+
+/**
+ * Interpolate between two colors using RGB linear interpolation
+ * This matches the linear spectrum behavior of color pickers
+ */
+export function interpolateRGB(color1: string, color2: string, t: number): string {
+  const rgb1 = hexToRGB(color1);
+  const rgb2 = hexToRGB(color2);
+  
+  const newRGB: RGB = {
+    r: rgb1.r + (rgb2.r - rgb1.r) * t,
+    g: rgb1.g + (rgb2.g - rgb1.g) * t,
+    b: rgb1.b + (rgb2.b - rgb1.b) * t
+  };
+  
+  return rgbToHex(newRGB);
+}
+
+/**
  * Generate color based on mode (range, palette, define, hsl)
  */
 export function generateColor(
@@ -182,8 +225,8 @@ export function generateColor(
       
       // If we have saturation/lightness ranges, use them to modify the interpolated color
       if (rangeSettings?.saturationRange || rangeSettings?.lightnessRange) {
-        // First interpolate hue between the two colors
-        const baseColor = interpolateHSL(range[0], range[1], Math.random());
+        // First interpolate using RGB for linear spectrum behavior
+        const baseColor = interpolateRGB(range[0], range[1], Math.random());
         const hsl = hexToHSL(baseColor);
         
         // Override saturation if range is provided
@@ -200,8 +243,8 @@ export function generateColor(
         
         return hslToHex(hsl);
       } else {
-        // Standard HSL interpolation without saturation/lightness overrides
-        return interpolateHSL(range[0], range[1], Math.random());
+        // Standard RGB interpolation for linear spectrum behavior
+        return interpolateRGB(range[0], range[1], Math.random());
       }
       
     case 'palette':
@@ -248,7 +291,7 @@ export function generateGradientColors(
       const colors: string[] = [];
       for (let i = 0; i < stopCount; i++) {
         const t = stopCount === 1 ? 0 : i / (stopCount - 1);
-        colors.push(interpolateHSL(range[0], range[1], t));
+        colors.push(interpolateRGB(range[0], range[1], t));
       }
       return colors;
       
