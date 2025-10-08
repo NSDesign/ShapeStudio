@@ -206,6 +206,48 @@ export function interpolateRGB(color1: string, color2: string, t: number): strin
 }
 
 /**
+ * Interpolate between two colors using full spectrum HSL interpolation
+ * Always takes the long path around the hue wheel for maximum color variety
+ */
+export function interpolateHSLFullSpectrum(color1: string, color2: string, t: number): string {
+  const hsl1 = hexToHSL(color1);
+  const hsl2 = hexToHSL(color2);
+  
+  // Always go the long way around the hue wheel for full spectrum
+  let hueDistance = Math.abs(hsl2.h - hsl1.h);
+  
+  // If colors are close together (< 180° apart), go the long way
+  let newHue;
+  if (hueDistance < 180) {
+    // Go the long way (360° - the short distance)
+    const longDistance = 360 - hueDistance;
+    if (hsl2.h > hsl1.h) {
+      // Go backwards (counterclockwise)
+      newHue = hsl1.h - (longDistance * t);
+    } else {
+      // Go forwards (clockwise)  
+      newHue = hsl1.h + (longDistance * t);
+    }
+  } else {
+    // Colors are already far apart, use normal interpolation
+    newHue = hsl1.h + (hsl2.h - hsl1.h) * t;
+  }
+  
+  // Normalize hue to 0-360
+  if (newHue < 0) newHue += 360;
+  if (newHue >= 360) newHue -= 360;
+  
+  // Linear interpolation for saturation and lightness
+  const newHSL: HSL = {
+    h: Math.round(newHue),
+    s: Math.round(hsl1.s + (hsl2.s - hsl1.s) * t),
+    l: Math.round(hsl1.l + (hsl2.l - hsl1.l) * t)
+  };
+  
+  return hslToHex(newHSL);
+}
+
+/**
  * Generate color based on mode (range, palette, define, hsl)
  */
 export function generateColor(
@@ -225,8 +267,8 @@ export function generateColor(
       
       // If we have saturation/lightness ranges, use them to modify the interpolated color
       if (rangeSettings?.saturationRange || rangeSettings?.lightnessRange) {
-        // First interpolate using RGB for linear spectrum behavior
-        const baseColor = interpolateRGB(range[0], range[1], Math.random());
+        // First interpolate using full spectrum HSL
+        const baseColor = interpolateHSLFullSpectrum(range[0], range[1], Math.random());
         const hsl = hexToHSL(baseColor);
         
         // Override saturation if range is provided
@@ -243,8 +285,8 @@ export function generateColor(
         
         return hslToHex(hsl);
       } else {
-        // Standard RGB interpolation for linear spectrum behavior
-        return interpolateRGB(range[0], range[1], Math.random());
+        // Use full spectrum HSL interpolation for maximum color variety
+        return interpolateHSLFullSpectrum(range[0], range[1], Math.random());
       }
       
     case 'palette':
@@ -291,7 +333,7 @@ export function generateGradientColors(
       const colors: string[] = [];
       for (let i = 0; i < stopCount; i++) {
         const t = stopCount === 1 ? 0 : i / (stopCount - 1);
-        colors.push(interpolateRGB(range[0], range[1], t));
+        colors.push(interpolateHSLFullSpectrum(range[0], range[1], t));
       }
       return colors;
       
