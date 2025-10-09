@@ -259,6 +259,9 @@ export function GenerationSetsInterface({
     //   return; // Prevent deleting the last set
     // }
 
+    // Find the index of the set being deleted
+    const deletedIndex = generationSets.findIndex(set => set.id === setId);
+    
     const updatedSets = generationSets
       .filter(set => set.id !== setId)
       .map((set, index) => ({
@@ -270,7 +273,16 @@ export function GenerationSetsInterface({
 
     // Update selection if deleted set was selected
     if (selectedSetId === setId) {
-      setSelectedSetId(updatedSets.length > 0 ? updatedSets[0].id : null);
+      if (updatedSets.length === 0) {
+        // No sets left
+        setSelectedSetId(null);
+      } else if (deletedIndex < updatedSets.length) {
+        // Select the next set (same index position, which is now the "next" set)
+        setSelectedSetId(updatedSets[deletedIndex].id);
+      } else {
+        // Deleted the last set, select the new last set (previous set)
+        setSelectedSetId(updatedSets[updatedSets.length - 1].id);
+      }
     }
   }, [generationSets, onGenerationSetsChange, selectedSetId]);
 
