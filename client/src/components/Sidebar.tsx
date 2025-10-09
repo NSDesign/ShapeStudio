@@ -5157,7 +5157,7 @@ export default function Sidebar({
         /* Expanded sidebar with full content */
         <div 
           ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
         >
           <Accordion 
             type="multiple" 
