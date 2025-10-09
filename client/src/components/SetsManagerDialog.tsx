@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
-import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS } from '@shared/schema';
+import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS, ShapeCountMode, BatchConfigSettings } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
 import { ValidationError, ValidationWarning } from '@/lib/typedHelpers';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
+import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
 
-interface SetsManagerDialogProps {
+// Base props that are always available
+interface SetsManagerDialogBaseProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   generationSets: GenerationSet[];
@@ -18,14 +20,39 @@ interface SetsManagerDialogProps {
   // Bi-directional sync props
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
-  // Current UI state for data capture
-  currentUIState?: CurrentUIState;
-  onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
   batchExportCount?: number;
   // Edge case strategy for when set count < batch export count
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';
   onEdgeCaseStrategyChange?: (strategy: 'hold' | 'cycle' | 'random' | 'stop') => void;
 }
+
+// When onCreateSetFromState is provided, all state capture props are REQUIRED
+interface SetsManagerDialogWithStateCapture extends SetsManagerDialogBaseProps {
+  // Raw UI state props for synchronous state capture at button click time (ALL REQUIRED)
+  enabledShapeTypes: Set<ShapeType>;
+  scatterSettings: ScatterSettings;
+  batchConfigSettings: BatchConfigSettings;
+  shapeCountMode: ShapeCountMode;
+  shapeCountFixed: number;
+  shapeCountRange: [number, number];
+  onCreateSetFromState: (uiState: CurrentUIState, name?: string) => string;
+}
+
+// When onCreateSetFromState is not provided, state capture props are not allowed
+interface SetsManagerDialogWithoutStateCapture extends SetsManagerDialogBaseProps {
+  enabledShapeTypes?: never;
+  scatterSettings?: never;
+  batchConfigSettings?: never;
+  shapeCountMode?: never;
+  shapeCountFixed?: never;
+  shapeCountRange?: never;
+  onCreateSetFromState?: never;
+}
+
+// Union type enforces: either ALL state props are provided, or NONE are provided
+type SetsManagerDialogProps = 
+  | SetsManagerDialogWithStateCapture 
+  | SetsManagerDialogWithoutStateCapture;
 
 export function SetsManagerDialog({
   isOpen,
@@ -37,8 +64,13 @@ export function SetsManagerDialog({
   // Bi-directional sync props
   currentSetId,
   onCurrentSetChange,
-  // Current UI state for data capture
-  currentUIState,
+  // Raw UI state props for synchronous state capture
+  enabledShapeTypes,
+  scatterSettings,
+  batchConfigSettings,
+  shapeCountMode,
+  shapeCountFixed,
+  shapeCountRange,
   onCreateSetFromState,
   batchExportCount,
   // Edge case strategy
@@ -105,19 +137,44 @@ export function SetsManagerDialog({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <GenerationSetsInterface
-            generationSets={generationSets}
-            onGenerationSetsChange={onGenerationSetsChange}
-            maxSets={DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
-            globalZIndexEnabled={globalZIndexEnabled}
-            showInlineValidation={showInlineValidation}
-            onValidationChange={handleValidationChange}
-            currentSetId={currentSetId}
-            onCurrentSetChange={onCurrentSetChange}
-            currentUIState={currentUIState}
-            onCreateSetFromState={onCreateSetFromState}
-            batchExportCount={batchExportCount}
-          />
+          {/* Type-safe conditional rendering based on whether state capture props are ALL provided */}
+          {/* Use explicit checks to avoid rejecting valid empty values (empty Set, [0,0] range, etc.) */}
+          {enabledShapeTypes instanceof Set && scatterSettings !== undefined && batchConfigSettings !== undefined && 
+           shapeCountMode !== undefined && shapeCountFixed !== undefined && 
+           Array.isArray(shapeCountRange) && shapeCountRange.length === 2 && 
+           typeof shapeCountRange[0] === 'number' && typeof shapeCountRange[1] === 'number' && 
+           onCreateSetFromState ? (
+            <GenerationSetsInterface
+              generationSets={generationSets}
+              onGenerationSetsChange={onGenerationSetsChange}
+              maxSets={DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
+              globalZIndexEnabled={globalZIndexEnabled}
+              showInlineValidation={showInlineValidation}
+              onValidationChange={handleValidationChange}
+              currentSetId={currentSetId}
+              onCurrentSetChange={onCurrentSetChange}
+              enabledShapeTypes={enabledShapeTypes}
+              scatterSettings={scatterSettings}
+              batchConfigSettings={batchConfigSettings}
+              shapeCountMode={shapeCountMode}
+              shapeCountFixed={shapeCountFixed}
+              shapeCountRange={shapeCountRange}
+              onCreateSetFromState={onCreateSetFromState}
+              batchExportCount={batchExportCount}
+            />
+          ) : (
+            <GenerationSetsInterface
+              generationSets={generationSets}
+              onGenerationSetsChange={onGenerationSetsChange}
+              maxSets={DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets}
+              globalZIndexEnabled={globalZIndexEnabled}
+              showInlineValidation={showInlineValidation}
+              onValidationChange={handleValidationChange}
+              currentSetId={currentSetId}
+              onCurrentSetChange={onCurrentSetChange}
+              batchExportCount={batchExportCount}
+            />
+          )}
         </div>
 
         {/* Footer */}

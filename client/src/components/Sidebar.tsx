@@ -5447,14 +5447,12 @@ export default function Sidebar({
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
         onCurrentSetChange={onCurrentGenerationSetChange}
-        currentUIState={{
-          enabledShapeTypes,
-          scatterSettings,
-          batchConfigSettings: generationConfigSettings,
-          shapeCountMode,
-          shapeCountFixed,
-          shapeCountRange
-        }}
+        enabledShapeTypes={enabledShapeTypes}
+        scatterSettings={scatterSettings}
+        batchConfigSettings={generationConfigSettings}
+        shapeCountMode={shapeCountMode}
+        shapeCountFixed={shapeCountFixed}
+        shapeCountRange={shapeCountRange}
         onCreateSetFromState={(uiState, name) => {
           // Use the passed uiState instead of re-capturing to ensure accurate state capture
           const setId = onCreateGenerationSet?.(name || '', uiState);

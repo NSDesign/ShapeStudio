@@ -43,7 +43,8 @@ import { ErrorBoundary, SafeSection } from '@/components/ErrorBoundary';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
-interface GenerationSetsInterfaceProps {
+// Base props that are always available
+interface GenerationSetsInterfaceBaseProps {
   generationSets: GenerationSet[];
   onGenerationSetsChange: (sets: GenerationSet[]) => void;
   validationErrors?: string[];
@@ -56,10 +57,35 @@ interface GenerationSetsInterfaceProps {
   onCurrentSetChange?: (setId: string | null) => void;
   // Mismatch detection for export count
   batchExportCount?: number;
-  // Current UI state for data capture
-  currentUIState?: CurrentUIState;
-  onCreateSetFromState?: (uiState: CurrentUIState, name?: string) => string;
 }
+
+// When onCreateSetFromState is provided, all state capture props are REQUIRED
+interface GenerationSetsInterfaceWithStateCapture extends GenerationSetsInterfaceBaseProps {
+  // Raw UI state props for synchronous state capture at button click time (ALL REQUIRED)
+  enabledShapeTypes: Set<ShapeType>;
+  scatterSettings: ScatterSettings;
+  batchConfigSettings: BatchConfigSettings;
+  shapeCountMode: ShapeCountMode;
+  shapeCountFixed: number;
+  shapeCountRange: [number, number];
+  onCreateSetFromState: (uiState: CurrentUIState, name?: string) => string;
+}
+
+// When onCreateSetFromState is not provided, state capture props are not allowed
+interface GenerationSetsInterfaceWithoutStateCapture extends GenerationSetsInterfaceBaseProps {
+  enabledShapeTypes?: never;
+  scatterSettings?: never;
+  batchConfigSettings?: never;
+  shapeCountMode?: never;
+  shapeCountFixed?: never;
+  shapeCountRange?: never;
+  onCreateSetFromState?: never;
+}
+
+// Union type enforces: either ALL state props are provided, or NONE are provided
+type GenerationSetsInterfaceProps = 
+  | GenerationSetsInterfaceWithStateCapture 
+  | GenerationSetsInterfaceWithoutStateCapture;
 
 export function GenerationSetsInterface({
   generationSets,
@@ -74,8 +100,13 @@ export function GenerationSetsInterface({
   onCurrentSetChange,
   // Mismatch detection for export count
   batchExportCount,
-  // Current UI state for data capture
-  currentUIState,
+  // Raw UI state props for synchronous state capture
+  enabledShapeTypes,
+  scatterSettings,
+  batchConfigSettings,
+  shapeCountMode,
+  shapeCountFixed,
+  shapeCountRange,
   onCreateSetFromState
 }: GenerationSetsInterfaceProps) {
   // Use external currentSetId if provided, otherwise fall back to internal state
@@ -134,8 +165,51 @@ export function GenerationSetsInterface({
     const existingNames = generationSets.map(set => set.name);
     const uniqueName = generateUniqueSetName(existingNames, 'Set');
     
-    // If we have current UI state and a creation handler, use real data
-    if (currentUIState && onCreateSetFromState) {
+    // Build CurrentUIState object from raw props AT BUTTON CLICK TIME
+    // This ensures we capture the absolute latest values, not stale state
+    if (onCreateSetFromState) {
+      // Runtime assertion: ALL state capture props must be present when onCreateSetFromState is provided
+      // This should be enforced by TypeScript, but we add a runtime check for safety
+      // Use explicit checks to avoid rejecting valid empty values (empty Set, [0,0] range, etc.)
+      const hasAllProps = 
+        enabledShapeTypes instanceof Set &&
+        scatterSettings !== undefined &&
+        batchConfigSettings !== undefined &&
+        shapeCountMode !== undefined &&
+        shapeCountFixed !== undefined &&
+        Array.isArray(shapeCountRange) && 
+        shapeCountRange.length === 2 &&
+        typeof shapeCountRange[0] === 'number' &&
+        typeof shapeCountRange[1] === 'number';
+        
+      if (!hasAllProps) {
+        console.error('❌ [STATE CAPTURE ERROR] onCreateSetFromState is provided but required state props are missing!', {
+          enabledShapeTypes: enabledShapeTypes instanceof Set ? 'Set' : typeof enabledShapeTypes,
+          scatterSettings: scatterSettings !== undefined ? 'present' : 'undefined',
+          batchConfigSettings: batchConfigSettings !== undefined ? 'present' : 'undefined',
+          shapeCountMode: shapeCountMode !== undefined ? shapeCountMode : 'undefined',
+          shapeCountFixed: shapeCountFixed !== undefined ? shapeCountFixed : 'undefined',
+          shapeCountRange: Array.isArray(shapeCountRange) ? 'array' : typeof shapeCountRange
+        });
+        throw new Error('Invalid state: onCreateSetFromState requires all state capture props to be provided');
+      }
+      
+      const currentUIState: CurrentUIState = {
+        enabledShapeTypes,
+        scatterSettings,
+        batchConfigSettings,
+        shapeCountMode,
+        shapeCountFixed,
+        shapeCountRange
+      };
+      
+      console.log('📋 [SYNC CAPTURE] Built CurrentUIState from raw props at button click:', {
+        shapeTypes: Array.from(currentUIState.enabledShapeTypes),
+        countMode: currentUIState.shapeCountMode,
+        countFixed: currentUIState.shapeCountFixed,
+        countRange: currentUIState.shapeCountRange
+      });
+      
       const newSetId = onCreateSetFromState(currentUIState, uniqueName);
       setSelectedSetId(newSetId);
       return;
@@ -154,7 +228,7 @@ export function GenerationSetsInterface({
     const updatedSets = [...generationSets, newSet];
     onGenerationSetsChange(updatedSets);
     setSelectedSetId(newId);
-  }, [generationSets, maxSets, onGenerationSetsChange, currentUIState, onCreateSetFromState]);
+  }, [generationSets, maxSets, onGenerationSetsChange, enabledShapeTypes, scatterSettings, batchConfigSettings, shapeCountMode, shapeCountFixed, shapeCountRange, onCreateSetFromState]);
 
   // Duplicate generation set
   const handleDuplicateSet = useCallback((setId: string) => {
