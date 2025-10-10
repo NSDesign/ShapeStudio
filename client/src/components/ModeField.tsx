@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -179,10 +180,9 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
 
       {/* Mode-specific Controls */}
       {config.kind === 'fixed' && (
-        <Input
-          type="number"
+        <NumericInput
           value={config.value}
-          onChange={(e) => onChange({ ...config, value: parseFloat(e.target.value) || bounds.min })}
+          onChange={(value) => onChange({ ...config, value })}
           min={bounds.min}
           max={bounds.max}
           step={step}
@@ -202,10 +202,9 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
             data-testid={`slider-${label.toLowerCase()}-range`}
           />
           <div className="flex space-x-2">
-            <Input
-              type="number"
+            <NumericInput
               value={config.min}
-              onChange={(e) => onChange({ ...config, min: parseFloat(e.target.value) || bounds.min })}
+              onChange={(min) => onChange({ ...config, min })}
               min={bounds.min}
               max={config.max}
               step={step}
@@ -213,10 +212,9 @@ export function ModeField({ label, config, onChange, bounds, unit = "", step = 1
               className="flex-1"
               data-testid={`input-${label.toLowerCase()}-min`}
             />
-            <Input
-              type="number"
+            <NumericInput
               value={config.max}
-              onChange={(e) => onChange({ ...config, max: parseFloat(e.target.value) || bounds.max })}
+              onChange={(max) => onChange({ ...config, max })}
               min={config.min}
               max={bounds.max}
               step={step}
