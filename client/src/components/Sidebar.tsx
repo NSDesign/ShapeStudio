@@ -731,23 +731,23 @@ export default function Sidebar({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs text-slate-400">Width</Label>
-                <Input
-                  type="number"
+                <NumericInput
                   value={customWidth}
-                  onChange={(e) => setCustomWidth(parseInt(e.target.value) || 1920)}
-                  min="1"
-                  max="10000"
+                  onChange={setCustomWidth}
+                  min={1}
+                  max={10000}
+                  step={1}
                   className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-slate-400">Height</Label>
-                <Input
-                  type="number"
+                <NumericInput
                   value={customHeight}
-                  onChange={(e) => setCustomHeight(parseInt(e.target.value) || 1080)}
-                  min="1"
-                  max="10000"
+                  onChange={setCustomHeight}
+                  min={1}
+                  max={10000}
+                  step={1}
                   className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 />
               </div>
@@ -4771,35 +4771,33 @@ export default function Sidebar({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Stroke Width</Label>
-              <Input
-                type="number"
+              <NumericInput
                 value={selectedShapes[0]?.properties.strokeWidth || 2}
-                onChange={(e) => {
-                  const width = Number(e.target.value);
+                onChange={(width) => {
                   updateShapeProperty((shape) => {
                     shape.properties.strokeWidth = width;
                   });
                 }}
+                min={0}
+                max={50}
+                step={0.1}
                 className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                min="0"
-                max="50"
-                step="0.1"
               />
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Stroke Opacity</Label>
-              <Input
-                type="number"
+              <NumericInput
                 value={Math.round((selectedShapes[0]?.properties.strokeOpacity || 1) * 100)}
-                onChange={(e) => {
-                  const opacity = Number(e.target.value) / 100;
+                onChange={(value) => {
+                  const opacity = value / 100;
                   updateShapeProperty((shape) => {
                     shape.properties.strokeOpacity = opacity;
                   });
                 }}
+                min={0}
+                max={100}
+                step={1}
                 className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                min="0"
-                max="100"
               />
             </div>
           </div>
@@ -4815,11 +4813,9 @@ export default function Sidebar({
               {selectedShapes[0].type === 'circle' && selectedShapes[0].radius && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Radius</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={selectedShapes[0].radius}
-                    onChange={(e) => {
-                      const newRadius = Number(e.target.value);
+                    onChange={(newRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.type === 'circle') {
                           shape.radius = newRadius;
@@ -4827,8 +4823,10 @@ export default function Sidebar({
                         }
                       });
                     }}
+                    min={1}
+                    max={1000}
+                    step={1}
                     className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                    min="1"
                   />
                 </div>
               )}
@@ -4837,11 +4835,9 @@ export default function Sidebar({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label className="text-xs text-slate-400">Width</Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={selectedShapes[0].width || 0}
-                      onChange={(e) => {
-                        const newWidth = Number(e.target.value);
+                      onChange={(newWidth) => {
                         updateShapeProperty((shape) => {
                           if (shape.width !== undefined) {
                             shape.width = newWidth;
@@ -4851,17 +4847,17 @@ export default function Sidebar({
                           }
                         });
                       }}
+                      min={1}
+                      max={2000}
+                      step={1}
                       className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                      min="1"
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-slate-400">Height</Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={selectedShapes[0].height || 0}
-                      onChange={(e) => {
-                        const newHeight = Number(e.target.value);
+                      onChange={(newHeight) => {
                         updateShapeProperty((shape) => {
                           if (shape.height !== undefined) {
                             shape.height = newHeight;
@@ -4871,8 +4867,10 @@ export default function Sidebar({
                           }
                         });
                       }}
+                      min={1}
+                      max={2000}
+                      step={1}
                       className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                      min="1"
                     />
                   </div>
                 </div>
@@ -4881,11 +4879,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'polygon' || selectedShapes[0].type === 'star') && selectedShapes[0].sides && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Sides</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={selectedShapes[0].sides}
-                    onChange={(e) => {
-                      const newSides = Number(e.target.value);
+                    onChange={(newSides) => {
                       updateShapeProperty((shape) => {
                         if (shape.sides !== undefined) {
                           shape.sides = newSides;
@@ -4893,9 +4889,10 @@ export default function Sidebar({
                         }
                       });
                     }}
+                    min={3}
+                    max={20}
+                    step={1}
                     className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                    min="3"
-                    max="20"
                   />
                 </div>
               )}
@@ -4990,11 +4987,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'rounded-rectangle' || selectedShapes[0].type === 'rounded-square') && selectedShapes[0].cornerRadius !== undefined && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Corner Radius</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={selectedShapes[0].cornerRadius || 0}
-                    onChange={(e) => {
-                      const newRadius = Number(e.target.value);
+                    onChange={(newRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.cornerRadius !== undefined) {
                           shape.cornerRadius = Math.max(0, newRadius);
@@ -5004,9 +4999,10 @@ export default function Sidebar({
                         }
                       });
                     }}
+                    min={0}
+                    max={50}
+                    step={1}
                     className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                    min="0"
-                    max="50"
                   />
                 </div>
               )}
@@ -5015,11 +5011,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'star' || selectedShapes[0].type === 'ring') && selectedShapes[0].innerRadius !== undefined && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Inner Radius</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={selectedShapes[0].innerRadius || 0}
-                    onChange={(e) => {
-                      const newInnerRadius = Number(e.target.value);
+                    onChange={(newInnerRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.innerRadius !== undefined) {
                           shape.innerRadius = Math.max(0, newInnerRadius);
@@ -5029,9 +5023,10 @@ export default function Sidebar({
                         }
                       });
                     }}
-                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
-                    min="0"
+                    min={0}
                     max={selectedShapes[0].radius ? Math.floor(selectedShapes[0].radius * 0.9) : 50}
+                    step={1}
+                    className="h-6 text-xs bg-slate-800 border-slate-600 text-white"
                   />
                 </div>
               )}
