@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Image, FileImage } from "lucide-react";
 import { ImageExporter, ImageFormat, ExportOptions } from '../lib/imageExport';
@@ -438,24 +439,24 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-slate-400">Width</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={customWidth}
-                    onChange={(e) => setCustomWidth(parseInt(e.target.value) || 0)}
-                    className="bg-[var(--surface-light)] border-slate-600 text-white"
+                    onChange={setCustomWidth}
                     min={1}
                     max={8000}
+                    step={1}
+                    className="bg-[var(--surface-light)] border-slate-600 text-white"
                   />
                 </div>
                 <div>
                   <Label className="text-xs text-slate-400">Height</Label>
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={customHeight}
-                    onChange={(e) => setCustomHeight(parseInt(e.target.value) || 0)}
-                    className="bg-[var(--surface-light)] border-slate-600 text-white"
+                    onChange={setCustomHeight}
                     min={1}
                     max={8000}
+                    step={1}
+                    className="bg-[var(--surface-light)] border-slate-600 text-white"
                   />
                 </div>
               </div>
@@ -567,65 +568,64 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
                 {uniformMargins ? (
                   <div>
                     <Label className="text-xs text-slate-400">Margin (px)</Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={marginTop}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0;
+                      onChange={(value) => {
                         setMarginTop(value);
                         setMarginRight(value);
                         setMarginBottom(value);
                         setMarginLeft(value);
                       }}
-                      className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                       min={0}
                       max={200}
+                      step={1}
+                      className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                     />
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs text-slate-400">Top</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={marginTop}
-                        onChange={(e) => setMarginTop(parseInt(e.target.value) || 0)}
-                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        onChange={setMarginTop}
                         min={0}
                         max={200}
+                        step={1}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                       />
                     </div>
                     <div>
                       <Label className="text-xs text-slate-400">Right</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={marginRight}
-                        onChange={(e) => setMarginRight(parseInt(e.target.value) || 0)}
-                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        onChange={setMarginRight}
                         min={0}
                         max={200}
+                        step={1}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                       />
                     </div>
                     <div>
                       <Label className="text-xs text-slate-400">Bottom</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={marginBottom}
-                        onChange={(e) => setMarginBottom(parseInt(e.target.value) || 0)}
-                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        onChange={setMarginBottom}
                         min={0}
                         max={200}
+                        step={1}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                       />
                     </div>
                     <div>
                       <Label className="text-xs text-slate-400">Left</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={marginLeft}
-                        onChange={(e) => setMarginLeft(parseInt(e.target.value) || 0)}
-                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
+                        onChange={setMarginLeft}
                         min={0}
                         max={200}
+                        step={1}
+                        className="bg-[var(--surface-light)] border-slate-600 text-white slider-input"
                       />
                     </div>
                   </div>
