@@ -34,8 +34,16 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
     }, [localValue, min, max, step, onChange]);
 
     const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocalValue(e.target.value);
-    }, []);
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      
+      // If the input is a valid number, call onChange immediately
+      const numValue = parseFloat(newValue);
+      if (!Number.isNaN(numValue) && newValue !== '' && newValue.trim() !== '-') {
+        const clampedValue = Math.max(min, Math.min(max, numValue));
+        onChange(clampedValue);
+      }
+    }, [min, max, onChange]);
 
     const handleInputBlur = React.useCallback(() => {
       const numValue = parseFloat(localValue);
