@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
+import { NumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -3288,31 +3289,35 @@ export default function Sidebar({
           
           {scatterSettings.shapeCountMode === 'range' ? (
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Min: {scatterSettings.minCount}</span>
-                <Input
-                  type="number"
-                  value={scatterSettings.minCount}
-                  onChange={(e) => {
-                    const value = Math.max(1, Math.min(Number(e.target.value), scatterSettings.maxCount - 1));
-                    onUpdateScatterSettings({ minCount: value });
-                  }}
-                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
-                  min={1}
-                  max={49}
-                />
-                <span className="text-slate-400">Max: {scatterSettings.maxCount}</span>
-                <Input
-                  type="number"
-                  value={scatterSettings.maxCount}
-                  onChange={(e) => {
-                    const value = Math.max(scatterSettings.minCount + 1, Math.min(Number(e.target.value), 50));
-                    onUpdateScatterSettings({ maxCount: value });
-                  }}
-                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
-                  min={2}
-                  max={50}
-                />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400 mb-1 block">Min</Label>
+                  <NumericInput
+                    value={scatterSettings.minCount}
+                    onChange={(value) => {
+                      const clampedValue = Math.min(value, scatterSettings.maxCount - 1);
+                      onUpdateScatterSettings({ minCount: clampedValue });
+                    }}
+                    min={1}
+                    max={scatterSettings.maxCount - 1}
+                    step={1}
+                    className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400 mb-1 block">Max</Label>
+                  <NumericInput
+                    value={scatterSettings.maxCount}
+                    onChange={(value) => {
+                      const clampedValue = Math.max(value, scatterSettings.minCount + 1);
+                      onUpdateScatterSettings({ maxCount: clampedValue });
+                    }}
+                    min={scatterSettings.minCount + 1}
+                    max={50}
+                    step={1}
+                    className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
               </div>
               <Slider
                 value={[scatterSettings.minCount, scatterSettings.maxCount]}
@@ -3326,20 +3331,14 @@ export default function Sidebar({
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Count: {scatterSettings.fixedShapeCount || 10}</span>
-                <Input
-                  type="number"
-                  value={scatterSettings.fixedShapeCount || 10}
-                  onChange={(e) => {
-                    const value = Math.max(1, Math.min(Number(e.target.value), 50));
-                    onUpdateScatterSettings({ fixedShapeCount: value });
-                  }}
-                  className="h-5 w-12 text-xs bg-slate-800 border-slate-600 text-white px-1"
-                  min={1}
-                  max={50}
-                />
-              </div>
+              <NumericInput
+                value={scatterSettings.fixedShapeCount || 10}
+                onChange={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
+                min={1}
+                max={50}
+                step={1}
+                className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
+              />
               <Slider
                 value={[scatterSettings.fixedShapeCount || 10]}
                 onValueChange={([value]) => onUpdateScatterSettings({ fixedShapeCount: value })}

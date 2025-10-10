@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, ArrowUp, ArrowDown } from "lucide-react";
+import { NumericInput } from "@/components/ui/numeric-input";
+import { Plus, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export type ModeKind = 'fixed' | 'range' | 'values';
@@ -178,67 +179,15 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
 
       {/* Mode-specific Controls with Pattern 2 Styling */}
       {config.kind === 'fixed' && (
-        <div className="flex items-center gap-1">
-          <Input
-            type="number"
-            value={fixedValueStr}
-            onChange={(e) => {
-              setFixedValueStr(e.target.value);
-            }}
-            onBlur={() => {
-              const v = parseFloat(fixedValueStr);
-              if (Number.isNaN(v) || fixedValueStr === '' || fixedValueStr.trim() === '-') {
-                // Reset to current value if invalid
-                const resetValue = config.value;
-                setFixedValueStr(resetValue.toString());
-                onChange({ ...config, value: resetValue });
-              } else {
-                // Clamp to bounds and update
-                const clampedValue = Math.max(bounds.min, Math.min(bounds.max, v));
-                setFixedValueStr(clampedValue.toString());
-                onChange({ ...config, value: clampedValue });
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-            min={bounds.min}
-            max={bounds.max}
-            step={step}
-            className="bg-slate-700 border-slate-600 text-slate-300 flex-1"
-            data-testid={`input-${idBase}-fixed`}
-          />
-          <div className="flex flex-col gap-0.5">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-4 w-6 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
-              onClick={() => {
-                const newValue = Math.min(bounds.max, config.value + step);
-                setFixedValueStr(newValue.toString());
-                onChange({ ...config, value: newValue });
-              }}
-              data-testid={`button-${idBase}-increment`}
-            >
-              <ArrowUp className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-4 w-6 p-0 bg-slate-700 border-slate-600 hover:bg-slate-600"
-              onClick={() => {
-                const newValue = Math.max(bounds.min, config.value - step);
-                setFixedValueStr(newValue.toString());
-                onChange({ ...config, value: newValue });
-              }}
-              data-testid={`button-${idBase}-decrement`}
-            >
-              <ArrowDown className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
+        <NumericInput
+          value={config.value}
+          onChange={(value) => onChange({ ...config, value })}
+          min={bounds.min}
+          max={bounds.max}
+          step={step}
+          className="bg-slate-700 border-slate-600 text-slate-300"
+          data-testid={`input-${idBase}-fixed`}
+        />
       )}
 
       {config.kind === 'range' && (
@@ -253,67 +202,27 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
             data-testid={`slider-${idBase}-range`}
           />
           <div className="flex space-x-2">
-            <Input
-              type="number"
-              value={minValueStr}
-              onChange={(e) => {
-                setMinValueStr(e.target.value);
-              }}
-              onBlur={() => {
-                const v = parseFloat(minValueStr);
-                if (Number.isNaN(v) || minValueStr === '' || minValueStr.trim() === '-') {
-                  // Reset to current value if invalid
-                  const resetValue = config.min;
-                  setMinValueStr(resetValue.toString());
-                  onChange({ ...config, min: resetValue });
-                } else {
-                  // Clamp to bounds and ensure min <= max
-                  const clampedValue = Math.max(bounds.min, Math.min(config.max, v));
-                  setMinValueStr(clampedValue.toString());
-                  onChange({ ...config, min: clampedValue });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur();
-                }
+            <NumericInput
+              value={config.min}
+              onChange={(min) => {
+                const clampedMin = Math.min(min, config.max);
+                onChange({ ...config, min: clampedMin });
               }}
               min={bounds.min}
               max={config.max}
               step={step}
-              placeholder="Min"
               className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
               data-testid={`input-${idBase}-min`}
             />
-            <Input
-              type="number"
-              value={maxValueStr}
-              onChange={(e) => {
-                setMaxValueStr(e.target.value);
-              }}
-              onBlur={() => {
-                const v = parseFloat(maxValueStr);
-                if (Number.isNaN(v) || maxValueStr === '' || maxValueStr.trim() === '-') {
-                  // Reset to current value if invalid
-                  const resetValue = config.max;
-                  setMaxValueStr(resetValue.toString());
-                  onChange({ ...config, max: resetValue });
-                } else {
-                  // Clamp to bounds and ensure max >= min
-                  const clampedValue = Math.min(bounds.max, Math.max(config.min, v));
-                  setMaxValueStr(clampedValue.toString());
-                  onChange({ ...config, max: clampedValue });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur();
-                }
+            <NumericInput
+              value={config.max}
+              onChange={(max) => {
+                const clampedMax = Math.max(max, config.min);
+                onChange({ ...config, max: clampedMax });
               }}
               min={config.min}
               max={bounds.max}
               step={step}
-              placeholder="Max"
               className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
               data-testid={`input-${idBase}-max`}
             />
