@@ -55,6 +55,8 @@ interface GenerationSetsInterfaceBaseProps {
   // Bi-directional sync props
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
+  // Callback when current set is updated (to trigger UI state restoration)
+  onCurrentSetUpdate?: (setId: string) => void;
   // Mismatch detection for export count
   batchExportCount?: number;
 }
@@ -98,6 +100,7 @@ export function GenerationSetsInterface({
   // Bi-directional sync props
   currentSetId,
   onCurrentSetChange,
+  onCurrentSetUpdate,
   // Mismatch detection for export count
   batchExportCount,
   // Raw UI state props for synchronous state capture
@@ -292,7 +295,13 @@ export function GenerationSetsInterface({
       set.id === setId ? { ...set, ...updates } : set
     );
     onGenerationSetsChange(updatedSets);
-  }, [generationSets, onGenerationSetsChange]);
+    
+    // If the updated set is the currently selected set, trigger UI state restoration
+    if (setId === selectedSetId && onCurrentSetUpdate) {
+      console.log('🔄 [SET UPDATE] Current set was modified, triggering UI state restoration for:', setId);
+      onCurrentSetUpdate(setId);
+    }
+  }, [generationSets, onGenerationSetsChange, selectedSetId, onCurrentSetUpdate]);
 
   // Toggle set enabled state
   const handleToggleSetEnabled = useCallback((setId: string) => {
