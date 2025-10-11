@@ -41,6 +41,7 @@ interface BatchConfigDialogProps {
   onOpenGenerationSetsManager?: () => void;
   isSetsManagerOpen?: boolean;
   onCloseGenerationSetsManager?: () => void;
+  updateGenerationSetPartial?: (setId: string, partialUpdate: Partial<GenerationSet>) => Promise<void>;
 }
 
 export default function BatchConfigDialog({ 
@@ -66,7 +67,8 @@ export default function BatchConfigDialog({
   generateUniqueSetName,
   onOpenGenerationSetsManager,
   isSetsManagerOpen = false,
-  onCloseGenerationSetsManager
+  onCloseGenerationSetsManager,
+  updateGenerationSetPartial
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
@@ -200,15 +202,23 @@ export default function BatchConfigDialog({
     setIsApplying(true);
     
     try {
-      // Apply legacy batch config settings
-      onSettingsChange(currentSettings);
+      // If generation sets are enabled, update only the batchConfig portion via partial update
+      if (generationSetsEnabled && currentGenerationSetId && updateGenerationSetPartial) {
+        console.log('📝 [GEN CONFIG APPLY] Updating batchConfig for set:', currentGenerationSetId);
+        await updateGenerationSetPartial(currentGenerationSetId, {
+          batchConfig: { ...currentSettings }
+        });
+      } else {
+        // Legacy mode: update parent settings directly
+        onSettingsChange(currentSettings);
+      }
       
       // Keep loading state visible for 1000ms for user feedback
       await new Promise(resolve => setTimeout(resolve, 1000));
     } finally {
       setIsApplying(false);
     }
-  }, [currentSettings, onSettingsChange, validateConfiguration, isExportDisabled]);
+  }, [currentSettings, onSettingsChange, validateConfiguration, isExportDisabled, generationSetsEnabled, currentGenerationSetId, updateGenerationSetPartial]);
 
   const blendModes: BlendMode[] = [
     'source-over', 'multiply', 'screen', 'overlay', 'darken', 

@@ -5508,6 +5508,7 @@ export default function Sidebar({
         onDeleteGenerationSet={onDeleteGenerationSet}
         generateUniqueSetName={generateUniqueSetName}
         onOpenGenerationSetsManager={onOpenGenerationSetsManager}
+        updateGenerationSetPartial={updateGenerationSetPartial}
       />
       
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
