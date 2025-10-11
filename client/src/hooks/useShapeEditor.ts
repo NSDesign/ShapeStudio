@@ -156,7 +156,6 @@ export const useShapeEditor = () => {
   // Generation Sets Management - centralized state for bi-directional sync
   const [generationSets, setGenerationSets] = useState<GenerationSet[]>([]);
   const [currentGenerationSetId, setCurrentGenerationSetId] = useState<string | null>(null);
-  const [hasManualChangesAfterRestore, setHasManualChangesAfterRestore] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
   // Track if initial load is complete to prevent save loops
@@ -309,11 +308,7 @@ export const useShapeEditor = () => {
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));
-    // Mark as manually changed only if not during restore operation
-    if (!isRestoring) {
-      setHasManualChangesAfterRestore(true);
-    }
-  }, [isRestoring]);
+  }, []);
 
   // Capture current UI state for comparison and saving
   const captureCurrentState = useCallback((): CurrentUIState => {
@@ -360,7 +355,6 @@ export const useShapeEditor = () => {
     };
     
     setGenerationSets(updatedSets);
-    setHasManualChangesAfterRestore(false);
     
     // Persist to database
     if (isPersistenceReady) {
@@ -369,24 +363,11 @@ export const useShapeEditor = () => {
     }
   }, [generationSets, currentGenerationSetId, isPersistenceReady, saveGenerationSets]);
 
-  // Check if there are manual changes after the last set restore
+  // Check if there are unsaved changes - with explicit Apply button, changes are always saved manually
   const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
-    if (!setId) return false;
-    
-    const set = generationSets.find(s => s.id === setId);
-    if (!set) return false;
-
-    console.log('🔄 [UNSAVED CHECK] Checking for manual changes in set:', set.name, 'ID:', setId);
-    console.log('🔄 [UNSAVED CHECK] Has manual changes after restore:', hasManualChangesAfterRestore);
-    
-    // Simply check if user has made manual changes after the last restore
-    if (hasManualChangesAfterRestore) {
-      console.log('🔄 [UNSAVED] User has made manual changes since last restore');
-      return true;
-    }
-    
+    // With explicit Apply button, we don't track unsaved changes automatically
     return false;
-  }, [generationSets, hasManualChangesAfterRestore]);
+  }, []);
 
   // UI state restoration from generation set
   const restoreUIStateFromSet = useCallback((setId: string) => {
@@ -428,10 +409,6 @@ export const useShapeEditor = () => {
     setGenerationConfigSettings(set.batchConfig);
     console.log('🔄 [SET RESTORE] Updated generation config settings');
     
-    // Reset manual changes flag since we just restored the set
-    setHasManualChangesAfterRestore(false);
-    console.log('🔄 [SET RESTORE] Reset manual changes flag');
-    
     // Clear restoring flag
     setIsRestoring(false);
     console.log('🔄 [SET RESTORE] Cleared restoring flag');
@@ -448,42 +425,6 @@ export const useShapeEditor = () => {
     console.log('🔄 [SET SWITCH] Attempting to switch to set:', setId);
     console.log('🔄 [SET SWITCH] Current set ID:', currentGenerationSetId);
     
-    // Auto-save current state before switching (if there's a current set)
-    if (currentGenerationSetId && hasUnsavedChanges(currentGenerationSetId)) {
-      console.log('🔄 [SET SWITCH] Auto-saving current set before switch:', currentGenerationSetId);
-      
-      // Capture current state and update the set
-      const currentState = captureCurrentState();
-      const setIndex = generationSets.findIndex(s => s.id === currentGenerationSetId);
-      if (setIndex !== -1) {
-        const updatedSet = {
-          ...generationSets[setIndex],
-          enabledShapeTypes: Array.from(currentState.enabledShapeTypes) as SupportedShapeType[],
-          shapeCountMode: currentState.shapeCountMode,
-          shapeCountFixed: currentState.shapeCountFixed,
-          shapeCountRange: currentState.shapeCountRange,
-          batchConfig: currentState.batchConfigSettings
-        };
-        
-        const newSets = [...generationSets];
-        newSets[setIndex] = updatedSet;
-        setGenerationSets(newSets);
-        
-        // Reset manual changes flag after saving
-        setHasManualChangesAfterRestore(false);
-        
-        // Immediately persist to server (bypass debounce)
-        if (isPersistenceReady) {
-          console.log('💾 [SET SWITCH] Immediately saving changes to server');
-          saveGenerationSets(newSets, currentGenerationSetId)
-            .then(() => console.log('✅ [SET SWITCH] Successfully saved to server'))
-            .catch(error => console.error('❌ [SET SWITCH] Failed to save to server:', error));
-        }
-        
-        console.log('🔄 [SET SWITCH] ✅ Auto-saved current set changes and reset manual changes flag');
-      }
-    }
-    
     console.log('🔄 [SET SWITCH] ✅ Proceeding with set switch to:', setId);
     setCurrentGenerationSetId(setId);
     
@@ -492,7 +433,7 @@ export const useShapeEditor = () => {
       console.log('🔄 [SET SWITCH] Restoring UI state for set:', setId);
       restoreUIStateFromSet(setId);
     }
-  }, [currentGenerationSetId, hasUnsavedChanges, restoreUIStateFromSet, captureCurrentState, generationSets, isPersistenceReady, saveGenerationSets]);
+  }, [currentGenerationSetId, restoreUIStateFromSet]);
 
   const handleBatchExportCountChange = useCallback((count: number) => {
     setBatchExportCount(count);
@@ -512,28 +453,7 @@ export const useShapeEditor = () => {
   const handleCreateGenerationSet = useCallback((customName?: string, currentUIState?: CurrentUIState) => {
     console.log('📝 [CREATE SET] Starting set creation with name:', customName);
     
-    // STEP 1: Save any manual changes to the current set before creating a new one
-    if (currentGenerationSetId && hasManualChangesAfterRestore) {
-      console.log('💾 [CREATE SET] Saving manual changes to current set before creating new one');
-      const currentState = captureCurrentState();
-      const updatedSets = generationSets.map(set => 
-        set.id === currentGenerationSetId 
-          ? {
-              ...set,
-              enabledShapeTypes: Array.from(currentState.enabledShapeTypes) as SupportedShapeType[],
-              shapeCountMode: currentState.shapeCountMode,
-              shapeCountFixed: currentState.shapeCountFixed,
-              shapeCountRange: currentState.shapeCountRange,
-              batchConfig: { ...currentState.batchConfigSettings }
-            }
-          : set
-      );
-      setGenerationSets(updatedSets);
-      setHasManualChangesAfterRestore(false);
-      console.log('✅ [CREATE SET] Saved changes to current set');
-    }
-    
-    // STEP 2: Generate unique name if none provided
+    // Generate unique name if none provided
     const setName = customName || generateUniqueSetName();
     
     // STEP 3: Use currentUIState if provided, otherwise fall back to current component state
@@ -614,10 +534,7 @@ export const useShapeEditor = () => {
     console.log('🎯 [CREATE SET] Auto-selecting new set:', newSetId);
     setCurrentGenerationSetId(newSetId);
     
-    // STEP 7: Reset manual changes flag for the new set
-    setHasManualChangesAfterRestore(false);
-    
-    // STEP 8: Immediately persist to server (bypass debounce) to ensure data is saved
+    // Immediately persist to server (bypass debounce) to ensure data is saved
     if (isPersistenceReady) {
       console.log('💾 [CREATE SET] Immediately saving to server');
       saveGenerationSets(newSets, newSetId)
@@ -627,7 +544,7 @@ export const useShapeEditor = () => {
     
     console.log('✅ [CREATE SET] Created and selected new set:', setName);
     return newSetId;
-  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName, currentGenerationSetId, hasManualChangesAfterRestore, captureCurrentState, isPersistenceReady, saveGenerationSets]);
+  }, [enabledShapeTypes, scatterSettings, generationConfigSettings, generationSets, generateUniqueSetName, isPersistenceReady, saveGenerationSets]);
 
   // Delete a generation set
   const handleDeleteGenerationSet = useCallback((setId: string) => {
@@ -3423,11 +3340,7 @@ export const useShapeEditor = () => {
 
   const updateGenerationConfigSettings = useCallback((updates: Partial<BatchConfigSettings>) => {
     setGenerationConfigSettings(prev => ({ ...prev, ...updates }));
-    // Mark as manually changed only if not during restore operation
-    if (!isRestoring) {
-      setHasManualChangesAfterRestore(true);
-    }
-  }, [isRestoring]);
+  }, []);
 
   // Project loading functionality
   const onLoadProject = useCallback((data: {
@@ -3771,10 +3684,6 @@ export const useShapeEditor = () => {
     setScatterSettings,
     setEnabledShapeTypes: useCallback((value: Set<ShapeType> | ((prev: Set<ShapeType>) => Set<ShapeType>)) => {
       setEnabledShapeTypes(value);
-      // Mark as manually changed only if not during restore operation
-      if (!isRestoring) {
-        setHasManualChangesAfterRestore(true);
-      }
-    }, [isRestoring])
+    }, [])
   };
 };
