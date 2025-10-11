@@ -144,6 +144,14 @@ export function useGenerationSets({
     updateSets(newSets);
   }, [generationSets, captureCurrentState, updateSets]);
 
+  // Apply current UI state to set (resolves immediately, callers handle visual feedback)
+  const applyCurrentUIStateToSet = useCallback(async (
+    setId: string,
+    uiState: CurrentUIState
+  ): Promise<void> => {
+    updateSetWithCurrentState(setId, uiState);
+  }, [updateSetWithCurrentState]);
+
   // Extract UI state from a generation set
   const extractUIStateFromSet = useCallback((setId: string): CurrentUIState | null => {
     const set = generationSets.find(s => s.id === setId);
@@ -226,6 +234,7 @@ export function useGenerationSets({
     setCurrentSetId,
     createSetFromCurrentState,
     updateSetWithCurrentState,
+    applyCurrentUIStateToSet,
     extractUIStateFromSet,
     deleteSet,
     renameSet,

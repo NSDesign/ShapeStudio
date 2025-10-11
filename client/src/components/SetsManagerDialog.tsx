@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
+import { X, CheckCircle, AlertTriangle } from 'lucide-react';
 import { GenerationSet, DEFAULT_GENERATION_SET_LIMITS, ShapeCountMode, BatchConfigSettings } from '@shared/schema';
 import { GenerationSetsInterface } from './GenerationSetsInterface';
 import { ValidationError, ValidationWarning } from '@/lib/typedHelpers';
@@ -21,6 +21,7 @@ interface SetsManagerDialogBaseProps {
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
   onCurrentSetUpdate?: (setId: string) => void;
+  onApplyCurrentUIStateToSet?: (setId: string, uiState: CurrentUIState) => Promise<void>;
   batchExportCount?: number;
   // Edge case strategy for when set count < batch export count
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';
@@ -66,6 +67,7 @@ export function SetsManagerDialog({
   currentSetId,
   onCurrentSetChange,
   onCurrentSetUpdate,
+  onApplyCurrentUIStateToSet,
   // Raw UI state props for synchronous state capture
   enabledShapeTypes,
   scatterSettings,
@@ -84,6 +86,7 @@ export function SetsManagerDialog({
     errors: ValidationError[];
     warnings: ValidationWarning[];
   }>({ isValid: true, errors: [], warnings: [] });
+  const [applyStatus, setApplyStatus] = useState<'idle' | 'applying' | 'success'>('idle');
 
   // Validation callback from GenerationSetsInterface
   const handleValidationChange = useCallback((isValid: boolean, errors: ValidationError[], warnings: ValidationWarning[]) => {
@@ -93,6 +96,39 @@ export function SetsManagerDialog({
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
+
+  // Apply current UI state to the current generation set
+  const handleApplyToCurrentSet = useCallback(async () => {
+    if (!currentSetId || !onApplyCurrentUIStateToSet) return;
+    if (!(enabledShapeTypes instanceof Set) || !scatterSettings || !batchConfigSettings || 
+        !shapeCountMode || shapeCountFixed === undefined || !Array.isArray(shapeCountRange)) {
+      return;
+    }
+
+    setApplyStatus('applying');
+    
+    try {
+      const currentUIState: CurrentUIState = {
+        enabledShapeTypes,
+        scatterSettings,
+        batchConfigSettings,
+        shapeCountMode,
+        shapeCountFixed,
+        shapeCountRange
+      };
+      
+      await onApplyCurrentUIStateToSet(currentSetId, currentUIState);
+      
+      // Show success state for 1000ms
+      setApplyStatus('success');
+      setTimeout(() => {
+        setApplyStatus('idle');
+      }, 1000);
+    } catch (error) {
+      // On error, revert to idle
+      setApplyStatus('idle');
+    }
+  }, [currentSetId, onApplyCurrentUIStateToSet, enabledShapeTypes, scatterSettings, batchConfigSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   // Calculate whether edge case strategy should be shown
   const enabledSetsCount = generationSets.filter(set => set.enabled).length;
@@ -183,12 +219,54 @@ export function SetsManagerDialog({
 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-slate-700 bg-slate-900">
-          <div className="text-xs text-slate-500">
-            {generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets
+          <div className="flex gap-4 text-xs text-slate-500">
+            <span>{generationSets.length} of {DEFAULT_GENERATION_SET_LIMITS.maxGenerationSets} sets</span>
+            <span>{enabledSetsCount} enabled</span>
           </div>
           
-          <div className="text-xs text-slate-500">
-            {enabledSetsCount} enabled
+          <div className="flex gap-2">
+            <Button 
+              onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
+              disabled={!currentSetId || !onApplyCurrentUIStateToSet || !(enabledShapeTypes instanceof Set)}
+              className={`${
+                !currentSetId || !onApplyCurrentUIStateToSet || !(enabledShapeTypes instanceof Set)
+                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                  : applyStatus === 'applying'
+                  ? 'bg-blue-600 text-white cursor-not-allowed'
+                  : applyStatus === 'success'
+                  ? 'bg-green-600 text-white cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              } transition-colors duration-200`}
+              data-testid="button-apply-sets-manager"
+            >
+              <div className="flex items-center space-x-2">
+                {!currentSetId || !onApplyCurrentUIStateToSet || !(enabledShapeTypes instanceof Set) ? (
+                  <AlertTriangle className="w-4 h-4" />
+                ) : applyStatus === 'applying' ? (
+                  <>
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Applying...</span>
+                  </>
+                ) : applyStatus === 'success' ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Applied!</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Apply</span>
+                  </>
+                )}
+              </div>
+            </Button>
+            <Button 
+              onClick={handleClose}
+              variant="outline"
+              className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+            >
+              Close
+            </Button>
           </div>
         </div>
       </div>

@@ -327,6 +327,48 @@ export const useShapeEditor = () => {
     };
   }, [enabledShapeTypes, scatterSettings, generationConfigSettings]);
 
+  // Apply current UI state to a specific generation set with visual feedback
+  const applyCurrentUIStateToSet = useCallback(async (
+    setId: string,
+    uiState: CurrentUIState
+  ): Promise<void> => {
+    const setIndex = generationSets.findIndex(set => set.id === setId);
+    if (setIndex === -1) {
+      console.warn('⚠️ [APPLY] Set not found:', setId);
+      return;
+    }
+
+    const existingSet = generationSets[setIndex];
+    console.log('💾 [APPLY] Applying UI state to set:', existingSet.name, 'ID:', setId);
+    
+    const updatedSets = [...generationSets];
+    updatedSets[setIndex] = {
+      ...existingSet,
+      enabledShapeTypes: Array.from(uiState.enabledShapeTypes) as SupportedShapeType[],
+      shapeCountMode: uiState.shapeCountMode,
+      shapeCountFixed: uiState.shapeCountFixed,
+      shapeCountRange: uiState.shapeCountRange,
+      shapeSpecificProperties: {
+        ...Object.fromEntries(
+          Object.entries(uiState.scatterSettings.shapeSpecific || {}).map(([shapeType, settings]) => [
+            shapeType,
+            settings
+          ])
+        )
+      },
+      batchConfig: { ...uiState.batchConfigSettings }
+    };
+    
+    setGenerationSets(updatedSets);
+    setHasManualChangesAfterRestore(false);
+    
+    // Persist to database
+    if (isPersistenceReady) {
+      await saveGenerationSets(updatedSets, currentGenerationSetId);
+      console.log('✅ [APPLY] Successfully saved changes to set:', existingSet.name);
+    }
+  }, [generationSets, currentGenerationSetId, isPersistenceReady, saveGenerationSets]);
+
   // Check if there are manual changes after the last set restore
   const hasUnsavedChanges = useCallback((setId: string | null): boolean => {
     if (!setId) return false;
@@ -3529,6 +3571,7 @@ export const useShapeEditor = () => {
     isSetsManagerOpen,
     generateUniqueSetName,
     restoreUIStateFromSet,
+    applyCurrentUIStateToSet,
     hasUnsavedChanges,
     areSetsEnabled,
     generateRandomShapes,

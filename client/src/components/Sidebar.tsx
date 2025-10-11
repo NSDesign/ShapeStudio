@@ -75,7 +75,9 @@ import {
   Plus,
   Minus,
   Info,
-  X
+  X,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
 import { ModeField } from '@/components/ModeField';
@@ -416,6 +418,7 @@ interface SidebarProps {
   onBatchExportCountChange?: (count: number) => void;
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
+  onApplyCurrentUIStateToSet?: (setId: string, uiState: CurrentUIState) => Promise<void>;
   hasUnsavedChanges?: (setId: string | null) => boolean;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
   
@@ -489,6 +492,7 @@ export default function Sidebar({
   onBatchExportCountChange,
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
+  onApplyCurrentUIStateToSet,
   hasUnsavedChanges,
   areSetsEnabled,
   
@@ -510,6 +514,7 @@ export default function Sidebar({
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [applyStatus, setApplyStatus] = useState<'idle' | 'applying' | 'success'>('idle');
   
   // Export settings state (lifted from ExportSaveContent for persistence)
   const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
@@ -958,6 +963,35 @@ export default function Sidebar({
     console.log('Created generation set:', name, 'with ID:', setId, 'from current UI state');
     return setId;
   }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+
+  // Apply current UI state to the current generation set
+  const handleApplyToCurrentSet = useCallback(async () => {
+    if (!currentGenerationSetId || !onApplyCurrentUIStateToSet) return;
+
+    setApplyStatus('applying');
+    
+    try {
+      const currentUIState: CurrentUIState = {
+        enabledShapeTypes,
+        scatterSettings,
+        batchConfigSettings: generationConfigSettings,
+        shapeCountMode,
+        shapeCountFixed,
+        shapeCountRange
+      };
+      
+      await onApplyCurrentUIStateToSet(currentGenerationSetId, currentUIState);
+      
+      // Show success state for 1000ms
+      setApplyStatus('success');
+      setTimeout(() => {
+        setApplyStatus('idle');
+      }, 1000);
+    } catch (error) {
+      // On error, revert to idle
+      setApplyStatus('idle');
+    }
+  }, [currentGenerationSetId, onApplyCurrentUIStateToSet, enabledShapeTypes, scatterSettings, generationConfigSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
   function ExportSaveContent() {
     // Export settings now use lifted state from main Sidebar component
@@ -3352,7 +3386,7 @@ export default function Sidebar({
         </div>
 
 
-        {/* Generate Buttons */}
+        {/* Generate and Apply Buttons */}
         <div className="flex gap-2">
           <Button 
             onClick={onGenerateRandomShapes}
@@ -3363,6 +3397,41 @@ export default function Sidebar({
               ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
               : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
             }
+          </Button>
+          <Button 
+            onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
+            disabled={!currentGenerationSetId || !onApplyCurrentUIStateToSet}
+            className={`${
+              !currentGenerationSetId || !onApplyCurrentUIStateToSet
+                ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                : applyStatus === 'applying'
+                ? 'bg-blue-600 text-white cursor-not-allowed'
+                : applyStatus === 'success'
+                ? 'bg-green-600 text-white cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            } transition-colors duration-200`}
+            data-testid="button-apply-shape-types"
+          >
+            <div className="flex items-center space-x-2">
+              {!currentGenerationSetId || !onApplyCurrentUIStateToSet ? (
+                <AlertTriangle className="w-4 h-4" />
+              ) : applyStatus === 'applying' ? (
+                <>
+                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Applying...</span>
+                </>
+              ) : applyStatus === 'success' ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Applied!</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Apply</span>
+                </>
+              )}
+            </div>
           </Button>
         </div>
       </div>
@@ -5446,6 +5515,7 @@ export default function Sidebar({
           console.log('🔄 [SIDEBAR] Current set updated, restoring UI state:', setId);
           onRestoreUIStateFromSet?.(setId);
         }}
+        onApplyCurrentUIStateToSet={onApplyCurrentUIStateToSet}
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         batchConfigSettings={generationConfigSettings}
