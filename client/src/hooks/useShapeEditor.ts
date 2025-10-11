@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { CurrentUIState } from './useGenerationSets';
 import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
+import { useExportSettings } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
@@ -36,6 +37,10 @@ export interface GenerationContextOverrides {
 }
 
 export const useShapeEditor = () => {
+  // Get export settings to check if shape sets are enabled
+  const { exportSettings } = useExportSettings();
+  const setsEnabled = exportSettings.generationSetsEnabled;
+  
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [groups, setGroups] = useState<ShapeGroupClass[]>([]);
   const [selectedShapes, setSelectedShapes] = useState<Shape[]>([]);
@@ -205,7 +210,14 @@ export const useShapeEditor = () => {
   }, [isPersistenceReady, persistedGenerationSets, persistedCurrentSetId, migrateGenerationSets]);
 
   // Auto-save when generation sets or current set changes (only after initial load)
+  // DISABLED when shape sets are enabled - Apply button is the only save mechanism
   useEffect(() => {
+    // Skip auto-save when shape sets are enabled - user must explicitly use Apply button
+    if (setsEnabled) {
+      console.log('⏭️ [AUTO-SAVE] Skipped - Shape sets enabled, use Apply button to save');
+      return;
+    }
+    
     if (isPersistenceReady && isInitialLoadComplete) {
       // Deep comparison for arrays and simple comparison for primitives
       const setsChanged = generationSets.length !== persistedGenerationSets.length ||
@@ -223,7 +235,7 @@ export const useShapeEditor = () => {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId]);
+  }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId, setsEnabled]);
   
   // Restore UI state for the current set after initial load
   useEffect(() => {
