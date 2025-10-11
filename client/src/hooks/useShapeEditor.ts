@@ -39,7 +39,6 @@ export interface GenerationContextOverrides {
 export const useShapeEditor = () => {
   // Get export settings to check if shape sets are enabled
   const { exportSettings } = useExportSettings();
-  const setsEnabled = exportSettings.generationSetsEnabled;
   
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [groups, setGroups] = useState<ShapeGroupClass[]>([]);
@@ -212,8 +211,15 @@ export const useShapeEditor = () => {
   // Auto-save when generation sets or current set changes (only after initial load)
   // DISABLED when shape sets are enabled - Apply button is the only save mechanism
   useEffect(() => {
-    // Skip auto-save when shape sets are enabled - user must explicitly use Apply button
-    if (setsEnabled) {
+    // Wait for initial hydration before checking exportSettings
+    // This ensures we have the accurate value, not defaults
+    if (!hasRestoredInitialUI.current) {
+      console.log('⏭️ [AUTO-SAVE] Skipped - Waiting for initial hydration');
+      return;
+    }
+    
+    // Skip auto-save when shape sets feature is enabled - user must use Apply button
+    if (exportSettings.generationSetsEnabled) {
       console.log('⏭️ [AUTO-SAVE] Skipped - Shape sets enabled, use Apply button to save');
       return;
     }
@@ -235,7 +241,7 @@ export const useShapeEditor = () => {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId, setsEnabled]);
+  }, [generationSets, currentGenerationSetId, saveGenerationSets, isPersistenceReady, isInitialLoadComplete, persistedGenerationSets, persistedCurrentSetId, exportSettings.generationSetsEnabled]);
   
   // Restore UI state for the current set after initial load
   useEffect(() => {
