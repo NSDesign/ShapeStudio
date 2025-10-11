@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
-import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode } from '@shared/schema';
+import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -419,6 +419,7 @@ interface SidebarProps {
   onGenerationCountModeChange?: (mode: 'fixed' | 'range') => void;
   onRestoreUIStateFromSet?: (setId: string) => void;
   onApplyCurrentUIStateToSet?: (setId: string, uiState: CurrentUIState) => Promise<void>;
+  updateGenerationSetPartial?: (setId: string, partialUpdate: Partial<GenerationSet>) => Promise<void>;
   hasUnsavedChanges?: (setId: string | null) => boolean;
   areSetsEnabled?: (batchCount?: number, countMode?: string) => boolean;
   
@@ -493,6 +494,7 @@ export default function Sidebar({
   onGenerationCountModeChange,
   onRestoreUIStateFromSet,
   onApplyCurrentUIStateToSet,
+  updateGenerationSetPartial,
   hasUnsavedChanges,
   areSetsEnabled,
   
@@ -964,23 +966,32 @@ export default function Sidebar({
     return setId;
   }, [onCreateGenerationSet, exportSettings.exportBatchModeEnabled, updateExportSettings, generationConfigSettings, onUpdateGenerationConfigSettings, enabledShapeTypes, scatterSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
 
-  // Apply current UI state to the current generation set
+  // Apply current UI state to the current generation set - Shape Types section only
   const handleApplyToCurrentSet = useCallback(async () => {
-    if (!currentGenerationSetId || !onApplyCurrentUIStateToSet) return;
+    if (!currentGenerationSetId || !updateGenerationSetPartial) return;
 
     setApplyStatus('applying');
     
     try {
-      const currentUIState: CurrentUIState = {
-        enabledShapeTypes,
-        scatterSettings,
-        batchConfigSettings: generationConfigSettings,
+      // Prepare shape types partial update - only what this section controls
+      const shapeTypesUpdate: Partial<GenerationSet> = {
+        enabledShapeTypes: Array.from(enabledShapeTypes) as SupportedShapeType[],
         shapeCountMode,
         shapeCountFixed,
-        shapeCountRange
+        shapeCountRange,
+        // Include shape-specific properties (corner radius, inner radius, segments, etc.)
+        shapeSpecificProperties: scatterSettings.shapeSpecific as any
       };
       
-      await onApplyCurrentUIStateToSet(currentGenerationSetId, currentUIState);
+      console.log('📝 [SHAPE TYPES APPLY] Updating with:', {
+        shapeTypes: shapeTypesUpdate.enabledShapeTypes,
+        mode: shapeCountMode,
+        fixed: shapeCountFixed,
+        range: shapeCountRange,
+        shapeSpecific: Object.keys(scatterSettings.shapeSpecific)
+      });
+      
+      await updateGenerationSetPartial(currentGenerationSetId, shapeTypesUpdate);
       
       // Show success state for 1000ms
       setApplyStatus('success');
@@ -988,10 +999,11 @@ export default function Sidebar({
         setApplyStatus('idle');
       }, 1000);
     } catch (error) {
+      console.error('Failed to apply shape types:', error);
       // On error, revert to idle
       setApplyStatus('idle');
     }
-  }, [currentGenerationSetId, onApplyCurrentUIStateToSet, enabledShapeTypes, scatterSettings, generationConfigSettings, shapeCountMode, shapeCountFixed, shapeCountRange]);
+  }, [currentGenerationSetId, updateGenerationSetPartial, enabledShapeTypes, shapeCountMode, shapeCountFixed, shapeCountRange, scatterSettings.shapeSpecific]);
 
   function ExportSaveContent() {
     // Export settings now use lifted state from main Sidebar component
@@ -3391,9 +3403,9 @@ export default function Sidebar({
           {setsEnabled && (
             <Button 
               onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
-              disabled={!currentGenerationSetId || !onApplyCurrentUIStateToSet}
+              disabled={!currentGenerationSetId || !updateGenerationSetPartial}
               className={`w-full ${
-                !currentGenerationSetId || !onApplyCurrentUIStateToSet
+                !currentGenerationSetId || !updateGenerationSetPartial
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                   : applyStatus === 'applying'
                   ? 'bg-blue-600 text-white cursor-not-allowed'
@@ -3404,7 +3416,7 @@ export default function Sidebar({
               data-testid="button-apply-shape-types"
             >
               <div className="flex items-center space-x-2">
-                {!currentGenerationSetId || !onApplyCurrentUIStateToSet ? (
+                {!currentGenerationSetId || !updateGenerationSetPartial ? (
                   <AlertTriangle className="w-4 h-4" />
                 ) : applyStatus === 'applying' ? (
                   <>

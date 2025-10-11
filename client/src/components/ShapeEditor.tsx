@@ -90,6 +90,7 @@ export default function ShapeEditor() {
     onCloseGenerationSetsManager,
     restoreUIStateFromSet,
     applyCurrentUIStateToSet,
+    updateGenerationSetPartial,
     hasUnsavedChanges,
     areSetsEnabled
   } = useShapeEditor();
@@ -209,6 +210,7 @@ export default function ShapeEditor() {
           onCloseGenerationSetsManager={onCloseGenerationSetsManager}
           onRestoreUIStateFromSet={restoreUIStateFromSet}
           onApplyCurrentUIStateToSet={applyCurrentUIStateToSet}
+          updateGenerationSetPartial={updateGenerationSetPartial}
           hasUnsavedChanges={hasUnsavedChanges}
           areSetsEnabled={areSetsEnabled}
         />

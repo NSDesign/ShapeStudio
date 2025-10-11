@@ -340,7 +340,37 @@ export const useShapeEditor = () => {
     };
   }, [enabledShapeTypes, scatterSettings, generationConfigSettings]);
 
+  // Partial update function - allows updating specific portions of a generation set
+  const updateGenerationSetPartial = useCallback(async (
+    setId: string,
+    partialUpdate: Partial<GenerationSet>
+  ): Promise<void> => {
+    const setIndex = generationSets.findIndex(set => set.id === setId);
+    if (setIndex === -1) {
+      console.warn('⚠️ [PARTIAL UPDATE] Set not found:', setId);
+      return;
+    }
+
+    const existingSet = generationSets[setIndex];
+    console.log('💾 [PARTIAL UPDATE] Updating set:', existingSet.name, 'with:', Object.keys(partialUpdate));
+    
+    const updatedSets = [...generationSets];
+    updatedSets[setIndex] = {
+      ...existingSet,
+      ...partialUpdate
+    };
+    
+    setGenerationSets(updatedSets);
+    
+    // Persist to database
+    if (isPersistenceReady) {
+      await saveGenerationSets(updatedSets, currentGenerationSetId);
+      console.log('✅ [PARTIAL UPDATE] Successfully saved changes to set:', existingSet.name);
+    }
+  }, [generationSets, currentGenerationSetId, isPersistenceReady, saveGenerationSets]);
+
   // Apply current UI state to a specific generation set with visual feedback
+  // DEPRECATED: Use updateGenerationSetPartial for section-specific updates
   const applyCurrentUIStateToSet = useCallback(async (
     setId: string,
     uiState: CurrentUIState
@@ -3504,6 +3534,7 @@ export const useShapeEditor = () => {
     generateUniqueSetName,
     restoreUIStateFromSet,
     applyCurrentUIStateToSet,
+    updateGenerationSetPartial,
     hasUnsavedChanges,
     areSetsEnabled,
     generateRandomShapes,
