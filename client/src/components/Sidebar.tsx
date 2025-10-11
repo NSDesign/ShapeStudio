@@ -3386,23 +3386,13 @@ export default function Sidebar({
         </div>
 
 
-        {/* Generate and Apply Buttons */}
-        <div className="flex gap-2">
-          <Button 
-            onClick={onGenerateRandomShapes}
-            className="flex-1 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-          >
-            <Wand2 className="w-4 h-4 mr-2" />
-            {scatterSettings.shapeCountMode === 'fixed' 
-              ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
-              : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
-            }
-          </Button>
-          {areSetsEnabled && (
+        {/* Apply and Generate Buttons */}
+        <div className="flex flex-col gap-2">
+          {setsEnabled && (
             <Button 
               onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
               disabled={!currentGenerationSetId || !onApplyCurrentUIStateToSet}
-              className={`${
+              className={`w-full ${
                 !currentGenerationSetId || !onApplyCurrentUIStateToSet
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                   : applyStatus === 'applying'
@@ -3435,6 +3425,16 @@ export default function Sidebar({
               </div>
             </Button>
           )}
+          <Button 
+            onClick={onGenerateRandomShapes}
+            className="w-full bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            {scatterSettings.shapeCountMode === 'fixed' 
+              ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
+              : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
+            }
+          </Button>
         </div>
       </div>
     );
