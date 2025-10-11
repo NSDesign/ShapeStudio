@@ -3398,41 +3398,43 @@ export default function Sidebar({
               : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
             }
           </Button>
-          <Button 
-            onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
-            disabled={!currentGenerationSetId || !onApplyCurrentUIStateToSet}
-            className={`${
-              !currentGenerationSetId || !onApplyCurrentUIStateToSet
-                ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                : applyStatus === 'applying'
-                ? 'bg-blue-600 text-white cursor-not-allowed'
-                : applyStatus === 'success'
-                ? 'bg-green-600 text-white cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            } transition-colors duration-200`}
-            data-testid="button-apply-shape-types"
-          >
-            <div className="flex items-center space-x-2">
-              {!currentGenerationSetId || !onApplyCurrentUIStateToSet ? (
-                <AlertTriangle className="w-4 h-4" />
-              ) : applyStatus === 'applying' ? (
-                <>
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Applying...</span>
-                </>
-              ) : applyStatus === 'success' ? (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Applied!</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Apply</span>
-                </>
-              )}
-            </div>
-          </Button>
+          {areSetsEnabled && (
+            <Button 
+              onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
+              disabled={!currentGenerationSetId || !onApplyCurrentUIStateToSet}
+              className={`${
+                !currentGenerationSetId || !onApplyCurrentUIStateToSet
+                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                  : applyStatus === 'applying'
+                  ? 'bg-blue-600 text-white cursor-not-allowed'
+                  : applyStatus === 'success'
+                  ? 'bg-green-600 text-white cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              } transition-colors duration-200`}
+              data-testid="button-apply-shape-types"
+            >
+              <div className="flex items-center space-x-2">
+                {!currentGenerationSetId || !onApplyCurrentUIStateToSet ? (
+                  <AlertTriangle className="w-4 h-4" />
+                ) : applyStatus === 'applying' ? (
+                  <>
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Applying...</span>
+                  </>
+                ) : applyStatus === 'success' ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Applied!</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Apply</span>
+                  </>
+                )}
+              </div>
+            </Button>
+          )}
         </div>
       </div>
     );
