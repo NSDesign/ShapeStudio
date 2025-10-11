@@ -383,6 +383,7 @@ export const useShapeEditor = () => {
     setIsRestoring(true);
     console.log('🔄 [SET RESTORE] Shape types:', set.enabledShapeTypes);
     console.log('🔄 [SET RESTORE] Count mode:', set.shapeCountMode, 'Fixed:', set.shapeCountFixed, 'Range:', set.shapeCountRange);
+    console.log('🔄 [SET RESTORE] Saved shapeSpecific properties:', set.shapeSpecificProperties);
 
     // Convert SupportedShapeType back to ShapeType Set
     const newShapeTypes = new Set(set.enabledShapeTypes as ShapeType[]);
@@ -390,6 +391,7 @@ export const useShapeEditor = () => {
     console.log('🔄 [SET RESTORE] Updated shape types to:', Array.from(newShapeTypes));
     
     // Restore scatter settings with proper shape count properties
+    // Prioritize saved values over current state by spreading saved properties last
     const restoredScatterSettings: ScatterSettings = {
       ...scatterSettings,
       shapeCountMode: set.shapeCountMode,
@@ -397,13 +399,12 @@ export const useShapeEditor = () => {
       count: set.shapeCountMode === 'fixed' ? set.shapeCountFixed : Math.floor((set.shapeCountRange[0] + set.shapeCountRange[1]) / 2),
       minCount: set.shapeCountRange[0],
       maxCount: set.shapeCountRange[1],
-      shapeSpecific: {
-        ...scatterSettings.shapeSpecific,
-        ...(set.shapeSpecificProperties as any)
-      }
+      // Saved shapeSpecific properties override current state completely
+      shapeSpecific: set.shapeSpecificProperties ? { ...(set.shapeSpecificProperties as any) } : scatterSettings.shapeSpecific
     };
     setScatterSettings(restoredScatterSettings);
     console.log('🔄 [SET RESTORE] Updated scatter settings:', restoredScatterSettings.shapeCountMode, restoredScatterSettings.count);
+    console.log('🔄 [SET RESTORE] Restored shapeSpecific:', restoredScatterSettings.shapeSpecific);
     
     // Restore batch config settings
     setGenerationConfigSettings(set.batchConfig);
