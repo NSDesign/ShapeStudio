@@ -20,6 +20,7 @@ interface SetsManagerDialogBaseProps {
   // Bi-directional sync props
   currentSetId?: string | null;
   onCurrentSetChange?: (setId: string | null) => void;
+  onCurrentSetUpdate?: (setId: string) => void;
   batchExportCount?: number;
   // Edge case strategy for when set count < batch export count
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';
@@ -64,6 +65,7 @@ export function SetsManagerDialog({
   // Bi-directional sync props
   currentSetId,
   onCurrentSetChange,
+  onCurrentSetUpdate,
   // Raw UI state props for synchronous state capture
   enabledShapeTypes,
   scatterSettings,
@@ -153,6 +155,7 @@ export function SetsManagerDialog({
               onValidationChange={handleValidationChange}
               currentSetId={currentSetId}
               onCurrentSetChange={onCurrentSetChange}
+              onCurrentSetUpdate={onCurrentSetUpdate}
               enabledShapeTypes={enabledShapeTypes}
               scatterSettings={scatterSettings}
               batchConfigSettings={batchConfigSettings}
@@ -172,6 +175,7 @@ export function SetsManagerDialog({
               onValidationChange={handleValidationChange}
               currentSetId={currentSetId}
               onCurrentSetChange={onCurrentSetChange}
+              onCurrentSetUpdate={onCurrentSetUpdate}
               batchExportCount={batchExportCount}
             />
           )}

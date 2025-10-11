@@ -5441,6 +5441,11 @@ export default function Sidebar({
         showInlineValidation={true}
         currentSetId={effectiveCurrentSetId}
         onCurrentSetChange={onCurrentGenerationSetChange}
+        onCurrentSetUpdate={(setId) => {
+          // When current set is updated, restore UI state from it
+          console.log('🔄 [SIDEBAR] Current set updated, restoring UI state:', setId);
+          onRestoreUIStateFromSet?.(setId);
+        }}
         enabledShapeTypes={enabledShapeTypes}
         scatterSettings={scatterSettings}
         batchConfigSettings={generationConfigSettings}
