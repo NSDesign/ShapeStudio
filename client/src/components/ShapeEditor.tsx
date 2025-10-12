@@ -5,6 +5,7 @@ import { FolderOpen } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Canvas from './Canvas';
 import ProjectDialog from './ProjectDialog';
+import { ShapeCountMode } from '@shared/schema';
 
 export default function ShapeEditor() {
   const {
@@ -198,6 +199,9 @@ export default function ShapeEditor() {
           currentGenerationSetId={currentGenerationSetId}
           batchExportCount={batchExportCount}
           generationCountMode={generationCountMode}
+          shapeCountMode={scatterSettings.shapeCountMode as ShapeCountMode}
+          shapeCountFixed={scatterSettings.fixedShapeCount}
+          shapeCountRange={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
           onGenerationSetsChange={handleGenerationSetsChange}
           onCurrentGenerationSetChange={handleCurrentGenerationSetChange}
           onBatchExportCountChange={handleBatchExportCountChange}
