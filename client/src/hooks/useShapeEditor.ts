@@ -168,6 +168,9 @@ export const useShapeEditor = () => {
   // Track if initial UI state has been restored to prevent multiple restores
   const hasRestoredInitialUI = useRef(false);
   
+  // Track if we're currently saving to prevent reload loops after Apply button saves
+  const isSavingRef = useRef(false);
+  
   // Migration function to ensure old sets have new properties
   const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
     return sets.map(set => ({
@@ -199,6 +202,12 @@ export const useShapeEditor = () => {
 
   // Sync persisted data to local state when loaded
   useEffect(() => {
+    // Skip reload if we're in the middle of saving (prevents Apply button reload loop)
+    if (isSavingRef.current) {
+      console.log('⏭️ [RELOAD] Skipped - Currently saving, local state is already updated');
+      return;
+    }
+    
     if (isPersistenceReady && persistedGenerationSets) {
       const migratedSets = migrateGenerationSets(persistedGenerationSets);
       setGenerationSets(migratedSets);
@@ -360,12 +369,21 @@ export const useShapeEditor = () => {
       ...partialUpdate
     };
     
+    // Update local state immediately
     setGenerationSets(updatedSets);
     
-    // Persist to database
+    // Persist to database (in background, without triggering reload)
     if (isPersistenceReady) {
-      await saveGenerationSets(updatedSets, currentGenerationSetId);
-      console.log('✅ [PARTIAL UPDATE] Successfully saved changes to set:', existingSet.name);
+      isSavingRef.current = true;
+      try {
+        await saveGenerationSets(updatedSets, currentGenerationSetId);
+        console.log('✅ [PARTIAL UPDATE] Successfully saved changes to set:', existingSet.name);
+      } finally {
+        // Clear saving flag after a short delay to ensure cache update is processed
+        setTimeout(() => {
+          isSavingRef.current = false;
+        }, 100);
+      }
     }
   }, [generationSets, currentGenerationSetId, isPersistenceReady, saveGenerationSets]);
 
