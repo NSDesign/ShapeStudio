@@ -413,12 +413,32 @@ export class Shape {
         break;
       case 'circle':
         this.radius = getRadius();
+        // Apply segment count from shape-specific settings if available
+        if (batchConfig?.scatterSettings?.shapeSpecific?.circle) {
+          const circleSettings = batchConfig.scatterSettings.shapeSpecific.circle;
+          if (circleSettings.segmentCountMode === 'fixed' && circleSettings.segmentCountValue !== undefined) {
+            this.segments = circleSettings.segmentCountValue;
+          } else if (circleSettings.segmentCountRange) {
+            const [min, max] = circleSettings.segmentCountRange;
+            this.segments = Math.floor(min + Math.random() * (max - min + 1));
+          }
+        }
         this.generateCirclePoints();
         break;
       case 'ellipse':
         const ellipseDims = getWidthHeight();
         this.width = ellipseDims.width;
         this.height = ellipseDims.height;
+        // Apply segment count from shape-specific settings if available
+        if (batchConfig?.scatterSettings?.shapeSpecific?.ellipse) {
+          const ellipseSettings = batchConfig.scatterSettings.shapeSpecific.ellipse;
+          if (ellipseSettings.segmentCountMode === 'fixed' && ellipseSettings.segmentCountValue !== undefined) {
+            this.segments = ellipseSettings.segmentCountValue;
+          } else if (ellipseSettings.segmentCountRange) {
+            const [min, max] = ellipseSettings.segmentCountRange;
+            this.segments = Math.floor(min + Math.random() * (max - min + 1));
+          }
+        }
         this.generateEllipsePoints();
         break;
       case 'triangle':
@@ -533,11 +553,19 @@ export class Shape {
         break;
       case 'ring':
         this.radius = getRadius(30, 70);
-        // Apply inner radius ratio from batch config if available
+        // Apply inner radius ratio from batch config or shape-specific settings
         let ringInnerRadiusRatio = 0.4 + Math.random() * 0.4;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
           ringInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.ring) {
+          const ringSettings = batchConfig.scatterSettings.shapeSpecific.ring;
+          if (ringSettings.innerRadiusMode === 'fixed' && ringSettings.innerRadiusValue !== undefined) {
+            ringInnerRadiusRatio = ringSettings.innerRadiusValue;
+          } else if (ringSettings.innerRadiusRange) {
+            const [minRatio, maxRatio] = ringSettings.innerRadiusRange;
+            ringInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+          }
         }
         this.innerRadius = this.radius * ringInnerRadiusRatio;
         this.generateRingPoints();
@@ -554,11 +582,19 @@ export class Shape {
         break;
       case 'spline-ring':
         this.radius = getRadius(30, 70);
-        // Apply inner radius ratio from batch config if available (same as ring)
+        // Apply inner radius ratio from batch config or shape-specific settings
         let splineRingInnerRadiusRatio = 0.4 + Math.random() * 0.4;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
           splineRingInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.['spline-ring']) {
+          const splineRingSettings = batchConfig.scatterSettings.shapeSpecific['spline-ring'];
+          if (splineRingSettings.innerRadiusMode === 'fixed' && splineRingSettings.innerRadiusValue !== undefined) {
+            splineRingInnerRadiusRatio = splineRingSettings.innerRadiusValue;
+          } else if (splineRingSettings.innerRadiusRange) {
+            const [minRatio, maxRatio] = splineRingSettings.innerRadiusRange;
+            splineRingInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+          }
         }
         this.innerRadius = this.radius * splineRingInnerRadiusRatio;
         this.generateSplineRingPoints();
