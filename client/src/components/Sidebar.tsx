@@ -5231,9 +5231,8 @@ export default function Sidebar({
               {/* Quick Generate Button - appears after Shape Types icon */}
               {section.id === 'shapes' && (
                 <Button
-                  variant="ghost"
                   onClick={onGenerateRandomShapes}
-                  className="w-full h-12 p-0 rounded-none border-0 hover:bg-purple-900/30 text-purple-400 hover:text-purple-300 transition-colors"
+                  className="w-full h-12 p-0 rounded-md bg-[var(--editor-accent)] hover:bg-purple-700 text-white transition-colors"
                   title="Generate Shapes (Quick)"
                   data-testid="sidebar-collapsed-quick-generate-button"
                 >
