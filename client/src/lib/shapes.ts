@@ -1755,18 +1755,30 @@ export class Shape {
           const xi = Math.max(0, Math.min(width - 1, x + i));
           const idx = (y * width + xi) * 4;
           
-          r += data[idx];
-          g += data[idx + 1];
-          b += data[idx + 2];
+          // Premultiply RGB by alpha to prevent dark halos
+          const pixelAlpha = data[idx + 3] / 255;
+          r += data[idx] * pixelAlpha;
+          g += data[idx + 1] * pixelAlpha;
+          b += data[idx + 2] * pixelAlpha;
           a += data[idx + 3];
           count++;
         }
         
         const idx = (y * width + x) * 4;
-        temp[idx] = r / count;
-        temp[idx + 1] = g / count;
-        temp[idx + 2] = b / count;
-        temp[idx + 3] = a / count;
+        const avgAlpha = a / count;
+        
+        // Unpremultiply: divide by alpha to get original color
+        if (avgAlpha > 0) {
+          const alphaFactor = avgAlpha / 255;
+          temp[idx] = (r / count) / alphaFactor;
+          temp[idx + 1] = (g / count) / alphaFactor;
+          temp[idx + 2] = (b / count) / alphaFactor;
+        } else {
+          temp[idx] = 0;
+          temp[idx + 1] = 0;
+          temp[idx + 2] = 0;
+        }
+        temp[idx + 3] = avgAlpha;
       }
     }
     
@@ -1784,18 +1796,30 @@ export class Shape {
           const yi = Math.max(0, Math.min(height - 1, y + i));
           const idx = (yi * width + x) * 4;
           
-          r += data[idx];
-          g += data[idx + 1];
-          b += data[idx + 2];
+          // Premultiply RGB by alpha to prevent dark halos
+          const pixelAlpha = data[idx + 3] / 255;
+          r += data[idx] * pixelAlpha;
+          g += data[idx + 1] * pixelAlpha;
+          b += data[idx + 2] * pixelAlpha;
           a += data[idx + 3];
           count++;
         }
         
         const idx = (y * width + x) * 4;
-        temp[idx] = r / count;
-        temp[idx + 1] = g / count;
-        temp[idx + 2] = b / count;
-        temp[idx + 3] = a / count;
+        const avgAlpha = a / count;
+        
+        // Unpremultiply: divide by alpha to get original color
+        if (avgAlpha > 0) {
+          const alphaFactor = avgAlpha / 255;
+          temp[idx] = (r / count) / alphaFactor;
+          temp[idx + 1] = (g / count) / alphaFactor;
+          temp[idx + 2] = (b / count) / alphaFactor;
+        } else {
+          temp[idx] = 0;
+          temp[idx + 1] = 0;
+          temp[idx + 2] = 0;
+        }
+        temp[idx + 3] = avgAlpha;
       }
     }
     
