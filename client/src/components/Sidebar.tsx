@@ -5173,59 +5173,74 @@ export default function Sidebar({
           ].filter(section => 
             // Only show sections that are enabled in user preferences
             sidebarSections[section.id as keyof typeof sidebarSections] === true
-          ).map(section => (
-            <Popover 
-              key={section.id} 
-              open={activePopover === section.id} 
-              onOpenChange={(open) => setActivePopover(open ? section.id : null)}
-            >
-              <PopoverTrigger asChild>
+          ).map((section, index) => (
+            <div key={section.id}>
+              <Popover 
+                open={activePopover === section.id} 
+                onOpenChange={(open) => setActivePopover(open ? section.id : null)}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={`w-full h-8 p-0 rounded-none border-0 hover:bg-slate-800 ${
+                      activePopover === section.id ? 'bg-slate-800' : ''
+                    } ${
+                      section.color === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' :
+                      section.color === 'orange' ? 'text-orange-400 hover:text-orange-300' :
+                      section.color === 'emerald' ? 'text-emerald-400 hover:text-emerald-300' :
+                      section.color === 'blue' ? 'text-blue-400 hover:text-blue-300' :
+                      section.color === 'green' ? 'text-green-400 hover:text-green-300' :
+                      section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
+                      section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
+                      section.color === 'indigo' ? 'text-indigo-400 hover:text-indigo-300' :
+                      section.color === 'violet' ? 'text-violet-400 hover:text-violet-300' :
+                      'text-pink-400 hover:text-pink-300'
+                    }`}
+                    onClick={() => handlePopoverToggle(section.id)}
+                    data-testid={`sidebar-collapsed-${section.id}-button`}
+                  >
+                    <section.icon className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  side="right" 
+                  align="start" 
+                  className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
+                  sideOffset={4}
+                >
+                  <div className="space-y-2">
+                    <h3 className={`text-sm font-medium ${
+                      section.color === 'cyan' ? 'text-cyan-400' :
+                      section.color === 'orange' ? 'text-orange-400' :
+                      section.color === 'emerald' ? 'text-emerald-400' :
+                      section.color === 'blue' ? 'text-blue-400' :
+                      section.color === 'green' ? 'text-green-400' :
+                      section.color === 'yellow' ? 'text-yellow-400' :
+                      section.color === 'purple' ? 'text-purple-400' :
+                      section.color === 'indigo' ? 'text-indigo-400' :
+                      section.color === 'violet' ? 'text-violet-400' :
+                      'text-pink-400'
+                    }`}>
+                      {section.name}
+                    </h3>
+                    <section.content />
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              {/* Quick Generate Button - appears after Shape Types icon */}
+              {section.id === 'shapes' && (
                 <Button
                   variant="ghost"
-                  className={`w-full h-8 p-0 rounded-none border-0 hover:bg-slate-800 ${
-                    activePopover === section.id ? 'bg-slate-800' : ''
-                  } ${
-                    section.color === 'cyan' ? 'text-cyan-400 hover:text-cyan-300' :
-                    section.color === 'orange' ? 'text-orange-400 hover:text-orange-300' :
-                    section.color === 'emerald' ? 'text-emerald-400 hover:text-emerald-300' :
-                    section.color === 'blue' ? 'text-blue-400 hover:text-blue-300' :
-                    section.color === 'green' ? 'text-green-400 hover:text-green-300' :
-                    section.color === 'yellow' ? 'text-yellow-400 hover:text-yellow-300' :
-                    section.color === 'purple' ? 'text-purple-400 hover:text-purple-300' :
-                    section.color === 'indigo' ? 'text-indigo-400 hover:text-indigo-300' :
-                    section.color === 'violet' ? 'text-violet-400 hover:text-violet-300' :
-                    'text-pink-400 hover:text-pink-300'
-                  }`}
-                  onClick={() => handlePopoverToggle(section.id)}
+                  onClick={onGenerateRandomShapes}
+                  className="w-full h-12 p-0 rounded-none border-0 hover:bg-purple-900/30 text-purple-400 hover:text-purple-300 transition-colors"
+                  title="Generate Shapes (Quick)"
+                  data-testid="sidebar-collapsed-quick-generate-button"
                 >
-                  <section.icon className="w-4 h-4" />
+                  <Wand2 className="w-5 h-5" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                side="right" 
-                align="start" 
-                className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
-                sideOffset={4}
-              >
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${
-                    section.color === 'cyan' ? 'text-cyan-400' :
-                    section.color === 'orange' ? 'text-orange-400' :
-                    section.color === 'emerald' ? 'text-emerald-400' :
-                    section.color === 'blue' ? 'text-blue-400' :
-                    section.color === 'green' ? 'text-green-400' :
-                    section.color === 'yellow' ? 'text-yellow-400' :
-                    section.color === 'purple' ? 'text-purple-400' :
-                    section.color === 'indigo' ? 'text-indigo-400' :
-                    section.color === 'violet' ? 'text-violet-400' :
-                    'text-pink-400'
-                  }`}>
-                    {section.name}
-                  </h3>
-                  <section.content />
-                </div>
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
           ))}
         </div>
       )}
