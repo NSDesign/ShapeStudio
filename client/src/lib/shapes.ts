@@ -296,14 +296,40 @@ export class Shape {
       // Check if polygon properties are specifically enabled
       if (batchConfig?.propertiesEnabled && batchConfig?.polygonPropertiesEnabled && batchConfig?.segmentCountRange) {
         const [min, max] = batchConfig.segmentCountRange;
-        return Math.floor(min + Math.random() * (max - min + 1));
+        const count = Math.floor(min + Math.random() * (max - min + 1));
+        console.log(`🔧 [SEGMENT COUNT] Using batch config: ${count} from range [${min}, ${max}]`);
+        return count;
       }
       // Fallback to scatter settings for polygon-specific properties
-      if (batchConfig?.scatterSettings?.shapeSpecific?.polygon?.segmentCountRange) {
-        const [min, max] = batchConfig.scatterSettings.shapeSpecific.polygon.segmentCountRange;
-        return Math.floor(min + Math.random() * (max - min + 1));
+      // Check both edgeCountRange (UI naming) and pointCountRange (schema naming)
+      if (batchConfig?.scatterSettings?.shapeSpecific?.polygon) {
+        const polygonSettings = batchConfig.scatterSettings.shapeSpecific.polygon as any;
+        
+        // Check for fixed mode with either edgeCountValue or pointCountValue
+        if (polygonSettings.edgeCountMode === 'fixed' && polygonSettings.edgeCountValue !== undefined) {
+          console.log(`🔧 [SEGMENT COUNT] Using fixed edgeCountValue: ${polygonSettings.edgeCountValue}`);
+          return polygonSettings.edgeCountValue;
+        } else if (polygonSettings.pointCountMode === 'fixed' && polygonSettings.pointCountValue !== undefined) {
+          console.log(`🔧 [SEGMENT COUNT] Using fixed pointCountValue: ${polygonSettings.pointCountValue}`);
+          return polygonSettings.pointCountValue;
+        }
+        
+        // Check for range mode with either edgeCountRange or pointCountRange
+        if (polygonSettings.edgeCountRange) {
+          const [min, max] = polygonSettings.edgeCountRange;
+          const count = Math.floor(min + Math.random() * (max - min + 1));
+          console.log(`🔧 [SEGMENT COUNT] Using edgeCountRange: ${count} from range [${min}, ${max}]`);
+          return count;
+        } else if (polygonSettings.pointCountRange) {
+          const [min, max] = polygonSettings.pointCountRange;
+          const count = Math.floor(min + Math.random() * (max - min + 1));
+          console.log(`🔧 [SEGMENT COUNT] Using pointCountRange: ${count} from range [${min}, ${max}]`);
+          return count;
+        }
       }
-      return defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
+      const count = defaultMin + Math.floor(Math.random() * (defaultMax - defaultMin + 1));
+      console.log(`🔧 [SEGMENT COUNT] Using default: ${count} from range [${defaultMin}, ${defaultMax}]`);
+      return count;
     };
     
     const getPointCount = (defaultMin: number, defaultMax: number): number => {
@@ -384,14 +410,19 @@ export class Shape {
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+          console.log(`🔧 [ROUNDED-SQUARE] Applied batch config corner radius: ${squareCornerRadius.toFixed(2)} from range [${minRadius}, ${maxRadius}]`);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-square']) {
           const roundedSquareSettings = batchConfig.scatterSettings.shapeSpecific['rounded-square'];
           if (roundedSquareSettings.cornerRadiusMode === 'fixed') {
             squareCornerRadius = roundedSquareSettings.cornerRadiusValue || 5;
+            console.log(`🔧 [ROUNDED-SQUARE] Applied fixed corner radius: ${squareCornerRadius}`);
           } else {
             const [minRadius, maxRadius] = roundedSquareSettings.cornerRadiusRange || [0, 10];
             squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
+            console.log(`🔧 [ROUNDED-SQUARE] Applied range corner radius: ${squareCornerRadius.toFixed(2)} from range [${minRadius}, ${maxRadius}]`);
           }
+        } else {
+          console.log(`🔧 [ROUNDED-SQUARE] No corner radius settings found, using default: ${squareCornerRadius}`);
         }
         this.generateRectanglePoints(squareCornerRadius);
         break;
@@ -471,17 +502,26 @@ export class Shape {
         break;
       case 'polygon':
         this.sides = getSegmentCount(3, 12);
+        console.log(`🔧 [POLYGON] Generated ${this.sides} sides for polygon (ID: ${this.id})`);
         this.radius = getRadius(30, 70);
         this.generatePolygonPoints();
         break;
       case 'star':
         this.sides = getSegmentCount(5, 12);
         this.radius = getRadius(30, 70);
-        // Apply inner radius ratio from batch config if available
+        // Apply inner radius ratio from batch config or scatter settings if available
         let innerRadiusRatio = 0.3 + Math.random() * 0.4;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.starInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.starInnerRadiusRange;
           innerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+        } else if (batchConfig?.scatterSettings?.shapeSpecific?.star) {
+          const starSettings = batchConfig.scatterSettings.shapeSpecific.star;
+          if (starSettings.innerRadiusMode === 'fixed' && starSettings.innerRadiusValue !== undefined) {
+            innerRadiusRatio = starSettings.innerRadiusValue;
+          } else if (starSettings.innerRadiusRange) {
+            const [minRatio, maxRatio] = starSettings.innerRadiusRange;
+            innerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
+          }
         }
         this.innerRadius = this.radius * innerRadiusRatio;
         this.generateStarPoints();
