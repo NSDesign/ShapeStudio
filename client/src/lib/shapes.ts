@@ -1342,24 +1342,18 @@ export class Shape {
     // Store corner radius for native roundRect() rendering
     this.cornerRadius = radius;
     
-    if (radius > 0 && radius < Math.min(w, h)) {
-      // For rounded rectangles, we'll use native roundRect() in drawing
-      // But still generate basic corner points for bounds calculation
-      this.points = [
-        { x: -w, y: -h },  // Top-left
-        { x: w, y: -h },   // Top-right
-        { x: w, y: h },    // Bottom-right
-        { x: -w, y: h }    // Bottom-left
-      ];
+    // Always generate basic corner points for bounds calculation
+    this.points = [
+      { x: -w, y: -h },  // Top-left
+      { x: w, y: -h },   // Top-right
+      { x: w, y: h },    // Bottom-right
+      { x: -w, y: h }    // Bottom-left
+    ];
+    
+    // Use roundRect rendering if radius is specified (drawRoundedRectangle will clamp it)
+    if (radius > 0) {
       this.renderType = 'roundRect';
     } else {
-      // Standard rectangle
-      this.points = [
-        { x: -w, y: -h },  // Top-left
-        { x: w, y: -h },   // Top-right
-        { x: w, y: h },    // Bottom-right
-        { x: -w, y: h }    // Bottom-left
-      ];
       this.renderType = 'polygon';
     }
     this.closed = true;
