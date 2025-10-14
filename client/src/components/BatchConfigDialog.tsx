@@ -546,24 +546,20 @@ export default function BatchConfigDialog({
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
+                          <div className="space-y-2">
                             <Label className="text-sm text-slate-300">X Spacing</Label>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'auto' })}
-                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                data-testid="button-x-spacing-auto"
-                              >
-                                Auto
-                              </button>
-                              <button
-                                onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'define' })}
-                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                data-testid="button-x-spacing-define"
-                              >
-                                Define
-                              </button>
-                            </div>
+                            <Select 
+                              value={currentSettings.gridSpacingXMode || 'define'}
+                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingXMode: value as 'auto' | 'define' })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-x-spacing">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
                             <div className="space-y-3 pl-2 border-l-2 border-slate-700">
@@ -594,24 +590,20 @@ export default function BatchConfigDialog({
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
+                          <div className="space-y-2">
                             <Label className="text-sm text-slate-300">Y Spacing</Label>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'auto' })}
-                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                data-testid="button-y-spacing-auto"
-                              >
-                                Auto
-                              </button>
-                              <button
-                                onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'define' })}
-                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                data-testid="button-y-spacing-define"
-                              >
-                                Define
-                              </button>
-                            </div>
+                            <Select 
+                              value={currentSettings.gridSpacingYMode || 'define'}
+                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingYMode: value as 'auto' | 'define' })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-y-spacing">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
                             <div className="space-y-3 pl-2 border-l-2 border-slate-700">
