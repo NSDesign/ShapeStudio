@@ -349,7 +349,7 @@ export default function BatchConfigDialog({
                           title="Open Shape Sets Manager"
                           data-testid="batch-dialog-generation-sets-manager-button"
                         >
-                          <Settings className="h-3 w-3 text-slate-300" />
+                          <Layers className="h-3 w-3 text-slate-300" />
                         </Button>
                       </div>
                     )}
