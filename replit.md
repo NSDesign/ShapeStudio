@@ -38,6 +38,12 @@ Preferred communication style: Simple, everyday language.
   * **Define Mode**: Custom X,Y coordinates for manual origin placement
   * **Predefined Artboard Mode**: 9-point alignment relative to artboard boundaries (top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right)
   * **Predefined Shape Mode**: 9-point alignment relative to each individual shape's boundaries, allowing per-shape transform origin control
+- **Position Alignment System**: Advanced dual anchor point alignment for precise shape positioning relative to artboard boundaries. Integrated into Properties section as an 'align' mode for X and Y position transforms:
+  * **Dual Anchor Points**: Each axis (X and Y) has independent shape anchor and artboard anchor configuration
+  * **Shape Anchor**: Defines the alignment point on the shape - predefined options (X: left/center/right, Y: top/center/bottom) or custom coordinate values
+  * **Artboard Anchor**: Defines the target alignment point on the artboard - predefined options (X: left/center/right, Y: top/center/bottom) or custom coordinate values
+  * **Flexibility**: Supports 81 possible alignment combinations (9 X-axis × 9 Y-axis) plus unlimited custom coordinate alignments
+  * **Use Cases**: Align shape's left edge to artboard center, position shape's center to artboard's top-right corner, align custom shape coordinate to custom artboard coordinate, etc.
 - **Canvas-Based Blur System**: Gaussian blur algorithm implemented via direct canvas pixel manipulation for pixel-perfect blur effects.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity, collinearity enforcement, and C1 smoothness. No random tangent generation to preserve mathematical integrity. Fixed tangent handle condition checks in shapeRenderer.ts to ensure proper cubic bezier curve rendering.
 - **Advanced Grid Layout Sorting**: Complete implementation with comprehensive sorting criteria (layer, creation-time, shape-type, size, fill-color, opacity, angle, id), configurable sort order (ascending/descending), and per-generation vs per-batch sorting scope for fine-grained control over shape arrangement in grid layouts.

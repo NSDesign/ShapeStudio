@@ -579,8 +579,8 @@ export interface BatchConfigSettings {
   
   // Enhanced Transform Properties  
   // Position Enhanced Modes
-  xTransformMode: 'range' | 'value' | 'incremental';
-  yTransformMode: 'range' | 'value' | 'incremental';
+  xTransformMode: 'range' | 'value' | 'incremental' | 'align';
+  yTransformMode: 'range' | 'value' | 'incremental' | 'align';
   xTransformValue: number;
   yTransformValue: number;
   xTransformIncrement: number;
@@ -591,6 +591,25 @@ export interface BatchConfigSettings {
   xTransformModulationValue: number;
   yTransformModulationEnabled: boolean;
   yTransformModulationValue: number;
+  
+  // Position Alignment (when mode is 'align')
+  // X Alignment - Shape Anchor
+  xShapeAnchorMode: 'predefined' | 'define';
+  xShapeAnchorPredefined: 'left' | 'center' | 'right';
+  xShapeAnchorDefine: number;
+  // X Alignment - Artboard Anchor
+  xArtboardAnchorMode: 'predefined' | 'define';
+  xArtboardAnchorPredefined: 'left' | 'center' | 'right';
+  xArtboardAnchorDefine: number;
+  
+  // Y Alignment - Shape Anchor
+  yShapeAnchorMode: 'predefined' | 'define';
+  yShapeAnchorPredefined: 'top' | 'center' | 'bottom';
+  yShapeAnchorDefine: number;
+  // Y Alignment - Artboard Anchor
+  yArtboardAnchorMode: 'predefined' | 'define';
+  yArtboardAnchorPredefined: 'top' | 'center' | 'bottom';
+  yArtboardAnchorDefine: number;
   
   // Scale Enhanced Modes
   scaleXMode: 'range' | 'value' | 'incremental';
@@ -1037,6 +1056,21 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   xTransformModulationValue: 100,
   yTransformModulationEnabled: false,
   yTransformModulationValue: 100,
+  
+  // Position Alignment (when mode is 'align')
+  xShapeAnchorMode: 'predefined',
+  xShapeAnchorPredefined: 'center',
+  xShapeAnchorDefine: 0,
+  xArtboardAnchorMode: 'predefined',
+  xArtboardAnchorPredefined: 'center',
+  xArtboardAnchorDefine: 0,
+  
+  yShapeAnchorMode: 'predefined',
+  yShapeAnchorPredefined: 'center',
+  yShapeAnchorDefine: 0,
+  yArtboardAnchorMode: 'predefined',
+  yArtboardAnchorPredefined: 'center',
+  yArtboardAnchorDefine: 0,
   
   // Scale Enhanced Modes
   scaleXMode: 'range',
@@ -1966,8 +2000,8 @@ export const BatchConfigSettingsSchema = z.object({
   skewYRange: z.tuple([z.number(), z.number()]),
   
   // Enhanced transform properties
-  xTransformMode: z.enum(['range', 'value', 'incremental']),
-  yTransformMode: z.enum(['range', 'value', 'incremental']),
+  xTransformMode: z.enum(['range', 'value', 'incremental', 'align']),
+  yTransformMode: z.enum(['range', 'value', 'incremental', 'align']),
   xTransformValue: z.number(),
   yTransformValue: z.number(),
   xTransformIncrement: z.number(),
@@ -1978,6 +2012,21 @@ export const BatchConfigSettingsSchema = z.object({
   xTransformModulationValue: z.number(),
   yTransformModulationEnabled: z.boolean(),
   yTransformModulationValue: z.number(),
+  
+  // Position Alignment (when mode is 'align')
+  xShapeAnchorMode: z.enum(['predefined', 'define']),
+  xShapeAnchorPredefined: z.enum(['left', 'center', 'right']),
+  xShapeAnchorDefine: z.number(),
+  xArtboardAnchorMode: z.enum(['predefined', 'define']),
+  xArtboardAnchorPredefined: z.enum(['left', 'center', 'right']),
+  xArtboardAnchorDefine: z.number(),
+  
+  yShapeAnchorMode: z.enum(['predefined', 'define']),
+  yShapeAnchorPredefined: z.enum(['top', 'center', 'bottom']),
+  yShapeAnchorDefine: z.number(),
+  yArtboardAnchorMode: z.enum(['predefined', 'define']),
+  yArtboardAnchorPredefined: z.enum(['top', 'center', 'bottom']),
+  yArtboardAnchorDefine: z.number(),
   
   scaleXMode: z.enum(['range', 'value', 'incremental']),
   scaleYMode: z.enum(['range', 'value', 'incremental']),

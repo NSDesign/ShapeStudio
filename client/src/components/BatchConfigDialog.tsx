@@ -2483,6 +2483,7 @@ export default function BatchConfigDialog({
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                 <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
                                 <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                <SelectItem value="align" className="text-slate-200 hover:bg-slate-700">Align</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -2528,6 +2529,92 @@ export default function BatchConfigDialog({
                               />
                             </div>
                           )}
+                          
+                          {currentSettings.xTransformMode === 'align' && (
+                            <div className="space-y-3">
+                              {/* Shape X Anchor */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Shape Anchor</Label>
+                                <Select value={currentSettings.xShapeAnchorMode} onValueChange={(value) => handleSettingsUpdate({ xShapeAnchorMode: value as any })}>
+                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                {currentSettings.xShapeAnchorMode === 'predefined' && (
+                                  <Select value={currentSettings.xShapeAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ xShapeAnchorPredefined: value as any })}>
+                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
+                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                      <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                
+                                {currentSettings.xShapeAnchorMode === 'define' && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">X: {currentSettings.xShapeAnchorDefine}</Label>
+                                    <Slider
+                                      value={[currentSettings.xShapeAnchorDefine]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ xShapeAnchorDefine: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Artboard X Anchor */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Artboard Anchor</Label>
+                                <Select value={currentSettings.xArtboardAnchorMode} onValueChange={(value) => handleSettingsUpdate({ xArtboardAnchorMode: value as any })}>
+                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                {currentSettings.xArtboardAnchorMode === 'predefined' && (
+                                  <Select value={currentSettings.xArtboardAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ xArtboardAnchorPredefined: value as any })}>
+                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
+                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                      <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                
+                                {currentSettings.xArtboardAnchorMode === 'define' && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">X: {currentSettings.xArtboardAnchorDefine}</Label>
+                                    <Slider
+                                      value={[currentSettings.xArtboardAnchorDefine]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ xArtboardAnchorDefine: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Y Position Controls */}
@@ -2542,6 +2629,7 @@ export default function BatchConfigDialog({
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                 <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
                                 <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                <SelectItem value="align" className="text-slate-200 hover:bg-slate-700">Align</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -2585,6 +2673,92 @@ export default function BatchConfigDialog({
                                 step={1}
                                 className="[&_[role=slider]]:bg-blue-600"
                               />
+                            </div>
+                          )}
+                          
+                          {currentSettings.yTransformMode === 'align' && (
+                            <div className="space-y-3">
+                              {/* Shape Y Anchor */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Shape Anchor</Label>
+                                <Select value={currentSettings.yShapeAnchorMode} onValueChange={(value) => handleSettingsUpdate({ yShapeAnchorMode: value as any })}>
+                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                {currentSettings.yShapeAnchorMode === 'predefined' && (
+                                  <Select value={currentSettings.yShapeAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ yShapeAnchorPredefined: value as any })}>
+                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="top" className="text-slate-200 hover:bg-slate-700">Top</SelectItem>
+                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                      <SelectItem value="bottom" className="text-slate-200 hover:bg-slate-700">Bottom</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                
+                                {currentSettings.yShapeAnchorMode === 'define' && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Y: {currentSettings.yShapeAnchorDefine}</Label>
+                                    <Slider
+                                      value={[currentSettings.yShapeAnchorDefine]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ yShapeAnchorDefine: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Artboard Y Anchor */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Artboard Anchor</Label>
+                                <Select value={currentSettings.yArtboardAnchorMode} onValueChange={(value) => handleSettingsUpdate({ yArtboardAnchorMode: value as any })}>
+                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                {currentSettings.yArtboardAnchorMode === 'predefined' && (
+                                  <Select value={currentSettings.yArtboardAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ yArtboardAnchorPredefined: value as any })}>
+                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="top" className="text-slate-200 hover:bg-slate-700">Top</SelectItem>
+                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                      <SelectItem value="bottom" className="text-slate-200 hover:bg-slate-700">Bottom</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                
+                                {currentSettings.yArtboardAnchorMode === 'define' && (
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Y: {currentSettings.yArtboardAnchorDefine}</Label>
+                                    <Slider
+                                      value={[currentSettings.yArtboardAnchorDefine]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ yArtboardAnchorDefine: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>

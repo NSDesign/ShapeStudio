@@ -175,11 +175,25 @@ export const useShapeEditor = () => {
   const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
     return sets.map(set => {
       // Migrate legacy 'predefined' transformOriginMode to 'predefined-artboard'
+      // Add default alignment values if they don't exist
       const migratedBatchConfig = set.batchConfig ? {
         ...set.batchConfig,
         transformOriginMode: (set.batchConfig.transformOriginMode === 'predefined' as any) 
           ? 'predefined-artboard' 
-          : set.batchConfig.transformOriginMode
+          : set.batchConfig.transformOriginMode,
+        // Add alignment defaults if they don't exist
+        xShapeAnchorMode: set.batchConfig.xShapeAnchorMode || 'predefined',
+        xShapeAnchorPredefined: set.batchConfig.xShapeAnchorPredefined || 'center',
+        xShapeAnchorDefine: set.batchConfig.xShapeAnchorDefine ?? 0,
+        xArtboardAnchorMode: set.batchConfig.xArtboardAnchorMode || 'predefined',
+        xArtboardAnchorPredefined: set.batchConfig.xArtboardAnchorPredefined || 'center',
+        xArtboardAnchorDefine: set.batchConfig.xArtboardAnchorDefine ?? 0,
+        yShapeAnchorMode: set.batchConfig.yShapeAnchorMode || 'predefined',
+        yShapeAnchorPredefined: set.batchConfig.yShapeAnchorPredefined || 'center',
+        yShapeAnchorDefine: set.batchConfig.yShapeAnchorDefine ?? 0,
+        yArtboardAnchorMode: set.batchConfig.yArtboardAnchorMode || 'predefined',
+        yArtboardAnchorPredefined: set.batchConfig.yArtboardAnchorPredefined || 'center',
+        yArtboardAnchorDefine: set.batchConfig.yArtboardAnchorDefine ?? 0,
       } : set.batchConfig;
 
       return {
@@ -1999,6 +2013,52 @@ export const useShapeEditor = () => {
             const incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * index;
             const randomVariation = (Math.random() * 2 - 1) * 25;
             positionDeltaX = incrementAmount + randomVariation;
+          } else if (effectiveBatchConfig.xTransformMode === 'align') {
+            // Alignment mode: align shape anchor to artboard anchor
+            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+            const artboardWidth = currentArtboard?.width || canvasBounds.width;
+            const artboardX = currentArtboard?.x || canvasBounds.x;
+            const shapeBounds = shape.getBounds();
+            
+            // Calculate shape X anchor point (relative to shape center)
+            let shapeAnchorX = 0;
+            if (effectiveBatchConfig.xShapeAnchorMode === 'predefined') {
+              switch (effectiveBatchConfig.xShapeAnchorPredefined) {
+                case 'left':
+                  shapeAnchorX = shapeBounds.x;
+                  break;
+                case 'center':
+                  shapeAnchorX = shapeBounds.x + shapeBounds.width / 2;
+                  break;
+                case 'right':
+                  shapeAnchorX = shapeBounds.x + shapeBounds.width;
+                  break;
+              }
+            } else {
+              shapeAnchorX = effectiveBatchConfig.xShapeAnchorDefine;
+            }
+            
+            // Calculate artboard X anchor point
+            let artboardAnchorX = 0;
+            if (effectiveBatchConfig.xArtboardAnchorMode === 'predefined') {
+              switch (effectiveBatchConfig.xArtboardAnchorPredefined) {
+                case 'left':
+                  artboardAnchorX = artboardX;
+                  break;
+                case 'center':
+                  artboardAnchorX = artboardX + artboardWidth / 2;
+                  break;
+                case 'right':
+                  artboardAnchorX = artboardX + artboardWidth;
+                  break;
+              }
+            } else {
+              artboardAnchorX = effectiveBatchConfig.xArtboardAnchorDefine;
+            }
+            
+            // Calculate delta to align shape anchor to artboard anchor
+            positionDeltaX = artboardAnchorX - shapeAnchorX;
+            console.log(`📍 [X ALIGN] Shape ${index}: shapeAnchor=${shapeAnchorX}, artboardAnchor=${artboardAnchorX}, delta=${positionDeltaX}`);
           }
 
           // Apply enhanced position transforms (Y)
@@ -2014,6 +2074,52 @@ export const useShapeEditor = () => {
             const incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * index;
             const randomVariation = (Math.random() * 2 - 1) * 25;
             positionDeltaY = incrementAmount + randomVariation;
+          } else if (effectiveBatchConfig.yTransformMode === 'align') {
+            // Alignment mode: align shape anchor to artboard anchor
+            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+            const artboardHeight = currentArtboard?.height || canvasBounds.height;
+            const artboardY = currentArtboard?.y || canvasBounds.y;
+            const shapeBounds = shape.getBounds();
+            
+            // Calculate shape Y anchor point (relative to shape center)
+            let shapeAnchorY = 0;
+            if (effectiveBatchConfig.yShapeAnchorMode === 'predefined') {
+              switch (effectiveBatchConfig.yShapeAnchorPredefined) {
+                case 'top':
+                  shapeAnchorY = shapeBounds.y;
+                  break;
+                case 'center':
+                  shapeAnchorY = shapeBounds.y + shapeBounds.height / 2;
+                  break;
+                case 'bottom':
+                  shapeAnchorY = shapeBounds.y + shapeBounds.height;
+                  break;
+              }
+            } else {
+              shapeAnchorY = effectiveBatchConfig.yShapeAnchorDefine;
+            }
+            
+            // Calculate artboard Y anchor point
+            let artboardAnchorY = 0;
+            if (effectiveBatchConfig.yArtboardAnchorMode === 'predefined') {
+              switch (effectiveBatchConfig.yArtboardAnchorPredefined) {
+                case 'top':
+                  artboardAnchorY = artboardY;
+                  break;
+                case 'center':
+                  artboardAnchorY = artboardY + artboardHeight / 2;
+                  break;
+                case 'bottom':
+                  artboardAnchorY = artboardY + artboardHeight;
+                  break;
+              }
+            } else {
+              artboardAnchorY = effectiveBatchConfig.yArtboardAnchorDefine;
+            }
+            
+            // Calculate delta to align shape anchor to artboard anchor
+            positionDeltaY = artboardAnchorY - shapeAnchorY;
+            console.log(`📍 [Y ALIGN] Shape ${index}: shapeAnchor=${shapeAnchorY}, artboardAnchor=${artboardAnchorY}, delta=${positionDeltaY}`);
           }
 
           // Apply enhanced scale transforms
