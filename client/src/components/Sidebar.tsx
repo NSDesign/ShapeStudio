@@ -5271,10 +5271,11 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <div 
-          ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
-        >
+        <>
+          <div 
+            ref={scrollContainerRef} 
+            className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
+          >
           <Accordion 
             type="multiple" 
             value={openAccordionSections} 
@@ -5525,6 +5526,7 @@ export default function Sidebar({
             )}
           </Accordion>
         </div>
+        </>
       )}
       
       {/* BatchConfigDialog - Moved to stable location to prevent mount/unmount cycles */}
