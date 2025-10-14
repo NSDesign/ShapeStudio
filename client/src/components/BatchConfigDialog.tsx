@@ -2447,526 +2447,526 @@ export default function BatchConfigDialog({
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
 
-                    <Separator className="bg-slate-700" />
+              <Separator className="bg-slate-600" />
 
-                    {/* Shape Transforms */}
-                    <div className="space-y-3">
+              {/* Transforms Section */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={currentSettings.transformsEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ transformsEnabled: checked as boolean })}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="font-medium text-slate-200">Transforms</Label>
+                </div>
+                
+                {currentSettings.transformsEnabled && (
+                  <div className="ml-6 space-y-4">
+                    {/* X and Y Translate Enhanced Controls */}
+                    <div className="space-y-3 p-3 bg-slate-800 rounded">
+                      <Label className="text-sm font-medium text-slate-200">Position (X/Y Translate)</Label>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* X Position Controls */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Label className="text-xs text-slate-300">X</Label>
+                            <Select value={currentSettings.xTransformMode} onValueChange={(value) => handleSettingsUpdate({ xTransformMode: value as any })}>
+                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {currentSettings.xTransformMode === 'range' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Range: {currentSettings.translateXRange?.[0] || -50} - {currentSettings.translateXRange?.[1] || 50}</Label>
+                              <Slider
+                                value={currentSettings.translateXRange || [-50, 50]}
+                                onValueChange={(value) => handleSettingsUpdate({ translateXRange: value as [number, number] })}
+                                min={-200}
+                                max={200}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.xTransformMode === 'value' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Value: {currentSettings.xTransformValue}</Label>
+                              <Slider
+                                value={[currentSettings.xTransformValue]}
+                                onValueChange={([value]) => handleSettingsUpdate({ xTransformValue: value })}
+                                min={-200}
+                                max={200}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.xTransformMode === 'incremental' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Increment: {currentSettings.xTransformIncrement}</Label>
+                              <Slider
+                                value={[currentSettings.xTransformIncrement]}
+                                onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
+                                min={-50}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Y Position Controls */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Label className="text-xs text-slate-300">Y</Label>
+                            <Select value={currentSettings.yTransformMode} onValueChange={(value) => handleSettingsUpdate({ yTransformMode: value as any })}>
+                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {currentSettings.yTransformMode === 'range' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Range: {currentSettings.translateYRange?.[0] || -50} - {currentSettings.translateYRange?.[1] || 50}</Label>
+                              <Slider
+                                value={currentSettings.translateYRange || [-50, 50]}
+                                onValueChange={(value) => handleSettingsUpdate({ translateYRange: value as [number, number] })}
+                                min={-200}
+                                max={200}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.yTransformMode === 'value' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Value: {currentSettings.yTransformValue}</Label>
+                              <Slider
+                                value={[currentSettings.yTransformValue]}
+                                onValueChange={([value]) => handleSettingsUpdate({ yTransformValue: value })}
+                                min={-200}
+                                max={200}
+                                step={5}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.yTransformMode === 'incremental' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Increment: {currentSettings.yTransformIncrement}</Label>
+                              <Slider
+                                value={[currentSettings.yTransformIncrement]}
+                                onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
+                                min={-50}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-blue-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Scale Enhanced Controls */}
+                    <div className="space-y-3 p-3 bg-slate-800 rounded">
                       <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={currentSettings.transformsEnabled}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ transformsEnabled: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
+                        <Label className="text-sm font-medium text-slate-200">Scale</Label>
+                        <Checkbox 
+                          checked={currentSettings.maintainScaleAspectRatio}
+                          onCheckedChange={(checked) => {
+                            handleSettingsUpdate({ maintainScaleAspectRatio: checked as boolean });
+                            // When linking, sync Y mode to match X mode
+                            if (checked) {
+                              handleSettingsUpdate({ 
+                                scaleYMode: currentSettings.scaleXMode,
+                                scaleYValue: currentSettings.scaleXValue,
+                                scaleYIncrement: currentSettings.scaleXIncrement
+                              });
+                            }
+                          }}
+                          className="border-slate-500 data-[state=checked]:bg-green-600"
                         />
-                        <Label className="text-sm font-medium text-slate-200">Shape Transforms</Label>
+                        <Label className="text-xs text-slate-300">Link X/Y</Label>
                       </div>
                       
-                      {currentSettings.transformsEnabled && (
-                        <div className="ml-6 space-y-4">
-                          {/* X and Y Translate Enhanced Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Position (X/Y Translate)</Label>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              {/* X Position Controls */}
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">X</Label>
-                                  <Select value={currentSettings.xTransformMode} onValueChange={(value) => handleSettingsUpdate({ xTransformMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                      <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                {currentSettings.xTransformMode === 'range' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Range: {currentSettings.translateXRange?.[0] || -50} - {currentSettings.translateXRange?.[1] || 50}</Label>
-                                    <Slider
-                                      value={currentSettings.translateXRange || [-50, 50]}
-                                      onValueChange={(value) => handleSettingsUpdate({ translateXRange: value as [number, number] })}
-                                      min={-200}
-                                      max={200}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.xTransformMode === 'value' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Value: {currentSettings.xTransformValue}</Label>
-                                    <Slider
-                                      value={[currentSettings.xTransformValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xTransformValue: value })}
-                                      min={-200}
-                                      max={200}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.xTransformMode === 'incremental' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.xTransformIncrement}</Label>
-                                    <Slider
-                                      value={[currentSettings.xTransformIncrement]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
-                                      min={-50}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Y Position Controls */}
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Y</Label>
-                                  <Select value={currentSettings.yTransformMode} onValueChange={(value) => handleSettingsUpdate({ yTransformMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                      <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                {currentSettings.yTransformMode === 'range' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Range: {currentSettings.translateYRange?.[0] || -50} - {currentSettings.translateYRange?.[1] || 50}</Label>
-                                    <Slider
-                                      value={currentSettings.translateYRange || [-50, 50]}
-                                      onValueChange={(value) => handleSettingsUpdate({ translateYRange: value as [number, number] })}
-                                      min={-200}
-                                      max={200}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.yTransformMode === 'value' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Value: {currentSettings.yTransformValue}</Label>
-                                    <Slider
-                                      value={[currentSettings.yTransformValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yTransformValue: value })}
-                                      min={-200}
-                                      max={200}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.yTransformMode === 'incremental' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.yTransformIncrement}</Label>
-                                    <Slider
-                                      value={[currentSettings.yTransformIncrement]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
-                                      min={-50}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Scale X Controls */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Label className="text-xs text-slate-300">X</Label>
+                            <Select 
+                              value={currentSettings.scaleXMode} 
+                              onValueChange={(value) => {
+                                handleSettingsUpdate({ scaleXMode: value as any });
+                                // Sync Y when aspect ratio is linked
+                                if (currentSettings.maintainScaleAspectRatio) {
+                                  handleSettingsUpdate({ scaleYMode: value as any });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           
-                          {/* Scale Enhanced Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Scale</Label>
-                              <Checkbox 
-                                checked={currentSettings.maintainScaleAspectRatio}
-                                onCheckedChange={(checked) => {
-                                  handleSettingsUpdate({ maintainScaleAspectRatio: checked as boolean });
-                                  // When linking, sync Y mode to match X mode
-                                  if (checked) {
-                                    handleSettingsUpdate({ 
-                                      scaleYMode: currentSettings.scaleXMode,
-                                      scaleYValue: currentSettings.scaleXValue,
-                                      scaleYIncrement: currentSettings.scaleXIncrement
-                                    });
+                          {currentSettings.scaleXMode === 'range' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Range: {currentSettings.scaleXRange?.[0] || 50}% - {currentSettings.scaleXRange?.[1] || 200}%</Label>
+                              <Slider
+                                value={currentSettings.scaleXRange || [50, 200]}
+                                onValueChange={(value) => {
+                                  handleSettingsUpdate({ scaleXRange: value as [number, number] });
+                                  if (currentSettings.maintainScaleAspectRatio) {
+                                    handleSettingsUpdate({ scaleYRange: value as [number, number] });
                                   }
                                 }}
-                                className="border-slate-500 data-[state=checked]:bg-green-600"
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-green-600"
                               />
-                              <Label className="text-xs text-slate-300">Link X/Y</Label>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              {/* Scale X Controls */}
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">X</Label>
-                                  <Select 
-                                    value={currentSettings.scaleXMode} 
-                                    onValueChange={(value) => {
-                                      handleSettingsUpdate({ scaleXMode: value as any });
-                                      // Sync Y when aspect ratio is linked
-                                      if (currentSettings.maintainScaleAspectRatio) {
-                                        handleSettingsUpdate({ scaleYMode: value as any });
-                                      }
-                                    }}
-                                  >
-                                    <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                      <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                {currentSettings.scaleXMode === 'range' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Range: {currentSettings.scaleXRange?.[0] || 50}% - {currentSettings.scaleXRange?.[1] || 200}%</Label>
-                                    <Slider
-                                      value={currentSettings.scaleXRange || [50, 200]}
-                                      onValueChange={(value) => {
-                                        handleSettingsUpdate({ scaleXRange: value as [number, number] });
-                                        if (currentSettings.maintainScaleAspectRatio) {
-                                          handleSettingsUpdate({ scaleYRange: value as [number, number] });
-                                        }
-                                      }}
-                                      min={10}
-                                      max={300}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.scaleXMode === 'value' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Value: {currentSettings.scaleXValue}%</Label>
-                                    <Slider
-                                      value={[currentSettings.scaleXValue]}
-                                      onValueChange={([value]) => {
-                                        handleSettingsUpdate({ scaleXValue: value });
-                                        if (currentSettings.maintainScaleAspectRatio) {
-                                          handleSettingsUpdate({ scaleYValue: value });
-                                        }
-                                      }}
-                                      min={10}
-                                      max={300}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.scaleXMode === 'incremental' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleXIncrement}%</Label>
-                                    <Slider
-                                      value={[currentSettings.scaleXIncrement]}
-                                      onValueChange={([value]) => {
-                                        handleSettingsUpdate({ scaleXIncrement: value });
-                                        if (currentSettings.maintainScaleAspectRatio) {
-                                          handleSettingsUpdate({ scaleYIncrement: value });
-                                        }
-                                      }}
-                                      min={-50}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Scale Y Controls */}
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Y</Label>
-                                  <Select 
-                                    value={currentSettings.scaleYMode} 
-                                    onValueChange={(value) => handleSettingsUpdate({ scaleYMode: value as any })}
-                                    disabled={currentSettings.maintainScaleAspectRatio}
-                                  >
-                                    <SelectTrigger className={`h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200 ${currentSettings.maintainScaleAspectRatio ? 'opacity-50' : ''}`}>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                      <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                {currentSettings.scaleYMode === 'range' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Range: {currentSettings.scaleYRange?.[0] || 50}% - {currentSettings.scaleYRange?.[1] || 200}%</Label>
-                                    <Slider
-                                      value={currentSettings.scaleYRange || [50, 200]}
-                                      onValueChange={(value) => handleSettingsUpdate({ scaleYRange: value as [number, number] })}
-                                      min={10}
-                                      max={300}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                      disabled={currentSettings.maintainScaleAspectRatio}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.scaleYMode === 'value' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Value: {currentSettings.scaleYValue}%</Label>
-                                    <Slider
-                                      value={[currentSettings.scaleYValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ scaleYValue: value })}
-                                      min={10}
-                                      max={300}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                      disabled={currentSettings.maintainScaleAspectRatio}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {currentSettings.scaleYMode === 'incremental' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleYIncrement}%</Label>
-                                    <Slider
-                                      value={[currentSettings.scaleYIncrement]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
-                                      min={-50}
-                                      max={50}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-green-600"
-                                      disabled={currentSettings.maintainScaleAspectRatio}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                          )}
                           
-                          {/* Rotation Enhanced Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Rotation</Label>
-                            
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <Label className="text-xs text-slate-300">Mode</Label>
-                                <Select value={currentSettings.rotationMode} onValueChange={(value) => handleSettingsUpdate({ rotationMode: value as any })}>
-                                  <SelectTrigger className="h-6 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                    <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {currentSettings.rotationMode === 'range' && (
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-400">Range: {currentSettings.rotationRange?.[0] || 0}° - {currentSettings.rotationRange?.[1] || 360}°</Label>
-                                  <Slider
-                                    value={currentSettings.rotationRange || [0, 360]}
-                                    onValueChange={(value) => handleSettingsUpdate({ rotationRange: value as [number, number] })}
-                                    min={0}
-                                    max={360}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-orange-600"
-                                  />
-                                </div>
-                              )}
-                              
-                              {currentSettings.rotationMode === 'value' && (
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-400">Value: {currentSettings.rotationValue}°</Label>
-                                  <Slider
-                                    value={[currentSettings.rotationValue]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ rotationValue: value })}
-                                    min={0}
-                                    max={360}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-orange-600"
-                                  />
-                                </div>
-                              )}
-                              
-                              {currentSettings.rotationMode === 'incremental' && (
-                                <div className="space-y-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.rotationIncrement}°</Label>
-                                    <Slider
-                                      value={[currentSettings.rotationIncrement]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
-                                      min={-180}
-                                      max={180}
-                                      step={15}
-                                      className="[&_[role=slider]]:bg-orange-600"
-                                    />
-                                  </div>
-                                  
-                                  <div className="flex items-center space-x-2">
-                                    <Checkbox 
-                                      checked={currentSettings.rotationModulationEnabled}
-                                      onCheckedChange={(checked) => handleSettingsUpdate({ rotationModulationEnabled: checked as boolean })}
-                                      className="border-slate-500 data-[state=checked]:bg-orange-600"
-                                    />
-                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                  </div>
-                                  
-                                  {currentSettings.rotationModulationEnabled && (
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Modulation: {currentSettings.rotationModulation}° (reset cycle)</Label>
-                                      <Slider
-                                        value={[currentSettings.rotationModulation]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
-                                        min={90}
-                                        max={720}
-                                        step={30}
-                                        className="[&_[role=slider]]:bg-orange-600"
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                          {currentSettings.scaleXMode === 'value' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Value: {currentSettings.scaleXValue}%</Label>
+                              <Slider
+                                value={[currentSettings.scaleXValue]}
+                                onValueChange={([value]) => {
+                                  handleSettingsUpdate({ scaleXValue: value });
+                                  if (currentSettings.maintainScaleAspectRatio) {
+                                    handleSettingsUpdate({ scaleYValue: value });
+                                  }
+                                }}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-green-600"
+                              />
                             </div>
-                          </div>
+                          )}
                           
-                          {/* Transform Randomization Scaling */}
-                          <div className="space-y-3 p-3 bg-slate-900 rounded border border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Transform Randomization Scaling</Label>
-                            <p className="text-xs text-slate-400">Control how much additional randomization is applied to transform modes</p>
-                            
-                            <div className="space-y-3">
-                              
-                              {/* Scale Randomization Scale */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Scale Randomization: {currentSettings.scaleRandomizationScale}%</Label>
-                                <Slider
-                                  value={[currentSettings.scaleRandomizationScale]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ scaleRandomizationScale: value })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms (range: 0 to 1)</p>
-                              </div>
-                              
-                              {/* Rotation Randomization Scale */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Rotation Randomization: {currentSettings.rotationRandomizationScale}%</Label>
-                                <Slider
-                                  value={[currentSettings.rotationRandomizationScale]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationRandomizationScale: value })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms (range: 0 to 1)</p>
-                              </div>
+                          {currentSettings.scaleXMode === 'incremental' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleXIncrement}%</Label>
+                              <Slider
+                                value={[currentSettings.scaleXIncrement]}
+                                onValueChange={([value]) => {
+                                  handleSettingsUpdate({ scaleXIncrement: value });
+                                  if (currentSettings.maintainScaleAspectRatio) {
+                                    handleSettingsUpdate({ scaleYIncrement: value });
+                                  }
+                                }}
+                                min={-50}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-green-600"
+                              />
                             </div>
-                          </div>
-                          
-                          {/* Transform Origin */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Transform Origin</Label>
-                            <p className="text-xs text-slate-400">Set the point from which transforms (rotation, scale, position) are applied</p>
-                            
-                            <div className="space-y-3">
-                              {/* Mode Selector */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Mode</Label>
-                                <Select 
-                                  value={currentSettings.transformOriginMode} 
-                                  onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined' })}
-                                >
-                                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
-                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {/* Define Mode - X and Y Coordinates */}
-                              {currentSettings.transformOriginMode === 'define' && (
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-300">X: {currentSettings.transformOriginX}</Label>
-                                    <Slider
-                                      value={[currentSettings.transformOriginX]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-300">Y: {currentSettings.transformOriginY}</Label>
-                                    <Slider
-                                      value={[currentSettings.transformOriginY]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Predefined Mode - Alignment Options */}
-                              {currentSettings.transformOriginMode === 'predefined' && (
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Alignment Point</Label>
-                                  <Select 
-                                    value={currentSettings.transformOriginPredefined} 
-                                    onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
-                                  >
-                                    <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                      <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
-                                      <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
-                                      <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
-                                      <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
-                                      <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
-                                      <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
-                                      <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
-                                      <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          )}
                         </div>
-                      )}
+                        
+                        {/* Scale Y Controls */}
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Label className="text-xs text-slate-300">Y</Label>
+                            <Select 
+                              value={currentSettings.scaleYMode} 
+                              onValueChange={(value) => handleSettingsUpdate({ scaleYMode: value as any })}
+                              disabled={currentSettings.maintainScaleAspectRatio}
+                            >
+                              <SelectTrigger className={`h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200 ${currentSettings.maintainScaleAspectRatio ? 'opacity-50' : ''}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {currentSettings.scaleYMode === 'range' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Range: {currentSettings.scaleYRange?.[0] || 50}% - {currentSettings.scaleYRange?.[1] || 200}%</Label>
+                              <Slider
+                                value={currentSettings.scaleYRange || [50, 200]}
+                                onValueChange={(value) => handleSettingsUpdate({ scaleYRange: value as [number, number] })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-green-600"
+                                disabled={currentSettings.maintainScaleAspectRatio}
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.scaleYMode === 'value' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Value: {currentSettings.scaleYValue}%</Label>
+                              <Slider
+                                value={[currentSettings.scaleYValue]}
+                                onValueChange={([value]) => handleSettingsUpdate({ scaleYValue: value })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-green-600"
+                                disabled={currentSettings.maintainScaleAspectRatio}
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.scaleYMode === 'incremental' && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleYIncrement}%</Label>
+                              <Slider
+                                value={[currentSettings.scaleYIncrement]}
+                                onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
+                                min={-50}
+                                max={50}
+                                step={1}
+                                className="[&_[role=slider]]:bg-green-600"
+                                disabled={currentSettings.maintainScaleAspectRatio}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Rotation Enhanced Controls */}
+                    <div className="space-y-3 p-3 bg-slate-800 rounded">
+                      <Label className="text-sm font-medium text-slate-200">Rotation</Label>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-xs text-slate-300">Mode</Label>
+                          <Select value={currentSettings.rotationMode} onValueChange={(value) => handleSettingsUpdate({ rotationMode: value as any })}>
+                            <SelectTrigger className="h-6 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                              <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
+                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {currentSettings.rotationMode === 'range' && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Range: {currentSettings.rotationRange?.[0] || 0}° - {currentSettings.rotationRange?.[1] || 360}°</Label>
+                            <Slider
+                              value={currentSettings.rotationRange || [0, 360]}
+                              onValueChange={(value) => handleSettingsUpdate({ rotationRange: value as [number, number] })}
+                              min={0}
+                              max={360}
+                              step={5}
+                              className="[&_[role=slider]]:bg-orange-600"
+                            />
+                          </div>
+                        )}
+                        
+                        {currentSettings.rotationMode === 'value' && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Value: {currentSettings.rotationValue}°</Label>
+                            <Slider
+                              value={[currentSettings.rotationValue]}
+                              onValueChange={([value]) => handleSettingsUpdate({ rotationValue: value })}
+                              min={0}
+                              max={360}
+                              step={5}
+                              className="[&_[role=slider]]:bg-orange-600"
+                            />
+                          </div>
+                        )}
+                        
+                        {currentSettings.rotationMode === 'incremental' && (
+                          <div className="space-y-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Increment: {currentSettings.rotationIncrement}°</Label>
+                              <Slider
+                                value={[currentSettings.rotationIncrement]}
+                                onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
+                                min={-180}
+                                max={180}
+                                step={15}
+                                className="[&_[role=slider]]:bg-orange-600"
+                              />
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.rotationModulationEnabled}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ rotationModulationEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-orange-600"
+                              />
+                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                            </div>
+                            
+                            {currentSettings.rotationModulationEnabled && (
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Modulation: {currentSettings.rotationModulation}° (reset cycle)</Label>
+                                <Slider
+                                  value={[currentSettings.rotationModulation]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
+                                  min={90}
+                                  max={720}
+                                  step={30}
+                                  className="[&_[role=slider]]:bg-orange-600"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Transform Randomization Scaling */}
+                    <div className="space-y-3 p-3 bg-slate-900 rounded border border-slate-600">
+                      <Label className="text-sm font-medium text-slate-200">Transform Randomization Scaling</Label>
+                      <p className="text-xs text-slate-400">Control how much additional randomization is applied to transform modes</p>
+                      
+                      <div className="space-y-3">
+                        
+                        {/* Scale Randomization Scale */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Scale Randomization: {currentSettings.scaleRandomizationScale}%</Label>
+                          <Slider
+                            value={[currentSettings.scaleRandomizationScale]}
+                            onValueChange={([value]) => handleSettingsUpdate({ scaleRandomizationScale: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-purple-600"
+                          />
+                          <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms (range: 0 to 1)</p>
+                        </div>
+                        
+                        {/* Rotation Randomization Scale */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Rotation Randomization: {currentSettings.rotationRandomizationScale}%</Label>
+                          <Slider
+                            value={[currentSettings.rotationRandomizationScale]}
+                            onValueChange={([value]) => handleSettingsUpdate({ rotationRandomizationScale: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-purple-600"
+                          />
+                          <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms (range: 0 to 1)</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Transform Origin */}
+                    <div className="space-y-3 p-3 bg-slate-800 rounded">
+                      <Label className="text-sm font-medium text-slate-200">Transform Origin</Label>
+                      <p className="text-xs text-slate-400">Set the point from which transforms (rotation, scale, position) are applied</p>
+                      
+                      <div className="space-y-3">
+                        {/* Mode Selector */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-300">Mode</Label>
+                          <Select 
+                            value={currentSettings.transformOriginMode} 
+                            onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined' })}
+                          >
+                            <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
+                              <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* Define Mode - X and Y Coordinates */}
+                        {currentSettings.transformOriginMode === 'define' && (
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-300">X: {currentSettings.transformOriginX}</Label>
+                              <Slider
+                                value={[currentSettings.transformOriginX]}
+                                onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
+                                min={-500}
+                                max={500}
+                                step={10}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-300">Y: {currentSettings.transformOriginY}</Label>
+                              <Slider
+                                value={[currentSettings.transformOriginY]}
+                                onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
+                                min={-500}
+                                max={500}
+                                step={10}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Predefined Mode - Alignment Options */}
+                        {currentSettings.transformOriginMode === 'predefined' && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Alignment Point</Label>
+                            <Select 
+                              value={currentSettings.transformOriginPredefined} 
+                              onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
+                            >
+                              <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
+                                <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
+                                <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
+                                <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
+                                <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
+                                <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
+                                <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
+                                <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
