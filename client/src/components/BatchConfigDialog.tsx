@@ -512,9 +512,9 @@ export default function BatchConfigDialog({
                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                           <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
                           <SelectItem value="auto-distribute" className="text-slate-200 hover:bg-slate-700">Auto Distribute</SelectItem>
-                          <SelectItem value="line" className="text-slate-200 hover:bg-slate-700">Line (coming soon)</SelectItem>
-                          <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle (coming soon)</SelectItem>
-                          <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral (coming soon)</SelectItem>
+                          <SelectItem value="wave" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
+                          <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
+                          <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -769,6 +769,322 @@ export default function BatchConfigDialog({
                               data-testid="slider-auto-distribute-y"
                             />
                           </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {currentSettings.distributionPattern === 'wave' && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Wave Type</Label>
+                          <Select 
+                            value={currentSettings.waveType}
+                            onValueChange={(value) => handleSettingsUpdate({ waveType: value as any })}
+                          >
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="sine" className="text-slate-200 hover:bg-slate-700">Sine Wave</SelectItem>
+                              <SelectItem value="triangle" className="text-slate-200 hover:bg-slate-700">Triangle Wave</SelectItem>
+                              <SelectItem value="square" className="text-slate-200 hover:bg-slate-700">Square Wave</SelectItem>
+                              <SelectItem value="sawtooth" className="text-slate-200 hover:bg-slate-700">Sawtooth Wave</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Amplitude: {currentSettings.waveAmplitude}px</Label>
+                            <Slider
+                              value={[currentSettings.waveAmplitude]}
+                              onValueChange={([value]) => handleSettingsUpdate({ waveAmplitude: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Frequency: {currentSettings.waveFrequency}</Label>
+                            <Slider
+                              value={[currentSettings.waveFrequency]}
+                              onValueChange={([value]) => handleSettingsUpdate({ waveFrequency: value })}
+                              min={0.5}
+                              max={10}
+                              step={0.5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Direction</Label>
+                            <Select 
+                              value={currentSettings.waveDirection}
+                              onValueChange={(value) => handleSettingsUpdate({ waveDirection: value as any })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
+                                <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Phase Offset: {currentSettings.wavePhaseOffset}°</Label>
+                            <Slider
+                              value={[currentSettings.wavePhaseOffset]}
+                              onValueChange={([value]) => handleSettingsUpdate({ wavePhaseOffset: value })}
+                              min={0}
+                              max={360}
+                              step={15}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {currentSettings.distributionPattern === 'ellipse' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Radius: {currentSettings.ellipseXRadius[0]}-{currentSettings.ellipseXRadius[1]}px</Label>
+                            <div className="flex gap-2">
+                              <Slider
+                                value={currentSettings.ellipseXRadius}
+                                onValueChange={(value) => handleSettingsUpdate({ ellipseXRadius: value as [number, number] })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Radius: {currentSettings.ellipseYRadius[0]}-{currentSettings.ellipseYRadius[1]}px</Label>
+                            <div className="flex gap-2">
+                              <Slider
+                                value={currentSettings.ellipseYRadius}
+                                onValueChange={(value) => handleSettingsUpdate({ ellipseYRadius: value as [number, number] })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Ring Count: {currentSettings.ellipseRingCount}</Label>
+                            <Slider
+                              value={[currentSettings.ellipseRingCount]}
+                              onValueChange={([value]) => handleSettingsUpdate({ ellipseRingCount: value })}
+                              min={1}
+                              max={10}
+                              step={1}
+                              className="[&_[role=slider]]:bg-cyan-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Ring Spacing</Label>
+                            <Select 
+                              value={currentSettings.ellipseRingSpacing}
+                              onValueChange={(value) => handleSettingsUpdate({ ellipseRingSpacing: value as any })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="even" className="text-slate-200 hover:bg-slate-700">Even Spacing</SelectItem>
+                                <SelectItem value="progressive" className="text-slate-200 hover:bg-slate-700">Progressive Spacing</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Rotation: {currentSettings.ellipseRotation}°</Label>
+                            <Slider
+                              value={[currentSettings.ellipseRotation]}
+                              onValueChange={([value]) => handleSettingsUpdate({ ellipseRotation: value })}
+                              min={0}
+                              max={360}
+                              step={15}
+                              className="[&_[role=slider]]:bg-cyan-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Rotation Alignment</Label>
+                            <Select 
+                              value={currentSettings.ellipseRotationAlignment}
+                              onValueChange={(value) => handleSettingsUpdate({ ellipseRotationAlignment: value as any })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="uniform" className="text-slate-200 hover:bg-slate-700">Uniform (same rotation)</SelectItem>
+                                <SelectItem value="progressive" className="text-slate-200 hover:bg-slate-700">Progressive (increasing)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {currentSettings.distributionPattern === 'spiral' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Turn Count: {currentSettings.spiralTurnCount}</Label>
+                            <Slider
+                              value={[currentSettings.spiralTurnCount]}
+                              onValueChange={([value]) => handleSettingsUpdate({ spiralTurnCount: value })}
+                              min={1}
+                              max={20}
+                              step={1}
+                              className="[&_[role=slider]]:bg-orange-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Spacing Mode</Label>
+                            <Select 
+                              value={currentSettings.spiralSpacingMode}
+                              onValueChange={(value) => handleSettingsUpdate({ spiralSpacingMode: value as any })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="linear" className="text-slate-200 hover:bg-slate-700">Linear (constant spacing)</SelectItem>
+                                <SelectItem value="logarithmic" className="text-slate-200 hover:bg-slate-700">Logarithmic (expanding)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Direction</Label>
+                            <Select 
+                              value={currentSettings.spiralDirection}
+                              onValueChange={(value) => handleSettingsUpdate({ spiralDirection: value as any })}
+                            >
+                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="clockwise" className="text-slate-200 hover:bg-slate-700">Clockwise</SelectItem>
+                                <SelectItem value="counterclockwise" className="text-slate-200 hover:bg-slate-700">Counter-Clockwise</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Start Angle: {currentSettings.spiralStartAngle}°</Label>
+                            <Slider
+                              value={[currentSettings.spiralStartAngle]}
+                              onValueChange={([value]) => handleSettingsUpdate({ spiralStartAngle: value })}
+                              min={0}
+                              max={360}
+                              step={15}
+                              className="[&_[role=slider]]:bg-orange-600"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Tightness: {currentSettings.spiralTightness.toFixed(1)}</Label>
+                          <Slider
+                            value={[currentSettings.spiralTightness]}
+                            onValueChange={([value]) => handleSettingsUpdate({ spiralTightness: value })}
+                            min={0.1}
+                            max={3}
+                            step={0.1}
+                            className="[&_[role=slider]]:bg-orange-600"
+                          />
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">

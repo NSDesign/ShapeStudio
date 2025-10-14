@@ -4,7 +4,7 @@ import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
 import { useExportSettings } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyAutoDistribution } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyAutoDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
@@ -2433,6 +2433,25 @@ export const useShapeEditor = () => {
         gridYRandomization: effectiveBatchConfig.gridYRandomization,
         autoDistributeXCount: effectiveBatchConfig.autoDistributeXCount,
         autoDistributeYCount: effectiveBatchConfig.autoDistributeYCount,
+        waveType: effectiveBatchConfig.waveType,
+        waveAmplitude: effectiveBatchConfig.waveAmplitude,
+        waveFrequency: effectiveBatchConfig.waveFrequency,
+        waveDirection: effectiveBatchConfig.waveDirection,
+        wavePhaseOffset: effectiveBatchConfig.wavePhaseOffset,
+        ellipseXRadius: effectiveBatchConfig.ellipseXRadius,
+        ellipseYRadius: effectiveBatchConfig.ellipseYRadius,
+        ellipseRingCount: effectiveBatchConfig.ellipseRingCount,
+        ellipseRingSpacing: effectiveBatchConfig.ellipseRingSpacing,
+        ellipseRotation: effectiveBatchConfig.ellipseRotation,
+        ellipseRotationAlignment: effectiveBatchConfig.ellipseRotationAlignment,
+        spiralTurnCount: effectiveBatchConfig.spiralTurnCount,
+        spiralSpacingMode: effectiveBatchConfig.spiralSpacingMode,
+        spiralDirection: effectiveBatchConfig.spiralDirection,
+        spiralStartAngle: effectiveBatchConfig.spiralStartAngle,
+        spiralTightness: effectiveBatchConfig.spiralTightness,
+        tangentAlignment: effectiveBatchConfig.tangentAlignment,
+        segmentDistribution: effectiveBatchConfig.segmentDistribution,
+        reverseDirection: effectiveBatchConfig.reverseDirection,
         positionsEnabled: effectiveBatchConfig.positionsEnabled
       };
 
@@ -2456,6 +2475,15 @@ export const useShapeEditor = () => {
       if (effectiveBatchConfig.distributionPattern === 'auto-distribute') {
         finalShapes = applyAutoDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
         console.log(`🎯 Applied auto-distribute: ${effectiveBatchConfig.autoDistributeXCount} shapes X, ${effectiveBatchConfig.autoDistributeYCount} shapes Y`);
+      } else if (effectiveBatchConfig.distributionPattern === 'wave') {
+        finalShapes = applyWaveDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
+        console.log(`🌊 Applied wave distribution: ${effectiveBatchConfig.waveType} wave, amplitude=${effectiveBatchConfig.waveAmplitude}px, frequency=${effectiveBatchConfig.waveFrequency}, direction=${effectiveBatchConfig.waveDirection}`);
+      } else if (effectiveBatchConfig.distributionPattern === 'ellipse') {
+        finalShapes = applyEllipseDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
+        console.log(`⭕ Applied ellipse distribution: ${effectiveBatchConfig.ellipseRingCount} rings, spacing=${effectiveBatchConfig.ellipseRingSpacing}, rotation=${effectiveBatchConfig.ellipseRotation}°`);
+      } else if (effectiveBatchConfig.distributionPattern === 'spiral') {
+        finalShapes = applySpiralDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
+        console.log(`🌀 Applied spiral distribution: ${effectiveBatchConfig.spiralTurnCount} turns, spacing=${effectiveBatchConfig.spiralSpacingMode}, direction=${effectiveBatchConfig.spiralDirection}, tightness=${effectiveBatchConfig.spiralTightness}`);
       } else {
         finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
         console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);

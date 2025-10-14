@@ -267,7 +267,7 @@ export interface BatchConfigSettings {
   
   // Distribution Layout
   distributionLayoutEnabled: boolean;
-  distributionPattern: 'grid' | 'line' | 'circle' | 'spiral' | 'auto-distribute';
+  distributionPattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
   
   // Grid Layout Settings
   gridRows: number;
@@ -288,6 +288,33 @@ export interface BatchConfigSettings {
   // Auto Distribute Layout Settings
   autoDistributeXCount: number; // Number of shapes to distribute in X direction
   autoDistributeYCount: number; // Number of shapes to distribute in Y direction (auto-balanced with X to maintain total)
+  
+  // Wave Pattern Settings
+  waveType: 'sine' | 'triangle' | 'square' | 'sawtooth';
+  waveAmplitude: number; // Wave height in pixels (0-200)
+  waveFrequency: number; // Number of complete waves or wavelength
+  waveDirection: 'horizontal' | 'vertical';
+  wavePhaseOffset: number; // Start position along wave (0-360 degrees)
+  
+  // Ellipse/Ring Pattern Settings
+  ellipseXRadius: [number, number]; // X radius range in pixels
+  ellipseYRadius: [number, number]; // Y radius range in pixels
+  ellipseRingCount: number; // Number of concentric rings (1-10)
+  ellipseRingSpacing: 'even' | 'progressive'; // Spacing mode between rings
+  ellipseRotation: number; // Ellipse rotation angle (0-360 degrees)
+  ellipseRotationAlignment: 'uniform' | 'progressive'; // All rings same rotation or progressive
+  
+  // Spiral Pattern Settings
+  spiralTurnCount: number; // Number of complete rotations (1-20)
+  spiralSpacingMode: 'linear' | 'logarithmic'; // Spacing growth mode
+  spiralDirection: 'clockwise' | 'counterclockwise';
+  spiralStartAngle: number; // Initial rotation offset (0-360 degrees)
+  spiralTightness: number; // How compact/spread the spiral is (0.1-2.0)
+  
+  // Shared Pattern Enhancements
+  tangentAlignment: boolean; // Orient shapes to follow curve tangent
+  segmentDistribution: 'even' | 'clustered'; // Shape distribution along path
+  reverseDirection: boolean; // Reverse pattern direction
   
   // Generation Count Controls
   generationCountMode: 'range' | 'fixed' | 'incremental';
@@ -763,6 +790,29 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   autoDistributeXCount: 10,
   autoDistributeYCount: 10,
+  
+  waveType: 'sine',
+  waveAmplitude: 50,
+  waveFrequency: 2,
+  waveDirection: 'horizontal',
+  wavePhaseOffset: 0,
+  
+  ellipseXRadius: [80, 120],
+  ellipseYRadius: [80, 120],
+  ellipseRingCount: 1,
+  ellipseRingSpacing: 'even',
+  ellipseRotation: 0,
+  ellipseRotationAlignment: 'uniform',
+  
+  spiralTurnCount: 3,
+  spiralSpacingMode: 'linear',
+  spiralDirection: 'clockwise',
+  spiralStartAngle: 0,
+  spiralTightness: 1.0,
+  
+  tangentAlignment: false,
+  segmentDistribution: 'even',
+  reverseDirection: false,
   
   // Generation Count Controls
   generationCountMode: 'range',
@@ -1748,7 +1798,7 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Distribution settings
   distributionLayoutEnabled: z.boolean(),
-  distributionPattern: z.enum(['grid', 'line', 'circle', 'spiral', 'auto-distribute']),
+  distributionPattern: z.enum(['grid', 'wave', 'ellipse', 'spiral', 'auto-distribute']),
   gridRows: z.number(),
   gridColumns: z.number(),
   gridStartX: z.number(),
@@ -1765,6 +1815,29 @@ export const BatchConfigSettingsSchema = z.object({
   
   autoDistributeXCount: z.number(),
   autoDistributeYCount: z.number(),
+  
+  waveType: z.enum(['sine', 'triangle', 'square', 'sawtooth']),
+  waveAmplitude: z.number(),
+  waveFrequency: z.number(),
+  waveDirection: z.enum(['horizontal', 'vertical']),
+  wavePhaseOffset: z.number(),
+  
+  ellipseXRadius: z.tuple([z.number(), z.number()]),
+  ellipseYRadius: z.tuple([z.number(), z.number()]),
+  ellipseRingCount: z.number(),
+  ellipseRingSpacing: z.enum(['even', 'progressive']),
+  ellipseRotation: z.number(),
+  ellipseRotationAlignment: z.enum(['uniform', 'progressive']),
+  
+  spiralTurnCount: z.number(),
+  spiralSpacingMode: z.enum(['linear', 'logarithmic']),
+  spiralDirection: z.enum(['clockwise', 'counterclockwise']),
+  spiralStartAngle: z.number(),
+  spiralTightness: z.number(),
+  
+  tangentAlignment: z.boolean(),
+  segmentDistribution: z.enum(['even', 'clustered']),
+  reverseDirection: z.boolean(),
   
   // Generation count
   generationCountMode: z.enum(['range', 'fixed', 'incremental']),

@@ -19,7 +19,7 @@ export interface GridPosition {
 
 export interface DistributionConfig {
   enabled: boolean;
-  pattern: 'grid' | 'line' | 'circle' | 'spiral' | 'auto-distribute';
+  pattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
   gridRows: number;
   gridColumns: number;
   gridStartX?: number;
@@ -35,6 +35,25 @@ export interface DistributionConfig {
   gridYRandomization: number;
   autoDistributeXCount?: number;
   autoDistributeYCount?: number;
+  waveType?: 'sine' | 'triangle' | 'square' | 'sawtooth';
+  waveAmplitude?: number;
+  waveFrequency?: number;
+  waveDirection?: 'horizontal' | 'vertical';
+  wavePhaseOffset?: number;
+  ellipseXRadius?: [number, number];
+  ellipseYRadius?: [number, number];
+  ellipseRingCount?: number;
+  ellipseRingSpacing?: 'even' | 'progressive';
+  ellipseRotation?: number;
+  ellipseRotationAlignment?: 'uniform' | 'progressive';
+  spiralTurnCount?: number;
+  spiralSpacingMode?: 'linear' | 'logarithmic';
+  spiralDirection?: 'clockwise' | 'counterclockwise';
+  spiralStartAngle?: number;
+  spiralTightness?: number;
+  tangentAlignment?: boolean;
+  segmentDistribution?: 'even' | 'clustered';
+  reverseDirection?: boolean;
   positionsEnabled: boolean; // Whether to add position offsets to grid layout
 }
 
@@ -682,6 +701,246 @@ export function applyAutoDistribution(
       const positionOffsetX = shape.transform?.x || 0;
       const positionOffsetY = shape.transform?.y || 0;
       
+      finalX = x + randomX + positionOffsetX;
+      finalY = y + randomY + positionOffsetY;
+    } else {
+      finalX = x + randomX;
+      finalY = y + randomY;
+    }
+    
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
+    
+    return shape;
+  });
+}
+
+// Apply wave distribution: shapes positioned along a wave pattern (sine, triangle, square, sawtooth)
+export function applyWaveDistribution(
+  shapes: any[],
+  config: DistributionConfig,
+  canvasCenter = { x: 0, y: 0 },
+  artboardBounds?: { x: number; y: number; width: number; height: number }
+): any[] {
+  if (!config.enabled || config.pattern !== 'wave') return shapes;
+  
+  const waveType = config.waveType || 'sine';
+  const amplitude = config.waveAmplitude || 50;
+  const frequency = config.waveFrequency || 2;
+  const direction = config.waveDirection || 'horizontal';
+  const phaseOffset = (config.wavePhaseOffset || 0) * (Math.PI / 180); // Convert to radians
+  
+  // Calculate artboard center
+  const artboardCenterX = artboardBounds 
+    ? artboardBounds.x + artboardBounds.width / 2 
+    : canvasCenter.x;
+  const artboardCenterY = artboardBounds 
+    ? artboardBounds.y + artboardBounds.height / 2 
+    : canvasCenter.y;
+  
+  // Calculate wave path length
+  const pathLength = direction === 'horizontal' 
+    ? (artboardBounds?.width || 400)
+    : (artboardBounds?.height || 400);
+  
+  const totalShapes = shapes.length;
+  const spacing = pathLength / (totalShapes + 1);
+  
+  return shapes.map((shape, index) => {
+    const t = (index + 1) * spacing; // Position along the path
+    const phase = (t / pathLength) * frequency * 2 * Math.PI + phaseOffset;
+    
+    // Calculate wave offset based on wave type
+    let waveOffset = 0;
+    switch (waveType) {
+      case 'sine':
+        waveOffset = Math.sin(phase) * amplitude;
+        break;
+      case 'triangle':
+        waveOffset = (2 * amplitude / Math.PI) * Math.asin(Math.sin(phase));
+        break;
+      case 'square':
+        waveOffset = Math.sign(Math.sin(phase)) * amplitude;
+        break;
+      case 'sawtooth':
+        waveOffset = (2 * amplitude / Math.PI) * (phase % (2 * Math.PI) - Math.PI);
+        break;
+    }
+    
+    let x, y;
+    if (direction === 'horizontal') {
+      x = artboardCenterX - pathLength / 2 + t;
+      y = artboardCenterY + waveOffset;
+    } else {
+      x = artboardCenterX + waveOffset;
+      y = artboardCenterY - pathLength / 2 + t;
+    }
+    
+    // Apply additive random offset
+    const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
+    const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
+    
+    let finalX, finalY;
+    if (config.positionsEnabled) {
+      const positionOffsetX = shape.transform?.x || 0;
+      const positionOffsetY = shape.transform?.y || 0;
+      finalX = x + randomX + positionOffsetX;
+      finalY = y + randomY + positionOffsetY;
+    } else {
+      finalX = x + randomX;
+      finalY = y + randomY;
+    }
+    
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
+    
+    return shape;
+  });
+}
+
+// Apply ellipse distribution: shapes positioned in concentric ellipse rings
+export function applyEllipseDistribution(
+  shapes: any[],
+  config: DistributionConfig,
+  canvasCenter = { x: 0, y: 0 },
+  artboardBounds?: { x: number; y: number; width: number; height: number }
+): any[] {
+  if (!config.enabled || config.pattern !== 'ellipse') return shapes;
+  
+  const xRadiusRange = config.ellipseXRadius || [80, 120];
+  const yRadiusRange = config.ellipseYRadius || [80, 120];
+  const ringCount = config.ellipseRingCount || 1;
+  const ringSpacing = config.ellipseRingSpacing || 'even';
+  const rotation = (config.ellipseRotation || 0) * (Math.PI / 180); // Convert to radians
+  const rotationAlignment = config.ellipseRotationAlignment || 'uniform';
+  
+  // Calculate artboard center
+  const artboardCenterX = artboardBounds 
+    ? artboardBounds.x + artboardBounds.width / 2 
+    : canvasCenter.x;
+  const artboardCenterY = artboardBounds 
+    ? artboardBounds.y + artboardBounds.height / 2 
+    : canvasCenter.y;
+  
+  const totalShapes = shapes.length;
+  const shapesPerRing = Math.ceil(totalShapes / ringCount);
+  
+  return shapes.map((shape, index) => {
+    const ringIndex = Math.floor(index / shapesPerRing);
+    const indexInRing = index % shapesPerRing;
+    const angleStep = (2 * Math.PI) / shapesPerRing;
+    const angle = indexInRing * angleStep;
+    
+    // Calculate ring radius based on spacing mode
+    let ringProgress;
+    if (ringSpacing === 'progressive') {
+      // Progressive: rings get further apart
+      ringProgress = Math.pow(ringIndex / Math.max(ringCount - 1, 1), 1.5);
+    } else {
+      // Even: equal spacing
+      ringProgress = ringIndex / Math.max(ringCount - 1, 1);
+    }
+    
+    // Interpolate radius based on ring
+    const xRadius = xRadiusRange[0] + (xRadiusRange[1] - xRadiusRange[0]) * ringProgress;
+    const yRadius = yRadiusRange[0] + (yRadiusRange[1] - yRadiusRange[0]) * ringProgress;
+    
+    // Calculate rotation based on alignment mode
+    const shapeRotation = rotationAlignment === 'progressive' 
+      ? rotation * (ringIndex / Math.max(ringCount - 1, 1))
+      : rotation;
+    
+    // Calculate position on ellipse with rotation
+    const cosAngle = Math.cos(angle);
+    const sinAngle = Math.sin(angle);
+    const cosRot = Math.cos(shapeRotation);
+    const sinRot = Math.sin(shapeRotation);
+    
+    const x = artboardCenterX + (xRadius * cosAngle * cosRot - yRadius * sinAngle * sinRot);
+    const y = artboardCenterY + (xRadius * cosAngle * sinRot + yRadius * sinAngle * cosRot);
+    
+    // Apply additive random offset
+    const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
+    const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
+    
+    let finalX, finalY;
+    if (config.positionsEnabled) {
+      const positionOffsetX = shape.transform?.x || 0;
+      const positionOffsetY = shape.transform?.y || 0;
+      finalX = x + randomX + positionOffsetX;
+      finalY = y + randomY + positionOffsetY;
+    } else {
+      finalX = x + randomX;
+      finalY = y + randomY;
+    }
+    
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
+    
+    return shape;
+  });
+}
+
+// Apply spiral distribution: shapes positioned along a spiral path
+export function applySpiralDistribution(
+  shapes: any[],
+  config: DistributionConfig,
+  canvasCenter = { x: 0, y: 0 },
+  artboardBounds?: { x: number; y: number; width: number; height: number }
+): any[] {
+  if (!config.enabled || config.pattern !== 'spiral') return shapes;
+  
+  const turnCount = config.spiralTurnCount || 3;
+  const spacingMode = config.spiralSpacingMode || 'linear';
+  const direction = config.spiralDirection || 'clockwise';
+  const startAngle = (config.spiralStartAngle || 0) * (Math.PI / 180); // Convert to radians
+  const tightness = config.spiralTightness || 1.0;
+  
+  // Calculate artboard center
+  const artboardCenterX = artboardBounds 
+    ? artboardBounds.x + artboardBounds.width / 2 
+    : canvasCenter.x;
+  const artboardCenterY = artboardBounds 
+    ? artboardBounds.y + artboardBounds.height / 2 
+    : canvasCenter.y;
+  
+  const totalShapes = shapes.length;
+  const totalAngle = turnCount * 2 * Math.PI;
+  const maxRadius = Math.min(
+    artboardBounds?.width || 400, 
+    artboardBounds?.height || 400
+  ) / 2 * 0.8; // Use 80% of available space
+  
+  return shapes.map((shape, index) => {
+    const progress = index / Math.max(totalShapes - 1, 1);
+    
+    // Calculate angle based on direction
+    const angle = direction === 'clockwise'
+      ? startAngle + (progress * totalAngle)
+      : startAngle - (progress * totalAngle);
+    
+    // Calculate radius based on spacing mode
+    let radius;
+    if (spacingMode === 'logarithmic') {
+      // Logarithmic: expands outward
+      radius = maxRadius * Math.pow(progress, tightness);
+    } else {
+      // Linear: constant spacing
+      radius = maxRadius * progress * tightness;
+    }
+    
+    // Calculate position
+    const x = artboardCenterX + radius * Math.cos(angle);
+    const y = artboardCenterY + radius * Math.sin(angle);
+    
+    // Apply additive random offset
+    const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
+    const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
+    
+    let finalX, finalY;
+    if (config.positionsEnabled) {
+      const positionOffsetX = shape.transform?.x || 0;
+      const positionOffsetY = shape.transform?.y || 0;
       finalX = x + randomX + positionOffsetX;
       finalY = y + randomY + positionOffsetY;
     } else {
