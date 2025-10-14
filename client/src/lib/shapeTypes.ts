@@ -22,6 +22,10 @@ export interface DistributionConfig {
   pattern: 'grid' | 'line' | 'circle' | 'spiral';
   gridRows: number;
   gridColumns: number;
+  gridStartX?: number;
+  gridStartY?: number;
+  gridSpacingXMode?: 'define' | 'auto';
+  gridSpacingYMode?: 'define' | 'auto';
   gridRowOffset: number;
   gridColumnOffset: number;
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
@@ -394,7 +398,12 @@ export function calculateGridPosition(
   rowOffset: number, 
   columnOffset: number,
   centerX = 0,
-  centerY = 0
+  centerY = 0,
+  artboardBounds?: { x: number; y: number; width: number; height: number },
+  gridStartX = 0,
+  gridStartY = 0,
+  spacingXMode: 'define' | 'auto' = 'define',
+  spacingYMode: 'define' | 'auto' = 'define'
 ): GridPosition {
   const totalPositions = rows * columns;
   const adjustedIndex = index % totalPositions;
@@ -402,12 +411,26 @@ export function calculateGridPosition(
   const row = Math.floor(adjustedIndex / columns);
   const column = adjustedIndex % columns;
   
-  // Calculate grid position from center
-  const startX = centerX - ((columns - 1) * columnOffset) / 2;
-  const startY = centerY - ((rows - 1) * rowOffset) / 2;
+  // Calculate effective spacing based on mode
+  let effectiveColumnOffset = columnOffset;
+  let effectiveRowOffset = rowOffset;
   
-  const x = startX + (column * columnOffset);
-  const y = startY + (row * rowOffset);
+  if (spacingXMode === 'auto' && artboardBounds) {
+    // Auto: evenly distribute across artboard width
+    effectiveColumnOffset = artboardBounds.width / (columns + 1);
+  }
+  
+  if (spacingYMode === 'auto' && artboardBounds) {
+    // Auto: evenly distribute across artboard height
+    effectiveRowOffset = artboardBounds.height / (rows + 1);
+  }
+  
+  // Calculate grid position from center
+  const startX = centerX - ((columns - 1) * effectiveColumnOffset) / 2;
+  const startY = centerY - ((rows - 1) * effectiveRowOffset) / 2;
+  
+  const x = startX + (column * effectiveColumnOffset) + gridStartX;
+  const y = startY + (row * effectiveRowOffset) + gridStartY;
   
   return { x, y, row, column };
 }
@@ -530,7 +553,8 @@ export function applyGridDistribution(
   shapes: any[], 
   config: DistributionConfig,
   canvasCenter = { x: 0, y: 0 },
-  generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number }
+  generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number },
+  artboardBounds?: { x: number; y: number; width: number; height: number }
 ): any[] {
   if (!config.enabled || config.pattern !== 'grid') return shapes;
   
@@ -567,7 +591,12 @@ export function applyGridDistribution(
       config.gridRowOffset,
       config.gridColumnOffset,
       canvasCenter.x,
-      canvasCenter.y
+      canvasCenter.y,
+      artboardBounds,
+      config.gridStartX || 0,
+      config.gridStartY || 0,
+      config.gridSpacingXMode || 'define',
+      config.gridSpacingYMode || 'define'
     );
     
     // If positions are enabled, preserve existing transform as position offset

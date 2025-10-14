@@ -194,6 +194,11 @@ export const useShapeEditor = () => {
         yArtboardAnchorMode: set.batchConfig.yArtboardAnchorMode || 'predefined',
         yArtboardAnchorPredefined: set.batchConfig.yArtboardAnchorPredefined || 'center',
         yArtboardAnchorDefine: set.batchConfig.yArtboardAnchorDefine ?? 0,
+        // Add grid distribution defaults if they don't exist
+        gridStartX: set.batchConfig.gridStartX ?? 0,
+        gridStartY: set.batchConfig.gridStartY ?? 0,
+        gridSpacingXMode: set.batchConfig.gridSpacingXMode || 'define',
+        gridSpacingYMode: set.batchConfig.gridSpacingYMode || 'define',
       } : set.batchConfig;
 
       return {
@@ -2415,6 +2420,10 @@ export const useShapeEditor = () => {
         pattern: effectiveBatchConfig.distributionPattern,
         gridRows: effectiveBatchConfig.gridRows,
         gridColumns: effectiveBatchConfig.gridColumns,
+        gridStartX: effectiveBatchConfig.gridStartX,
+        gridStartY: effectiveBatchConfig.gridStartY,
+        gridSpacingXMode: effectiveBatchConfig.gridSpacingXMode,
+        gridSpacingYMode: effectiveBatchConfig.gridSpacingYMode,
         gridRowOffset: effectiveBatchConfig.gridRowOffset,
         gridColumnOffset: effectiveBatchConfig.gridColumnOffset,
         gridSortBy: effectiveBatchConfig.gridSortBy,
@@ -2433,7 +2442,16 @@ export const useShapeEditor = () => {
         shapesPerGeneration: newShapes.length
       };
       
-      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo);
+      // Get artboard bounds for auto spacing calculations
+      const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+      const artboardBounds = currentArtboard ? {
+        x: currentArtboard.x,
+        y: currentArtboard.y,
+        width: currentArtboard.width,
+        height: currentArtboard.height
+      } : undefined;
+      
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
       console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);
     }
 

@@ -272,6 +272,10 @@ export interface BatchConfigSettings {
   // Grid Layout Settings
   gridRows: number;
   gridColumns: number;
+  gridStartX: number; // Start position offset X
+  gridStartY: number; // Start position offset Y
+  gridSpacingXMode: 'define' | 'auto'; // Manual or auto-calculated X spacing
+  gridSpacingYMode: 'define' | 'auto'; // Manual or auto-calculated Y spacing
   gridRowOffset: number;
   gridColumnOffset: number;
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
@@ -741,6 +745,10 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   distributionPattern: 'grid',
   gridRows: 3,
   gridColumns: 3,
+  gridStartX: 0,
+  gridStartY: 0,
+  gridSpacingXMode: 'define',
+  gridSpacingYMode: 'define',
   gridRowOffset: 120,
   gridColumnOffset: 120,
   gridSortBy: 'none',
@@ -1736,6 +1744,10 @@ export const BatchConfigSettingsSchema = z.object({
   distributionPattern: z.enum(['grid', 'line', 'circle', 'spiral']),
   gridRows: z.number(),
   gridColumns: z.number(),
+  gridStartX: z.number(),
+  gridStartY: z.number(),
+  gridSpacingXMode: z.enum(['define', 'auto']),
+  gridSpacingYMode: z.enum(['define', 'auto']),
   gridRowOffset: z.number(),
   gridColumnOffset: z.number(),
   gridSortBy: z.enum(['layer', 'id', 'shape-type', 'fill-color', 'opacity', 'size', 'angle', 'creation-time', 'none']),
