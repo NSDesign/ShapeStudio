@@ -34,6 +34,10 @@ Preferred communication style: Simple, everyday language.
 - **Noise System**: Pure mathematical implementation with property-specific amplitude controls, octave modes, and seeded random generation for reproducibility.
 - **Properties Section Integration**: Noise ranges are controlled by enabled Properties sections (Position, Rotation, Scale, Opacity, Fill Color, Shape Size, Corner Radius, Inner Radius, Segments, Point Counts).
 - **Transform Randomization Scaling**: Controls for position, scale, and rotation randomization amount.
+- **Transform Origin Controls**: Three-mode transform origin system for precise control over the point from which transforms (rotation, scale, position) are applied:
+  * **Define Mode**: Custom X,Y coordinates for manual origin placement
+  * **Predefined Artboard Mode**: 9-point alignment relative to artboard boundaries (top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right)
+  * **Predefined Shape Mode**: 9-point alignment relative to each individual shape's boundaries, allowing per-shape transform origin control
 - **Canvas-Based Blur System**: Gaussian blur algorithm implemented via direct canvas pixel manipulation for pixel-perfect blur effects.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity, collinearity enforcement, and C1 smoothness. No random tangent generation to preserve mathematical integrity. Fixed tangent handle condition checks in shapeRenderer.ts to ensure proper cubic bezier curve rendering.
 - **Advanced Grid Layout Sorting**: Complete implementation with comprehensive sorting criteria (layer, creation-time, shape-type, size, fill-color, opacity, angle, id), configurable sort order (ascending/descending), and per-generation vs per-batch sorting scope for fine-grained control over shape arrangement in grid layouts.

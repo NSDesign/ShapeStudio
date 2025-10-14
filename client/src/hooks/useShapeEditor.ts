@@ -173,31 +173,42 @@ export const useShapeEditor = () => {
   
   // Migration function to ensure old sets have new properties
   const migrateGenerationSets = useCallback((sets: GenerationSet[]): GenerationSet[] => {
-    return sets.map(set => ({
-      ...set,
-      // Add new set-level properties with defaults if they don't exist
-      setVisibility: set.setVisibility || {
-        visible: true,
-        opacity: 1.0,
-        opacityVariance: 0.0
-      },
-      setBlendMode: set.setBlendMode || 'source-over',
-      compositingOperation: set.compositingOperation || 'source-over',
-      setTransform: set.setTransform || {
-        x: 0,
-        y: 0,
-        rotation: 0,
-        scaleX: 1.0,
-        scaleY: 1.0,
-        transformOrigin: 'center'
-      },
-      artboardAlignment: set.artboardAlignment || {
-        fitToArtboard: false,
-        alignTo: 'none',
-        alignmentType: 'center',
-        margin: 0
-      }
-    }));
+    return sets.map(set => {
+      // Migrate legacy 'predefined' transformOriginMode to 'predefined-artboard'
+      const migratedBatchConfig = set.batchConfig ? {
+        ...set.batchConfig,
+        transformOriginMode: (set.batchConfig.transformOriginMode === 'predefined' as any) 
+          ? 'predefined-artboard' 
+          : set.batchConfig.transformOriginMode
+      } : set.batchConfig;
+
+      return {
+        ...set,
+        batchConfig: migratedBatchConfig,
+        // Add new set-level properties with defaults if they don't exist
+        setVisibility: set.setVisibility || {
+          visible: true,
+          opacity: 1.0,
+          opacityVariance: 0.0
+        },
+        setBlendMode: set.setBlendMode || 'source-over',
+        compositingOperation: set.compositingOperation || 'source-over',
+        setTransform: set.setTransform || {
+          x: 0,
+          y: 0,
+          rotation: 0,
+          scaleX: 1.0,
+          scaleY: 1.0,
+          transformOrigin: 'center'
+        },
+        artboardAlignment: set.artboardAlignment || {
+          fitToArtboard: false,
+          alignTo: 'none',
+          alignmentType: 'center',
+          margin: 0
+        }
+      };
+    });
   }, []);
 
   // Sync persisted data to local state when loaded
