@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info } from 'lucide-react';
+import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
@@ -238,7 +238,7 @@ export default function BatchConfigDialog({
 
   return (
     <>
-      <div className="flex justify-center px-2 py-2">
+      <div className={`flex ${sidebarCollapsed ? 'flex-col gap-2' : 'flex-row gap-2'} justify-center px-2 py-2`}>
         <Button 
           variant="ghost" 
           size="sm"
@@ -252,6 +252,23 @@ export default function BatchConfigDialog({
         >
           <Settings className="w-4 h-4" />
           {!sidebarCollapsed && <span className="text-sm">Gen Config Settings</span>}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className={`bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 ${
+            sidebarCollapsed 
+              ? 'h-12 w-12 p-0' 
+              : 'h-10 px-3 gap-2'
+          }`}
+          onClick={onOpenGenerationSetsManager}
+          disabled={!onOpenGenerationSetsManager}
+          data-testid="button-sets-manager"
+          title="Open Sets Manager"
+        >
+          <Layers className="w-4 h-4" />
+          {!sidebarCollapsed && <span className="text-sm">Sets Manager</span>}
         </Button>
       </div>
       
