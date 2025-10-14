@@ -5334,7 +5334,7 @@ export default function Sidebar({
                             title="Open Generation Sets Manager"
                             data-testid="sidebar-generation-sets-manager-button"
                           >
-                            <Settings className="h-3 w-3 text-slate-300" />
+                            <Layers className="h-3 w-3 text-slate-300" />
                           </Button>
                         </div>
                       )}

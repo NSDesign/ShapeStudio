@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Minus, Settings } from 'lucide-react';
+import { Plus, Minus, Layers } from 'lucide-react';
 import { GenerationSet, ShapeCountMode, SupportedShapeType, BatchConfigSettings } from '@shared/schema';
 import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
 
@@ -172,7 +172,7 @@ export function GenerationSetsDropdown({
         title="Open Generation Sets Manager"
         data-testid={`${testId}-manager-button`}
       >
-        <Settings className={`h-4 w-4 ${hasMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
+        <Layers className={`h-4 w-4 ${hasMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
       </Button>
 
       {/* Create Set Modal/Input */}
