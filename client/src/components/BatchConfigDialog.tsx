@@ -22,6 +22,7 @@ interface BatchConfigDialogProps {
   onSettingsChange: (settings: BatchConfigSettings) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  sidebarCollapsed?: boolean;
   
   // Generation Sets Integration
   generationSets?: GenerationSet[];
@@ -49,6 +50,7 @@ export default function BatchConfigDialog({
   onSettingsChange, 
   isOpen: controlledIsOpen, 
   onOpenChange: controlledOnOpenChange,
+  sidebarCollapsed = false,
   
   // Generation Sets Integration props
   generationSets = [],
@@ -236,15 +238,22 @@ export default function BatchConfigDialog({
 
   return (
     <>
-      <Button 
-        variant="ghost" 
-        size="sm"
-        className="h-10 w-10 p-0 bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600"
-        onClick={() => setIsOpen(true)}
-        data-testid="button-batch-settings"
-      >
-        <Settings className="w-4 h-4" />
-      </Button>
+      <div className="flex justify-center px-2 py-2">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className={`bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 ${
+            sidebarCollapsed 
+              ? 'h-10 w-10 p-0' 
+              : 'h-10 px-3 gap-2'
+          }`}
+          onClick={() => setIsOpen(true)}
+          data-testid="button-batch-settings"
+        >
+          <Settings className="w-4 h-4" />
+          {!sidebarCollapsed && <span className="text-sm">Gen Config Settings</span>}
+        </Button>
+      </div>
       
       {isOpen && createPortal(
         <div

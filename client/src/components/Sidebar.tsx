@@ -5531,6 +5531,7 @@ export default function Sidebar({
       <BatchConfigDialog
         settings={generationConfigSettings}
         onSettingsChange={handleBatchConfigSettingsChange}
+        sidebarCollapsed={isCollapsed}
         
         // Generation Sets Integration
         generationSets={generationSets}
