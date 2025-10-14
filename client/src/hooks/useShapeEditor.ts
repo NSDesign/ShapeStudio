@@ -4,7 +4,7 @@ import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
 import { useExportSettings } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyAutoDistribution } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
@@ -2431,6 +2431,8 @@ export const useShapeEditor = () => {
         gridSortOrder: effectiveBatchConfig.gridSortOrder,
         gridXRandomization: effectiveBatchConfig.gridXRandomization,
         gridYRandomization: effectiveBatchConfig.gridYRandomization,
+        autoDistributeXCount: effectiveBatchConfig.autoDistributeXCount,
+        autoDistributeYCount: effectiveBatchConfig.autoDistributeYCount,
         positionsEnabled: effectiveBatchConfig.positionsEnabled
       };
 
@@ -2451,8 +2453,13 @@ export const useShapeEditor = () => {
         height: currentArtboard.height
       } : undefined;
       
-      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
-      console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);
+      if (effectiveBatchConfig.distributionPattern === 'auto-distribute') {
+        finalShapes = applyAutoDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
+        console.log(`🎯 Applied auto-distribute: ${effectiveBatchConfig.autoDistributeXCount} shapes X, ${effectiveBatchConfig.autoDistributeYCount} shapes Y`);
+      } else {
+        finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
+        console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);
+      }
     }
 
     // Apply setTransform if provided in overrides

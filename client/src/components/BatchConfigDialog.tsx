@@ -511,6 +511,7 @@ export default function BatchConfigDialog({
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                           <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
+                          <SelectItem value="auto-distribute" className="text-slate-200 hover:bg-slate-700">Auto Distribute</SelectItem>
                           <SelectItem value="line" className="text-slate-200 hover:bg-slate-700">Line (coming soon)</SelectItem>
                           <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle (coming soon)</SelectItem>
                           <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral (coming soon)</SelectItem>
@@ -635,23 +636,23 @@ export default function BatchConfigDialog({
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Randomization Scale: {currentSettings.gridXRandomization}%</Label>
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
                             <Slider
                               value={[currentSettings.gridXRandomization]}
                               onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
                               min={0}
-                              max={100}
+                              max={200}
                               step={5}
                               className="[&_[role=slider]]:bg-purple-600"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Randomization Scale: {currentSettings.gridYRandomization}%</Label>
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
                             <Slider
                               value={[currentSettings.gridYRandomization]}
                               onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
                               min={0}
-                              max={100}
+                              max={200}
                               step={5}
                               className="[&_[role=slider]]:bg-purple-600"
                             />
@@ -720,6 +721,80 @@ export default function BatchConfigDialog({
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+                    
+                    {currentSettings.distributionPattern === 'auto-distribute' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Shapes X Count: {currentSettings.autoDistributeXCount}</Label>
+                            <Slider
+                              value={[currentSettings.autoDistributeXCount]}
+                              onValueChange={([value]) => {
+                                const totalShapes = currentSettings.generationCountMode === 'fixed' 
+                                  ? currentSettings.generationCountDefine 
+                                  : 20;
+                                const yCount = totalShapes - value;
+                                handleSettingsUpdate({ 
+                                  autoDistributeXCount: value,
+                                  autoDistributeYCount: Math.max(0, yCount)
+                                });
+                              }}
+                              min={0}
+                              max={currentSettings.generationCountMode === 'fixed' ? currentSettings.generationCountDefine : 50}
+                              step={1}
+                              className="[&_[role=slider]]:bg-green-600"
+                              data-testid="slider-auto-distribute-x"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Shapes Y Count: {currentSettings.autoDistributeYCount}</Label>
+                            <Slider
+                              value={[currentSettings.autoDistributeYCount]}
+                              onValueChange={([value]) => {
+                                const totalShapes = currentSettings.generationCountMode === 'fixed' 
+                                  ? currentSettings.generationCountDefine 
+                                  : 20;
+                                const xCount = totalShapes - value;
+                                handleSettingsUpdate({ 
+                                  autoDistributeXCount: Math.max(0, xCount),
+                                  autoDistributeYCount: value
+                                });
+                              }}
+                              min={0}
+                              max={currentSettings.generationCountMode === 'fixed' ? currentSettings.generationCountDefine : 50}
+                              step={1}
+                              className="[&_[role=slider]]:bg-green-600"
+                              data-testid="slider-auto-distribute-y"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

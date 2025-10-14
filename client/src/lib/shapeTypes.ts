@@ -19,7 +19,7 @@ export interface GridPosition {
 
 export interface DistributionConfig {
   enabled: boolean;
-  pattern: 'grid' | 'line' | 'circle' | 'spiral';
+  pattern: 'grid' | 'line' | 'circle' | 'spiral' | 'auto-distribute';
   gridRows: number;
   gridColumns: number;
   gridStartX?: number;
@@ -33,6 +33,8 @@ export interface DistributionConfig {
   gridSortOrder: 'ascending' | 'descending';
   gridXRandomization: number;
   gridYRandomization: number;
+  autoDistributeXCount?: number;
+  autoDistributeYCount?: number;
   positionsEnabled: boolean; // Whether to add position offsets to grid layout
 }
 
@@ -612,23 +614,81 @@ export function applyGridDistribution(
       finalX = gridPos.x + positionOffsetX;
       finalY = gridPos.y + positionOffsetY;
     } else {
-      // Scale existing transform randomization using X/Y randomization factors
-      // If randomization is 0, existing transform is preserved (no scaling)
-      // If randomization is 100, existing transform variation is maximized
-      const existingXVariation = shape.transform?.x || 0;
-      const existingYVariation = shape.transform?.y || 0;
+      // Apply additive random offset (0-200px configurable range)
+      const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization; // -randomization to +randomization
+      const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization; // -randomization to +randomization
       
-      const xScaleFactor = config.gridXRandomization / 100; // Convert 0-100 to 0-1 scale
-      const yScaleFactor = config.gridYRandomization / 100; // Convert 0-100 to 0-1 scale
-      
-      const scaledXVariation = existingXVariation * xScaleFactor;
-      const scaledYVariation = existingYVariation * yScaleFactor;
-      
-      finalX = gridPos.x + scaledXVariation;
-      finalY = gridPos.y + scaledYVariation;
+      finalX = gridPos.x + randomX;
+      finalY = gridPos.y + randomY;
     }
     
     // Apply final grid position
+    shape.transform.x = finalX;
+    shape.transform.y = finalY;
+    
+    return shape;
+  });
+}
+
+// Apply auto-distribute layout: shapes distributed in X and Y directions based on counts
+export function applyAutoDistribution(
+  shapes: any[],
+  config: DistributionConfig,
+  canvasCenter = { x: 0, y: 0 },
+  artboardBounds?: { x: number; y: number; width: number; height: number }
+): any[] {
+  if (!config.enabled || config.pattern !== 'auto-distribute') return shapes;
+  
+  const xCount = config.autoDistributeXCount || 0;
+  const yCount = config.autoDistributeYCount || 0;
+  const totalShapes = shapes.length;
+  
+  // Calculate artboard center from bounds (or use canvas center as fallback)
+  const artboardCenterX = artboardBounds 
+    ? artboardBounds.x + artboardBounds.width / 2 
+    : canvasCenter.x;
+  const artboardCenterY = artboardBounds 
+    ? artboardBounds.y + artboardBounds.height / 2 
+    : canvasCenter.y;
+  
+  // Auto-calculate spacing based on artboard dimensions
+  const xSpacing = artboardBounds ? artboardBounds.width / (xCount + 1) : 100;
+  const ySpacing = artboardBounds ? artboardBounds.height / (yCount + 1) : 100;
+  
+  // Distribute shapes
+  return shapes.map((shape, index) => {
+    let x, y;
+    
+    if (index < xCount) {
+      // First xCount shapes distributed along X axis
+      const xIndex = index + 1;
+      x = artboardCenterX - (artboardBounds?.width || 400) / 2 + (xIndex * xSpacing);
+      y = artboardCenterY;
+    } else {
+      // Remaining shapes distributed along Y axis
+      const yIndex = (index - xCount) + 1;
+      x = artboardCenterX;
+      y = artboardCenterY - (artboardBounds?.height || 400) / 2 + (yIndex * ySpacing);
+    }
+    
+    // Apply additive random offset
+    const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
+    const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
+    
+    let finalX, finalY;
+    
+    if (config.positionsEnabled) {
+      // Add position offsets
+      const positionOffsetX = shape.transform?.x || 0;
+      const positionOffsetY = shape.transform?.y || 0;
+      
+      finalX = x + randomX + positionOffsetX;
+      finalY = y + randomY + positionOffsetY;
+    } else {
+      finalX = x + randomX;
+      finalY = y + randomY;
+    }
+    
     shape.transform.x = finalX;
     shape.transform.y = finalY;
     

@@ -267,7 +267,7 @@ export interface BatchConfigSettings {
   
   // Distribution Layout
   distributionLayoutEnabled: boolean;
-  distributionPattern: 'grid' | 'line' | 'circle' | 'spiral';
+  distributionPattern: 'grid' | 'line' | 'circle' | 'spiral' | 'auto-distribute';
   
   // Grid Layout Settings
   gridRows: number;
@@ -281,9 +281,13 @@ export interface BatchConfigSettings {
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
   gridSortScope: 'per-generation' | 'per-batch'; // Sort within each generation or across entire batch
   gridSortOrder: 'ascending' | 'descending'; // Sort direction
-  // Grid randomization amounts
-  gridXRandomization: number; // 0-100 pixels randomization in X direction
-  gridYRandomization: number; // 0-100 pixels randomization in Y direction
+  // Grid randomization amounts (additive pixel offsets)
+  gridXRandomization: number; // 0-200 pixels additive randomization in X direction
+  gridYRandomization: number; // 0-200 pixels additive randomization in Y direction
+  
+  // Auto Distribute Layout Settings
+  autoDistributeXCount: number; // Number of shapes to distribute in X direction
+  autoDistributeYCount: number; // Number of shapes to distribute in Y direction (auto-balanced with X to maintain total)
   
   // Generation Count Controls
   generationCountMode: 'range' | 'fixed' | 'incremental';
@@ -756,6 +760,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   gridSortOrder: 'ascending',
   gridXRandomization: 0,
   gridYRandomization: 0,
+  
+  autoDistributeXCount: 10,
+  autoDistributeYCount: 10,
   
   // Generation Count Controls
   generationCountMode: 'range',
@@ -1741,7 +1748,7 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Distribution settings
   distributionLayoutEnabled: z.boolean(),
-  distributionPattern: z.enum(['grid', 'line', 'circle', 'spiral']),
+  distributionPattern: z.enum(['grid', 'line', 'circle', 'spiral', 'auto-distribute']),
   gridRows: z.number(),
   gridColumns: z.number(),
   gridStartX: z.number(),
@@ -1755,6 +1762,9 @@ export const BatchConfigSettingsSchema = z.object({
   gridSortOrder: z.enum(['ascending', 'descending']),
   gridXRandomization: z.number(),
   gridYRandomization: z.number(),
+  
+  autoDistributeXCount: z.number(),
+  autoDistributeYCount: z.number(),
   
   // Generation count
   generationCountMode: z.enum(['range', 'fixed', 'incremental']),
