@@ -500,14 +500,6 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.distributionLayoutEnabled && (
                   <div className="ml-6 space-y-4">
-                    <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                      <p className="text-xs text-slate-400">
-                        <strong>Grid positioning works additively with noise:</strong> Grid provides base layout, noise adds variation on top.
-                        <strong>X/Y Randomization Scale:</strong> Controls the amount of existing random variation applied to grid positions (0% = no variation, 100% = full variation).
-                        When grid is active, consider zeroing transform position properties to avoid conflicts.
-                      </p>
-                    </div>
-                    
                     <div className="space-y-2">
                       <Label className="text-sm text-slate-300">Pattern Type</Label>
                       <Select 
