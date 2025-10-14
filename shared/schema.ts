@@ -621,7 +621,7 @@ export interface BatchConfigSettings {
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
   // Transform Origin
-  transformOriginMode: 'define' | 'predefined';
+  transformOriginMode: 'define' | 'predefined-artboard' | 'predefined-shape';
   transformOriginX: number;
   transformOriginY: number;
   transformOriginPredefined: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -1067,7 +1067,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   heightRandomizationScale: 100,
   
   // Transform Origin
-  transformOriginMode: 'predefined',
+  transformOriginMode: 'predefined-artboard',
   transformOriginX: 0,
   transformOriginY: 0,
   transformOriginPredefined: 'center',

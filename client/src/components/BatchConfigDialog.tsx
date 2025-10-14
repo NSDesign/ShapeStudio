@@ -2901,14 +2901,15 @@ export default function BatchConfigDialog({
                           <Label className="text-xs text-slate-300">Mode</Label>
                           <Select 
                             value={currentSettings.transformOriginMode} 
-                            onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined' })}
+                            onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined-artboard' | 'predefined-shape' })}
                           >
                             <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                               <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
-                              <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                              <SelectItem value="predefined-artboard" className="text-slate-200 hover:bg-slate-700">Predefined Artboard</SelectItem>
+                              <SelectItem value="predefined-shape" className="text-slate-200 hover:bg-slate-700">Predefined Shape</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2941,10 +2942,36 @@ export default function BatchConfigDialog({
                           </div>
                         )}
                         
-                        {/* Predefined Mode - Alignment Options */}
-                        {currentSettings.transformOriginMode === 'predefined' && (
+                        {/* Predefined Artboard Mode - Alignment Options */}
+                        {currentSettings.transformOriginMode === 'predefined-artboard' && (
                           <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Alignment Point</Label>
+                            <Label className="text-xs text-slate-300">Artboard Alignment Point</Label>
+                            <Select 
+                              value={currentSettings.transformOriginPredefined} 
+                              onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
+                            >
+                              <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
+                                <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
+                                <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
+                                <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
+                                <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
+                                <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
+                                <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
+                                <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        {/* Predefined Shape Mode - Alignment Options */}
+                        {currentSettings.transformOriginMode === 'predefined-shape' && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Shape Alignment Point</Label>
                             <Select 
                               value={currentSettings.transformOriginPredefined} 
                               onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
