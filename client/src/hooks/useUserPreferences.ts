@@ -10,11 +10,46 @@ export function useUserPreferences() {
     staleTime: 0, // Always refetch when invalidated
   });
 
-  // Extract sidebar sections with fallback to defaults
-  const sidebarSections: SidebarSectionConfig = {
-    ...DEFAULT_SIDEBAR_SECTIONS,
-    ...(preferences?.sidebarSections as SidebarSectionConfig || {}),
+  // Normalize sidebar sections from old boolean format to new object format
+  const normalizeSidebarSections = (sections: any): SidebarSectionConfig => {
+    // Start with defaults
+    const normalized: SidebarSectionConfig = {} as SidebarSectionConfig;
+    
+    // First, populate all keys from defaults
+    Object.keys(DEFAULT_SIDEBAR_SECTIONS).forEach((key) => {
+      const defaultValue = DEFAULT_SIDEBAR_SECTIONS[key as keyof SidebarSectionConfig];
+      normalized[key as keyof SidebarSectionConfig] = { ...defaultValue };
+    });
+    
+    // If no persisted sections, return defaults
+    if (!sections) return normalized;
+    
+    // For each persisted key, override the default
+    Object.keys(sections).forEach((key) => {
+      const value = sections[key];
+      const typedKey = key as keyof SidebarSectionConfig;
+      
+      // If it's a boolean (old format), convert to object preserving the boolean value
+      if (typeof value === 'boolean') {
+        normalized[typedKey] = {
+          enabled: value, // Preserve the actual boolean value (true or false)
+          displayOrder: DEFAULT_SIDEBAR_SECTIONS[typedKey]?.displayOrder ?? 999
+        };
+      }
+      // If it's already an object (new format), use it
+      else if (typeof value === 'object' && value !== null) {
+        normalized[typedKey] = {
+          enabled: value.enabled !== undefined ? value.enabled : DEFAULT_SIDEBAR_SECTIONS[typedKey]?.enabled ?? true,
+          displayOrder: value.displayOrder ?? DEFAULT_SIDEBAR_SECTIONS[typedKey]?.displayOrder ?? 999
+        };
+      }
+    });
+    
+    return normalized;
   };
+
+  // Extract sidebar sections with fallback to defaults and normalization
+  const sidebarSections: SidebarSectionConfig = normalizeSidebarSections(preferences?.sidebarSections);
 
   // Extract export settings with fallback to defaults
   const exportSettings: ExportSettingsConfig = {

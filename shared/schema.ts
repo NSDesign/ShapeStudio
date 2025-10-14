@@ -63,32 +63,38 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Sidebar section item configuration
+export interface SidebarSectionItem {
+  enabled: boolean;
+  displayOrder: number;
+}
+
 // Sidebar section configuration type
 export interface SidebarSectionConfig {
-  shapes: boolean;           // Shape Types - enabled by default
-  selection: boolean;        // Selection Modes - disabled by default  
-  layers: boolean;           // Layers - disabled by default
-  properties: boolean;       // Properties - disabled by default
-  composition: boolean;      // Composition - disabled by default
-  'align-distribute': boolean; // Align & Distribute - disabled by default
-  artboards: boolean;        // Artboards - enabled by default
-  colors: boolean;           // Color Manipulation - disabled by default
-  project: boolean;          // Project Management - enabled by default
-  export: boolean;           // Export & Save - enabled by default
+  shapes: SidebarSectionItem;           // Shape Types - enabled by default
+  selection: SidebarSectionItem;        // Selection Modes - disabled by default  
+  layers: SidebarSectionItem;           // Layers - disabled by default
+  properties: SidebarSectionItem;       // Properties - disabled by default
+  composition: SidebarSectionItem;      // Composition - disabled by default
+  'align-distribute': SidebarSectionItem; // Align & Distribute - disabled by default
+  artboards: SidebarSectionItem;        // Artboards - enabled by default
+  colors: SidebarSectionItem;           // Color Manipulation - disabled by default
+  project: SidebarSectionItem;          // Project Management - enabled by default
+  export: SidebarSectionItem;           // Export & Save - enabled by default
 }
 
 // Default sidebar section configuration
 export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
-  shapes: true,              // Shape Types - enabled by default
-  selection: false,          // Selection Modes - disabled by default
-  layers: false,             // Layers - disabled by default
-  properties: false,         // Properties - disabled by default
-  composition: false,        // Composition - disabled by default
-  'align-distribute': false, // Align & Distribute - disabled by default
-  artboards: true,           // Artboards - enabled by default
-  colors: false,             // Color Manipulation - disabled by default
-  project: true,             // Project Management - enabled by default
-  export: true,              // Export & Save - enabled by default
+  shapes: { enabled: true, displayOrder: 1 },              // Shape Types - enabled by default
+  layers: { enabled: false, displayOrder: 2 },             // Layers - disabled by default
+  properties: { enabled: false, displayOrder: 3 },         // Properties - disabled by default
+  artboards: { enabled: true, displayOrder: 4 },           // Artboards - enabled by default
+  project: { enabled: true, displayOrder: 5 },             // Project Management - enabled by default
+  export: { enabled: true, displayOrder: 6 },              // Export & Save - enabled by default
+  selection: { enabled: false, displayOrder: 7 },          // Selection Modes - disabled by default
+  composition: { enabled: false, displayOrder: 8 },        // Composition - disabled by default
+  'align-distribute': { enabled: false, displayOrder: 9 }, // Align & Distribute - disabled by default
+  colors: { enabled: false, displayOrder: 10 },            // Color Manipulation - disabled by default
 };
 
 // Export settings configuration type

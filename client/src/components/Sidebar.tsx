@@ -541,6 +541,24 @@ export default function Sidebar({
   const effectiveMode = generationCountMode ?? 'fixed';
   const setsEnabled = exportSettings.generationSetsEnabled;
   
+  // Define section order based on displayOrder from user preferences
+  const sectionOrder = useMemo(() => {
+    const sections = [
+      'shapes', 'selection', 'layers', 'properties', 'composition', 
+      'align-distribute', 'artboards', 'colors', 'project', 'export'
+    ] as const;
+    
+    return sections
+      .map(id => ({
+        id,
+        displayOrder: sidebarSections[id as keyof typeof sidebarSections]?.displayOrder ?? 999,
+        enabled: sidebarSections[id as keyof typeof sidebarSections]?.enabled ?? false
+      }))
+      .filter(item => item.enabled) // Only include enabled sections
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(item => item.id);
+  }, [sidebarSections]);
+
   // Auto-load app settings on mount
   useEffect(() => {
     if (appSettingsDefaults && !isLoadingPreferences) {
@@ -5170,9 +5188,16 @@ export default function Sidebar({
             { id: 'colors', name: 'Color Manipulation', icon: Palette, color: 'pink', content: ColorManipulationContent },
             { id: 'project', name: 'Project Management', icon: FolderOpen, color: 'violet', content: ProjectManagementContent },
             { id: 'export', name: 'Export & Save', icon: Download, color: 'emerald', content: ExportSaveContent }
-          ].filter(section => 
+          ]
+          .sort((a, b) => {
+            // Sort by displayOrder from user preferences
+            const orderA = sidebarSections[a.id as keyof typeof sidebarSections]?.displayOrder ?? 999;
+            const orderB = sidebarSections[b.id as keyof typeof sidebarSections]?.displayOrder ?? 999;
+            return orderA - orderB;
+          })
+          .filter(section => 
             // Only show sections that are enabled in user preferences
-            sidebarSections[section.id as keyof typeof sidebarSections] === true
+            sidebarSections[section.id as keyof typeof sidebarSections]?.enabled === true
           ).map((section, index) => (
             <div key={section.id}>
               <Popover 
@@ -5254,11 +5279,11 @@ export default function Sidebar({
             type="multiple" 
             value={openAccordionSections} 
             onValueChange={setOpenAccordionSections}
-            className="w-full px-2 py-1"
+            className="w-full px-2 py-1 flex flex-col"
           >
             {/* Shape Types Section */}
-            {sidebarSections.shapes && (
-              <AccordionItem value="shapes" className="border-slate-700">
+            {sidebarSections.shapes?.enabled && (
+              <AccordionItem value="shapes" className="border-slate-700" style={{ order: sidebarSections.shapes?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-blue-400 hover:text-blue-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Shapes className="w-4 h-4 mr-2" />
@@ -5364,8 +5389,8 @@ export default function Sidebar({
             )}
 
             {/* Selection Modes Section */}
-            {sidebarSections.selection && (
-              <AccordionItem value="selection" className="border-slate-700">
+            {sidebarSections.selection?.enabled && (
+              <AccordionItem value="selection" className="border-slate-700" style={{ order: sidebarSections.selection?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-cyan-400 hover:text-cyan-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Target className="w-4 h-4 mr-2" />
@@ -5379,8 +5404,8 @@ export default function Sidebar({
             )}
 
             {/* Layers Section */}
-            {sidebarSections.layers && (
-              <AccordionItem value="layers" className="border-slate-700">
+            {sidebarSections.layers?.enabled && (
+              <AccordionItem value="layers" className="border-slate-700" style={{ order: sidebarSections.layers?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-purple-400 hover:text-purple-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Layers3 className="w-4 h-4 mr-2" />
@@ -5394,8 +5419,8 @@ export default function Sidebar({
             )}
 
             {/* Composition Section */}
-            {sidebarSections.composition && (
-              <AccordionItem value="composition" className="border-slate-700">
+            {sidebarSections.composition?.enabled && (
+              <AccordionItem value="composition" className="border-slate-700" style={{ order: sidebarSections.composition?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-green-400 hover:text-green-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Shuffle className="w-4 h-4 mr-2" />
@@ -5409,8 +5434,8 @@ export default function Sidebar({
             )}
 
             {/* Align & Distribute Section */}
-            {sidebarSections['align-distribute'] && (
-              <AccordionItem value="align-distribute" className="border-slate-700">
+            {sidebarSections['align-distribute']?.enabled && (
+              <AccordionItem value="align-distribute" className="border-slate-700" style={{ order: sidebarSections['align-distribute']?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-indigo-400 hover:text-indigo-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <AlignCenter className="w-4 h-4 mr-2" />
@@ -5424,8 +5449,8 @@ export default function Sidebar({
             )}
 
             {/* Artboards Section */}
-            {sidebarSections.artboards && (
-              <AccordionItem value="artboards" className="border-slate-700">
+            {sidebarSections.artboards?.enabled && (
+              <AccordionItem value="artboards" className="border-slate-700" style={{ order: sidebarSections.artboards?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-orange-400 hover:text-orange-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Monitor className="w-4 h-4 mr-2" />
@@ -5439,8 +5464,8 @@ export default function Sidebar({
             )}
 
             {/* Color Manipulation Section */}
-            {sidebarSections.colors && (
-              <AccordionItem value="colors" className="border-slate-700">
+            {sidebarSections.colors?.enabled && (
+              <AccordionItem value="colors" className="border-slate-700" style={{ order: sidebarSections.colors?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-pink-400 hover:text-pink-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Palette className="w-4 h-4 mr-2" />
@@ -5454,8 +5479,8 @@ export default function Sidebar({
             )}
 
             {/* Project Management Section */}
-            {sidebarSections.project && (
-              <AccordionItem value="project" className="border-slate-700">
+            {sidebarSections.project?.enabled && (
+              <AccordionItem value="project" className="border-slate-700" style={{ order: sidebarSections.project?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-violet-400 hover:text-violet-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <FolderOpen className="w-4 h-4 mr-2" />
@@ -5470,8 +5495,8 @@ export default function Sidebar({
             )}
 
             {/* Export & Save Section */}
-            {sidebarSections.export && (
-              <AccordionItem value="export" className="border-slate-700">
+            {sidebarSections.export?.enabled && (
+              <AccordionItem value="export" className="border-slate-700" style={{ order: sidebarSections.export?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-emerald-400 hover:text-emerald-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Download className="w-4 h-4 mr-2" />
@@ -5485,8 +5510,8 @@ export default function Sidebar({
             )}
 
             {/* Properties Section - Moved to last position */}
-            {sidebarSections.properties && (
-              <AccordionItem value="properties" className="border-slate-700">
+            {sidebarSections.properties?.enabled && (
+              <AccordionItem value="properties" className="border-slate-700" style={{ order: sidebarSections.properties?.displayOrder ?? 999 }}>
                 <AccordionTrigger className="text-sm text-yellow-400 hover:text-yellow-300 py-3 hover:no-underline">
                   <div className="flex items-center">
                     <Settings className="w-4 h-4 mr-2" />
