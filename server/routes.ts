@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerExportRoutes } from "./routes/export";
+import { setupLiveApiRoutes } from "./routes/liveApi";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -242,6 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register export API routes
   registerExportRoutes(app);
+  setupLiveApiRoutes(app, storage);
 
   const httpServer = createServer(app);
   return httpServer;
