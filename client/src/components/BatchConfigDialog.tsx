@@ -2869,6 +2869,85 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Transform Origin */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <Label className="text-sm font-medium text-slate-200">Transform Origin</Label>
+                            <p className="text-xs text-slate-400">Set the point from which transforms (rotation, scale, position) are applied</p>
+                            
+                            <div className="space-y-3">
+                              {/* Mode Selector */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Mode</Label>
+                                <Select 
+                                  value={currentSettings.transformOriginMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined' })}
+                                >
+                                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
+                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {/* Define Mode - X and Y Coordinates */}
+                              {currentSettings.transformOriginMode === 'define' && (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-300">X: {currentSettings.transformOriginX}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginX]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-300">Y: {currentSettings.transformOriginY}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginY]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Predefined Mode - Alignment Options */}
+                              {currentSettings.transformOriginMode === 'predefined' && (
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Alignment Point</Label>
+                                  <Select 
+                                    value={currentSettings.transformOriginPredefined} 
+                                    onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
+                                  >
+                                    <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                      <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
+                                      <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
+                                      <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
+                                      <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
+                                      <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
+                                      <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
+                                      <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
+                                      <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

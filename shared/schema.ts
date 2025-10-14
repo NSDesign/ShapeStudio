@@ -620,6 +620,12 @@ export interface BatchConfigSettings {
   widthRandomizationScale: number; // Scale for width randomization in range mode
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
+  // Transform Origin
+  transformOriginMode: 'define' | 'predefined';
+  transformOriginX: number;
+  transformOriginY: number;
+  transformOriginPredefined: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+  
   // Shape Effects
   shapeEffectsEnabled: boolean;
   
@@ -1059,6 +1065,12 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   rotationRandomizationScale: 50,
   widthRandomizationScale: 100,
   heightRandomizationScale: 100,
+  
+  // Transform Origin
+  transformOriginMode: 'predefined',
+  transformOriginX: 0,
+  transformOriginY: 0,
+  transformOriginPredefined: 'center',
   
   // Shape Effects
   shapeEffectsEnabled: false,

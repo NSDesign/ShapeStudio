@@ -1867,116 +1867,182 @@ export const useShapeEditor = () => {
 
         // Apply shape transforms if enabled
         if (effectiveBatchConfig.transformsEnabled) {
+          // Calculate transform origin point
+          let originX = 0;
+          let originY = 0;
+          
+          if (effectiveBatchConfig.transformOriginMode === 'define') {
+            // Use custom coordinates
+            originX = effectiveBatchConfig.transformOriginX || 0;
+            originY = effectiveBatchConfig.transformOriginY || 0;
+          } else {
+            // Use predefined artboard alignment points
+            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+            const artboardWidth = currentArtboard?.width || canvasBounds.width;
+            const artboardHeight = currentArtboard?.height || canvasBounds.height;
+            const artboardX = currentArtboard?.x || canvasBounds.x;
+            const artboardY = currentArtboard?.y || canvasBounds.y;
+            
+            switch (effectiveBatchConfig.transformOriginPredefined) {
+              case 'center':
+                originX = artboardX + artboardWidth / 2;
+                originY = artboardY + artboardHeight / 2;
+                break;
+              case 'top-left':
+                originX = artboardX;
+                originY = artboardY;
+                break;
+              case 'top-center':
+                originX = artboardX + artboardWidth / 2;
+                originY = artboardY;
+                break;
+              case 'top-right':
+                originX = artboardX + artboardWidth;
+                originY = artboardY;
+                break;
+              case 'center-left':
+                originX = artboardX;
+                originY = artboardY + artboardHeight / 2;
+                break;
+              case 'center-right':
+                originX = artboardX + artboardWidth;
+                originY = artboardY + artboardHeight / 2;
+                break;
+              case 'bottom-left':
+                originX = artboardX;
+                originY = artboardY + artboardHeight;
+                break;
+              case 'bottom-center':
+                originX = artboardX + artboardWidth / 2;
+                originY = artboardY + artboardHeight;
+                break;
+              case 'bottom-right':
+                originX = artboardX + artboardWidth;
+                originY = artboardY + artboardHeight;
+                break;
+            }
+          }
+          
+          console.log(`🎯 [TRANSFORM ORIGIN] Shape ${index}: mode=${effectiveBatchConfig.transformOriginMode}, origin=(${originX}, ${originY}), predefined=${effectiveBatchConfig.transformOriginPredefined}`);
+          
+          // Store original shape position relative to origin
+          const shapeRelativeX = shape.transform.x - originX;
+          const shapeRelativeY = shape.transform.y - originY;
+
           // Apply enhanced position transforms (X)
+          let positionDeltaX = 0;
           if (effectiveBatchConfig.xTransformMode === 'range') {
             const [minTransX, maxTransX] = effectiveBatchConfig.translateXRange;
-            const randomization = minTransX + Math.random() * (maxTransX - minTransX);
-            shape.transform.x += randomization;
+            positionDeltaX = minTransX + Math.random() * (maxTransX - minTransX);
           } else if (effectiveBatchConfig.xTransformMode === 'value') {
             const baseValue = effectiveBatchConfig.xTransformValue || 0;
-            // Add small random variation for value mode
-            const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
-            shape.transform.x += baseValue + randomVariation;
+            const randomVariation = (Math.random() * 2 - 1) * 50;
+            positionDeltaX = baseValue + randomVariation;
           } else if (effectiveBatchConfig.xTransformMode === 'incremental') {
-            // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * index;
-            // Add small random variation for incremental mode
-            const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
-            shape.transform.x += incrementAmount + randomVariation;
+            const randomVariation = (Math.random() * 2 - 1) * 25;
+            positionDeltaX = incrementAmount + randomVariation;
           }
 
           // Apply enhanced position transforms (Y)
+          let positionDeltaY = 0;
           if (effectiveBatchConfig.yTransformMode === 'range') {
             const [minTransY, maxTransY] = effectiveBatchConfig.translateYRange;
-            const randomization = minTransY + Math.random() * (maxTransY - minTransY);
-            shape.transform.y += randomization;
+            positionDeltaY = minTransY + Math.random() * (maxTransY - minTransY);
           } else if (effectiveBatchConfig.yTransformMode === 'value') {
             const baseValue = effectiveBatchConfig.yTransformValue || 0;
-            // Add small random variation for value mode
-            const randomVariation = (Math.random() * 2 - 1) * 50; // ±50px variation
-            shape.transform.y += baseValue + randomVariation;
+            const randomVariation = (Math.random() * 2 - 1) * 50;
+            positionDeltaY = baseValue + randomVariation;
           } else if (effectiveBatchConfig.yTransformMode === 'incremental') {
-            // Incremental mode: each shape gets progressively more transform
             const incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * index;
-            // Add small random variation for incremental mode
-            const randomVariation = (Math.random() * 2 - 1) * 25; // ±25px variation
-            shape.transform.y += incrementAmount + randomVariation;
+            const randomVariation = (Math.random() * 2 - 1) * 25;
+            positionDeltaY = incrementAmount + randomVariation;
           }
 
           // Apply enhanced scale transforms
+          let scaleX = shape.transform.scaleX;
+          let scaleY = shape.transform.scaleY;
+          
           if (effectiveBatchConfig.maintainScaleAspectRatio) {
-            // Use scaleX mode for both X and Y when aspect ratio is linked
             if (effectiveBatchConfig.scaleXMode === 'range') {
               const [minScale, maxScale] = effectiveBatchConfig.scaleXRange;
-              // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScale + Math.random() * (maxScale - minScale)) / 100;
-              shape.transform.scaleX = Math.max(0.1, randomScale); // Prevent negative scale
-              shape.transform.scaleY = Math.max(0.1, randomScale);
+              scaleX = Math.max(0.1, randomScale);
+              scaleY = Math.max(0.1, randomScale);
             } else if (effectiveBatchConfig.scaleXMode === 'value') {
-              const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
-              shape.transform.scaleX = Math.max(0.1, baseScale);
-              shape.transform.scaleY = Math.max(0.1, baseScale);
+              const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100;
+              scaleX = Math.max(0.1, baseScale);
+              scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
-              shape.transform.scaleX = Math.max(0.1, finalScale);
-              shape.transform.scaleY = Math.max(0.1, finalScale);
+              scaleX = Math.max(0.1, finalScale);
+              scaleY = Math.max(0.1, finalScale);
             }
           } else {
-            // Independent scale X and Y
-            // Scale X
             if (effectiveBatchConfig.scaleXMode === 'range') {
               const [minScaleX, maxScaleX] = effectiveBatchConfig.scaleXRange;
-              // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScaleX + Math.random() * (maxScaleX - minScaleX)) / 100;
-              shape.transform.scaleX = Math.max(0.1, randomScale);
+              scaleX = Math.max(0.1, randomScale);
             } else if (effectiveBatchConfig.scaleXMode === 'value') {
-              const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
-              shape.transform.scaleX = Math.max(0.1, baseScale);
+              const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100;
+              scaleX = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
-              shape.transform.scaleX = Math.max(0.1, finalScale);
+              scaleX = Math.max(0.1, finalScale);
             }
 
-            // Scale Y
             if (effectiveBatchConfig.scaleYMode === 'range') {
               const [minScaleY, maxScaleY] = effectiveBatchConfig.scaleYRange;
-              // Convert percentage to decimal like value mode (50% = 0.5, 100% = 1.0)
               const randomScale = (minScaleY + Math.random() * (maxScaleY - minScaleY)) / 100;
-              shape.transform.scaleY = Math.max(0.1, randomScale);
+              scaleY = Math.max(0.1, randomScale);
             } else if (effectiveBatchConfig.scaleYMode === 'value') {
-              const baseScale = (effectiveBatchConfig.scaleYValue || 100) / 100; // Convert percentage to decimal (100% = 1.0)
-              shape.transform.scaleY = Math.max(0.1, baseScale);
+              const baseScale = (effectiveBatchConfig.scaleYValue || 100) / 100;
+              scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleYMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleYIncrement || 0) * index;
               const finalScale = 1 + incrementAmount;
-              shape.transform.scaleY = Math.max(0.1, finalScale);
+              scaleY = Math.max(0.1, finalScale);
             }
           }
 
           // Apply enhanced rotation transforms
+          let rotation = 0;
           if (effectiveBatchConfig.rotationMode === 'range') {
             const [minRot, maxRot] = effectiveBatchConfig.rotationRange;
-            const baseRotation = minRot + Math.random() * (maxRot - minRot);
-            console.log(`🔄 [ENHANCED ROTATION RANGE] Shape ${index}: base=${baseRotation.toFixed(2)}°, range=${minRot}-${maxRot}`);
-            shape.transform.rotation = baseRotation;
+            rotation = minRot + Math.random() * (maxRot - minRot);
+            console.log(`🔄 [ENHANCED ROTATION RANGE] Shape ${index}: base=${rotation.toFixed(2)}°, range=${minRot}-${maxRot}`);
           } else if (effectiveBatchConfig.rotationMode === 'value') {
-            const baseRotation = effectiveBatchConfig.rotationValue || 0;
-            console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${baseRotation}°`);
-            shape.transform.rotation = baseRotation;
+            rotation = effectiveBatchConfig.rotationValue || 0;
+            console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${rotation}°`);
           } else if (effectiveBatchConfig.rotationMode === 'incremental') {
-            // Incremental mode: each shape gets progressively more rotation
             let incrementAmount = (effectiveBatchConfig.rotationIncrement || 0) * index;
-            
-            // Apply modulation if enabled
             if (effectiveBatchConfig.rotationModulationEnabled && effectiveBatchConfig.rotationModulation > 0) {
               incrementAmount = incrementAmount % effectiveBatchConfig.rotationModulation;
             }
-            
+            rotation = incrementAmount;
             console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: increment=${incrementAmount}°`);
-            shape.transform.rotation = incrementAmount;
           }
+
+          // Apply transforms relative to origin
+          // 1. Scale the shape's relative position
+          const scaledRelativeX = shapeRelativeX * scaleX;
+          const scaledRelativeY = shapeRelativeY * scaleY;
+          
+          // 2. Rotate the scaled relative position
+          const rotationRad = (rotation * Math.PI) / 180;
+          const cosR = Math.cos(rotationRad);
+          const sinR = Math.sin(rotationRad);
+          const rotatedX = scaledRelativeX * cosR - scaledRelativeY * sinR;
+          const rotatedY = scaledRelativeX * sinR + scaledRelativeY * cosR;
+          
+          // 3. Apply the final position: origin + rotated position + position delta
+          shape.transform.x = originX + rotatedX + positionDeltaX;
+          shape.transform.y = originY + rotatedY + positionDeltaY;
+          shape.transform.scaleX = scaleX;
+          shape.transform.scaleY = scaleY;
+          shape.transform.rotation = rotation;
 
           // Apply skew if configured (legacy system)
           if (effectiveBatchConfig.skewXRange && effectiveBatchConfig.skewYRange) {
