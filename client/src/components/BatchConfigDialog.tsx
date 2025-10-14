@@ -553,54 +553,40 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Grid Start X: {currentSettings.gridStartX || 0}px</Label>
-                            <Slider
-                              value={[currentSettings.gridStartX || 0]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridStartX: value })}
-                              min={-500}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Grid Start Y: {currentSettings.gridStartY || 0}px</Label>
-                            <Slider
-                              value={[currentSettings.gridStartY || 0]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridStartY: value })}
-                              min={-500}
-                              max={500}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <Label className="text-sm text-slate-300">X Spacing</Label>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'define' })}
-                                  className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                  data-testid="button-x-spacing-define"
-                                >
-                                  Define
-                                </button>
-                                <button
-                                  onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'auto' })}
-                                  className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                  data-testid="button-x-spacing-auto"
-                                >
-                                  Auto
-                                </button>
-                              </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm text-slate-300">X Spacing</Label>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'auto' })}
+                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                data-testid="button-x-spacing-auto"
+                              >
+                                Auto
+                              </button>
+                              <button
+                                onClick={() => handleSettingsUpdate({ gridSpacingXMode: 'define' })}
+                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingXMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                data-testid="button-x-spacing-define"
+                              >
+                                Define
+                              </button>
                             </div>
-                            {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
-                              <>
+                          </div>
+                          {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
+                            <div className="space-y-3 pl-2 border-l-2 border-slate-700">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Grid Start X: {currentSettings.gridStartX || 0}px</Label>
+                                <Slider
+                                  value={[currentSettings.gridStartX || 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ gridStartX: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Column Offset: {currentSettings.gridColumnOffset}px</Label>
                                 <Slider
                                   value={[currentSettings.gridColumnOffset]}
@@ -610,34 +596,45 @@ export default function BatchConfigDialog({
                                   step={5}
                                   className="[&_[role=slider]]:bg-green-600"
                                 />
-                              </>
-                            )}
-                            {(currentSettings.gridSpacingXMode || 'define') === 'auto' && (
-                              <p className="text-xs text-slate-500 italic">Spacing calculated automatically based on artboard width</p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <Label className="text-sm text-slate-300">Y Spacing</Label>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'define' })}
-                                  className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                  data-testid="button-y-spacing-define"
-                                >
-                                  Define
-                                </button>
-                                <button
-                                  onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'auto' })}
-                                  className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                  data-testid="button-y-spacing-auto"
-                                >
-                                  Auto
-                                </button>
                               </div>
                             </div>
-                            {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
-                              <>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm text-slate-300">Y Spacing</Label>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'auto' })}
+                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'auto' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                data-testid="button-y-spacing-auto"
+                              >
+                                Auto
+                              </button>
+                              <button
+                                onClick={() => handleSettingsUpdate({ gridSpacingYMode: 'define' })}
+                                className={`px-2 py-0.5 text-xs rounded ${(currentSettings.gridSpacingYMode || 'define') === 'define' ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                data-testid="button-y-spacing-define"
+                              >
+                                Define
+                              </button>
+                            </div>
+                          </div>
+                          {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
+                            <div className="space-y-3 pl-2 border-l-2 border-slate-700">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Grid Start Y: {currentSettings.gridStartY || 0}px</Label>
+                                <Slider
+                                  value={[currentSettings.gridStartY || 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ gridStartY: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Row Offset: {currentSettings.gridRowOffset}px</Label>
                                 <Slider
                                   value={[currentSettings.gridRowOffset]}
@@ -647,12 +644,9 @@ export default function BatchConfigDialog({
                                   step={5}
                                   className="[&_[role=slider]]:bg-green-600"
                                 />
-                              </>
-                            )}
-                            {(currentSettings.gridSpacingYMode || 'define') === 'auto' && (
-                              <p className="text-xs text-slate-500 italic">Spacing calculated automatically based on artboard height</p>
-                            )}
-                          </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
