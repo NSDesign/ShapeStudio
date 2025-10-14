@@ -244,7 +244,7 @@ export default function BatchConfigDialog({
           size="sm"
           className={`bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 ${
             sidebarCollapsed 
-              ? 'h-10 w-10 p-0' 
+              ? 'h-12 w-12 p-0' 
               : 'h-10 px-3 gap-2'
           }`}
           onClick={() => setIsOpen(true)}
