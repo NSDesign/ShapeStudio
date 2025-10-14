@@ -76,6 +76,8 @@ Preferred communication style: Simple, everyday language.
 - **Modular Design**: Separation of concerns between frontend, backend, and database layers.
 - **Type Safety**: Extensive use of TypeScript across the entire stack for robust development.
 - **Unified Generation System**: `generateShapesWithBatchConfig` function ensures all batch configuration settings are applied consistently for both live generation and batch exports.
+- **Live API Endpoints**: Comprehensive REST API for capturing complete application state:
+  * **/api/live/sets/enabled**: Returns only enabled generation sets with filtered batch configurations (disabled sections stripped), export settings, artboard settings, and batch export settings. Includes shape types data, generation config settings (properties, transforms, effects, color harmony, etc.), and set manager settings (visibility, transforms, alignment, blend modes, compositing, z-index).
 
 ## External Dependencies
 

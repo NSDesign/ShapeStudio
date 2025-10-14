@@ -9,7 +9,8 @@ import {
   type UserPreferences
 } from '@shared/schema';
 
-const API_KEY = '3211d3f332fsss4t4tbebw5r653765h6brb4';
+// API key from environment or fallback to hardcoded for development
+const API_KEY = process.env.LIVE_API_KEY || '3211d3f332fsss4t4tbebw5r653765h6brb4';
 
 // Helper function to filter BatchConfigSettings to only include enabled sections
 function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<BatchConfigSettings> {
