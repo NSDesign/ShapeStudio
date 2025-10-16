@@ -624,7 +624,6 @@ interface LiveSetsEnabledResponse {
       count: number;
       saveProjectFiles: boolean;
       packageAsZip: boolean;
-      edgeCaseStrategy: string;
       generationSetsEnabled: boolean;
       generationCountMode: string;
     };
@@ -703,7 +702,6 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
             count: exportSettings.batchExportCount || 10,
             saveProjectFiles: exportSettings.exportSaveProjectFiles || false,
             packageAsZip: exportSettings.packageAsZip || false,
-            edgeCaseStrategy: exportSettings.edgeCaseStrategy || 'cycle',
             generationSetsEnabled: exportSettings.generationSetsEnabled || false,
             generationCountMode: exportSettings.generationCountMode || 'fixed',
           },
