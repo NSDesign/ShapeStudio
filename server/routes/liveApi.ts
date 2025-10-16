@@ -577,12 +577,15 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
         });
       }
 
-      // Get user ID from session or request body
+      // Get user ID from request body or session
+      // NOTE: For production use, implement proper API key -> userId mapping
+      // Currently accepts userId from request body for development/testing
+      // TODO: Add API key -> userId validation to prevent unauthorized access
       const userId = req.body.userId || (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ 
           success: false, 
-          error: 'User not authenticated' 
+          error: 'User ID required. Provide userId in request body or authenticate via session.' 
         });
       }
 
