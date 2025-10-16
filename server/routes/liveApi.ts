@@ -534,6 +534,8 @@ function filterSetManagerSettings(set: GenerationSet): any {
     compositingOperation: 'source-over',
     setTransform: { x: 0, y: 0, rotation: 0, scaleX: 1.0, scaleY: 1.0, transformOrigin: 'center' },
     artboardAlignment: { fitToArtboard: false, alignTo: 'none', alignmentType: 'center', margin: 0 },
+    zIndexConfig: { baseOffset: 0, incrementPerShape: 1, incrementPerGeneration: 1000 },
+    generationOrder: 0,
   };
   
   // Only include if different from default
@@ -552,10 +554,12 @@ function filterSetManagerSettings(set: GenerationSet): any {
   if (JSON.stringify(set.artboardAlignment) !== JSON.stringify(defaults.artboardAlignment)) {
     result.artboardAlignment = set.artboardAlignment;
   }
-  
-  // Always include zIndexConfig and generationOrder (needed for rendering)
-  result.zIndexConfig = set.zIndexConfig;
-  result.generationOrder = set.generationOrder;
+  if (JSON.stringify(set.zIndexConfig) !== JSON.stringify(defaults.zIndexConfig)) {
+    result.zIndexConfig = set.zIndexConfig;
+  }
+  if (set.generationOrder !== defaults.generationOrder) {
+    result.generationOrder = set.generationOrder;
+  }
   
   return result;
 }
