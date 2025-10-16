@@ -114,7 +114,7 @@ export default function ApiCallGenerator({
   className = "" 
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
-  const [selectedApiVersion, setSelectedApiVersion] = useState<'live' | 'v1' | 'v2' | 'v3' | 'v4'>('live');
+  const [selectedApiVersion, setSelectedApiVersion] = useState<'sets-enabled' | 'live' | 'v1' | 'v2' | 'v3' | 'v4'>('sets-enabled');
 
   // Get current artboard background color
   const getCurrentArtboardBackground = (): string => {
@@ -263,8 +263,11 @@ export default function ApiCallGenerator({
   };
 
   // Choose payload based on selected API version
-  const generateApiPayload = (): ApiPayload => {
-    if (selectedApiVersion === 'live') {
+  const generateApiPayload = (): ApiPayload | { userId: string } => {
+    if (selectedApiVersion === 'sets-enabled') {
+      // For /api/live/sets/enabled endpoint - simple userId payload
+      return { userId: "your-user-id" };
+    } else if (selectedApiVersion === 'live') {
       return generateLiveStatePayload();
     } else {
       return generateDetailedApiPayload();
@@ -275,26 +278,30 @@ export default function ApiCallGenerator({
     const payload = generateApiPayload();
     const jsonPayload = JSON.stringify(payload, null, 2);
     const baseUrl = 'https://shape-studio-nsdesign.replit.app';
-    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
     
     // Choose endpoint based on API version
-    const endpoint = selectedApiVersion === 'live' 
-      ? '/api/live/execute' 
-      : `/api/export/batch/${selectedApiVersion}`;
+    let endpoint = '';
+    if (selectedApiVersion === 'sets-enabled') {
+      endpoint = '/api/live/sets/enabled';
+    } else if (selectedApiVersion === 'live') {
+      endpoint = '/api/live/execute';
+    } else {
+      endpoint = `/api/export/batch/${selectedApiVersion}`;
+    }
     
     if (platform === 'windows') {
-      // Windows cmd/PowerShell format
+      // Windows cmd/PowerShell format - use environment variable
       const escapedJson = jsonPayload.replace(/"/g, '\\"');
       return `curl -X POST ^
   -H "Content-Type: application/json" ^
-  -H "x-api-key: ${apiKey}" ^
+  -H "x-api-key: %LIVE_API_KEY%" ^
   -d "${escapedJson}" ^
   ${baseUrl}${endpoint}`;
     } else {
-      // Linux/Mac bash format
+      // Linux/Mac bash format - use environment variable
       return `curl -X POST \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${apiKey}" \\
+  -H "x-api-key: $LIVE_API_KEY" \\
   -d '${jsonPayload}' \\
   ${baseUrl}${endpoint}`;
     }
@@ -302,10 +309,16 @@ export default function ApiCallGenerator({
 
   const generateN8nConfig = (): object => {
     const payload = generateApiPayload();
-    const apiKey = '3211d3f332fsss4t4tbebw5r653765h6brb4';
-    const endpoint = selectedApiVersion === 'live' 
-      ? '/api/live/execute' 
-      : `/api/export/batch/${selectedApiVersion}`;
+    
+    // Choose endpoint based on API version
+    let endpoint = '';
+    if (selectedApiVersion === 'sets-enabled') {
+      endpoint = '/api/live/sets/enabled';
+    } else if (selectedApiVersion === 'live') {
+      endpoint = '/api/live/execute';
+    } else {
+      endpoint = `/api/export/batch/${selectedApiVersion}`;
+    }
     
     return {
       "node": "HttpRequest",
@@ -314,7 +327,7 @@ export default function ApiCallGenerator({
         "url": `https://shape-studio-nsdesign.replit.app${endpoint}`,
         "headers": {
           "Content-Type": "application/json",
-          "x-api-key": apiKey
+          "x-api-key": "={{$credentials.ShapeEditorAPIKey}}"
         },
         "body": {
           "bodyType": "json",
@@ -363,11 +376,12 @@ export default function ApiCallGenerator({
           {/* Version Selector */}
           <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
             <label className="text-sm font-medium">API Version:</label>
-            <Select value={selectedApiVersion} onValueChange={(value: 'live' | 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
-              <SelectTrigger className="w-32">
+            <Select value={selectedApiVersion} onValueChange={(value: 'sets-enabled' | 'live' | 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select version" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="sets-enabled">Sets Enabled (Recommended)</SelectItem>
                 <SelectItem value="live">Live State (Current UI)</SelectItem>
                 <SelectItem value="v1">V1 (Basic)</SelectItem>
                 <SelectItem value="v2">V2 (Advanced)</SelectItem>
@@ -378,7 +392,9 @@ export default function ApiCallGenerator({
           </div>
           
           <div className="text-sm text-slate-400">
-            {selectedApiVersion === 'live' 
+            {selectedApiVersion === 'sets-enabled'
+              ? 'Returns only enabled generation sets with filtered batch configurations. Perfect for capturing your current setup!' 
+              : selectedApiVersion === 'live' 
               ? 'Executes with ALL your current app settings - export format, batch size, save options, generation config, everything!' 
               : 'Based on your current generation count settings. Ready to use with Shape Studio API.'}
           </div>

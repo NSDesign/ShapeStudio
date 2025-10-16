@@ -10,8 +10,9 @@ import { Separator } from '@/components/ui/separator';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
-import { ScatterSettings, ShapeType } from '@/lib/shapeTypes';
+import { ScatterSettings, ShapeType, Artboard } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
+import ApiCallGenerator from './ApiCallGenerator';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 // Use defaultSettings from shared schema
@@ -43,6 +44,21 @@ interface BatchConfigDialogProps {
   isSetsManagerOpen?: boolean;
   onCloseGenerationSetsManager?: () => void;
   updateGenerationSetPartial?: (setId: string, partialUpdate: Partial<GenerationSet>) => Promise<void>;
+  
+  // Props for ApiCallGenerator
+  artboards?: Artboard[];
+  activeArtboard?: string;
+  exportBatchModeEnabled?: boolean;
+  exportSaveProjectFiles?: boolean;
+  exportBatchCount?: number;
+  exportShapeCountRange?: [number, number];
+  exportQuality?: number;
+  exportScale?: number;
+  exportFormat?: string;
+  exportScope?: 'all' | 'selected' | 'artboard';
+  packageAsZip?: boolean;
+  exportAllImages?: boolean;
+  selectedImageIndices?: number[];
 }
 
 export default function BatchConfigDialog({ 
@@ -70,7 +86,22 @@ export default function BatchConfigDialog({
   onOpenGenerationSetsManager,
   isSetsManagerOpen = false,
   onCloseGenerationSetsManager,
-  updateGenerationSetPartial
+  updateGenerationSetPartial,
+  
+  // ApiCallGenerator props
+  artboards = [],
+  activeArtboard = '',
+  exportBatchModeEnabled = true,
+  exportSaveProjectFiles = false,
+  exportBatchCount = 5,
+  exportShapeCountRange,
+  exportQuality = 92,
+  exportScale = 1,
+  exportFormat = "png",
+  exportScope = "all",
+  packageAsZip = false,
+  exportAllImages = true,
+  selectedImageIndices = []
 }: BatchConfigDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<BatchConfigSettings>(defaultSettings);
   const [isOpen, setIsOpen] = useState(controlledIsOpen ?? false);
@@ -270,6 +301,36 @@ export default function BatchConfigDialog({
           <Layers className="w-4 h-4" />
           {!sidebarCollapsed && <span className="text-sm">Sets Manager</span>}
         </Button>
+        
+        {/* Separator */}
+        <Separator className="bg-slate-600" />
+        
+        {/* API Call Generator Button */}
+        <ApiCallGenerator 
+          enabledShapeTypes={enabledShapeTypes}
+          scatterSettings={scatterSettings || {
+            shapeCountMode: 'fixed',
+            fixedShapeCount: 10,
+            minCount: 5,
+            maxCount: 15,
+            shapeSpecific: {}
+          } as ScatterSettings}
+          generationConfigSettings={settings}
+          exportBatchModeEnabled={exportBatchModeEnabled}
+          exportSaveProjectFiles={exportSaveProjectFiles}
+          exportBatchCount={exportBatchCount}
+          packageAsZip={packageAsZip}
+          exportAllImages={exportAllImages}
+          selectedImageIndices={selectedImageIndices}
+          exportShapeCountRange={exportShapeCountRange}
+          exportQuality={exportQuality}
+          exportScale={exportScale}
+          exportFormat={exportFormat}
+          exportScope={exportScope}
+          artboards={artboards}
+          activeArtboard={activeArtboard}
+          className="w-full"
+        />
       </div>
       
       {isOpen && createPortal(

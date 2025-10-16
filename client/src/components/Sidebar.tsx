@@ -2704,32 +2704,6 @@ export default function Sidebar({
             </>
           )}
         </div>
-
-        {/* API Call Generator */}
-        <div className="mt-6 pt-4 border-t border-slate-700">
-          <div className="mb-3">
-            <Label className="text-xs text-slate-400">Quick Actions</Label>
-          </div>
-          <ApiCallGenerator 
-            enabledShapeTypes={enabledShapeTypes}
-            scatterSettings={scatterSettings}
-            generationConfigSettings={generationConfigSettings}
-            exportBatchModeEnabled={exportSettings.exportBatchModeEnabled}
-            exportSaveProjectFiles={exportSaveProjectFiles}
-            exportBatchCount={exportBatchCount}
-            packageAsZip={packageAsZip}
-            exportAllImages={exportAllImages}
-            selectedImageIndices={selectedImageIndices}
-            exportShapeCountRange={exportShapeCountRange}
-            exportQuality={92}
-            exportScale={1}
-            exportFormat="png"
-            exportScope="all"
-            artboards={artboards}
-            activeArtboard={activeArtboard}
-            className="w-full text-xs"
-          />
-        </div>
       </div>
     );
   }
@@ -5551,6 +5525,21 @@ export default function Sidebar({
         generateUniqueSetName={generateUniqueSetName}
         onOpenGenerationSetsManager={onOpenGenerationSetsManager}
         updateGenerationSetPartial={updateGenerationSetPartial}
+        
+        // Props for ApiCallGenerator
+        artboards={artboards}
+        activeArtboard={activeArtboard}
+        exportBatchModeEnabled={exportSettings.exportBatchModeEnabled}
+        exportSaveProjectFiles={exportSaveProjectFiles}
+        exportBatchCount={exportBatchCount}
+        exportShapeCountRange={exportShapeCountRange}
+        exportQuality={exportQuality}
+        exportScale={exportScale}
+        exportFormat={exportFormat}
+        exportScope={exportMode === 'selection' ? 'selected' : exportMode}
+        packageAsZip={packageAsZip}
+        exportAllImages={exportAllImages}
+        selectedImageIndices={selectedImageIndices}
       />
       
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
