@@ -101,8 +101,13 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
     if (batchConfig.distributionPattern === 'grid') {
       filtered.gridRows = batchConfig.gridRows;
       filtered.gridColumns = batchConfig.gridColumns;
-      filtered.gridStartX = batchConfig.gridStartX;
-      filtered.gridStartY = batchConfig.gridStartY;
+      
+      // Only include if not default values
+      if (batchConfig.gridStartX !== 0) filtered.gridStartX = batchConfig.gridStartX;
+      if (batchConfig.gridStartY !== 0) filtered.gridStartY = batchConfig.gridStartY;
+      if (batchConfig.gridXRandomization !== 0) filtered.gridXRandomization = batchConfig.gridXRandomization;
+      if (batchConfig.gridYRandomization !== 0) filtered.gridYRandomization = batchConfig.gridYRandomization;
+      
       filtered.gridSpacingXMode = batchConfig.gridSpacingXMode;
       filtered.gridSpacingYMode = batchConfig.gridSpacingYMode;
       filtered.gridRowOffset = batchConfig.gridRowOffset;
@@ -110,8 +115,6 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
       filtered.gridSortBy = batchConfig.gridSortBy;
       filtered.gridSortScope = batchConfig.gridSortScope;
       filtered.gridSortOrder = batchConfig.gridSortOrder;
-      filtered.gridXRandomization = batchConfig.gridXRandomization;
-      filtered.gridYRandomization = batchConfig.gridYRandomization;
     }
     if (batchConfig.distributionPattern === 'auto-distribute') {
       filtered.autoDistributeXCount = batchConfig.autoDistributeXCount;
@@ -140,10 +143,10 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
       filtered.spiralTightness = batchConfig.spiralTightness;
     }
     
-    // Shared pattern enhancements
-    filtered.tangentAlignment = batchConfig.tangentAlignment;
-    filtered.segmentDistribution = batchConfig.segmentDistribution;
-    filtered.reverseDirection = batchConfig.reverseDirection;
+    // Shared pattern enhancements - only include if not default values
+    if (batchConfig.tangentAlignment !== false) filtered.tangentAlignment = batchConfig.tangentAlignment;
+    if (batchConfig.segmentDistribution !== 'even') filtered.segmentDistribution = batchConfig.segmentDistribution;
+    if (batchConfig.reverseDirection !== false) filtered.reverseDirection = batchConfig.reverseDirection;
   }
 
   // Generation Count Controls
@@ -252,8 +255,8 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
       const fillColorProps = filterModeBasedProperties(batchConfig, 'fillColor', batchConfig.fillColorMode);
       Object.assign(filtered, fillColorProps);
       
-      // Add flip flag only for range mode
-      if (batchConfig.fillColorMode === 'range') {
+      // Add flip flag only for range mode and only if true (default is false)
+      if (batchConfig.fillColorMode === 'range' && batchConfig.fillColorRangeFlip) {
         filtered.fillColorRangeFlip = batchConfig.fillColorRangeFlip;
       }
 
@@ -315,7 +318,8 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
       const strokeColorProps = filterModeBasedProperties(batchConfig, 'strokeColor', batchConfig.strokeColorMode);
       Object.assign(filtered, strokeColorProps);
       
-      if (batchConfig.strokeColorMode === 'range') {
+      // Add flip flag only for range mode and only if true (default is false)
+      if (batchConfig.strokeColorMode === 'range' && batchConfig.strokeColorRangeFlip) {
         filtered.strokeColorRangeFlip = batchConfig.strokeColorRangeFlip;
       }
       
