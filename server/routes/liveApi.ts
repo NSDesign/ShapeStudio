@@ -12,13 +12,45 @@ import {
 // API key from environment or fallback to hardcoded for development
 const API_KEY = process.env.LIVE_API_KEY || '3211d3f332fsss4t4tbebw5r653765h6brb4';
 
+// Helper function to filter shape-specific properties based on enabled shape types
+function filterShapeSpecificProperties(
+  shapeSpecificProps: any,
+  enabledShapeTypes: string[]
+): any {
+  const filtered: any = {};
+  
+  // Only include properties for enabled shape types
+  enabledShapeTypes.forEach(shapeType => {
+    if (shapeSpecificProps[shapeType]) {
+      filtered[shapeType] = shapeSpecificProps[shapeType];
+    }
+  });
+  
+  return filtered;
+}
+
+// Helper function to compare values and only return if different from defaults
+function stripDefaultValues(obj: any, defaults: any): any {
+  const result: any = {};
+  
+  for (const key in obj) {
+    const value = obj[key];
+    const defaultValue = defaults[key];
+    
+    // Include if value is different from default
+    if (JSON.stringify(value) !== JSON.stringify(defaultValue)) {
+      result[key] = value;
+    }
+  }
+  
+  return result;
+}
+
 // Helper function to filter BatchConfigSettings to only include enabled sections
 function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<BatchConfigSettings> {
   const filtered: Partial<BatchConfigSettings> = {
     selectedPreset: batchConfig.selectedPreset,
   };
-
-  // Noise Section - REMOVED (deprecated feature)
 
   // Distribution Layout Section
   if (batchConfig.distributionLayoutEnabled) {
@@ -468,9 +500,46 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<Bat
   return filtered;
 }
 
+// Helper function to filter Set Manager settings (only include if different from defaults)
+function filterSetManagerSettings(set: GenerationSet): any {
+  const result: any = {};
+  
+  // Default values for Set Manager settings
+  const defaults = {
+    setVisibility: { visible: true, opacity: 1.0, opacityVariance: 0.0 },
+    setBlendMode: 'source-over',
+    compositingOperation: 'source-over',
+    setTransform: { x: 0, y: 0, rotation: 0, scaleX: 1.0, scaleY: 1.0, transformOrigin: 'center' },
+    artboardAlignment: { fitToArtboard: false, alignTo: 'none', alignmentType: 'center', margin: 0 },
+  };
+  
+  // Only include if different from default
+  if (JSON.stringify(set.setVisibility) !== JSON.stringify(defaults.setVisibility)) {
+    result.setVisibility = set.setVisibility;
+  }
+  if (set.setBlendMode !== defaults.setBlendMode) {
+    result.setBlendMode = set.setBlendMode;
+  }
+  if (set.compositingOperation !== defaults.compositingOperation) {
+    result.compositingOperation = set.compositingOperation;
+  }
+  if (JSON.stringify(set.setTransform) !== JSON.stringify(defaults.setTransform)) {
+    result.setTransform = set.setTransform;
+  }
+  if (JSON.stringify(set.artboardAlignment) !== JSON.stringify(defaults.artboardAlignment)) {
+    result.artboardAlignment = set.artboardAlignment;
+  }
+  
+  // Always include zIndexConfig and generationOrder (needed for rendering)
+  result.zIndexConfig = set.zIndexConfig;
+  result.generationOrder = set.generationOrder;
+  
+  return result;
+}
+
 // Helper function to filter a GenerationSet to only include enabled data
 function filterEnabledGenerationSet(set: GenerationSet): any {
-  return {
+  const filtered: any = {
     id: set.id,
     name: set.name,
     enabled: set.enabled,
@@ -480,21 +549,27 @@ function filterEnabledGenerationSet(set: GenerationSet): any {
     shapeCountMode: set.shapeCountMode,
     shapeCountFixed: set.shapeCountFixed,
     shapeCountRange: set.shapeCountRange,
-    shapeSpecificProperties: set.shapeSpecificProperties,
+    
+    // Only include shape-specific properties for enabled shape types
+    shapeSpecificProperties: filterShapeSpecificProperties(
+      set.shapeSpecificProperties,
+      set.enabledShapeTypes
+    ),
     
     // Generation Configuration Settings (filtered to only enabled sections)
     batchConfig: filterEnabledBatchConfig(set.batchConfig),
-    
-    // Set Manager Settings
-    zIndexConfig: set.zIndexConfig,
-    setVisibility: set.setVisibility,
-    setBlendMode: set.setBlendMode,
-    compositingOperation: set.compositingOperation,
-    setTransform: set.setTransform,
-    artboardAlignment: set.artboardAlignment,
-    generationOrder: set.generationOrder,
-    description: set.description,
   };
+  
+  // Add Set Manager settings (only if different from defaults)
+  const setManagerSettings = filterSetManagerSettings(set);
+  Object.assign(filtered, setManagerSettings);
+  
+  // Add description if present
+  if (set.description) {
+    filtered.description = set.description;
+  }
+  
+  return filtered;
 }
 
 // Request schema for /api/live/sets/enabled
@@ -525,6 +600,8 @@ interface LiveSetsEnabledResponse {
       enabled: boolean;
       count: number;
       setsPerExport: number;
+      saveProjectFiles: boolean;
+      packageAsZip: boolean;
     };
   };
   error?: string;
@@ -600,6 +677,8 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
             enabled: exportSettings.exportBatchModeEnabled || false,
             count: exportSettings.batchExportCount || 10,
             setsPerExport: exportSettings.batchExportSetsPerExport || 1,
+            saveProjectFiles: exportSettings.exportSaveProjectFiles || false,
+            packageAsZip: exportSettings.packageAsZip || false,
           },
         },
       };
@@ -689,8 +768,8 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
         includeBackground: true,
         backgroundColor: artboardSettings.backgroundColor || '#ffffff',
         batchExportCount: batchExportSettings.count || 10,
-        batchSaveProjectFiles: false,
-        packageAsZip: false,
+        batchSaveProjectFiles: batchExportSettings.saveProjectFiles || false,
+        packageAsZip: batchExportSettings.packageAsZip || false,
         exportAllImages: true,
         selectedImageIndices: []
       };
