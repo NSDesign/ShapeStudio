@@ -114,7 +114,7 @@ export default function ApiCallGenerator({
   className = "" 
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
-  const [selectedApiVersion, setSelectedApiVersion] = useState<'sets-enabled' | 'live' | 'v1' | 'v2' | 'v3' | 'v4'>('sets-enabled');
+  const [selectedApiVersion, setSelectedApiVersion] = useState<'sets-enabled' | 'sets-execute' | 'live' | 'v1' | 'v2' | 'v3' | 'v4'>('sets-enabled');
 
   // Get current artboard background color
   const getCurrentArtboardBackground = (): string => {
@@ -263,10 +263,50 @@ export default function ApiCallGenerator({
   };
 
   // Choose payload based on selected API version
-  const generateApiPayload = (): ApiPayload | { userId: string } => {
+  const generateApiPayload = (): ApiPayload | { userId: string } | { data: any } => {
     if (selectedApiVersion === 'sets-enabled') {
       // For /api/live/sets/enabled endpoint - simple userId payload
       return { userId: "your-user-id" };
+    } else if (selectedApiVersion === 'sets-execute') {
+      // For /api/live/sets/execute endpoint - use response from sets-enabled
+      return {
+        data: {
+          generationSets: [
+            {
+              id: "set-1",
+              name: "Example Set",
+              enabled: true,
+              enabledShapeTypes: ["circle", "rectangle"],
+              shapeCountMode: "fixed",
+              shapeCountFixed: 10,
+              batchConfig: {
+                selectedPreset: "none",
+                noiseEnabled: false,
+                distributionLayoutEnabled: false,
+                propertiesEnabled: true
+              }
+            }
+          ],
+          exportSettings: {
+            format: exportFormat,
+            quality: exportQuality,
+            scale: exportScale,
+            mode: exportScope
+          },
+          artboardSettings: {
+            width: 400,
+            height: 400,
+            backgroundColor: getCurrentArtboardBackground(),
+            displayGrid: false,
+            displayBorder: true
+          },
+          batchExportSettings: {
+            enabled: exportBatchModeEnabled,
+            count: exportBatchCount,
+            setsPerExport: 1
+          }
+        }
+      };
     } else if (selectedApiVersion === 'live') {
       return generateLiveStatePayload();
     } else {
@@ -283,6 +323,8 @@ export default function ApiCallGenerator({
     let endpoint = '';
     if (selectedApiVersion === 'sets-enabled') {
       endpoint = '/api/live/sets/enabled';
+    } else if (selectedApiVersion === 'sets-execute') {
+      endpoint = '/api/live/sets/execute';
     } else if (selectedApiVersion === 'live') {
       endpoint = '/api/live/execute';
     } else {
@@ -314,6 +356,8 @@ export default function ApiCallGenerator({
     let endpoint = '';
     if (selectedApiVersion === 'sets-enabled') {
       endpoint = '/api/live/sets/enabled';
+    } else if (selectedApiVersion === 'sets-execute') {
+      endpoint = '/api/live/sets/execute';
     } else if (selectedApiVersion === 'live') {
       endpoint = '/api/live/execute';
     } else {
@@ -376,12 +420,13 @@ export default function ApiCallGenerator({
           {/* Version Selector */}
           <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
             <label className="text-sm font-medium">API Version:</label>
-            <Select value={selectedApiVersion} onValueChange={(value: 'sets-enabled' | 'live' | 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
+            <Select value={selectedApiVersion} onValueChange={(value: 'sets-enabled' | 'sets-execute' | 'live' | 'v1' | 'v2' | 'v3' | 'v4') => setSelectedApiVersion(value)}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select version" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sets-enabled">Sets Enabled (Recommended)</SelectItem>
+                <SelectItem value="sets-enabled">Get Config (Step 1)</SelectItem>
+                <SelectItem value="sets-execute">Execute Generation (Step 2)</SelectItem>
                 <SelectItem value="live">Live State (Current UI)</SelectItem>
                 <SelectItem value="v1">V1 (Basic)</SelectItem>
                 <SelectItem value="v2">V2 (Advanced)</SelectItem>
@@ -393,7 +438,9 @@ export default function ApiCallGenerator({
           
           <div className="text-sm text-slate-400">
             {selectedApiVersion === 'sets-enabled'
-              ? 'Returns only enabled generation sets with filtered batch configurations. Perfect for capturing your current setup!' 
+              ? 'Step 1: Get your enabled generation sets configuration. Use this response in Step 2 to execute generation.' 
+              : selectedApiVersion === 'sets-execute'
+              ? 'Step 2: Execute generation using the config from Step 1. Returns exportId to poll for image URLs at /api/export/status/:exportId'
               : selectedApiVersion === 'live' 
               ? 'Executes with ALL your current app settings - export format, batch size, save options, generation config, everything!' 
               : 'Based on your current generation count settings. Ready to use with Shape Studio API.'}

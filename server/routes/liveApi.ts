@@ -645,4 +645,133 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       });
     }
   });
+
+  // POST /api/live/sets/execute - Execute generation using configuration from /api/live/sets/enabled
+  app.post('/api/live/sets/execute', async (req, res) => {
+    try {
+      // Validate API key
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey || apiKey !== API_KEY) {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Invalid or missing API key' 
+        });
+      }
+
+      // Extract configuration from request body (should be the output from /api/live/sets/enabled)
+      const { data } = req.body;
+      if (!data) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing configuration data. Please provide the output from /api/live/sets/enabled endpoint.' 
+        });
+      }
+
+      const { generationSets, exportSettings, artboardSettings, batchExportSettings } = data;
+
+      // Validate required fields
+      if (!generationSets || !Array.isArray(generationSets) || generationSets.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'No generation sets provided. At least one enabled generation set is required.' 
+        });
+      }
+
+      if (!exportSettings || !artboardSettings || !batchExportSettings) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing required settings. Please provide exportSettings, artboardSettings, and batchExportSettings.' 
+        });
+      }
+
+      // Import export service
+      const { ExportService } = await import('../services/exportService');
+      const exportService = new ExportService();
+
+      // Build canvas settings from artboard settings
+      const canvasSettings = {
+        width: artboardSettings.width || 400,
+        height: artboardSettings.height || 400,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        backgroundColor: artboardSettings.backgroundColor || '#ffffff',
+        showGrid: artboardSettings.displayGrid || false
+      };
+
+      // Shape generation function
+      // NOTE: This is currently a placeholder. To generate actual shapes server-side:
+      // 1. Port the shape generation logic from client/src/lib/shapeGenerators.ts to server
+      // 2. Use the generationSets[].enabledShapeTypes and batchConfig to generate shapes
+      // 3. Apply transforms, effects, and set-level operations from generationSets[].setTransform
+      // For now, this returns empty shapes which means the export will be blank
+      const mockGenerateShapes = (config: any) => {
+        // TODO: Implement server-side shape generation using the provided generation sets
+        return { shapes: [], groups: [] };
+      };
+
+      // Build export settings
+      const exportConfig = {
+        format: exportSettings.format || 'png',
+        quality: (exportSettings.quality || 90) / 100,
+        scale: exportSettings.scale || 1,
+        scope: exportSettings.mode || 'all',
+        includeBackground: true,
+        backgroundColor: artboardSettings.backgroundColor || '#ffffff',
+        batchExportCount: batchExportSettings.count || 10,
+        batchSaveProjectFiles: false,
+        packageAsZip: false,
+        exportAllImages: true,
+        selectedImageIndices: []
+      };
+
+      // Process all enabled generation sets
+      // TODO: Currently only using the first set - need to iterate through all sets
+      // and combine their shapes for proper multi-set generation
+      const firstSet = generationSets[0];
+      const enabledShapeTypes = new Set<string>(firstSet.enabledShapeTypes || []);
+      const batchConfig = firstSet.batchConfig || {
+        selectedPreset: 'none',
+        noiseEnabled: false,
+        distributionLayoutEnabled: false,
+        propertiesEnabled: false
+      };
+
+      const result = await exportService.startBatchExport(
+        [], // shapes - empty until server-side generation is implemented
+        [], // groups - empty until server-side generation is implemented
+        canvasSettings,
+        batchConfig as any,
+        enabledShapeTypes,
+        exportConfig,
+        mockGenerateShapes
+      );
+
+      // Return response with exportId for polling status
+      res.json({
+        success: true,
+        data: {
+          exportId: result.exportId,
+          message: 'Export job created. Note: Server-side shape generation is not yet implemented, so exports will be blank. Poll /api/export/status/:exportId to check status.',
+          statusEndpoint: `/api/export/status/${result.exportId}`,
+          setsConfigured: generationSets.length,
+          setsProcessed: 1, // Currently only processing first set
+          config: {
+            exportFormat: exportSettings.format,
+            batchCount: batchExportSettings.count,
+            artboardSize: `${artboardSettings.width}x${artboardSettings.height}`,
+            note: 'Shape generation logic needs to be ported from client to server for actual image generation'
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error in /api/live/sets/execute:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to execute generation',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 }
