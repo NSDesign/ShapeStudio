@@ -33,6 +33,38 @@ function filterShapeSpecificProperties(
   return filtered;
 }
 
+// Deep equality comparison that ignores key ordering
+function deepEqual(a: any, b: any): boolean {
+  // Handle primitives and same reference
+  if (a === b) return true;
+  
+  // Handle null/undefined
+  if (a == null || b == null) return false;
+  
+  // Handle different types
+  if (typeof a !== typeof b) return false;
+  
+  // Handle arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((val, idx) => deepEqual(val, b[idx]));
+  }
+  
+  // Handle objects
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    
+    if (keysA.length !== keysB.length) return false;
+    
+    return keysA.every(key => 
+      keysB.includes(key) && deepEqual(a[key], b[key])
+    );
+  }
+  
+  return false;
+}
+
 // Helper function to compare values and only return if different from defaults
 function stripDefaultValues(obj: any, defaults: any): any {
   const result: any = {};
@@ -41,8 +73,8 @@ function stripDefaultValues(obj: any, defaults: any): any {
     const value = obj[key];
     const defaultValue = defaults[key];
     
-    // Include if value is different from default
-    if (JSON.stringify(value) !== JSON.stringify(defaultValue)) {
+    // Include if value is different from default (using deep equality)
+    if (!deepEqual(value, defaultValue)) {
       result[key] = value;
     }
   }
@@ -542,8 +574,8 @@ function filterSetManagerSettings(set: GenerationSet): any {
     generationOrder: 0,
   };
   
-  // Only include if different from default
-  if (JSON.stringify(set.setVisibility) !== JSON.stringify(defaults.setVisibility)) {
+  // Only include if different from default (using deep equality)
+  if (!deepEqual(set.setVisibility, defaults.setVisibility)) {
     result.setVisibility = set.setVisibility;
   }
   if (set.setBlendMode !== defaults.setBlendMode) {
@@ -552,13 +584,13 @@ function filterSetManagerSettings(set: GenerationSet): any {
   if (set.compositingOperation !== defaults.compositingOperation) {
     result.compositingOperation = set.compositingOperation;
   }
-  if (JSON.stringify(set.setTransform) !== JSON.stringify(defaults.setTransform)) {
+  if (!deepEqual(set.setTransform, defaults.setTransform)) {
     result.setTransform = set.setTransform;
   }
-  if (JSON.stringify(set.artboardAlignment) !== JSON.stringify(defaults.artboardAlignment)) {
+  if (!deepEqual(set.artboardAlignment, defaults.artboardAlignment)) {
     result.artboardAlignment = set.artboardAlignment;
   }
-  if (JSON.stringify(set.zIndexConfig) !== JSON.stringify(defaults.zIndexConfig)) {
+  if (!deepEqual(set.zIndexConfig, defaults.zIndexConfig)) {
     result.zIndexConfig = set.zIndexConfig;
   }
   if (set.generationOrder !== defaults.generationOrder) {
