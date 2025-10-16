@@ -18,38 +18,7 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<Bat
     selectedPreset: batchConfig.selectedPreset,
   };
 
-  // Noise Section
-  if (batchConfig.noiseEnabled) {
-    filtered.noiseEnabled = true;
-    filtered.noiseAlgorithm = batchConfig.noiseAlgorithm;
-    filtered.noiseScale = batchConfig.noiseScale;
-    filtered.noiseOctaves = batchConfig.noiseOctaves;
-    filtered.noiseAmplitude = batchConfig.noiseAmplitude;
-    filtered.noiseSeed = batchConfig.noiseSeed;
-    filtered.noiseScaleToCanvas = batchConfig.noiseScaleToCanvas;
-    filtered.noisePositionAmplitude = batchConfig.noisePositionAmplitude;
-    filtered.noiseRotationAmplitude = batchConfig.noiseRotationAmplitude;
-    filtered.noiseScaleAmplitude = batchConfig.noiseScaleAmplitude;
-    filtered.noiseOpacityAmplitude = batchConfig.noiseOpacityAmplitude;
-    filtered.noiseColorAmplitude = batchConfig.noiseColorAmplitude;
-    filtered.noiseOctaveMode = batchConfig.noiseOctaveMode;
-    
-    // Algorithm-specific settings
-    if (batchConfig.noiseAlgorithm === 'fractal') {
-      filtered.noiseLacunarity = batchConfig.noiseLacunarity;
-      filtered.noiseGain = batchConfig.noiseGain;
-    }
-    if (batchConfig.noiseAlgorithm === 'worley') {
-      filtered.noiseDistanceFunction = batchConfig.noiseDistanceFunction;
-      filtered.noiseFeaturePoints = batchConfig.noiseFeaturePoints;
-    }
-    if (batchConfig.noiseAlgorithm === 'ridge') {
-      filtered.noiseRidgeOffset = batchConfig.noiseRidgeOffset;
-    }
-    if (batchConfig.noiseAlgorithm === 'turbulence') {
-      filtered.noiseTurbulencePower = batchConfig.noiseTurbulencePower;
-    }
-  }
+  // Noise Section - REMOVED (deprecated feature)
 
   // Distribution Layout Section
   if (batchConfig.distributionLayoutEnabled) {
@@ -141,9 +110,7 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<Bat
       filtered.yPositionRange = batchConfig.yPositionRange;
       filtered.widthMode = batchConfig.widthMode;
       filtered.heightMode = batchConfig.heightMode;
-      filtered.sizeNoiseWithinRange = batchConfig.sizeNoiseWithinRange;
       filtered.sizeIncrementalResetPerBatch = batchConfig.sizeIncrementalResetPerBatch;
-      filtered.sizeNoiseMode = batchConfig.sizeNoiseMode;
       filtered.useMinWidthHeight = batchConfig.useMinWidthHeight;
       filtered.useMaxWidthHeight = batchConfig.useMaxWidthHeight;
       filtered.useAvgWidthHeight = batchConfig.useAvgWidthHeight;
@@ -735,7 +702,6 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       const enabledShapeTypes = new Set<string>(firstSet.enabledShapeTypes || []);
       const batchConfig = firstSet.batchConfig || {
         selectedPreset: 'none',
-        noiseEnabled: false,
         distributionLayoutEnabled: false,
         propertiesEnabled: false
       };
