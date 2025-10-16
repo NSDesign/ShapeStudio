@@ -50,6 +50,39 @@ function stripDefaultValues(obj: any, defaults: any): any {
   return result;
 }
 
+// Helper to filter mode-based properties - only include relevant fields based on mode value
+function filterModeBasedProperties(
+  config: any, 
+  prefix: string, 
+  mode: string
+): any {
+  const result: any = {
+    [`${prefix}Mode`]: mode
+  };
+
+  if (mode === 'range') {
+    result[`${prefix}Range`] = config[`${prefix}Range`];
+  } else if (mode === 'define' || mode === 'fixed') {
+    result[`${prefix}Define`] = config[`${prefix}Define`];
+  } else if (mode === 'incremental') {
+    result[`${prefix}StartValue`] = config[`${prefix}StartValue`];
+    result[`${prefix}Increment`] = config[`${prefix}Increment`];
+  } else if (mode === 'modulation') {
+    result[`${prefix}StartValue`] = config[`${prefix}StartValue`];
+    result[`${prefix}ModulationEnabled`] = config[`${prefix}ModulationEnabled`];
+    if (config[`${prefix}ModulationEnabled`]) {
+      result[`${prefix}ModulationValue`] = config[`${prefix}ModulationValue`];
+    }
+  } else if (mode === 'palette') {
+    result[`${prefix}Palette`] = config[`${prefix}Palette`];
+  } else if (mode === 'harmony') {
+    result[`${prefix}SaturationRange`] = config[`${prefix}SaturationRange`];
+    result[`${prefix}LightnessRange`] = config[`${prefix}LightnessRange`];
+  }
+
+  return result;
+}
+
 // Helper function to filter BatchConfigSettings to only include enabled sections
 function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShapeTypes: string[] = []): Partial<BatchConfigSettings> {
   const filtered: Partial<BatchConfigSettings> = {
@@ -194,48 +227,35 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
     // Shape-specific properties (only include if relevant shapes are enabled)
     // Rectangle/Rounded-Rectangle corner radius (only if rounded variants are enabled)
     if (enabledShapesSet.has('rounded-rectangle') || enabledShapesSet.has('rounded-square')) {
-      filtered.rectangleCornerRadiusMode = batchConfig.rectangleCornerRadiusMode;
-      filtered.rectangleCornerRadiusRange = batchConfig.rectangleCornerRadiusRange;
-      filtered.rectangleCornerRadiusDefine = batchConfig.rectangleCornerRadiusDefine;
-      filtered.rectangleCornerRadiusStartValue = batchConfig.rectangleCornerRadiusStartValue;
-      filtered.rectangleCornerRadiusIncrement = batchConfig.rectangleCornerRadiusIncrement;
-      filtered.rectangleCornerRadiusModulationEnabled = batchConfig.rectangleCornerRadiusModulationEnabled;
-      filtered.rectangleCornerRadiusModulationValue = batchConfig.rectangleCornerRadiusModulationValue;
+      const cornerRadiusProps = filterModeBasedProperties(batchConfig, 'rectangleCornerRadius', batchConfig.rectangleCornerRadiusMode);
+      Object.assign(filtered, cornerRadiusProps);
     }
 
     // Star inner radius (only if star is enabled)
     if (enabledShapesSet.has('star')) {
-      filtered.starInnerRadiusMode = batchConfig.starInnerRadiusMode;
-      filtered.starInnerRadiusRange = batchConfig.starInnerRadiusRange;
-      filtered.starInnerRadiusDefine = batchConfig.starInnerRadiusDefine;
-      filtered.starInnerRadiusStartValue = batchConfig.starInnerRadiusStartValue;
-      filtered.starInnerRadiusIncrement = batchConfig.starInnerRadiusIncrement;
-      filtered.starInnerRadiusModulationEnabled = batchConfig.starInnerRadiusModulationEnabled;
-      filtered.starInnerRadiusModulationValue = batchConfig.starInnerRadiusModulationValue;
+      const starInnerRadiusProps = filterModeBasedProperties(batchConfig, 'starInnerRadius', batchConfig.starInnerRadiusMode);
+      Object.assign(filtered, starInnerRadiusProps);
     }
 
     // Ring inner radius (only if ring or spline-ring is enabled)
     if (enabledShapesSet.has('ring') || enabledShapesSet.has('spline-ring')) {
-      filtered.ringInnerRadiusMode = batchConfig.ringInnerRadiusMode;
-      filtered.ringInnerRadiusRange = batchConfig.ringInnerRadiusRange;
-      filtered.ringInnerRadiusDefine = batchConfig.ringInnerRadiusDefine;
-      filtered.ringInnerRadiusStartValue = batchConfig.ringInnerRadiusStartValue;
-      filtered.ringInnerRadiusIncrement = batchConfig.ringInnerRadiusIncrement;
-      filtered.ringInnerRadiusModulationEnabled = batchConfig.ringInnerRadiusModulationEnabled;
-      filtered.ringInnerRadiusModulationValue = batchConfig.ringInnerRadiusModulationValue;
+      const ringInnerRadiusProps = filterModeBasedProperties(batchConfig, 'ringInnerRadius', batchConfig.ringInnerRadiusMode);
+      Object.assign(filtered, ringInnerRadiusProps);
     }
 
     // Fill Properties
     if (batchConfig.fillEnabled) {
       filtered.fillEnabled = true;
       filtered.fillStyleProbability = batchConfig.fillStyleProbability;
-      filtered.fillColorMode = batchConfig.fillColorMode;
-      filtered.fillColorRange = batchConfig.fillColorRange;
-      filtered.fillColorRangeFlip = batchConfig.fillColorRangeFlip;
-      filtered.fillColorPalette = batchConfig.fillColorPalette;
-      filtered.fillColorDefine = batchConfig.fillColorDefine;
-      filtered.fillColorSaturationRange = batchConfig.fillColorSaturationRange;
-      filtered.fillColorLightnessRange = batchConfig.fillColorLightnessRange;
+      
+      // Only include fill color properties relevant to the mode
+      const fillColorProps = filterModeBasedProperties(batchConfig, 'fillColor', batchConfig.fillColorMode);
+      Object.assign(filtered, fillColorProps);
+      
+      // Add flip flag only for range mode
+      if (batchConfig.fillColorMode === 'range') {
+        filtered.fillColorRangeFlip = batchConfig.fillColorRangeFlip;
+      }
 
       // Fill Gradient Settings
       if (batchConfig.fillGradientEnabled) {
@@ -271,54 +291,41 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
         filtered.fillGradientConicAngle = batchConfig.fillGradientConicAngle;
       }
 
-      // Fill Opacity Settings
-      filtered.fillOpacityMode = batchConfig.fillOpacityMode;
-      filtered.fillOpacityRange = batchConfig.fillOpacityRange;
-      filtered.fillOpacityDefine = batchConfig.fillOpacityDefine;
-      filtered.fillOpacityStartValue = batchConfig.fillOpacityStartValue;
-      filtered.fillOpacityIncrement = batchConfig.fillOpacityIncrement;
-      filtered.fillOpacityModulationEnabled = batchConfig.fillOpacityModulationEnabled;
-      filtered.fillOpacityModulationValue = batchConfig.fillOpacityModulationValue;
+      // Fill Opacity Settings - only include relevant properties based on mode
+      const fillOpacityProps = filterModeBasedProperties(batchConfig, 'fillOpacity', batchConfig.fillOpacityMode);
+      Object.assign(filtered, fillOpacityProps);
     }
 
     // Blur Properties
     if (batchConfig.blurEnabled) {
       filtered.blurEnabled = true;
       filtered.blurProbability = batchConfig.blurProbability;
-      filtered.blurMode = batchConfig.blurMode;
-      filtered.blurRange = batchConfig.blurRange;
-      filtered.blurDefine = batchConfig.blurDefine;
-      filtered.blurStartValue = batchConfig.blurStartValue;
-      filtered.blurIncrement = batchConfig.blurIncrement;
-      filtered.blurModulationEnabled = batchConfig.blurModulationEnabled;
-      filtered.blurModulationValue = batchConfig.blurModulationValue;
+      
+      // Only include blur properties relevant to the mode
+      const blurProps = filterModeBasedProperties(batchConfig, 'blur', batchConfig.blurMode);
+      Object.assign(filtered, blurProps);
     }
 
     // Stroke Properties
     if (batchConfig.strokeEnabled) {
       filtered.strokeEnabled = true;
       filtered.strokeProbability = batchConfig.strokeProbability;
-      filtered.strokeColorMode = batchConfig.strokeColorMode;
-      filtered.strokeColorRange = batchConfig.strokeColorRange;
-      filtered.strokeColorRangeFlip = batchConfig.strokeColorRangeFlip;
-      filtered.strokeColorPalette = batchConfig.strokeColorPalette;
-      filtered.strokeColorDefine = batchConfig.strokeColorDefine;
-      filtered.strokeColorSaturationRange = batchConfig.strokeColorSaturationRange;
-      filtered.strokeColorLightnessRange = batchConfig.strokeColorLightnessRange;
-      filtered.strokeOpacityMode = batchConfig.strokeOpacityMode;
-      filtered.strokeOpacityRange = batchConfig.strokeOpacityRange;
-      filtered.strokeOpacityDefine = batchConfig.strokeOpacityDefine;
-      filtered.strokeOpacityStartValue = batchConfig.strokeOpacityStartValue;
-      filtered.strokeOpacityIncrement = batchConfig.strokeOpacityIncrement;
-      filtered.strokeOpacityModulationEnabled = batchConfig.strokeOpacityModulationEnabled;
-      filtered.strokeOpacityModulationValue = batchConfig.strokeOpacityModulationValue;
-      filtered.strokeWidthMode = batchConfig.strokeWidthMode;
-      filtered.strokeWidthRange = batchConfig.strokeWidthRange;
-      filtered.strokeWidthDefine = batchConfig.strokeWidthDefine;
-      filtered.strokeWidthStartValue = batchConfig.strokeWidthStartValue;
-      filtered.strokeWidthIncrement = batchConfig.strokeWidthIncrement;
-      filtered.strokeWidthModulationEnabled = batchConfig.strokeWidthModulationEnabled;
-      filtered.strokeWidthModulationValue = batchConfig.strokeWidthModulationValue;
+      
+      // Stroke Color - only include relevant properties based on mode
+      const strokeColorProps = filterModeBasedProperties(batchConfig, 'strokeColor', batchConfig.strokeColorMode);
+      Object.assign(filtered, strokeColorProps);
+      
+      if (batchConfig.strokeColorMode === 'range') {
+        filtered.strokeColorRangeFlip = batchConfig.strokeColorRangeFlip;
+      }
+      
+      // Stroke Opacity - only include relevant properties based on mode
+      const strokeOpacityProps = filterModeBasedProperties(batchConfig, 'strokeOpacity', batchConfig.strokeOpacityMode);
+      Object.assign(filtered, strokeOpacityProps);
+      
+      // Stroke Width - only include relevant properties based on mode
+      const strokeWidthProps = filterModeBasedProperties(batchConfig, 'strokeWidth', batchConfig.strokeWidthMode);
+      Object.assign(filtered, strokeWidthProps);
     }
 
     // Polygon Properties
