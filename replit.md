@@ -78,6 +78,7 @@ Preferred communication style: Simple, everyday language.
 - **Unified Generation System**: `generateShapesWithBatchConfig` function ensures all batch configuration settings are applied consistently for both live generation and batch exports.
 - **Live API Endpoints**: Comprehensive REST API for capturing complete application state:
   * **/api/live/sets/enabled**: Returns only enabled generation sets with filtered batch configurations (disabled sections stripped), export settings, artboard settings, and batch export settings. Includes shape types data, generation config settings (properties, transforms, effects, color harmony, etc.), and set manager settings (visibility, transforms, alignment, blend modes, compositing, z-index).
+- **API Call Generator**: Relocated to bottom of sidebar (after Sets Manager button with separator) for better accessibility. Provides multi-version API call generation with secure credential handling ($LIVE_API_KEY for curl, {{$credentials.ShapeEditorAPIKey}} for n8n). Defaults to /api/live/sets/enabled endpoint. Always visible regardless of sidebar collapsed/expanded state.
 
 ## External Dependencies
 
