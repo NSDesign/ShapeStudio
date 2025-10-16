@@ -1,0 +1,136 @@
+  "shapeSpecificProperties": {
+          "line": {
+            "pointCountRange": [
+              2,
+              4
+            ],
+            "strokeCapProbabilities": {
+              "butt": 34,
+              "round": 33,
+              "square": 33
+            }
+          },
+          "ring": {
+            "innerRadiusRange": [
+              0.2,
+              0.8
+            ]
+          },
+          "star": {
+            "pointCountRange": [
+              8,
+              10
+            ],
+            "innerRadiusRange": [
+              0.5,
+              0.7
+            ]
+          },
+          "cubic": {
+            "patternType": 2,
+            "spreadRange": [
+              40,
+              120
+            ],
+            "curvatureRange": [
+              0.2,
+              0.8
+            ],
+            "openProbability": 90,
+            "pointCountRange": [
+              3,
+              8
+            ]
+          },
+          "bezier": {
+            "openProbability": 50,
+            "pointCountRange": [
+              3,
+              6
+            ],
+            "strokeCapProbabilities": {
+              "butt": 34,
+              "round": 33,
+              "square": 33
+            }
+          },
+          "circle": {
+            "segmentCountRange": [
+              16,
+              32
+            ]
+          },
+          "square": {},
+          "ellipse": {
+            "segmentCountRange": [
+              16,
+              32
+            ]
+          },
+          "polygon": {
+            "edgeCountRange": [
+              4,
+              8
+            ]
+          },
+          "rectangle": {},
+          "line-vector": {
+            "length": {
+              "max": 500,
+              "min": 5,
+              "kind": "range"
+            },
+            "centroid": {
+              "kind": "fixed",
+              "value": 0.5
+            },
+            "direction": {
+              "max": 360,
+              "min": 0,
+              "kind": "range"
+            },
+            "strokeCapProbabilities": {
+              "butt": 34,
+              "round": 33,
+              "square": 33
+            }
+          },
+          "spline-ring": {
+            "innerRadiusRange": [
+              0.2,
+              0.8
+            ],
+            "segmentCountRange": [
+              16,
+              32
+            ]
+          },
+          "smooth-spline": {
+            "openProbability": 50,
+            "pointCountRange": [
+              3,
+              6
+            ],
+            "strokeCapProbabilities": {
+              "butt": 34,
+              "round": 33,
+              "square": 33
+            }
+          },
+          "rounded-square": {
+            "cornerRadiusMode": "range",
+            "cornerRadiusRange": [
+              13,
+              33
+            ],
+            "cornerRadiusValue": 5
+          },
+          "rounded-rectangle": {
+            "cornerRadiusMode": "range",
+            "cornerRadiusRange": [
+              15,
+              30
+            ],
+            "cornerRadiusValue": 5
+          }
+        },
