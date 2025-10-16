@@ -974,7 +974,7 @@ export class ExportService {
     // Filter enabled generation sets and sort by generation order
     const enabledSets = enhancedConfig.generationSets
       .filter(set => set.enabled)
-      .sort((a, b) => a.generationOrder - b.generationOrder);
+      .sort((a, b) => (a.generationOrder ?? 0) - (b.generationOrder ?? 0));
       
     if (enabledSets.length === 0) {
       throw new Error('No enabled generation sets found for multi-generation mode');
