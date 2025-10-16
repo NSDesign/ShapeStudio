@@ -17,11 +17,15 @@ function filterShapeSpecificProperties(
   shapeSpecificProps: any,
   enabledShapeTypes: string[]
 ): any {
+  if (!shapeSpecificProps || typeof shapeSpecificProps !== 'object') {
+    return {};
+  }
+  
   const filtered: any = {};
   
   // Only include properties for enabled shape types
   enabledShapeTypes.forEach(shapeType => {
-    if (shapeSpecificProps[shapeType]) {
+    if (shapeSpecificProps[shapeType] !== undefined) {
       filtered[shapeType] = shapeSpecificProps[shapeType];
     }
   });
@@ -47,10 +51,13 @@ function stripDefaultValues(obj: any, defaults: any): any {
 }
 
 // Helper function to filter BatchConfigSettings to only include enabled sections
-function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<BatchConfigSettings> {
+function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShapeTypes: string[] = []): Partial<BatchConfigSettings> {
   const filtered: Partial<BatchConfigSettings> = {
     selectedPreset: batchConfig.selectedPreset,
   };
+  
+  // Create a set for faster lookup
+  const enabledShapesSet = new Set(enabledShapeTypes);
 
   // Distribution Layout Section
   if (batchConfig.distributionLayoutEnabled) {
@@ -185,29 +192,38 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings): Partial<Bat
     }
 
     // Shape-specific properties (only include if relevant shapes are enabled)
-    filtered.rectangleCornerRadiusMode = batchConfig.rectangleCornerRadiusMode;
-    filtered.rectangleCornerRadiusRange = batchConfig.rectangleCornerRadiusRange;
-    filtered.rectangleCornerRadiusDefine = batchConfig.rectangleCornerRadiusDefine;
-    filtered.rectangleCornerRadiusStartValue = batchConfig.rectangleCornerRadiusStartValue;
-    filtered.rectangleCornerRadiusIncrement = batchConfig.rectangleCornerRadiusIncrement;
-    filtered.rectangleCornerRadiusModulationEnabled = batchConfig.rectangleCornerRadiusModulationEnabled;
-    filtered.rectangleCornerRadiusModulationValue = batchConfig.rectangleCornerRadiusModulationValue;
+    // Rectangle/Rounded-Rectangle corner radius (only if rounded variants are enabled)
+    if (enabledShapesSet.has('rounded-rectangle') || enabledShapesSet.has('rounded-square')) {
+      filtered.rectangleCornerRadiusMode = batchConfig.rectangleCornerRadiusMode;
+      filtered.rectangleCornerRadiusRange = batchConfig.rectangleCornerRadiusRange;
+      filtered.rectangleCornerRadiusDefine = batchConfig.rectangleCornerRadiusDefine;
+      filtered.rectangleCornerRadiusStartValue = batchConfig.rectangleCornerRadiusStartValue;
+      filtered.rectangleCornerRadiusIncrement = batchConfig.rectangleCornerRadiusIncrement;
+      filtered.rectangleCornerRadiusModulationEnabled = batchConfig.rectangleCornerRadiusModulationEnabled;
+      filtered.rectangleCornerRadiusModulationValue = batchConfig.rectangleCornerRadiusModulationValue;
+    }
 
-    filtered.starInnerRadiusMode = batchConfig.starInnerRadiusMode;
-    filtered.starInnerRadiusRange = batchConfig.starInnerRadiusRange;
-    filtered.starInnerRadiusDefine = batchConfig.starInnerRadiusDefine;
-    filtered.starInnerRadiusStartValue = batchConfig.starInnerRadiusStartValue;
-    filtered.starInnerRadiusIncrement = batchConfig.starInnerRadiusIncrement;
-    filtered.starInnerRadiusModulationEnabled = batchConfig.starInnerRadiusModulationEnabled;
-    filtered.starInnerRadiusModulationValue = batchConfig.starInnerRadiusModulationValue;
+    // Star inner radius (only if star is enabled)
+    if (enabledShapesSet.has('star')) {
+      filtered.starInnerRadiusMode = batchConfig.starInnerRadiusMode;
+      filtered.starInnerRadiusRange = batchConfig.starInnerRadiusRange;
+      filtered.starInnerRadiusDefine = batchConfig.starInnerRadiusDefine;
+      filtered.starInnerRadiusStartValue = batchConfig.starInnerRadiusStartValue;
+      filtered.starInnerRadiusIncrement = batchConfig.starInnerRadiusIncrement;
+      filtered.starInnerRadiusModulationEnabled = batchConfig.starInnerRadiusModulationEnabled;
+      filtered.starInnerRadiusModulationValue = batchConfig.starInnerRadiusModulationValue;
+    }
 
-    filtered.ringInnerRadiusMode = batchConfig.ringInnerRadiusMode;
-    filtered.ringInnerRadiusRange = batchConfig.ringInnerRadiusRange;
-    filtered.ringInnerRadiusDefine = batchConfig.ringInnerRadiusDefine;
-    filtered.ringInnerRadiusStartValue = batchConfig.ringInnerRadiusStartValue;
-    filtered.ringInnerRadiusIncrement = batchConfig.ringInnerRadiusIncrement;
-    filtered.ringInnerRadiusModulationEnabled = batchConfig.ringInnerRadiusModulationEnabled;
-    filtered.ringInnerRadiusModulationValue = batchConfig.ringInnerRadiusModulationValue;
+    // Ring inner radius (only if ring or spline-ring is enabled)
+    if (enabledShapesSet.has('ring') || enabledShapesSet.has('spline-ring')) {
+      filtered.ringInnerRadiusMode = batchConfig.ringInnerRadiusMode;
+      filtered.ringInnerRadiusRange = batchConfig.ringInnerRadiusRange;
+      filtered.ringInnerRadiusDefine = batchConfig.ringInnerRadiusDefine;
+      filtered.ringInnerRadiusStartValue = batchConfig.ringInnerRadiusStartValue;
+      filtered.ringInnerRadiusIncrement = batchConfig.ringInnerRadiusIncrement;
+      filtered.ringInnerRadiusModulationEnabled = batchConfig.ringInnerRadiusModulationEnabled;
+      filtered.ringInnerRadiusModulationValue = batchConfig.ringInnerRadiusModulationValue;
+    }
 
     // Fill Properties
     if (batchConfig.fillEnabled) {
@@ -557,7 +573,7 @@ function filterEnabledGenerationSet(set: GenerationSet): any {
     ),
     
     // Generation Configuration Settings (filtered to only enabled sections)
-    batchConfig: filterEnabledBatchConfig(set.batchConfig),
+    batchConfig: filterEnabledBatchConfig(set.batchConfig, set.enabledShapeTypes),
   };
   
   // Add Set Manager settings (only if different from defaults)
