@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "data": {
+    "generationSets": [
+      {
+        "id": "set-1760596619867-93kxuieuw",
+        "name": "Set 10",
+        "enabled": true,
+        "enabledShapeTypes": [
+          "polygon"
+        ],
+        "shapeCountMode": "range",
+        "shapeCountFixed": 5,
+        "shapeCountRange": [
+          5,
+          15
+        ],
+        "shapeSpecificProperties": {
+          "polygon": {
+            "edgeCountRange": [
+              4,
+              8
+            ]
+          }
+        },
+        "batchConfig": {
+          "selectedPreset": "custom",
+          "distributionLayoutEnabled": true,
+          "distributionPattern": "grid",
+          "gridRows": 5,
+          "gridColumns": 5,
+          "gridStartX": 0,
+          "gridStartY": 0,
+          "gridSpacingXMode": "define",
+          "gridSpacingYMode": "define",
+          "gridRowOffset": 50,
+          "gridColumnOffset": 50,
+          "gridSortBy": "fill-color",
+          "gridSortScope": "per-generation",
+          "gridSortOrder": "ascending",
+          "gridXRandomization": 0,
+          "gridYRandomization": 0,
+          "tangentAlignment": false,
+          "segmentDistribution": "even",
+          "reverseDirection": false,
+          "propertiesEnabled": true,
+          "rectangleCornerRadiusMode": "range",
+          "rectangleCornerRadiusRange": [
+            0,
+            20
+          ],
+          "rectangleCornerRadiusDefine": 10,
+          "rectangleCornerRadiusStartValue": 0,
+          "rectangleCornerRadiusIncrement": 2,
+          "rectangleCornerRadiusModulationEnabled": false,
+          "rectangleCornerRadiusModulationValue": 50,
+          "starInnerRadiusMode": "range",
+          "starInnerRadiusRange": [
+            0.3,
+            0.7
+          ],
+          "starInnerRadiusDefine": 0.5,
+          "starInnerRadiusStartValue": 0.3,
+          "starInnerRadiusIncrement": 0.05,
+          "starInnerRadiusModulationEnabled": false,
+          "starInnerRadiusModulationValue": 1,
+          "ringInnerRadiusMode": "range",
+          "ringInnerRadiusRange": [
+            0.4,
+            0.8
+          ],
+          "ringInnerRadiusDefine": 0.6,
+          "ringInnerRadiusStartValue": 0.4,
+          "ringInnerRadiusIncrement": 0.05,
+          "ringInnerRadiusModulationEnabled": false,
+          "ringInnerRadiusModulationValue": 1,
+          "fillEnabled": true,
+          "fillStyleProbability": 60,
+          "fillColorMode": "range",
+          "fillColorRange": [
+            "#f73bf1",
+            "#f7dd5f"
+          ],
+          "fillColorRangeFlip": false,
+          "fillColorPalette": [
+            "#3b82f6",
+            "#94bdff",
+            "#235ab3",
+            "#99ceff",
+            "#4f618c"
+          ],
+          "fillColorDefine": "#3b82f6",
+          "fillColorSaturationRange": [
+            100,
+            100
+          ],
+          "fillColorLightnessRange": [
+            55,
+            60
+          ],
+          "fillOpacityMode": "range",
+          "fillOpacityRange": [
+            55,
+            75
+          ],
+          "fillOpacityDefine": 100,
+          "fillOpacityStartValue": 70,
+          "fillOpacityIncrement": 5,
+          "fillOpacityModulationEnabled": false,
+          "fillOpacityModulationValue": 100
+        },
+        "setVisibility": {
+          "opacity": 1,
+          "visible": true,
+          "opacityVariance": 0
+        },
+        "setTransform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "transformOrigin": "center"
+        },
+        "artboardAlignment": {
+          "margin": 0,
+          "alignTo": "none",
+          "alignmentType": "center",
+          "fitToArtboard": false
+        },
+        "zIndexConfig": {
+          "baseOffset": 0,
+          "incrementPerShape": 1,
+          "incrementPerGeneration": 1000
+        },
+        "generationOrder": 9,
+        "description": "Generated from current settings on 10/16/2025, 5:36:59 PM"
+      }
+    ],
+    "currentSetId": "set-1760596619867-93kxuieuw",
+    "exportSettings": {
+      "format": "png",
+      "quality": 90,
+      "scale": 1,
+      "mode": "all"
+    },
+    "artboardSettings": {
+      "width": 400,
+      "height": 400,
+      "backgroundColor": "#ffffff",
+      "displayGrid": false,
+      "displayBorder": true
+    },
+    "batchExportSettings": {
+      "enabled": true,
+      "count": 4,
+      "setsPerExport": 1,
+      "saveProjectFiles": true,
+      "packageAsZip": true
+    }
+  }
