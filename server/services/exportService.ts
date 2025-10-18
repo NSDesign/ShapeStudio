@@ -127,6 +127,106 @@ export class ExportService {
     return { ...defaults, ...userSettings };
   }
 
+  /**
+   * Render shapes to a node-canvas Canvas
+   * @param shapes - Array of shapes to render
+   * @param canvasSettings - Canvas dimensions and settings
+   * @param exportOptions - Export options including background, margins, scale
+   * @returns Canvas with rendered shapes
+   */
+  private renderShapesToCanvas(
+    shapes: Shape[],
+    canvasSettings: CanvasSettings,
+    exportOptions: ExportOptions
+  ): NodeCanvas {
+    // Calculate canvas dimensions with scale and margins
+    const scale = exportOptions.scale || 1;
+    const margins = exportOptions.margins || { top: 0, right: 0, bottom: 0, left: 0 };
+    
+    // Use custom size if specified, otherwise use artboard dimensions
+    const baseWidth = exportOptions.width || canvasSettings.width;
+    const baseHeight = exportOptions.height || canvasSettings.height;
+    
+    // Apply margins and scale
+    const canvasWidth = (baseWidth + margins.left + margins.right) * scale;
+    const canvasHeight = (baseHeight + margins.top + margins.bottom) * scale;
+    
+    // Create canvas
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+    
+    // Apply scale
+    ctx.scale(scale, scale);
+    
+    // Translate for margins
+    ctx.translate(margins.left, margins.top);
+    
+    // Draw background if requested
+    if (exportOptions.includeBackground && exportOptions.backgroundColor) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+      ctx.fillStyle = exportOptions.backgroundColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      ctx.restore();
+    }
+    
+    // Sort shapes by z-index for proper layering
+    const sortedShapes = [...shapes].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+    
+    // Render each shape
+    for (const shape of sortedShapes) {
+      renderShape(ctx, shape, !exportOptions.includeAdornments);
+    }
+    
+    return canvas;
+  }
+
+  /**
+   * Convert canvas to image buffer with format support
+   * @param canvas - The canvas to convert
+   * @param format - Image format (png, jpeg, webp, etc.)
+   * @param quality - Quality for lossy formats (0-1)
+   * @returns Buffer containing image data
+   */
+  private canvasToBuffer(
+    canvas: NodeCanvas,
+    format: ImageFormat,
+    quality: number = 0.92
+  ): Buffer {
+    switch (format.toLowerCase()) {
+      case 'png':
+        return canvas.toBuffer('image/png');
+      
+      case 'jpeg':
+      case 'jpg':
+        return canvas.toBuffer('image/jpeg', { quality });
+      
+      case 'webp':
+        // WebP support in node-canvas (if available)
+        try {
+          return canvas.toBuffer('image/webp', { quality });
+        } catch (e) {
+          // Fallback to PNG if WebP not supported
+          console.warn('WebP not supported, falling back to PNG');
+          return canvas.toBuffer('image/png');
+        }
+      
+      case 'avif':
+        // AVIF not supported in node-canvas, fallback to PNG
+        console.warn('AVIF not supported in node-canvas, falling back to PNG');
+        return canvas.toBuffer('image/png');
+      
+      case 'bmp':
+        // BMP not directly supported, fallback to PNG
+        console.warn('BMP not supported in node-canvas, falling back to PNG');
+        return canvas.toBuffer('image/png');
+      
+      default:
+        // Default to PNG
+        return canvas.toBuffer('image/png');
+    }
+  }
+
   // Legacy method for backward compatibility
   async startBatchExport(
     shapes: Shape[],
