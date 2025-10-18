@@ -353,10 +353,10 @@ export function registerExportRoutes(app: Express): void {
   });
 
   // Download completed export (ZIP only)
-  app.get('/api/export/download/:exportId', (req, res) => {
+  app.get('/api/export/download/:exportId', async (req, res) => {
     try {
       const { exportId } = req.params;
-      const filePath = exportService.getExportFile(exportId);
+      const filePath = await exportService.getExportFile(exportId);
       
       if (!filePath) {
         return res.status(404).json({ 

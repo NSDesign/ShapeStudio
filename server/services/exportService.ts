@@ -604,8 +604,38 @@ export class ExportService {
     }
   }
 
-  getExportFile(exportId: string): string | null {
-    return this.exportResults.get(exportId) || null;
+  async getExportFile(exportId: string): Promise<string | null> {
+    // First check in-memory cache for backwards compatibility
+    const cachedPath = this.exportResults.get(exportId);
+    if (cachedPath) {
+      return cachedPath;
+    }
+
+    // Query database for export job
+    try {
+      const [exportJob] = await db
+        .select()
+        .from(exportJobs)
+        .where(eq(exportJobs.exportId, exportId))
+        .limit(1);
+
+      if (!exportJob || !exportJob.results) {
+        return null;
+      }
+
+      // Extract downloadPath from results JSONB column
+      const results = exportJob.results as any;
+      const downloadPath = results?.downloadPath;
+
+      if (downloadPath && fs.existsSync(downloadPath)) {
+        return downloadPath;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`[ExportService] Error fetching export file from database:`, error);
+      return null;
+    }
   }
 
   getIndividualFiles(exportId: string): { imageFiles: any[], projectFiles: any[] } | null {
