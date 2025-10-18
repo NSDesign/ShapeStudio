@@ -171,11 +171,12 @@ export class ExportService {
     }
     
     // Sort shapes by z-index for proper layering
-    const sortedShapes = [...shapes].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+    const sortedShapes = [...shapes].sort((a, b) => (a.properties.zIndex || 0) - (b.properties.zIndex || 0));
     
     // Render each shape
     for (const shape of sortedShapes) {
-      renderShape(ctx, shape, !exportOptions.includeAdornments);
+      // Cast to server Shape type - they're compatible in structure
+      renderShape(ctx, shape as any, !exportOptions.includeAdornments);
     }
     
     return canvas;
@@ -193,38 +194,20 @@ export class ExportService {
     format: ImageFormat,
     quality: number = 0.92
   ): Buffer {
-    switch (format.toLowerCase()) {
-      case 'png':
-        return canvas.toBuffer('image/png');
-      
-      case 'jpeg':
-      case 'jpg':
-        return canvas.toBuffer('image/jpeg', { quality });
-      
-      case 'webp':
-        // WebP support in node-canvas (if available)
-        try {
-          return canvas.toBuffer('image/webp', { quality });
-        } catch (e) {
-          // Fallback to PNG if WebP not supported
-          console.warn('WebP not supported, falling back to PNG');
-          return canvas.toBuffer('image/png');
-        }
-      
-      case 'avif':
-        // AVIF not supported in node-canvas, fallback to PNG
-        console.warn('AVIF not supported in node-canvas, falling back to PNG');
-        return canvas.toBuffer('image/png');
-      
-      case 'bmp':
-        // BMP not directly supported, fallback to PNG
-        console.warn('BMP not supported in node-canvas, falling back to PNG');
-        return canvas.toBuffer('image/png');
-      
-      default:
-        // Default to PNG
-        return canvas.toBuffer('image/png');
+    const formatLower = format.toLowerCase();
+    
+    // node-canvas supports PNG and JPEG reliably
+    if (formatLower === 'jpeg' || formatLower === 'jpg') {
+      return canvas.toBuffer('image/jpeg', { quality });
     }
+    
+    // All other formats default to PNG
+    // (WebP, AVIF, BMP not widely supported in node-canvas)
+    if (formatLower !== 'png') {
+      console.warn(`Format ${format} not fully supported, using PNG`);
+    }
+    
+    return canvas.toBuffer('image/png');
   }
 
   // Legacy method for backward compatibility
@@ -371,23 +354,21 @@ export class ExportService {
           exportOptions.height = settings.customHeight;
         }
         
-        // For now, create a mock blob since we can't use browser Canvas API on server
-        // In a real implementation, this would use a server-side canvas library like node-canvas
-        const mockImageData = Buffer.from(`mock-image-data-${i + 1}`);
-        const blob = { arrayBuffer: async () => mockImageData.buffer } as Blob;
+        // Render shapes to canvas and convert to image buffer
+        const canvas = this.renderShapesToCanvas(currentShapes, canvasSettings, exportOptions);
+        const imageBuffer = this.canvasToBuffer(canvas, settings.format, exportOptions.quality);
         
         // Generate filename
         const filename = this.generateBatchFilename(settings, i + 1);
-        const imageData = await blob.arrayBuffer();
         const imageFilename = `${filename}.${settings.format}`;
         
         if (settings.packageAsZip) {
           // Add to ZIP
-          zip!.file(imageFilename, imageData);
+          zip!.file(imageFilename, imageBuffer);
         } else {
           // Save individual file
           const imagePath = path.join(exportDir, imageFilename);
-          fs.writeFileSync(imagePath, Buffer.from(imageData));
+          fs.writeFileSync(imagePath, imageBuffer);
           
           // Track individual file
           imageFiles.push({
@@ -1523,23 +1504,21 @@ export class ExportService {
       exportOptions.height = settings.customHeight;
     }
     
-    // For now, create a mock blob since we can't use browser Canvas API on server
-    // In a real implementation, this would use a server-side canvas library like node-canvas
-    const mockImageData = Buffer.from(`mock-enhanced-image-data-${index}`);
-    const blob = { arrayBuffer: async () => mockImageData.buffer } as Blob;
+    // Render shapes to canvas and convert to image buffer
+    const canvas = this.renderShapesToCanvas(shapes, canvasSettings, exportOptions);
+    const imageBuffer = this.canvasToBuffer(canvas, settings.format, exportOptions.quality);
     
     // Generate filename
     const filename = this.generateBatchFilename(settings, index);
-    const imageData = await blob.arrayBuffer();
     const imageFilename = `${filename}.${settings.format}`;
     
     if (settings.packageAsZip) {
       // Add to ZIP
-      zip!.file(imageFilename, imageData);
+      zip!.file(imageFilename, imageBuffer);
     } else {
       // Save individual file
       const imagePath = path.join(exportDir, imageFilename);
-      fs.writeFileSync(imagePath, Buffer.from(imageData));
+      fs.writeFileSync(imagePath, imageBuffer);
       
       // Track individual file
       imageFiles.push({
