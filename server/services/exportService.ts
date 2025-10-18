@@ -20,6 +20,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
+import { createCanvas, Canvas as NodeCanvas } from 'canvas';
+import { renderShape } from '../lib/canvasRenderer';
 
 export interface BatchExportSettings {
   // Format and quality
