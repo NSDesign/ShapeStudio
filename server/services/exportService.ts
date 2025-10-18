@@ -204,6 +204,7 @@ export class ExportService {
       progress.status = 'processing';
       progress.currentStep = settings.packageAsZip ? 'Creating ZIP archive...' : 'Creating individual files...';
       this.activeExports.set(exportId, progress);
+      await this.updateExportJobProgress(exportId, progress);
       
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       
@@ -234,6 +235,7 @@ export class ExportService {
         progress.currentStep = `Generating artwork ${i + 1} of ${settings.batchExportCount}`;
         progress.progress = Math.round((currentStep / totalSteps) * 100);
         this.activeExports.set(exportId, progress);
+        await this.updateExportJobProgress(exportId, progress);
         
         // Generate shapes for this iteration
         const { shapes: currentShapes, groups: currentGroups } = generateShapesFunction(batchConfigSettings);
@@ -243,6 +245,7 @@ export class ExportService {
         progress.currentStep = `Exporting image ${i + 1} of ${settings.batchExportCount}`;
         progress.progress = Math.round((currentStep / totalSteps) * 100);
         this.activeExports.set(exportId, progress);
+        await this.updateExportJobProgress(exportId, progress);
         
         const exportOptions: ExportOptions = {
           format: settings.format,
@@ -327,6 +330,7 @@ export class ExportService {
         
         progress.imagesCompleted = i + 1;
         currentStep++;
+        await this.updateExportJobProgress(exportId, progress);
       }
       
       if (settings.packageAsZip) {
@@ -334,6 +338,7 @@ export class ExportService {
         progress.currentStep = 'Creating ZIP file...';
         progress.progress = Math.round((currentStep / totalSteps) * 100);
         this.activeExports.set(exportId, progress);
+        await this.updateExportJobProgress(exportId, progress);
         
         const zipBlob = await zip!.generateAsync({ type: 'nodebuffer' });
         const zipFilename = `batch-export-${timestamp}.zip`;
@@ -348,6 +353,14 @@ export class ExportService {
         progress.downloadPath = zipPath;
         this.activeExports.set(exportId, progress);
         this.exportResults.set(exportId, zipPath);
+        
+        // Update database with final results
+        await this.updateExportJobResults(exportId, {
+          downloadUrl: `/api/export/download/${exportId}`,
+          downloadPath: zipPath,
+          packageType: 'zip'
+        });
+        await this.updateExportJobProgress(exportId, progress);
       } else {
         // Complete individual files export
         progress.status = 'completed';
@@ -357,12 +370,23 @@ export class ExportService {
         
         // Store individual file information
         this.individualFiles.set(exportId, { imageFiles, projectFiles });
+        
+        // Update database with final results
+        await this.updateExportJobResults(exportId, {
+          imageFiles,
+          projectFiles,
+          packageType: 'individual'
+        });
+        await this.updateExportJobProgress(exportId, progress);
       }
       
     } catch (error) {
       progress.status = 'error';
       progress.errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.activeExports.set(exportId, progress);
+      
+      // Update database with error status
+      await this.updateExportJobProgress(exportId, progress);
     }
   }
 
@@ -947,6 +971,9 @@ export class ExportService {
       progress.currentStep = settings.packageAsZip ? 'Creating enhanced ZIP archive...' : 'Creating enhanced individual files...';
       this.activeExports.set(exportId, progress);
       
+      // Update database with processing status
+      await this.updateExportJobProgress(exportId, progress);
+      
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       
       // Initialize tracking for individual files
@@ -1012,6 +1039,9 @@ export class ExportService {
       progress.status = 'error';
       progress.errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       this.activeExports.set(exportId, progress);
+      
+      // Update database with error status
+      await this.updateExportJobProgress(exportId, progress);
     }
   }
 
@@ -1060,6 +1090,7 @@ export class ExportService {
       progress.currentStep = `Generating artwork ${i + 1} of ${settings.batchExportCount} (Single Mode)`;
       progress.progress = Math.round((currentStep / totalSteps) * 100);
       this.activeExports.set(exportId, progress);
+      await this.updateExportJobProgress(exportId, progress);
       
       // Generate shapes for this iteration using legacy config
       const { shapes: currentShapes, groups: currentGroups } = generateShapesFunction(batchConfig);
@@ -1069,6 +1100,7 @@ export class ExportService {
       progress.currentStep = `Exporting image ${i + 1} of ${settings.batchExportCount}`;
       progress.progress = Math.round((currentStep / totalSteps) * 100);
       this.activeExports.set(exportId, progress);
+      await this.updateExportJobProgress(exportId, progress);
       
       await this.exportImage(
         i + 1, 
@@ -1087,6 +1119,7 @@ export class ExportService {
       
       progress.imagesCompleted = i + 1;
       currentStep++;
+      await this.updateExportJobProgress(exportId, progress);
     }
   }
 
@@ -1137,6 +1170,7 @@ export class ExportService {
       progress.currentStep = `Generating composite artwork ${i + 1} of ${settings.batchExportCount} (Multi Mode)`;
       progress.progress = Math.round((currentStep / totalSteps) * 100);
       this.activeExports.set(exportId, progress);
+      await this.updateExportJobProgress(exportId, progress);
       
       // Accumulate shapes from all generation sets with proper z-index layering
       const compositeShapes: Shape[] = [];
@@ -1198,6 +1232,7 @@ export class ExportService {
       progress.currentStep = `Exporting composite image ${i + 1} of ${settings.batchExportCount}`;
       progress.progress = Math.round((currentStep / totalSteps) * 100);
       this.activeExports.set(exportId, progress);
+      await this.updateExportJobProgress(exportId, progress);
       
       await this.exportImage(
         i + 1, 
@@ -1216,6 +1251,7 @@ export class ExportService {
       
       progress.imagesCompleted = i + 1;
       currentStep++;
+      await this.updateExportJobProgress(exportId, progress);
     }
   }
 
@@ -1445,6 +1481,14 @@ export class ExportService {
       progress.downloadPath = zipPath;
       this.activeExports.set(exportId, progress);
       this.exportResults.set(exportId, zipPath);
+      
+      // Update database with final results
+      await this.updateExportJobResults(exportId, {
+        downloadUrl: `/api/export/download/${exportId}`,
+        downloadPath: zipPath,
+        packageType: 'zip'
+      });
+      await this.updateExportJobProgress(exportId, progress);
     } else {
       // Complete individual files export
       progress.status = 'completed';
@@ -1454,6 +1498,14 @@ export class ExportService {
       
       // Store individual file information
       this.individualFiles.set(exportId, { imageFiles, projectFiles });
+      
+      // Update database with final results
+      await this.updateExportJobResults(exportId, {
+        imageFiles,
+        projectFiles,
+        packageType: 'individual'
+      });
+      await this.updateExportJobProgress(exportId, progress);
     }
   }
 }
