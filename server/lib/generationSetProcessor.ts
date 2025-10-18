@@ -164,9 +164,14 @@ export function processGenerationSets(
  */
 function applySetVisibility(
   shapes: Shape[],
-  visibility: SetVisibility,
+  visibility: SetVisibility | undefined,
   setName: string
 ): void {
+  // If no visibility config, shapes are visible with default opacity
+  if (!visibility) {
+    return;
+  }
+  
   if (!visibility.visible) {
     console.log(`👁️ [SERVER] Set "${setName}" is hidden, shapes will be skipped during render`);
     return;
@@ -429,8 +434,8 @@ function compositeSetCanvases(
   
   // Composite each set canvas onto the target
   sortedSets.forEach(({ canvas, set }) => {
-    // Skip invisible sets
-    if (!set.setVisibility.visible) {
+    // Skip invisible sets (if visibility config exists and visible is false)
+    if (set.setVisibility && !set.setVisibility.visible) {
       console.log(`⏭️ [SERVER] Skipping invisible set "${set.name}"`);
       return;
     }

@@ -289,10 +289,10 @@ export function registerExportRoutes(app: Express): void {
   });
 
   // Get export status
-  app.get('/api/export/status/:exportId', (req, res) => {
+  app.get('/api/export/status/:exportId', async (req, res) => {
     try {
       const { exportId } = req.params;
-      const status = exportService.getExportStatus(exportId);
+      const status = await exportService.getExportStatus(exportId);
       
       if (!status) {
         return res.status(404).json({ 

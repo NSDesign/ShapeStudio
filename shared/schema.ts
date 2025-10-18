@@ -2392,3 +2392,20 @@ export const SUPPORTED_SHAPE_TYPES: SupportedShapeType[] = [
   'line-vector', 'line', 'polygon', 'star', 'chunk', 'blob', 'ring', 'cubic', 'bezier', 
   'smooth-spline', 'spline-circle', 'spline-ellipse', 'spline-ring'
 ];
+
+// ===== EXPORT JOBS =====
+// Persistent storage for export job status and results
+export const exportJobs = pgTable("export_jobs", {
+  exportId: varchar("export_id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: varchar("status").notNull().default('queued'), // queued, processing, completed, failed
+  progress: jsonb("progress").notNull(), // { progress: number, currentStep: string }
+  config: jsonb("config").notNull(), // Export configuration (shapes, settings, etc.)
+  results: jsonb("results"), // Download URLs, file paths, etc.
+  error: text("error"), // Error message if failed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export type ExportJob = typeof exportJobs.$inferSelect;
+export type InsertExportJob = typeof exportJobs.$inferInsert;

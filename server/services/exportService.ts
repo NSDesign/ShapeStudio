@@ -9,12 +9,17 @@ import {
   GenerationSetMode, 
   ShapeCountMode,
   ZIndexConfig,
-  SupportedShapeType
+  SupportedShapeType,
+  exportJobs,
+  InsertExportJob,
+  ExportJob
 } from '../../shared/schema';
 import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
 import * as fs from 'fs';
 import * as path from 'path';
+import { db } from '../db';
+import { eq } from 'drizzle-orm';
 
 export interface BatchExportSettings {
   // Format and quality
@@ -128,7 +133,8 @@ export class ExportService {
     batchConfigSettings: BatchConfigSettings,
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
-    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    userId?: string
   ): Promise<BatchExportResult>;
   
   // New enhanced method for generation sets
@@ -139,7 +145,8 @@ export class ExportService {
     enhancedConfig: EnhancedBatchConfig,
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
-    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    userId?: string
   ): Promise<EnhancedBatchExportResult>;
   
   // Implementation with overload handling
@@ -150,7 +157,8 @@ export class ExportService {
     configSettings: BatchConfigSettings | EnhancedBatchConfig,
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
-    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    userId: string = 'dev-user'
   ): Promise<BatchExportResult | EnhancedBatchExportResult> {
     // Detect configuration type and delegate to appropriate handler
     const isEnhanced = this.isEnhancedBatchConfig(configSettings);
@@ -163,7 +171,8 @@ export class ExportService {
         configSettings as EnhancedBatchConfig,
         enabledShapeTypes,
         userSettings,
-        generateShapesFunction
+        generateShapesFunction,
+        userId
       );
     } else {
       return this.startLegacyBatchExport(
@@ -173,7 +182,8 @@ export class ExportService {
         configSettings as BatchConfigSettings,
         enabledShapeTypes,
         userSettings,
-        generateShapesFunction
+        generateShapesFunction,
+        userId
       );
     }
   }
@@ -450,8 +460,124 @@ export class ExportService {
     };
   }
 
-  getExportStatus(exportId: string): ExportProgress | null {
-    return this.activeExports.get(exportId) || null;
+  async getExportStatus(exportId: string): Promise<ExportProgress | null> {
+    // Try in-memory cache first for performance
+    const cached = this.activeExports.get(exportId);
+    if (cached) {
+      return cached;
+    }
+    
+    // Query from database
+    try {
+      const [job] = await db.select().from(exportJobs).where(eq(exportJobs.exportId, exportId));
+      
+      if (!job) {
+        return null;
+      }
+      
+      // Convert database record to ExportProgress format
+      const progress = job.progress as any;
+      const results = job.results as any;
+      
+      const exportProgress: ExportProgress = {
+        exportId: job.exportId,
+        status: job.status as any,
+        progress: progress?.progress || 0,
+        currentStep: progress?.currentStep || '',
+        imagesCompleted: progress?.imagesCompleted || 0,
+        totalImages: progress?.totalImages || 0,
+        estimatedTimeRemaining: progress?.estimatedTimeRemaining,
+        errorMessage: job.error || undefined,
+        downloadPath: results?.downloadUrl || results?.downloadPath
+      };
+      
+      // Cache it for future requests
+      this.activeExports.set(exportId, exportProgress);
+      
+      return exportProgress;
+    } catch (error) {
+      console.error(`[ExportService] Error fetching export status from database:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Create a new export job in the database
+   */
+  private async createExportJob(
+    exportId: string,
+    userId: string,
+    progress: ExportProgress,
+    config: any
+  ): Promise<void> {
+    try {
+      await db.insert(exportJobs).values({
+        exportId,
+        userId,
+        status: progress.status,
+        progress: {
+          progress: progress.progress,
+          currentStep: progress.currentStep,
+          imagesCompleted: progress.imagesCompleted,
+          totalImages: progress.totalImages,
+          estimatedTimeRemaining: progress.estimatedTimeRemaining
+        },
+        config,
+        results: null,
+        error: progress.errorMessage || null
+      });
+      
+      console.log(`[ExportService] Created export job in database: ${exportId}`);
+    } catch (error) {
+      console.error(`[ExportService] Error creating export job in database:`, error);
+    }
+  }
+
+  /**
+   * Update export job progress in the database
+   */
+  private async updateExportJobProgress(
+    exportId: string,
+    progress: ExportProgress
+  ): Promise<void> {
+    try {
+      await db.update(exportJobs)
+        .set({
+          status: progress.status,
+          progress: {
+            progress: progress.progress,
+            currentStep: progress.currentStep,
+            imagesCompleted: progress.imagesCompleted,
+            totalImages: progress.totalImages,
+            estimatedTimeRemaining: progress.estimatedTimeRemaining
+          },
+          error: progress.errorMessage || null,
+          completedAt: progress.status === 'completed' || progress.status === 'error' ? new Date() : null
+        })
+        .where(eq(exportJobs.exportId, exportId));
+    } catch (error) {
+      console.error(`[ExportService] Error updating export job progress in database:`, error);
+    }
+  }
+
+  /**
+   * Update export job results in the database
+   */
+  private async updateExportJobResults(
+    exportId: string,
+    results: any
+  ): Promise<void> {
+    try {
+      await db.update(exportJobs)
+        .set({
+          results,
+          status: 'completed',
+          completedAt: new Date()
+        })
+        .where(eq(exportJobs.exportId, exportId));
+    } catch (error) {
+      console.error(`[ExportService] Error updating export job results in database:`, error);
+    }
   }
 
   getExportFile(exportId: string): string | null {
@@ -630,7 +756,8 @@ export class ExportService {
     batchConfigSettings: BatchConfigSettings,
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
-    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    userId: string = 'dev-user'
   ): Promise<BatchExportResult> {
     const exportId = this.generateExportId();
     const settings = this.mergeBatchSettings(userSettings);
@@ -653,6 +780,16 @@ export class ExportService {
     };
     
     this.activeExports.set(exportId, progress);
+    
+    // Persist to database
+    await this.createExportJob(exportId, userId, progress, {
+      shapes: shapes.map(s => this.serializeShape(s)),
+      groups: groups.map(g => this.serializeGroup(g)),
+      canvasSettings,
+      batchConfigSettings,
+      enabledShapeTypes: Array.from(enabledShapeTypes),
+      userSettings
+    });
     
     // Start async batch processing using legacy method
     this.processBatchExport(
@@ -695,7 +832,8 @@ export class ExportService {
     enhancedConfig: EnhancedBatchConfig,
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
-    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    userId: string = 'dev-user'
   ): Promise<EnhancedBatchExportResult> {
     // Validate mode restrictions
     this.validateModeRestrictions(enhancedConfig);
@@ -724,6 +862,16 @@ export class ExportService {
     };
     
     this.activeExports.set(exportId, progress);
+    
+    // Persist to database
+    await this.createExportJob(exportId, userId, progress, {
+      shapes: shapes.map(s => this.serializeShape(s)),
+      groups: groups.map(g => this.serializeGroup(g)),
+      canvasSettings,
+      enhancedConfig,
+      enabledShapeTypes: Array.from(enabledShapeTypes),
+      userSettings
+    });
     
     // Start async enhanced batch processing
     this.processBatchExportEnhanced(
