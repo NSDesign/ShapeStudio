@@ -95,3 +95,16 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "API execute enabled data"
+mode = "sequential"
+author = 21294
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Project"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = '''curl -X POST \   -H "Content-Type: application/json" \   -H "x-api-key: $LIVE_API_KEY" \   -d '{"userId": "dev-user"}' \   https://shape-studio-NSDesign.replit.app/api/live/sets/enabled \   | jq -c '{data: .data}' \   | curl -X POST \     -H "Content-Type: application/json" \     -H "x-api-key: $LIVE_API_KEY" \     -d @- \     https://shape-studio-NSDesign.replit.app/api/live/sets/execute'''
