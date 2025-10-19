@@ -1,24 +1,47 @@
-# Live API Usage Guide
+# Shape Editor Live API - Usage Guide
 
 ## Overview
 
-The Shape Editor Pro Live API provides endpoints to capture complete application state, including generation sets, batch configurations, export settings, and artboard settings. This guide covers how to use the API both from within the Replit environment and from external services like n8n.
+The Shape Editor Live API provides endpoints to capture complete application state, execute server-side shape generation, and export images with real PNG/JPEG rendering. This guide covers the complete export workflow including individual file downloads, batch operations, and integration patterns.
 
 ---
 
 ## Available Endpoints
 
 ### 1. `/api/live/sets/enabled` (POST)
-
-Returns only **enabled** generation sets with filtered batch configurations (disabled sections stripped).
+Returns only **enabled** generation sets with filtered batch configurations.
 
 **Response includes:**
 - Enabled generation sets with complete shape types data
 - Filtered generation config settings (only enabled sections)
 - Set manager settings (visibility, transforms, alignment, blend modes, compositing)
-- Export settings
-- Artboard settings  
-- Batch export settings
+- Export settings, artboard settings, batch export settings
+
+### 2. `/api/live/sets/execute` (POST)
+Executes server-side shape generation and creates export job with real PNG/JPEG images.
+
+**Response includes:**
+- Export job ID for tracking
+- Initial status
+- Estimated completion time
+
+### 3. `/api/export/status/:exportId` (GET)
+Polls export job progress and retrieves download URLs when complete.
+
+**Response includes:**
+- Job status (pending, processing, completed, failed)
+- Progress percentage
+- Download URLs (ZIP and individual files)
+- File metadata
+
+### 4. `/api/export/download/:exportId` (GET)
+Downloads complete export as ZIP file.
+
+### 5. `/api/export/files/:exportId/:filename` (GET)
+Downloads individual image files from export.
+
+### 6. `/api/projects/download/:filename` (GET)
+Downloads individual project JSON files.
 
 ---
 
@@ -27,6 +50,187 @@ Returns only **enabled** generation sets with filtered batch configurations (dis
 All endpoints require an API key passed via the `x-api-key` header.
 
 **Security Note:** Never hardcode API keys in scripts or documentation. Always use secure credential management.
+
+---
+
+## Complete Export Workflow
+
+### Three-Step Process
+
+The complete workflow follows this pattern:
+1. **Get Configuration** - `/api/live/sets/enabled` retrieves current app state
+2. **Execute Export** - `/api/live/sets/execute` generates images server-side
+3. **Download Files** - `/api/export/download/:exportId` or individual file endpoints
+
+---
+
+## Quick Start Examples
+
+### Example 1: Complete Workflow (Production URL)
+
+```bash
+# Step 1: Get enabled sets configuration
+CONFIG=$(curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d '{"userId":"nick.sullivan.now@gmail.com"}')
+
+# Step 2: Execute export with configuration
+EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | \
+  curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" \
+    -H "Content-Type: application/json" \
+    -H "x-api-key: $LIVE_API_KEY" \
+    -d @- | jq -r '.data.exportId')
+
+echo "Export ID: $EXPORT_ID"
+
+# Step 3: Poll for completion (wait 5 seconds)
+sleep 5
+
+# Step 4: Get status and download path
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+DOWNLOAD_PATH=$(echo "$STATUS" | jq -r '.status.downloadPath')
+
+# Step 5: Download ZIP with smart filename extraction
+curl -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
+
+echo "✅ Export complete! Check your directory for batch-export-*.zip"
+```
+
+### Example 2: One-Line Chained Command (Local Development)
+
+```bash
+CONFIG=$(curl -s -X POST "http://localhost:5000/api/live/sets/enabled" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"nick.sullivan.now@gmail.com"}') && \
+EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | curl -s -X POST "http://localhost:5000/api/live/sets/execute" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @- | jq -r '.data.exportId') && \
+sleep 5 && \
+curl -JO "http://localhost:5000$(curl -s "http://localhost:5000/api/export/status/$EXPORT_ID" | jq -r '.status.downloadPath')"
+```
+
+**What `-JO` does:**
+- `-J` - Use filename from `Content-Disposition` header (e.g., `batch-export-2025-10-18T16-03-29.zip`)
+- `-O` - Save file with the extracted filename
+
+---
+
+## Downloading Individual Files
+
+When an export completes, the status response includes individual file URLs for both images and project files.
+
+### Example: Extract and Download Individual Images
+
+```bash
+# Get export status
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+
+# Extract image file URLs
+IMAGE_URLS=$(echo "$STATUS" | jq -r '.status.imageFiles[]?.url')
+
+# Download each image
+echo "$IMAGE_URLS" | while read url; do
+  curl -JO "https://shape-studio-nsdesign.replit.app$url"
+done
+```
+
+### Example: Download Specific Images by Index
+
+```bash
+# Download only the first 3 images
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+
+echo "$STATUS" | jq -r '.status.imageFiles[0:3][]?.url' | while read url; do
+  curl -JO "https://shape-studio-nsdesign.replit.app$url"
+done
+```
+
+### Example: Download Project Files
+
+```bash
+# Extract and download project JSON files
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+
+PROJECT_URLS=$(echo "$STATUS" | jq -r '.status.projectFiles[]?.url')
+
+echo "$PROJECT_URLS" | while read url; do
+  curl -JO "https://shape-studio-nsdesign.replit.app$url"
+done
+```
+
+### Example: Organized Download Script
+
+```bash
+#!/bin/bash
+
+# Configuration
+API_BASE="https://shape-studio-nsdesign.replit.app"
+EXPORT_ID="$1"
+OUTPUT_DIR="./downloads"
+
+# Validate export ID
+if [ -z "$EXPORT_ID" ]; then
+  echo "Usage: $0 <export_id>"
+  exit 1
+fi
+
+# Create organized directory structure
+mkdir -p "$OUTPUT_DIR/images"
+mkdir -p "$OUTPUT_DIR/projects"
+mkdir -p "$OUTPUT_DIR/zips"
+
+# Get export status
+echo "Fetching export status..."
+STATUS=$(curl -s "$API_BASE/api/export/status/$EXPORT_ID")
+
+# Check if completed
+if [ "$(echo "$STATUS" | jq -r '.status.status')" != "completed" ]; then
+  echo "Export not completed yet. Status: $(echo "$STATUS" | jq -r '.status.status')"
+  exit 1
+fi
+
+# Download ZIP
+echo "Downloading ZIP archive..."
+ZIP_PATH=$(echo "$STATUS" | jq -r '.status.downloadPath')
+curl -o "$OUTPUT_DIR/zips/export.zip" "$API_BASE$ZIP_PATH"
+
+# Download individual images
+echo "Downloading individual images..."
+echo "$STATUS" | jq -r '.status.imageFiles[]?.url' | while read url; do
+  filename=$(basename "$url")
+  curl -o "$OUTPUT_DIR/images/$filename" "$API_BASE$url"
+  echo "  ✓ $filename"
+done
+
+# Download project files
+if [ "$(echo "$STATUS" | jq '.status.projectFiles | length')" -gt 0 ]; then
+  echo "Downloading project files..."
+  echo "$STATUS" | jq -r '.status.projectFiles[]?.url' | while read url; do
+    filename=$(basename "$url")
+    curl -o "$OUTPUT_DIR/projects/$filename" "$API_BASE$url"
+    echo "  ✓ $filename"
+  done
+fi
+
+# Summary
+IMAGE_COUNT=$(echo "$STATUS" | jq '.status.imageFiles | length')
+PROJECT_COUNT=$(echo "$STATUS" | jq '.status.projectFiles | length')
+
+echo ""
+echo "📦 Download Complete!"
+echo "  Images: $IMAGE_COUNT files in $OUTPUT_DIR/images/"
+echo "  Projects: $PROJECT_COUNT files in $OUTPUT_DIR/projects/"
+echo "  ZIP: $OUTPUT_DIR/zips/export.zip"
+```
+
+**Usage:**
+```bash
+chmod +x download-export.sh
+./download-export.sh export_1760803409714_xecxxxez9
+```
 
 ---
 
@@ -57,7 +261,7 @@ When running curl commands **inside the Replit environment** (Shell, workspace s
 curl -X POST http://localhost:5000/api/live/sets/enabled \
   -H "Content-Type: application/json" \
   -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"dev-user"}'
+  -d '{"userId":"nick.sullivan.now@gmail.com"}'
 ```
 
 **How it works:**
@@ -65,103 +269,156 @@ curl -X POST http://localhost:5000/api/live/sets/enabled \
 - The key is never exposed in command history or scripts
 - Anyone running this command will use their own secret value
 
-#### Example: Using in a Bash Script
-
-```bash
-#!/bin/bash
-
-# Fetch enabled generation sets
-response=$(curl -s -X POST http://localhost:5000/api/live/sets/enabled \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"'"$USER_ID"'"}')
-
-echo "Response: $response"
-```
-
 ---
 
 ### Scenario 2: External Usage (n8n, Zapier, Make, etc.)
 
 When calling the API from **external services** outside the Replit environment, you cannot access Replit secrets. Instead, use the external service's own credential management system.
 
-#### n8n Setup Instructions
+#### n8n Complete Workflow Example
 
-##### Option A: Using n8n Credentials (Recommended)
+**Workflow:** Fetch config → Execute export → Poll status → Download files
 
-1. **Create Credential in n8n:**
-   - Go to **Credentials** in n8n
-   - Click **Add Credential**
-   - Choose **Header Auth** or **Generic Credential**
-   - Name: `ShapeEditorAPIKey`
-   - Add the API key value
+**Node 1: HTTP Request (Get Configuration)**
+```json
+{
+  "method": "POST",
+  "url": "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled",
+  "authentication": "predefinedCredentialType",
+  "nodeCredentialType": "httpHeaderAuth",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "userId": "nick.sullivan.now@gmail.com"
+  }
+}
+```
 
-2. **Use in HTTP Request Node:**
+**Node 2: HTTP Request (Execute Export)**
+```json
+{
+  "method": "POST",
+  "url": "https://shape-studio-nsdesign.replit.app/api/live/sets/execute",
+  "authentication": "predefinedCredentialType",
+  "nodeCredentialType": "httpHeaderAuth",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "data": "={{ $json.data }}"
+  }
+}
+```
 
-   **Node Configuration:**
-   - **Method:** POST
-   - **URL:** `https://your-replit-app.repl.co/api/live/sets/enabled`
-   
-   **Headers:**
-   ```json
-   {
-     "Content-Type": "application/json",
-     "x-api-key": "={{$credentials.ShapeEditorAPIKey}}"
-   }
-   ```
-   
-   **Body (JSON):**
-   ```json
-   {
-     "userId": "{{$json.userId}}"
-   }
-   ```
+**Node 3: Code (Wait for Completion)**
+```javascript
+// Wait 10 seconds for export to complete
+return new Promise(resolve => {
+  setTimeout(() => {
+    resolve({ exportId: $input.item.json.data.exportId });
+  }, 10000);
+});
+```
 
-3. **Authentication:**
-   - In the HTTP Request node, select your credential from the **Credential for Predefined Credential Type** dropdown
+**Node 4: HTTP Request (Check Status)**
+```json
+{
+  "method": "GET",
+  "url": "https://shape-studio-nsdesign.replit.app/api/export/status/={{ $json.exportId }}",
+  "authentication": "predefinedCredentialType",
+  "nodeCredentialType": "httpHeaderAuth"
+}
+```
 
-##### Option B: Using n8n Variables
+**Node 5: HTTP Request (Download ZIP)**
+```json
+{
+  "method": "GET",
+  "url": "https://shape-studio-nsdesign.replit.app={{ $json.status.downloadPath }}",
+  "responseFormat": "file"
+}
+```
 
-1. **Set Variable in Workflow:**
-   ```javascript
-   // In a Set node
-   {
-     "apiKey": "your-api-key-value"
-   }
-   ```
+**Node 6: Move Binary Data (Save File)**
+- Move the downloaded file to your desired storage location
 
-2. **Use in HTTP Request Node:**
-   ```json
-   {
-     "x-api-key": "={{$node['Set'].json.apiKey}}"
-   }
-   ```
+---
 
-**Note:** This method stores the key in the workflow, which is less secure than using credentials.
-
-#### Example: curl Command from External Server
+### Scenario 3: Production Server
 
 ```bash
-# Store API key in environment variable on your server
-export LIVE_API_KEY="your-api-key-value"
+#!/bin/bash
 
-# Make request
-curl -X POST https://your-replit-app.repl.co/api/live/sets/enabled \
+# Store API key securely on your server
+export LIVE_API_KEY="your-api-key-value"
+API_BASE="https://shape-studio-nsdesign.replit.app"
+USER_ID="nick.sullivan.now@gmail.com"
+
+# Function to check export status with timeout
+wait_for_export() {
+  local export_id=$1
+  local max_attempts=30
+  local attempt=0
+  
+  while [ $attempt -lt $max_attempts ]; do
+    status=$(curl -s "$API_BASE/api/export/status/$export_id" | jq -r '.status.status')
+    
+    if [ "$status" = "completed" ]; then
+      echo "✅ Export completed!"
+      return 0
+    elif [ "$status" = "failed" ]; then
+      echo "❌ Export failed!"
+      return 1
+    fi
+    
+    echo "⏳ Status: $status (attempt $((attempt + 1))/$max_attempts)"
+    sleep 2
+    attempt=$((attempt + 1))
+  done
+  
+  echo "⏰ Timeout waiting for export"
+  return 1
+}
+
+# Execute workflow
+echo "1. Fetching configuration..."
+config=$(curl -s -X POST "$API_BASE/api/live/sets/enabled" \
   -H "Content-Type: application/json" \
   -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"external-user-123"}'
+  -d "{\"userId\":\"$USER_ID\"}")
+
+echo "2. Executing export..."
+response=$(echo "$config" | jq -c '{data}' | \
+  curl -s -X POST "$API_BASE/api/live/sets/execute" \
+    -H "Content-Type: application/json" \
+    -H "x-api-key: $LIVE_API_KEY" \
+    -d @-)
+
+export_id=$(echo "$response" | jq -r '.data.exportId')
+echo "   Export ID: $export_id"
+
+echo "3. Waiting for completion..."
+if wait_for_export "$export_id"; then
+  echo "4. Downloading files..."
+  curl -JO "$API_BASE$(curl -s "$API_BASE/api/export/status/$export_id" | jq -r '.status.downloadPath')"
+  echo "✨ Done!"
+else
+  echo "❌ Export workflow failed"
+  exit 1
+fi
 ```
 
 ---
 
-## Request Format
+## Request & Response Formats
 
 ### POST `/api/live/sets/enabled`
 
 **Request Body:**
 ```json
 {
-  "userId": "string"
+  "userId": "nick.sullivan.now@gmail.com"
 }
 ```
 
@@ -173,107 +430,155 @@ curl -X POST https://your-replit-app.repl.co/api/live/sets/enabled \
 }
 ```
 
----
-
-## Response Format
-
-### Success Response
-
+**Success Response:**
 ```json
 {
   "success": true,
   "data": {
-    "generationSets": [
-      {
-        "id": "set-1760146321165-0f3pjy9n8",
-        "name": "Set 1",
-        "enabled": true,
-        "enabledShapeTypes": ["circle", "rectangle"],
-        "shapeCountMode": "range",
-        "shapeCountFixed": 10,
-        "shapeCountRange": [5, 15],
-        "shapeSpecificProperties": {
-          "circle": {
-            "segmentCountRange": [16, 32]
-          },
-          "rectangle": {
-            "cornerRadiusMode": "range",
-            "cornerRadiusRange": [0, 20]
-          }
-        },
-        "batchConfig": {
-          "selectedPreset": "custom",
-          "propertiesEnabled": true,
-          "fillEnabled": true,
-          "strokeEnabled": true,
-          "distributionEnabled": true,
-          "distributionPattern": "grid",
-          "gridRows": 3,
-          "gridColumns": 3,
-          "gridSpacing": 50
-        },
-        "setVisibility": {
-          "visible": true,
-          "opacity": 1,
-          "opacityVariance": 0
-        },
-        "setBlendMode": "normal",
-        "compositingOperation": "source-over",
-        "setTransform": {
-          "x": 0,
-          "y": 0,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1
-        },
-        "artboardAlignment": {
-          "fitToArtboard": false,
-          "alignTo": "center"
-        },
-        "zIndexConfig": {
-          "mode": "auto",
-          "baseValue": 0
-        },
-        "generationOrder": 0,
-        "description": ""
-      }
-    ],
-    "currentSetId": "set-1760146321165-0f3pjy9n8",
-    "exportSettings": {
-      "format": "png",
-      "quality": 90,
-      "scale": 1,
-      "mode": "all"
-    },
-    "artboardSettings": {
-      "width": 400,
-      "height": 400,
-      "backgroundColor": "#ffffff",
-      "displayGrid": false,
-      "displayBorder": true
-    },
-    "batchExportSettings": {
-      "enabled": false,
-      "count": 10,
-      "setsPerExport": 1
-    }
+    "generationSets": [...],
+    "currentSetId": "set-...",
+    "exportSettings": {...},
+    "artboardSettings": {...},
+    "batchExportSettings": {...}
   }
 }
 ```
 
-### Error Response
+---
 
+### POST `/api/live/sets/execute`
+
+**Request Body:**
 ```json
 {
-  "error": "Invalid API key"
+  "data": {
+    "generationSets": [...],
+    "exportSettings": {...},
+    "artboardSettings": {...},
+    "batchExportSettings": {...}
+  }
 }
 ```
 
-**Status Codes:**
-- `200` - Success
-- `401` - Unauthorized (invalid API key)
-- `404` - User not found
-- `500` - Server error
+**Success Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "exportId": "export_1760803409714_xecxxxez9",
+    "status": "pending",
+    "message": "Export job created successfully"
+  }
+}
+```
+
+---
+
+### GET `/api/export/status/:exportId`
+
+**Success Response (Completed):**
+```json
+{
+  "success": true,
+  "status": {
+    "id": "export_1760803409714_xecxxxez9",
+    "status": "completed",
+    "progress": 100,
+    "totalImages": 4,
+    "completedImages": 4,
+    "downloadPath": "/api/export/download/export_1760803409714_xecxxxez9",
+    "imageFiles": [
+      {
+        "filename": "batch-export-001.png",
+        "url": "/api/export/files/export_1760803409714_xecxxxez9/batch-export-001.png",
+        "size": 18432
+      },
+      {
+        "filename": "batch-export-002.png",
+        "url": "/api/export/files/export_1760803409714_xecxxxez9/batch-export-002.png",
+        "size": 18521
+      }
+    ],
+    "projectFiles": [
+      {
+        "filename": "project-001.json",
+        "url": "/api/projects/download/project-001.json",
+        "size": 2048
+      }
+    ],
+    "createdAt": "2025-10-18T16:03:29.714Z",
+    "completedAt": "2025-10-18T16:03:34.821Z"
+  }
+}
+```
+
+---
+
+## Advanced Examples
+
+### Example: Selective Image Download
+
+Download only images matching a pattern:
+
+```bash
+# Get status
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+
+# Download only images 1-5
+echo "$STATUS" | jq -r '.status.imageFiles[] | select(.filename | test("00[1-5]")) | .url' | \
+  while read url; do
+    curl -JO "https://shape-studio-nsdesign.replit.app$url"
+  done
+```
+
+### Example: Parallel Downloads
+
+Download all files in parallel (requires GNU parallel):
+
+```bash
+# Get all URLs
+STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
+
+# Extract all file URLs
+echo "$STATUS" | jq -r '.status.imageFiles[]?.url, .status.projectFiles[]?.url' | \
+  parallel -j 4 "curl -JO https://shape-studio-nsdesign.replit.app{}"
+```
+
+### Example: Webhook Notification on Completion
+
+```bash
+#!/bin/bash
+
+API_BASE="https://shape-studio-nsdesign.replit.app"
+WEBHOOK_URL="https://your-webhook-endpoint.com/notify"
+
+# Execute export
+EXPORT_ID=$(curl -s -X POST "$API_BASE/api/live/sets/execute" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @config.json | jq -r '.data.exportId')
+
+# Poll and notify
+while true; do
+  status=$(curl -s "$API_BASE/api/export/status/$EXPORT_ID")
+  current=$(echo "$status" | jq -r '.status.status')
+  
+  if [ "$current" = "completed" ]; then
+    # Send webhook notification
+    curl -X POST "$WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{\"exportId\":\"$EXPORT_ID\",\"status\":\"completed\",\"downloadPath\":\"$(echo "$status" | jq -r '.status.downloadPath')\"}"
+    break
+  elif [ "$current" = "failed" ]; then
+    curl -X POST "$WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{\"exportId\":\"$EXPORT_ID\",\"status\":\"failed\"}"
+    break
+  fi
+  
+  sleep 2
+done
+```
 
 ---
 
@@ -328,123 +633,6 @@ curl -X POST https://your-replit-app.repl.co/api/live/sets/enabled \
 
 ---
 
-## Testing the API
-
-### Test from Replit Shell
-
-```bash
-# Set up test user ID
-export TEST_USER_ID="dev-user"
-
-# Make request
-curl -X POST http://localhost:5000/api/live/sets/enabled \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"'"$TEST_USER_ID"'"}' | jq
-```
-
-**Using jq for pretty output:**
-```bash
-# Install jq if not available
-# In Replit: already installed
-
-# Pretty print response
-curl -s -X POST http://localhost:5000/api/live/sets/enabled \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"dev-user"}' | jq '.data.generationSets[0].name'
-```
-
-### Test from n8n
-
-1. **Create a simple workflow:**
-   - Start with **Manual Trigger** node
-   - Add **HTTP Request** node configured as shown above
-   - Add **Set** node to view response
-
-2. **Execute workflow:**
-   - Click **Execute Workflow**
-   - Check the **Set** node output
-
-3. **Debug issues:**
-   - Check HTTP Request node for error messages
-   - Verify API key is correct in credentials
-   - Ensure URL is correct (http://localhost for dev, https://your-app.repl.co for production)
-
----
-
-## Integration Examples
-
-### Example 1: Fetch and Process in n8n
-
-**Workflow:** Fetch enabled sets → Filter by shape type → Send to webhook
-
-**Node 1: HTTP Request (Fetch Sets)**
-```json
-{
-  "method": "POST",
-  "url": "https://your-app.repl.co/api/live/sets/enabled",
-  "headers": {
-    "x-api-key": "={{$credentials.ShapeEditorAPIKey}}"
-  },
-  "body": {
-    "userId": "production-user"
-  }
-}
-```
-
-**Node 2: Function (Filter)**
-```javascript
-const sets = $input.item.json.data.generationSets;
-const circleSets = sets.filter(set => 
-  set.enabledShapeTypes.includes('circle')
-);
-return { circleSets };
-```
-
-**Node 3: Webhook (Send)**
-- Send filtered data to external system
-
-### Example 2: Bash Script for Batch Processing
-
-```bash
-#!/bin/bash
-
-# Configuration
-API_URL="http://localhost:5000/api/live/sets/enabled"
-OUTPUT_DIR="./api-exports"
-USER_ID="batch-processor"
-
-# Ensure output directory exists
-mkdir -p "$OUTPUT_DIR"
-
-# Fetch data
-echo "Fetching enabled generation sets..."
-response=$(curl -s -X POST "$API_URL" \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"'"$USER_ID"'"}')
-
-# Check for errors
-if echo "$response" | jq -e '.error' > /dev/null; then
-  echo "Error: $(echo "$response" | jq -r '.error')"
-  exit 1
-fi
-
-# Save to file
-timestamp=$(date +%Y%m%d_%H%M%S)
-output_file="$OUTPUT_DIR/sets_$timestamp.json"
-echo "$response" | jq '.' > "$output_file"
-
-echo "Data saved to: $output_file"
-
-# Extract set count
-set_count=$(echo "$response" | jq '.data.generationSets | length')
-echo "Total enabled sets: $set_count"
-```
-
----
-
 ## Troubleshooting
 
 ### Common Issues
@@ -461,15 +649,17 @@ echo "Total enabled sets: $set_count"
 3. **Connection refused**
    - Ensure the Replit app is running
    - Check the URL is correct (localhost:5000 for dev)
-   - For published apps, use the Replit-provided URL
+   - For published apps, use `https://shape-studio-nsdesign.replit.app`
 
-4. **CORS errors (browser requests)**
-   - API is designed for server-to-server communication
-   - If calling from browser, ensure CORS is configured in Express
+4. **Export stuck in "processing"**
+   - Check server logs for errors
+   - Verify node-canvas is properly installed
+   - Ensure sufficient memory/CPU resources
 
-5. **Empty response**
-   - Check that user has at least one enabled generation set
-   - Verify batch configuration has enabled sections
+5. **File not found (404) on download**
+   - Files expire after a certain period
+   - Check that export completed successfully
+   - Verify exportId is correct
 
 ### Debug Steps
 
@@ -480,9 +670,10 @@ echo "Total enabled sets: $set_count"
 
 2. **Test with Hardcoded Key (temporarily):**
    ```bash
-   curl -X POST http://localhost:5000/api/live/sets/enabled \
+   curl -X POST https://shape-studio-nsdesign.replit.app/api/live/sets/enabled \
      -H "x-api-key: 3211d3f332fsss4t4tbebw5r653765h6brb4" \
-     -d '{"userId":"dev-user"}'
+     -H "Content-Type: application/json" \
+     -d '{"userId":"nick.sullivan.now@gmail.com"}'
    ```
 
 3. **Check Server Logs:**
@@ -491,9 +682,16 @@ echo "Total enabled sets: $set_count"
 
 4. **Test Endpoint Availability:**
    ```bash
-   curl -X POST http://localhost:5000/api/live/sets/enabled \
+   curl -X POST https://shape-studio-nsdesign.replit.app/api/live/sets/enabled \
      -H "x-api-key: $LIVE_API_KEY" \
-     -d '{"userId":"dev-user"}' -v
+     -H "Content-Type: application/json" \
+     -d '{"userId":"nick.sullivan.now@gmail.com"}' -v
+   ```
+
+5. **Inspect Export Status:**
+   ```bash
+   # Get detailed status
+   curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" | jq
    ```
 
 ---
@@ -546,20 +744,242 @@ if (!VALID_API_KEYS.includes(apiKey)) {
 
 ---
 
+## OpenAPI / Swagger Documentation
+
+### Overview
+
+OpenAPI (formerly Swagger) provides interactive API documentation with a web UI where users can test endpoints directly. While not yet implemented in Shape Editor, here's how to add it:
+
+### Implementation Guide
+
+#### 1. Install Dependencies
+
+```bash
+npm install swagger-ui-express swagger-jsdoc --save
+npm install @types/swagger-ui-express --save-dev
+```
+
+#### 2. Create OpenAPI Configuration
+
+Create `server/swagger.ts`:
+
+```typescript
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Shape Editor API',
+      version: '1.0.0',
+      description: 'Live API for server-side shape generation and export',
+      contact: {
+        name: 'API Support',
+        email: 'nick.sullivan.now@gmail.com'
+      }
+    },
+    servers: [
+      {
+        url: 'http://localhost:5000',
+        description: 'Development server'
+      },
+      {
+        url: 'https://shape-studio-nsdesign.replit.app',
+        description: 'Production server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-api-key'
+        }
+      }
+    },
+    security: [{
+      ApiKeyAuth: []
+    }]
+  },
+  apis: ['./server/routes/*.ts'] // Path to API route files
+};
+
+export const swaggerSpec = swaggerJsdoc(options);
+```
+
+#### 3. Add to Express Server
+
+In `server/index.ts`:
+
+```typescript
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger';
+
+// Add after other routes
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+```
+
+#### 4. Annotate API Routes
+
+Add JSDoc comments to `server/routes/liveApi.ts`:
+
+```typescript
+/**
+ * @swagger
+ * /api/live/sets/enabled:
+ *   post:
+ *     summary: Get enabled generation sets
+ *     description: Returns configuration for all enabled generation sets with filtered batch settings
+ *     tags:
+ *       - Live API
+ *     security:
+ *       - ApiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: nick.sullivan.now@gmail.com
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized - Invalid API key
+ */
+app.post('/api/live/sets/enabled', async (req, res) => {
+  // ... existing code
+});
+```
+
+#### 5. Access Documentation
+
+Once implemented, visit:
+- **Local:** http://localhost:5000/api-docs
+- **Production:** https://shape-studio-nsdesign.replit.app/api-docs
+
+### Benefits of OpenAPI/Swagger
+
+✅ **Interactive Testing** - Test endpoints directly in browser
+✅ **Auto-Generated Docs** - Always up-to-date with code
+✅ **Client Code Generation** - Generate API clients for multiple languages
+✅ **Type Safety** - Define schemas once, use everywhere
+✅ **Team Collaboration** - Easy onboarding for new developers
+
+### Alternative: Postman Collections
+
+Another option is exporting a Postman collection:
+
+```json
+{
+  "info": {
+    "name": "Shape Editor API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Enabled Sets",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{API_KEY}}"
+          }
+        ],
+        "url": "{{BASE_URL}}/api/live/sets/enabled",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userId\":\"nick.sullivan.now@gmail.com\"}"
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Performance & Optimization
+
+### Recommended Practices
+
+1. **Batch Size Limits**
+   - Keep exports under 50 images for faster processing
+   - Use higher batch counts only when necessary
+
+2. **Image Quality**
+   - PNG: Lossless but larger files (recommended for graphics)
+   - JPEG: Smaller files, quality 85-92 recommended
+   - Adjust quality based on use case
+
+3. **Polling Strategy**
+   - Poll status every 2-3 seconds
+   - Implement exponential backoff for long exports
+   - Set reasonable timeout (30-60 seconds)
+
+4. **Concurrent Requests**
+   - Limit parallel export requests to avoid resource exhaustion
+   - Queue requests if processing multiple users
+
+---
+
+## Rate Limiting (Future Enhancement)
+
+Consider implementing rate limiting to prevent abuse:
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: 'Too many requests from this IP'
+});
+
+app.use('/api/live/', apiLimiter);
+```
+
+---
+
 ## Next Steps
 
-- **Monitor Usage:** Track API calls to detect unusual activity
-- **Rate Limiting:** Implement rate limiting to prevent abuse
-- **API Documentation:** Consider adding OpenAPI/Swagger docs
-- **Webhooks:** Add webhook support for real-time updates
-- **Versioning:** Implement API versioning (e.g., `/api/v1/live/sets/enabled`)
+- ✅ **Individual File Downloads** - Implemented in this guide
+- ✅ **Complete Workflow Examples** - Provided with real URLs
+- ⏳ **OpenAPI/Swagger Docs** - Implementation guide provided
+- ⏳ **Webhooks** - Add webhook support for real-time updates
+- ⏳ **Rate Limiting** - Implement to prevent abuse
+- ⏳ **API Versioning** - Consider `/api/v1/live/sets/enabled`
+- ⏳ **Monitoring** - Track API usage and performance metrics
 
 ---
 
 ## Support
 
 For issues or questions:
+
 1. Check this documentation first
 2. Review troubleshooting section
 3. Check server logs in Replit console
-4. Contact support with error messages and request details
+4. Test with the provided example scripts
+5. Contact support with error messages and request details
+
+**API Endpoints Summary:**
+- Production: `https://shape-studio-nsdesign.replit.app`
+- Development: `http://localhost:5000`
+- User: `nick.sullivan.now@gmail.com`
+- Auth: `x-api-key` header required

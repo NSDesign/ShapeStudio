@@ -1,7 +1,7 @@
-# Shape Editor Pro - Replit Development Guide
+# Shape Editor - Replit Development Guide
 
 ## Overview
-Shape Editor Pro is a web-based application for creating, manipulating, and composing geometric shapes. Built with React, TypeScript, and Express, it offers advanced features like procedural generation, boolean operations, and smart distribution algorithms. The project aims to provide a comprehensive toolset for digital artists and designers to create complex graphic compositions with ease, targeting a market for creative professionals and hobbyists seeking advanced shape manipulation capabilities.
+Shape Editor is a web-based application for creating, manipulating, and composing geometric shapes. Built with React, TypeScript, and Express, it offers advanced features like procedural generation, boolean operations, and smart distribution algorithms. The project aims to provide a comprehensive toolset for digital artists and designers to create complex graphic compositions with ease, targeting a market for creative professionals and hobbyists seeking advanced shape manipulation capabilities.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
