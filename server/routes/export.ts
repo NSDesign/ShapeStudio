@@ -3,6 +3,11 @@ import { ExportService, BatchExportSettings } from '../services/exportService';
 import { ProjectService, SaveProjectSettings } from '../services/projectService';
 import { z } from 'zod';
 import * as path from 'path';
+import { 
+  BatchConfigSettingsSchema, 
+  GenerationSetSchema, 
+  SupportedShapeTypeSchema 
+} from '../../shared/schema';
 
 // Create service instances
 const exportService = new ExportService();
@@ -61,9 +66,35 @@ const BatchExportSchema = z.object({
   modulationValue: z.number().min(0).max(1).optional()
 });
 
+// Comprehensive SaveProjectRequestSchema - accepts complete project state
 const SaveProjectSchema = z.object({
+  // Project metadata
   projectName: z.string().optional(),
-  includeTimestamp: z.boolean().optional().default(true)
+  includeTimestamp: z.boolean().optional().default(true),
+  
+  // Core project data
+  shapes: z.array(z.any()).optional().default([]),
+  groups: z.array(z.any()).optional().default([]),
+  
+  // Canvas settings
+  canvasSettings: z.object({
+    width: z.number(),
+    height: z.number(),
+    zoom: z.number().optional().default(1),
+    panX: z.number().optional().default(0),
+    panY: z.number().optional().default(0),
+    backgroundColor: z.string().optional().default('#1e293b'),
+    showGrid: z.boolean().optional().default(false)
+  }).optional(),
+  
+  // Batch configuration settings (complete generation config)
+  batchConfigSettings: BatchConfigSettingsSchema.optional(),
+  
+  // Generation sets (shape sets configuration)
+  generationSets: z.array(GenerationSetSchema).optional().default([]),
+  
+  // Enabled shape types
+  enabledShapeTypes: z.array(SupportedShapeTypeSchema).optional().default([])
 });
 
 // Live State API Schema - Complete current UI state
