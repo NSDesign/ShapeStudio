@@ -73,7 +73,7 @@ The complete workflow follows this pattern:
 CONFIG=$(curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
   -H "Content-Type: application/json" \
   -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"nick.sullivan.now@gmail.com"}')
+  -d '{"userId":"21294"}')
 
 # Step 2: Execute export with configuration
 EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | \
@@ -103,7 +103,7 @@ echo "✅ Export complete! Check your directory for batch-export-*.zip"
 CONFIG=$(curl -s -X POST "http://localhost:5000/api/live/sets/enabled" \
   -H "x-api-key: $LIVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"userId":"nick.sullivan.now@gmail.com"}') && \
+  -d '{"userId":"21294"}') && \
 EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | curl -s -X POST "http://localhost:5000/api/live/sets/execute" \
   -H "x-api-key: $LIVE_API_KEY" \
   -H "Content-Type: application/json" \
@@ -261,7 +261,7 @@ When running curl commands **inside the Replit environment** (Shell, workspace s
 curl -X POST http://localhost:5000/api/live/sets/enabled \
   -H "Content-Type: application/json" \
   -H "x-api-key: $LIVE_API_KEY" \
-  -d '{"userId":"nick.sullivan.now@gmail.com"}'
+  -d '{"userId":"21294"}'
 ```
 
 **How it works:**
@@ -290,7 +290,7 @@ When calling the API from **external services** outside the Replit environment, 
     "Content-Type": "application/json"
   },
   "body": {
-    "userId": "nick.sullivan.now@gmail.com"
+    "userId": "21294"
   }
 }
 ```
@@ -353,7 +353,7 @@ return new Promise(resolve => {
 # Store API key securely on your server
 export LIVE_API_KEY="your-api-key-value"
 API_BASE="https://shape-studio-nsdesign.replit.app"
-USER_ID="nick.sullivan.now@gmail.com"
+USER_ID="21294"
 
 # Function to check export status with timeout
 wait_for_export() {
@@ -418,7 +418,7 @@ fi
 **Request Body:**
 ```json
 {
-  "userId": "nick.sullivan.now@gmail.com"
+  "userId": "21294"
 }
 ```
 
@@ -673,7 +673,7 @@ done
    curl -X POST https://shape-studio-nsdesign.replit.app/api/live/sets/enabled \
      -H "x-api-key: 3211d3f332fsss4t4tbebw5r653765h6brb4" \
      -H "Content-Type: application/json" \
-     -d '{"userId":"nick.sullivan.now@gmail.com"}'
+     -d '{"userId":"21294"}'
    ```
 
 3. **Check Server Logs:**
@@ -685,7 +685,7 @@ done
    curl -X POST https://shape-studio-nsdesign.replit.app/api/live/sets/enabled \
      -H "x-api-key: $LIVE_API_KEY" \
      -H "Content-Type: application/json" \
-     -d '{"userId":"nick.sullivan.now@gmail.com"}' -v
+     -d '{"userId":"21294"}' -v
    ```
 
 5. **Inspect Export Status:**
@@ -775,7 +775,7 @@ const options = {
       description: 'Live API for server-side shape generation and export',
       contact: {
         name: 'API Support',
-        email: 'nick.sullivan.now@gmail.com'
+        email: '21294'
       }
     },
     servers: [
@@ -845,7 +845,7 @@ Add JSDoc comments to `server/routes/liveApi.ts`:
  *             properties:
  *               userId:
  *                 type: string
- *                 example: nick.sullivan.now@gmail.com
+ *                 example: 21294
  *     responses:
  *       200:
  *         description: Successful response
@@ -904,7 +904,7 @@ Another option is exporting a Postman collection:
         "url": "{{BASE_URL}}/api/live/sets/enabled",
         "body": {
           "mode": "raw",
-          "raw": "{\"userId\":\"nick.sullivan.now@gmail.com\"}"
+          "raw": "{\"userId\":\"21294\"}"
         }
       }
     }
@@ -981,5 +981,5 @@ For issues or questions:
 **API Endpoints Summary:**
 - Production: `https://shape-studio-nsdesign.replit.app`
 - Development: `http://localhost:5000`
-- User: `nick.sullivan.now@gmail.com`
+- User: `21294`
 - Auth: `x-api-key` header required
