@@ -111,9 +111,9 @@ const LiveStateApiSchema = z.object({
     shapeCountRange: z.tuple([z.number(), z.number()]),
     shapeSpecificSettings: z.record(z.any()),
     // Export settings from current UI
-    exportFormat: z.string(),
+    exportFormat: z.enum(['png', 'jpeg', 'webp', 'avif', 'bmp']),
     exportQuality: z.number().min(1).max(100),
-    exportScale: z.number().min(1).max(4),
+    exportScale: z.number().min(0.1).max(8),
     exportScope: z.enum(['all', 'selected', 'artboard']),
     // Batch settings from UI
     exportBatchModeEnabled: z.boolean(),
@@ -219,7 +219,6 @@ export function registerExportRoutes(app: Express): void {
         { value: 'jpeg', label: 'JPEG', description: 'Lossy compression, smaller files' },
         { value: 'webp', label: 'WebP', description: 'Modern format, excellent compression' },
         { value: 'avif', label: 'AVIF', description: 'Next-gen format, best compression' },
-        { value: 'svg', label: 'SVG', description: 'Vector format, scalable' },
         { value: 'bmp', label: 'BMP', description: 'Uncompressed bitmap' }
       ];
       

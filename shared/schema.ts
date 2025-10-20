@@ -122,9 +122,9 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
 // App settings defaults configuration type
 export interface AppSettingsDefaults {
   // Export settings
-  exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf';
+  exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf';
   exportQuality: number;              // 10-100 for lossy formats
-  exportScale: number;                // 0.5-4x scaling
+  exportScale: number;                // 0.1-8x scaling (up to 600dpi)
   exportMode: 'selection' | 'artboard' | 'all';
   
   // Artboard settings
@@ -1559,7 +1559,7 @@ export interface EnhancedBatchConfig {
     edgeCaseStrategy: 'hold' | 'cycle' | 'random' | 'stop';
     
     // Export settings
-    exportFormat: 'png' | 'svg' | 'json';
+    exportFormat: 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp';
     exportQuality: number;            // 0-100 for image formats
     
     // Global z-index management (single source of truth)
@@ -2244,7 +2244,7 @@ export const EnhancedBatchConfigSchema = z.object({
       backgroundColor: z.string()
     }).optional(),
     edgeCaseStrategy: z.enum(['hold', 'cycle', 'random', 'stop']),
-    exportFormat: z.enum(['png', 'svg', 'json']),
+    exportFormat: z.enum(['png', 'jpeg', 'webp', 'avif', 'bmp']),
     exportQuality: z.number().min(0).max(100),
     globalZIndexSettings: z.object({
       startingZIndex: z.number(),
