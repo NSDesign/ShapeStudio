@@ -457,12 +457,12 @@ export function registerExportRoutes(app: Express): void {
   // Save project
   app.post('/api/projects/save', async (req, res) => {
     try {
-      const validatedSettings = SaveProjectSchema.parse(req.body);
+      const validatedData = SaveProjectSchema.parse(req.body);
       
-      // Mock project data for now
-      const mockShapes: any[] = [];
-      const mockGroups: any[] = [];
-      const mockCanvasSettings = {
+      // Extract project data from request body
+      const shapes = validatedData.shapes || [];
+      const groups = validatedData.groups || [];
+      const canvasSettings = validatedData.canvasSettings || {
         width: 1200,
         height: 800,
         zoom: 1,
@@ -471,19 +471,22 @@ export function registerExportRoutes(app: Express): void {
         backgroundColor: '#1e293b',
         showGrid: false
       };
-      const mockBatchConfigSettings = {
-        selectedPreset: 'none',
-        // Add other settings
+      const batchConfigSettings = validatedData.batchConfigSettings || {};
+      const enabledShapeTypes = new Set(validatedData.enabledShapeTypes || []);
+      
+      // Pass settings for projectName and includeTimestamp
+      const saveSettings: SaveProjectSettings = {
+        projectName: validatedData.projectName,
+        includeTimestamp: validatedData.includeTimestamp ?? true
       };
-      const mockEnabledShapeTypes = new Set(['rectangle', 'circle', 'polygon']);
       
       const result = await projectService.saveProject(
-        mockShapes,
-        mockGroups,
-        mockCanvasSettings,
-        mockBatchConfigSettings as any,
-        mockEnabledShapeTypes,
-        validatedSettings
+        shapes,
+        groups,
+        canvasSettings,
+        batchConfigSettings as any,
+        enabledShapeTypes,
+        saveSettings
       );
       
       res.json(result);
