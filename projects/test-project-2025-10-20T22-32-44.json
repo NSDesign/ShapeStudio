@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-20T22:32:44.253Z",
+  "name": "test-project",
+  "canvasSettings": {
+    "width": 800,
+    "height": 600,
+    "zoom": 1,
+    "panX": 0,
+    "panY": 0,
+    "backgroundColor": "#1e293b",
+    "showGrid": false
+  },
+  "batchConfigSettings": {},
+  "enabledShapeTypes": [
+    "circle"
+  ],
+  "shapes": [
+    {
+      "id": "s1",
+      "type": "circle",
+      "selected": false,
+      "radius": 50
+    }
+  ],
+  "groups": []
+}

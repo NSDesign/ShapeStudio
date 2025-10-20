@@ -43,6 +43,37 @@ Downloads individual image files from export.
 ### 6. `/api/projects/download/:filename` (GET)
 Downloads individual project JSON files.
 
+### 7. `/api/projects/save` (POST)
+Saves complete project data including shapes, groups, canvas settings, generation sets, and configuration.
+
+**Request Body:**
+- `shapes`: Array of shape objects (optional)
+- `groups`: Array of group objects (optional)
+- `canvasSettings`: Canvas configuration object (optional)
+- `batchConfigSettings`: Complete generation config settings (optional)
+- `generationSets`: Array of generation set configurations (optional)
+- `enabledShapeTypes`: Array of enabled shape type strings (optional)
+- `projectName`: Custom project name (optional)
+- `includeTimestamp`: Whether to include timestamp in filename (optional, default: true)
+
+**Response includes:**
+- Success status
+- Saved file path
+- Project metadata
+
+---
+
+## Supported Export Formats
+
+The API supports the following image formats:
+- **PNG**: Lossless compression with transparency support (recommended for graphics)
+- **JPEG**: Lossy compression with smaller file sizes (quality: 1-100)
+- **WebP**: Modern format with excellent compression
+- **AVIF**: Next-generation format with best compression
+- **BMP**: Uncompressed bitmap format
+
+**Scale Factor:** Supports 0.1x to 8x scaling (up to 600dpi for high-resolution print-quality exports)
+
 ---
 
 ## Authentication
@@ -510,6 +541,72 @@ fi
     "completedAt": "2025-10-18T16:03:34.821Z"
   }
 }
+```
+
+---
+
+### POST `/api/projects/save`
+
+**Request Body (Complete Example):**
+```json
+{
+  "projectName": "my-shape-project",
+  "includeTimestamp": true,
+  "shapes": [
+    {
+      "id": "shape-1",
+      "type": "circle",
+      "x": 200,
+      "y": 200,
+      "radius": 50,
+      "fill": "#ff6b6b",
+      "stroke": "#000000",
+      "strokeWidth": 2
+    }
+  ],
+  "groups": [],
+  "canvasSettings": {
+    "width": 800,
+    "height": 600,
+    "zoom": 1,
+    "panX": 0,
+    "panY": 0,
+    "backgroundColor": "#1e293b",
+    "showGrid": false
+  },
+  "batchConfigSettings": {
+    "properties": {
+      "position": { "enabled": true },
+      "rotation": { "enabled": true },
+      "scale": { "enabled": true }
+    }
+  },
+  "generationSets": [],
+  "enabledShapeTypes": ["circle", "rectangle", "polygon"]
+}
+```
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "filePath": "/tmp/projects/my-shape-project-2025-10-20T22-30-15.json",
+  "filename": "my-shape-project-2025-10-20T22-30-15.json",
+  "message": "Project saved successfully"
+}
+```
+
+**curl Example:**
+```bash
+curl -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d '{
+    "projectName": "my-shape-project",
+    "shapes": [{"id": "s1", "type": "circle", "x": 200, "y": 200, "radius": 50}],
+    "canvasSettings": {"width": 800, "height": 600},
+    "enabledShapeTypes": ["circle"]
+  }'
 ```
 
 ---
