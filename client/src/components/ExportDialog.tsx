@@ -77,7 +77,6 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
     { value: 'jpeg' as ImageFormat, label: 'JPEG', description: 'Lossy compression, smaller files' },
     { value: 'webp' as ImageFormat, label: 'WebP', description: 'Modern format, excellent compression' },
     { value: 'avif' as ImageFormat, label: 'AVIF', description: 'Next-gen format, best compression' },
-    { value: 'svg' as ImageFormat, label: 'SVG', description: 'Vector format, scalable' },
     { value: 'bmp' as ImageFormat, label: 'BMP', description: 'Uncompressed bitmap' }
   ].filter(f => ImageExporter.isFormatSupported(f.value));
 
@@ -94,6 +93,8 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
     if (scale === 2) return '2x (Retina)';
     if (scale === 3) return '3x (Super Retina)';
     if (scale === 4) return '4x (Ultra High DPI)';
+    if (scale >= 6) return `${scale}x (600dpi+)`;
+    if (scale >= 5) return `${scale}x (High Resolution)`;
     return `${scale}x`;
   };
 
@@ -415,13 +416,13 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
             <Slider
               value={[scale]}
               onValueChange={([value]) => setScale(value)}
-              min={1}
-              max={4}
-              step={1}
+              min={0.1}
+              max={8}
+              step={0.1}
               className="w-full"
             />
             <div className="text-xs text-slate-400">
-              Higher scales create larger, higher resolution images
+              Higher scales create larger, higher resolution images (up to 8x for 600dpi)
             </div>
           </div>
 

@@ -519,7 +519,7 @@ export default function Sidebar({
   const [applyStatus, setApplyStatus] = useState<'idle' | 'applying' | 'success'>('idle');
   
   // Export settings state (lifted from ExportSaveContent for persistence)
-  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'svg' | 'pdf'>('png');
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf'>('png');
   const [exportQuality, setExportQuality] = useState(90);
   const [exportScale, setExportScale] = useState(1);
   const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
@@ -563,7 +563,7 @@ export default function Sidebar({
   useEffect(() => {
     if (appSettingsDefaults && !isLoadingPreferences) {
       console.log('Auto-loading app settings:', appSettingsDefaults);
-      setExportFormat(appSettingsDefaults.exportFormat);
+      setExportFormat(appSettingsDefaults.exportFormat === 'svg' ? 'png' : appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
@@ -610,7 +610,7 @@ export default function Sidebar({
   const handleLoadAppSettings = useCallback(() => {
     if (appSettingsDefaults) {
       console.log('Loading app settings:', appSettingsDefaults);
-      setExportFormat(appSettingsDefaults.exportFormat);
+      setExportFormat(appSettingsDefaults.exportFormat === 'svg' ? 'png' : appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
@@ -2228,7 +2228,6 @@ export default function Sidebar({
                 <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP (Modern)</SelectItem>
                 <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF (Next-gen)</SelectItem>
                 <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP (Uncompressed)</SelectItem>
-                <SelectItem value="svg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">SVG (Vector)</SelectItem>
                 <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
@@ -2250,16 +2249,16 @@ export default function Sidebar({
           )}
 
           <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Scale</Label>
+            <Label className="text-xs text-slate-400">Scale (up to 8x for 600dpi)</Label>
             <Slider
               value={[exportScale]}
               onValueChange={([value]) => setExportScale(value)}
-              min={0.5}
-              max={4}
-              step={0.5}
+              min={0.1}
+              max={8}
+              step={0.1}
               className="w-full"
             />
-            <span className="text-xs text-slate-500">{exportScale}x</span>
+            <span className="text-xs text-slate-500">{exportScale}x {exportScale >= 6 ? '(600dpi+)' : exportScale >= 4 ? '(High DPI)' : ''}</span>
           </div>
 
           <Button

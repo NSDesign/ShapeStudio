@@ -29,9 +29,9 @@ const GenerationCountSchema = z.object({
 
 const BatchExportSchema = z.object({
   // V1 (existing) parameters
-  format: z.enum(['png', 'jpeg', 'webp', 'avif', 'svg', 'bmp']).default('png'),
+  format: z.enum(['png', 'jpeg', 'webp', 'avif', 'bmp']).default('png'),
   quality: z.number().min(1).max(100).optional().default(92),
-  scale: z.number().min(0.1).max(10).optional().default(1),
+  scale: z.number().min(0.1).max(8).optional().default(1),
   useCustomSize: z.boolean().optional().default(false),
   customWidth: z.number().min(1).optional(),
   customHeight: z.number().min(1).optional(),

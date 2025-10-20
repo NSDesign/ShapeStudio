@@ -1,7 +1,7 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, Artboard } from './shapeTypes';
 
-export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'svg' | 'bmp';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp';
 
 export interface ExportOptions {
   format: ImageFormat;
@@ -219,8 +219,6 @@ export class ImageExporter {
 
     // Export based on format
     switch (format) {
-      case 'svg':
-        return this.exportAsSVG(shapes, groups, canvasSettings, options);
       case 'png':
         return this.exportAsRaster('image/png');
       case 'jpeg':
@@ -301,156 +299,6 @@ export class ImageExporter {
     });
   }
 
-  private async exportAsSVG(
-    shapes: Shape[],
-    groups: ShapeGroupClass[],
-    canvasSettings: CanvasSettings,
-    options: ExportOptions
-  ): Promise<Blob> {
-    const {
-      width = canvasSettings.width,
-      height = canvasSettings.height,
-      backgroundColor = 'transparent',
-      includeBackground = true
-    } = options;
-
-    let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
-
-    // Add background if requested
-    if (includeBackground && backgroundColor !== 'transparent') {
-      svgContent += `\n  <rect width="100%" height="100%" fill="${backgroundColor}"/>`;
-    }
-
-    // Add group for transforms
-    svgContent += `\n  <g transform="scale(${canvasSettings.zoom}) translate(${canvasSettings.panX}, ${canvasSettings.panY})">`;
-
-    // Convert groups to SVG
-    groups.forEach(group => {
-      svgContent += this.groupToSVG(group);
-    });
-
-    // Convert individual shapes to SVG
-    shapes.forEach(shape => {
-      svgContent += this.shapeToSVG(shape);
-    });
-
-    svgContent += '\n  </g>\n</svg>';
-
-    return new Blob([svgContent], { type: 'image/svg+xml' });
-  }
-
-  private shapeToSVG(shape: Shape): string {
-    const transform = `translate(${shape.transform.x}, ${shape.transform.y}) rotate(${shape.transform.rotation}) scale(${shape.transform.scaleX}, ${shape.transform.scaleY}) skewX(${shape.transform.skewX}) skewY(${shape.transform.skewY})`;
-    
-    let shapeElement = '';
-    
-    switch (shape.type) {
-      case 'rectangle':
-      case 'square':
-        shapeElement = `<rect x="${-shape.width! / 2}" y="${-shape.height! / 2}" width="${shape.width}" height="${shape.height}"`;
-        break;
-      case 'circle':
-        shapeElement = `<circle cx="0" cy="0" r="${shape.radius}"`;
-        break;
-      case 'ellipse':
-        shapeElement = `<ellipse cx="0" cy="0" rx="${shape.width! / 2}" ry="${shape.height! / 2}"`;
-        break;
-      case 'polygon':
-        const polygonPoints = this.getPolygonPoints(shape.sides!, shape.radius!);
-        shapeElement = `<polygon points="${polygonPoints}"`;
-        break;
-      case 'star':
-        const starPoints = this.getStarPoints(shape.sides!, shape.radius!, shape.innerRadius!);
-        shapeElement = `<polygon points="${starPoints}"`;
-        break;
-      case 'line':
-        const linePoints = shape.points.map(p => `${p.x},${p.y}`).join(' ');
-        shapeElement = `<polyline points="${linePoints}" fill="none"`;
-        break;
-      default:
-        // For complex shapes, use path
-        if (shape.points && shape.points.length > 0) {
-          const pathData = this.pointsToPath(shape.points, shape.type);
-          shapeElement = `<path d="${pathData}"`;
-        }
-        break;
-    }
-
-    if (shapeElement) {
-      const styles = `fill="${shape.properties.fillColor}" fill-opacity="${shape.properties.fillOpacity}" stroke="${shape.properties.strokeColor}" stroke-width="${shape.properties.strokeWidth}" stroke-opacity="${shape.properties.strokeOpacity}"`;
-      return `\n    <g transform="${transform}">\n      ${shapeElement} ${styles}/>\n    </g>`;
-    }
-
-    return '';
-  }
-
-  private groupToSVG(group: ShapeGroupClass): string {
-    const transform = `translate(${group.transform.x}, ${group.transform.y}) rotate(${group.transform.rotation}) scale(${group.transform.scaleX}, ${group.transform.scaleY})`;
-    
-    let groupContent = `\n    <g transform="${transform}">`;
-    group.shapes.forEach(shape => {
-      groupContent += this.shapeToSVG(shape);
-    });
-    groupContent += '\n    </g>';
-    
-    return groupContent;
-  }
-
-  private getPolygonPoints(sides: number, radius: number): string {
-    const points: string[] = [];
-    for (let i = 0; i < sides; i++) {
-      const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      points.push(`${x},${y}`);
-    }
-    return points.join(' ');
-  }
-
-  private getStarPoints(sides: number, outerRadius: number, innerRadius: number): string {
-    const points: string[] = [];
-    for (let i = 0; i < sides * 2; i++) {
-      const angle = (i * Math.PI) / sides - Math.PI / 2;
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      points.push(`${x},${y}`);
-    }
-    return points.join(' ');
-  }
-
-  private pointsToPath(points: { x: number; y: number }[], shapeType: string): string {
-    if (points.length === 0) return '';
-    
-    let path = `M ${points[0].x} ${points[0].y}`;
-    
-    for (let i = 1; i < points.length; i++) {
-      if (shapeType === 'chunk' || shapeType === 'blob') {
-        // Use smooth curves for chunks and blobs
-        const current = points[i];
-        const next = points[(i + 1) % points.length];
-        const cp1x = current.x;
-        const cp1y = current.y;
-        const cp2x = (current.x + next.x) / 2;
-        const cp2y = (current.y + next.y) / 2;
-        path += ` Q ${cp1x} ${cp1y} ${cp2x} ${cp2y}`;
-      } else {
-        path += ` L ${points[i].x} ${points[i].y}`;
-      }
-    }
-    
-    if (shapeType === 'chunk' || shapeType === 'blob' || shapeType === 'polygon' || 
-        shapeType === 'triangle' || shapeType === 'right-triangle' || shapeType === 'trapezoid' ||
-        shapeType === 'pentagon' || shapeType === 'hexagon' || shapeType === 'rhombus' ||
-        shapeType === 'parallelogram' || shapeType === 'kite' || shapeType === 'semicircle' ||
-        shapeType === 'heart' || shapeType === 'arrow' || shapeType === 'cross') {
-      path += ' Z';
-    }
-    
-    return path;
-  }
-
   static async downloadImage(blob: Blob, filename: string): Promise<void> {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -468,7 +316,6 @@ export class ImageExporter {
       jpeg: 'jpg',
       webp: 'webp',
       avif: 'avif',
-      svg: 'svg',
       bmp: 'bmp'
     };
     return extensions[format];
@@ -485,7 +332,6 @@ export class ImageExporter {
         case 'png':
         case 'jpeg':
         case 'bmp':
-        case 'svg':
           return true;
         case 'webp':
           return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;

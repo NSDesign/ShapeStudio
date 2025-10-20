@@ -5,7 +5,7 @@ export type ExportScope = 'all' | 'artboard' | 'selected';
 export const EXPORT_SCOPE_ORDER = ['all', 'artboard', 'selected'] as const;
 
 // Export format types
-export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'svg' | 'bmp';
+export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp';
 
 // Canonical batch export settings interface
 export interface CanonicalBatchExportSettings {
