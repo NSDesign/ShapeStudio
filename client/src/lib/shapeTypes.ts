@@ -436,6 +436,25 @@ export function calculateGridPosition(
   const row = Math.floor(adjustedIndex / columns);
   const column = adjustedIndex % columns;
   
+  // Debug logging for first position only
+  if (index === 0) {
+    console.log('🔍 [GRID DEBUG] calculateGridPosition - Initial params:', {
+      rows,
+      columns,
+      rowOffset,
+      columnOffset,
+      centerX,
+      centerY,
+      artboardBounds,
+      gridStartX,
+      gridStartY,
+      spacingXMode,
+      spacingYMode,
+      marginEnabled,
+      marginValue
+    });
+  }
+  
   // Calculate effective spacing based on mode
   let effectiveColumnOffset = columnOffset;
   let effectiveRowOffset = rowOffset;
@@ -453,6 +472,15 @@ export function calculateGridPosition(
         const availableWidth = artboardBounds.width - (2 * marginValue);
         effectiveColumnOffset = columns > 1 ? availableWidth / (columns - 1) : 0;
         startX = artboardBounds.x - centerX + marginValue;
+        
+        if (index === 0) {
+          console.log('🔍 [GRID DEBUG] X-axis auto-centered with margin:', {
+            availableWidth,
+            effectiveColumnOffset,
+            calculation: `artboardBounds.x(${artboardBounds.x}) - centerX(${centerX}) + marginValue(${marginValue})`,
+            startX
+          });
+        }
       } else {
         // Auto margin: evenly distribute with auto-calculated margins
         effectiveColumnOffset = artboardBounds.width / (columns + 1);
@@ -476,6 +504,15 @@ export function calculateGridPosition(
         const availableHeight = artboardBounds.height - (2 * marginValue);
         effectiveRowOffset = rows > 1 ? availableHeight / (rows - 1) : 0;
         startY = artboardBounds.y - centerY + marginValue;
+        
+        if (index === 0) {
+          console.log('🔍 [GRID DEBUG] Y-axis auto-centered with margin:', {
+            availableHeight,
+            effectiveRowOffset,
+            calculation: `artboardBounds.y(${artboardBounds.y}) - centerY(${centerY}) + marginValue(${marginValue})`,
+            startY
+          });
+        }
       } else {
         // Auto margin: evenly distribute with auto-calculated margins
         effectiveRowOffset = artboardBounds.height / (rows + 1);
@@ -490,6 +527,15 @@ export function calculateGridPosition(
   
   const x = startX + (column * effectiveColumnOffset) + gridStartX;
   const y = startY + (row * effectiveRowOffset) + gridStartY;
+  
+  if (index === 0 || index === columns - 1 || index === totalPositions - 1) {
+    console.log(`🔍 [GRID DEBUG] Position ${index} (row ${row}, col ${column}):`, {
+      calculation: `startX(${startX}) + column(${column}) * effectiveColumnOffset(${effectiveColumnOffset}) + gridStartX(${gridStartX})`,
+      x,
+      calculationY: `startY(${startY}) + row(${row}) * effectiveRowOffset(${effectiveRowOffset}) + gridStartY(${gridStartY})`,
+      y
+    });
+  }
   
   return { x, y, row, column };
 }
