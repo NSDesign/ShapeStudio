@@ -1,7 +1,7 @@
 # Shape Editor - Replit Development Guide
 
 ## Overview
-Shape Editor is a web-based application for creating, manipulating, and composing geometric shapes. Built with React, TypeScript, and Express, it offers advanced features like procedural generation, boolean operations, and smart distribution algorithms. The project aims to provide a comprehensive toolset for digital artists and designers to create complex graphic compositions with ease, targeting a market for creative professionals and hobbyists seeking advanced shape manipulation capabilities.
+Shape Editor is a web-based application for creating, manipulating, and composing geometric shapes. Built with React, TypeScript, and Express, it offers advanced features like procedural generation, boolean operations, and smart distribution algorithms. The project aims to provide a comprehensive toolset for digital artists and designers to create complex graphic compositions, targeting creative professionals and hobbyists.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,81 +9,53 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **UI Components**: Shadcn/ui with Radix UI primitives
-- **Styling**: Tailwind CSS with custom CSS variables
-- **Canvas Rendering**: HTML5 Canvas with custom rendering pipeline
-- **Color Harmony**: Comprehensive system with Monochromatic, Analogous, Complementary, Triadic, Split-Complementary, and Tetradic harmonies.
-- **Unified Controls**: Consolidated UI for color, fill, stroke, and shape properties.
-- **Responsive Design**: Sidebar authentication adapts to collapsed/expanded states.
-- **Status Indicators**: Disabled sections have clear visual cues (opacity reduction, pointer-events blocking, color-coded labels).
-- **Enhanced Properties Section**: Improved Properties accordion to show Canvas Settings and Quick Actions when no shapes are selected, providing better UX with functional Generate and Clear buttons.
+- **Frameworks**: React 18 with TypeScript, Vite, Shadcn/ui, Radix UI.
+- **Styling**: Tailwind CSS with custom CSS variables.
+- **Canvas Rendering**: HTML5 Canvas with a custom rendering pipeline.
+- **Advanced UI**: Features like color harmony systems, unified property controls, responsive design, and enhanced status indicators.
+- **Properties Section**: Improved accordion for Canvas Settings and Quick Actions when no shapes are selected.
 
 ### Technical Implementations
-- **Frontend**: React 18 with TypeScript, Vite, Shadcn/ui, Radix UI, Tailwind CSS, custom React hooks for state management.
-- **Backend**: Node.js with Express.js, TypeScript (tsx for dev), RESTful API.
-- **Database**: PostgreSQL with Drizzle ORM for type-safe schema management and Drizzle Kit for migrations.
-- **Shape System**: Supports geometric primitives, 2D transformations (translate, rotate, scale, skew), boolean operations (union, subtract, intersect, exclude), point-level editing, and hierarchical grouping.
-- **Canvas Engine**: Three-layer canvas architecture - infinite canvas with pan/zoom, multi-touch support, multi-selection, and optimized real-time rendering. Layer separation ensures compositing operations (destination-in masking) do not affect UI elements.
-- **Distribution Algorithms**: Advanced shape placement with multiple pattern types:
-  * **Grid**: Rows × columns layout with customizable start position, spacing modes (Auto/Define), sorting (by layer, type, size, color, opacity, angle, creation time), and additive randomization (0-200px X/Y)
-  * **Auto Distribute**: Balanced X/Y shape distribution with auto-calculated spacing based on artboard dimensions and independent X/Y count controls
-  * **Wave**: Sinusoidal, triangle, square, and sawtooth wave patterns with configurable amplitude (0-200px), frequency (0.5-10), direction (horizontal/vertical), and phase offset (0-360°)
-  * **Ellipse**: Concentric ring distribution with separate X/Y radius ranges, multiple rings (1-10), spacing modes (even/progressive), rotation (0-360°), and alignment (uniform/progressive)
-  * **Spiral**: Archimedean and logarithmic spirals with turn count (1-20), spacing modes (linear/logarithmic), direction (CW/CCW), start angle (0-360°), and tightness control (0.1-3.0)
-  * All patterns support additive pixel randomization (0-200px) for organic variation
-  * Physics simulation, noise generation (Randomise, Perlin, Simplex, Fractal, Worley, Ridge, Turbulence), and constraint system
+- **Frontend**: React 18, TypeScript, Vite, Shadcn/ui, Radix UI, Tailwind CSS, custom React hooks.
+- **Backend**: Node.js with Express.js, TypeScript, RESTful API.
+- **Database**: PostgreSQL with Drizzle ORM for type-safe schema management.
+- **Shape System**: Supports geometric primitives, 2D transformations, boolean operations, point-level editing, and hierarchical grouping.
+- **Canvas Engine**: Three-layer infinite canvas with pan/zoom, multi-touch, multi-selection, and optimized real-time rendering.
+- **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization, physics simulation, and noise generation.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and project save/load.
-- **Enhanced Gradient System**: Comprehensive gradient controls with separate linear/radial probability sliders, angle range controls (min-max 0-360° in 15° increments), predefined directions with shape alignment options, advanced radial center positioning (center, random, customizable corners/midpoints selection with random/cycle modes, coordinates), radial shape controls (circle vs ellipse probability), and intelligent gradient type matching to shape geometry.
-- **Full Spectrum Color Interpolation**: Advanced HSL color interpolation system that automatically detects when two colors are close together on the hue wheel (< 180° apart) and interpolates the long way around to provide maximum color variety. This ensures range-based color pickers (fill, stroke, gradient) produce a full rainbow spectrum regardless of endpoint positions - e.g., red to orange generates colors through magenta, purple, blue, cyan, green, yellow back to orange for diverse visual output.
-- **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage and database-level access control.
-- **Noise System**: Pure mathematical implementation with property-specific amplitude controls, octave modes, and seeded random generation for reproducibility.
-- **Properties Section Integration**: Noise ranges are controlled by enabled Properties sections (Position, Rotation, Scale, Opacity, Fill Color, Shape Size, Corner Radius, Inner Radius, Segments, Point Counts).
-- **Transform Randomization Scaling**: Controls for position, scale, and rotation randomization amount.
-- **Transform Origin Controls**: Three-mode transform origin system for precise control over the point from which transforms (rotation, scale, position) are applied:
-  * **Define Mode**: Custom X,Y coordinates for manual origin placement
-  * **Predefined Artboard Mode**: 9-point alignment relative to artboard boundaries (top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right)
-  * **Predefined Shape Mode**: 9-point alignment relative to each individual shape's boundaries, allowing per-shape transform origin control
-- **Position Alignment System**: Advanced dual anchor point alignment for precise shape positioning relative to artboard boundaries. Integrated into Properties section as an 'align' mode for X and Y position transforms:
-  * **Dual Anchor Points**: Each axis (X and Y) has independent shape anchor and artboard anchor configuration
-  * **Shape Anchor**: Defines the alignment point on the shape - predefined options (X: left/center/right, Y: top/center/bottom) or custom coordinate values
-  * **Artboard Anchor**: Defines the target alignment point on the artboard - predefined options (X: left/center/right, Y: top/center/bottom) or custom coordinate values
-  * **Flexibility**: Supports 81 possible alignment combinations (9 X-axis × 9 Y-axis) plus unlimited custom coordinate alignments
-  * **Use Cases**: Align shape's left edge to artboard center, position shape's center to artboard's top-right corner, align custom shape coordinate to custom artboard coordinate, etc.
-- **Canvas-Based Blur System**: Gaussian blur algorithm implemented via direct canvas pixel manipulation for pixel-perfect blur effects.
-- **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity, collinearity enforcement, and C1 smoothness. No random tangent generation to preserve mathematical integrity. Fixed tangent handle condition checks in shapeRenderer.ts to ensure proper cubic bezier curve rendering.
-- **Advanced Grid Layout Sorting**: Complete implementation with comprehensive sorting criteria (layer, creation-time, shape-type, size, fill-color, opacity, angle, id), configurable sort order (ascending/descending), and per-generation vs per-batch sorting scope for fine-grained control over shape arrangement in grid layouts.
-- **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets (Grid Start X/Y: -500 to 500px), dual spacing modes (Define with manual 0-300px offsets, Auto with artboard-based even distribution), and independent X/Y axis configuration. Auto mode calculates spacing as artboardWidth/(columns+1) for X and artboardHeight/(rows+1) for Y, ensuring perfect distribution. Minimum spacing reduced to 0px for maximum flexibility.
-- **Shape Type Architecture**: Clear distinction between standard and rounded shapes - rectangle (sharp corners), rounded-rectangle (configurable radius), square (sharp corners), rounded-square (configurable radius with 1:1 aspect ratio). Only rounded variants support corner radius geometry properties with Range and Fixed modes.
-- **Shape Sets System** (renamed from Generation Sets): Comprehensive layer management system with two synchronized dropdowns:
-  * **Sidebar Shape Sets Dropdown**: Captures current shape types enabled + their settings + shape count mode/value
-  * **Generation Config Settings Dropdown**: Captures advanced settings that apply to those shapes
-  Each Shape Set = combination of shape types + generation config settings. Tied to batch export "Shape Sets per Export" fixed value (defines how many times shapes are generated per image). Purpose: provide variety to generated shapes (e.g., Set 1 = circles, Set 2 = squares, each with different colors/transforms/effects). Shape Sets Manager provides additional control over generated shapes as whole sets (positioning, blending, compositing, transforms, alignment).
-- **Fill Opacity Mode Implementation**: Fully functional fillOpacityMode with 'define' and 'range' modes - fillOpacityDefine value is correctly applied when mode is set to 'define', matching stroke opacity behavior.
-- **Set Transform Implementation**: Complete implementation of setTransform feature allowing translation (x, y), rotation, and scaling (scaleX, scaleY) to be applied to all shapes within a Shape Set during both live generation and batch export.
-- **Artboard Alignment Implementation**: Full artboard alignment system with fitToArtboard (scales shapes to fit within artboard bounds with margin) and alignTo with 9-point alignment (top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right) for precise Shape Set positioning. Works in both live generation (Generate Shapes button) and batch export.
-- **Blend Modes and Compositing Operations**: Dual-level implementation for advanced visual effects:
-  * **Set-Level**: Full implementation of blend modes (multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity) and compositing operations (source-in, source-out, source-atop, destination-over, destination-in, destination-out, destination-atop, lighter, copy, xor) applied to entire Shape Sets. Compositing operations take precedence over blend modes when both are set.
-  * **Shape-Level**: Probability-based blend modes and compositing operations in Generation Config Settings. Each mode/operation has 0-100% probability weight for random selection. Mutually exclusive to prevent conflicts - when Blending Modes section is enabled, Compositing section is disabled, and vice versa (inline messages explain the constraint). These are independent sections in Generation Config Settings dialog with the following structure: Properties → Transforms → Shape Effects → Blending Modes → Compositing Operations. All sections work independently based on their own enabled flags without dependencies.
-- **Set Visibility Controls**: Implemented visibility toggle and opacity controls with variance for Shape Sets - allows hiding sets or applying opacity multiplier with randomization to all shapes in a set.
-- **Z-index Layering Strategy**: Shape Sets use generationOrder × 1000 for z-index offset to ensure proper layering - this 1000x multiplier creates disjoint z-index ranges preventing overlap between sets (e.g., Set 0: 0-999, Set 1: 1000-1999). Without this spacing, individual shape indices could cause later shapes in an earlier set to render above an entire later set.
+- **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, predefined directions, radial center positioning, and intelligent type matching.
+- **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
+- **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
+- **Noise System**: Pure mathematical implementation with property-specific amplitude controls and seeded random generation.
+- **Transform Controls**: Transform origin controls (Define, Predefined Artboard, Predefined Shape) and randomization scaling for position, scale, and rotation.
+- **Position Alignment System**: Dual anchor point alignment for precise shape positioning relative to artboard boundaries (Shape Anchor, Artboard Anchor).
+- **Canvas-Based Blur System**: Gaussian blur implemented via direct canvas pixel manipulation.
+- **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity.
+- **Advanced Grid Layout Sorting**: Comprehensive sorting criteria (layer, creation-time, shape-type, size, color, opacity, angle, id) with configurable order and scope.
+- **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets, three spacing modes (Define, Auto-Centered, Auto-Edge-to-Edge), and independent axis configuration.
+- **Shape Type Architecture**: Clear distinction between standard and rounded shapes (rectangle, rounded-rectangle, square, rounded-square) with specific corner radius properties.
+- **Shape Sets System**: Layer management with synchronized dropdowns for shape types and generation config settings. Supports set-level positioning, blending, compositing, transforms, and alignment.
+- **Fill Opacity Mode**: Full functionality for 'define' and 'range' modes.
+- **Set Transform**: Implementation for translation, rotation, and scaling applied to all shapes within a Shape Set.
+- **Artboard Alignment**: FitToArtboard and 9-point alignment for precise Shape Set positioning.
+- **Blend Modes and Compositing Operations**: Dual-level implementation at Set-level and Shape-level, with probability-based selection for individual shapes.
+- **Set Visibility Controls**: Visibility toggle and opacity controls with variance for Shape Sets.
+- **Z-index Layering Strategy**: GenerationOrder-based z-index offset for proper layering of Shape Sets.
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
-- **Session Management**: Express sessions with PostgreSQL storage for persistent user data.
-- **Deployment**: Vite for frontend, ESBuild for backend, Node.js runtime, Replit autoscale deployment target.
-- **Modular Design**: Separation of concerns between frontend, backend, and database layers.
-- **Type Safety**: Extensive use of TypeScript across the entire stack for robust development.
-- **Unified Generation System**: `generateShapesWithBatchConfig` function ensures all batch configuration settings are applied consistently for both live generation and batch exports.
-- **Live API Endpoints**: Comprehensive REST API for capturing complete application state:
-  * **/api/live/sets/enabled**: Returns only enabled generation sets with filtered batch configurations (disabled sections stripped), export settings, artboard settings, and batch export settings. Includes shape types data, generation config settings (properties, transforms, effects, color harmony, etc.), and set manager settings (visibility, transforms, alignment, blend modes, compositing, z-index).
-- **API Call Generator**: Relocated to bottom of sidebar (after Sets Manager button with separator) for better accessibility. Provides multi-version API call generation with secure credential handling ($LIVE_API_KEY for curl, {{$credentials.ShapeEditorAPIKey}} for n8n). Defaults to /api/live/sets/enabled endpoint. Always visible regardless of sidebar collapsed/expanded state.
+- **Session Management**: Express sessions with PostgreSQL storage.
+- **Deployment**: Vite for frontend, ESBuild for backend, Node.js runtime, Replit autoscale deployment.
+- **Modular Design**: Separation of concerns across frontend, backend, and database.
+- **Type Safety**: Extensive TypeScript usage.
+- **Unified Generation System**: `generateShapesWithBatchConfig` for consistent application of batch settings.
+- **Live API Endpoints**: Comprehensive REST API (e.g., `/api/live/sets/enabled`) for capturing application state.
+- **API Call Generator**: Provides multi-version API call generation with secure credential handling.
 
 ## External Dependencies
 
-- **React Ecosystem**: React 18, React DOM, React Query
-- **UI Framework**: Radix UI primitives, Shadcn/ui
-- **Utility Libraries**: clsx, date-fns, jsPDF
-- **Database**: Drizzle ORM, Neon Database (Serverless PostgreSQL), PostgreSQL for session storage
-- **Build Tools**: TypeScript, ESBuild, PostCSS, Vite plugins
+- **React Ecosystem**: React 18, React DOM, React Query.
+- **UI Framework**: Radix UI primitives, Shadcn/ui.
+- **Utility Libraries**: clsx, date-fns, jsPDF.
+- **Database**: Drizzle ORM, Neon Database (Serverless PostgreSQL), PostgreSQL.
+- **Build Tools**: TypeScript, ESBuild, PostCSS, Vite plugins.
