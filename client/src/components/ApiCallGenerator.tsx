@@ -30,6 +30,7 @@ interface ApiCallGeneratorProps {
   artboards: Artboard[];
   activeArtboard: string;
   className?: string;
+  sidebarCollapsed?: boolean;
 }
 
 interface GenerationCountConfig {
@@ -111,7 +112,8 @@ export default function ApiCallGenerator({
   selectedImageIndices = [],
   artboards,
   activeArtboard,
-  className = "" 
+  className = "",
+  sidebarCollapsed = false
 }: ApiCallGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedApiVersion, setSelectedApiVersion] = useState<'sets-enabled' | 'sets-execute' | 'live' | 'v1' | 'v2' | 'v3' | 'v4'>('sets-enabled');
@@ -405,10 +407,10 @@ export default function ApiCallGenerator({
         <Button 
           variant="secondary" 
           size="sm" 
-          className={`gap-2 ${className}`}
+          className={`${sidebarCollapsed ? 'h-8 w-8 p-0 flex items-center justify-center' : 'h-6 gap-2'} ${className}`}
         >
           <Code2 className="h-4 w-4" />
-          Generate API Call
+          {!sidebarCollapsed && 'Generate API Call'}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
