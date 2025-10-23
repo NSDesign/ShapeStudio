@@ -5230,7 +5230,7 @@ export default function Sidebar({
               {section.id === 'shapes' && (
                 <Button
                   onClick={onGenerateRandomShapes}
-                  className="w-full h-8 p-0 rounded-md bg-[var(--editor-accent)] hover:bg-purple-700 text-white transition-colors"
+                  className="w-8 h-8 p-0 rounded-md bg-[var(--editor-accent)] hover:bg-purple-700 text-white transition-colors"
                   title="Generate Shapes (Quick)"
                   data-testid="sidebar-collapsed-quick-generate-button"
                 >
