@@ -5149,7 +5149,7 @@ export default function Sidebar({
 
       {/* Collapsed Content with Tight Popovers */}
       {isCollapsed && (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full items-center">
           {[
             { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
             { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
@@ -5172,7 +5172,7 @@ export default function Sidebar({
             // Only show sections that are enabled in user preferences
             sidebarSections[section.id as keyof typeof sidebarSections]?.enabled === true
           ).map((section, index) => (
-            <div key={section.id}>
+            <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
                 onOpenChange={(open) => setActivePopover(open ? section.id : null)}
