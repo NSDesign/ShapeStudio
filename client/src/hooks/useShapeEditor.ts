@@ -2426,6 +2426,8 @@ export const useShapeEditor = () => {
         gridSpacingYMode: effectiveBatchConfig.gridSpacingYMode,
         gridRowOffset: effectiveBatchConfig.gridRowOffset,
         gridColumnOffset: effectiveBatchConfig.gridColumnOffset,
+        gridMarginEnabled: effectiveBatchConfig.gridMarginEnabled,
+        gridMarginValue: effectiveBatchConfig.gridMarginValue,
         gridSortBy: effectiveBatchConfig.gridSortBy,
         gridSortScope: effectiveBatchConfig.gridSortScope,
         gridSortOrder: effectiveBatchConfig.gridSortOrder,

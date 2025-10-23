@@ -462,11 +462,15 @@ export function calculateGridPosition(
   let startY = centerY - ((rows - 1) * effectiveRowOffset) / 2;
   
   // Handle X spacing mode
+  let ignoreGridStartX = false;
+  let ignoreGridStartY = false;
+  
   if (artboardBounds) {
     // Backward compatibility: treat 'auto' as 'auto-centered'
     const effectiveXMode = spacingXMode === 'auto' ? 'auto-centered' : spacingXMode;
     
     if (effectiveXMode === 'auto-centered') {
+      ignoreGridStartX = true; // Auto modes calculate their own positioning
       if (marginEnabled) {
         // Custom margin: calculate spacing within margin-reduced area
         const availableWidth = artboardBounds.width - (2 * marginValue);
@@ -487,6 +491,7 @@ export function calculateGridPosition(
         startX = artboardBounds.x - centerX + effectiveColumnOffset;
       }
     } else if (effectiveXMode === 'auto-edge-to-edge') {
+      ignoreGridStartX = true; // Auto modes calculate their own positioning
       // Edge to edge: positions from 0 to artboard width
       effectiveColumnOffset = columns > 1 ? artboardBounds.width / (columns - 1) : 0;
       startX = artboardBounds.x - centerX;
@@ -499,6 +504,7 @@ export function calculateGridPosition(
     const effectiveYMode = spacingYMode === 'auto' ? 'auto-centered' : spacingYMode;
     
     if (effectiveYMode === 'auto-centered') {
+      ignoreGridStartY = true; // Auto modes calculate their own positioning
       if (marginEnabled) {
         // Custom margin: calculate spacing within margin-reduced area
         const availableHeight = artboardBounds.height - (2 * marginValue);
@@ -519,14 +525,15 @@ export function calculateGridPosition(
         startY = artboardBounds.y - centerY + effectiveRowOffset;
       }
     } else if (effectiveYMode === 'auto-edge-to-edge') {
+      ignoreGridStartY = true; // Auto modes calculate their own positioning
       // Edge to edge: positions from 0 to artboard height
       effectiveRowOffset = rows > 1 ? artboardBounds.height / (rows - 1) : 0;
       startY = artboardBounds.y - centerY;
     }
   }
   
-  const x = startX + (column * effectiveColumnOffset) + gridStartX;
-  const y = startY + (row * effectiveRowOffset) + gridStartY;
+  const x = startX + (column * effectiveColumnOffset) + (ignoreGridStartX ? 0 : gridStartX);
+  const y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
   
   if (index === 0 || index === columns - 1 || index === totalPositions - 1) {
     console.log(`🔍 [GRID DEBUG] Position ${index} (row ${row}, col ${column}):`, {
