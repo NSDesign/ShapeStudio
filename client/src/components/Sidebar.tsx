@@ -3395,7 +3395,7 @@ export default function Sidebar({
             <Button 
               onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
               disabled={!currentGenerationSetId || !updateGenerationSetPartial}
-              className={`w-full h-6 ${
+              className={`w-full h-8 ${
                 !currentGenerationSetId || !updateGenerationSetPartial
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                   : applyStatus === 'applying'
@@ -3430,7 +3430,7 @@ export default function Sidebar({
           )}
           <Button 
             onClick={onGenerateRandomShapes}
-            className="w-full h-6 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+            className="w-full h-8 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
           >
             <Wand2 className="w-4 h-4 mr-2" />
             {scatterSettings.shapeCountMode === 'fixed' 
