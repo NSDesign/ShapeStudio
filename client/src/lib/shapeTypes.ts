@@ -24,10 +24,12 @@ export interface DistributionConfig {
   gridColumns: number;
   gridStartX?: number;
   gridStartY?: number;
-  gridSpacingXMode?: 'define' | 'auto';
-  gridSpacingYMode?: 'define' | 'auto';
+  gridSpacingXMode?: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge';
+  gridSpacingYMode?: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge';
   gridRowOffset: number;
   gridColumnOffset: number;
+  gridMarginEnabled?: boolean;
+  gridMarginValue?: number;
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
   gridSortScope: 'per-generation' | 'per-batch';
   gridSortOrder: 'ascending' | 'descending';
@@ -423,8 +425,10 @@ export function calculateGridPosition(
   artboardBounds?: { x: number; y: number; width: number; height: number },
   gridStartX = 0,
   gridStartY = 0,
-  spacingXMode: 'define' | 'auto' = 'define',
-  spacingYMode: 'define' | 'auto' = 'define'
+  spacingXMode: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge' = 'define',
+  spacingYMode: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge' = 'define',
+  marginEnabled: boolean = false,
+  marginValue: number = 50
 ): GridPosition {
   const totalPositions = rows * columns;
   const adjustedIndex = index % totalPositions;
@@ -435,20 +439,54 @@ export function calculateGridPosition(
   // Calculate effective spacing based on mode
   let effectiveColumnOffset = columnOffset;
   let effectiveRowOffset = rowOffset;
+  let startX = centerX - ((columns - 1) * effectiveColumnOffset) / 2;
+  let startY = centerY - ((rows - 1) * effectiveRowOffset) / 2;
   
-  if (spacingXMode === 'auto' && artboardBounds) {
-    // Auto: evenly distribute across artboard width
-    effectiveColumnOffset = artboardBounds.width / (columns + 1);
+  // Handle X spacing mode
+  if (artboardBounds) {
+    // Backward compatibility: treat 'auto' as 'auto-centered'
+    const effectiveXMode = spacingXMode === 'auto' ? 'auto-centered' : spacingXMode;
+    
+    if (effectiveXMode === 'auto-centered') {
+      if (marginEnabled) {
+        // Custom margin: calculate spacing within margin-reduced area
+        const availableWidth = artboardBounds.width - (2 * marginValue);
+        effectiveColumnOffset = columns > 1 ? availableWidth / (columns - 1) : 0;
+        startX = artboardBounds.x - centerX + marginValue;
+      } else {
+        // Auto margin: evenly distribute with auto-calculated margins
+        effectiveColumnOffset = artboardBounds.width / (columns + 1);
+        startX = artboardBounds.x - centerX + effectiveColumnOffset;
+      }
+    } else if (effectiveXMode === 'auto-edge-to-edge') {
+      // Edge to edge: positions from 0 to artboard width
+      effectiveColumnOffset = columns > 1 ? artboardBounds.width / (columns - 1) : 0;
+      startX = artboardBounds.x - centerX;
+    }
   }
   
-  if (spacingYMode === 'auto' && artboardBounds) {
-    // Auto: evenly distribute across artboard height
-    effectiveRowOffset = artboardBounds.height / (rows + 1);
+  // Handle Y spacing mode
+  if (artboardBounds) {
+    // Backward compatibility: treat 'auto' as 'auto-centered'
+    const effectiveYMode = spacingYMode === 'auto' ? 'auto-centered' : spacingYMode;
+    
+    if (effectiveYMode === 'auto-centered') {
+      if (marginEnabled) {
+        // Custom margin: calculate spacing within margin-reduced area
+        const availableHeight = artboardBounds.height - (2 * marginValue);
+        effectiveRowOffset = rows > 1 ? availableHeight / (rows - 1) : 0;
+        startY = artboardBounds.y - centerY + marginValue;
+      } else {
+        // Auto margin: evenly distribute with auto-calculated margins
+        effectiveRowOffset = artboardBounds.height / (rows + 1);
+        startY = artboardBounds.y - centerY + effectiveRowOffset;
+      }
+    } else if (effectiveYMode === 'auto-edge-to-edge') {
+      // Edge to edge: positions from 0 to artboard height
+      effectiveRowOffset = rows > 1 ? artboardBounds.height / (rows - 1) : 0;
+      startY = artboardBounds.y - centerY;
+    }
   }
-  
-  // Calculate grid position from center
-  const startX = centerX - ((columns - 1) * effectiveColumnOffset) / 2;
-  const startY = centerY - ((rows - 1) * effectiveRowOffset) / 2;
   
   const x = startX + (column * effectiveColumnOffset) + gridStartX;
   const y = startY + (row * effectiveRowOffset) + gridStartY;
@@ -617,7 +655,9 @@ export function applyGridDistribution(
       config.gridStartX || 0,
       config.gridStartY || 0,
       config.gridSpacingXMode || 'define',
-      config.gridSpacingYMode || 'define'
+      config.gridSpacingYMode || 'define',
+      config.gridMarginEnabled || false,
+      config.gridMarginValue || 50
     );
     
     // If positions are enabled, preserve existing transform as position offset

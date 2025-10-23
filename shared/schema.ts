@@ -274,10 +274,12 @@ export interface BatchConfigSettings {
   gridColumns: number;
   gridStartX: number; // Start position offset X
   gridStartY: number; // Start position offset Y
-  gridSpacingXMode: 'define' | 'auto'; // Manual or auto-calculated X spacing
-  gridSpacingYMode: 'define' | 'auto'; // Manual or auto-calculated Y spacing
+  gridSpacingXMode: 'define' | 'auto-centered' | 'auto-edge-to-edge'; // Spacing calculation mode
+  gridSpacingYMode: 'define' | 'auto-centered' | 'auto-edge-to-edge'; // Spacing calculation mode
   gridRowOffset: number;
   gridColumnOffset: number;
+  gridMarginEnabled: boolean; // Enable custom margin for auto-centered mode
+  gridMarginValue: number; // Custom margin value (applies to all sides)
   gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
   gridSortScope: 'per-generation' | 'per-batch'; // Sort within each generation or across entire batch
   gridSortOrder: 'ascending' | 'descending'; // Sort direction
@@ -782,6 +784,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   gridSpacingYMode: 'define',
   gridRowOffset: 120,
   gridColumnOffset: 120,
+  gridMarginEnabled: false,
+  gridMarginValue: 50,
   gridSortBy: 'none',
   gridSortScope: 'per-generation',
   gridSortOrder: 'ascending',
@@ -1803,10 +1807,12 @@ export const BatchConfigSettingsSchema = z.object({
   gridColumns: z.number(),
   gridStartX: z.number(),
   gridStartY: z.number(),
-  gridSpacingXMode: z.enum(['define', 'auto']),
-  gridSpacingYMode: z.enum(['define', 'auto']),
+  gridSpacingXMode: z.enum(['define', 'auto-centered', 'auto-edge-to-edge']),
+  gridSpacingYMode: z.enum(['define', 'auto-centered', 'auto-edge-to-edge']),
   gridRowOffset: z.number(),
   gridColumnOffset: z.number(),
+  gridMarginEnabled: z.boolean(),
+  gridMarginValue: z.number(),
   gridSortBy: z.enum(['layer', 'id', 'shape-type', 'fill-color', 'opacity', 'size', 'angle', 'creation-time', 'none']),
   gridSortScope: z.enum(['per-generation', 'per-batch']),
   gridSortOrder: z.enum(['ascending', 'descending']),

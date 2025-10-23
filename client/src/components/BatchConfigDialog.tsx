@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
@@ -141,9 +142,33 @@ export default function BatchConfigDialog({
     console.log('[BatchConfigDialog] Dialog state changed:', { isOpen });
   }, [isOpen]);
 
-  // Initialize settings 
+  // Initialize settings with backward compatibility migration
   useEffect(() => {
     const mergedSettings = { ...defaultSettings, ...settings };
+    
+    // Migrate legacy 'auto' spacing mode to 'auto-centered'
+    if ((mergedSettings.gridSpacingXMode as any) === 'auto') {
+      mergedSettings.gridSpacingXMode = 'auto-centered';
+      // Set default values for new margin controls if not present
+      if (mergedSettings.gridMarginEnabled === undefined) {
+        mergedSettings.gridMarginEnabled = false;
+      }
+      if (mergedSettings.gridMarginValue === undefined) {
+        mergedSettings.gridMarginValue = 50;
+      }
+    }
+    
+    if ((mergedSettings.gridSpacingYMode as any) === 'auto') {
+      mergedSettings.gridSpacingYMode = 'auto-centered';
+      // Set default values for new margin controls if not present
+      if (mergedSettings.gridMarginEnabled === undefined) {
+        mergedSettings.gridMarginEnabled = false;
+      }
+      if (mergedSettings.gridMarginValue === undefined) {
+        mergedSettings.gridMarginValue = 50;
+      }
+    }
+    
     setCurrentSettings(mergedSettings);
   }, [settings]);
 
@@ -611,15 +636,16 @@ export default function BatchConfigDialog({
                           <div className="space-y-2">
                             <Label className="text-sm text-slate-300">X Spacing</Label>
                             <Select 
-                              value={currentSettings.gridSpacingXMode || 'define'}
-                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingXMode: value as 'auto' | 'define' })}
+                              value={((currentSettings.gridSpacingXMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingXMode) || 'define'}
+                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingXMode: value as 'define' | 'auto-centered' | 'auto-edge-to-edge' })}
                             >
                               <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-x-spacing">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                <SelectItem value="auto-centered" className="text-slate-200 hover:bg-slate-700">Auto - Centered</SelectItem>
+                                <SelectItem value="auto-edge-to-edge" className="text-slate-200 hover:bg-slate-700">Auto - Edge to Edge</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -655,15 +681,16 @@ export default function BatchConfigDialog({
                           <div className="space-y-2">
                             <Label className="text-sm text-slate-300">Y Spacing</Label>
                             <Select 
-                              value={currentSettings.gridSpacingYMode || 'define'}
-                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingYMode: value as 'auto' | 'define' })}
+                              value={((currentSettings.gridSpacingYMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingYMode) || 'define'}
+                              onValueChange={(value) => handleSettingsUpdate({ gridSpacingYMode: value as 'define' | 'auto-centered' | 'auto-edge-to-edge' })}
                             >
                               <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-y-spacing">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                <SelectItem value="auto-centered" className="text-slate-200 hover:bg-slate-700">Auto - Centered</SelectItem>
+                                <SelectItem value="auto-edge-to-edge" className="text-slate-200 hover:bg-slate-700">Auto - Edge to Edge</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -694,6 +721,33 @@ export default function BatchConfigDialog({
                             </div>
                           )}
                         </div>
+                        
+                        {((currentSettings.gridSpacingXMode === 'auto-centered' || (currentSettings.gridSpacingXMode as any) === 'auto') || 
+                          (currentSettings.gridSpacingYMode === 'auto-centered' || (currentSettings.gridSpacingYMode as any) === 'auto')) && (
+                          <div className="space-y-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm text-slate-300">Custom Margin</Label>
+                              <Switch
+                                checked={currentSettings.gridMarginEnabled || false}
+                                onCheckedChange={(checked: boolean) => handleSettingsUpdate({ gridMarginEnabled: checked })}
+                                data-testid="switch-custom-margin"
+                              />
+                            </div>
+                            {currentSettings.gridMarginEnabled && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Margin: {currentSettings.gridMarginValue || 50}px</Label>
+                                <Slider
+                                  value={[currentSettings.gridMarginValue || 50]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ gridMarginValue: value })}
+                                  min={0}
+                                  max={200}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-orange-600"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
