@@ -5133,7 +5133,7 @@ export default function Sidebar({
       </div>
       
       {/* Header */}
-      <div className={`flex items-center p-3 border-b border-slate-700 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+      <div className={`flex items-center border-b border-slate-700 ${isCollapsed ? 'justify-center py-3' : 'justify-between p-3'}`}>
         {!isCollapsed && (
           <h2 className="text-lg font-semibold text-white">Shape Editor</h2>
         )}
