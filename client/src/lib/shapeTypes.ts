@@ -689,6 +689,16 @@ export function applyGridDistribution(
   }
   
   return sortedShapes.map((shape, index) => {
+    // Debug: log original transform for first few shapes
+    if (index < 3) {
+      console.log(`🔍 [GRID DEBUG] applyGridDistribution - Shape ${index} BEFORE:`, {
+        originalTransform: { ...shape.transform },
+        positionsEnabled: config.positionsEnabled,
+        gridXRandomization: config.gridXRandomization,
+        gridYRandomization: config.gridYRandomization
+      });
+    }
+    
     const gridPos = calculateGridPosition(
       index,
       config.gridRows,
@@ -718,6 +728,16 @@ export function applyGridDistribution(
       
       finalX = gridPos.x + positionOffsetX;
       finalY = gridPos.y + positionOffsetY;
+      
+      if (index < 3) {
+        console.log(`🔍 [GRID DEBUG] Shape ${index} - Positions ENABLED:`, {
+          gridPos,
+          positionOffsetX,
+          positionOffsetY,
+          finalX,
+          finalY
+        });
+      }
     } else {
       // Apply additive random offset (0-200px configurable range)
       const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization; // -randomization to +randomization
@@ -725,11 +745,27 @@ export function applyGridDistribution(
       
       finalX = gridPos.x + randomX;
       finalY = gridPos.y + randomY;
+      
+      if (index < 3) {
+        console.log(`🔍 [GRID DEBUG] Shape ${index} - Positions DISABLED:`, {
+          gridPos,
+          randomX,
+          randomY,
+          finalX,
+          finalY
+        });
+      }
     }
     
     // Apply final grid position
     shape.transform.x = finalX;
     shape.transform.y = finalY;
+    
+    if (index < 3) {
+      console.log(`🔍 [GRID DEBUG] Shape ${index} AFTER:`, {
+        finalTransform: { ...shape.transform }
+      });
+    }
     
     return shape;
   });
