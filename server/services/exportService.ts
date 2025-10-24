@@ -151,9 +151,16 @@ export class ExportService {
     const canvasWidth = (baseWidth + margins.left + margins.right) * scale;
     const canvasHeight = (baseHeight + margins.top + margins.bottom) * scale;
     
+    console.log(`[ExportService] Creating canvas: ${canvasWidth}x${canvasHeight} (base: ${baseWidth}x${baseHeight}, scale: ${scale})`);
+    console.log(`[ExportService] Rendering ${shapes.length} shapes`);
+    
     // Create canvas
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      throw new Error('Failed to get 2D context from canvas');
+    }
     
     // Apply scale
     ctx.scale(scale, scale);
@@ -163,6 +170,7 @@ export class ExportService {
     
     // Draw background if requested
     if (exportOptions.includeBackground && exportOptions.backgroundColor) {
+      console.log(`[ExportService] Drawing background: ${exportOptions.backgroundColor}`);
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
       ctx.fillStyle = exportOptions.backgroundColor;
@@ -174,11 +182,20 @@ export class ExportService {
     const sortedShapes = [...shapes].sort((a, b) => (a.properties.zIndex || 0) - (b.properties.zIndex || 0));
     
     // Render each shape
-    for (const shape of sortedShapes) {
+    for (let i = 0; i < sortedShapes.length; i++) {
+      const shape = sortedShapes[i];
+      console.log(`[ExportService] Rendering shape ${i + 1}/${sortedShapes.length}: type=${shape.type}, points=${shape.points?.length || 0}`);
+      
+      if (!shape.points || shape.points.length === 0) {
+        console.warn(`[ExportService] Shape ${shape.type} has no points, skipping`);
+        continue;
+      }
+      
       // Cast to server Shape type - they're compatible in structure
       renderShape(ctx, shape as any, !exportOptions.includeAdornments);
     }
     
+    console.log('[ExportService] Canvas rendering complete');
     return canvas;
   }
 
@@ -198,7 +215,9 @@ export class ExportService {
     
     // node-canvas supports PNG and JPEG reliably
     if (formatLower === 'jpeg' || formatLower === 'jpg') {
-      return canvas.toBuffer('image/jpeg', { quality });
+      const buffer = canvas.toBuffer('image/jpeg', { quality });
+      console.log(`[ExportService] Generated JPEG buffer, size: ${buffer.length} bytes`);
+      return buffer;
     }
     
     // All other formats default to PNG
@@ -207,7 +226,27 @@ export class ExportService {
       console.warn(`Format ${format} not fully supported, using PNG`);
     }
     
-    return canvas.toBuffer('image/png');
+    const buffer = canvas.toBuffer('image/png');
+    console.log(`[ExportService] Generated PNG buffer, size: ${buffer.length} bytes`);
+    
+    // Validate PNG header (PNG signature: 89 50 4E 47 0D 0A 1A 0A)
+    if (buffer.length < 8) {
+      console.error('[ExportService] PNG buffer too small:', buffer.length);
+      throw new Error('Generated PNG buffer is too small');
+    }
+    
+    const pngSignature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+    const bufferSignature = buffer.slice(0, 8);
+    
+    if (!bufferSignature.equals(pngSignature)) {
+      console.error('[ExportService] Invalid PNG signature:', bufferSignature);
+      console.error('[ExportService] Expected:', pngSignature);
+      console.error('[ExportService] Buffer preview (first 50 bytes):', buffer.slice(0, 50));
+      throw new Error('Generated buffer does not have valid PNG signature');
+    }
+    
+    console.log('[ExportService] PNG buffer validated successfully');
+    return buffer;
   }
 
   // Legacy method for backward compatibility
