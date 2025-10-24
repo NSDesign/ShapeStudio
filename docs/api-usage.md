@@ -111,9 +111,16 @@ echo $env:LIVE_API_KEY
 ```
 
 **Important for PowerShell Users:**
-- Use `curl.exe` (not `curl`) to avoid the PowerShell alias that maps to `Invoke-WebRequest`
-- PowerShell requires `jq` for JSON parsing - install via: `winget install jqlang.jq`
-- Use backtick (`` ` ``) for line continuation instead of backslash (`\`)
+- **Always use `curl.exe`** (not `curl`) to avoid the PowerShell alias that maps to `Invoke-WebRequest`
+- **JSON Parsing:** PowerShell has built-in `ConvertFrom-Json` and `ConvertTo-Json` cmdlets - no need for `jq`
+- **Line Continuation:** Use backtick (`` ` ``) for line continuation instead of backslash (`\`)
+- **Environment Variables:** Access with `$env:VARIABLE_NAME` (not `$VARIABLE_NAME`)
+- **String Escaping:** Double quotes inside JSON strings must be escaped with backslash: `'{\"key\":\"value\"}'`
+- **Nested Quotes:** Use backtick to escape inner quotes in PowerShell: `"{`"data`":$ConfigData}"`
+- **Sleep Command:** Use `Start-Sleep -Seconds 5` instead of `sleep 5`
+- **Command Chaining:** Use semicolons (`;`) to chain commands instead of `&&`
+- **ForEach-Object:** PowerShell's native looping for arrays - use `| ForEach-Object { }` for iteration
+- **Array Slicing:** Use `Select-Object -First N` to limit array results instead of `jq` array slicing
 
 ---
 
