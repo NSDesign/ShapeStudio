@@ -547,6 +547,67 @@ export function calculateGridPosition(
   return { x, y, row, column };
 }
 
+/**
+ * Detects which shape-specific sort options are available based on enabled shape types
+ * @param enabledShapeTypes - Array of enabled shape type strings
+ * @returns Object indicating which sort criteria are available
+ */
+export function getAvailableShapeSpecificSortOptions(enabledShapeTypes: string[]): {
+  cornerRadius: boolean;
+  pointCount: boolean;
+  edgeCount: boolean;
+  innerRadius: boolean;
+  segmentCount: boolean;
+  direction: boolean;
+  length: boolean;
+  centroid: boolean;
+  spread: boolean;
+  curvature: boolean;
+} {
+  const hasRoundedShapes = enabledShapeTypes.some(type => 
+    type === 'rounded-rectangle' || type === 'rounded-square'
+  );
+  
+  const hasPointCountShapes = enabledShapeTypes.some(type => 
+    type === 'star' || type === 'polygon' || type === 'line' || 
+    type === 'bezier' || type === 'cubic' || type === 'smooth-spline'
+  );
+  
+  const hasEdgeCountShapes = enabledShapeTypes.some(type => 
+    type === 'polygon'
+  );
+  
+  const hasInnerRadiusShapes = enabledShapeTypes.some(type => 
+    type === 'ring' || type === 'star' || type === 'spline-ring'
+  );
+  
+  const hasSegmentCountShapes = enabledShapeTypes.some(type => 
+    type === 'circle' || type === 'ellipse' || type === 'spline-circle' || 
+    type === 'spline-ellipse' || type === 'spline-ring'
+  );
+  
+  const hasLineVectorShapes = enabledShapeTypes.some(type => 
+    type === 'line-vector'
+  );
+  
+  const hasCubicShapes = enabledShapeTypes.some(type => 
+    type === 'cubic'
+  );
+  
+  return {
+    cornerRadius: hasRoundedShapes,
+    pointCount: hasPointCountShapes,
+    edgeCount: hasEdgeCountShapes,
+    innerRadius: hasInnerRadiusShapes,
+    segmentCount: hasSegmentCountShapes,
+    direction: hasLineVectorShapes,
+    length: hasLineVectorShapes,
+    centroid: hasLineVectorShapes,
+    spread: hasCubicShapes,
+    curvature: hasCubicShapes
+  };
+}
+
 export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'ascending' | 'descending' = 'ascending'): any[] {
   if (sortBy === 'none') return shapes;
   
