@@ -573,7 +573,7 @@ export function getAvailableShapeSpecificSortOptions(enabledShapeTypes: string[]
   );
   
   const hasPointCountShapes = enabledShapeTypes.some(type => 
-    type === 'star' || type === 'polygon' || type === 'line' || 
+    type === 'star' || type === 'line' || 
     type === 'bezier' || type === 'cubic' || type === 'smooth-spline'
   );
   
@@ -586,8 +586,7 @@ export function getAvailableShapeSpecificSortOptions(enabledShapeTypes: string[]
   );
   
   const hasSegmentCountShapes = enabledShapeTypes.some(type => 
-    type === 'circle' || type === 'ellipse' || type === 'spline-circle' || 
-    type === 'spline-ellipse' || type === 'spline-ring'
+    type === 'circle' || type === 'ellipse' || type === 'spline-ring'
   );
   
   const hasLineVectorShapes = enabledShapeTypes.some(type => 
