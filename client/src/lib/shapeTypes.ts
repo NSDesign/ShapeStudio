@@ -30,9 +30,13 @@ export interface DistributionConfig {
   gridColumnOffset: number;
   gridMarginEnabled?: boolean;
   gridMarginValue?: number;
-  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none' | 
+    'corner-radius' | 'point-count' | 'edge-count' | 'inner-radius' | 'segment-count' | 
+    'direction' | 'length' | 'centroid' | 'spread' | 'curvature';
   gridSortScope: 'per-generation' | 'per-batch';
   gridSortOrder: 'ascending' | 'descending';
+  gridGroupByShapeType?: boolean;
+  gridReverseGroups?: boolean;
   gridXRandomization: number;
   gridYRandomization: number;
   autoDistributeXCount?: number;
@@ -608,11 +612,73 @@ export function getAvailableShapeSpecificSortOptions(enabledShapeTypes: string[]
   };
 }
 
-export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'ascending' | 'descending' = 'ascending'): any[] {
+export function sortShapesForGrid(
+  shapes: any[], 
+  sortBy: string, 
+  sortOrder: 'ascending' | 'descending' = 'ascending',
+  groupByShapeType: boolean = false,
+  reverseGroups: boolean = false
+): any[] {
   if (sortBy === 'none') return shapes;
   
-  const sorted = [...shapes].sort((a, b) => {
-    let comparison = 0;
+  // If grouping is enabled, group shapes by type first
+  if (groupByShapeType) {
+    // Group shapes by their type
+    const groupedByType: Record<string, any[]> = {};
+    shapes.forEach(shape => {
+      const type = shape.type || 'unknown';
+      if (!groupedByType[type]) {
+        groupedByType[type] = [];
+      }
+      groupedByType[type].push(shape);
+    });
+    
+    // Sort shapes within each group first
+    let sortedGroups = Object.entries(groupedByType).map(([type, groupShapes]) => {
+      const sorted = sortShapesWithinGroup(groupShapes, sortBy, sortOrder);
+      return {
+        type,
+        shapes: sorted,
+        // Use first shape from sorted array as representative
+        // For ascending, first is smallest; for descending, first is largest
+        representative: sorted[0]
+      };
+    });
+    
+    // Sort the groups themselves using the same criteria
+    sortedGroups = sortedGroups.sort((groupA, groupB) => {
+      // Special case: for shape-type sorting, sort groups by type name
+      if (sortBy === 'shape-type') {
+        const comparison = groupA.type.localeCompare(groupB.type);
+        return sortOrder === 'ascending' ? comparison : -comparison;
+      }
+      
+      // For other criteria, compare representative shapes from each group
+      const comparison = getComparisonValue(groupA.representative, groupB.representative, sortBy, sortOrder);
+      
+      // Add tie-breaker using type name for stable sorting
+      if (comparison === 0) {
+        return groupA.type.localeCompare(groupB.type);
+      }
+      
+      return comparison;
+    });
+    
+    // Optionally reverse the order of groups
+    if (reverseGroups) {
+      sortedGroups.reverse();
+    }
+    
+    // Flatten the sorted groups back into a single array
+    return sortedGroups.flatMap(group => group.shapes);
+  }
+  
+  // Standard sorting without grouping
+  return sortShapesWithinGroup(shapes, sortBy, sortOrder);
+}
+
+function getComparisonValue(a: any, b: any, sortBy: string, sortOrder: 'ascending' | 'descending'): number {
+  let comparison = 0;
     
     switch (sortBy) {
       case 'layer':
@@ -702,13 +768,14 @@ export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'asc
         break;
       
       default:
-        return 0;
+        comparison = 0;
     }
     
     return sortOrder === 'ascending' ? comparison : -comparison;
-  });
-  
-  return sorted;
+}
+
+function sortShapesWithinGroup(shapes: any[], sortBy: string, sortOrder: 'ascending' | 'descending'): any[] {
+  return [...shapes].sort((a, b) => getComparisonValue(a, b, sortBy, sortOrder));
 }
 
 function extractTimestamp(id: string): number | null {
@@ -799,14 +866,22 @@ export function applyGridDistribution(
       const sortedGeneration = sortShapesForGrid(
         generationShapes, 
         config.gridSortBy, 
-        config.gridSortOrder
+        config.gridSortOrder,
+        config.gridGroupByShapeType || false,
+        config.gridReverseGroups || false
       );
       
       sortedShapes.push(...sortedGeneration);
     }
   } else {
     // Sort across entire batch
-    sortedShapes = sortShapesForGrid(shapes, config.gridSortBy, config.gridSortOrder);
+    sortedShapes = sortShapesForGrid(
+      shapes, 
+      config.gridSortBy, 
+      config.gridSortOrder,
+      config.gridGroupByShapeType || false,
+      config.gridReverseGroups || false
+    );
   }
   
   return sortedShapes.map((shape, index) => {

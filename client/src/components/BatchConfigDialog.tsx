@@ -123,7 +123,7 @@ export default function BatchConfigDialog({
   const availableShapeSpecificSortOptions = React.useMemo(() => {
     // Get current generation set's shape types
     const currentSet = generationSets.find(set => set.id === currentGenerationSetId);
-    const shapeTypes = currentSet?.shapeTypes || [];
+    const shapeTypes = currentSet?.enabledShapeTypes || [];
     
     // Get available sort options
     return getAvailableShapeSpecificSortOptions(shapeTypes);
