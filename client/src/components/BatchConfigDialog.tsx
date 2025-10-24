@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
-import { ScatterSettings, ShapeType, Artboard } from '@/lib/shapeTypes';
+import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
@@ -119,7 +119,15 @@ export default function BatchConfigDialog({
   const enabledSetsCount = generationSets.filter(set => set.enabled).length;
   const hasSetsCountMismatch = batchExportCount > 0 && enabledSetsCount < batchExportCount;
 
-
+  // Calculate available shape-specific sort options based on current generation set
+  const availableShapeSpecificSortOptions = React.useMemo(() => {
+    // Get current generation set's shape types
+    const currentSet = generationSets.find(set => set.id === currentGenerationSetId);
+    const shapeTypes = currentSet?.shapeTypes || [];
+    
+    // Get available sort options
+    return getAvailableShapeSpecificSortOptions(shapeTypes);
+  }, [generationSets, currentGenerationSetId]);
 
   // Sync with external control
   useEffect(() => {
@@ -794,6 +802,79 @@ export default function BatchConfigDialog({
                               <SelectItem value="opacity" className="text-slate-200 hover:bg-slate-700">Opacity</SelectItem>
                               <SelectItem value="angle" className="text-slate-200 hover:bg-slate-700">Rotation Angle</SelectItem>
                               <SelectItem value="id" className="text-slate-200 hover:bg-slate-700">Shape ID</SelectItem>
+                              
+                              <SelectSeparator className="bg-slate-600" />
+                              
+                              <SelectItem 
+                                value="corner-radius" 
+                                disabled={!availableShapeSpecificSortOptions.cornerRadius}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Corner Radius
+                              </SelectItem>
+                              <SelectItem 
+                                value="point-count" 
+                                disabled={!availableShapeSpecificSortOptions.pointCount}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Point Count
+                              </SelectItem>
+                              <SelectItem 
+                                value="edge-count" 
+                                disabled={!availableShapeSpecificSortOptions.edgeCount}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Edge Count
+                              </SelectItem>
+                              <SelectItem 
+                                value="inner-radius" 
+                                disabled={!availableShapeSpecificSortOptions.innerRadius}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Inner Radius
+                              </SelectItem>
+                              <SelectItem 
+                                value="segment-count" 
+                                disabled={!availableShapeSpecificSortOptions.segmentCount}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Segment Count
+                              </SelectItem>
+                              <SelectItem 
+                                value="direction" 
+                                disabled={!availableShapeSpecificSortOptions.direction}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Direction (line-vector)
+                              </SelectItem>
+                              <SelectItem 
+                                value="length" 
+                                disabled={!availableShapeSpecificSortOptions.length}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Length (line-vector)
+                              </SelectItem>
+                              <SelectItem 
+                                value="centroid" 
+                                disabled={!availableShapeSpecificSortOptions.centroid}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Centroid (line-vector)
+                              </SelectItem>
+                              <SelectItem 
+                                value="spread" 
+                                disabled={!availableShapeSpecificSortOptions.spread}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Spread (cubic)
+                              </SelectItem>
+                              <SelectItem 
+                                value="curvature" 
+                                disabled={!availableShapeSpecificSortOptions.curvature}
+                                className="text-slate-200 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Curvature (cubic)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
