@@ -132,6 +132,8 @@ The complete workflow follows this pattern:
 
 ### Example 1: Complete Workflow (Production URL)
 
+**Bash/Linux/macOS:**
+
 ```bash
 # Step 1: Get enabled sets configuration
 CONFIG=$(curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
@@ -159,6 +161,38 @@ DOWNLOAD_PATH=$(echo "$STATUS" | jq -r '.status.downloadPath')
 curl -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
 
 echo "✅ Export complete! Check your directory for batch-export-*.zip"
+```
+
+**Windows PowerShell ISE:**
+
+```powershell
+# Step 1: Get enabled sets configuration
+$CONFIG = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d '{\"userId\":\"21294\"}'
+
+# Step 2: Execute export with configuration
+$ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10
+$ExportResponse = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d "{`"data`":$ConfigData}"
+
+$EXPORT_ID = ($ExportResponse | ConvertFrom-Json).data.exportId
+Write-Host "Export ID: $EXPORT_ID"
+
+# Step 3: Poll for completion (wait 5 seconds)
+Start-Sleep -Seconds 5
+
+# Step 4: Get status and download path
+$STATUS = curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID"
+$DOWNLOAD_PATH = ($STATUS | ConvertFrom-Json).status.downloadPath
+
+# Step 5: Download ZIP with smart filename extraction
+curl.exe -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
+
+Write-Host "✅ Export complete! Check your directory for batch-export-*.zip"
 ```
 
 ### Example 2: One-Line Chained Command (Local Development)
