@@ -197,6 +197,8 @@ Write-Host "✅ Export complete! Check your directory for batch-export-*.zip"
 
 ### Example 2: One-Line Chained Command (Local Development)
 
+**Bash/Linux/macOS:**
+
 ```bash
 CONFIG=$(curl -s -X POST "http://localhost:5000/api/live/sets/enabled" \
   -H "x-api-key: $LIVE_API_KEY" \
@@ -208,6 +210,12 @@ EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | curl -s -X POST "http://localhost:
   -d @- | jq -r '.data.exportId') && \
 sleep 5 && \
 curl -JO "http://localhost:5000$(curl -s "http://localhost:5000/api/export/status/$EXPORT_ID" | jq -r '.status.downloadPath')"
+```
+
+**Windows PowerShell ISE:**
+
+```powershell
+$CONFIG = curl.exe -s -X POST "http://localhost:5000/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10; $EXPORT_ID = (curl.exe -s -X POST "http://localhost:5000/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "{`"data`":$ConfigData}" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "http://localhost:5000/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; curl.exe -JO "http://localhost:5000$DOWNLOAD_PATH"
 ```
 
 **What `-JO` does:**
