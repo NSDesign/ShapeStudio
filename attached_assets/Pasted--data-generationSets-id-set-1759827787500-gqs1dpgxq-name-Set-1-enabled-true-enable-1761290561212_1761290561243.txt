@@ -1,0 +1,18 @@
+{"data":{"generationSets":[{"id":"set-1759827787500-gqs1dpgxq","name":"Set 1","enabled":true,"enabledShapeTypes":["rectangle","rounded-rectangle","squ
+are","rounded-square","circle","polygon"],"shapeCountMode":"range","shapeCountFixed":10,"shapeCountRange":[15,35],"shapeSpecificProperties":{"rectangl
+e":{},"rounded-rectangle":{"cornerRadiusMode":"range","cornerRadiusRange":[0,10],"cornerRadiusValue":5},"square":{},"rounded-square":{"cornerRadiusMod
+e":"range","cornerRadiusRange":[0,10],"cornerRadiusValue":5},"circle":{"segmentCountRange":[16,32]},"polygon":{"edgeCountRange":[3,20]}},"batchConfig"
+:{"selectedPreset":"custom"},"description":"Generated from current settings on 10/7/2025, 8:03:07 PM"},{"id":"set-1759827803158-h9xiifwaq","name":"Set
+ 2","enabled":true,"enabledShapeTypes":["blob"],"shapeCountMode":"fixed","shapeCountFixed":1,"shapeCountRange":[5,15],"shapeSpecificProperties":{},"ba
+tchConfig":{"selectedPreset":"custom","propertiesEnabled":true,"fillEnabled":true,"fillStyleProbability":100,"fillColorMode":"define","fillColorDefine
+":"#001eff","fillOpacityMode":"define","fillOpacityDefine":100},"compositingOperation":"destination-in","artboardAlignment":{"margin":0,"alignTo":"non
+e","alignmentType":"center","fitToArtboard":true},"generationOrder":1,"description":"Generated from current settings on 10/7/2025, 8:03:23 PM"},{"id":
+"set-1760147878889-l061k6c2p","name":"Set 3","enabled":true,"enabledShapeTypes":["semicircle"],"shapeCountMode":"fixed","shapeCountFixed":10,"shapeCou
+ntRange":[5,15],"shapeSpecificProperties":{},"batchConfig":{"selectedPreset":"custom","blendModeEnabled":true,"enabledBlendModes":{"soft-light":50,"so
+urce-over":100},"propertiesEnabled":true,"fillEnabled":true,"fillStyleProbability":100,"fillColorMode":"range","fillColorRange":["#f0a600","#7500ee"],
+"fillOpacityMode":"define","fillOpacityDefine":100},"generationOrder":2,"description":"Generated from current settings on 11/10/2025, 12:57:58 pm"}],"
+currentSetId":"set-1760147878889-l061k6c2p","exportSettings":{"format":"png","quality":90,"scale":1,"mode":"all"},"artboardSettings":{"width":400,"hei
+ght":400,"backgroundColor":"#ffffff","displayGrid":false,"displayBorder":true},"batchExportSettings":{"enabled":true,"count":1,"saveProjectFiles":fals
+e,"packageAsZip":false,"generationSetsEnabled":true,"generationCountMode":"fixed"}}}
+Export Response:
+{"message":"Expected property name or '}' in JSON at position 1"}
