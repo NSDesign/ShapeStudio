@@ -280,9 +280,13 @@ export interface BatchConfigSettings {
   gridColumnOffset: number;
   gridMarginEnabled: boolean; // Enable custom margin for auto-centered mode
   gridMarginValue: number; // Custom margin value (applies to all sides)
-  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none';
+  gridSortBy: 'layer' | 'id' | 'shape-type' | 'fill-color' | 'opacity' | 'size' | 'angle' | 'creation-time' | 'none' | 
+    'corner-radius' | 'point-count' | 'edge-count' | 'inner-radius' | 'segment-count' | 
+    'direction' | 'length' | 'centroid' | 'spread' | 'curvature';
   gridSortScope: 'per-generation' | 'per-batch'; // Sort within each generation or across entire batch
   gridSortOrder: 'ascending' | 'descending'; // Sort direction
+  gridGroupByShapeType: boolean; // Group shapes by type before sorting
+  gridReverseGroups: boolean; // Reverse the order of shape-type groups
   // Grid randomization amounts (additive pixel offsets)
   gridXRandomization: number; // 0-200 pixels additive randomization in X direction
   gridYRandomization: number; // 0-200 pixels additive randomization in Y direction
@@ -789,6 +793,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   gridSortBy: 'none',
   gridSortScope: 'per-generation',
   gridSortOrder: 'ascending',
+  gridGroupByShapeType: false,
+  gridReverseGroups: false,
   gridXRandomization: 0,
   gridYRandomization: 0,
   
@@ -1813,9 +1819,13 @@ export const BatchConfigSettingsSchema = z.object({
   gridColumnOffset: z.number(),
   gridMarginEnabled: z.boolean(),
   gridMarginValue: z.number(),
-  gridSortBy: z.enum(['layer', 'id', 'shape-type', 'fill-color', 'opacity', 'size', 'angle', 'creation-time', 'none']),
+  gridSortBy: z.enum(['layer', 'id', 'shape-type', 'fill-color', 'opacity', 'size', 'angle', 'creation-time', 'none',
+    'corner-radius', 'point-count', 'edge-count', 'inner-radius', 'segment-count', 
+    'direction', 'length', 'centroid', 'spread', 'curvature']),
   gridSortScope: z.enum(['per-generation', 'per-batch']),
   gridSortOrder: z.enum(['ascending', 'descending']),
+  gridGroupByShapeType: z.boolean(),
+  gridReverseGroups: z.boolean(),
   gridXRandomization: z.number(),
   gridYRandomization: z.number(),
   
