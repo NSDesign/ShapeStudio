@@ -648,6 +648,59 @@ export function sortShapesForGrid(shapes: any[], sortBy: string, sortOrder: 'asc
       case 'id':
         comparison = a.id.localeCompare(b.id);
         break;
+      
+      // Shape-specific sort criteria
+      case 'corner-radius':
+        const aCornerRadius = a.config?.cornerRadius || 0;
+        const bCornerRadius = b.config?.cornerRadius || 0;
+        comparison = aCornerRadius - bCornerRadius;
+        break;
+      case 'point-count':
+        const aPointCount = a.config?.pointCount || a.points?.length || 0;
+        const bPointCount = b.config?.pointCount || b.points?.length || 0;
+        comparison = aPointCount - bPointCount;
+        break;
+      case 'edge-count':
+        const aEdgeCount = a.config?.edgeCount || a.config?.pointCount || 0;
+        const bEdgeCount = b.config?.edgeCount || b.config?.pointCount || 0;
+        comparison = aEdgeCount - bEdgeCount;
+        break;
+      case 'inner-radius':
+        const aInnerRadius = a.config?.innerRadius || 0;
+        const bInnerRadius = b.config?.innerRadius || 0;
+        comparison = aInnerRadius - bInnerRadius;
+        break;
+      case 'segment-count':
+        const aSegmentCount = a.config?.segmentCount || 0;
+        const bSegmentCount = b.config?.segmentCount || 0;
+        comparison = aSegmentCount - bSegmentCount;
+        break;
+      case 'direction':
+        const aDirection = a.config?.direction || 0;
+        const bDirection = b.config?.direction || 0;
+        comparison = aDirection - bDirection;
+        break;
+      case 'length':
+        const aLength = a.config?.length || 0;
+        const bLength = b.config?.length || 0;
+        comparison = aLength - bLength;
+        break;
+      case 'centroid':
+        const aCentroid = a.config?.centroid || 0;
+        const bCentroid = b.config?.centroid || 0;
+        comparison = aCentroid - bCentroid;
+        break;
+      case 'spread':
+        const aSpread = a.config?.spread || 0;
+        const bSpread = b.config?.spread || 0;
+        comparison = aSpread - bSpread;
+        break;
+      case 'curvature':
+        const aCurvature = a.config?.curvature || 0;
+        const bCurvature = b.config?.curvature || 0;
+        comparison = aCurvature - bCurvature;
+        break;
+      
       default:
         return 0;
     }
