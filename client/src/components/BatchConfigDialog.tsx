@@ -916,6 +916,36 @@ export default function BatchConfigDialog({
                                 </SelectContent>
                               </Select>
                             </div>
+                            
+                            <div className="space-y-3 pt-2">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm text-slate-300">Group by Shape Type</Label>
+                                <Switch
+                                  checked={currentSettings.gridGroupByShapeType}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridGroupByShapeType: checked })}
+                                  className="data-[state=checked]:bg-purple-600"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-400">
+                                Group shapes by type first, then sort within each group
+                              </p>
+                            </div>
+                            
+                            {currentSettings.gridGroupByShapeType && (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-sm text-slate-300">Reverse Groups</Label>
+                                  <Switch
+                                    checked={currentSettings.gridReverseGroups}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ gridReverseGroups: checked })}
+                                    className="data-[state=checked]:bg-purple-600"
+                                  />
+                                </div>
+                                <p className="text-xs text-slate-400">
+                                  Reverse the order of shape-type groups
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
