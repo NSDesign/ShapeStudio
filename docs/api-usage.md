@@ -84,6 +84,39 @@ All endpoints require an API key passed via the `x-api-key` header.
 
 ---
 
+## Setting Up Environment Variables
+
+### Bash/Linux/macOS
+
+```bash
+# Set API key for current session
+export LIVE_API_KEY="your_api_key_here"
+
+# Add to ~/.bashrc or ~/.zshrc for persistence
+echo 'export LIVE_API_KEY="your_api_key_here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Windows PowerShell ISE / PowerShell
+
+```powershell
+# Set API key for current session only
+$env:LIVE_API_KEY = "your_api_key_here"
+
+# Set persistently for current user (survives restarts)
+[System.Environment]::SetEnvironmentVariable('LIVE_API_KEY', 'your_api_key_here', 'User')
+
+# Verify it's set
+echo $env:LIVE_API_KEY
+```
+
+**Important for PowerShell Users:**
+- Use `curl.exe` (not `curl`) to avoid the PowerShell alias that maps to `Invoke-WebRequest`
+- PowerShell requires `jq` for JSON parsing - install via: `winget install jqlang.jq`
+- Use backtick (`` ` ``) for line continuation instead of backslash (`\`)
+
+---
+
 ## Complete Export Workflow
 
 ### Three-Step Process
