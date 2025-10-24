@@ -179,12 +179,18 @@ $CONFIG = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live
   -H "x-api-key: $env:LIVE_API_KEY" `
   -d '{\"userId\":\"21294\"}'
 
-# Step 2: Execute export with configuration
-$ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10
+# Step 2: Execute export with configuration (using temp file for complex JSON)
+$Payload = @{
+    data = ($CONFIG | ConvertFrom-Json).data
+} | ConvertTo-Json -Compress -Depth 10
+
+$TempFile = "$env:TEMP\export-payload.json"
+$Payload | Out-File -FilePath $TempFile -Encoding UTF8 -NoNewline
+
 $ExportResponse = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" `
   -H "Content-Type: application/json" `
   -H "x-api-key: $env:LIVE_API_KEY" `
-  -d "{`"data`":$ConfigData}"
+  -d "@$TempFile"
 
 $EXPORT_ID = ($ExportResponse | ConvertFrom-Json).data.exportId
 Write-Host "Export ID: $EXPORT_ID"
@@ -196,10 +202,14 @@ Start-Sleep -Seconds 5
 $STATUS = curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID"
 $DOWNLOAD_PATH = ($STATUS | ConvertFrom-Json).status.downloadPath
 
-# Step 5: Download ZIP with smart filename extraction
+# Step 5: Download ZIP to accessible directory
+$DownloadDir = "$env:USERPROFILE\Downloads\shape-exports"
+New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
+Set-Location $DownloadDir
+
 curl.exe -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
 
-Write-Host "✅ Export complete! Check your directory for batch-export-*.zip"
+Write-Host "✅ Export complete! Files saved to: $DownloadDir"
 ```
 
 ### Example 2: One-Line Chained Command (Local Development)
@@ -222,7 +232,7 @@ curl -JO "http://localhost:5000$(curl -s "http://localhost:5000/api/export/statu
 **Windows PowerShell ISE:**
 
 ```powershell
-$CONFIG = curl.exe -s -X POST "http://localhost:5000/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10; $EXPORT_ID = (curl.exe -s -X POST "http://localhost:5000/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "{`"data`":$ConfigData}" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "http://localhost:5000/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; curl.exe -JO "http://localhost:5000$DOWNLOAD_PATH"
+$CONFIG = curl.exe -s -X POST "http://localhost:5000/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $Payload = (@{ data = ($CONFIG | ConvertFrom-Json).data } | ConvertTo-Json -Compress -Depth 10); $TempFile = "$env:TEMP\export-payload.json"; $Payload | Out-File -FilePath $TempFile -Encoding UTF8 -NoNewline; $EXPORT_ID = (curl.exe -s -X POST "http://localhost:5000/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "@$TempFile" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "http://localhost:5000/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; $DownloadDir = "$env:USERPROFILE\Downloads\shape-exports"; New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null; Set-Location $DownloadDir; curl.exe -JO "http://localhost:5000$DOWNLOAD_PATH"
 ```
 
 ### Example 3: One-Line Chained Command (Production URL)
@@ -245,7 +255,7 @@ curl -JO "https://shape-studio-nsdesign.replit.app$(curl -s "https://shape-studi
 **Windows PowerShell ISE:**
 
 ```powershell
-$CONFIG = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10; $EXPORT_ID = (curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "{`"data`":$ConfigData}" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; curl.exe -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
+$CONFIG = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $Payload = (@{ data = ($CONFIG | ConvertFrom-Json).data } | ConvertTo-Json -Compress -Depth 10); $TempFile = "$env:TEMP\export-payload.json"; $Payload | Out-File -FilePath $TempFile -Encoding UTF8 -NoNewline; $EXPORT_ID = (curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "@$TempFile" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; $DownloadDir = "$env:USERPROFILE\Downloads\shape-exports"; New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null; Set-Location $DownloadDir; curl.exe -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
 ```
 
 **What `-JO` does:**
@@ -1207,6 +1217,139 @@ app.use('/api/live/', apiLimiter);
 - ⏳ **Rate Limiting** - Implement to prevent abuse
 - ⏳ **API Versioning** - Consider `/api/v1/live/sets/enabled`
 - ⏳ **Monitoring** - Track API usage and performance metrics
+
+---
+
+## Troubleshooting
+
+### Windows PowerShell Issues
+
+#### Issue: "Permission denied" when downloading files
+
+**Symptom:**
+```
+Warning: Failed to open the file image-001.png: Permission denied
+curl: (23) client returned ERROR on write of 66 bytes
+```
+
+**Solution:**
+Change to a directory where you have write permissions:
+
+```powershell
+# Create and navigate to a downloads folder
+$DownloadDir = "$env:USERPROFILE\Downloads\shape-exports"
+New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
+Set-Location $DownloadDir
+
+# Now download files
+curl.exe -JO "https://shape-studio-nsdesign.replit.app/api/export/files/$EXPORT_ID/image-001.png"
+```
+
+#### Issue: "Expected property name or '}' in JSON at position 1"
+
+**Symptom:**
+```
+{"message":"Expected property name or '}' in JSON at position 1"}
+```
+
+**Solution:**
+Use the file-based approach for complex JSON payloads:
+
+```powershell
+# Instead of inline JSON string
+$Payload = @{
+    data = ($CONFIG | ConvertFrom-Json).data
+} | ConvertTo-Json -Compress -Depth 10
+
+# Save to temp file
+$TempFile = "$env:TEMP\export-payload.json"
+$Payload | Out-File -FilePath $TempFile -Encoding UTF8 -NoNewline
+
+# Use @filename syntax
+curl.exe -d "@$TempFile" ...
+```
+
+#### Issue: curl command not found or using wrong curl
+
+**Symptom:**
+```
+curl : The 'Invoke-WebRequest' command was found in the module 'Microsoft.PowerShell.Utility'
+```
+
+**Solution:**
+Always use `curl.exe` (not `curl`) to avoid PowerShell's alias:
+
+```powershell
+# Wrong - uses PowerShell alias
+curl -X POST ...
+
+# Correct - uses actual curl.exe
+curl.exe -X POST ...
+```
+
+#### Issue: Environment variable not found
+
+**Symptom:**
+```
+$env:LIVE_API_KEY is empty or null
+```
+
+**Solution:**
+Set the environment variable properly:
+
+```powershell
+# For current session
+$env:LIVE_API_KEY = "your_api_key_here"
+
+# Verify it's set
+echo $env:LIVE_API_KEY
+
+# For persistent storage (survives restarts)
+[System.Environment]::SetEnvironmentVariable('LIVE_API_KEY', 'your_api_key_here', 'User')
+```
+
+### General API Issues
+
+#### Issue: Export returns empty imageFiles array
+
+**Symptom:**
+Status shows completed but no individual file URLs:
+```json
+{
+  "status": {
+    "status": "completed",
+    "imageFiles": [],
+    "projectFiles": []
+  }
+}
+```
+
+**Cause:**
+This occurs when `packageAsZip` is set to `false` in your batch export settings. The individual file tracking is currently not fully implemented.
+
+**Solution:**
+Use `packageAsZip: true` (recommended for API usage):
+
+```bash
+# Ensure packageAsZip is true in your configuration
+# This will provide a downloadPath in the status response
+```
+
+Alternatively, manually construct file URLs if you know the export ID and filename pattern:
+```powershell
+curl.exe -JO "https://shape-studio-nsdesign.replit.app/api/export/files/$EXPORT_ID/image-001.png"
+```
+
+#### Issue: Corrupted or invalid image files
+
+**Symptom:**
+Downloaded PNG files cannot be opened; error messages like "not a valid bitmap file" or "no decode delegate for this image format"
+
+**Status:**
+This is a known issue with the current server-side canvas image generation. Investigation in progress.
+
+**Workaround:**
+Currently, server-side image generation may produce corrupted files. This issue is being actively investigated.
 
 ---
 

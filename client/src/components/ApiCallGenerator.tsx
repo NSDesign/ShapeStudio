@@ -351,6 +351,40 @@ export default function ApiCallGenerator({
     }
   };
 
+  const generatePowerShellCommand = (): string => {
+    const payload = generateApiPayload();
+    const jsonPayload = JSON.stringify(payload, null, 2);
+    const baseUrl = 'https://shape-studio-nsdesign.replit.app';
+    
+    // Choose endpoint based on API version
+    let endpoint = '';
+    if (selectedApiVersion === 'sets-enabled') {
+      endpoint = '/api/live/sets/enabled';
+    } else if (selectedApiVersion === 'sets-execute') {
+      endpoint = '/api/live/sets/execute';
+    } else if (selectedApiVersion === 'live') {
+      endpoint = '/api/live/execute';
+    } else {
+      endpoint = `/api/export/batch/${selectedApiVersion}`;
+    }
+    
+    // PowerShell with file-based approach (more reliable for complex JSON)
+    return `# Save payload to temp file
+$Payload = @'
+${jsonPayload}
+'@
+
+$TempFile = "$env:TEMP\\api-payload.json"
+$Payload | Out-File -FilePath $TempFile -Encoding UTF8 -NoNewline
+
+# Execute API call
+curl.exe -X POST \`
+  -H "Content-Type: application/json" \`
+  -H "x-api-key: $env:LIVE_API_KEY" \`
+  -d "@$TempFile" \`
+  ${baseUrl}${endpoint}`;
+  };
+
   const generateN8nConfig = (): object => {
     const payload = generateApiPayload();
     
@@ -399,6 +433,7 @@ export default function ApiCallGenerator({
   const payload = generateApiPayload();
   const curlLinux = generateCurlCommand('linux');
   const curlWindows = generateCurlCommand('windows');
+  const powerShell = generatePowerShellCommand();
   const n8nConfig = generateN8nConfig();
 
   return (
@@ -449,9 +484,10 @@ export default function ApiCallGenerator({
           </div>
 
           <Tabs defaultValue="curl-linux" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="curl-linux" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">cURL (Linux/Mac)</TabsTrigger>
               <TabsTrigger value="curl-windows" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">cURL (Windows)</TabsTrigger>
+              <TabsTrigger value="powershell" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">PowerShell</TabsTrigger>
               <TabsTrigger value="n8n" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:font-medium">n8n HTTP Request</TabsTrigger>
             </TabsList>
             
@@ -488,6 +524,24 @@ export default function ApiCallGenerator({
               </div>
               <pre className="bg-slate-900 p-4 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap">
                 {curlWindows}
+              </pre>
+            </TabsContent>
+            
+            <TabsContent value="powershell" className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium">Windows PowerShell ISE</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(powerShell, 'powershell')}
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  {copied === 'powershell' ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+              <pre className="bg-slate-900 p-4 rounded-lg text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap">
+                {powerShell}
               </pre>
             </TabsContent>
             
