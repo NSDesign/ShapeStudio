@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerExportRoutes } from "./routes/export";
 import { setupLiveApiRoutes } from "./routes/liveApi";
+import { registerCanvasTestRoutes } from "./routes/canvasTest";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -244,6 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register export API routes
   registerExportRoutes(app);
   setupLiveApiRoutes(app, storage);
+  
+  // Register canvas test routes (for debugging)
+  registerCanvasTestRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
