@@ -230,6 +230,8 @@ When an export completes, the status response includes individual file URLs for 
 
 ### Example: Extract and Download Individual Images
 
+**Bash/Linux/macOS:**
+
 ```bash
 # Get export status
 STATUS=$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID")
@@ -243,7 +245,21 @@ echo "$IMAGE_URLS" | while read url; do
 done
 ```
 
+**Windows PowerShell ISE:**
+
+```powershell
+# Get export status
+$STATUS = curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID"
+
+# Extract image file URLs and download each
+($STATUS | ConvertFrom-Json).status.imageFiles | ForEach-Object {
+  curl.exe -JO "https://shape-studio-nsdesign.replit.app$($_.url)"
+}
+```
+
 ### Example: Download Specific Images by Index
+
+**Bash/Linux/macOS:**
 
 ```bash
 # Download only the first 3 images
@@ -254,7 +270,20 @@ echo "$STATUS" | jq -r '.status.imageFiles[0:3][]?.url' | while read url; do
 done
 ```
 
+**Windows PowerShell ISE:**
+
+```powershell
+# Download only the first 3 images
+$STATUS = curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID"
+
+($STATUS | ConvertFrom-Json).status.imageFiles | Select-Object -First 3 | ForEach-Object {
+  curl.exe -JO "https://shape-studio-nsdesign.replit.app$($_.url)"
+}
+```
+
 ### Example: Download Project Files
+
+**Bash/Linux/macOS:**
 
 ```bash
 # Extract and download project JSON files
@@ -265,6 +294,17 @@ PROJECT_URLS=$(echo "$STATUS" | jq -r '.status.projectFiles[]?.url')
 echo "$PROJECT_URLS" | while read url; do
   curl -JO "https://shape-studio-nsdesign.replit.app$url"
 done
+```
+
+**Windows PowerShell ISE:**
+
+```powershell
+# Extract and download project JSON files
+$STATUS = curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID"
+
+($STATUS | ConvertFrom-Json).status.projectFiles | ForEach-Object {
+  curl.exe -JO "https://shape-studio-nsdesign.replit.app$($_.url)"
+}
 ```
 
 ### Example: Organized Download Script
