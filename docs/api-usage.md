@@ -225,6 +225,29 @@ curl -JO "http://localhost:5000$(curl -s "http://localhost:5000/api/export/statu
 $CONFIG = curl.exe -s -X POST "http://localhost:5000/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10; $EXPORT_ID = (curl.exe -s -X POST "http://localhost:5000/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "{`"data`":$ConfigData}" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "http://localhost:5000/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; curl.exe -JO "http://localhost:5000$DOWNLOAD_PATH"
 ```
 
+### Example 3: One-Line Chained Command (Production URL)
+
+**Bash/Linux/macOS:**
+
+```bash
+CONFIG=$(curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"21294"}') && \
+EXPORT_ID=$(echo "$CONFIG" | jq -c '{data}' | curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @- | jq -r '.data.exportId') && \
+sleep 5 && \
+curl -JO "https://shape-studio-nsdesign.replit.app$(curl -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" | jq -r '.status.downloadPath')"
+```
+
+**Windows PowerShell ISE:**
+
+```powershell
+$CONFIG = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d '{\"userId\":\"21294\"}'; $ConfigData = ($CONFIG | ConvertFrom-Json).data | ConvertTo-Json -Compress -Depth 10; $EXPORT_ID = (curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" -H "x-api-key: $env:LIVE_API_KEY" -H "Content-Type: application/json" -d "{`"data`":$ConfigData}" | ConvertFrom-Json).data.exportId; Start-Sleep -Seconds 5; $DOWNLOAD_PATH = (curl.exe -s "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" | ConvertFrom-Json).status.downloadPath; curl.exe -JO "https://shape-studio-nsdesign.replit.app$DOWNLOAD_PATH"
+```
+
 **What `-JO` does:**
 - `-J` - Use filename from `Content-Disposition` header (e.g., `batch-export-2025-10-18T16-03-29.zip`)
 - `-O` - Save file with the extracted filename
