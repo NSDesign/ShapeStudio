@@ -1,0 +1,543 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-18T16:03:30.547Z",
+  "name": "batch-export-004",
+  "canvasSettings": {
+    "width": 400,
+    "height": 400,
+    "zoom": 1,
+    "panX": 0,
+    "panY": 0,
+    "backgroundColor": "#ffffff",
+    "showGrid": false
+  },
+  "batchConfigSettings": {
+    "selectedPreset": "custom",
+    "distributionLayoutEnabled": true,
+    "distributionPattern": "grid",
+    "gridRows": 5,
+    "gridColumns": 5,
+    "gridSpacingXMode": "define",
+    "gridSpacingYMode": "define",
+    "gridRowOffset": 50,
+    "gridColumnOffset": 50,
+    "gridSortBy": "fill-color",
+    "gridSortScope": "per-generation",
+    "gridSortOrder": "ascending",
+    "propertiesEnabled": true,
+    "fillEnabled": true,
+    "fillStyleProbability": 60,
+    "fillColorMode": "range",
+    "fillColorRange": [
+      "#f73bf1",
+      "#f7dd5f"
+    ],
+    "fillOpacityMode": "range",
+    "fillOpacityRange": [
+      55,
+      75
+    ]
+  },
+  "enabledShapeTypes": [
+    "polygon"
+  ],
+  "shapes": [
+    {
+      "id": "shape_1760803410480_2mb7bpjc8",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f78355",
+        "fillOpacity": 0.6890765405118029,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 2.592492133771363e-15,
+          "y": -42.33860955789632
+        },
+        {
+          "x": 29.937917924398064,
+          "y": -29.93791792439806
+        },
+        {
+          "x": 42.33860955789632,
+          "y": 0
+        },
+        {
+          "x": 29.937917924398064,
+          "y": 29.93791792439806
+        },
+        {
+          "x": 2.592492133771363e-15,
+          "y": 42.33860955789632
+        },
+        {
+          "x": -29.93791792439806,
+          "y": 29.937917924398064
+        },
+        {
+          "x": -42.33860955789632,
+          "y": 5.184984267542726e-15
+        },
+        {
+          "x": -29.937917924398068,
+          "y": -29.93791792439806
+        }
+      ],
+      "sides": 8,
+      "radius": 42.33860955789632,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_o5d717z6s",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f74b73",
+        "fillOpacity": 0.7416077243074856,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 3.3388203475430663e-15,
+          "y": -54.527074253044766
+        },
+        {
+          "x": 54.527074253044766,
+          "y": 0
+        },
+        {
+          "x": 3.3388203475430663e-15,
+          "y": 54.527074253044766
+        },
+        {
+          "x": -54.527074253044766,
+          "y": 6.677640695086133e-15
+        }
+      ],
+      "sides": 4,
+      "radius": 54.527074253044766,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_bt6rdi5qo",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f78b55",
+        "fillOpacity": 0.6151348128070544,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 1.3583063769730062e-15,
+          "y": -22.182826557317785
+        },
+        {
+          "x": 15.685627084564443,
+          "y": -15.685627084564441
+        },
+        {
+          "x": 22.182826557317785,
+          "y": 0
+        },
+        {
+          "x": 15.685627084564443,
+          "y": 15.685627084564441
+        },
+        {
+          "x": 1.3583063769730062e-15,
+          "y": 22.182826557317785
+        },
+        {
+          "x": -15.685627084564441,
+          "y": 15.685627084564443
+        },
+        {
+          "x": -22.182826557317785,
+          "y": 2.7166127539460125e-15
+        },
+        {
+          "x": -15.685627084564446,
+          "y": -15.685627084564441
+        }
+      ],
+      "sides": 8,
+      "radius": 22.182826557317785,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_oi7bn1jqb",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f73be7",
+        "fillOpacity": 0.7353764704689183,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 2.1591843569903743e-15,
+          "y": -35.26215654168504
+        },
+        {
+          "x": 20.72657557923102,
+          "y": -28.52768390053292
+        },
+        {
+          "x": 33.53630375758933,
+          "y": -10.8966056296904
+        },
+        {
+          "x": 33.53630375758933,
+          "y": 10.8966056296904
+        },
+        {
+          "x": 20.72657557923102,
+          "y": 28.52768390053292
+        },
+        {
+          "x": 2.1591843569903743e-15,
+          "y": 35.26215654168504
+        },
+        {
+          "x": -20.726575579231017,
+          "y": 28.52768390053292
+        },
+        {
+          "x": -33.53630375758933,
+          "y": 10.896605629690404
+        },
+        {
+          "x": -33.53630375758934,
+          "y": -10.896605629690395
+        },
+        {
+          "x": -20.726575579231024,
+          "y": -28.527683900532917
+        }
+      ],
+      "sides": 10,
+      "radius": 35.26215654168504,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_7ldiiti3c",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f74b5c",
+        "fillOpacity": 0.7312567172220141,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 2.27657351963672e-15,
+          "y": -37.17926705433369
+        },
+        {
+          "x": 20.10062933265494,
+          "y": -31.27718975753216
+        },
+        {
+          "x": 33.819450876452066,
+          "y": -15.444825706776637
+        },
+        {
+          "x": 36.80083572379684,
+          "y": 5.291161377956775
+        },
+        {
+          "x": 28.098215251115985,
+          "y": 24.34724211074872
+        },
+        {
+          "x": 10.474609968707773,
+          "y": 35.67324550277014
+        },
+        {
+          "x": -10.474609968707751,
+          "y": 35.67324550277015
+        },
+        {
+          "x": -28.09821525111598,
+          "y": 24.347242110748724
+        },
+        {
+          "x": -36.80083572379683,
+          "y": 5.291161377956779
+        },
+        {
+          "x": -33.81945087645205,
+          "y": -15.444825706776655
+        },
+        {
+          "x": -20.100629332654957,
+          "y": -31.277189757532145
+        }
+      ],
+      "sides": 11,
+      "radius": 37.17926705433369,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_23gav0szo",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f75e50",
+        "fillOpacity": 0.5749913027625854,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 2.2011020203459962e-15,
+          "y": -35.94672393507237
+        },
+        {
+          "x": 31.13077611059879,
+          "y": -17.973361967536185
+        },
+        {
+          "x": 31.1307761105988,
+          "y": 17.973361967536178
+        },
+        {
+          "x": 2.2011020203459962e-15,
+          "y": 35.94672393507237
+        },
+        {
+          "x": -31.130776110598788,
+          "y": 17.973361967536196
+        },
+        {
+          "x": -31.13077611059879,
+          "y": -17.97336196753619
+        }
+      ],
+      "sides": 6,
+      "radius": 35.94672393507237,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_fyn3yrqx4",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f6a35a",
+        "fillOpacity": 0.6398444800573063,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 3.2822089318483697e-15,
+          "y": -53.60253967321143
+        },
+        {
+          "x": 50.97904464617722,
+          "y": -16.564095700679673
+        },
+        {
+          "x": 31.506782305335882,
+          "y": 43.36536553728539
+        },
+        {
+          "x": -31.506782305335875,
+          "y": 43.36536553728539
+        },
+        {
+          "x": -50.97904464617723,
+          "y": -16.564095700679665
+        }
+      ],
+      "sides": 5,
+      "radius": 53.60253967321143,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    },
+    {
+      "id": "shape_1760803410480_750xcoykh",
+      "type": "polygon",
+      "transform": {
+        "x": null,
+        "y": null,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#f6c85a",
+        "fillOpacity": 0.5754225352285697,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 1760803419480,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 1.7181155227731908e-15,
+          "y": -28.058955838849368
+        },
+        {
+          "x": 16.492640436801437,
+          "y": -22.700172118045298
+        },
+        {
+          "x": 26.685652790975638,
+          "y": -8.670694198620613
+        },
+        {
+          "x": 26.685652790975638,
+          "y": 8.670694198620613
+        },
+        {
+          "x": 16.492640436801437,
+          "y": 22.700172118045298
+        },
+        {
+          "x": 1.7181155227731908e-15,
+          "y": 28.058955838849368
+        },
+        {
+          "x": -16.492640436801434,
+          "y": 22.700172118045298
+        },
+        {
+          "x": -26.685652790975638,
+          "y": 8.670694198620616
+        },
+        {
+          "x": -26.68565279097564,
+          "y": -8.670694198620609
+        },
+        {
+          "x": -16.49264043680144,
+          "y": -22.700172118045295
+        }
+      ],
+      "sides": 10,
+      "radius": 28.058955838849368,
+      "width": 100,
+      "height": 100,
+      "closed": true
+    }
+  ],
+  "groups": []
+}
