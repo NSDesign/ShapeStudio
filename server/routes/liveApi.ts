@@ -863,7 +863,14 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
         batchConfig as any,
         enabledShapeTypes,
         exportConfig,
-        generateShapesFromSets
+        generateShapesFromSets,
+        '21294', // userId
+        {
+          // Pass generation sets metadata so it can be saved in project JSON files
+          generationSets,
+          exportSettings,
+          artboardSettings
+        }
       );
 
       // Return response with exportId for polling status

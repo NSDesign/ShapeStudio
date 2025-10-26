@@ -258,7 +258,12 @@ export class ExportService {
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
     generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] },
-    userId?: string
+    userId?: string,
+    generationSetsMetadata?: {
+      generationSets?: any[];
+      exportSettings?: any;
+      artboardSettings?: any;
+    }
   ): Promise<BatchExportResult>;
   
   // New enhanced method for generation sets
@@ -282,7 +287,12 @@ export class ExportService {
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
     generateShapesFunction: (config: any, enabledTypes?: Set<SupportedShapeType>) => { shapes: Shape[], groups: ShapeGroupClass[] },
-    userId: string = 'dev-user'
+    userId: string = 'dev-user',
+    generationSetsMetadata?: {
+      generationSets?: any[];
+      exportSettings?: any;
+      artboardSettings?: any;
+    }
   ): Promise<BatchExportResult | EnhancedBatchExportResult> {
     // Detect configuration type and delegate to appropriate handler
     const isEnhanced = this.isEnhancedBatchConfig(configSettings);
@@ -307,7 +317,8 @@ export class ExportService {
         enabledShapeTypes,
         userSettings,
         generateShapesFunction,
-        userId
+        userId,
+        generationSetsMetadata
       );
     }
   }
@@ -320,7 +331,12 @@ export class ExportService {
     batchConfigSettings: BatchConfigSettings,
     enabledShapeTypes: Set<string>,
     settings: BatchExportSettings,
-    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] }
+    generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] },
+    generationSetsMetadata?: {
+      generationSets?: any[];
+      exportSettings?: any;
+      artboardSettings?: any;
+    }
   ): Promise<void> {
     const progress = this.activeExports.get(exportId)!;
     
@@ -419,7 +435,7 @@ export class ExportService {
         
         // Save project file if requested
         if (settings.batchSaveProjectFiles) {
-          const projectData = {
+          const projectData: any = {
             version: '1.0.0',
             timestamp: new Date().toISOString(),
             name: filename,
@@ -429,6 +445,19 @@ export class ExportService {
             shapes: currentShapes.map(shape => this.serializeShape(shape)),
             groups: currentGroups.map(group => this.serializeGroup(group))
           };
+
+          // Include generation sets metadata if available (from API)
+          if (generationSetsMetadata) {
+            if (generationSetsMetadata.generationSets) {
+              projectData.generationSets = generationSetsMetadata.generationSets;
+            }
+            if (generationSetsMetadata.exportSettings) {
+              projectData.exportSettings = generationSetsMetadata.exportSettings;
+            }
+            if (generationSetsMetadata.artboardSettings) {
+              projectData.artboardSettings = generationSetsMetadata.artboardSettings;
+            }
+          }
           
           const projectJson = JSON.stringify(projectData, null, 2);
           const projectFilename = `${filename}.json`;
@@ -933,7 +962,12 @@ export class ExportService {
     enabledShapeTypes: Set<string>,
     userSettings: Partial<BatchExportSettings> & { exportAllImages?: boolean, selectedImageIndices?: number[] },
     generateShapesFunction: (config: any) => { shapes: Shape[], groups: ShapeGroupClass[] },
-    userId: string = 'dev-user'
+    userId: string = 'dev-user',
+    generationSetsMetadata?: {
+      generationSets?: any[];
+      exportSettings?: any;
+      artboardSettings?: any;
+    }
   ): Promise<BatchExportResult> {
     const exportId = this.generateExportId();
     const settings = this.mergeBatchSettings(userSettings);
@@ -976,7 +1010,8 @@ export class ExportService {
       batchConfigSettings,
       enabledShapeTypes,
       settings,
-      generateShapesFunction
+      generateShapesFunction,
+      generationSetsMetadata
     );
     
     // Return appropriate response based on packaging mode
