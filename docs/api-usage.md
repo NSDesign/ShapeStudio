@@ -11,6 +11,10 @@ The Shape Editor Live API provides endpoints to capture complete application sta
 ### 1. `/api/live/sets/enabled` (POST)
 Returns only **enabled** generation sets with filtered batch configurations.
 
+**Method:** POST  
+**Required Headers:** `Content-Type: application/json`, `x-api-key`  
+**Required Body:** `{"userId": "21294"}`
+
 **Response includes:**
 - Enabled generation sets with complete shape types data
 - Filtered generation config settings (only enabled sections)
@@ -20,6 +24,10 @@ Returns only **enabled** generation sets with filtered batch configurations.
 ### 2. `/api/live/sets/execute` (POST)
 Executes server-side shape generation and creates export job with real PNG/JPEG images.
 
+**Method:** POST  
+**Required Headers:** `Content-Type: application/json`, `x-api-key`  
+**Required Body:** Configuration data from `/api/live/sets/enabled`
+
 **Response includes:**
 - Export job ID for tracking
 - Initial status
@@ -27,6 +35,10 @@ Executes server-side shape generation and creates export job with real PNG/JPEG 
 
 ### 3. `/api/export/status/:exportId` (GET)
 Polls export job progress and retrieves download URLs when complete.
+
+**Method:** GET  
+**Required Headers:** `x-api-key`  
+**URL Parameter:** `:exportId` - The export ID returned from `/api/live/sets/execute`
 
 **Response includes:**
 - Job status (pending, processing, completed, failed)
@@ -37,16 +49,35 @@ Polls export job progress and retrieves download URLs when complete.
 ### 4. `/api/export/download/:exportId` (GET)
 Downloads complete export as ZIP file.
 
+**Method:** GET  
+**Required Headers:** `x-api-key`  
+**URL Parameter:** `:exportId` - The export ID  
+**Returns:** Binary ZIP file (use `-JO` flags with curl)
+
 ### 5. `/api/export/files/:exportId/:filename` (GET)
 Downloads individual image files from export.
+
+**Method:** GET  
+**Required Headers:** `x-api-key`  
+**URL Parameters:** `:exportId`, `:filename`  
+**Returns:** Binary image file (PNG, JPEG, etc.)
 
 ### 6. `/api/projects/download/:filename` (GET)
 Downloads individual project JSON files.
 
+**Method:** GET  
+**Required Headers:** `x-api-key`  
+**URL Parameter:** `:filename` - The project filename  
+**Returns:** JSON file
+
 ### 7. `/api/projects/save` (POST)
 Saves complete project data including shapes, groups, canvas settings, generation sets, and configuration.
 
-**Request Body:**
+**Method:** POST  
+**Required Headers:** `Content-Type: application/json`, `x-api-key`  
+**Required Body:** Project configuration (all fields optional)
+
+**Request Body Fields:**
 - `shapes`: Array of shape objects (optional)
 - `groups`: Array of group objects (optional)
 - `canvasSettings`: Canvas configuration object (optional)
