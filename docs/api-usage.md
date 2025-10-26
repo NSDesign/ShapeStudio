@@ -599,6 +599,64 @@ fi
 
 ## Request & Response Formats
 
+### Understanding GET vs POST Requests
+
+Before diving into the specific endpoints, here's what you need to know about making API calls:
+
+#### 📨 **POST Requests** (Sending Data)
+POST requests are used when you need to **send data** to the API. They require:
+
+1. **Request Method:** `-X POST` flag
+2. **Request Body:** `-d` flag with your JSON data
+3. **Content-Type Header:** `-H "Content-Type: application/json"`
+4. **API Key Header:** `-H "x-api-key: your-api-key"`
+
+**Bash Example:**
+```bash
+curl -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d '{"projectName": "test"}'
+```
+
+**PowerShell Example:**
+```powershell
+curl.exe -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d '{\"projectName\": \"test\"}'
+```
+
+**Common POST Error:**
+```
+411 Length Required
+POST requests require a Content-length header.
+```
+**Fix:** Add `-d "{}"` (even if empty) to automatically set Content-Length.
+
+---
+
+#### 📥 **GET Requests** (Retrieving Data)
+GET requests are used when you need to **retrieve data** from the API. They are simpler:
+
+1. **API Key Header:** `-H "x-api-key: your-api-key"` (or URL parameter)
+2. **No Request Body:** Don't use `-d` flag
+3. **No Content-Type:** Not needed for GET
+
+**Bash Example:**
+```bash
+curl "https://shape-studio-nsdesign.replit.app/api/export/status/export_123" \
+  -H "x-api-key: $LIVE_API_KEY"
+```
+
+**PowerShell Example:**
+```powershell
+curl.exe "https://shape-studio-nsdesign.replit.app/api/export/status/export_123" `
+  -H "x-api-key: $env:LIVE_API_KEY"
+```
+
+---
+
 ### POST `/api/live/sets/enabled`
 
 **Request Body:**
