@@ -818,6 +818,26 @@ Remove-Item $TempFile
 }
 ```
 
+**How to Call (Bash):**
+```bash
+# Replace with your actual export ID
+EXPORT_ID="export_1760803409714_xecxxxez9"
+
+curl "https://shape-studio-nsdesign.replit.app/api/export/status/$EXPORT_ID" \
+  -H "x-api-key: $LIVE_API_KEY"
+```
+
+**How to Call (PowerShell):**
+```powershell
+# Replace with your actual export ID
+$ExportId = "export_1760803409714_xecxxxez9"
+
+curl.exe "https://shape-studio-nsdesign.replit.app/api/export/status/$ExportId" `
+  -H "x-api-key: $env:LIVE_API_KEY"
+```
+
+**Note:** For GET requests, you don't need `-X GET`, `-d` (data), or `Content-Type` header. Just the URL and API key!
+
 ---
 
 ### POST `/api/projects/save`
@@ -871,7 +891,7 @@ Remove-Item $TempFile
 }
 ```
 
-**curl Example:**
+**How to Call (Bash):**
 ```bash
 curl -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" \
   -H "Content-Type: application/json" \
@@ -883,6 +903,102 @@ curl -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" \
     "enabledShapeTypes": ["circle"]
   }'
 ```
+
+**How to Call (PowerShell):**
+```powershell
+# Save JSON to temp file (recommended for complex data)
+$TempFile = [System.IO.Path]::GetTempFileName()
+@"
+{
+  "projectName": "my-shape-project",
+  "shapes": [{"id": "s1", "type": "circle", "x": 200, "y": 200, "radius": 50}],
+  "canvasSettings": {"width": 800, "height": 600},
+  "enabledShapeTypes": ["circle"]
+}
+"@ | Out-File -FilePath $TempFile -Encoding utf8
+
+curl.exe -X POST "https://shape-studio-nsdesign.replit.app/api/projects/save" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d "@$TempFile"
+
+Remove-Item $TempFile
+```
+
+---
+
+### GET `/api/export/download/:exportId`
+
+Downloads the complete export as a ZIP file containing all generated images and project files.
+
+**How to Call (Bash):**
+```bash
+# The -JO flags automatically save with the correct filename
+EXPORT_ID="export_1760803409714_xecxxxez9"
+
+curl -JO "https://shape-studio-nsdesign.replit.app/api/export/download/$EXPORT_ID" \
+  -H "x-api-key: $LIVE_API_KEY"
+```
+
+**How to Call (PowerShell):**
+```powershell
+$ExportId = "export_1760803409714_xecxxxez9"
+
+curl.exe -JO "https://shape-studio-nsdesign.replit.app/api/export/download/$ExportId" `
+  -H "x-api-key: $env:LIVE_API_KEY"
+```
+
+**Result:** Downloads a ZIP file named like `shape-export-20251018-160334.zip`
+
+---
+
+### GET `/api/export/files/:exportId/:filename`
+
+Downloads a single image file from an export.
+
+**How to Call (Bash):**
+```bash
+EXPORT_ID="export_1760803409714_xecxxxez9"
+FILENAME="batch-export-001.png"
+
+curl -JO "https://shape-studio-nsdesign.replit.app/api/export/files/$EXPORT_ID/$FILENAME" \
+  -H "x-api-key: $LIVE_API_KEY"
+```
+
+**How to Call (PowerShell):**
+```powershell
+$ExportId = "export_1760803409714_xecxxxez9"
+$Filename = "batch-export-001.png"
+
+curl.exe -JO "https://shape-studio-nsdesign.replit.app/api/export/files/$ExportId/$Filename" `
+  -H "x-api-key: $env:LIVE_API_KEY"
+```
+
+**Result:** Downloads the individual PNG file
+
+---
+
+### GET `/api/projects/download/:filename`
+
+Downloads a saved project JSON file.
+
+**How to Call (Bash):**
+```bash
+FILENAME="my-shape-project-2025-10-20T22-30-15.json"
+
+curl -JO "https://shape-studio-nsdesign.replit.app/api/projects/download/$FILENAME" \
+  -H "x-api-key: $LIVE_API_KEY"
+```
+
+**How to Call (PowerShell):**
+```powershell
+$Filename = "my-shape-project-2025-10-20T22-30-15.json"
+
+curl.exe -JO "https://shape-studio-nsdesign.replit.app/api/projects/download/$Filename" `
+  -H "x-api-key: $env:LIVE_API_KEY"
+```
+
+**Result:** Downloads the project JSON file
 
 ---
 
