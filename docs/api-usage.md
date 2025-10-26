@@ -688,6 +688,32 @@ curl.exe "https://shape-studio-nsdesign.replit.app/api/export/status/export_123"
 }
 ```
 
+**How to Call (Bash):**
+```bash
+curl -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d '{"userId": "21294"}'
+```
+
+**How to Call (PowerShell):**
+```powershell
+# Method 1: Inline JSON (escape quotes with backslash)
+curl.exe -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d '{\"userId\": \"21294\"}'
+
+# Method 2: Save to temp file (recommended for complex JSON)
+$TempFile = [System.IO.Path]::GetTempFileName()
+'{"userId": "21294"}' | Out-File -FilePath $TempFile -Encoding utf8
+curl.exe -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d "@$TempFile"
+Remove-Item $TempFile
+```
+
 ---
 
 ### POST `/api/live/sets/execute`
@@ -714,6 +740,42 @@ curl.exe "https://shape-studio-nsdesign.replit.app/api/export/status/export_123"
     "message": "Export job created successfully"
   }
 }
+```
+
+**How to Call (Bash):**
+```bash
+# Step 1: Get configuration from /api/live/sets/enabled
+CONFIG=$(curl -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d '{"userId": "21294"}')
+
+# Step 2: Execute export using that configuration
+curl -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $LIVE_API_KEY" \
+  -d "$CONFIG"
+```
+
+**How to Call (PowerShell):**
+```powershell
+# Step 1: Get configuration
+$Config = curl.exe -s -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/enabled" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d '{\"userId\": \"21294\"}'
+
+# Step 2: Save to temp file
+$TempFile = [System.IO.Path]::GetTempFileName()
+$Config | Out-File -FilePath $TempFile -Encoding utf8
+
+# Step 3: Execute export
+curl.exe -X POST "https://shape-studio-nsdesign.replit.app/api/live/sets/execute" `
+  -H "Content-Type: application/json" `
+  -H "x-api-key: $env:LIVE_API_KEY" `
+  -d "@$TempFile"
+
+Remove-Item $TempFile
 ```
 
 ---
