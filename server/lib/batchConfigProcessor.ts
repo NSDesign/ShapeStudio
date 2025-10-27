@@ -278,6 +278,44 @@ function calculateConstrainedSize(
 }
 
 /**
+ * Helper function to build distribution settings from batch config
+ */
+function buildDistributionSettings(batchConfig: BatchConfigSettings): any {
+  // Use batch config's distribution pattern, fallback to 'random'
+  const pattern = batchConfig.distributionPattern || 'random';
+  
+  const distributionSettings: any = {
+    pattern,
+    randomness: 1,
+    spacing: 20,
+    scale: 1,
+    density: 0.5,
+    rotation: 0,
+    avoidOverlap: false,
+    respectBounds: true
+  };
+
+  // Add pattern-specific settings from batchConfig
+  if (pattern === 'grid') {
+    distributionSettings.rows = batchConfig.gridRows || 3;
+    distributionSettings.columns = batchConfig.gridColumns || 3;
+    distributionSettings.spacing = batchConfig.gridColumnOffset || 20;
+  } else if (pattern === 'wave') {
+    distributionSettings.amplitude = batchConfig.waveAmplitude || 50;
+    distributionSettings.frequency = batchConfig.waveFrequency || 1;
+    distributionSettings.phase = batchConfig.wavePhase || 0;
+  } else if (pattern === 'ellipse') {
+    distributionSettings.radiusX = batchConfig.ellipseRadiusX || 100;
+    distributionSettings.radiusY = batchConfig.ellipseRadiusY || 100;
+  } else if (pattern === 'spiral') {
+    distributionSettings.turns = batchConfig.spiralTurns || 3;
+    distributionSettings.spacing = batchConfig.spiralSpacing || 20;
+  }
+
+  return distributionSettings;
+}
+
+/**
  * Main function to generate shapes with batch configuration
  */
 export function generateShapesWithBatchConfig(
@@ -287,23 +325,14 @@ export function generateShapesWithBatchConfig(
 ): Shape[] {
   const enabledTypes = options.enabledShapeTypes || ['rectangle', 'circle', 'triangle'];
   const batchConfig = options.batchConfig;
-  const useDistribution = options.distributionEnabled !== false;
+  const useDistribution = options.distributionEnabled !== false && batchConfig.distributionLayoutEnabled;
 
   if (enabledTypes.length === 0) {
     return [];
   }
 
   const positions = useDistribution
-    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, {
-        pattern: 'random',
-        randomness: 1,
-        spacing: 20,
-        scale: 1,
-        density: 0.5,
-        rotation: 0,
-        avoidOverlap: false,
-        respectBounds: true
-      })
+    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, buildDistributionSettings(batchConfig))
     : Array.from({ length: count }, () => ({
         x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
         y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
