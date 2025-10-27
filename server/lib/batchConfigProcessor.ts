@@ -312,20 +312,27 @@ export function generateShapesWithBatchConfig(
   const newShapes = positions.map((position, index) => {
     const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
 
+    console.log(`[DEBUG ${index}] Raw position from SmartDistributionAlgorithm:`, { x: position.x, y: position.y });
+
     let shapeX = position.x;
     let shapeY = position.y;
 
     // Defensive fallback: if distribution algorithm returns null positions, use random defaults
     if (shapeX == null) {
       shapeX = canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8);
+      console.log(`[DEBUG ${index}] X was null, replaced with random:`, shapeX);
     }
     if (shapeY == null) {
       shapeY = canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8);
+      console.log(`[DEBUG ${index}] Y was null, replaced with random:`, shapeY);
     }
+
+    console.log(`[DEBUG ${index}] After null-check - shapeX:`, shapeX, 'shapeY:', shapeY);
 
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
       shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      console.log(`[DEBUG ${index}] After calculatePosition - shapeX:`, shapeX, 'shapeY:', shapeY);
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
@@ -337,7 +344,9 @@ export function generateShapesWithBatchConfig(
 
     const finalSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
     
+    console.log(`[DEBUG ${index}] About to create Shape with x:`, shapeX, 'y:', shapeY);
     const shape = new Shape(randomType, shapeX, shapeY);
+    console.log(`[DEBUG ${index}] Shape created, transform.x:`, shape.transform.x, 'transform.y:', shape.transform.y);
     shape.width = finalSize;
     shape.height = batchConfig.maintainAspectRatio || ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType) 
       ? finalSize 
