@@ -1,0 +1,140 @@
+
+Shape Editor Live API - Usage Guide
+Overview
+The Shape Editor Live API provides endpoints to capture complete application state, execute server-side shape generation, and export images with real PNG/JPEG rendering. This guide covers the complete export workflow including individual file downloads, batch operations, and integration patterns.
+
+Available Endpoints
+1. /api/live/sets/enabled (POST)
+Returns only enabled generation sets with filtered batch configurations.
+
+Method: POST
+Required Headers: Content-Type: application/json, x-api-key
+Required Body: {"userId": "21294"}
+
+Response includes:
+
+Enabled generation sets with complete shape types data
+Filtered generation config settings (only enabled sections)
+Set manager settings (visibility, transforms, alignment, blend modes, compositing)
+Export settings, artboard settings, batch export settings
+2. /api/live/sets/execute (POST)
+Executes server-side shape generation and creates export job with real PNG/JPEG images.
+
+Method: POST
+Required Headers: Content-Type: application/json, x-api-key
+Required Body: Configuration data from /api/live/sets/enabled
+
+Response includes:
+
+Export job ID for tracking
+Initial status
+Estimated completion time
+3. /api/export/status/:exportId (GET)
+Polls export job progress and retrieves download URLs when complete.
+
+Method: GET
+Required Headers: x-api-key
+URL Parameter: :exportId - The export ID returned from /api/live/sets/execute
+
+Response includes:
+
+Job status (pending, processing, completed, failed)
+Progress percentage
+Download URLs (ZIP and individual files)
+File metadata
+4. /api/export/download/:exportId (GET)
+Downloads complete export as ZIP file.
+
+Method: GET
+Required Headers: x-api-key
+URL Parameter: :exportId - The export ID
+Returns: Binary ZIP file (use -JO flags with curl)
+
+5. /api/export/files/:exportId/:filename (GET)
+Downloads individual image files from export.
+
+Method: GET
+Required Headers: x-api-key
+URL Parameters: :exportId, :filename
+Returns: Binary image file (PNG, JPEG, etc.)
+
+6. /api/projects/download/:filename (GET)
+Downloads individual project JSON files.
+
+Method: GET
+Required Headers: x-api-key
+URL Parameter: :filename - The project filename
+Returns: JSON file
+
+7. /api/projects/save (POST)
+Saves complete project data including shapes, groups, canvas settings, generation sets, and configuration.
+
+Method: POST
+Required Headers: Content-Type: application/json, x-api-key
+Required Body: Project configuration (all fields optional)
+
+Request Body Fields:
+
+shapes: Array of shape objects (optional)
+groups: Array of group objects (optional)
+canvasSettings: Canvas configuration object (optional)
+batchConfigSettings: Complete generation config settings (optional)
+generationSets: Array of generation set configurations (optional)
+enabledShapeTypes: Array of enabled shape type strings (optional)
+projectName: Custom project name (optional)
+includeTimestamp: Whether to include timestamp in filename (optional, default: true)
+Response includes:
+
+Success status
+Saved file path
+Project metadata
+Supported Export Formats
+The API supports the following image formats:
+
+PNG: Lossless compression with transparency support (recommended for graphics)
+JPEG: Lossy compression with smaller file sizes (quality: 1-100)
+WebP: Modern format with excellent compression
+AVIF: Next-generation format with best compression
+BMP: Uncompressed bitmap format
+Scale Factor: Supports 0.1x to 8x scaling (up to 600dpi for high-resolution print-quality exports)
+
+Authentication
+All endpoints require an API key passed via the x-api-key header.
+
+Security Note: Never hardcode API keys in scripts or documentation. Always use secure credential management.
+
+Setting Up Environment Variables
+Bash/Linux/macOS
+# Set API key for current session
+export LIVE_API_KEY="your_api_key_here"
+# Add to ~/.bashrc or ~/.zshrc for persistence
+echo 'export LIVE_API_KEY="your_api_key_here"' >> ~/.bashrc
+source ~/.bashrc
+Windows PowerShell ISE / PowerShell
+# Set API key for current session only
+$env:LIVE_API_KEY = "your_api_key_here"
+# Set persistently for current user (survives restarts)
+[System.Environment]::SetEnvironmentVariable('LIVE_API_KEY', 'your_api_key_here', 'User')
+# Verify it's set
+echo $env:LIVE_API_KEY
+Important for PowerShell Users:
+
+Always use curl.exe (not curl) to avoid the PowerShell alias that maps to Invoke-WebRequest
+JSON Parsing: PowerShell has built-in ConvertFrom-Json and ConvertTo-Json cmdlets - no need for jq
+Line Continuation: Use backtick (`) for line continuation instead of backslash (\)
+Environment Variables: Access with $env:VARIABLE_NAME (not $VARIABLE_NAME)
+String Escaping: Double quotes inside JSON strings must be escaped with backslash: '{\"key\":\"value\"}'
+Nested Quotes: Use backtick to escape inner quotes in PowerShell: "{"data":$ConfigData}"
+Sleep Command: Use Start-Sleep -Seconds 5 instead of sleep 5
+Command Chaining: Use semicolons (;) to chain commands instead of &&
+ForEach-Object: PowerShell's native looping for arrays - use | ForEach-Object { } for iteration
+Array Slicing: Use Select-Object -First N to limit array results instead of jq array slicing
+Complete Export Workflow
+Three-Step Process
+The complete workflow follows this pattern:
+
+Get Configuration - /api/live/sets/enabled retrieves current app state
+Execute Export - /api/live/sets/execute generates images server-side
+Download Files - /api/export/download/:exportId or individual file endpoints
+Quick Start Examples
+Example 1: Complete Workflow (Production URL)
