@@ -315,6 +315,14 @@ export function generateShapesWithBatchConfig(
     let shapeX = position.x;
     let shapeY = position.y;
 
+    // Defensive fallback: if distribution algorithm returns null positions, use random defaults
+    if (shapeX == null) {
+      shapeX = canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8);
+    }
+    if (shapeY == null) {
+      shapeY = canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8);
+    }
+
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
       shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
