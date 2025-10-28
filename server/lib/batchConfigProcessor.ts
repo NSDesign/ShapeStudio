@@ -778,42 +778,29 @@ export function generateShapesWithBatchConfig(
     return shape;
   });
 
-  // Ensure all shapes have valid positions (fix null positions)
+  // Ensure all shapes have valid positions (fix null positions with random placement)
   const shapesWithPositions = newShapes.map(shape => {
     if (shape.transform.x === null || shape.transform.y === null) {
-      // Apply default center position if missing
-      shape.transform.x = canvasBounds.width / 2;
-      shape.transform.y = canvasBounds.height / 2;
-      console.log(`⚠️ [SERVER] Fixed null position for shape ${shape.id}, setting to center (${shape.transform.x}, ${shape.transform.y})`);
+      // Apply random position if missing (match client behavior)
+      const padding = 50;
+      shape.transform.x = padding + Math.random() * (canvasBounds.width - 2 * padding);
+      shape.transform.y = padding + Math.random() * (canvasBounds.height - 2 * padding);
+      console.log(`⚠️ [SERVER] Fixed null position for shape ${shape.id}, setting to random position (${shape.transform.x.toFixed(2)}, ${shape.transform.y.toFixed(2)})`);
     }
     return shape;
   });
   
-  // Phase 2: Apply distribution layouts if enabled OR if no positions were set
+  // Phase 2: Apply distribution layouts ONLY if explicitly enabled
   let finalShapes = shapesWithPositions;
   
-  // Check if we need to apply default distribution (when positions are all center or distribution is enabled)
-  const allAtCenter = shapesWithPositions.every(shape => 
-    shape.transform.x === canvasBounds.width / 2 && 
-    shape.transform.y === canvasBounds.height / 2
-  );
+  console.log(`📍 [SERVER] Phase 2 Check: distributionLayoutEnabled=${batchConfig.distributionLayoutEnabled}, pattern=${batchConfig.distributionPattern}`);
   
-  const shouldApplyDistribution = batchConfig.distributionLayoutEnabled || allAtCenter;
-  
-  console.log(`📍 [SERVER] Phase 2 Check: distributionLayoutEnabled=${batchConfig.distributionLayoutEnabled}, pattern=${batchConfig.distributionPattern}, allAtCenter=${allAtCenter}, shouldApply=${shouldApplyDistribution}`);
-  
-  if (shouldApplyDistribution) {
-    // Use default grid distribution when not specified
-    const distributionPattern = batchConfig.distributionPattern || 'grid';
-    
-    // Calculate default grid size based on number of shapes
-    const defaultGridSize = Math.ceil(Math.sqrt(shapesWithPositions.length));
-    
+  if (batchConfig.distributionLayoutEnabled) {
     const distributionConfig = {
-      enabled: batchConfig.distributionLayoutEnabled !== false,
-      pattern: distributionPattern,
-      gridRows: batchConfig.gridRows || defaultGridSize,
-      gridColumns: batchConfig.gridColumns || defaultGridSize,
+      enabled: batchConfig.distributionLayoutEnabled,
+      pattern: batchConfig.distributionPattern,
+      gridRows: batchConfig.gridRows,
+      gridColumns: batchConfig.gridColumns,
       gridStartX: batchConfig.gridStartX,
       gridStartY: batchConfig.gridStartY,
       gridSpacingXMode: batchConfig.gridSpacingXMode,
@@ -859,21 +846,21 @@ export function generateShapesWithBatchConfig(
     };
     
     // Apply the appropriate distribution pattern
-    if (distributionPattern === 'auto-distribute') {
+    if (batchConfig.distributionPattern === 'auto-distribute') {
       finalShapes = applyAutoDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
-      console.log(`🎯 [SERVER] Applied auto-distribute: ${distributionConfig.autoDistributeXCount} shapes X, ${distributionConfig.autoDistributeYCount} shapes Y`);
-    } else if (distributionPattern === 'wave') {
+      console.log(`🎯 [SERVER] Applied auto-distribute: ${batchConfig.autoDistributeXCount} shapes X, ${batchConfig.autoDistributeYCount} shapes Y`);
+    } else if (batchConfig.distributionPattern === 'wave') {
       finalShapes = applyWaveDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
-      console.log(`🌊 [SERVER] Applied wave distribution: ${distributionConfig.waveType} wave, amplitude=${distributionConfig.waveAmplitude}px, frequency=${distributionConfig.waveFrequency}`);
-    } else if (distributionPattern === 'ellipse') {
+      console.log(`🌊 [SERVER] Applied wave distribution: ${batchConfig.waveType} wave, amplitude=${batchConfig.waveAmplitude}px, frequency=${batchConfig.waveFrequency}`);
+    } else if (batchConfig.distributionPattern === 'ellipse') {
       finalShapes = applyEllipseDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
-      console.log(`⭕ [SERVER] Applied ellipse distribution: ${distributionConfig.ellipseRingCount} rings`);
-    } else if (distributionPattern === 'spiral') {
+      console.log(`⭕ [SERVER] Applied ellipse distribution: ${batchConfig.ellipseRingCount} rings`);
+    } else if (batchConfig.distributionPattern === 'spiral') {
       finalShapes = applySpiralDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
-      console.log(`🌀 [SERVER] Applied spiral distribution: ${distributionConfig.spiralTurnCount} turns`);
+      console.log(`🌀 [SERVER] Applied spiral distribution: ${batchConfig.spiralTurnCount} turns`);
     } else {
       finalShapes = applyGridDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
-      console.log(`🎯 [SERVER] Applied grid distribution: ${distributionConfig.gridRows || defaultGridSize}×${distributionConfig.gridColumns || defaultGridSize} (default grid)`);
+      console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
     }
   }
 
