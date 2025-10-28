@@ -9,6 +9,13 @@ import { ColorUtils, generateColor, generateGradientColors } from './colorUtils'
 import { NoiseSystem } from './noiseUtils';
 import type { BatchConfigSettings } from '../../shared/schema';
 import type { ShapeType, Point } from '../../client/src/lib/shapeTypes';
+import { 
+  applyGridDistribution, 
+  applyWaveDistribution, 
+  applyEllipseDistribution, 
+  applySpiralDistribution, 
+  applyAutoDistribution 
+} from './distributionLayouts';
 
 interface CanvasBounds {
   x: number;
@@ -277,43 +284,6 @@ function calculateConstrainedSize(
   return Math.max(width, height);
 }
 
-/**
- * Helper function to build distribution settings from batch config
- */
-function buildDistributionSettings(batchConfig: BatchConfigSettings): any {
-  // Use batch config's distribution pattern, fallback to 'random'
-  const pattern = batchConfig.distributionPattern || 'random';
-  
-  const distributionSettings: any = {
-    pattern,
-    randomness: 1,
-    spacing: 20,
-    scale: 1,
-    density: 0.5,
-    rotation: 0,
-    avoidOverlap: false,
-    respectBounds: true
-  };
-
-  // Add pattern-specific settings from batchConfig
-  if (pattern === 'grid') {
-    distributionSettings.rows = batchConfig.gridRows || 3;
-    distributionSettings.columns = batchConfig.gridColumns || 3;
-    distributionSettings.spacing = batchConfig.gridColumnOffset || 20;
-  } else if (pattern === 'wave') {
-    distributionSettings.amplitude = batchConfig.waveAmplitude || 50;
-    distributionSettings.frequency = batchConfig.waveFrequency || 1;
-    distributionSettings.phase = batchConfig.wavePhase || 0;
-  } else if (pattern === 'ellipse') {
-    distributionSettings.radiusX = batchConfig.ellipseRadiusX || 100;
-    distributionSettings.radiusY = batchConfig.ellipseRadiusY || 100;
-  } else if (pattern === 'spiral') {
-    distributionSettings.turns = batchConfig.spiralTurns || 3;
-    distributionSettings.spacing = batchConfig.spiralSpacing || 20;
-  }
-
-  return distributionSettings;
-}
 
 /**
  * Main function to generate shapes with batch configuration
@@ -325,43 +295,43 @@ export function generateShapesWithBatchConfig(
 ): Shape[] {
   const enabledTypes = options.enabledShapeTypes || ['rectangle', 'circle', 'triangle'];
   const batchConfig = options.batchConfig;
-  const useDistribution = options.distributionEnabled !== false && batchConfig.distributionLayoutEnabled;
+  
+  // For initial scatter, use SmartDistributionAlgorithm with simple settings
+  // The advanced distribution layouts will be applied afterward
+  const useSmartDistribution = options.distributionEnabled !== false;
 
   if (enabledTypes.length === 0) {
     return [];
   }
 
-  const positions = useDistribution
-    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, buildDistributionSettings(batchConfig))
+  // Phase 1: Generate initial positions (simple scatter or random)
+  const positions = useSmartDistribution 
+    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, {
+        pattern: 'random',
+        spacing: 50,
+        randomness: 0.3,
+        rotation: 0,
+        scale: 1,
+        density: 0.5,
+        avoidOverlap: false,
+        respectBounds: true
+      })
     : Array.from({ length: count }, () => ({
         x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
         y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
       }));
 
+  // Create shapes with initial positions
   const newShapes = positions.map((position, index) => {
     const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
-
-    console.log(`[DEBUG ${index}] Raw position from SmartDistributionAlgorithm:`, { x: position.x, y: position.y });
 
     let shapeX = position.x;
     let shapeY = position.y;
 
-    // Defensive fallback: if distribution algorithm returns null positions, use random defaults
-    if (shapeX == null) {
-      shapeX = canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8);
-      console.log(`[DEBUG ${index}] X was null, replaced with random:`, shapeX);
-    }
-    if (shapeY == null) {
-      shapeY = canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8);
-      console.log(`[DEBUG ${index}] Y was null, replaced with random:`, shapeY);
-    }
-
-    console.log(`[DEBUG ${index}] After null-check - shapeX:`, shapeX, 'shapeY:', shapeY);
-
+    // Apply batch config position overrides if enabled
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
       shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-      console.log(`[DEBUG ${index}] After calculatePosition - shapeX:`, shapeX, 'shapeY:', shapeY);
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
@@ -373,9 +343,7 @@ export function generateShapesWithBatchConfig(
 
     const finalSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
     
-    console.log(`[DEBUG ${index}] About to create Shape with x:`, shapeX, 'y:', shapeY);
     const shape = new Shape(randomType, shapeX, shapeY);
-    console.log(`[DEBUG ${index}] Shape created, transform.x:`, shape.transform.x, 'transform.y:', shape.transform.y);
     shape.width = finalSize;
     shape.height = batchConfig.maintainAspectRatio || ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType) 
       ? finalSize 
@@ -810,5 +778,76 @@ export function generateShapesWithBatchConfig(
     return shape;
   });
 
-  return newShapes;
+  // Phase 2: Apply distribution layouts if enabled
+  let finalShapes = newShapes;
+  if (batchConfig.distributionLayoutEnabled) {
+    const distributionConfig = {
+      enabled: batchConfig.distributionLayoutEnabled,
+      pattern: batchConfig.distributionPattern,
+      gridRows: batchConfig.gridRows,
+      gridColumns: batchConfig.gridColumns,
+      gridStartX: batchConfig.gridStartX,
+      gridStartY: batchConfig.gridStartY,
+      gridSpacingXMode: batchConfig.gridSpacingXMode,
+      gridSpacingYMode: batchConfig.gridSpacingYMode,
+      gridRowOffset: batchConfig.gridRowOffset,
+      gridColumnOffset: batchConfig.gridColumnOffset,
+      gridMarginEnabled: batchConfig.gridMarginEnabled,
+      gridMarginValue: batchConfig.gridMarginValue,
+      gridSortBy: batchConfig.gridSortBy,
+      gridSortScope: batchConfig.gridSortScope,
+      gridSortOrder: batchConfig.gridSortOrder,
+      gridXRandomization: batchConfig.gridXRandomization,
+      gridYRandomization: batchConfig.gridYRandomization,
+      autoDistributeXCount: batchConfig.autoDistributeXCount,
+      autoDistributeYCount: batchConfig.autoDistributeYCount,
+      waveType: batchConfig.waveType,
+      waveAmplitude: batchConfig.waveAmplitude,
+      waveFrequency: batchConfig.waveFrequency,
+      waveDirection: batchConfig.waveDirection,
+      wavePhaseOffset: batchConfig.wavePhaseOffset,
+      ellipseXRadius: batchConfig.ellipseXRadius,
+      ellipseYRadius: batchConfig.ellipseYRadius,
+      ellipseRingCount: batchConfig.ellipseRingCount,
+      ellipseRingSpacing: batchConfig.ellipseRingSpacing,
+      ellipseRotation: batchConfig.ellipseRotation,
+      ellipseRotationAlignment: batchConfig.ellipseRotationAlignment,
+      spiralTurnCount: batchConfig.spiralTurnCount,
+      spiralSpacingMode: batchConfig.spiralSpacingMode,
+      spiralDirection: batchConfig.spiralDirection,
+      spiralStartAngle: batchConfig.spiralStartAngle,
+      spiralTightness: batchConfig.spiralTightness,
+      tangentAlignment: batchConfig.tangentAlignment,
+      segmentDistribution: batchConfig.segmentDistribution,
+      reverseDirection: batchConfig.reverseDirection,
+      positionsEnabled: batchConfig.positionsEnabled
+    };
+
+    // Default generation info for single batch
+    const generationInfo = {
+      currentGeneration: 0,
+      totalGenerations: 1,
+      shapesPerGeneration: newShapes.length
+    };
+    
+    // Apply the appropriate distribution pattern
+    if (batchConfig.distributionPattern === 'auto-distribute') {
+      finalShapes = applyAutoDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      console.log(`🎯 [SERVER] Applied auto-distribute: ${batchConfig.autoDistributeXCount} shapes X, ${batchConfig.autoDistributeYCount} shapes Y`);
+    } else if (batchConfig.distributionPattern === 'wave') {
+      finalShapes = applyWaveDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      console.log(`🌊 [SERVER] Applied wave distribution: ${batchConfig.waveType} wave, amplitude=${batchConfig.waveAmplitude}px, frequency=${batchConfig.waveFrequency}`);
+    } else if (batchConfig.distributionPattern === 'ellipse') {
+      finalShapes = applyEllipseDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      console.log(`⭕ [SERVER] Applied ellipse distribution: ${batchConfig.ellipseRingCount} rings`);
+    } else if (batchConfig.distributionPattern === 'spiral') {
+      finalShapes = applySpiralDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      console.log(`🌀 [SERVER] Applied spiral distribution: ${batchConfig.spiralTurnCount} turns`);
+    } else {
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
+      console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
+    }
+  }
+
+  return finalShapes;
 }
