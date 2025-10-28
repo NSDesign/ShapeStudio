@@ -305,6 +305,7 @@ export function generateShapesWithBatchConfig(
   }
 
   // Phase 1: Generate initial positions (simple scatter or random)
+  console.log(`🎲 [SERVER] Phase 1: Generating initial positions for ${count} shapes`);
   const positions = useSmartDistribution 
     ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, {
         pattern: 'random',
@@ -317,9 +318,11 @@ export function generateShapesWithBatchConfig(
         respectBounds: true
       })
     : Array.from({ length: count }, () => ({
-        x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
-        y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
+        x: canvasBounds.x + Math.random() * canvasBounds.width,
+        y: canvasBounds.y + Math.random() * canvasBounds.height
       }));
+  
+  console.log(`✅ [SERVER] Phase 1: Generated ${positions.length} random positions`);
 
   // Create shapes with initial positions
   const newShapes = positions.map((position, index) => {
@@ -328,10 +331,17 @@ export function generateShapesWithBatchConfig(
     let shapeX = position.x;
     let shapeY = position.y;
 
-    // Apply batch config position overrides if enabled
+    // Apply batch config position overrides only if position modes are specified
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
-      shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-      shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      // Only override X position if a position mode is explicitly set
+      if (batchConfig.xPositionMode) {
+        shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      }
+      
+      // Only override Y position if a position mode is explicitly set
+      if (batchConfig.yPositionMode) {
+        shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      }
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
@@ -778,20 +788,8 @@ export function generateShapesWithBatchConfig(
     return shape;
   });
 
-  // Ensure all shapes have valid positions (fix null positions with random placement)
-  const shapesWithPositions = newShapes.map(shape => {
-    if (shape.transform.x === null || shape.transform.y === null) {
-      // Apply random position if missing (match client behavior)
-      const padding = 50;
-      shape.transform.x = padding + Math.random() * (canvasBounds.width - 2 * padding);
-      shape.transform.y = padding + Math.random() * (canvasBounds.height - 2 * padding);
-      console.log(`⚠️ [SERVER] Fixed null position for shape ${shape.id}, setting to random position (${shape.transform.x.toFixed(2)}, ${shape.transform.y.toFixed(2)})`);
-    }
-    return shape;
-  });
-  
   // Phase 2: Apply distribution layouts ONLY if explicitly enabled
-  let finalShapes = shapesWithPositions;
+  let finalShapes = newShapes;
   
   console.log(`📍 [SERVER] Phase 2 Check: distributionLayoutEnabled=${batchConfig.distributionLayoutEnabled}, pattern=${batchConfig.distributionPattern}`);
   
@@ -847,19 +845,19 @@ export function generateShapesWithBatchConfig(
     
     // Apply the appropriate distribution pattern
     if (batchConfig.distributionPattern === 'auto-distribute') {
-      finalShapes = applyAutoDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      finalShapes = applyAutoDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
       console.log(`🎯 [SERVER] Applied auto-distribute: ${batchConfig.autoDistributeXCount} shapes X, ${batchConfig.autoDistributeYCount} shapes Y`);
     } else if (batchConfig.distributionPattern === 'wave') {
-      finalShapes = applyWaveDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      finalShapes = applyWaveDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
       console.log(`🌊 [SERVER] Applied wave distribution: ${batchConfig.waveType} wave, amplitude=${batchConfig.waveAmplitude}px, frequency=${batchConfig.waveFrequency}`);
     } else if (batchConfig.distributionPattern === 'ellipse') {
-      finalShapes = applyEllipseDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      finalShapes = applyEllipseDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
       console.log(`⭕ [SERVER] Applied ellipse distribution: ${batchConfig.ellipseRingCount} rings`);
     } else if (batchConfig.distributionPattern === 'spiral') {
-      finalShapes = applySpiralDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, canvasBounds);
+      finalShapes = applySpiralDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
       console.log(`🌀 [SERVER] Applied spiral distribution: ${batchConfig.spiralTurnCount} turns`);
     } else {
-      finalShapes = applyGridDistribution(shapesWithPositions, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
+      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
       console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
     }
   }
