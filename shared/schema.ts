@@ -231,40 +231,6 @@ export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
   
-  // Advanced Noise (First configurable section)
-  noiseEnabled: boolean;
-  noiseAlgorithm: 'randomise' | 'perlin' | 'simplex' | 'fractal' | 'worley' | 'ridge' | 'turbulence';
-  noiseScale: number;
-  noiseOctaves: number;
-  noiseAmplitude: number;
-  noiseSeed: number;
-  noiseScaleToCanvas: boolean;
-  
-  // Property-specific amplitude multipliers
-  noisePositionAmplitude: number;
-  noiseRotationAmplitude: number;
-  noiseScaleAmplitude: number;
-  noiseOpacityAmplitude: number;
-  noiseColorAmplitude: number;
-  
-  // Octave handling mode
-  noiseOctaveMode: 'natural' | 'normalized';
-  
-  // Algorithm-specific settings
-  // Fractal specific
-  noiseLacunarity: number;
-  noiseGain: number;
-  
-  // Worley specific
-  noiseDistanceFunction: 'euclidean' | 'manhattan' | 'chebyshev';
-  noiseFeaturePoints: number;
-  
-  // Ridge specific
-  noiseRidgeOffset: number;
-  
-  // Turbulence specific
-  noiseTurbulencePower: number;
-  
   // Distribution Layout
   distributionLayoutEnabled: boolean;
   distributionPattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
@@ -354,9 +320,7 @@ export interface BatchConfigSettings {
   heightMode: 'range' | 'value' | 'incremental';
   
   // Width/Height Mode Toggles
-  sizeNoiseWithinRange: boolean; // true: noise defines values within range, false: noise adds to range
   sizeIncrementalResetPerBatch: boolean; // true: reset count per batch, false: continuous increment
-  sizeNoiseMode: 'additive' | 'multiplicative'; // how noise affects size properties
   
   // Shape Constraint Value Selection (replaces separate constraint ranges)
   useMinWidthHeight: boolean; // Use minimum of width/height for circular shapes
@@ -752,32 +716,6 @@ export interface BatchConfigSettings {
 export const defaultBatchConfigSettings: BatchConfigSettings = {
   selectedPreset: 'custom',
   
-  noiseEnabled: false,
-  noiseAlgorithm: 'randomise',
-  noiseScale: 1,
-  noiseOctaves: 1,
-  noiseAmplitude: 50,
-  noiseSeed: Math.floor(Math.random() * 10000),
-  noiseScaleToCanvas: true,
-  
-  // Property-specific amplitude multipliers
-  noisePositionAmplitude: 1.0,
-  noiseRotationAmplitude: 1.0,
-  noiseScaleAmplitude: 1.0,
-  noiseOpacityAmplitude: 1.0,
-  noiseColorAmplitude: 1.0,
-  
-  // Octave handling mode
-  noiseOctaveMode: 'natural',
-  
-  // Algorithm-specific settings
-  noiseLacunarity: 2.0,
-  noiseGain: 0.5,
-  noiseDistanceFunction: 'euclidean',
-  noiseFeaturePoints: 1,
-  noiseRidgeOffset: 1.0,
-  noiseTurbulencePower: 1.0,
-  
   distributionLayoutEnabled: false,
   distributionPattern: 'grid',
   gridRows: 3,
@@ -853,9 +791,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   heightMode: 'range',
   
   // Width/Height Mode Toggles
-  sizeNoiseWithinRange: false, // Default: noise adds to range
   sizeIncrementalResetPerBatch: true, // Default: reset count per batch
-  sizeNoiseMode: 'additive', // Default: additive noise
   
   // Shape Constraint Value Selection (replaces separate constraint ranges)
   useMinWidthHeight: false, // Use minimum of width/height for circular shapes
@@ -1785,27 +1721,6 @@ export const ShapeSpecificPropertiesSchema = z.object({
 export const BatchConfigSettingsSchema = z.object({
   selectedPreset: z.string(),
   
-  // Noise settings
-  noiseEnabled: z.boolean(),
-  noiseAlgorithm: z.enum(['randomise', 'perlin', 'simplex', 'fractal', 'worley', 'ridge', 'turbulence']),
-  noiseScale: z.number(),
-  noiseOctaves: z.number(),
-  noiseAmplitude: z.number(),
-  noiseSeed: z.number(),
-  noiseScaleToCanvas: z.boolean(),
-  noisePositionAmplitude: z.number(),
-  noiseRotationAmplitude: z.number(),
-  noiseScaleAmplitude: z.number(),
-  noiseOpacityAmplitude: z.number(),
-  noiseColorAmplitude: z.number(),
-  noiseOctaveMode: z.enum(['natural', 'normalized']),
-  noiseLacunarity: z.number(),
-  noiseGain: z.number(),
-  noiseDistanceFunction: z.enum(['euclidean', 'manhattan', 'chebyshev']),
-  noiseFeaturePoints: z.number(),
-  noiseRidgeOffset: z.number(),
-  noiseTurbulencePower: z.number(),
-  
   // Distribution settings
   distributionLayoutEnabled: z.boolean(),
   distributionPattern: z.enum(['grid', 'wave', 'ellipse', 'spiral', 'auto-distribute']),
@@ -1885,9 +1800,7 @@ export const BatchConfigSettingsSchema = z.object({
   // Enhanced width/height
   widthMode: z.enum(['range', 'value', 'incremental']),
   heightMode: z.enum(['range', 'value', 'incremental']),
-  sizeNoiseWithinRange: z.boolean(),
   sizeIncrementalResetPerBatch: z.boolean(),
-  sizeNoiseMode: z.enum(['additive', 'multiplicative']),
   useMinWidthHeight: z.boolean(),
   useMaxWidthHeight: z.boolean(),
   useAvgWidthHeight: z.boolean(),
