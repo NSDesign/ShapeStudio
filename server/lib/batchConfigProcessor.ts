@@ -6,7 +6,6 @@
 import { Shape } from './shapeGenerator';
 import { SmartDistributionAlgorithm } from './distributionAlgorithm';
 import { ColorUtils, generateColor, generateGradientColors } from './colorUtils';
-import { NoiseSystem } from './noiseUtils';
 import type { BatchConfigSettings } from '../../shared/schema';
 import type { ShapeType, Point } from '../../client/src/lib/shapeTypes';
 import { 
@@ -724,64 +723,6 @@ export function generateShapesWithBatchConfig(
         const randomVariation = (Math.random() * 2 - 1) * 30;
         const scaledVariation = randomVariation * (batchConfig.rotationRandomizationScale / 100);
         shape.transform.rotation += scaledVariation;
-      }
-    }
-
-    if (batchConfig.noiseEnabled) {
-      const noiseResult = NoiseSystem.generateNoiseVariation(
-        index,
-        batchConfig,
-        position.x,
-        position.y,
-        canvasBounds.width,
-        canvasBounds.height
-      );
-
-      shape.transform.x += noiseResult.x;
-      shape.transform.y += noiseResult.y;
-      shape.transform.rotation += noiseResult.rotation;
-      shape.transform.scaleX += noiseResult.scaleX * 0.1;
-      shape.transform.scaleY += noiseResult.scaleY * 0.1;
-
-      if (batchConfig.propertiesEnabled && batchConfig.noiseOpacityAmplitude > 0) {
-        const baseOpacity = shape.properties.fillOpacity;
-        const noiseOpacity = baseOpacity + (noiseResult.opacity - 1) * 0.3;
-        shape.properties.fillOpacity = Math.max(0.1, Math.min(1, noiseOpacity));
-        shape.properties.strokeOpacity = Math.max(0.1, Math.min(1, noiseOpacity));
-      }
-
-      shape.properties.blurRadius = Math.max(0, noiseResult.blur);
-
-      if (!batchConfig.colorHarmonyEnabled) {
-        if (batchConfig.noiseAlgorithm === 'randomise') {
-          const hue = noiseResult.hue;
-          const saturation = noiseResult.saturation;
-          const lightness = noiseResult.lightness;
-          const noiseColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-          shape.properties.fillColor = noiseColor;
-        } else if (batchConfig.noiseAlgorithm === 'perlin') {
-          let hue = 0, saturation = 50, lightness = 50;
-          const hslMatch = shape.properties.fillColor?.match(/hsl\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%\)/);
-          if (hslMatch) {
-            hue = parseFloat(hslMatch[1]);
-            saturation = parseFloat(hslMatch[2]);
-            lightness = parseFloat(hslMatch[3]);
-          }
-
-          hue = (hue + noiseResult.hue + 360) % 360;
-          saturation = Math.max(0, Math.min(100, saturation + noiseResult.saturation));
-          lightness = Math.max(0, Math.min(100, lightness + noiseResult.lightness));
-          shape.properties.fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        } else {
-          const baseHue = Math.random() * 360;
-          const baseSaturation = 60 + Math.random() * 30;
-          const baseLightness = 40 + Math.random() * 30;
-
-          const finalHue = (baseHue + noiseResult.hue + 360) % 360;
-          const finalSaturation = Math.max(10, Math.min(95, baseSaturation + noiseResult.saturation));
-          const finalLightness = Math.max(15, Math.min(85, baseLightness + noiseResult.lightness));
-          shape.properties.fillColor = `hsl(${finalHue}, ${finalSaturation}%, ${finalLightness}%)`;
-        }
       }
     }
 
