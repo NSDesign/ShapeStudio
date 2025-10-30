@@ -157,15 +157,6 @@ export default function ApiCallGenerator({
   const getEnabledGenerationSettings = () => {
     const enabled: Record<string, any> = {};
     
-    // Only include settings from enabled sections
-    if (generationConfigSettings.noiseEnabled) {
-      enabled.noise = {
-        enabled: true,
-        amplitude: generationConfigSettings.noiseAmplitude || 0.5,
-        octaves: generationConfigSettings.noiseOctaves || 4
-      };
-    }
-    
     if (generationConfigSettings.distributionLayoutEnabled) {
       enabled.distributionLayout = {
         enabled: true,
@@ -283,7 +274,6 @@ export default function ApiCallGenerator({
               shapeCountFixed: 10,
               batchConfig: {
                 selectedPreset: "none",
-                noiseEnabled: false,
                 distributionLayoutEnabled: false,
                 propertiesEnabled: true
               }
