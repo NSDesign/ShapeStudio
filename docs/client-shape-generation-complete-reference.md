@@ -1,5 +1,7 @@
 # Complete Client-Side Shape Generation Reference
 
+> **⚠️ DEPRECATION NOTICE**: The Noise System (Section 5) has been completely removed from the codebase as of the latest update. All noise-related properties, algorithms, and UI controls have been deleted. This documentation is kept for historical reference only.
+
 ## Overview
 This document provides a comprehensive analysis of the client's shape generation logic that the server must replicate. The generation process is controlled by `BatchConfigSettings` and involves multiple phases of property application.
 

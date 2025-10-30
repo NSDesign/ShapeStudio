@@ -21,13 +21,12 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM for type-safe schema management.
 - **Shape System**: Supports geometric primitives, 2D transformations, boolean operations, point-level editing, and hierarchical grouping.
 - **Canvas Engine**: Three-layer infinite canvas with pan/zoom, multi-touch, multi-selection, and optimized real-time rendering.
-- **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization, physics simulation, and noise generation.
+- **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation.
   - **Server-Side Distribution**: Full support for all distribution layouts (grid, wave, ellipse, spiral, auto-distribute) with batch config settings. Server implementation matches client's two-phase approach: initial scatter followed by distribution layout application.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and project save/load.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, predefined directions, radial center positioning, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
-- **Noise System**: Pure mathematical implementation with property-specific amplitude controls and seeded random generation.
 - **Transform Controls**: Transform origin controls (Define, Predefined Artboard, Predefined Shape) and randomization scaling for position, scale, and rotation.
 - **Position Alignment System**: Dual anchor point alignment for precise shape positioning relative to artboard boundaries (Shape Anchor, Artboard Anchor).
 - **Canvas-Based Blur System**: Gaussian blur implemented via direct canvas pixel manipulation.
