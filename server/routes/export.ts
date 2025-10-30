@@ -274,7 +274,6 @@ export function registerExportRoutes(app: Express): void {
       };
       const mockBatchConfigSettings = {
         selectedPreset: 'none',
-        noiseEnabled: false,
         distributionLayoutEnabled: false,
         propertiesEnabled: true,
         // Add other default batch config settings
@@ -629,7 +628,6 @@ export function registerExportRoutes(app: Express): void {
       };
       const mockBatchConfigSettings = {
         selectedPreset: 'none',
-        noiseEnabled: false,
         distributionLayoutEnabled: false,
         propertiesEnabled: true,
       };
