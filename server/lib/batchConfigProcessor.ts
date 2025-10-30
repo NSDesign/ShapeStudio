@@ -785,6 +785,43 @@ export function generateShapesWithBatchConfig(
       }
     }
 
+    // Apply blend modes or compositing operations based on probabilities
+    if (batchConfig.blendModeEnabled && batchConfig.enabledBlendModes) {
+      const enabledModes = Object.entries(batchConfig.enabledBlendModes);
+      if (enabledModes.length > 0) {
+        const totalWeight = enabledModes.reduce((sum, [_, weight]) => sum + (weight as number), 0);
+        if (totalWeight > 0) {
+          const random = Math.random() * totalWeight;
+          let cumulative = 0;
+          
+          for (const [mode, weight] of enabledModes) {
+            cumulative += (weight as number);
+            if (random < cumulative) {
+              shape.properties.blendMode = mode as any;
+              break;
+            }
+          }
+        }
+      }
+    } else if (batchConfig.compositingOperationsEnabled && batchConfig.enabledCompositingOperations) {
+      const enabledOps = Object.entries(batchConfig.enabledCompositingOperations);
+      if (enabledOps.length > 0) {
+        const totalWeight = enabledOps.reduce((sum, [_, weight]) => sum + (weight as number), 0);
+        if (totalWeight > 0) {
+          const random = Math.random() * totalWeight;
+          let cumulative = 0;
+          
+          for (const [op, weight] of enabledOps) {
+            cumulative += (weight as number);
+            if (random < cumulative) {
+              shape.properties.blendMode = op as any;
+              break;
+            }
+          }
+        }
+      }
+    }
+
     return shape;
   });
 
