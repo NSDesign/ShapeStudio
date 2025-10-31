@@ -755,6 +755,46 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
     }
   });
 
+  // POST /api/live/sets/test-generation - Test shape generation without export
+  app.post('/api/live/sets/test-generation', async (req, res) => {
+    try {
+      const apiKey = req.headers['x-api-key'];
+      if (!apiKey || apiKey !== API_KEY) {
+        return res.status(401).json({ success: false, error: 'Invalid or missing API key' });
+      }
+
+      const data = req.body.data || req.body;
+      const { generationSets, artboardSettings } = data;
+      
+      const { processGenerationSets } = await import('../lib/generationSetProcessor');
+      
+      const result = processGenerationSets(
+        generationSets,
+        artboardSettings || { width: 400, height: 400 },
+        { width: 400, height: 400, dpr: 1 }
+      );
+      
+      // Return just a few shapes for testing
+      const testShapes = result.shapes.slice(0, 3).map(shape => ({
+        type: shape.type,
+        transform: shape.transform,
+        width: shape.width,
+        height: shape.height
+      }));
+      
+      return res.json({
+        success: true,
+        data: {
+          totalShapes: result.shapes.length,
+          testShapes
+        }
+      });
+    } catch (error: any) {
+      console.error('Error testing generation:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // POST /api/live/sets/execute - Execute generation using configuration from /api/live/sets/enabled
   app.post('/api/live/sets/execute', async (req, res) => {
     try {

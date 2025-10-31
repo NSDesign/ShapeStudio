@@ -71,9 +71,10 @@ export function processGenerationSets(
   }
 
   // Canvas bounds for shape placement
+  // If x/y are not provided, center the artboard at (0, 0)
   const canvasBounds = {
-    x: artboardSettings.x,
-    y: artboardSettings.y,
+    x: artboardSettings.x ?? -artboardSettings.width / 2,
+    y: artboardSettings.y ?? -artboardSettings.height / 2,
     width: artboardSettings.width,
     height: artboardSettings.height
   };
