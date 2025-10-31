@@ -764,14 +764,14 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       }
 
       const data = req.body.data || req.body;
-      const { generationSets, artboardSettings } = data;
+      const { generationSets, artboardSettings, dpr } = data;
       
       const { processGenerationSets } = await import('../lib/generationSetProcessor');
       
       const result = processGenerationSets(
         generationSets,
         artboardSettings || { width: 400, height: 400 },
-        { width: 400, height: 400, dpr: 1 }
+        { width: 400, height: 400, dpr: dpr || 1 }
       );
       
       // Return just a few shapes for testing
@@ -808,7 +808,7 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       }
 
       // Extract configuration from request body (should be the output from /api/live/sets/enabled)
-      const { data } = req.body;
+      const { data, dpr } = req.body;
       if (!data) {
         return res.status(400).json({ 
           success: false, 
@@ -817,6 +817,9 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       }
 
       const { generationSets, exportSettings, artboardSettings, batchExportSettings } = data;
+      
+      // Use provided DPR or default to 1
+      const devicePixelRatio = dpr || 1;
 
       // Validate required fields
       if (!generationSets || !Array.isArray(generationSets) || generationSets.length === 0) {
@@ -872,7 +875,7 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
           const result = processGenerationSets(
             generationSets,
             artboardSettings,
-            exportSettings
+            { width: artboardSettings.width, height: artboardSettings.height, dpr: devicePixelRatio }
           );
           
           // Return shapes AND the composited canvas
