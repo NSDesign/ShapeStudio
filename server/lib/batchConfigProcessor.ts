@@ -7,7 +7,7 @@ import { Shape } from './shapeGenerator';
 import { SmartDistributionAlgorithm } from './distributionAlgorithm';
 import { ColorUtils, generateColor, generateGradientColors } from './colorUtils';
 import type { BatchConfigSettings } from '../../shared/schema';
-import type { ShapeType, Point } from '../../client/src/lib/shapeTypes';
+import type { ShapeType, Point, DistributionSettings } from '../../client/src/lib/shapeTypes';
 import { 
   applyGridDistribution, 
   applyWaveDistribution, 
