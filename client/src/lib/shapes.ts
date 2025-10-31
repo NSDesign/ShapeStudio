@@ -273,12 +273,31 @@ export class Shape {
     };
     
     const getWidthHeight = (): { width: number; height: number } => {
-      // For batch configuration, width and height are already calculated with proper randomization scaling
-      // Use the exact values passed in without additional randomization
+      // For batch configuration, width and height are calculated based on mode
       if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled) {
-        // Use default center values if ranges are not provided
-        const width = batchConfig?.widthRange ? (batchConfig.widthRange[0] + batchConfig.widthRange[1]) / 2 : 100;
-        const height = batchConfig?.heightRange ? (batchConfig.heightRange[0] + batchConfig.heightRange[1]) / 2 : 100;
+        let width = 100;
+        let height = 100;
+        
+        // Width calculation based on mode
+        if (batchConfig.widthMode === 'value' && batchConfig.widthValue !== undefined) {
+          width = batchConfig.widthValue;
+        } else if (batchConfig.widthMode === 'range' && batchConfig.widthRange) {
+          const [min, max] = batchConfig.widthRange;
+          width = (min + max) / 2; // Use center value
+        } else if (batchConfig.widthMode === 'incremental') {
+          width = batchConfig.widthStartValue || 100;
+        }
+        
+        // Height calculation based on mode
+        if (batchConfig.heightMode === 'value' && batchConfig.heightValue !== undefined) {
+          height = batchConfig.heightValue;
+        } else if (batchConfig.heightMode === 'range' && batchConfig.heightRange) {
+          const [min, max] = batchConfig.heightRange;
+          height = (min + max) / 2; // Use center value
+        } else if (batchConfig.heightMode === 'incremental') {
+          height = batchConfig.heightStartValue || 100;
+        }
+        
         return { width, height };
       }
       // For non-batch creation, use random values
