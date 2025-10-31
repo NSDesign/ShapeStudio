@@ -552,7 +552,7 @@ export class Shape {
         this.generateBlobPoints();
         break;
       case 'ring':
-        this.radius = getRadius(30, 70);
+        this.radius = getRadius();
         // Apply inner radius ratio from batch config or shape-specific settings
         let ringInnerRadiusRatio = 0.4 + Math.random() * 0.4;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
@@ -571,7 +571,7 @@ export class Shape {
         this.generateRingPoints();
         break;
       case 'spline-circle':
-        this.radius = getRadius(30, 70);
+        this.radius = getRadius();
         this.generateSplineCirclePoints();
         break;
       case 'spline-ellipse':
@@ -581,7 +581,7 @@ export class Shape {
         this.generateSplineEllipsePoints();
         break;
       case 'spline-ring':
-        this.radius = getRadius(30, 70);
+        this.radius = getRadius();
         // Apply inner radius ratio from batch config or shape-specific settings
         let splineRingInnerRadiusRatio = 0.4 + Math.random() * 0.4;
         if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
