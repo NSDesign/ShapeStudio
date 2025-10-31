@@ -592,8 +592,7 @@ export class ExportService {
             canvasSettings,
             batchConfigSettings,
             enabledShapeTypes: Array.from(enabledShapeTypes),
-            shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape)),
-            groups: currentGroups.map((group: ShapeGroupClass) => this.serializeGroup(group))
+            shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape))
           };
 
           // Include generation sets metadata if available (from API)
@@ -764,7 +763,6 @@ export class ExportService {
       type: shape.type,
       transform: shape.transform,
       properties: shape.properties,
-      selected: false, // Don't save selection state
       points: shape.points,
       sides: shape.sides,
       radius: shape.radius,
@@ -780,8 +778,7 @@ export class ExportService {
     return {
       id: group.id,
       shapes: group.shapes.map(shape => this.serializeShape(shape)),
-      transform: group.transform,
-      selected: false // Don't save selection state
+      transform: group.transform
     };
   }
 
@@ -1771,8 +1768,7 @@ export class ExportService {
         canvasSettings,
         batchConfig,
         enabledShapeTypes: Array.from(enabledShapeTypes),
-        shapes: shapes.map(shape => this.serializeShape(shape)),
-        groups: groups.map(group => this.serializeGroup(group))
+        shapes: shapes.map(shape => this.serializeShape(shape))
       };
       
       const projectJson = JSON.stringify(projectData, null, 2);
