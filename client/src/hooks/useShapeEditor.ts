@@ -1567,6 +1567,7 @@ export const useShapeEditor = () => {
         let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
         
         console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: Calculated width=${width}, height=${height}`);
+        console.log(`🔍 [CONSTRAINT DEBUG] Shape ${index}: maintainAspectRatio=${effectiveBatchConfig.maintainAspectRatio}, useMin=${effectiveBatchConfig.useMinWidthHeight}, useMax=${effectiveBatchConfig.useMaxWidthHeight}, useAvg=${effectiveBatchConfig.useAvgWidthHeight}`);
 
         // Check if 1:1 aspect ratio enforcement is enabled
         if (effectiveBatchConfig.maintainAspectRatio) {
@@ -1582,6 +1583,7 @@ export const useShapeEditor = () => {
           case 'rounded-rectangle':
             shape.width = width;
             shape.height = height;
+            console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): width=${shape.width}, height=${shape.height}`);
             break;
           case 'square':
           case 'rounded-square':
@@ -1595,6 +1597,7 @@ export const useShapeEditor = () => {
             // Circular shapes use constraint system to determine final radius
             const circleSize = effectiveBatchConfig.maintainAspectRatio ? width : calculateConstrainedSize(effectiveBatchConfig, width, height, shape.type);
             shape.radius = circleSize / 2;
+            console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): circleSize=${circleSize}, radius=${shape.radius}`);
             break;
           case 'polygon':
             // Polygon uses constraint system for radius
