@@ -297,7 +297,8 @@ export default function ApiCallGenerator({
             count: exportBatchCount,
             setsPerExport: 1
           }
-        }
+        },
+        dpr: window.devicePixelRatio || 1
       };
     } else if (selectedApiVersion === 'live') {
       return generateLiveStatePayload();
