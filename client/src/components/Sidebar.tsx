@@ -563,7 +563,7 @@ export default function Sidebar({
   useEffect(() => {
     if (appSettingsDefaults && !isLoadingPreferences) {
       console.log('Auto-loading app settings:', appSettingsDefaults);
-      setExportFormat(appSettingsDefaults.exportFormat === 'svg' ? 'png' : appSettingsDefaults.exportFormat);
+      setExportFormat(appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
@@ -610,7 +610,7 @@ export default function Sidebar({
   const handleLoadAppSettings = useCallback(() => {
     if (appSettingsDefaults) {
       console.log('Loading app settings:', appSettingsDefaults);
-      setExportFormat(appSettingsDefaults.exportFormat === 'svg' ? 'png' : appSettingsDefaults.exportFormat);
+      setExportFormat(appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
