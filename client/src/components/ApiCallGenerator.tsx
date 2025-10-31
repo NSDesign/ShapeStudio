@@ -256,7 +256,7 @@ export default function ApiCallGenerator({
   };
 
   // Choose payload based on selected API version
-  const generateApiPayload = (): ApiPayload | { userId: string } | { data: any } => {
+  const generateApiPayload = (): ApiPayload | { userId: string } | { data: any; dpr?: number } => {
     if (selectedApiVersion === 'sets-enabled') {
       // For /api/live/sets/enabled endpoint - simple userId payload
       return { userId: "your-user-id" };
