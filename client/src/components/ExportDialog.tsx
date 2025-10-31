@@ -276,7 +276,7 @@ export default function ExportDialog({ shapes, groups, canvasSettings, artboards
   };
 
   const supportsQuality = ['jpeg', 'webp', 'avif'].includes(format);
-  const supportsTransparency = ['png', 'webp', 'avif', 'svg'].includes(format);
+  const supportsTransparency = ['png', 'webp', 'avif'].includes(format);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
