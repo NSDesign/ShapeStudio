@@ -1490,6 +1490,13 @@ export const useShapeEditor = () => {
     console.log(`🔍 [DIAGNOSTIC] effectiveBatchConfig in generateShapes:`, {
       source: overrides?.batchConfig ? 'FROM_OVERRIDES' : 'FROM_GLOBAL_UI',
       propertiesEnabled: effectiveBatchConfig.propertiesEnabled,
+      shapePropertiesEnabled: effectiveBatchConfig.shapePropertiesEnabled,
+      widthMode: effectiveBatchConfig.widthMode,
+      widthValue: effectiveBatchConfig.widthValue,
+      widthRange: effectiveBatchConfig.widthRange,
+      heightMode: effectiveBatchConfig.heightMode,
+      heightValue: effectiveBatchConfig.heightValue,
+      heightRange: effectiveBatchConfig.heightRange,
       fillColorMode: effectiveBatchConfig.fillColorMode,
       fillColorDefine: effectiveBatchConfig.fillColorDefine,
       fillOpacityDefine: effectiveBatchConfig.fillOpacityDefine,
@@ -1552,8 +1559,14 @@ export const useShapeEditor = () => {
       // Apply width/height from batch config if properties are enabled
       if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
         // Enhanced width and height calculation based on mode
+        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthMode=${effectiveBatchConfig.widthMode}, heightMode=${effectiveBatchConfig.heightMode}`);
+        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthValue=${effectiveBatchConfig.widthValue}, heightValue=${effectiveBatchConfig.heightValue}`);
+        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthRange=${JSON.stringify(effectiveBatchConfig.widthRange)}, heightRange=${JSON.stringify(effectiveBatchConfig.heightRange)}`);
+        
         let width = calculateWidth(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        
+        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: Calculated width=${width}, height=${height}`);
 
         // Check if 1:1 aspect ratio enforcement is enabled
         if (effectiveBatchConfig.maintainAspectRatio) {
