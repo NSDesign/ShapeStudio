@@ -828,17 +828,19 @@ export function setupLiveApiRoutes(app: Express, storage: DatabaseStorage) {
       const generateShapesFromSets = (config: any) => {
         try {
           // Use processGenerationSets to generate shapes with full set support
+          // This returns a properly composited canvas with all blend modes and compositing operations applied
           const result = processGenerationSets(
             generationSets,
             artboardSettings,
             exportSettings
           );
           
-          // Return shapes (groups are empty for now)
+          // Return shapes AND the composited canvas
           // Cast to any to bypass type mismatch - export service only needs the data structure
           return { 
             shapes: result.shapes as any || [], 
-            groups: [] 
+            groups: [],
+            compositedCanvas: result.canvas // NEW: return the pre-composited canvas
           };
         } catch (error) {
           console.error('Error generating shapes:', error);

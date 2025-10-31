@@ -18,7 +18,7 @@ import { generateShapesWithBatchConfig } from './batchConfigProcessor';
 import { renderShape } from './canvasRenderer';
 import { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
 import type { GenerationSet, SetTransform, ArtboardAlignment, SetVisibility } from '../../shared/schema';
-import type { ShapeType } from '../../client/src/lib/shapeTypes';
+import type { ShapeType, DistributionSettings } from '../../client/src/lib/shapeTypes';
 
 interface ArtboardSettings {
   x: number;
@@ -104,7 +104,7 @@ export function processGenerationSets(
     // Convert shapeSpecificProperties to scatterSettings format (matching client logic)
     const scatterSettings = {
       distribution: {
-        pattern: 'random',
+        pattern: 'random' as const,
         spacing: 50,
         randomness: 0.3,
         rotation: 0,
@@ -112,7 +112,7 @@ export function processGenerationSets(
         density: 0.5,
         avoidOverlap: false,
         respectBounds: true
-      },
+      } as DistributionSettings,
       shapeSpecific: set.shapeSpecificProperties || {}
     };
     

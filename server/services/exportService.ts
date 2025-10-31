@@ -235,6 +235,99 @@ export class ExportService {
   }
 
   /**
+   * Apply export options to a pre-composited canvas
+   * This preserves blend modes and compositing while applying margins, bounds, backgrounds, etc.
+   * @param sourceCanvas - The pre-composited canvas from generation sets
+   * @param shapes - Array of shapes (for bounds calculation)
+   * @param canvasSettings - Canvas dimensions
+   * @param exportOptions - Export options to apply
+   * @returns New canvas with export options applied
+   */
+  private applyExportOptionsToCanvas(
+    sourceCanvas: NodeCanvas,
+    shapes: Shape[],
+    canvasSettings: CanvasSettings,
+    exportOptions: ExportOptions
+  ): NodeCanvas {
+    const scale = exportOptions.scale || 1;
+    const margins = exportOptions.margins || { top: 0, right: 0, bottom: 0, left: 0 };
+    
+    // Calculate bounds (same logic as renderShapesToCanvas)
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    if (exportOptions.artboardBounds) {
+      minX = exportOptions.artboardBounds.x;
+      minY = exportOptions.artboardBounds.y;
+      maxX = exportOptions.artboardBounds.x + exportOptions.artboardBounds.width;
+      maxY = exportOptions.artboardBounds.y + exportOptions.artboardBounds.height;
+      console.log(`[ExportService] Using artboard bounds for composited canvas: ${minX},${minY} to ${maxX},${maxY}`);
+    } else {
+      // Get bounds of all shapes
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        minX = Math.min(minX, bounds.x);
+        minY = Math.min(minY, bounds.y);
+        maxX = Math.max(maxX, bounds.x + bounds.width);
+        maxY = Math.max(maxY, bounds.y + bounds.height);
+      });
+      
+      if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+        minX = 0;
+        minY = 0;
+        maxX = 100;
+        maxY = 100;
+      }
+      console.log(`[ExportService] Calculated bounds for composited canvas from ${shapes.length} shapes: ${minX},${minY} to ${maxX},${maxY}`);
+    }
+    
+    // Calculate content dimensions
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    
+    // Use custom size if specified, otherwise use calculated content dimensions
+    const baseWidth = exportOptions.width || contentWidth;
+    const baseHeight = exportOptions.height || contentHeight;
+    
+    // Apply margins and scale
+    const canvasWidth = (baseWidth + margins.left + margins.right) * scale;
+    const canvasHeight = (baseHeight + margins.top + margins.bottom) * scale;
+    
+    console.log(`[ExportService] Creating final export canvas: ${canvasWidth}x${canvasHeight} (base: ${baseWidth}x${baseHeight}, scale: ${scale})`);
+    
+    // Create final export canvas
+    const exportCanvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = exportCanvas.getContext('2d');
+    
+    if (!ctx) {
+      throw new Error('Failed to get 2D context from export canvas');
+    }
+    
+    // Apply scale
+    ctx.scale(scale, scale);
+    
+    // Translate for margins and to move content origin to (0,0) - same as renderShapesToCanvas
+    ctx.translate(margins.left - minX, margins.top - minY);
+    
+    // Draw background if requested
+    if (exportOptions.includeBackground && exportOptions.backgroundColor) {
+      console.log(`[ExportService] Drawing background: ${exportOptions.backgroundColor}`);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+      ctx.fillStyle = exportOptions.backgroundColor;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      ctx.restore();
+    }
+    
+    // Draw the pre-composited canvas at the origin
+    // The sourceCanvas is centered at (width/2, height/2) from processGenerationSets
+    // We need to draw it so that shapes at (minX, minY) appear at our origin
+    ctx.drawImage(sourceCanvas, 0, 0);
+    
+    console.log('[ExportService] Applied export options to composited canvas');
+    return exportCanvas;
+  }
+
+  /**
    * Convert canvas to image buffer with format support
    * @param canvas - The canvas to convert
    * @param format - Image format (png, jpeg, webp, etc.)
@@ -413,7 +506,8 @@ export class ExportService {
         await this.updateExportJobProgress(exportId, progress);
         
         // Generate shapes for this iteration
-        const { shapes: currentShapes, groups: currentGroups } = generateShapesFunction(batchConfigSettings);
+        const generationResult = generateShapesFunction(batchConfigSettings) as any;
+        const { shapes: currentShapes, groups: currentGroups, compositedCanvas } = generationResult;
         currentStep++;
         
         // Export image
@@ -422,6 +516,7 @@ export class ExportService {
         this.activeExports.set(exportId, progress);
         await this.updateExportJobProgress(exportId, progress);
         
+        // Build export options
         const exportOptions: ExportOptions = {
           format: settings.format,
           quality: settings.quality ? settings.quality / 100 : 0.92,
@@ -454,9 +549,19 @@ export class ExportService {
           exportOptions.height = settings.customHeight;
         }
         
-        // Render shapes to canvas and convert to image buffer
-        const canvas = this.renderShapesToCanvas(currentShapes, canvasSettings, exportOptions);
-        const imageBuffer = this.canvasToBuffer(canvas, settings.format, exportOptions.quality);
+        let imageBuffer: Buffer;
+        
+        // CRITICAL FIX: If generation sets returned a pre-composited canvas, use it as source
+        // but still apply export options (margins, bounds, background) for parity
+        if (compositedCanvas) {
+          console.log(`[ExportService] Using pre-composited canvas from generation sets with export options applied`);
+          const finalCanvas = this.applyExportOptionsToCanvas(compositedCanvas, currentShapes, canvasSettings, exportOptions);
+          imageBuffer = this.canvasToBuffer(finalCanvas, settings.format, exportOptions.quality);
+        } else {
+          // Normal flow: render shapes to canvas
+          const canvas = this.renderShapesToCanvas(currentShapes, canvasSettings, exportOptions);
+          imageBuffer = this.canvasToBuffer(canvas, settings.format, exportOptions.quality);
+        }
         
         // Generate filename
         const filename = this.generateBatchFilename(settings, i + 1);
@@ -487,8 +592,8 @@ export class ExportService {
             canvasSettings,
             batchConfigSettings,
             enabledShapeTypes: Array.from(enabledShapeTypes),
-            shapes: currentShapes.map(shape => this.serializeShape(shape)),
-            groups: currentGroups.map(group => this.serializeGroup(group))
+            shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape)),
+            groups: currentGroups.map((group: ShapeGroupClass) => this.serializeGroup(group))
           };
 
           // Include generation sets metadata if available (from API)
