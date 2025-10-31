@@ -30,6 +30,7 @@ export interface BatchExportSettings {
   
   // Scale and dimensions  
   scale?: number;
+  scope?: 'all' | 'artboard'; // Export mode: 'all' = fit to all shapes, 'artboard' = use artboard bounds
   useCustomSize?: boolean;
   customWidth?: number;
   customHeight?: number;
@@ -143,9 +144,43 @@ export class ExportService {
     const scale = exportOptions.scale || 1;
     const margins = exportOptions.margins || { top: 0, right: 0, bottom: 0, left: 0 };
     
-    // Use custom size if specified, otherwise use artboard dimensions
-    const baseWidth = exportOptions.width || canvasSettings.width;
-    const baseHeight = exportOptions.height || canvasSettings.height;
+    // Calculate bounds of all content to export
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    // Use artboard bounds if provided (for artboard exports)
+    if (exportOptions.artboardBounds) {
+      minX = exportOptions.artboardBounds.x;
+      minY = exportOptions.artboardBounds.y;
+      maxX = exportOptions.artboardBounds.x + exportOptions.artboardBounds.width;
+      maxY = exportOptions.artboardBounds.y + exportOptions.artboardBounds.height;
+      console.log(`[ExportService] Using artboard bounds: ${minX},${minY} to ${maxX},${maxY}`);
+    } else {
+      // Get bounds of all shapes
+      shapes.forEach(shape => {
+        const bounds = shape.getBounds();
+        minX = Math.min(minX, bounds.x);
+        minY = Math.min(minY, bounds.y);
+        maxX = Math.max(maxX, bounds.x + bounds.width);
+        maxY = Math.max(maxY, bounds.y + bounds.height);
+      });
+      
+      // If no valid bounds found after checking all content, use a minimal default
+      if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+        minX = 0;
+        minY = 0;
+        maxX = 100;
+        maxY = 100;
+      }
+      console.log(`[ExportService] Calculated bounds from ${shapes.length} shapes: ${minX},${minY} to ${maxX},${maxY}`);
+    }
+    
+    // Calculate content dimensions
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    
+    // Use custom size if specified, otherwise use calculated content dimensions
+    const baseWidth = exportOptions.width || contentWidth;
+    const baseHeight = exportOptions.height || contentHeight;
     
     // Apply margins and scale
     const canvasWidth = (baseWidth + margins.left + margins.right) * scale;
@@ -165,8 +200,8 @@ export class ExportService {
     // Apply scale
     ctx.scale(scale, scale);
     
-    // Translate for margins
-    ctx.translate(margins.left, margins.top);
+    // Translate for margins and to move content origin to (0,0)
+    ctx.translate(margins.left - minX, margins.top - minY);
     
     // Draw background if requested
     if (exportOptions.includeBackground && exportOptions.backgroundColor) {
@@ -403,6 +438,16 @@ export class ExportService {
             left: settings.marginLeft || 0
           } : undefined
         };
+        
+        // Set artboard bounds if scope is 'artboard'
+        if (settings.scope === 'artboard') {
+          exportOptions.artboardBounds = {
+            x: -(canvasSettings.width / 2),
+            y: -(canvasSettings.height / 2),
+            width: canvasSettings.width,
+            height: canvasSettings.height
+          };
+        }
         
         if (settings.useCustomSize && settings.customWidth && settings.customHeight) {
           exportOptions.width = settings.customWidth;
@@ -1572,6 +1617,16 @@ export class ExportService {
         left: settings.marginLeft || 0
       } : undefined
     };
+    
+    // Set artboard bounds if scope is 'artboard'
+    if (settings.scope === 'artboard') {
+      exportOptions.artboardBounds = {
+        x: -(canvasSettings.width / 2),
+        y: -(canvasSettings.height / 2),
+        width: canvasSettings.width,
+        height: canvasSettings.height
+      };
+    }
     
     if (settings.useCustomSize && settings.customWidth && settings.customHeight) {
       exportOptions.width = settings.customWidth;
