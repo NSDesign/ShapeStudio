@@ -46,7 +46,7 @@ export class ProjectService {
         batchConfigSettings,
         enabledShapeTypes: Array.from(enabledShapeTypes),
         shapes: shapes.map(shape => this.serializeShape(shape)),
-        groups: groups.map(group => this.serializeGroup(group))
+        ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
       };
 
       const filename = settings.includeTimestamp 
@@ -86,7 +86,6 @@ export class ProjectService {
       type: shape.type,
       transform: shape.transform,
       properties: shape.properties,
-      selected: false, // Don't save selection state
       points: shape.points,
       sides: shape.sides,
       radius: shape.radius,
@@ -102,8 +101,7 @@ export class ProjectService {
     return {
       id: group.id,
       shapes: group.shapes.map(shape => this.serializeShape(shape)),
-      transform: group.transform,
-      selected: false // Don't save selection state
+      transform: group.transform
     };
   }
 
