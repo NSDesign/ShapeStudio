@@ -106,7 +106,12 @@ export function processGenerationSets(
       distribution: {
         pattern: 'random',
         spacing: 50,
-        randomness: 0.3
+        randomness: 0.3,
+        rotation: 0,
+        scale: 1,
+        density: 0.5,
+        avoidOverlap: false,
+        respectBounds: true
       },
       shapeSpecific: set.shapeSpecificProperties || {}
     };

@@ -28,12 +28,7 @@ interface GenerationOptions {
   batchConfig: BatchConfigSettings;
   distributionEnabled?: boolean;
   scatterSettings?: {
-    distribution: {
-      pattern: string;
-      spacing?: number;
-      randomness?: number;
-      [key: string]: any;
-    };
+    distribution: DistributionSettings;
     shapeSpecific?: Record<string, any>;
   };
 }
@@ -303,7 +298,18 @@ export function generateShapesWithBatchConfig(
 ): Shape[] {
   const enabledTypes = options.enabledShapeTypes || ['rectangle', 'circle', 'triangle'];
   const batchConfig = options.batchConfig;
-  const scatterSettings = options.scatterSettings || { distribution: { pattern: 'random', spacing: 50, randomness: 0.3 } };
+  const scatterSettings = options.scatterSettings || { 
+    distribution: { 
+      pattern: 'random', 
+      spacing: 50, 
+      randomness: 0.3,
+      rotation: 0,
+      scale: 1,
+      density: 0.5,
+      avoidOverlap: false,
+      respectBounds: true
+    }
+  };
   
   // For initial scatter, use SmartDistributionAlgorithm with settings from generation sets
   // The advanced distribution layouts will be applied afterward
