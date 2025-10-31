@@ -1,0 +1,2025 @@
+{
+  "shapes": [
+    {
+      "id": "shape_1761881009389_4nizqkck8",
+      "type": "spline-circle",
+      "transform": {
+        "x": -144.5214793977204,
+        "y": -149.00426017506783,
+        "scaleX": 1.2697788303008481,
+        "scaleY": 1.2697788303008481,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff2e6d",
+        "fillOpacity": 0.688640738428179,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9018,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009395_u1dkw1ld4",
+      "type": "spline-circle",
+      "transform": {
+        "x": -81.0355495110386,
+        "y": -156.06699164637274,
+        "scaleX": 1.3721682846871197,
+        "scaleY": 1.3721682846871197,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff2e7e",
+        "fillOpacity": 0.7069220250618149,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9023,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009363_868dwcqfw",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1.674694023340031,
+        "y": -145.32005044751313,
+        "scaleX": 1.466902976868458,
+        "scaleY": 1.466902976868458,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff1a90",
+        "fillOpacity": 0.701812545049073,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9005,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009360_98oafbt6f",
+      "type": "spline-circle",
+      "transform": {
+        "x": 80.5263993908036,
+        "y": -144.25396989248665,
+        "scaleX": 1.4438730473066244,
+        "scaleY": 1.4438730473066244,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff29d4",
+        "fillOpacity": 0.6231384195171068,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9003,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009358_zerlls0co",
+      "type": "spline-circle",
+      "transform": {
+        "x": 146.99912628765728,
+        "y": -148.55216500748955,
+        "scaleX": 1.480305696104174,
+        "scaleY": 1.480305696104174,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9002,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009362_79z0gtxhy",
+      "type": "spline-circle",
+      "transform": {
+        "x": -154.37279579136373,
+        "y": -77.66178005015017,
+        "scaleX": 1.3673607528407512,
+        "scaleY": 1.3673607528407512,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9004,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009365_r3muc1vgj",
+      "type": "spline-circle",
+      "transform": {
+        "x": -74.83688212944517,
+        "y": -65.44074738744517,
+        "scaleX": 1.301676714461363,
+        "scaleY": 1.301676714461363,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9006,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009369_r0dtpbffi",
+      "type": "spline-circle",
+      "transform": {
+        "x": -4.253456129109578,
+        "y": -77.44672101473832,
+        "scaleX": 1.3425522044037337,
+        "scaleY": 1.3425522044037337,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9007,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009373_9p9kjcnbg",
+      "type": "spline-circle",
+      "transform": {
+        "x": 80.47698005314268,
+        "y": -79.70769430474735,
+        "scaleX": 1.3241782506726272,
+        "scaleY": 1.3241782506726272,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9008,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009376_1ws8v81md",
+      "type": "spline-circle",
+      "transform": {
+        "x": 141.31263156808444,
+        "y": -78.79270765912915,
+        "scaleX": 1.375864761742966,
+        "scaleY": 1.375864761742966,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9010,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009381_wlbma3hbx",
+      "type": "spline-circle",
+      "transform": {
+        "x": -156.25511303230664,
+        "y": 4.290213197861474,
+        "scaleX": 1.4466596078943907,
+        "scaleY": 1.4466596078943907,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9013,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009382_nyhqchwbp",
+      "type": "spline-circle",
+      "transform": {
+        "x": -80.08623682078185,
+        "y": 7.894910397046457,
+        "scaleX": 1.3464451005680453,
+        "scaleY": 1.3464451005680453,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9014,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009384_o6bv3wmt0",
+      "type": "spline-circle",
+      "transform": {
+        "x": -5.863142170977154,
+        "y": -1.1457332907439333,
+        "scaleX": 1.4336194055070683,
+        "scaleY": 1.4336194055070683,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9015,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009388_ymgnm4xq1",
+      "type": "spline-circle",
+      "transform": {
+        "x": 72.90963441687923,
+        "y": 8.642771195565167,
+        "scaleX": 1.4873969098925062,
+        "scaleY": 1.4873969098925062,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9017,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009390_2maysro7g",
+      "type": "spline-circle",
+      "transform": {
+        "x": 157.18201235346595,
+        "y": -7.839531461583591,
+        "scaleX": 1.3382698239371027,
+        "scaleY": 1.3382698239371027,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9019,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009392_mf3hok3tm",
+      "type": "spline-circle",
+      "transform": {
+        "x": -155.22966864262753,
+        "y": 69.66643122093541,
+        "scaleX": 1.482486088863773,
+        "scaleY": 1.482486088863773,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9020,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009393_z77lkf7l7",
+      "type": "spline-circle",
+      "transform": {
+        "x": -78.77032688786215,
+        "y": 65.04476894235641,
+        "scaleX": 1.4005551699891405,
+        "scaleY": 1.4005551699891405,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9022,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009396_kdoqqvh3w",
+      "type": "spline-circle",
+      "transform": {
+        "x": -7.430423649055173,
+        "y": 77.1134084042719,
+        "scaleX": 1.4411213030700094,
+        "scaleY": 1.4411213030700094,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.8,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9024,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009397_iay6wn4g6",
+      "type": "spline-circle",
+      "transform": {
+        "x": 80.95307700210876,
+        "y": 79.3867681836346,
+        "scaleX": 1.3039159378504466,
+        "scaleY": 1.3039159378504466,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff9524",
+        "fillOpacity": 0.5893966554156022,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9025,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009379_tqkwpeni0",
+      "type": "spline-circle",
+      "transform": {
+        "x": 141.78212973151201,
+        "y": 69.64952608028045,
+        "scaleX": 1.431368646069082,
+        "scaleY": 1.431368646069082,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff8b1f",
+        "fillOpacity": 0.6570362154668934,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9012,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009374_y61jjjhy8",
+      "type": "spline-circle",
+      "transform": {
+        "x": -156.9705246804066,
+        "y": 155.56462729812782,
+        "scaleX": 1.3064389459459045,
+        "scaleY": 1.3064389459459045,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff8d29",
+        "fillOpacity": 0.7325147711648726,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9009,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009385_xevucg2fs",
+      "type": "spline-circle",
+      "transform": {
+        "x": -67.8833336111252,
+        "y": 141.84411775055423,
+        "scaleX": 1.2573333433935123,
+        "scaleY": 1.2573333433935123,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff8b33",
+        "fillOpacity": 0.7424885718948602,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9016,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009377_2m51xyjes",
+      "type": "spline-circle",
+      "transform": {
+        "x": -0.7906896488433812,
+        "y": 152.6815980687709,
+        "scaleX": 1.3792761467468486,
+        "scaleY": 1.3792761467468486,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff7b24",
+        "fillOpacity": 0.6158048908962387,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9011,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009355_q8b1db7jc",
+      "type": "spline-circle",
+      "transform": {
+        "x": 75.14889797507261,
+        "y": 143.16322576057087,
+        "scaleX": 1.3974734434897145,
+        "scaleY": 1.3974734434897145,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff6d24",
+        "fillOpacity": 0.6020262063897731,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9001,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1761881009393_g4i8d2qc7",
+      "type": "spline-circle",
+      "transform": {
+        "x": 150.83858522707007,
+        "y": 146.5520881219372,
+        "scaleX": 1.4438877264593077,
+        "scaleY": 1.4438877264593077,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "#ff301a",
+        "fillOpacity": 0.6727480902731162,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 9021,
+        "blurRadius": 0
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 27.5
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 5,
+      "controlPoints": [
+        {
+          "x": 27.5,
+          "y": -15.187832
+        },
+        {
+          "x": 15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -15.187832,
+          "y": -27.5
+        },
+        {
+          "x": -27.5,
+          "y": -15.187832
+        },
+        {
+          "x": -27.5,
+          "y": 15.187832
+        },
+        {
+          "x": -15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 15.187832,
+          "y": 27.5
+        },
+        {
+          "x": 27.5,
+          "y": 15.187832
+        }
+      ],
+      "closed": true
+    }
+  ],
+  "groups": [],
+  "enabledShapeTypes": [
+    "spline-circle"
+  ],
+  "artboards": [],
+  "metadata": {
+    "exportIndex": 4,
+    "totalExports": 4,
+    "timestamp": "2025-10-31T03:23:29.614Z",
+    "version": "1.0.0",
+    "exportMode": "all",
+    "generationBounds": {
+      "x": -200,
+      "y": -200,
+      "width": 400,
+      "height": 400
+    },
+    "imageFilename": "batch-004-1761881009404.png",
+    "shapeCount": 25,
+    "description": "Batch export 4 of 4 - Generated 25 shapes"
+  }
+}
