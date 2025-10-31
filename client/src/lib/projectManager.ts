@@ -9,7 +9,7 @@ export interface ProjectData {
   scatterSettings: ScatterSettings;
   enabledShapeTypes: ShapeType[];
   shapes: any[]; // Serialized shape data
-  groups: any[]; // Serialized group data
+  groups?: any[]; // Serialized group data (optional, only included when non-empty)
 }
 
 export class ProjectManager {
@@ -32,7 +32,7 @@ export class ProjectManager {
       scatterSettings,
       enabledShapeTypes: Array.from(enabledShapeTypes),
       shapes: shapes.map(shape => this.serializeShape(shape)),
-      groups: groups.map(group => this.serializeGroup(group))
+      ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
     };
 
     const jsonData = JSON.stringify(projectData, null, 2);
@@ -64,12 +64,12 @@ export class ProjectManager {
           const projectData: ProjectData = JSON.parse(e.target?.result as string);
           
           // Validate project data
-          if (!projectData.version || !projectData.shapes || !projectData.groups) {
+          if (!projectData.version || !projectData.shapes) {
             throw new Error('Invalid project file format');
           }
 
           const shapes = projectData.shapes.map(shapeData => this.deserializeShape(shapeData));
-          const groups = projectData.groups.map(groupData => this.deserializeGroup(groupData));
+          const groups = (projectData.groups || []).map(groupData => this.deserializeGroup(groupData));
           
           resolve({
             shapes,
@@ -106,7 +106,6 @@ export class ProjectManager {
       type: shape.type,
       transform: shape.transform,
       properties: shape.properties,
-      selected: false, // Don't save selection state
       points: shape.points,
       sides: shape.sides,
       radius: shape.radius,
@@ -122,8 +121,7 @@ export class ProjectManager {
     return {
       id: group.id,
       shapes: group.shapes.map(shape => this.serializeShape(shape)),
-      transform: group.transform,
-      selected: false // Don't save selection state
+      transform: group.transform
     };
   }
 
@@ -173,7 +171,7 @@ export class ProjectManager {
       scatterSettings,
       enabledShapeTypes: Array.from(enabledShapeTypes),
       shapes: shapes.map(shape => this.serializeShape(shape)),
-      groups: groups.map(group => this.serializeGroup(group))
+      ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
     };
 
     return JSON.stringify(projectData, null, 2);
