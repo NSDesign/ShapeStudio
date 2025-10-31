@@ -27,6 +27,15 @@ interface GenerationOptions {
   enabledShapeTypes?: ShapeType[];
   batchConfig: BatchConfigSettings;
   distributionEnabled?: boolean;
+  scatterSettings?: {
+    distribution: {
+      pattern: string;
+      spacing?: number;
+      randomness?: number;
+      [key: string]: any;
+    };
+    shapeSpecific?: Record<string, any>;
+  };
 }
 
 /**
@@ -294,8 +303,9 @@ export function generateShapesWithBatchConfig(
 ): Shape[] {
   const enabledTypes = options.enabledShapeTypes || ['rectangle', 'circle', 'triangle'];
   const batchConfig = options.batchConfig;
+  const scatterSettings = options.scatterSettings || { distribution: { pattern: 'random', spacing: 50, randomness: 0.3 } };
   
-  // For initial scatter, use SmartDistributionAlgorithm with simple settings
+  // For initial scatter, use SmartDistributionAlgorithm with settings from generation sets
   // The advanced distribution layouts will be applied afterward
   const useSmartDistribution = options.distributionEnabled !== false;
 
@@ -303,22 +313,13 @@ export function generateShapesWithBatchConfig(
     return [];
   }
 
-  // Phase 1: Generate initial positions (simple scatter or random)
+  // Phase 1: Generate initial positions using scatter settings from generation sets (matching client)
   console.log(`🎲 [SERVER] Phase 1: Generating initial positions for ${count} shapes`);
   const positions = useSmartDistribution 
-    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, {
-        pattern: 'random',
-        spacing: 50,
-        randomness: 0.3,
-        rotation: 0,
-        scale: 1,
-        density: 0.5,
-        avoidOverlap: false,
-        respectBounds: true
-      })
+    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, scatterSettings.distribution)
     : Array.from({ length: count }, () => ({
-        x: canvasBounds.x + Math.random() * canvasBounds.width,
-        y: canvasBounds.y + Math.random() * canvasBounds.height
+        x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
+        y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
       }));
   
   console.log(`✅ [SERVER] Phase 1: Generated ${positions.length} random positions`);
@@ -330,17 +331,11 @@ export function generateShapesWithBatchConfig(
     let shapeX = position.x;
     let shapeY = position.y;
 
-    // Apply batch config position overrides only if position modes are specified
+    // Apply batch config position overrides if properties are enabled (matching client logic)
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
-      // Only override X position if a position mode is explicitly set
-      if (batchConfig.xPositionMode) {
-        shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-      }
-      
-      // Only override Y position if a position mode is explicitly set
-      if (batchConfig.yPositionMode) {
-        shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-      }
+      // Always calculate positions when properties enabled (client doesn't check for xPositionMode)
+      shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
@@ -352,7 +347,14 @@ export function generateShapesWithBatchConfig(
 
     const finalSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
     
-    const shape = new Shape(randomType, shapeX, shapeY);
+    // Create combined config matching client: batchConfig + scatterSettings
+    const combinedConfig = {
+      ...batchConfig,
+      scatterSettings: scatterSettings
+    };
+    
+    // Pass combinedConfig to Shape constructor like client does
+    const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
     shape.width = finalSize;
     shape.height = batchConfig.maintainAspectRatio || ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType) 
       ? finalSize 

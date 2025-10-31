@@ -101,13 +101,24 @@ export function processGenerationSets(
     console.log(`🎯 [SERVER] Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
 
     // Generate shapes for this set
+    // Convert shapeSpecificProperties to scatterSettings format (matching client logic)
+    const scatterSettings = {
+      distribution: {
+        pattern: 'random',
+        spacing: 50,
+        randomness: 0.3
+      },
+      shapeSpecific: set.shapeSpecificProperties || {}
+    };
+    
     const setShapes = generateShapesWithBatchConfig(
       setCount,
       canvasBounds,
       {
         enabledShapeTypes: set.enabledShapeTypes as ShapeType[],
         batchConfig: set.batchConfig,
-        distributionEnabled: true
+        distributionEnabled: true,
+        scatterSettings: scatterSettings
       }
     );
 
