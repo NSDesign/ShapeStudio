@@ -580,6 +580,7 @@ export default function Sidebar({
   }, [sidebarSections]);
 
   // Auto-load app settings on mount (once only)
+  // Note: Artboard and canvas restoration is handled by useShapeEditor
   useEffect(() => {
     if (appSettingsDefaults && !isLoadingPreferences && !hasRestoredSidebar.current) {
       console.log('Auto-loading app settings:', appSettingsDefaults);
@@ -590,18 +591,6 @@ export default function Sidebar({
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
       setIsCollapsed(appSettingsDefaults.sidebarCollapsed ?? false);
-      
-      // Apply artboard settings to the active artboard
-      const activeBoard = artboards.find(a => a.id === activeArtboard);
-      if (activeBoard && onUpdateArtboard) {
-        onUpdateArtboard(activeArtboard, {
-          width: appSettingsDefaults.artboardWidth,
-          height: appSettingsDefaults.artboardHeight,
-          backgroundColor: appSettingsDefaults.artboardBackgroundColor,
-          displayGrid: appSettingsDefaults.artboardDisplayGrid,
-          displayBorder: appSettingsDefaults.artboardDisplayBorder
-        });
-      }
     }
   }, [appSettingsDefaults, isLoadingPreferences]);
 
