@@ -397,6 +397,12 @@ interface SidebarProps {
     canvasSettings?: CanvasSettings;
     scatterSettings?: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
+    generationSets?: GenerationSet[];
+    currentSetId?: string | null;
+    exportSettings?: any;
+    appSettingsDefaults?: any;
+    artboard?: Artboard;
+    sidebarSections?: SidebarSectionConfig;
   }) => void;
   
   // Generation Sets Management
@@ -4216,21 +4222,43 @@ export default function Sidebar({
               onClick={async () => {
                 setIsSavingProject(true);
                 try {
-                  const projectData = {
-                    shapes,
-                    selectedGroups,
-                    scatterSettings,
-                    enabledShapeTypes: Array.from(enabledShapeTypes)
+                  // Import ProjectManager dynamically
+                  const { ProjectManager } = await import('../lib/projectManager');
+                  
+                  // Gather all app state for complete save
+                  const activeArtboardData = artboards.find(a => a.id === activeArtboard);
+                  const exportSettingsData = {
+                    batchExportMode: exportSettings.generationSetsEnabled ? 'sets' : 'single',
+                    enableGenerationSets: exportSettings.generationSetsEnabled,
+                    batchCount: exportSettings.batchExportCount || batchExportCount,
+                    batchSaveProjectFiles: exportSettings.batchSaveProjectFiles || false
                   };
-                  const blob = new Blob([JSON.stringify(projectData, null, 2)], {
-                    type: 'application/json'
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `shape-editor-project-${new Date().toISOString().split('T')[0]}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
+                  const appDefaultsData = {
+                    exportFormat,
+                    exportQuality,
+                    exportScale,
+                    exportMode,
+                    artboardWidth: appSettingsDefaults?.artboardWidth,
+                    artboardHeight: appSettingsDefaults?.artboardHeight,
+                    artboardBackgroundColor: appSettingsDefaults?.artboardBackgroundColor,
+                    artboardDisplayGrid: appSettingsDefaults?.artboardDisplayGrid,
+                    artboardDisplayBorder: appSettingsDefaults?.artboardDisplayBorder
+                  };
+                  
+                  await ProjectManager.saveProject(
+                    shapes,
+                    selectedGroups as any, // Cast to ShapeGroupClass[]
+                    generationConfigSettings as any, // Canvas settings
+                    scatterSettings,
+                    enabledShapeTypes,
+                    undefined, // project name (auto-generated)
+                    effectiveGenerationSets,
+                    effectiveCurrentSetId,
+                    exportSettingsData,
+                    appDefaultsData,
+                    activeArtboardData,
+                    sidebarSections
+                  );
                   
                   // Add a small delay to show the loading state
                   await new Promise(resolve => setTimeout(resolve, 500));
@@ -4265,45 +4293,39 @@ export default function Sidebar({
                   if (file) {
                     setIsLoadingProject(true);
                     try {
-                      const reader = new FileReader();
-                      reader.onload = async (e) => {
-                        try {
-                          const data = JSON.parse(e.target?.result as string);
-                          console.log('Project loaded:', data);
-                          
-                          // Load project data into the app if onLoadProject is available
-                          if (onLoadProject) {
-                            // Convert shapes array back to Shape objects if needed
-                            const shapes = data.shapes || [];
-                            const groups = data.groups || [];
-                            const canvasSettings = data.canvasSettings || {};
-                            const scatterSettings = data.scatterSettings || {};
-                            const enabledShapeTypes = data.enabledShapeTypes ? 
-                              new Set(data.enabledShapeTypes as ShapeType[]) : new Set<ShapeType>();
-                            
-                            onLoadProject({
-                              shapes,
-                              groups,
-                              canvasSettings,
-                              scatterSettings,
-                              enabledShapeTypes
-                            });
-                            
-                            console.log('✅ Project loaded successfully!');
-                          } else {
-                            console.warn('⚠️ onLoadProject callback not available');
-                          }
-                        } catch (error) {
-                          console.error('❌ Failed to load project:', error);
-                        } finally {
-                          // Add a small delay to show the loading state
-                          await new Promise(resolve => setTimeout(resolve, 500));
-                          setIsLoadingProject(false);
-                        }
-                      };
-                      reader.readAsText(file);
+                      // Import ProjectManager dynamically
+                      const { ProjectManager } = await import('../lib/projectManager');
+                      
+                      // Load project using ProjectManager
+                      const projectData = await ProjectManager.loadProject(file);
+                      console.log('Project loaded:', projectData);
+                      
+                      // Restore all project state if onLoadProject is available
+                      if (onLoadProject) {
+                        onLoadProject({
+                          shapes: projectData.shapes,
+                          groups: projectData.groups,
+                          canvasSettings: projectData.canvasSettings,
+                          scatterSettings: projectData.scatterSettings,
+                          enabledShapeTypes: projectData.enabledShapeTypes,
+                          generationSets: projectData.generationSets,
+                          currentSetId: projectData.currentSetId,
+                          exportSettings: projectData.exportSettings,
+                          appSettingsDefaults: projectData.appSettingsDefaults,
+                          artboard: projectData.artboard,
+                          sidebarSections: projectData.sidebarSections
+                        });
+                        
+                        console.log('✅ Project loaded successfully with all settings!');
+                      } else {
+                        console.warn('⚠️ onLoadProject callback not available');
+                      }
+                      
+                      // Add a small delay to show the loading state
+                      await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (error) {
                       console.error('❌ Failed to load project:', error);
+                    } finally {
                       setIsLoadingProject(false);
                     }
                   }

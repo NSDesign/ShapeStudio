@@ -1,6 +1,6 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, ScatterSettings, ShapeType, Artboard } from './shapeTypes';
-import { GenerationSet, SidebarSectionConfig } from '../../shared/schema';
+import type { GenerationSet, SidebarSectionConfig } from '@shared/schema';
 
 export interface AppSettingsDefaults {
   exportFormat?: string;
