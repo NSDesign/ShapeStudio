@@ -3304,6 +3304,15 @@ export class Shape {
       case 'ellipse':
         this.generateEllipsePoints();
         break;
+      case 'spline-circle':
+        this.generateSplineCirclePoints();
+        break;
+      case 'spline-ellipse':
+        this.generateSplineEllipsePoints();
+        break;
+      case 'spline-ring':
+        this.generateSplineRingPoints();
+        break;
       case 'rectangle':
       case 'square':
         this.generateRectanglePoints();
