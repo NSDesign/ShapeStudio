@@ -24,6 +24,16 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -520,6 +530,11 @@ export default function Sidebar({
   const [isCopying, setIsCopying] = useState(false);
   const [applyStatus, setApplyStatus] = useState<'idle' | 'applying' | 'success'>('idle');
   
+  // Project load dialog state
+  const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
+  const [pendingProjectFile, setPendingProjectFile] = useState<File | null>(null);
+  const [dontAskAgainPref, setDontAskAgainPref] = useState(false);
+  
   // Export settings state (lifted from ExportSaveContent for persistence)
   const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf'>('png');
   const [exportQuality, setExportQuality] = useState(90);
@@ -529,7 +544,7 @@ export default function Sidebar({
   // Sets Manager Dialog state is now managed centrally via props
 
   // Get user preferences for sidebar section visibility
-  const { sidebarSections, isLoading: isLoadingPreferences, appSettingsDefaults, saveAppSettings } = useUserPreferences();
+  const { sidebarSections, isLoading: isLoadingPreferences, appSettingsDefaults, saveAppSettings, skipLoadProjectDialog, updateSkipLoadDialog } = useUserPreferences();
   
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
@@ -630,6 +645,51 @@ export default function Sidebar({
       }
     }
   }, [appSettingsDefaults, artboards, activeArtboard, onUpdateArtboard]);
+
+  // Project load handler - loads project file after user confirms in dialog
+  const handleLoadProjectFile = useCallback(async (file: File, clearSettings: boolean = false) => {
+    setIsLoadingProject(true);
+    try {
+      const { ProjectManager } = await import('../lib/projectManager');
+      const projectData = await ProjectManager.loadProject(file);
+      console.log('Project loaded:', projectData);
+      
+      // If clearing settings, reset to defaults
+      if (clearSettings) {
+        console.log('🔄 Clearing settings and resetting to defaults...');
+        
+        // Reset export settings to defaults
+        setExportFormat('png');
+        setExportQuality(90);
+        setExportScale(1);
+        setExportMode('all');
+        
+        // Clear generation sets (start fresh)
+        if (onClearAll) {
+          onClearAll();
+        }
+        
+        console.log('✅ Settings cleared, loading project fresh');
+      }
+      
+      if (onLoadProject) {
+        onLoadProject({
+          shapes: projectData.shapes,
+          groups: projectData.groups,
+          artboard: projectData.artboard
+        });
+        console.log('✅ Project loaded successfully!');
+      } else {
+        console.warn('⚠️ onLoadProject callback not available');
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error('❌ Failed to load project:', error);
+    } finally {
+      setIsLoadingProject(false);
+    }
+  }, [onLoadProject, onClearAll]);
 
   // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
@@ -4266,34 +4326,12 @@ export default function Sidebar({
                 input.onchange = async (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
-                    setIsLoadingProject(true);
-                    try {
-                      // Import ProjectManager dynamically
-                      const { ProjectManager } = await import('../lib/projectManager');
-                      
-                      // Load minimal project using ProjectManager
-                      const projectData = await ProjectManager.loadProject(file);
-                      console.log('Project loaded:', projectData);
-                      
-                      // Load shapes and artboard config
-                      if (onLoadProject) {
-                        onLoadProject({
-                          shapes: projectData.shapes,
-                          groups: projectData.groups,
-                          artboard: projectData.artboard
-                        });
-                        
-                        console.log('✅ Project loaded successfully!');
-                      } else {
-                        console.warn('⚠️ onLoadProject callback not available');
-                      }
-                      
-                      // Add a small delay to show the loading state
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (error) {
-                      console.error('❌ Failed to load project:', error);
-                    } finally {
-                      setIsLoadingProject(false);
+                    // If user previously checked "don't ask again", load directly
+                    if (skipLoadProjectDialog) {
+                      await handleLoadProjectFile(file, false);
+                    } else {
+                      setPendingProjectFile(file);
+                      setIsLoadDialogOpen(true);
                     }
                   }
                 };
@@ -4421,6 +4459,72 @@ export default function Sidebar({
             <div>Selected: {selectedCount}</div>
           </div>
         </div>
+
+        {/* Load Project Dialog */}
+        <AlertDialog open={isLoadDialogOpen} onOpenChange={setIsLoadDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Load Project File</AlertDialogTitle>
+              <AlertDialogDescription>
+                This project file contains shapes and artboard settings. Would you like to keep your current auto-saved settings or start fresh?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex items-center space-x-2 py-2">
+              <Checkbox
+                id="dont-ask-again"
+                checked={dontAskAgainPref}
+                onCheckedChange={(checked) => setDontAskAgainPref(checked as boolean)}
+              />
+              <label
+                htmlFor="dont-ask-again"
+                className="text-sm text-slate-300 cursor-pointer"
+              >
+                Don't ask again
+              </label>
+            </div>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel onClick={() => {
+                setPendingProjectFile(null);
+                setDontAskAgainPref(false);
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                variant="secondary"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (pendingProjectFile) {
+                    setIsLoadDialogOpen(false);
+                    // Save "don't ask again" preference if checked
+                    if (dontAskAgainPref) {
+                      await updateSkipLoadDialog.mutateAsync(true);
+                    }
+                    await handleLoadProjectFile(pendingProjectFile, true);
+                    setPendingProjectFile(null);
+                    setDontAskAgainPref(false);
+                  }
+                }}
+              >
+                Clear & Load Fresh
+              </AlertDialogAction>
+              <AlertDialogAction onClick={async (e) => {
+                e.preventDefault();
+                if (pendingProjectFile) {
+                  setIsLoadDialogOpen(false);
+                  // Save "don't ask again" preference if checked
+                  if (dontAskAgainPref) {
+                    await updateSkipLoadDialog.mutateAsync(true);
+                  }
+                  await handleLoadProjectFile(pendingProjectFile, false);
+                  setPendingProjectFile(null);
+                  setDontAskAgainPref(false);
+                }
+              }}>
+                Keep My Settings
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }

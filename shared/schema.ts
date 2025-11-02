@@ -5,6 +5,7 @@ import {
   timestamp,
   jsonb,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -59,6 +60,8 @@ export const userPreferences = pgTable("user_preferences", {
   exportSettings: jsonb("export_settings").notNull().default('{}'),
   // App settings defaults (export format, artboard dimensions, etc.)
   appSettingsDefaults: jsonb("app_settings_defaults"),
+  // Load project dialog preference - skip dialog if user checked "don't ask again"
+  skipLoadProjectDialog: boolean("skip_load_project_dialog").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -148,16 +148,42 @@ export function useUserPreferences() {
     },
   });
 
+  // Mutation for updating skip load project dialog preference
+  const updateSkipLoadDialog = useMutation({
+    mutationFn: (skip: boolean) => {
+      console.log('Updating skip load project dialog preference:', skip);
+      return apiRequest('PUT', '/api/user/preferences', {
+        skipLoadProjectDialog: skip,
+      });
+    },
+    onSuccess: (response, variables) => {
+      console.log('Skip load dialog preference updated:', variables);
+      // Update cache directly
+      queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          skipLoadProjectDialog: variables,
+        };
+      });
+    },
+    onError: (error) => {
+      console.error('Skip load dialog preference update failed:', error);
+    },
+  });
+
   return {
     preferences,
     sidebarSections,
     exportSettings,
     appSettingsDefaults,
+    skipLoadProjectDialog: preferences?.skipLoadProjectDialog ?? false,
     isLoading,
     error,
     updateExportSettings,
     updateSidebarSections,
     saveAppSettings,
+    updateSkipLoadDialog,
   };
 }
 
