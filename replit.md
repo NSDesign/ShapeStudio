@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **Canvas Engine**: Three-layer infinite canvas with pan/zoom, multi-touch, multi-selection, and optimized real-time rendering.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation.
   - **Server-Side Distribution**: Full support for all distribution layouts (grid, wave, ellipse, spiral, auto-distribute) with batch config settings. Server implementation matches client's two-phase approach: initial scatter followed by distribution layout application.
-- **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and project save/load.
+- **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and enhanced project save/load with complete application state persistence.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, predefined directions, radial center positioning, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 - **Blend Modes and Compositing Operations**: Dual-level implementation at Set-level and Shape-level, with probability-based selection for individual shapes.
 - **Set Visibility Controls**: Visibility toggle and opacity controls with variance for Shape Sets.
 - **Z-index Layering Strategy**: GenerationOrder-based z-index offset for proper layering of Shape Sets.
+- **Enhanced Project Persistence**: Complete application state save/load including generation sets, export settings, artboard configuration, sidebar sections, and app defaults. Backward compatible with legacy project files through automatic migration of deprecated field names (e.g., batchSaveProjectFiles → exportSaveProjectFiles).
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
