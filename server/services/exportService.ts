@@ -590,6 +590,9 @@ export class ExportService {
             timestamp: new Date().toISOString(),
             name: filename,
             shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape)),
+            ...(currentGroups && currentGroups.length > 0 && { 
+              groups: currentGroups.map((group: ShapeGroupClass) => this.serializeGroup(group)) 
+            }),
             artboard: {
               width: canvasSettings.width || 1200,
               height: canvasSettings.height || 800,
