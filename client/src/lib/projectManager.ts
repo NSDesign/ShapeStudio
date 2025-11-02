@@ -1,5 +1,25 @@
 import { Shape, ShapeGroupClass } from './shapes';
-import { CanvasSettings, ScatterSettings, ShapeType } from './shapeTypes';
+import { CanvasSettings, ScatterSettings, ShapeType, Artboard } from './shapeTypes';
+import { GenerationSet, SidebarSectionConfig } from '../../shared/schema';
+
+export interface AppSettingsDefaults {
+  exportFormat?: string;
+  exportQuality?: number;
+  exportScale?: number;
+  exportMode?: string;
+  artboardWidth?: number;
+  artboardHeight?: number;
+  artboardBackgroundColor?: string;
+  artboardDisplayGrid?: boolean;
+  artboardDisplayBorder?: boolean;
+}
+
+export interface ExportSettingsData {
+  batchExportMode?: string;
+  enableGenerationSets?: boolean;
+  batchCount?: number;
+  batchSaveProjectFiles?: boolean;
+}
 
 export interface ProjectData {
   version: string;
@@ -10,6 +30,20 @@ export interface ProjectData {
   enabledShapeTypes: ShapeType[];
   shapes: any[]; // Serialized shape data
   groups?: any[]; // Serialized group data (optional, only included when non-empty)
+  
+  // Generation Sets configuration
+  generationSets?: GenerationSet[];
+  currentSetId?: string | null;
+  
+  // Export and App Settings
+  exportSettings?: ExportSettingsData;
+  appSettingsDefaults?: AppSettingsDefaults;
+  
+  // Artboard configuration
+  artboard?: Artboard;
+  
+  // UI configuration
+  sidebarSections?: SidebarSectionConfig;
 }
 
 export class ProjectManager {
@@ -19,7 +53,13 @@ export class ProjectManager {
     canvasSettings: CanvasSettings,
     scatterSettings: ScatterSettings,
     enabledShapeTypes: Set<ShapeType>,
-    projectName?: string
+    projectName?: string,
+    generationSets?: GenerationSet[],
+    currentSetId?: string | null,
+    exportSettings?: ExportSettingsData,
+    appSettingsDefaults?: AppSettingsDefaults,
+    artboard?: Artboard,
+    sidebarSections?: SidebarSectionConfig
   ): Promise<void> {
     const timestamp = new Date().toISOString();
     const name = projectName || `shape-editor-${timestamp.slice(0, 10)}`;
@@ -32,7 +72,13 @@ export class ProjectManager {
       scatterSettings,
       enabledShapeTypes: Array.from(enabledShapeTypes),
       shapes: shapes.map(shape => this.serializeShape(shape)),
-      ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
+      ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) }),
+      ...(generationSets && { generationSets }),
+      ...(currentSetId !== undefined && { currentSetId }),
+      ...(exportSettings && { exportSettings }),
+      ...(appSettingsDefaults && { appSettingsDefaults }),
+      ...(artboard && { artboard }),
+      ...(sidebarSections && { sidebarSections })
     };
 
     const jsonData = JSON.stringify(projectData, null, 2);
@@ -55,6 +101,12 @@ export class ProjectManager {
     scatterSettings: ScatterSettings;
     enabledShapeTypes: Set<ShapeType>;
     projectName: string;
+    generationSets?: GenerationSet[];
+    currentSetId?: string | null;
+    exportSettings?: ExportSettingsData;
+    appSettingsDefaults?: AppSettingsDefaults;
+    artboard?: Artboard;
+    sidebarSections?: SidebarSectionConfig;
   }> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -88,7 +140,13 @@ export class ProjectManager {
               randomness: 0.5
             },
             enabledShapeTypes: new Set(projectData.enabledShapeTypes || ['rectangle', 'circle', 'polygon']),
-            projectName: projectData.name
+            projectName: projectData.name,
+            generationSets: projectData.generationSets,
+            currentSetId: projectData.currentSetId,
+            exportSettings: projectData.exportSettings,
+            appSettingsDefaults: projectData.appSettingsDefaults,
+            artboard: projectData.artboard,
+            sidebarSections: projectData.sidebarSections
           });
         } catch (error) {
           reject(new Error(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`));
