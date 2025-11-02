@@ -18,7 +18,7 @@ export interface ExportSettingsData {
   batchExportMode?: string;
   enableGenerationSets?: boolean;
   batchCount?: number;
-  batchSaveProjectFiles?: boolean;
+  exportSaveProjectFiles?: boolean; // Match shared/schema.ts naming
 }
 
 export interface ProjectData {
@@ -123,27 +123,83 @@ export class ProjectManager {
           const shapes = projectData.shapes.map(shapeData => this.deserializeShape(shapeData));
           const groups = (projectData.groups || []).map(groupData => this.deserializeGroup(groupData));
           
+          // Handle legacy export settings migration
+          let exportSettings = projectData.exportSettings;
+          if (exportSettings && (exportSettings as any).batchSaveProjectFiles !== undefined) {
+            // Migrate legacy batchSaveProjectFiles to exportSaveProjectFiles
+            exportSettings = {
+              ...exportSettings,
+              exportSaveProjectFiles: (exportSettings as any).batchSaveProjectFiles
+            };
+            delete (exportSettings as any).batchSaveProjectFiles;
+          }
+          
+          // Complete canvasSettings defaults
+          const canvasSettings: CanvasSettings = projectData.canvasSettings ? {
+            width: projectData.canvasSettings.width || 1200,
+            height: projectData.canvasSettings.height || 800,
+            zoom: projectData.canvasSettings.zoom || 1,
+            panX: projectData.canvasSettings.panX || 0,
+            panY: projectData.canvasSettings.panY || 0,
+            backgroundColor: projectData.canvasSettings.backgroundColor || '#1e293b',
+            showGrid: projectData.canvasSettings.showGrid || false
+          } : {
+            width: 1200,
+            height: 800,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            backgroundColor: '#1e293b',
+            showGrid: false
+          };
+          
+          // Complete scatterSettings defaults with all required fields
+          const scatterSettings: ScatterSettings = projectData.scatterSettings ? {
+            onPoints: projectData.scatterSettings.onPoints || false,
+            insideArea: projectData.scatterSettings.insideArea || false,
+            count: projectData.scatterSettings.count || 5,
+            minCount: projectData.scatterSettings.minCount || 1,
+            maxCount: projectData.scatterSettings.maxCount || 10,
+            shapeCountMode: projectData.scatterSettings.shapeCountMode || 'fixed',
+            fixedShapeCount: projectData.scatterSettings.fixedShapeCount || 5,
+            randomness: projectData.scatterSettings.randomness || 0.5,
+            distribution: projectData.scatterSettings.distribution || {
+              type: 'random',
+              padding: 20,
+              gridColumns: 5,
+              gridRows: 5,
+              gridSpacing: 50
+            },
+            shapeSpecific: projectData.scatterSettings.shapeSpecific || {}
+          } : {
+            onPoints: false,
+            insideArea: false,
+            count: 5,
+            minCount: 1,
+            maxCount: 10,
+            shapeCountMode: 'fixed',
+            fixedShapeCount: 5,
+            randomness: 0.5,
+            distribution: {
+              type: 'random',
+              padding: 20,
+              gridColumns: 5,
+              gridRows: 5,
+              gridSpacing: 50
+            },
+            shapeSpecific: {}
+          };
+          
           resolve({
             shapes,
             groups,
-            canvasSettings: projectData.canvasSettings || {
-              width: 1200,
-              height: 800,
-              zoom: 1,
-              panX: 0,
-              panY: 0
-            },
-            scatterSettings: projectData.scatterSettings || {
-              onPoints: false,
-              insideArea: false,
-              count: 5,
-              randomness: 0.5
-            },
+            canvasSettings,
+            scatterSettings,
             enabledShapeTypes: new Set(projectData.enabledShapeTypes || ['rectangle', 'circle', 'polygon']),
             projectName: projectData.name,
             generationSets: projectData.generationSets,
             currentSetId: projectData.currentSetId,
-            exportSettings: projectData.exportSettings,
+            exportSettings,
             appSettingsDefaults: projectData.appSettingsDefaults,
             artboard: projectData.artboard,
             sidebarSections: projectData.sidebarSections

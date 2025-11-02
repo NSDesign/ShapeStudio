@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
-import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
+import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -4227,11 +4227,32 @@ export default function Sidebar({
                   
                   // Gather all app state for complete save
                   const activeArtboardData = artboards.find(a => a.id === activeArtboard);
+                  
+                  // Build canvasSettings from artboard or use defaults
+                  const canvasSettingsData = activeArtboardData ? {
+                    width: activeArtboardData.width,
+                    height: activeArtboardData.height,
+                    zoom: 1,
+                    panX: 0,
+                    panY: 0,
+                    backgroundColor: activeArtboardData.backgroundColor || '#1e293b',
+                    // Handle both displayGrid (current) and showGrid (legacy) properties
+                    showGrid: activeArtboardData.displayGrid !== undefined ? activeArtboardData.displayGrid : (activeArtboardData as any).showGrid || false
+                  } : {
+                    width: 1200,
+                    height: 800,
+                    zoom: 1,
+                    panX: 0,
+                    panY: 0,
+                    backgroundColor: '#1e293b',
+                    showGrid: false
+                  };
+                  
                   const exportSettingsData = {
                     batchExportMode: exportSettings.generationSetsEnabled ? 'sets' : 'single',
                     enableGenerationSets: exportSettings.generationSetsEnabled,
                     batchCount: exportSettings.batchExportCount || batchExportCount,
-                    batchSaveProjectFiles: exportSettings.batchSaveProjectFiles || false
+                    exportSaveProjectFiles: exportSettings.exportSaveProjectFiles || false
                   };
                   const appDefaultsData = {
                     exportFormat,
@@ -4248,7 +4269,7 @@ export default function Sidebar({
                   await ProjectManager.saveProject(
                     shapes,
                     selectedGroups as any, // Cast to ShapeGroupClass[]
-                    generationConfigSettings as any, // Canvas settings
+                    canvasSettingsData, // Use constructed canvas settings
                     scatterSettings,
                     enabledShapeTypes,
                     undefined, // project name (auto-generated)

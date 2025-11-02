@@ -1,13 +1,38 @@
 import { ProjectManager } from '../../client/src/lib/projectManager';
 import { Shape, ShapeGroupClass } from '../../client/src/lib/shapes';
-import { CanvasSettings } from '../../client/src/lib/shapeTypes';
-import { BatchConfigSettings } from '../../client/src/components/BatchConfigDialog';
+import { CanvasSettings, Artboard, ScatterSettings } from '../../client/src/lib/shapeTypes';
+import type { BatchConfigSettings, GenerationSet, SidebarSectionConfig } from '../../shared/schema';
 import * as fs from 'fs';
 import * as path from 'path';
+
+export interface ExportSettingsData {
+  batchExportMode?: string;
+  enableGenerationSets?: boolean;
+  batchCount?: number;
+  exportSaveProjectFiles?: boolean; // Match shared/schema.ts naming
+}
+
+export interface AppSettingsDefaults {
+  exportFormat?: string;
+  exportQuality?: number;
+  exportScale?: number;
+  exportMode?: string;
+  artboardWidth?: number;
+  artboardHeight?: number;
+  artboardBackgroundColor?: string;
+  artboardDisplayGrid?: boolean;
+  artboardDisplayBorder?: boolean;
+}
 
 export interface SaveProjectSettings {
   projectName?: string;
   includeTimestamp?: boolean;
+  generationSets?: GenerationSet[];
+  currentSetId?: string | null;
+  exportSettings?: ExportSettingsData;
+  appSettingsDefaults?: AppSettingsDefaults;
+  artboard?: Artboard;
+  sidebarSections?: SidebarSectionConfig;
 }
 
 export interface ProjectSaveResult {
@@ -30,7 +55,7 @@ export class ProjectService {
     shapes: Shape[],
     groups: ShapeGroupClass[],
     canvasSettings: CanvasSettings,
-    batchConfigSettings: BatchConfigSettings,
+    scatterSettings: ScatterSettings, // Properly typed to match client ProjectManager
     enabledShapeTypes: Set<string>,
     settings: SaveProjectSettings = {}
   ): Promise<ProjectSaveResult> {
@@ -38,16 +63,37 @@ export class ProjectService {
       const timestamp = new Date().toISOString();
       const name = settings.projectName || `shape-editor-${timestamp.slice(0, 10)}`;
       
-      const projectData = {
+      // Build project data matching client ProjectManager schema exactly
+      const projectData: any = {
         version: '1.0.0',
         timestamp,
         name,
         canvasSettings,
-        batchConfigSettings,
+        scatterSettings, // Changed from batchConfigSettings to scatterSettings
         enabledShapeTypes: Array.from(enabledShapeTypes),
         shapes: shapes.map(shape => this.serializeShape(shape)),
         ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
       };
+
+      // Add optional enhanced settings (match client field names exactly)
+      if (settings.generationSets && settings.generationSets.length > 0) {
+        projectData.generationSets = settings.generationSets;
+      }
+      if (settings.currentSetId !== undefined) {
+        projectData.currentSetId = settings.currentSetId; // Changed from currentGenerationSetId
+      }
+      if (settings.exportSettings) {
+        projectData.exportSettings = settings.exportSettings;
+      }
+      if (settings.appSettingsDefaults) {
+        projectData.appSettingsDefaults = settings.appSettingsDefaults;
+      }
+      if (settings.artboard) {
+        projectData.artboard = settings.artboard;
+      }
+      if (settings.sidebarSections) {
+        projectData.sidebarSections = settings.sidebarSections;
+      }
 
       const filename = settings.includeTimestamp 
         ? `${name}-${timestamp.replace(/[:.]/g, '-').slice(0, -5)}.json`
