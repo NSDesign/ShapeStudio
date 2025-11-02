@@ -341,6 +341,9 @@ export const useShapeEditor = () => {
 
   // Touch device detection
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // Track if we've restored settings to prevent re-restoration loops
+  const hasRestoredSettings = useRef(false);
 
   // Synchronize selectedShapes and selectedGroups with shape.selected flags
   useEffect(() => {
@@ -362,10 +365,11 @@ export const useShapeEditor = () => {
     setCanvasSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Restore canvas and artboard settings from appSettingsDefaults when it loads
+  // Restore canvas and artboard settings from appSettingsDefaults when it loads (once only)
   useEffect(() => {
-    if (appSettingsDefaults) {
+    if (appSettingsDefaults && !hasRestoredSettings.current) {
       console.log('🔄 Restoring app settings from user preferences');
+      hasRestoredSettings.current = true;
       
       // Restore canvas pan/zoom
       setCanvasSettings(prev => ({
@@ -392,7 +396,7 @@ export const useShapeEditor = () => {
 
   // Save canvas settings when they change (debounced)
   useEffect(() => {
-    if (!appSettingsDefaults) return;
+    if (!appSettingsDefaults || !hasRestoredSettings.current) return;
     
     const timeoutId = setTimeout(() => {
       const activeAb = artboards.find(ab => ab.id === activeArtboard);
@@ -407,11 +411,11 @@ export const useShapeEditor = () => {
     }, 1000);
     
     return () => clearTimeout(timeoutId);
-  }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom, appSettingsDefaults, saveAppSettings, artboards, activeArtboard]);
+  }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom]);
 
   // Save artboard settings when active artboard changes (debounced)
   useEffect(() => {
-    if (!appSettingsDefaults) return;
+    if (!appSettingsDefaults || !hasRestoredSettings.current) return;
     
     const activeAb = artboards.find(ab => ab.id === activeArtboard);
     if (!activeAb) return;
@@ -429,7 +433,7 @@ export const useShapeEditor = () => {
     }, 1000);
     
     return () => clearTimeout(timeoutId);
-  }, [artboards, activeArtboard, appSettingsDefaults, saveAppSettings]);
+  }, [artboards, activeArtboard]);
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));

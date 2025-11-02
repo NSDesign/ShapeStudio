@@ -517,6 +517,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
+  
+  // Track if sidebar settings have been restored to prevent save loops
+  const hasRestoredSidebar = useRef(false);
   const [moveX, setMoveX] = useState(0);
   const [moveY, setMoveY] = useState(0);
   const [scaleX, setScaleX] = useState(100);
@@ -576,10 +579,12 @@ export default function Sidebar({
       .map(item => item.id);
   }, [sidebarSections]);
 
-  // Auto-load app settings on mount
+  // Auto-load app settings on mount (once only)
   useEffect(() => {
-    if (appSettingsDefaults && !isLoadingPreferences) {
+    if (appSettingsDefaults && !isLoadingPreferences && !hasRestoredSidebar.current) {
       console.log('Auto-loading app settings:', appSettingsDefaults);
+      hasRestoredSidebar.current = true;
+      
       setExportFormat(appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
@@ -602,7 +607,7 @@ export default function Sidebar({
 
   // Save sidebar collapsed state when it changes (debounced)
   useEffect(() => {
-    if (!appSettingsDefaults) return;
+    if (!appSettingsDefaults || !hasRestoredSidebar.current) return;
     
     const timeoutId = setTimeout(() => {
       saveAppSettings.mutate({
@@ -612,7 +617,7 @@ export default function Sidebar({
     }, 500);
     
     return () => clearTimeout(timeoutId);
-  }, [isCollapsed, appSettingsDefaults, saveAppSettings]);
+  }, [isCollapsed]);
 
   // Save app settings handler
   const handleSaveAppSettings = useCallback(async () => {
