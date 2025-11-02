@@ -4384,32 +4384,27 @@ export default function Sidebar({
               variant="secondary"
               size="sm"
               className="text-xs"
-              disabled={saveAppSettings.isPending}
+              disabled={true}
               data-testid="button-save-app-settings"
             >
-              {saveAppSettings.isPending ? (
-                <>
-                  <div className="w-3 h-3 mr-1 animate-spin rounded-full border-2 border-slate-400 border-t-slate-600" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-3 h-3 mr-1" />
-                  Save
-                </>
-              )}
+              <Save className="w-3 h-3 mr-1" />
+              Save
             </Button>
             <Button
               onClick={handleLoadAppSettings}
               variant="secondary"
               size="sm"
               className="text-xs"
+              disabled={true}
               data-testid="button-load-app-settings"
             >
               <FolderOpen className="w-3 h-3 mr-1" />
               Load
             </Button>
           </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Your settings are automatically saved to the database and reloaded when the app is refreshed.
+          </p>
         </div>
 
         <Separator className="bg-slate-700" />
