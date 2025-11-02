@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { CurrentUIState } from './useGenerationSets';
 import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
-import { useExportSettings } from './useUserPreferences';
+import { useUserPreferences } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
 import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyAutoDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution } from '../lib/shapeTypes';
@@ -36,8 +36,8 @@ export interface GenerationContextOverrides {
 }
 
 export const useShapeEditor = () => {
-  // Get export settings to check if shape sets are enabled
-  const { exportSettings } = useExportSettings();
+  // Get user preferences for app settings persistence
+  const { exportSettings, appSettingsDefaults, saveAppSettings } = useUserPreferences();
   
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [groups, setGroups] = useState<ShapeGroupClass[]>([]);
@@ -361,6 +361,75 @@ export const useShapeEditor = () => {
   const updateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
     setCanvasSettings(prev => ({ ...prev, ...updates }));
   }, []);
+
+  // Restore canvas and artboard settings from appSettingsDefaults when it loads
+  useEffect(() => {
+    if (appSettingsDefaults) {
+      console.log('🔄 Restoring app settings from user preferences');
+      
+      // Restore canvas pan/zoom
+      setCanvasSettings(prev => ({
+        ...prev,
+        panX: appSettingsDefaults.canvasPanX ?? prev.panX,
+        panY: appSettingsDefaults.canvasPanY ?? prev.panY,
+        zoom: appSettingsDefaults.canvasZoom ?? prev.zoom,
+      }));
+      
+      // Restore active artboard settings
+      setArtboards(prev => prev.map(ab => 
+        ab.id === activeArtboard ? {
+          ...ab,
+          name: appSettingsDefaults.artboardName ?? ab.name,
+          width: appSettingsDefaults.artboardWidth ?? ab.width,
+          height: appSettingsDefaults.artboardHeight ?? ab.height,
+          backgroundColor: appSettingsDefaults.artboardBackgroundColor ?? ab.backgroundColor,
+          displayGrid: appSettingsDefaults.artboardDisplayGrid ?? ab.displayGrid,
+          displayBorder: appSettingsDefaults.artboardDisplayBorder ?? ab.displayBorder,
+        } : ab
+      ));
+    }
+  }, [appSettingsDefaults, activeArtboard]); // Re-run when appSettingsDefaults loads
+
+  // Save canvas settings when they change (debounced)
+  useEffect(() => {
+    if (!appSettingsDefaults) return;
+    
+    const timeoutId = setTimeout(() => {
+      const activeAb = artboards.find(ab => ab.id === activeArtboard);
+      if (!activeAb) return;
+      
+      saveAppSettings.mutate({
+        ...appSettingsDefaults,
+        canvasPanX: canvasSettings.panX,
+        canvasPanY: canvasSettings.panY,
+        canvasZoom: canvasSettings.zoom,
+      });
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom, appSettingsDefaults, saveAppSettings, artboards, activeArtboard]);
+
+  // Save artboard settings when active artboard changes (debounced)
+  useEffect(() => {
+    if (!appSettingsDefaults) return;
+    
+    const activeAb = artboards.find(ab => ab.id === activeArtboard);
+    if (!activeAb) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveAppSettings.mutate({
+        ...appSettingsDefaults,
+        artboardName: activeAb.name,
+        artboardWidth: activeAb.width,
+        artboardHeight: activeAb.height,
+        artboardBackgroundColor: activeAb.backgroundColor ?? '#ffffff',
+        artboardDisplayGrid: activeAb.displayGrid ?? false,
+        artboardDisplayBorder: activeAb.displayBorder ?? true,
+      });
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [artboards, activeArtboard, appSettingsDefaults, saveAppSettings]);
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));
@@ -3745,6 +3814,28 @@ export const useShapeEditor = () => {
         // Default reset if no artboard is active
         updateCanvasSettings({ zoom: 1, panX: 0, panY: 0 });
       }
+    },
+    fitToArtboard: () => {
+      // Find the active artboard
+      const artboard = artboards.find(ab => ab.id === activeArtboard);
+      if (!artboard || !canvasRef.current) return;
+      
+      // Get canvas viewport dimensions
+      const canvas = canvasRef.current;
+      const viewportWidth = canvas.clientWidth;
+      const viewportHeight = canvas.clientHeight;
+      
+      // Calculate zoom to fit artboard with 10% padding
+      const paddingFactor = 0.9;
+      const zoomX = (viewportWidth * paddingFactor) / artboard.width;
+      const zoomY = (viewportHeight * paddingFactor) / artboard.height;
+      const zoom = Math.min(zoomX, zoomY, 5); // Cap at max zoom of 5
+      
+      // Center the artboard in the viewport
+      const centerX = -(artboard.x + artboard.width / 2);
+      const centerY = -(artboard.y + artboard.height / 2);
+      
+      updateCanvasSettings({ zoom, panX: centerX, panY: centerY });
     },
 
     // Transform operations

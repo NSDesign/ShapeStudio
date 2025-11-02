@@ -584,6 +584,7 @@ export default function Sidebar({
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
       setExportMode(appSettingsDefaults.exportMode);
+      setIsCollapsed(appSettingsDefaults.sidebarCollapsed ?? false);
       
       // Apply artboard settings to the active artboard
       const activeBoard = artboards.find(a => a.id === activeArtboard);
@@ -599,6 +600,20 @@ export default function Sidebar({
     }
   }, [appSettingsDefaults, isLoadingPreferences]);
 
+  // Save sidebar collapsed state when it changes (debounced)
+  useEffect(() => {
+    if (!appSettingsDefaults) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveAppSettings.mutate({
+        ...appSettingsDefaults,
+        sidebarCollapsed: isCollapsed,
+      });
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isCollapsed, appSettingsDefaults, saveAppSettings]);
+
   // Save app settings handler
   const handleSaveAppSettings = useCallback(async () => {
     const activeBoard = artboards.find(a => a.id === activeArtboard);
@@ -612,11 +627,16 @@ export default function Sidebar({
       exportQuality,
       exportScale,
       exportMode,
+      artboardName: activeBoard.name,
       artboardWidth: activeBoard.width,
       artboardHeight: activeBoard.height,
       artboardBackgroundColor: activeBoard.backgroundColor || '#ffffff',
       artboardDisplayGrid: activeBoard.displayGrid || false,
-      artboardDisplayBorder: activeBoard.displayBorder !== undefined ? activeBoard.displayBorder : true
+      artboardDisplayBorder: activeBoard.displayBorder !== undefined ? activeBoard.displayBorder : true,
+      canvasPanX: appSettingsDefaults?.canvasPanX ?? 0,
+      canvasPanY: appSettingsDefaults?.canvasPanY ?? 0,
+      canvasZoom: appSettingsDefaults?.canvasZoom ?? 1,
+      sidebarCollapsed: isCollapsed
     };
     
     console.log('Saving app settings:', settings);

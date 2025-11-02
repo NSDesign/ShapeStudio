@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Trash2 } from 'lucide-react';
+import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Maximize2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
@@ -39,6 +39,7 @@ interface CanvasProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
+  onFitToArtboard: () => void;
   onClearAll: () => void;
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
@@ -85,6 +86,7 @@ export default function Canvas({
   onZoomIn,
   onZoomOut,
   onResetView,
+  onFitToArtboard,
   onClearAll,
   canvasRef,
 }: CanvasProps) {
@@ -658,6 +660,15 @@ export default function Canvas({
                 </Button>
               </TooltipTrigger>
               <TooltipContent><p>Reset view</p></TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={onFitToArtboard} className="text-slate-300 hover:text-white hover:bg-slate-700" data-testid="button-fit-artboard">
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Fit Artboard</p></TooltipContent>
             </Tooltip>
           </div>
         </div>

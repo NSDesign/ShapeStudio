@@ -131,11 +131,20 @@ export interface AppSettingsDefaults {
   exportMode: 'selection' | 'artboard' | 'all';
   
   // Artboard settings
+  artboardName: string;
   artboardWidth: number;
   artboardHeight: number;
   artboardBackgroundColor: string;
   artboardDisplayGrid: boolean;
   artboardDisplayBorder: boolean;
+  
+  // Canvas settings
+  canvasPanX: number;
+  canvasPanY: number;
+  canvasZoom: number;
+  
+  // UI settings
+  sidebarCollapsed: boolean;
 }
 
 // Default app settings
@@ -144,11 +153,16 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   exportQuality: 90,
   exportScale: 1,
   exportMode: 'all',
+  artboardName: 'Artboard 1',
   artboardWidth: 400,
   artboardHeight: 400,
   artboardBackgroundColor: '#ffffff',
   artboardDisplayGrid: false,
   artboardDisplayBorder: true,
+  canvasPanX: 0,
+  canvasPanY: 0,
+  canvasZoom: 1,
+  sidebarCollapsed: false,
 };
 
 // User preferences schemas

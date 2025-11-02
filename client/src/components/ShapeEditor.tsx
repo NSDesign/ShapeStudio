@@ -48,6 +48,7 @@ export default function ShapeEditor() {
     zoomIn,
     zoomOut,
     resetView,
+    fitToArtboard,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
@@ -249,6 +250,7 @@ export default function ShapeEditor() {
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
             onResetView={resetView}
+            onFitToArtboard={fitToArtboard}
             onClearAll={clearAllShapes}
             canvasRef={canvasRef}
           />
