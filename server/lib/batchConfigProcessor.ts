@@ -268,7 +268,7 @@ function calculateConstrainedSize(
   height: number,
   shapeType: string
 ): number {
-  if (!['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(shapeType)) {
+  if (!['circle', 'star', 'ring', 'polygon', 'ellipse', 'spline-circle', 'spline-ellipse', 'spline-ring'].includes(shapeType)) {
     return width;
   }
 
@@ -361,10 +361,27 @@ export function generateShapesWithBatchConfig(
     
     // Pass combinedConfig to Shape constructor like client does
     const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
-    shape.width = finalSize;
-    shape.height = batchConfig.maintainAspectRatio || ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType) 
-      ? finalSize 
-      : calculatedHeight;
+    
+    // Determine if constraints are active for this shape type
+    const isConstraintActive = batchConfig.maintainAspectRatio || 
+                               batchConfig.useMinWidthHeight || 
+                               batchConfig.useMaxWidthHeight || 
+                               batchConfig.useAvgWidthHeight;
+    
+    // For circular shapes (circle, star, ring, spline-circle, spline-ring), always use radius-based sizing
+    const isAlwaysCircular = ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType);
+    
+    // For ellipse/spline-ellipse/polygon, use constrained size only when constraints are active
+    const isConditionallyCircular = ['polygon', 'ellipse', 'spline-ellipse'].includes(randomType);
+    
+    if (isAlwaysCircular || (isConditionallyCircular && isConstraintActive)) {
+      shape.width = finalSize;
+      shape.height = finalSize;
+    } else {
+      // Use independent width/height for non-circular shapes or when constraints are disabled
+      shape.width = calculatedWidth;
+      shape.height = calculatedHeight;
+    }
 
     if (batchConfig.propertiesEnabled) {
       if (batchConfig.fillEnabled) {

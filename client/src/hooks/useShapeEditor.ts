@@ -1358,8 +1358,8 @@ export const useShapeEditor = () => {
 
   // Helper function to determine final size for circular shapes based on width/height constraint preferences
   const calculateConstrainedSize = (settings: BatchConfigSettings, width: number, height: number, shapeType: string): number => {
-    // Only apply constraints to circular shapes (circle, star, ring, etc.)
-    if (!['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(shapeType)) {
+    // Only apply constraints to circular shapes (circle, star, ring, ellipse, polygon, etc.)
+    if (!['circle', 'star', 'ring', 'polygon', 'ellipse', 'spline-circle', 'spline-ellipse', 'spline-ring'].includes(shapeType)) {
       return width; // For non-circular shapes, use width as-is
     }
 
@@ -1618,6 +1618,22 @@ export const useShapeEditor = () => {
             // Ring uses constraint system for outer radius
             const ringSize = effectiveBatchConfig.maintainAspectRatio ? width : calculateConstrainedSize(effectiveBatchConfig, width, height, shape.type);
             shape.radius = ringSize / 2;
+            break;
+          case 'ellipse':
+          case 'spline-ellipse':
+            // Ellipse shapes use constraint system when constraints are enabled
+            // If any constraint is enabled (min/max/avg), apply it to both width and height
+            if (effectiveBatchConfig.useMinWidthHeight || effectiveBatchConfig.useMaxWidthHeight || effectiveBatchConfig.useAvgWidthHeight) {
+              const ellipseSize = calculateConstrainedSize(effectiveBatchConfig, width, height, shape.type);
+              shape.width = ellipseSize;
+              shape.height = ellipseSize;
+              console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): constrained width=${shape.width}, height=${shape.height}`);
+            } else {
+              // No constraints enabled, use independent width/height
+              shape.width = width;
+              shape.height = height;
+              console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): independent width=${shape.width}, height=${shape.height}`);
+            }
             break;
           case 'line':
           case 'bezier':
