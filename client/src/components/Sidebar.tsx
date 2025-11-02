@@ -394,15 +394,11 @@ interface SidebarProps {
   onLoadProject: (data: {
     shapes: any[];
     groups: any[];
-    canvasSettings?: CanvasSettings;
-    scatterSettings?: ScatterSettings;
-    enabledShapeTypes: Set<ShapeType>;
-    generationSets?: GenerationSet[];
-    currentSetId?: string | null;
-    exportSettings?: any;
-    appSettingsDefaults?: any;
-    artboard?: Artboard;
-    sidebarSections?: SidebarSectionConfig;
+    artboard: {
+      width: number;
+      height: number;
+      backgroundColor: string;
+    };
   }) => void;
   
   // Generation Sets Management
@@ -4225,60 +4221,18 @@ export default function Sidebar({
                   // Import ProjectManager dynamically
                   const { ProjectManager } = await import('../lib/projectManager');
                   
-                  // Gather all app state for complete save
+                  // Get active artboard for minimal save
                   const activeArtboardData = artboards.find(a => a.id === activeArtboard);
                   
-                  // Build canvasSettings from artboard or use defaults
-                  const canvasSettingsData = activeArtboardData ? {
-                    width: activeArtboardData.width,
-                    height: activeArtboardData.height,
-                    zoom: 1,
-                    panX: 0,
-                    panY: 0,
-                    backgroundColor: activeArtboardData.backgroundColor || '#1e293b',
-                    // Handle both displayGrid (current) and showGrid (legacy) properties
-                    showGrid: activeArtboardData.displayGrid !== undefined ? activeArtboardData.displayGrid : (activeArtboardData as any).showGrid || false
-                  } : {
-                    width: 1200,
-                    height: 800,
-                    zoom: 1,
-                    panX: 0,
-                    panY: 0,
-                    backgroundColor: '#1e293b',
-                    showGrid: false
-                  };
-                  
-                  const exportSettingsData = {
-                    batchExportMode: exportSettings.generationSetsEnabled ? 'sets' : 'single',
-                    enableGenerationSets: exportSettings.generationSetsEnabled,
-                    batchCount: exportSettings.batchExportCount || batchExportCount,
-                    exportSaveProjectFiles: exportSettings.exportSaveProjectFiles || false
-                  };
-                  const appDefaultsData = {
-                    exportFormat,
-                    exportQuality,
-                    exportScale,
-                    exportMode,
-                    artboardWidth: appSettingsDefaults?.artboardWidth,
-                    artboardHeight: appSettingsDefaults?.artboardHeight,
-                    artboardBackgroundColor: appSettingsDefaults?.artboardBackgroundColor,
-                    artboardDisplayGrid: appSettingsDefaults?.artboardDisplayGrid,
-                    artboardDisplayBorder: appSettingsDefaults?.artboardDisplayBorder
-                  };
+                  if (!activeArtboardData) {
+                    console.error('No active artboard found');
+                    return;
+                  }
                   
                   await ProjectManager.saveProject(
                     shapes,
-                    selectedGroups as any, // Cast to ShapeGroupClass[]
-                    canvasSettingsData, // Use constructed canvas settings
-                    scatterSettings,
-                    enabledShapeTypes,
-                    undefined, // project name (auto-generated)
-                    effectiveGenerationSets,
-                    effectiveCurrentSetId,
-                    exportSettingsData,
-                    appDefaultsData,
-                    activeArtboardData,
-                    sidebarSections
+                    selectedGroups as any,
+                    activeArtboardData
                   );
                   
                   // Add a small delay to show the loading state
@@ -4317,27 +4271,19 @@ export default function Sidebar({
                       // Import ProjectManager dynamically
                       const { ProjectManager } = await import('../lib/projectManager');
                       
-                      // Load project using ProjectManager
+                      // Load minimal project using ProjectManager
                       const projectData = await ProjectManager.loadProject(file);
                       console.log('Project loaded:', projectData);
                       
-                      // Restore all project state if onLoadProject is available
+                      // Load shapes and artboard config
                       if (onLoadProject) {
                         onLoadProject({
                           shapes: projectData.shapes,
                           groups: projectData.groups,
-                          canvasSettings: projectData.canvasSettings,
-                          scatterSettings: projectData.scatterSettings,
-                          enabledShapeTypes: projectData.enabledShapeTypes,
-                          generationSets: projectData.generationSets,
-                          currentSetId: projectData.currentSetId,
-                          exportSettings: projectData.exportSettings,
-                          appSettingsDefaults: projectData.appSettingsDefaults,
-                          artboard: projectData.artboard,
-                          sidebarSections: projectData.sidebarSections
+                          artboard: projectData.artboard
                         });
                         
-                        console.log('✅ Project loaded successfully with all settings!');
+                        console.log('✅ Project loaded successfully!');
                       } else {
                         console.warn('⚠️ onLoadProject callback not available');
                       }

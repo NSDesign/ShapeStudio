@@ -3574,17 +3574,19 @@ export const useShapeEditor = () => {
     setGenerationConfigSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Project loading functionality
+  // Project loading functionality (minimal - shapes and artboard only)
   const onLoadProject = useCallback((data: {
     shapes: any[];
     groups: any[];
-    canvasSettings?: CanvasSettings;
-    scatterSettings?: ScatterSettings;
-    enabledShapeTypes: Set<ShapeType>;
+    artboard: {
+      width: number;
+      height: number;
+      backgroundColor: string;
+    };
   }) => {
-    console.log('🔄 Loading project with data:', data);
+    console.log('🔄 Loading project with minimal data:', data);
 
-    // Clear current state
+    // Clear current shapes and selections
     setShapes([]);
     setGroups([]);
     setSelectedShapes([]);
@@ -3602,46 +3604,24 @@ export const useShapeEditor = () => {
       return shape;
     });
 
-    // Convert groups if needed (for now, just use empty array since groups might be plain objects too)
+    // Convert groups if needed
     const groupInstances = (data.groups || []).map((groupData: any) => {
-      // For now, just return the group data as-is since groups are less complex
       return groupData;
     });
 
-    // Load new data
+    // Load shapes and groups
     setShapes(shapeInstances);
     setGroups(groupInstances);
-    setEnabledShapeTypes(data.enabledShapeTypes || new Set());
 
-    // Update settings if provided with proper defaults
-    if (data.scatterSettings) {
-      setScatterSettings(data.scatterSettings);
-    }
-    if (data.canvasSettings) {
-      // Ensure canvas settings have valid values
-      const validCanvasSettings = {
-        width: data.canvasSettings.width || Number.MAX_SAFE_INTEGER,
-        height: data.canvasSettings.height || Number.MAX_SAFE_INTEGER,
-        zoom: data.canvasSettings.zoom && data.canvasSettings.zoom > 0 ? data.canvasSettings.zoom : 1,
-        panX: data.canvasSettings.panX || 0,
-        panY: data.canvasSettings.panY || 0,
-        backgroundColor: data.canvasSettings.backgroundColor || '#1e293b',
-        showGrid: data.canvasSettings.showGrid !== undefined ? data.canvasSettings.showGrid : true
-      };
-      setCanvasSettings(validCanvasSettings);
-      console.log('📐 Applied canvas settings:', validCanvasSettings);
-    } else {
-      // Reset to defaults if no canvas settings provided
-      setCanvasSettings({
-        width: Number.MAX_SAFE_INTEGER,
-        height: Number.MAX_SAFE_INTEGER,
-        zoom: 1,
-        panX: 0,
-        panY: 0,
-        backgroundColor: '#1e293b',
-        showGrid: true
-      });
-      console.log('📐 Reset to default canvas settings');
+    // Update active artboard with loaded dimensions and background
+    if (data.artboard) {
+      const currentArtboard = artboards.find(a => a.id === activeArtboard);
+      if (currentArtboard) {
+        currentArtboard.width = data.artboard.width;
+        currentArtboard.height = data.artboard.height;
+        currentArtboard.backgroundColor = data.artboard.backgroundColor;
+        setArtboards([...artboards]);
+      }
     }
 
     console.log('✅ Project loaded successfully with', shapeInstances.length, 'shapes');
@@ -3655,7 +3635,7 @@ export const useShapeEditor = () => {
         y: s.transform.y
       })));
     }
-  }, []);
+  }, [artboards, activeArtboard]);
 
   return {
     // State
