@@ -66,7 +66,7 @@ const BatchExportSchema = z.object({
   modulationValue: z.number().min(0).max(1).optional()
 });
 
-// Comprehensive SaveProjectRequestSchema - accepts complete project state
+// Minimal SaveProjectRequestSchema - shapes and artboard only
 const SaveProjectSchema = z.object({
   // Project metadata
   projectName: z.string().optional(),
@@ -76,7 +76,14 @@ const SaveProjectSchema = z.object({
   shapes: z.array(z.any()).optional().default([]),
   groups: z.array(z.any()).optional().default([]),
   
-  // Canvas settings
+  // Minimal artboard config (new format)
+  artboard: z.object({
+    width: z.number(),
+    height: z.number(),
+    backgroundColor: z.string()
+  }).optional(),
+  
+  // Legacy canvas settings (for backwards compatibility)
   canvasSettings: z.object({
     width: z.number(),
     height: z.number(),
@@ -87,13 +94,9 @@ const SaveProjectSchema = z.object({
     showGrid: z.boolean().optional().default(false)
   }).optional(),
   
-  // Batch configuration settings (complete generation config)
+  // Legacy fields (for backwards compatibility, but not saved)
   batchConfigSettings: BatchConfigSettingsSchema.optional(),
-  
-  // Generation sets (shape sets configuration)
   generationSets: z.array(GenerationSetSchema).optional().default([]),
-  
-  // Enabled shape types
   enabledShapeTypes: z.array(SupportedShapeTypeSchema).optional().default([])
 });
 
@@ -452,25 +455,38 @@ export function registerExportRoutes(app: Express): void {
     }
   });
 
-  // Save project
+  // Save project (minimal schema: shapes + artboard only)
   app.post('/api/projects/save', async (req, res) => {
     try {
       const validatedData = SaveProjectSchema.parse(req.body);
       
-      // Extract project data from request body
+      // Extract minimal project data from request body
       const shapes = validatedData.shapes || [];
       const groups = validatedData.groups || [];
-      const canvasSettings = validatedData.canvasSettings || {
-        width: 1200,
-        height: 800,
-        zoom: 1,
-        panX: 0,
-        panY: 0,
-        backgroundColor: '#1e293b',
-        showGrid: false
-      };
-      const batchConfigSettings = validatedData.batchConfigSettings || {};
-      const enabledShapeTypes = new Set(validatedData.enabledShapeTypes || []);
+      
+      // Extract artboard config from canvasSettings or artboard field
+      let artboard: { width: number; height: number; backgroundColor: string };
+      if (validatedData.artboard) {
+        artboard = {
+          width: validatedData.artboard.width || 1200,
+          height: validatedData.artboard.height || 800,
+          backgroundColor: validatedData.artboard.backgroundColor || '#ffffff'
+        };
+      } else if (validatedData.canvasSettings) {
+        // Legacy compatibility: extract from canvasSettings
+        artboard = {
+          width: validatedData.canvasSettings.width || 1200,
+          height: validatedData.canvasSettings.height || 800,
+          backgroundColor: validatedData.canvasSettings.backgroundColor || '#ffffff'
+        };
+      } else {
+        // Default fallback
+        artboard = {
+          width: 1200,
+          height: 800,
+          backgroundColor: '#ffffff'
+        };
+      }
       
       // Pass settings for projectName and includeTimestamp
       const saveSettings: SaveProjectSettings = {
@@ -481,9 +497,7 @@ export function registerExportRoutes(app: Express): void {
       const result = await projectService.saveProject(
         shapes,
         groups,
-        canvasSettings,
-        batchConfigSettings as any,
-        enabledShapeTypes,
+        artboard,
         saveSettings
       );
       

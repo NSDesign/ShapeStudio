@@ -54,46 +54,26 @@ export class ProjectService {
   async saveProject(
     shapes: Shape[],
     groups: ShapeGroupClass[],
-    canvasSettings: CanvasSettings,
-    scatterSettings: ScatterSettings, // Properly typed to match client ProjectManager
-    enabledShapeTypes: Set<string>,
+    artboard: { width: number; height: number; backgroundColor: string },
     settings: SaveProjectSettings = {}
   ): Promise<ProjectSaveResult> {
     try {
       const timestamp = new Date().toISOString();
       const name = settings.projectName || `shape-editor-${timestamp.slice(0, 10)}`;
       
-      // Build project data matching client ProjectManager schema exactly
+      // Build minimal project data (shapes + artboard only)
       const projectData: any = {
         version: '1.0.0',
         timestamp,
         name,
-        canvasSettings,
-        scatterSettings, // Changed from batchConfigSettings to scatterSettings
-        enabledShapeTypes: Array.from(enabledShapeTypes),
         shapes: shapes.map(shape => this.serializeShape(shape)),
-        ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) })
+        ...(groups.length > 0 && { groups: groups.map(group => this.serializeGroup(group)) }),
+        artboard: {
+          width: artboard.width || 1200,
+          height: artboard.height || 800,
+          backgroundColor: artboard.backgroundColor || '#ffffff'
+        }
       };
-
-      // Add optional enhanced settings (match client field names exactly)
-      if (settings.generationSets && settings.generationSets.length > 0) {
-        projectData.generationSets = settings.generationSets;
-      }
-      if (settings.currentSetId !== undefined) {
-        projectData.currentSetId = settings.currentSetId; // Changed from currentGenerationSetId
-      }
-      if (settings.exportSettings) {
-        projectData.exportSettings = settings.exportSettings;
-      }
-      if (settings.appSettingsDefaults) {
-        projectData.appSettingsDefaults = settings.appSettingsDefaults;
-      }
-      if (settings.artboard) {
-        projectData.artboard = settings.artboard;
-      }
-      if (settings.sidebarSections) {
-        projectData.sidebarSections = settings.sidebarSections;
-      }
 
       const filename = settings.includeTimestamp 
         ? `${name}-${timestamp.replace(/[:.]/g, '-').slice(0, -5)}.json`

@@ -583,30 +583,19 @@ export class ExportService {
           });
         }
         
-        // Save project file if requested
+        // Save project file if requested (minimal schema: shapes + artboard only)
         if (settings.batchSaveProjectFiles) {
           const projectData: any = {
             version: '1.0.0',
             timestamp: new Date().toISOString(),
             name: filename,
-            canvasSettings,
-            batchConfigSettings,
-            enabledShapeTypes: Array.from(enabledShapeTypes),
-            shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape))
+            shapes: currentShapes.map((shape: Shape) => this.serializeShape(shape)),
+            artboard: {
+              width: canvasSettings.width || 1200,
+              height: canvasSettings.height || 800,
+              backgroundColor: canvasSettings.backgroundColor || '#ffffff'
+            }
           };
-
-          // Include generation sets metadata if available (from API)
-          if (generationSetsMetadata) {
-            if (generationSetsMetadata.generationSets) {
-              projectData.generationSets = generationSetsMetadata.generationSets;
-            }
-            if (generationSetsMetadata.exportSettings) {
-              projectData.exportSettings = generationSetsMetadata.exportSettings;
-            }
-            if (generationSetsMetadata.artboardSettings) {
-              projectData.artboardSettings = generationSetsMetadata.artboardSettings;
-            }
-          }
           
           const projectJson = JSON.stringify(projectData, null, 2);
           const projectFilename = `${filename}.json`;
