@@ -292,6 +292,14 @@ export interface BatchConfigSettings {
   ellipseRingSpacing: 'even' | 'progressive'; // Spacing mode between rings
   ellipseRotation: number; // Ellipse rotation angle (0-360 degrees)
   ellipseRotationAlignment: 'uniform' | 'progressive'; // All rings same rotation or progressive
+  ellipseAlignToRing: boolean; // Align shapes to ellipse tangent
+  ellipseFlipInward: boolean; // Flip alignment inward vs outward
+  ellipseAdditionalRotation: number; // Additional rotation added to alignment (degrees)
+  ellipseShapeRotationMode: 'none' | 'fixed' | 'range' | 'incremental'; // Shape rotation mode
+  ellipseRotationFixed: number; // Fixed rotation value (degrees)
+  ellipseRotationRange: [number, number]; // Random rotation range (degrees)
+  ellipseRotationIncrementalStart: number; // Starting rotation (degrees)
+  ellipseRotationIncrementalStep: number; // Rotation increment per shape (degrees)
   
   // Spiral Pattern Settings
   spiralTurnCount: number; // Number of complete rotations (1-20)
@@ -768,6 +776,14 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   ellipseRingSpacing: 'even',
   ellipseRotation: 0,
   ellipseRotationAlignment: 'uniform',
+  ellipseAlignToRing: false,
+  ellipseFlipInward: false,
+  ellipseAdditionalRotation: 0,
+  ellipseShapeRotationMode: 'none',
+  ellipseRotationFixed: 0,
+  ellipseRotationRange: [0, 360],
+  ellipseRotationIncrementalStart: 0,
+  ellipseRotationIncrementalStep: 10,
   
   spiralTurnCount: 3,
   spiralSpacingMode: 'linear',
@@ -1776,6 +1792,14 @@ export const BatchConfigSettingsSchema = z.object({
   ellipseRingSpacing: z.enum(['even', 'progressive']),
   ellipseRotation: z.number(),
   ellipseRotationAlignment: z.enum(['uniform', 'progressive']),
+  ellipseAlignToRing: z.boolean(),
+  ellipseFlipInward: z.boolean(),
+  ellipseAdditionalRotation: z.number(),
+  ellipseShapeRotationMode: z.enum(['none', 'fixed', 'range', 'incremental']),
+  ellipseRotationFixed: z.number(),
+  ellipseRotationRange: z.tuple([z.number(), z.number()]),
+  ellipseRotationIncrementalStart: z.number(),
+  ellipseRotationIncrementalStep: z.number(),
   
   spiralTurnCount: z.number(),
   spiralSpacingMode: z.enum(['linear', 'logarithmic']),
