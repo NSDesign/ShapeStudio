@@ -677,64 +677,45 @@ export class Shape {
       }
     };
 
-    // Get line-vector properties from batch config with robust default merging
-    // Import the default config and convert it to flat schema that the generator expects
-    const defaultConfig = { 
-      direction: { kind: 'range' as const, min: 0, max: 360 },
-      length: { kind: 'range' as const, min: 5, max: 500 },
-      centroid: { kind: 'fixed' as const, value: 0.5 },
-      strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
-    };
+    // Get line-vector properties from batch config
+    // The settings come in ScalarMode format: { kind: 'fixed'|'range'|'incremental', value/min/max/... }
+    const rawSettings = batchConfig?.scatterSettings?.shapeSpecific?.['line-vector'] || {};
     
-    // Convert to flat schema expected by generator with proper defaults
-    const defaultFlatSettings = {
-      directionMode: 'range' as const,
-      directionRange: [0, 360] as [number, number],
-      directionValue: 0,
-      lengthMode: 'range' as const,
-      lengthRange: [50, 150] as [number, number],
-      lengthValue: 100,
-      centroidMode: 'fixed' as const,
-      centroidRange: [0, 1] as [number, number],
-      centroidValue: 0.5,
-      strokeCapProbabilities: { round: 33, square: 33, butt: 34 }
-    };
+    // Default settings in ScalarMode format
+    const defaultDirection = { kind: 'range' as const, min: 0, max: 360 };
+    const defaultLength = { kind: 'range' as const, min: 5, max: 500 };
+    const defaultCentroid = { kind: 'fixed' as const, value: 0.5 };
     
-    const lineVectorSettings = {
-      ...defaultFlatSettings,
-      ...(batchConfig?.scatterSettings?.shapeSpecific?.['line-vector'] || {})
-    };
-    
-    // Direction (0-360 degrees)
-    const directionMode = lineVectorSettings.directionMode || 'range';
+    // Get direction setting (merge with defaults)
+    const directionSetting = rawSettings.direction || defaultDirection;
     const direction = getValue(
-      directionMode,
-      lineVectorSettings.directionRange || [0, 360],
-      lineVectorSettings.directionValue || 0,
-      lineVectorSettings.directionStartValue || 0,
-      lineVectorSettings.directionIncrement || 0,
+      directionSetting.kind,
+      directionSetting.kind === 'range' ? [directionSetting.min, directionSetting.max] : undefined,
+      directionSetting.kind === 'fixed' ? directionSetting.value : undefined,
+      directionSetting.kind === 'incremental' ? directionSetting.startValue : undefined,
+      directionSetting.kind === 'incremental' ? directionSetting.increment : undefined,
       batchConfig?.generationIndex || 0
     );
     
-    // Length (5-500)
-    const lengthMode = lineVectorSettings.lengthMode || 'range';
+    // Get length setting (merge with defaults)
+    const lengthSetting = rawSettings.length || defaultLength;
     const length = getValue(
-      lengthMode,
-      lineVectorSettings.lengthRange || [50, 150],
-      lineVectorSettings.lengthValue || 100,
-      lineVectorSettings.lengthStartValue || 100,
-      lineVectorSettings.lengthIncrement || 0,
+      lengthSetting.kind,
+      lengthSetting.kind === 'range' ? [lengthSetting.min, lengthSetting.max] : undefined,
+      lengthSetting.kind === 'fixed' ? lengthSetting.value : undefined,
+      lengthSetting.kind === 'incremental' ? lengthSetting.startValue : undefined,
+      lengthSetting.kind === 'incremental' ? lengthSetting.increment : undefined,
       batchConfig?.generationIndex || 0
     );
     
-    // Centroid (0-1) - position along line where rotation point is
-    const centroidMode = lineVectorSettings.centroidMode || 'fixed';
+    // Get centroid setting (merge with defaults)
+    const centroidSetting = rawSettings.centroid || defaultCentroid;
     const centroid = getValue(
-      centroidMode,
-      lineVectorSettings.centroidRange || [0, 1],
-      lineVectorSettings.centroidValue || 0.5,
-      lineVectorSettings.centroidStartValue || 0.5,
-      lineVectorSettings.centroidIncrement || 0,
+      centroidSetting.kind,
+      centroidSetting.kind === 'range' ? [centroidSetting.min, centroidSetting.max] : undefined,
+      centroidSetting.kind === 'fixed' ? centroidSetting.value : undefined,
+      centroidSetting.kind === 'incremental' ? centroidSetting.startValue : undefined,
+      centroidSetting.kind === 'incremental' ? centroidSetting.increment : undefined,
       batchConfig?.generationIndex || 0
     );
     
