@@ -1164,7 +1164,7 @@ export function applyEllipseDistribution(
     
     // Calculate rotation based on alignment mode
     const shapeRotation = rotationAlignment === 'progressive' 
-      ? rotation * (ringIndex / Math.max(ringCount - 1, 1))
+      ? rotation * Math.pow(ringIndex / Math.max(ringCount - 1, 1), 1.5)
       : rotation;
     
     // Calculate position on ellipse with rotation

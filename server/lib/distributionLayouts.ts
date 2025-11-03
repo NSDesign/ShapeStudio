@@ -457,7 +457,7 @@ export function applyEllipseDistribution(
     const yRadius = yRadiusRange[0] + (yRadiusRange[1] - yRadiusRange[0]) * ringProgress;
     
     const shapeRotation = rotationAlignment === 'progressive' 
-      ? rotation * (ringIndex / Math.max(ringCount - 1, 1))
+      ? rotation * Math.pow(ringIndex / Math.max(ringCount - 1, 1), 1.5)
       : rotation;
     
     const cosAngle = Math.cos(angle);
