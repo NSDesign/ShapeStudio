@@ -51,6 +51,14 @@ interface DistributionConfig {
   ellipseRingSpacing?: 'even' | 'progressive';
   ellipseRotation?: number;
   ellipseRotationAlignment?: 'uniform' | 'progressive';
+  ellipseAlignToRing?: boolean;
+  ellipseFlipInward?: boolean;
+  ellipseAdditionalRotation?: number;
+  ellipseShapeRotationMode?: 'none' | 'fixed' | 'range' | 'incremental';
+  ellipseRotationFixed?: number;
+  ellipseRotationRange?: [number, number];
+  ellipseRotationIncrementalStart?: number;
+  ellipseRotationIncrementalStep?: number;
   
   // Spiral Pattern Settings
   spiralTurnCount?: number;
