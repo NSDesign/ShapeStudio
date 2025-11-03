@@ -135,6 +135,12 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     ctx.globalAlpha = shape.properties.strokeOpacity;
     ctx.strokeStyle = shape.properties.strokeColor;
     ctx.lineWidth = shape.properties.strokeWidth;
+    
+    // Apply stroke cap if set (for line and bezier shapes)
+    if (shape.strokeCap) {
+      ctx.lineCap = shape.strokeCap;
+    }
+    
     ctx.stroke();
   }
 }
