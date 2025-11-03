@@ -2860,7 +2860,7 @@ export default function Sidebar({
                 onChange={(modeConfig) => {
                   handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
                 }}
-                bounds={{ min: 5, max: 500 }}
+                bounds={{ min: 0, max: 500 }}
                 unit="px"
                 step={5}
               />

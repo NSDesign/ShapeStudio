@@ -1629,7 +1629,8 @@ export const useShapeEditor = () => {
 
       const combinedConfig = { 
         ...effectiveBatchConfig, 
-        scatterSettings: enhancedScatterSettings 
+        scatterSettings: enhancedScatterSettings,
+        generationIndex: index
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
 
