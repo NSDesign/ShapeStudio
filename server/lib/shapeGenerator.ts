@@ -830,8 +830,11 @@ export class Shape {
     const angleRad = (direction * Math.PI) / 180;
     
     // Calculate start and end points based on centroid
-    const startDist = -length * centroid;
-    const endDist = length * (1 - centroid);
+    // Centroid 0 = anchor at line start (start point at origin)
+    // Centroid 0.5 = anchor at line center (center point at origin)
+    // Centroid 1 = anchor at line end (end point at origin)
+    const startDist = -length * (1 - centroid);
+    const endDist = length * centroid;
     
     this.points = [
       {

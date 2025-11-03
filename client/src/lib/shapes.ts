@@ -742,15 +742,17 @@ export class Shape {
     const angleRadians = (direction * Math.PI) / 180;
     
     // Calculate line endpoints based on centroid position
-    // centroid 0 = start point, 0.5 = center, 1 = end point
-    const startDistance = length * centroid;
-    const endDistance = length * (1 - centroid);
+    // Centroid 0 = anchor at line start (start point at origin)
+    // Centroid 0.5 = anchor at line center (center point at origin)
+    // Centroid 1 = anchor at line end (end point at origin)
+    const startDist = -length * (1 - centroid);
+    const endDist = length * centroid;
     
     // Calculate points along the direction vector
-    const startX = -Math.cos(angleRadians) * startDistance;
-    const startY = -Math.sin(angleRadians) * startDistance;
-    const endX = Math.cos(angleRadians) * endDistance;
-    const endY = Math.sin(angleRadians) * endDistance;
+    const startX = Math.cos(angleRadians) * startDist;
+    const startY = Math.sin(angleRadians) * startDist;
+    const endX = Math.cos(angleRadians) * endDist;
+    const endY = Math.sin(angleRadians) * endDist;
     
     // Create exactly 2 points for the line vector
     this.points = [

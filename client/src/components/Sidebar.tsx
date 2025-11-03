@@ -2908,7 +2908,7 @@ export default function Sidebar({
                           });
                         }}
                         min={0}
-                        max={50}
+                        max={100}
                         step={1}
                         className="w-full"
                       />
@@ -3004,7 +3004,7 @@ export default function Sidebar({
                             });
                           }}
                           min={0}
-                          max={50}
+                          max={100}
                           step={5}
                           className="w-full"
                         />
@@ -3111,7 +3111,7 @@ export default function Sidebar({
                           });
                         }}
                         min={0}
-                        max={50}
+                        max={100}
                         step={1}
                         className="w-full"
                       />
