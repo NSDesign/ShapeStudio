@@ -675,6 +675,10 @@ export class Shape {
         y: yVariation
       });
     }
+    
+    // Set stroke cap based on normalized probabilities
+    const strokeCapProbabilities = batchConfig?.scatterSettings?.shapeSpecific?.line?.strokeCapProbabilities || { round: 33, square: 33, butt: 34 };
+    this.strokeCap = selectStrokeCap(strokeCapProbabilities);
   }
 
   private generateLineVectorPoints(batchConfig?: any): void {
@@ -1679,6 +1683,10 @@ export class Shape {
     this.generateSmoothTangentHandles();
     this.renderType = 'bezier'; // Use bezier rendering for smooth curves
     this.segments = this.closed ? pointCount : pointCount - 1;
+    
+    // Set stroke cap based on normalized probabilities
+    const strokeCapProbabilities = batchConfig?.scatterSettings?.shapeSpecific?.['smooth-spline']?.strokeCapProbabilities || { round: 33, square: 33, butt: 34 };
+    this.strokeCap = selectStrokeCap(strokeCapProbabilities);
   }
 
   render(ctx: CanvasRenderingContext2D, skipSelectionAdornments = false): void {
