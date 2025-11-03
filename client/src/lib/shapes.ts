@@ -1,5 +1,33 @@
 import { BaseShape, ShapeType, Point, TangentHandle, Transform, ShapeProperties, ShapeGroup, BlendMode } from './shapeTypes';
 
+// Utility function to normalize stroke cap probabilities
+// Takes raw slider values (can be any positive numbers) and returns a selected stroke cap
+function selectStrokeCap(probabilities: { round: number; square: number; butt: number }): 'round' | 'square' | 'butt' {
+  const { round, square, butt } = probabilities;
+  const total = round + square + butt;
+  
+  // Handle edge case where all probabilities are 0
+  if (total === 0) {
+    return 'butt'; // Default to butt if no probabilities set
+  }
+  
+  // Normalize to percentages (0-100)
+  const roundPercent = (round / total) * 100;
+  const squarePercent = (square / total) * 100;
+  // buttPercent is implicit (remaining percentage)
+  
+  // Generate random number 0-100 and select based on normalized ranges
+  const rand = Math.random() * 100;
+  
+  if (rand < roundPercent) {
+    return 'round';
+  } else if (rand < roundPercent + squarePercent) {
+    return 'square';
+  } else {
+    return 'butt';
+  }
+}
+
 export class Shape {
   id: string;
   type: ShapeType;
@@ -741,6 +769,10 @@ export class Shape {
       { x: endX, y: endY }
     ];
     
+    // Set stroke cap based on normalized probabilities
+    const strokeCapProbabilities = rawSettings.strokeCapProbabilities || { round: 33, square: 33, butt: 34 };
+    this.strokeCap = selectStrokeCap(strokeCapProbabilities);
+    
     // Set render properties for line vectors
     this.closed = false;
     this.renderType = 'polygon'; // Simple line rendering
@@ -803,6 +835,11 @@ export class Shape {
     }
     
     this.closed = Math.random() * 100 > openProbability;
+    
+    // Set stroke cap based on normalized probabilities
+    const strokeCapProbabilities = batchConfig?.scatterSettings?.shapeSpecific?.[this.type]?.strokeCapProbabilities || { round: 33, square: 33, butt: 34 };
+    this.strokeCap = selectStrokeCap(strokeCapProbabilities);
+    
     this.renderType = 'bezier';
   }
 
@@ -1931,6 +1968,12 @@ export class Shape {
       ctx.globalAlpha = this.properties.strokeOpacity;
       ctx.strokeStyle = this.properties.strokeColor;
       ctx.lineWidth = this.properties.strokeWidth;
+      
+      // Apply stroke cap if set (for line and bezier shapes)
+      if (this.strokeCap) {
+        ctx.lineCap = this.strokeCap;
+      }
+      
       ctx.stroke();
     }
   }
