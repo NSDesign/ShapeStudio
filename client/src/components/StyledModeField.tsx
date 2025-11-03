@@ -1,19 +1,15 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/ui/numeric-input";
-import { Plus, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export type ModeKind = 'fixed' | 'range' | 'values';
+export type ModeKind = 'fixed' | 'range' | 'incremental';
 
 export type ModeConfig = 
   | { kind: 'fixed'; value: number }
   | { kind: 'range'; min: number; max: number }
-  | { kind: 'values'; values: number[]; selection: 'random' | 'cycle' };
+  | { kind: 'incremental'; startValue: number; increment: number };
 
 export interface StyledModeFieldProps {
   label: string;
@@ -25,9 +21,7 @@ export interface StyledModeFieldProps {
   allowedModes?: ModeKind[];
 }
 
-export function StyledModeField({ label, config, onChange, bounds, unit = "", step = 1, allowedModes = ['fixed', 'range', 'values'] }: StyledModeFieldProps) {
-  const [newValue, setNewValue] = useState("");
-  
+export function StyledModeField({ label, config, onChange, bounds, unit = "", step = 1, allowedModes = ['fixed', 'range', 'incremental'] }: StyledModeFieldProps) {
   // Local string state for numeric inputs to prevent focus loss
   const [fixedValueStr, setFixedValueStr] = useState("");
   const [minValueStr, setMinValueStr] = useState("");
@@ -58,31 +52,9 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
       case 'range':
         onChange({ kind: 'range', min: bounds.min, max: bounds.max });
         break;
-      case 'values':
-        onChange({ kind: 'values', values: [bounds.min], selection: 'random' });
+      case 'incremental':
+        onChange({ kind: 'incremental', startValue: bounds.min, increment: step });
         break;
-    }
-  };
-
-  const addValue = () => {
-    if (config.kind === 'values' && newValue) {
-      const num = parseFloat(newValue);
-      if (!isNaN(num) && num >= bounds.min && num <= bounds.max) {
-        onChange({
-          ...config,
-          values: [...config.values, num]
-        });
-        setNewValue("");
-      }
-    }
-  };
-
-  const removeValue = (index: number) => {
-    if (config.kind === 'values') {
-      onChange({
-        ...config,
-        values: config.values.filter((_, i) => i !== index)
-      });
     }
   };
 
@@ -107,72 +79,37 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
           <SelectContent className="bg-slate-700 border-slate-600 text-white z-50">
             {allowedModes.includes('fixed') && <SelectItem value="fixed">Fixed</SelectItem>}
             {allowedModes.includes('range') && <SelectItem value="range">Range</SelectItem>}
-            {allowedModes.includes('values') && <SelectItem value="values">Values</SelectItem>}
+            {allowedModes.includes('incremental') && <SelectItem value="incremental">Incremental</SelectItem>}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Values Controls with Pattern 2 Styling */}
-      {config.kind === 'values' && (
+      {/* Incremental Controls with Pattern 2 Styling */}
+      {config.kind === 'incremental' && (
         <div className="space-y-4">
-          {/* Add new value */}
-          <div className="flex space-x-2">
-            <Input
-              type="number"
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-xs">Start Value</Label>
+            <NumericInput
+              value={config.startValue}
+              onChange={(startValue) => onChange({ ...config, startValue })}
               min={bounds.min}
               max={bounds.max}
               step={step}
-              placeholder={`Add value (${bounds.min}-${bounds.max})`}
-              className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
-              data-testid={`input-${idBase}-values`}
+              className="bg-slate-700 border-slate-600 text-slate-300"
+              data-testid={`input-${idBase}-start-value`}
             />
-            <Button 
-              size="sm" 
-              onClick={addValue}
-              className="bg-slate-700 border-slate-600 hover:bg-slate-600"
-              data-testid={`button-add-${idBase}-value`}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
           </div>
-
-          {/* Values list */}
-          {config.values.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {config.values.map((value, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="flex items-center gap-1 bg-slate-700 text-slate-300 border-slate-600"
-                  data-testid={`badge-${idBase}-value-${index}`}
-                >
-                  {value}{unit}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeValue(index)}
-                  />
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          {/* Selection strategy with Pattern 2 Styling */}
-          <div className="flex items-center space-x-2">
-            <Label className="text-slate-300 text-xs">Selection:</Label>
-            <Select
-              value={config.selection}
-              onValueChange={(selection: 'random' | 'cycle') => onChange({ ...config, selection })}
-            >
-              <SelectTrigger className="w-20 h-8 bg-slate-700 border-slate-600 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600 text-white z-50">
-                <SelectItem value="random">Random</SelectItem>
-                <SelectItem value="cycle">Cycle</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-xs">Increment</Label>
+            <NumericInput
+              value={config.increment}
+              onChange={(increment) => onChange({ ...config, increment })}
+              min={-1000}
+              max={1000}
+              step={step}
+              className="bg-slate-700 border-slate-600 text-slate-300"
+              data-testid={`input-${idBase}-increment`}
+            />
           </div>
         </div>
       )}
