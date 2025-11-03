@@ -1128,63 +1128,110 @@ export default function BatchConfigDialog({
                     
                     {currentSettings.distributionPattern === 'ellipse' && (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Radius: {currentSettings.ellipseXRadius[0]}-{currentSettings.ellipseXRadius[1]}px</Label>
-                            <div className="flex gap-2">
-                              <Slider
-                                value={currentSettings.ellipseXRadius}
-                                onValueChange={(value) => handleSettingsUpdate({ ellipseXRadius: value as [number, number] })}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-cyan-600"
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Radius: {currentSettings.ellipseYRadius[0]}-{currentSettings.ellipseYRadius[1]}px</Label>
-                            <div className="flex gap-2">
-                              <Slider
-                                value={currentSettings.ellipseYRadius}
-                                onValueChange={(value) => handleSettingsUpdate({ ellipseYRadius: value as [number, number] })}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-cyan-600"
-                              />
-                            </div>
-                          </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-slate-300">Ring Count: {currentSettings.ellipseRingCount}</Label>
+                          <Slider
+                            value={[currentSettings.ellipseRingCount]}
+                            onValueChange={([value]) => handleSettingsUpdate({ ellipseRingCount: value })}
+                            min={1}
+                            max={10}
+                            step={1}
+                            className="[&_[role=slider]]:bg-cyan-600"
+                          />
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Ring Count: {currentSettings.ellipseRingCount}</Label>
-                            <Slider
-                              value={[currentSettings.ellipseRingCount]}
-                              onValueChange={([value]) => handleSettingsUpdate({ ellipseRingCount: value })}
-                              min={1}
-                              max={10}
-                              step={1}
-                              className="[&_[role=slider]]:bg-cyan-600"
-                            />
+                        {currentSettings.ellipseRingCount === 1 ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-sm text-slate-300">X Radius: {currentSettings.ellipseXRadius[0]}px</Label>
+                              <Slider
+                                value={[currentSettings.ellipseXRadius[0]]}
+                                onValueChange={([value]) => handleSettingsUpdate({ ellipseXRadius: [value, value] })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm text-slate-300">Y Radius: {currentSettings.ellipseYRadius[0]}px</Label>
+                              <Slider
+                                value={[currentSettings.ellipseYRadius[0]]}
+                                onValueChange={([value]) => handleSettingsUpdate({ ellipseYRadius: [value, value] })}
+                                min={10}
+                                max={300}
+                                step={5}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Ring Spacing</Label>
-                            <Select 
-                              value={currentSettings.ellipseRingSpacing}
-                              onValueChange={(value) => handleSettingsUpdate({ ellipseRingSpacing: value as any })}
-                            >
-                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="even" className="text-slate-200 hover:bg-slate-700">Even Spacing</SelectItem>
-                                <SelectItem value="progressive" className="text-slate-200 hover:bg-slate-700">Progressive Spacing</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-sm text-slate-300">Min X Radius: {currentSettings.ellipseXRadius[0]}px</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseXRadius[0]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseXRadius: [value, currentSettings.ellipseXRadius[1]] })}
+                                  min={10}
+                                  max={300}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-sm text-slate-300">Max X Radius: {currentSettings.ellipseXRadius[1]}px</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseXRadius[1]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseXRadius: [currentSettings.ellipseXRadius[0], value] })}
+                                  min={10}
+                                  max={300}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-sm text-slate-300">Min Y Radius: {currentSettings.ellipseYRadius[0]}px</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseYRadius[0]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseYRadius: [value, currentSettings.ellipseYRadius[1]] })}
+                                  min={10}
+                                  max={300}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-sm text-slate-300">Max Y Radius: {currentSettings.ellipseYRadius[1]}px</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseYRadius[1]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseYRadius: [currentSettings.ellipseYRadius[0], value] })}
+                                  min={10}
+                                  max={300}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm text-slate-300">Ring Spacing</Label>
+                              <Select 
+                                value={currentSettings.ellipseRingSpacing}
+                                onValueChange={(value) => handleSettingsUpdate({ ellipseRingSpacing: value as any })}
+                              >
+                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="even" className="text-slate-200 hover:bg-slate-700">Even Spacing</SelectItem>
+                                  <SelectItem value="progressive" className="text-slate-200 hover:bg-slate-700">Progressive Spacing</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </>
+                        )}
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -1214,6 +1261,134 @@ export default function BatchConfigDialog({
                             </Select>
                           </div>
                         </div>
+                        
+                        <Separator className="bg-slate-600" />
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch 
+                              checked={currentSettings.ellipseAlignToRing}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ ellipseAlignToRing: checked })}
+                              className="data-[state=checked]:bg-cyan-600"
+                            />
+                            <Label className="text-sm text-slate-300">Align to Ring (Tangent)</Label>
+                          </div>
+                          
+                          {currentSettings.ellipseAlignToRing && (
+                            <div className="ml-6 space-y-3">
+                              <div className="flex items-center space-x-2">
+                                <Switch 
+                                  checked={currentSettings.ellipseFlipInward}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ ellipseFlipInward: checked })}
+                                  className="data-[state=checked]:bg-cyan-600"
+                                />
+                                <Label className="text-xs text-slate-400">Flip Inward</Label>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Additional Rotation: {currentSettings.ellipseAdditionalRotation}°</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseAdditionalRotation]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseAdditionalRotation: value })}
+                                  min={-180}
+                                  max={180}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Separator className="bg-slate-600" />
+                        
+                        <div className="space-y-3">
+                          <Label className="text-sm text-slate-300">Shape Rotation Mode</Label>
+                          <Select 
+                            value={currentSettings.ellipseShapeRotationMode}
+                            onValueChange={(value) => handleSettingsUpdate({ ellipseShapeRotationMode: value as any })}
+                          >
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None</SelectItem>
+                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {currentSettings.ellipseShapeRotationMode === 'fixed' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-300">Rotation: {currentSettings.ellipseRotationFixed}°</Label>
+                              <Slider
+                                value={[currentSettings.ellipseRotationFixed]}
+                                onValueChange={([value]) => handleSettingsUpdate({ ellipseRotationFixed: value })}
+                                min={0}
+                                max={360}
+                                step={5}
+                                className="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          )}
+                          
+                          {currentSettings.ellipseShapeRotationMode === 'range' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Min: {currentSettings.ellipseRotationRange[0]}°</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseRotationRange[0]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseRotationRange: [value, currentSettings.ellipseRotationRange[1]] })}
+                                  min={0}
+                                  max={360}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Max: {currentSettings.ellipseRotationRange[1]}°</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseRotationRange[1]]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseRotationRange: [currentSettings.ellipseRotationRange[0], value] })}
+                                  min={0}
+                                  max={360}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {currentSettings.ellipseShapeRotationMode === 'incremental' && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Start: {currentSettings.ellipseRotationIncrementalStart}°</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseRotationIncrementalStart]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseRotationIncrementalStart: value })}
+                                  min={0}
+                                  max={360}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Step: {currentSettings.ellipseRotationIncrementalStep}°</Label>
+                                <Slider
+                                  value={[currentSettings.ellipseRotationIncrementalStep]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ ellipseRotationIncrementalStep: value })}
+                                  min={-180}
+                                  max={180}
+                                  step={5}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Separator className="bg-slate-600" />
                         
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
