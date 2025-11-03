@@ -429,6 +429,14 @@ export function applyEllipseDistribution(
   const ringSpacing = config.ellipseRingSpacing || 'even';
   const rotation = (config.ellipseRotation || 0) * (Math.PI / 180);
   const rotationAlignment = config.ellipseRotationAlignment || 'uniform';
+  const alignToRing = config.ellipseAlignToRing || false;
+  const flipInward = config.ellipseFlipInward || false;
+  const additionalRotation = (config.ellipseAdditionalRotation || 0) * (Math.PI / 180);
+  const shapeRotationMode = config.ellipseShapeRotationMode || 'none';
+  const rotationFixed = (config.ellipseRotationFixed || 0) * (Math.PI / 180);
+  const rotationRange = config.ellipseRotationRange || [0, 360];
+  const rotationIncrementalStart = (config.ellipseRotationIncrementalStart || 0) * (Math.PI / 180);
+  const rotationIncrementalStep = (config.ellipseRotationIncrementalStep || 10) * (Math.PI / 180);
   
   const artboardCenterX = artboardBounds 
     ? artboardBounds.x + artboardBounds.width / 2 
@@ -484,6 +492,37 @@ export function applyEllipseDistribution(
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
+    
+    // Apply align-to-ring tangent rotation
+    let finalRotation = 0;
+    if (alignToRing) {
+      // Calculate tangent angle at this point on the ellipse
+      // For an ellipse, the tangent angle is perpendicular to the normal
+      // The normal direction from center to point is angle, so tangent is angle + 90°
+      let tangentAngle = angle + shapeRotation + Math.PI / 2;
+      
+      // Flip inward reverses the tangent direction
+      if (flipInward) {
+        tangentAngle += Math.PI;
+      }
+      
+      // Add additional rotation offset
+      finalRotation = tangentAngle + additionalRotation;
+    }
+    
+    // Apply shape rotation mode on top of align-to-ring rotation
+    if (shapeRotationMode === 'fixed') {
+      finalRotation += rotationFixed;
+    } else if (shapeRotationMode === 'range') {
+      const minRot = rotationRange[0] * (Math.PI / 180);
+      const maxRot = rotationRange[1] * (Math.PI / 180);
+      finalRotation += minRot + Math.random() * (maxRot - minRot);
+    } else if (shapeRotationMode === 'incremental') {
+      finalRotation += rotationIncrementalStart + (index * rotationIncrementalStep);
+    }
+    
+    // Convert rotation back to degrees and apply to shape
+    shape.transform.rotation = finalRotation * (180 / Math.PI);
     
     return shape;
   });
