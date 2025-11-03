@@ -1982,8 +1982,8 @@ export const useShapeEditor = () => {
           shape.properties.strokeWidth = 0;
         }
 
-        // Handle blur properties
-        if (effectiveBatchConfig.blurEnabled) {
+        // Handle blur properties - check parent Shape Effects first
+        if (effectiveBatchConfig.shapeEffectsEnabled && effectiveBatchConfig.blurEnabled) {
           const shouldHaveBlur = Math.random() * 100 < effectiveBatchConfig.blurProbability;
           if (shouldHaveBlur) {
             // Apply blur based on mode
@@ -1999,7 +1999,7 @@ export const useShapeEditor = () => {
             console.log(`🌊 [BLUR] Shape ${index}: No blur applied (probability failed)`);
           }
         } else {
-          // Blur section disabled - ensure no blur
+          // Shape Effects or Blur section disabled - ensure no blur
           shape.properties.blurRadius = 0;
         }
 
