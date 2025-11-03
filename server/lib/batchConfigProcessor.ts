@@ -519,7 +519,8 @@ export function generateShapesWithBatchConfig(
         shape.properties.strokeWidth = 0;
       }
 
-      if (batchConfig.blurEnabled) {
+      // Handle blur properties - check parent Shape Effects first
+      if (batchConfig.shapeEffectsEnabled && batchConfig.blurEnabled) {
         const shouldHaveBlur = Math.random() * 100 < batchConfig.blurProbability;
         if (shouldHaveBlur) {
           if (batchConfig.blurMode === 'range') {
@@ -532,6 +533,7 @@ export function generateShapesWithBatchConfig(
           shape.properties.blurRadius = 0;
         }
       } else {
+        // Shape Effects or Blur section disabled - ensure no blur
         shape.properties.blurRadius = 0;
       }
 
