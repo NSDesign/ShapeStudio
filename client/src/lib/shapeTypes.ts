@@ -1158,10 +1158,23 @@ export function applyEllipseDistribution(
   const totalShapes = shapes.length;
   const shapesPerRing = Math.ceil(totalShapes / ringCount);
   
+  // Group shapes by ring to calculate proper distribution
+  const shapesByRing: any[][] = [];
+  for (let i = 0; i < ringCount; i++) {
+    shapesByRing[i] = [];
+  }
+  shapes.forEach((shape, index) => {
+    const ringIndex = Math.floor(index / shapesPerRing);
+    shapesByRing[ringIndex].push({ shape, originalIndex: index });
+  });
+  
   return shapes.map((shape, index) => {
     const ringIndex = Math.floor(index / shapesPerRing);
     const indexInRing = index % shapesPerRing;
-    const angleStep = (2 * Math.PI) / shapesPerRing;
+    
+    // Calculate angle step based on actual number of shapes in this ring
+    const shapesInThisRing = shapesByRing[ringIndex].length;
+    const angleStep = (2 * Math.PI) / shapesInThisRing;
     const angle = indexInRing * angleStep;
     
     // Calculate ring radius based on spacing mode
