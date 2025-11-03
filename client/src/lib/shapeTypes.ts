@@ -244,13 +244,12 @@ export interface DistributionSettings {
 }
 
 // Mode configuration types for line-vector properties
-export type ModeKind = 'values' | 'range' | 'fixed';
+export type ModeKind = 'incremental' | 'range' | 'fixed';
 
-export interface ValuesMode<T> { 
-  kind: 'values'; 
-  values: T[]; 
-  selection: 'random' | 'cycle'; 
-  startIndex?: number;
+export interface IncrementalMode<T> { 
+  kind: 'incremental'; 
+  startValue: T; 
+  increment: T;
 }
 
 export interface RangeMode<T> { 
@@ -266,7 +265,7 @@ export interface FixedMode<T> {
   value: T;
 }
 
-export type ScalarMode<T> = ValuesMode<T> | RangeMode<T> | FixedMode<T>;
+export type ScalarMode<T> = IncrementalMode<T> | RangeMode<T> | FixedMode<T>;
 
 export interface ShapeSpecificSettings {
   polygon: {
@@ -1380,17 +1379,8 @@ export const resolveScalar = (config: ScalarMode<number>, index?: number): numbe
     case 'range':
       // For now, return random value in range. Can be enhanced with distribution later
       return Math.random() * (config.max - config.min) + config.min;
-    case 'values':
-      if (config.values.length === 0) return 0;
-      if (config.selection === 'cycle') {
-        const startIdx = config.startIndex || 0;
-        const cycleIndex = ((index || 0) + startIdx) % config.values.length;
-        return config.values[cycleIndex];
-      } else {
-        // random selection
-        const randomIndex = Math.floor(Math.random() * config.values.length);
-        return config.values[randomIndex];
-      }
+    case 'incremental':
+      return config.startValue + (config.increment * (index || 0));
     default:
       return 0;
   }
