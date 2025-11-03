@@ -454,21 +454,53 @@ export function applyEllipseDistribution(
     : canvasCenter.y;
   
   const totalShapes = shapes.length;
-  const shapesPerRing = Math.ceil(totalShapes / ringCount);
   
-  // Group shapes by ring to calculate proper distribution
+  // Calculate smooth descending distribution for rings
+  // Example: 50 shapes, 4 rings -> 14, 13, 12, 11 (smoother than 13, 13, 13, 11)
+  const basePerRing = Math.floor(totalShapes / ringCount);
+  const remainder = totalShapes % ringCount;
+  const ringAllocations: number[] = [];
+  
+  for (let i = 0; i < ringCount; i++) {
+    // Distribute remainder shapes across first rings in descending order
+    // This gives us 14, 13, 12, 11 instead of 13, 13, 13, 11
+    ringAllocations[i] = basePerRing + (i < remainder ? 1 : 0);
+  }
+  
+  // Group shapes by ring using the calculated allocations
   const shapesByRing: any[][] = [];
   for (let i = 0; i < ringCount; i++) {
     shapesByRing[i] = [];
   }
-  shapes.forEach((shape, index) => {
-    const ringIndex = Math.floor(index / shapesPerRing);
-    shapesByRing[ringIndex].push({ shape, originalIndex: index });
-  });
+  
+  let shapeIndex = 0;
+  for (let ringIdx = 0; ringIdx < ringCount; ringIdx++) {
+    for (let i = 0; i < ringAllocations[ringIdx]; i++) {
+      if (shapeIndex < totalShapes) {
+        shapesByRing[ringIdx].push({ shape: shapes[shapeIndex], originalIndex: shapeIndex });
+        shapeIndex++;
+      }
+    }
+  }
   
   return shapes.map((shape, index) => {
-    const ringIndex = Math.floor(index / shapesPerRing);
-    const indexInRing = index % shapesPerRing;
+    // Find which ring this shape belongs to
+    let ringIndex = 0;
+    let cumulativeCount = 0;
+    for (let i = 0; i < ringCount; i++) {
+      if (index < cumulativeCount + ringAllocations[i]) {
+        ringIndex = i;
+        break;
+      }
+      cumulativeCount += ringAllocations[i];
+    }
+    
+    // Calculate index within the ring
+    cumulativeCount = 0;
+    for (let i = 0; i < ringIndex; i++) {
+      cumulativeCount += ringAllocations[i];
+    }
+    const indexInRing = index - cumulativeCount;
     
     // Calculate angle step based on actual number of shapes in this ring
     const shapesInThisRing = shapesByRing[ringIndex].length;
