@@ -232,11 +232,11 @@ const convertLineVectorToModeConfig = (scalarMode: ScalarMode<number>) => {
         min: scalarMode.min,
         max: scalarMode.max
       };
-    case 'values':
+    case 'incremental':
       return {
-        kind: 'values' as const,
-        values: scalarMode.values,
-        selection: scalarMode.selection
+        kind: 'incremental' as const,
+        startValue: scalarMode.startValue,
+        increment: scalarMode.increment
       };
     default:
       return {
@@ -270,12 +270,11 @@ const handleLineVectorModeConfigChange = (
         max: modeConfig.max
       };
       break;
-    case 'values':
+    case 'incremental':
       newScalarMode = {
-        kind: 'values' as const,
-        values: modeConfig.values,
-        selection: modeConfig.selection,
-        startIndex: 0
+        kind: 'incremental' as const,
+        startValue: modeConfig.startValue,
+        increment: modeConfig.increment
       };
       break;
     default:
