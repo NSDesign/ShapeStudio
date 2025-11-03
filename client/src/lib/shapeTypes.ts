@@ -1157,16 +1157,26 @@ export function applyEllipseDistribution(
   
   const totalShapes = shapes.length;
   
-  // Calculate smooth descending distribution for rings
-  // Example: 50 shapes, 4 rings -> 14, 13, 12, 11 (smoother than 13, 13, 13, 11)
-  const basePerRing = Math.floor(totalShapes / ringCount);
-  const remainder = totalShapes % ringCount;
+  // Calculate descending arithmetic sequence for smooth distribution
+  // Formula: a = (N + R×(R-1)/2) / R
+  // Example: 50 shapes, 4 rings -> a = (50 + 6)/4 = 14 -> [14, 13, 12, 11]
+  const startingCount = Math.round((totalShapes + ringCount * (ringCount - 1) / 2) / ringCount);
   const ringAllocations: number[] = [];
   
   for (let i = 0; i < ringCount; i++) {
-    // Distribute remainder shapes across first rings in descending order
-    // This gives us 14, 13, 12, 11 instead of 13, 13, 13, 11
-    ringAllocations[i] = basePerRing + (i < remainder ? 1 : 0);
+    ringAllocations[i] = Math.max(0, startingCount - i);
+  }
+  
+  // Adjust for rounding errors by distributing any difference
+  const currentTotal = ringAllocations.reduce((sum, count) => sum + count, 0);
+  const difference = totalShapes - currentTotal;
+  
+  if (difference !== 0) {
+    // Distribute the difference across rings to match exactly
+    for (let i = 0; i < Math.abs(difference); i++) {
+      const ringIndex = i % ringCount;
+      ringAllocations[ringIndex] += difference > 0 ? 1 : -1;
+    }
   }
   
   // Group shapes by ring using the calculated allocations
