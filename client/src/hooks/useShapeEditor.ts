@@ -1982,6 +1982,22 @@ export const useShapeEditor = () => {
           shape.properties.strokeWidth = 0;
         }
 
+        // Special handling: line and line-vector shapes MUST have visible strokes
+        // since they have no fill - apply random stroke as fallback when stroke disabled
+        if ((shape.type === 'line' || shape.type === 'line-vector') && !effectiveBatchConfig.strokeEnabled) {
+          // Generate random stroke color (full hue range)
+          const randomHue = Math.floor(Math.random() * 360);
+          shape.properties.strokeColor = `hsl(${randomHue}, 70%, 50%)`;
+          
+          // Random stroke width between 1-3px
+          shape.properties.strokeWidth = 1 + Math.random() * 2;
+          
+          // Full opacity
+          shape.properties.strokeOpacity = 1;
+          
+          console.log(`🔵 [LINE FALLBACK] Shape ${index} (${shape.type}): Applied random stroke color=${shape.properties.strokeColor}, width=${shape.properties.strokeWidth.toFixed(1)}px`);
+        }
+
         // Handle blur properties - check parent Shape Effects first
         if (effectiveBatchConfig.shapeEffectsEnabled && effectiveBatchConfig.blurEnabled) {
           const shouldHaveBlur = Math.random() * 100 < effectiveBatchConfig.blurProbability;
