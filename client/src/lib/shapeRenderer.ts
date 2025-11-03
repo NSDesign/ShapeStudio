@@ -70,6 +70,7 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       drawPolygon(ctx, shape);
       break;
     case 'line':
+    case 'line-vector':
       drawLine(ctx, shape);
       break;
     case 'cubic':
@@ -137,9 +138,7 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
     ctx.lineWidth = shape.properties.strokeWidth;
     
     // Apply stroke cap if set (for line and bezier shapes)
-    if (shape.strokeCap) {
-      ctx.lineCap = shape.strokeCap;
-    }
+    ctx.lineCap = shape.strokeCap ?? 'butt';
     
     ctx.stroke();
   }

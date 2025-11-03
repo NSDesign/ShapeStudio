@@ -1978,9 +1978,7 @@ export class Shape {
       ctx.lineWidth = this.properties.strokeWidth;
       
       // Apply stroke cap if set (for line and bezier shapes)
-      if (this.strokeCap) {
-        ctx.lineCap = this.strokeCap;
-      }
+      ctx.lineCap = this.strokeCap ?? 'butt';
       
       ctx.stroke();
     }
