@@ -256,40 +256,58 @@
   }
 
   /* Enhanced numeric input spinner buttons with up/down arrows */
-  /* Hide outer spin button since inner overlays it in WebKit */
-  input[type="number"].show-spinners::-webkit-outer-spin-button {
-    display: none;
+  /* Desktop-only: Custom styled spinners with arrows */
+  @media (hover: hover) and (pointer: fine) {
+    /* Hide outer spin button since inner overlays it in WebKit */
+    input[type="number"].show-spinners::-webkit-outer-spin-button {
+      display: none;
+    }
+
+    /* Show both arrows on the inner spin button using dual background images */
+    input[type="number"].show-spinners::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+      height: 100%;
+      width: 20px;
+      cursor: pointer;
+      opacity: 1;
+      /* Layered backgrounds: up arrow at top, down arrow at bottom, then solid fill */
+      background: 
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23e2e8f0' d='M5 1 L8 6 L2 6 Z'/%3E%3C/svg%3E") center 25% no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23e2e8f0' d='M5 7 L8 2 L2 2 Z'/%3E%3C/svg%3E") center 75% no-repeat,
+        #475569;
+      background-size: 8px 6px, 8px 6px, 100% 100%;
+    }
+
+    input[type="number"].show-spinners:hover::-webkit-inner-spin-button {
+      /* On hover: white arrows with lighter background */
+      background: 
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23ffffff' d='M5 1 L8 6 L2 6 Z'/%3E%3C/svg%3E") center 25% no-repeat,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23ffffff' d='M5 7 L8 2 L2 2 Z'/%3E%3C/svg%3E") center 75% no-repeat,
+        #64748b;
+      background-size: 8px 6px, 8px 6px, 100% 100%;
+    }
+
+    /* Firefox: Show spinners for inputs with show-spinners class */
+    input[type="number"].show-spinners {
+      -moz-appearance: number-input;
+    }
   }
 
-  /* Show both arrows on the inner spin button using dual background images */
-  input[type="number"].show-spinners::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    appearance: none;
-    margin: 0;
-    height: 100%;
-    width: 20px;
-    cursor: pointer;
-    opacity: 1;
-    /* Layered backgrounds: up arrow at top, down arrow at bottom, then solid fill */
-    background: 
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23e2e8f0' d='M5 1 L8 6 L2 6 Z'/%3E%3C/svg%3E") center 25% no-repeat,
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23e2e8f0' d='M5 7 L8 2 L2 2 Z'/%3E%3C/svg%3E") center 75% no-repeat,
-      #475569;
-    background-size: 8px 6px, 8px 6px, 100% 100%;
-  }
-
-  input[type="number"].show-spinners:hover::-webkit-inner-spin-button {
-    /* On hover: white arrows with lighter background */
-    background: 
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23ffffff' d='M5 1 L8 6 L2 6 Z'/%3E%3C/svg%3E") center 25% no-repeat,
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%23ffffff' d='M5 7 L8 2 L2 2 Z'/%3E%3C/svg%3E") center 75% no-repeat,
-      #64748b;
-    background-size: 8px 6px, 8px 6px, 100% 100%;
-  }
-
-  /* Firefox: Show spinners for inputs with show-spinners class */
-  input[type="number"].show-spinners {
-    -moz-appearance: number-input;
+  /* Mobile: Use native controls - webkit spinners don't work on mobile anyway */
+  @media (hover: none) and (pointer: coarse) {
+    input[type="number"].show-spinners {
+      -webkit-appearance: auto;
+      -moz-appearance: auto;
+      appearance: auto;
+    }
+    
+    input[type="number"].show-spinners::-webkit-inner-spin-button,
+    input[type="number"].show-spinners::-webkit-outer-spin-button {
+      -webkit-appearance: auto;
+      opacity: 1;
+    }
   }
 
   /* Firefox numeric input styling */
