@@ -308,6 +308,11 @@ export const useShapeEditor = () => {
   const [batchExportCount, setBatchExportCount] = useState(1);
   const [generationCountMode, setGenerationCountMode] = useState<'fixed' | 'range'>('fixed');
   
+  // Global repetition settings
+  const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
+  const [globalRepetitionValue, setGlobalRepetitionValue] = useState<number>(0);
+  const [globalRepetitionRange, setGlobalRepetitionRange] = useState<[number, number]>([0, 0]);
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragState, setDragState] = useState<{
     startScreenX: number;
@@ -708,7 +713,11 @@ export const useShapeEditor = () => {
         alignTo: 'none',
         alignmentType: 'center',
         margin: 0
-      }
+      },
+      // Repetition settings (per-set defaults to use global)
+      repetitionMode: 'use-global',
+      repetitionValue: 0,
+      repetitionRange: [0, 0]
     };
     
     // STEP 5: Add to generation sets
@@ -2654,6 +2663,35 @@ export const useShapeEditor = () => {
     return finalShapes;
   }, [enabledShapeTypes, scatterSettings, canvasSettings, generationConfigSettings]);
 
+  // Helper function to calculate repetition count for a set
+  const calculateRepetitionCount = useCallback((
+    set: GenerationSet,
+    globalRepetitionMode: 'fixed' | 'range',
+    globalRepetitionValue: number,
+    globalRepetitionRange: [number, number]
+  ): number => {
+    // Check if set overrides global repetition settings
+    const useSetRepetition = set.repetitionMode && set.repetitionMode !== 'use-global';
+    
+    if (useSetRepetition) {
+      // Use set-specific repetition settings
+      if (set.repetitionMode === 'fixed') {
+        return set.repetitionValue || 0;
+      } else if (set.repetitionMode === 'range' && set.repetitionRange) {
+        const [min, max] = set.repetitionRange;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+    }
+    
+    // Use global repetition settings
+    if (globalRepetitionMode === 'fixed') {
+      return globalRepetitionValue;
+    } else {
+      const [min, max] = globalRepetitionRange;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+  }, []);
+
   const generateRandomShapes = useCallback(() => {
     // Check if generation sets are enabled and have enabled sets
     const enabledGenerationSets = generationSets
@@ -2684,6 +2722,16 @@ export const useShapeEditor = () => {
       const allNewShapes: Shape[] = [];
       
       enabledGenerationSets.forEach((set, setIndex) => {
+        // Calculate repetition count for this set
+        const repetitionCount = calculateRepetitionCount(
+          set,
+          globalRepetitionMode,
+          globalRepetitionValue,
+          globalRepetitionRange
+        );
+        
+        console.log(`🔁 [REPETITION] Set "${set.name}" will generate ${repetitionCount} repetition(s)`);
+        
         // Calculate shape count for this set
         const setCount = set.shapeCountMode === 'fixed' 
           ? set.shapeCountFixed
@@ -2880,7 +2928,19 @@ export const useShapeEditor = () => {
           }
         }
 
-        allNewShapes.push(...setShapes);
+        // Apply repetition by cloning the generated shapes
+        const totalReps = Math.max(1, repetitionCount);
+        for (let repIndex = 0; repIndex < totalReps; repIndex++) {
+          if (repIndex === 0) {
+            // First repetition: use original shapes
+            allNewShapes.push(...setShapes);
+          } else {
+            // Subsequent repetitions: clone the original shapes
+            console.log(`🔁 [REPETITION ${repIndex + 1}/${totalReps}] Duplicating ${setShapes.length} shapes for set "${set.name}"`);
+            const clonedShapes = setShapes.map(shape => shape.clone());
+            allNewShapes.push(...clonedShapes);
+          }
+        }
       });
 
       console.log(`✅ Generated total of ${allNewShapes.length} shapes from ${enabledGenerationSets.length} generation sets`);
@@ -2946,7 +3006,7 @@ export const useShapeEditor = () => {
         !generationConfigSettings.incrementalResetPerBatch) {
       setLastIncrementalIndex(prev => prev + newShapes.length);
     }
-  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, generationConfigSettings, generationSets]);
+  }, [enabledShapeTypes, scatterSettings, generateShapesWithBatchConfig, artboards, activeArtboard, generationConfigSettings, generationSets, calculateRepetitionCount, globalRepetitionMode, globalRepetitionValue, globalRepetitionRange]);
 
   const getTouchCenter = useCallback((touch1: React.Touch, touch2: React.Touch, canvas: HTMLCanvasElement): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
@@ -3787,6 +3847,14 @@ export const useShapeEditor = () => {
     currentGenerationSetId,
     batchExportCount,
     generationCountMode,
+    
+    // Global repetition settings
+    globalRepetitionMode,
+    globalRepetitionValue,
+    globalRepetitionRange,
+    setGlobalRepetitionMode,
+    setGlobalRepetitionValue,
+    setGlobalRepetitionRange,
     selectedCount: selectedShapes.length + selectedGroups.length,
     selectedPointsCount: selectedPoints.length,
     selectedSegmentsCount: selectedSegments.length,

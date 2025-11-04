@@ -1853,6 +1853,29 @@ export default function Sidebar({
                 for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
                   const set = enabledSets[setIndex];
                   
+                  // Calculate repetition count for this set
+                  const useSetRepetition = set.repetitionMode && set.repetitionMode !== 'use-global';
+                  let repetitionCount = 0;
+                  
+                  if (useSetRepetition) {
+                    if (set.repetitionMode === 'fixed') {
+                      repetitionCount = set.repetitionValue || 0;
+                    } else if (set.repetitionMode === 'range' && set.repetitionRange) {
+                      const [min, max] = set.repetitionRange;
+                      repetitionCount = Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+                  } else {
+                    // Use global repetition settings
+                    if (globalRepetitionMode === 'fixed') {
+                      repetitionCount = globalRepetitionValue;
+                    } else {
+                      const [min, max] = globalRepetitionRange;
+                      repetitionCount = Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+                  }
+                  
+                  console.log(`🔁 [BATCH REPETITION] Set "${set.name}" will generate ${repetitionCount} repetition(s)`);
+                  
                   // Calculate shape count for this set
                   let shapesFromThisCall: number;
                   const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
@@ -1923,7 +1946,19 @@ export default function Sidebar({
                     }
                   }
                   
-                  currentExportShapes.push(...newShapes);
+                  // Apply repetition by cloning the generated shapes
+                  const totalReps = Math.max(1, repetitionCount);
+                  for (let repIndex = 0; repIndex < totalReps; repIndex++) {
+                    if (repIndex === 0) {
+                      // First repetition: use original shapes
+                      currentExportShapes.push(...newShapes);
+                    } else {
+                      // Subsequent repetitions: clone the original shapes
+                      console.log(`🔁 [BATCH REPETITION ${repIndex + 1}/${totalReps}] Duplicating ${newShapes.length} shapes for set "${set.name}"`);
+                      const clonedShapes = newShapes.map(shape => shape.clone());
+                      currentExportShapes.push(...clonedShapes);
+                    }
+                  }
                 }
               }
             } else {
