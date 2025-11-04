@@ -138,7 +138,14 @@ export const useShapeEditor = () => {
       y: -200,
       width: 400,
       height: 400,
+      dpi: 72,  // Default screen resolution
+      unitType: 'pixels',  // Default to pixels
       backgroundColor: '#ffffff',
+      displayGrid: false,
+      displayBorder: true,
+      displayName: true,
+      displayDimensions: false,
+      displayResolution: false,
       preset: 'Basic'
     }
   ]);

@@ -363,11 +363,16 @@ export interface Artboard {
   name: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  width: number;  // Always stored in pixels internally
+  height: number; // Always stored in pixels internally
+  dpi?: number;   // Resolution in dots per inch (default 72)
+  unitType?: 'pixels' | 'mm' | 'cm' | 'inches'; // Display unit (default 'pixels')
   backgroundColor?: string;
   displayGrid?: boolean;
   displayBorder?: boolean;
+  displayName?: boolean;
+  displayDimensions?: boolean;
+  displayResolution?: boolean;
   preset?: string;
   category?: string;
 }
