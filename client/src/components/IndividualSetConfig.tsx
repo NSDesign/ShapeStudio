@@ -529,7 +529,7 @@ export function IndividualSetConfig({
                           max="100"
                           value={generationSet.repetitionValue}
                           onChange={(e) => handleRepetitionValueChange(parseInt(e.target.value) || 0)}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          className="bg-slate-700 border-slate-600 text-white mt-1 show-spinners"
                           data-testid="input-repetition-value"
                         />
                         <p className="text-xs text-slate-500 mt-1">
@@ -550,7 +550,7 @@ export function IndividualSetConfig({
                             max="100"
                             value={generationSet.repetitionRange[0]}
                             onChange={(e) => handleRepetitionRangeChange([parseInt(e.target.value) || 0, generationSet.repetitionRange[1]])}
-                            className="bg-slate-700 border-slate-600 text-white"
+                            className="bg-slate-700 border-slate-600 text-white show-spinners"
                             placeholder="Min"
                             data-testid="input-repetition-range-min"
                           />
@@ -560,7 +560,7 @@ export function IndividualSetConfig({
                             max="100"
                             value={generationSet.repetitionRange[1]}
                             onChange={(e) => handleRepetitionRangeChange([generationSet.repetitionRange[0], parseInt(e.target.value) || 0])}
-                            className="bg-slate-700 border-slate-600 text-white"
+                            className="bg-slate-700 border-slate-600 text-white show-spinners"
                             placeholder="Max"
                             data-testid="input-repetition-range-max"
                           />

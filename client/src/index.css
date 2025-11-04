@@ -255,37 +255,70 @@
     opacity: 0.3;
   }
 
-  /* Enhanced numeric input spinner buttons for StyledModeField */
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
+  /* Enhanced numeric input spinner buttons with up/down arrows */
+  input[type="number"].show-spinners::-webkit-outer-spin-button,
+  input[type="number"].show-spinners::-webkit-inner-spin-button {
     -webkit-appearance: none;
     appearance: none;
     margin: 0;
-    height: 100%;
-    width: 20px;
+    height: 50%;
+    width: 16px;
     position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background: linear-gradient(to bottom, #475569 0%, #475569 50%, #374151 50%, #374151 100%);
-    border-left: 1px solid #475569;
+    right: 2px;
+    background: #475569;
+    border-radius: 2px;
     cursor: pointer;
+    opacity: 0.8;
+  }
+
+  input[type="number"].show-spinners::-webkit-outer-spin-button {
+    top: 2px;
+  }
+
+  input[type="number"].show-spinners::-webkit-inner-spin-button {
+    bottom: 2px;
+    top: auto;
+  }
+
+  /* Up arrow */
+  input[type="number"].show-spinners::-webkit-outer-spin-button::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid #e2e8f0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Down arrow */
+  input[type="number"].show-spinners::-webkit-inner-spin-button::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #e2e8f0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  input[type="number"].show-spinners:hover::-webkit-outer-spin-button,
+  input[type="number"].show-spinners:hover::-webkit-inner-spin-button {
+    background: #64748b;
     opacity: 1;
   }
 
-  input[type="number"]::-webkit-inner-spin-button {
-    background-image: 
-      linear-gradient(45deg, transparent 35%, #e2e8f0 35%, #e2e8f0 65%, transparent 65%),
-      linear-gradient(-45deg, transparent 35%, #e2e8f0 35%, #e2e8f0 65%, transparent 65%);
-    background-size: 8px 8px;
-    background-position: center 25%, center 75%;
-    background-repeat: no-repeat;
-  }
-
-  input[type="number"]:hover::-webkit-outer-spin-button,
-  input[type="number"]:hover::-webkit-inner-spin-button {
-    background-color: #64748b;
-    opacity: 1;
+  /* Firefox: Show spinners for inputs with show-spinners class */
+  input[type="number"].show-spinners {
+    -moz-appearance: number-input;
   }
 
   /* Firefox numeric input styling */
