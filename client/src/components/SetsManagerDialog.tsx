@@ -222,7 +222,7 @@ export function SetsManagerDialog({
                     max="100"
                     value={globalRepetitionValue}
                     onChange={(e) => onGlobalRepetitionValueChange?.(parseInt(e.target.value) || 0)}
-                    className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm"
+                    className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm show-spinners"
                     data-testid="global-repetition-value"
                   />
                 </>
@@ -236,7 +236,7 @@ export function SetsManagerDialog({
                       max="100"
                       value={globalRepetitionRange[0]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([parseInt(e.target.value) || 0, globalRepetitionRange[1]])}
-                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1"
+                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1 show-spinners"
                       placeholder="Min"
                       data-testid="global-repetition-range-min"
                     />
@@ -246,7 +246,7 @@ export function SetsManagerDialog({
                       max="100"
                       value={globalRepetitionRange[1]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([globalRepetitionRange[0], parseInt(e.target.value) || 0])}
-                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1"
+                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1 show-spinners"
                       placeholder="Max"
                       data-testid="global-repetition-range-max"
                     />
