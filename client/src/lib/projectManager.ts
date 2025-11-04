@@ -25,6 +25,14 @@ export interface ArtboardConfig {
   width: number;
   height: number;
   backgroundColor: string;
+  dpi?: number;
+  unitType?: 'pixels' | 'mm' | 'cm' | 'inches';
+  displayGrid?: boolean;
+  displayBorder?: boolean;
+  displayName?: boolean;
+  displayDimensions?: boolean;
+  displayResolution?: boolean;
+  name?: string;
 }
 
 export interface ProjectData {
@@ -55,7 +63,15 @@ export class ProjectManager {
       artboard: {
         width: artboard.width,
         height: artboard.height,
-        backgroundColor: artboard.backgroundColor || '#ffffff'
+        backgroundColor: artboard.backgroundColor || '#ffffff',
+        dpi: artboard.dpi ?? 72,
+        unitType: artboard.unitType ?? 'pixels',
+        displayGrid: artboard.displayGrid ?? false,
+        displayBorder: artboard.displayBorder ?? true,
+        displayName: artboard.displayName ?? true,
+        displayDimensions: artboard.displayDimensions ?? false,
+        displayResolution: artboard.displayResolution ?? false,
+        name: artboard.name
       }
     };
 
@@ -99,21 +115,43 @@ export class ProjectManager {
             artboard = {
               width: projectData.artboard.width || 1200,
               height: projectData.artboard.height || 800,
-              backgroundColor: projectData.artboard.backgroundColor || '#ffffff'
+              backgroundColor: projectData.artboard.backgroundColor || '#ffffff',
+              dpi: projectData.artboard.dpi ?? 72,
+              unitType: projectData.artboard.unitType ?? 'pixels',
+              displayGrid: projectData.artboard.displayGrid ?? false,
+              displayBorder: projectData.artboard.displayBorder ?? true,
+              displayName: projectData.artboard.displayName ?? true,
+              displayDimensions: projectData.artboard.displayDimensions ?? false,
+              displayResolution: projectData.artboard.displayResolution ?? false,
+              name: projectData.artboard.name
             };
           } else if (projectData.canvasSettings) {
             // Legacy compatibility: extract from canvasSettings
             artboard = {
               width: projectData.canvasSettings.width || 1200,
               height: projectData.canvasSettings.height || 800,
-              backgroundColor: projectData.canvasSettings.backgroundColor || '#ffffff'
+              backgroundColor: projectData.canvasSettings.backgroundColor || '#ffffff',
+              dpi: 72,
+              unitType: 'pixels',
+              displayGrid: false,
+              displayBorder: true,
+              displayName: true,
+              displayDimensions: false,
+              displayResolution: false
             };
           } else {
             // Default fallback
             artboard = {
               width: 1200,
               height: 800,
-              backgroundColor: '#ffffff'
+              backgroundColor: '#ffffff',
+              dpi: 72,
+              unitType: 'pixels',
+              displayGrid: false,
+              displayBorder: true,
+              displayName: true,
+              displayDimensions: false,
+              displayResolution: false
             };
           }
           
