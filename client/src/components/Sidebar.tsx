@@ -4794,7 +4794,6 @@ export default function Sidebar({
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction
-                variant="secondary"
                 onClick={async (e) => {
                   e.preventDefault();
                   if (pendingProjectFile) {

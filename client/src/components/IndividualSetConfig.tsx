@@ -297,11 +297,6 @@ export function IndividualSetConfig({
         updates[`${property}Mode`] = 'range';
         updates[`${property}Range`] = [config.min, config.max];
         break;
-      case 'values':
-        // For now, convert values mode to range using first and last values
-        updates[`${property}Mode`] = 'range';
-        updates[`${property}Range`] = [Math.min(...config.values), Math.max(...config.values)];
-        break;
     }
 
     // Apply all updates atomically with a single helper operation
