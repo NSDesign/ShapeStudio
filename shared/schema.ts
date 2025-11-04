@@ -134,9 +134,14 @@ export interface AppSettingsDefaults {
   artboardName: string;
   artboardWidth: number;
   artboardHeight: number;
+  artboardDpi: number;
+  artboardUnitType: 'pixels' | 'mm' | 'cm' | 'inches';
   artboardBackgroundColor: string;
   artboardDisplayGrid: boolean;
   artboardDisplayBorder: boolean;
+  artboardDisplayName: boolean;
+  artboardDisplayDimensions: boolean;
+  artboardDisplayResolution: boolean;
   
   // Canvas settings
   canvasPanX: number;
@@ -156,9 +161,14 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   artboardName: 'Artboard 1',
   artboardWidth: 400,
   artboardHeight: 400,
+  artboardDpi: 72,
+  artboardUnitType: 'pixels',
   artboardBackgroundColor: '#ffffff',
   artboardDisplayGrid: false,
   artboardDisplayBorder: true,
+  artboardDisplayName: true,
+  artboardDisplayDimensions: false,
+  artboardDisplayResolution: false,
   canvasPanX: 0,
   canvasPanY: 0,
   canvasZoom: 1,

@@ -393,9 +393,14 @@ export const useShapeEditor = () => {
           name: appSettingsDefaults.artboardName ?? ab.name,
           width: appSettingsDefaults.artboardWidth ?? ab.width,
           height: appSettingsDefaults.artboardHeight ?? ab.height,
+          dpi: appSettingsDefaults.artboardDpi ?? ab.dpi ?? 72,
+          unitType: appSettingsDefaults.artboardUnitType ?? ab.unitType ?? 'pixels',
           backgroundColor: appSettingsDefaults.artboardBackgroundColor ?? ab.backgroundColor,
           displayGrid: appSettingsDefaults.artboardDisplayGrid ?? ab.displayGrid,
           displayBorder: appSettingsDefaults.artboardDisplayBorder ?? ab.displayBorder,
+          displayName: appSettingsDefaults.artboardDisplayName ?? ab.displayName ?? true,
+          displayDimensions: appSettingsDefaults.artboardDisplayDimensions ?? ab.displayDimensions ?? false,
+          displayResolution: appSettingsDefaults.artboardDisplayResolution ?? ab.displayResolution ?? false,
         } : ab
       ));
     }
@@ -433,9 +438,14 @@ export const useShapeEditor = () => {
         artboardName: activeAb.name,
         artboardWidth: activeAb.width,
         artboardHeight: activeAb.height,
+        artboardDpi: activeAb.dpi ?? 72,
+        artboardUnitType: activeAb.unitType ?? 'pixels',
         artboardBackgroundColor: activeAb.backgroundColor ?? '#ffffff',
         artboardDisplayGrid: activeAb.displayGrid ?? false,
         artboardDisplayBorder: activeAb.displayBorder ?? true,
+        artboardDisplayName: activeAb.displayName ?? true,
+        artboardDisplayDimensions: activeAb.displayDimensions ?? false,
+        artboardDisplayResolution: activeAb.displayResolution ?? false,
       });
     }, 1000);
     
