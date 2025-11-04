@@ -93,6 +93,7 @@ import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, C
 import { ModeField } from '@/components/ModeField';
 import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
+import { pixelsToUnit, unitToPixels, calculatePixelDimensions, getArtboardDisplayDimensions, getUnitLabel, DPI_PRESETS, type UnitType } from '@/lib/artboardUtils';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
@@ -1000,6 +1001,179 @@ export default function Sidebar({
                     />
                     <span className="text-xs text-slate-400">
                       {currentArtboard.displayBorder !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Artboard Name */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Artboard Name</Label>
+                  <Input
+                    type="text"
+                    value={currentArtboard.name}
+                    onChange={(e) => onUpdateArtboard(currentArtboard.id, { name: e.target.value })}
+                    placeholder="Artboard 1"
+                    className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-artboard-name"
+                  />
+                </div>
+
+                <Separator className="bg-slate-600/50" />
+
+                {/* DPI Setting */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Resolution (DPI)</Label>
+                  <Select
+                    value={String(currentArtboard.dpi ?? 72)}
+                    onValueChange={(value) => onUpdateArtboard(currentArtboard.id, { dpi: parseInt(value) })}
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DPI_PRESETS.map(preset => (
+                        <SelectItem key={preset.value} value={String(preset.value)}>
+                          {preset.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Unit Type Selector */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Units</Label>
+                  <Select
+                    value={currentArtboard.unitType ?? 'pixels'}
+                    onValueChange={(value: UnitType) => onUpdateArtboard(currentArtboard.id, { unitType: value })}
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pixels">Pixels (px)</SelectItem>
+                      <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                      <SelectItem value="cm">Centimeters (cm)</SelectItem>
+                      <SelectItem value="inches">Inches (in)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Dimensions */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">
+                    Dimensions {currentArtboard.unitType !== 'pixels' && (
+                      <span className="text-slate-500">({getUnitLabel(currentArtboard.unitType ?? 'pixels')})</span>
+                    )}
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Input
+                        type="number"
+                        step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
+                        value={(() => {
+                          const displayDims = getArtboardDisplayDimensions(
+                            currentArtboard.width,
+                            currentArtboard.height,
+                            currentArtboard.dpi ?? 72,
+                            currentArtboard.unitType ?? 'pixels'
+                          );
+                          return displayDims.widthFormatted;
+                        })()}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          const pixelDims = calculatePixelDimensions(
+                            value,
+                            pixelsToUnit(currentArtboard.height, currentArtboard.dpi ?? 72, currentArtboard.unitType ?? 'pixels'),
+                            currentArtboard.dpi ?? 72,
+                            currentArtboard.unitType ?? 'pixels'
+                          );
+                          onUpdateArtboard(currentArtboard.id, { width: pixelDims.widthPixels });
+                        }}
+                        placeholder="Width"
+                        className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        data-testid="input-artboard-width"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="number"
+                        step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
+                        value={(() => {
+                          const displayDims = getArtboardDisplayDimensions(
+                            currentArtboard.width,
+                            currentArtboard.height,
+                            currentArtboard.dpi ?? 72,
+                            currentArtboard.unitType ?? 'pixels'
+                          );
+                          return displayDims.heightFormatted;
+                        })()}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          const pixelDims = calculatePixelDimensions(
+                            pixelsToUnit(currentArtboard.width, currentArtboard.dpi ?? 72, currentArtboard.unitType ?? 'pixels'),
+                            value,
+                            currentArtboard.dpi ?? 72,
+                            currentArtboard.unitType ?? 'pixels'
+                          );
+                          onUpdateArtboard(currentArtboard.id, { height: pixelDims.heightPixels });
+                        }}
+                        placeholder="Height"
+                        className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        data-testid="input-artboard-height"
+                      />
+                    </div>
+                  </div>
+                  {currentArtboard.unitType !== 'pixels' && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      {currentArtboard.width} × {currentArtboard.height} px
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="bg-slate-600/50" />
+
+                {/* Display Name Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Name</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayName !== false}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayName: checked })}
+                      data-testid="switch-artboard-display-name"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayName !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Display Dimensions Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Dimensions</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayDimensions === true}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayDimensions: checked })}
+                      data-testid="switch-artboard-display-dimensions"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayDimensions === true ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Display Resolution Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Resolution</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayResolution === true}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayResolution: checked })}
+                      data-testid="switch-artboard-display-resolution"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayResolution === true ? 'On' : 'Off'}
                     </span>
                   </div>
                 </div>
