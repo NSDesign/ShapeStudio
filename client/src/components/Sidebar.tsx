@@ -545,6 +545,7 @@ export default function Sidebar({
   const [exportScale, setExportScale] = useState(1);
   const [exportAutoScaleFromDpi, setExportAutoScaleFromDpi] = useState(false);
   const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
+  const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
   
   // Sets Manager Dialog state is now managed centrally via props
 
@@ -732,6 +733,23 @@ export default function Sidebar({
     }
     return exportScale;
   }, [exportAutoScaleFromDpi, exportScale, artboards, activeArtboard]);
+
+  // Auto-select artboard when export mode changes to 'artboard'
+  useEffect(() => {
+    if (exportMode === 'artboard' && artboards.length > 0) {
+      // If no artboard is selected, auto-select one
+      if (!selectedArtboardForExport) {
+        // First try to select the active artboard
+        const activeBoard = artboards.find(a => a.id === activeArtboard);
+        if (activeBoard) {
+          setSelectedArtboardForExport(activeBoard.id);
+        } else {
+          // Otherwise select the first artboard
+          setSelectedArtboardForExport(artboards[0].id);
+        }
+      }
+    }
+  }, [exportMode, artboards, activeArtboard, selectedArtboardForExport]);
 
   // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
@@ -1326,8 +1344,7 @@ export default function Sidebar({
 
   function ExportSaveContent() {
     // Export settings now use lifted state from main Sidebar component
-    // exportFormat, exportQuality, exportScale, exportMode are already defined at the component level
-    const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
+    // exportFormat, exportQuality, exportScale, exportMode, selectedArtboardForExport are already defined at the component level
 
     // Local export state (not needed by API generator)
     const [batchExportPath, setBatchExportPath] = useState<string>('');
