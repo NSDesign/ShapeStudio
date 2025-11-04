@@ -1874,91 +1874,88 @@ export default function Sidebar({
                     }
                   }
                   
-                  console.log(`🔁 [BATCH REPETITION] Set "${set.name}" will generate ${repetitionCount} repetition(s)`);
-                  
-                  // Calculate shape count for this set
-                  let shapesFromThisCall: number;
-                  const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
-                  if (isFixedMode) {
-                    shapesFromThisCall = set.shapeCountFixed || 10;
-                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
-                  } else {
-                    shapesFromThisCall = Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
-                    console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
-                  }
-                  
-                  // Create overrides from set configuration
-                  const overrides = {
-                    enabledShapeTypes: new Set(set.enabledShapeTypes as ShapeType[]),
-                    batchConfig: set.batchConfig,
-                    scatterSettings: {
-                      shapeCountMode: set.shapeCountMode,
-                      fixedShapeCount: set.shapeCountFixed,
-                      minCount: set.shapeCountRange[0],
-                      maxCount: set.shapeCountRange[1],
-                      shapeSpecific: set.shapeSpecificProperties
-                    },
-                    setTransform: set.setTransform,
-                    artboardAlignment: set.artboardAlignment
-                  };
-                  
-                  // DIAGNOSTIC: Log overrides being passed
-                  console.log(`🔍 [DIAGNOSTIC] Passing overrides for "${set.name}":`, {
-                    hasOverrides: !!overrides,
-                    hasBatchConfig: !!overrides.batchConfig,
-                    fillColorMode: overrides.batchConfig?.fillColorMode,
-                    fillColorDefine: overrides.batchConfig?.fillColorDefine,
-                    propertiesEnabled: overrides.batchConfig?.propertiesEnabled
-                  });
-                  
-                  const newShapes = onGenerateShapesWithBatchConfig(
-                    shapesFromThisCall, 
-                    generationBounds, 
-                    true, 
-                    i + callIndex * 1000 + setIndex, 
-                    set.shapeSpecificProperties,
-                    overrides
-                  );
-                  
-                  // Apply set-specific post-processing
-                  // Apply z-index offset based on generation order (1000x spacing ensures sets never overlap)
-                  newShapes.forEach(shape => {
-                    shape.properties.zIndex += set.generationOrder * 1000;
-                  });
-                  
-                  // NOTE: Set-level blend modes and compositing operations are applied during rendering,
-                  // not to individual shapes. Shapes keep their own blend modes.
-                  
-                  // Apply visibility and opacity
-                  if (set.setVisibility) {
-                    if (!set.setVisibility.visible) {
-                      // Skip adding these shapes if set is not visible
-                      continue;
-                    }
-                    if (set.setVisibility.opacity !== undefined && set.setVisibility.opacity < 1.0) {
-                      const variance = set.setVisibility.opacityVariance || 0;
-                      newShapes.forEach(shape => {
-                        const randomVariance = (Math.random() - 0.5) * 2 * variance;
-                        const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + randomVariance));
-                        shape.properties.fillOpacity *= finalOpacity;
-                        shape.properties.strokeOpacity *= finalOpacity;
-                      });
-                    }
-                  }
-                  
-                  // Apply repetition by cloning the generated shapes
                   const totalReps = Math.max(1, repetitionCount);
+                  console.log(`🔁 [BATCH REPETITION] Set "${set.name}" will generate ${totalReps} time(s)`);
+                  
+                  // Loop for each repetition - regenerate shapes fresh each time
                   for (let repIndex = 0; repIndex < totalReps; repIndex++) {
-                    if (repIndex === 0) {
-                      // First repetition: use original shapes
-                      currentExportShapes.push(...newShapes);
-                    } else {
-                      // Subsequent repetitions: clone the original shapes
-                      console.log(`🔁 [BATCH REPETITION ${repIndex + 1}/${totalReps}] Duplicating ${newShapes.length} shapes for set "${set.name}"`);
-                      const clonedShapes = newShapes.map(shape => shape.clone());
-                      currentExportShapes.push(...clonedShapes);
+                    if (repetitionCount > 0) {
+                      console.log(`🔁 [BATCH REPETITION ${repIndex + 1}/${totalReps}] Generating fresh shapes for set "${set.name}"`);
                     }
-                  }
+                    
+                    // Calculate shape count for this set
+                    let shapesFromThisCall: number;
+                    const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
+                    if (isFixedMode) {
+                      shapesFromThisCall = set.shapeCountFixed || 10;
+                      console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (FIXED)`);
+                    } else {
+                      shapesFromThisCall = Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
+                      console.log(`📞 [${set.name}] Generation ${callIndex + 1}/${generationCallsCount}: Creating ${shapesFromThisCall} shapes (RANGE ${set.shapeCountRange[0]}-${set.shapeCountRange[1]})`);
+                    }
+                    
+                    // Create overrides from set configuration
+                    const overrides = {
+                      enabledShapeTypes: new Set(set.enabledShapeTypes as ShapeType[]),
+                      batchConfig: set.batchConfig,
+                      scatterSettings: {
+                        shapeCountMode: set.shapeCountMode,
+                        fixedShapeCount: set.shapeCountFixed,
+                        minCount: set.shapeCountRange[0],
+                        maxCount: set.shapeCountRange[1],
+                        shapeSpecific: set.shapeSpecificProperties
+                      },
+                      setTransform: set.setTransform,
+                      artboardAlignment: set.artboardAlignment
+                    };
+                    
+                    // DIAGNOSTIC: Log overrides being passed
+                    console.log(`🔍 [DIAGNOSTIC] Passing overrides for "${set.name}":`, {
+                      hasOverrides: !!overrides,
+                      hasBatchConfig: !!overrides.batchConfig,
+                      fillColorMode: overrides.batchConfig?.fillColorMode,
+                      fillColorDefine: overrides.batchConfig?.fillColorDefine,
+                      propertiesEnabled: overrides.batchConfig?.propertiesEnabled
+                    });
+                    
+                    const newShapes = onGenerateShapesWithBatchConfig(
+                      shapesFromThisCall, 
+                      generationBounds, 
+                      true, 
+                      i + callIndex * 1000 + setIndex, 
+                      set.shapeSpecificProperties,
+                      overrides
+                    );
+                    
+                    // Apply set-specific post-processing
+                    // Apply z-index offset based on generation order (1000x spacing ensures sets never overlap)
+                    newShapes.forEach(shape => {
+                      shape.properties.zIndex += set.generationOrder * 1000;
+                    });
+                    
+                    // NOTE: Set-level blend modes and compositing operations are applied during rendering,
+                    // not to individual shapes. Shapes keep their own blend modes.
+                    
+                    // Apply visibility and opacity
+                    if (set.setVisibility) {
+                      if (!set.setVisibility.visible) {
+                        // Skip adding these shapes if set is not visible
+                        continue;
+                      }
+                      if (set.setVisibility.opacity !== undefined && set.setVisibility.opacity < 1.0) {
+                        const variance = set.setVisibility.opacityVariance || 0;
+                        newShapes.forEach(shape => {
+                          const randomVariance = (Math.random() - 0.5) * 2 * variance;
+                          const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + randomVariance));
+                          shape.properties.fillOpacity *= finalOpacity;
+                          shape.properties.strokeOpacity *= finalOpacity;
+                        });
+                      }
+                    }
+                    
+                    // Add the generated shapes to the collection
+                    currentExportShapes.push(...newShapes);
+                  } // End of repetition loop
                 }
               }
             } else {

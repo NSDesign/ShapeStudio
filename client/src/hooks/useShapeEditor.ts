@@ -2730,217 +2730,214 @@ export const useShapeEditor = () => {
           globalRepetitionRange
         );
         
-        console.log(`🔁 [REPETITION] Set "${set.name}" will generate ${repetitionCount} repetition(s)`);
+        const totalReps = Math.max(1, repetitionCount);
+        console.log(`🔁 [REPETITION] Set "${set.name}" will generate ${totalReps} time(s)`);
         
-        // Calculate shape count for this set
-        const setCount = set.shapeCountMode === 'fixed' 
-          ? set.shapeCountFixed
-          : Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
-
-        console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
-
-        // Generate shapes for this set - pass set's configuration as overrides
-        const setShapes = generateShapesWithBatchConfig(
-          setCount,
-          canvasBounds,
-          true,
-          setIndex,
-          set.shapeSpecificProperties,
-          {
-            enabledShapeTypes: new Set(set.enabledShapeTypes),
-            batchConfig: set.batchConfig,
-            scatterSettings: {},
-            setTransform: set.setTransform,
-            artboardAlignment: set.artboardAlignment
-          }
-        );
-
-        // Apply z-index offset based on generation order (1000x spacing ensures sets never overlap)
-        setShapes.forEach(shape => {
-          shape.properties.zIndex += set.generationOrder * 1000;
-        });
-
-        // NOTE: Do NOT assign set's compositing operation to individual shapes
-        // Compositing operations should only be applied BETWEEN sets, not WITHIN sets
-        // Shapes within a set should always use 'source-over' to combine properly
-        // The set-level compositing is handled during rendering (Canvas.tsx for live, Sidebar.tsx for batch)
-
-        // Apply set visibility and opacity
-        if (set.setVisibility) {
-          if (!set.setVisibility.visible) {
-            console.log(`👁️ Set "${set.name}" is hidden, skipping render`);
-            return; // Skip this set entirely if not visible
+        // Loop for each repetition - regenerate shapes fresh each time
+        for (let repIndex = 0; repIndex < totalReps; repIndex++) {
+          if (repetitionCount > 0) {
+            console.log(`🔁 [REPETITION ${repIndex + 1}/${totalReps}] Generating fresh shapes for set "${set.name}"`);
           }
           
-          if (set.setVisibility.opacity < 1 || set.setVisibility.opacityVariance > 0) {
-            console.log(`🌫️ Applying set opacity ${set.setVisibility.opacity} with variance ${set.setVisibility.opacityVariance} to set "${set.name}"`);
-            setShapes.forEach(shape => {
-              const variance = (Math.random() - 0.5) * 2 * set.setVisibility.opacityVariance;
-              const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + variance));
-              
-              // Apply to both fill and stroke opacity
-              shape.properties.fillOpacity *= finalOpacity;
-              shape.properties.strokeOpacity *= finalOpacity;
-            });
-          }
-        }
+          // Calculate shape count for this set
+          const setCount = set.shapeCountMode === 'fixed' 
+            ? set.shapeCountFixed
+            : Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
 
-        // Apply setTransform if configured
-        if (set.setTransform && (set.setTransform.x !== 0 || set.setTransform.y !== 0 || 
-            set.setTransform.rotation !== 0 || set.setTransform.scaleX !== 1 || set.setTransform.scaleY !== 1)) {
-          console.log(`🔄 Applying setTransform to set "${set.name}": x=${set.setTransform.x}, y=${set.setTransform.y}, rotation=${set.setTransform.rotation}, scaleX=${set.setTransform.scaleX}, scaleY=${set.setTransform.scaleY}`);
-          
+          console.log(`🎯 Generating ${setCount} shapes for set "${set.name}" (${set.shapeCountMode} mode)`);
+
+          // Generate shapes for this set - pass set's configuration as overrides
+          const setShapes = generateShapesWithBatchConfig(
+            setCount,
+            canvasBounds,
+            true,
+            setIndex,
+            set.shapeSpecificProperties,
+            {
+              enabledShapeTypes: new Set(set.enabledShapeTypes),
+              batchConfig: set.batchConfig,
+              scatterSettings: {},
+              setTransform: set.setTransform,
+              artboardAlignment: set.artboardAlignment
+            }
+          );
+
+          // Apply z-index offset based on generation order (1000x spacing ensures sets never overlap)
           setShapes.forEach(shape => {
-            // Apply translation
-            shape.transform.x += set.setTransform!.x;
-            shape.transform.y += set.setTransform!.y;
-            
-            // Apply rotation
-            shape.transform.rotation += set.setTransform!.rotation;
-            
-            // Apply scale
-            shape.transform.scaleX *= set.setTransform!.scaleX;
-            shape.transform.scaleY *= set.setTransform!.scaleY;
+            shape.properties.zIndex += set.generationOrder * 1000;
           });
-        }
 
-        // Apply artboard alignment if configured
-        if (set.artboardAlignment && set.artboardAlignment.fitToArtboard && currentArtboard) {
-          console.log(`📐 Applying fitToArtboard for set "${set.name}"`);
-          
-          // Calculate bounding box of all shapes in this set using world bounds
-          if (setShapes.length > 0) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            
-            setShapes.forEach(shape => {
-              const worldBounds = shape.getWorldBounds();
-              
-              minX = Math.min(minX, worldBounds.x);
-              minY = Math.min(minY, worldBounds.y);
-              maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
-              maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
-            });
-            
-            const setBoundsWidth = maxX - minX;
-            const setBoundsHeight = maxY - minY;
-            const setCenterX = (minX + maxX) / 2;
-            const setCenterY = (minY + maxY) / 2;
-            
-            // Calculate scale to fit within artboard with margin
-            const margin = set.artboardAlignment.margin || 0;
-            const availableWidth = currentArtboard.width - (margin * 2);
-            const availableHeight = currentArtboard.height - (margin * 2);
-            
-            const scaleX = availableWidth / setBoundsWidth;
-            const scaleY = availableHeight / setBoundsHeight;
-            const fitScale = Math.min(scaleX, scaleY);
-            
-            // Apply scale and center to artboard
-            setShapes.forEach(shape => {
-              // Scale relative to set center
-              const relX = shape.transform.x - setCenterX;
-              const relY = shape.transform.y - setCenterY;
-              
-              shape.transform.x = currentArtboard.x + currentArtboard.width / 2 + (relX * fitScale);
-              shape.transform.y = currentArtboard.y + currentArtboard.height / 2 + (relY * fitScale);
-              shape.transform.scaleX *= fitScale;
-              shape.transform.scaleY *= fitScale;
-            });
-            
-            console.log(`✅ Fitted set to artboard with scale=${fitScale.toFixed(2)}`);
-          }
-        } else if (set.artboardAlignment && set.artboardAlignment.alignTo !== 'none' && currentArtboard) {
-          console.log(`🎯 Applying alignment for set "${set.name}": ${set.artboardAlignment.alignmentType}`);
-          
-          // Calculate bounding box center
-          if (setShapes.length > 0) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            
-            setShapes.forEach(shape => {
-              const x = shape.transform.x;
-              const y = shape.transform.y;
-              const halfWidth = (shape.width || 50) / 2;
-              const halfHeight = (shape.height || 50) / 2;
-              
-              minX = Math.min(minX, x - halfWidth);
-              minY = Math.min(minY, y - halfHeight);
-              maxX = Math.max(maxX, x + halfWidth);
-              maxY = Math.max(maxY, y + halfHeight);
-            });
-            
-            const setCenterX = (minX + maxX) / 2;
-            const setCenterY = (minY + maxY) / 2;
-            const margin = set.artboardAlignment.margin || 0;
-            
-            // Calculate target position based on alignment type
-            let targetX = currentArtboard.x + currentArtboard.width / 2;
-            let targetY = currentArtboard.y + currentArtboard.height / 2;
-            
-            switch (set.artboardAlignment.alignmentType) {
-              case 'top-left':
-                targetX = currentArtboard.x + margin;
-                targetY = currentArtboard.y + margin;
-                break;
-              case 'top-center':
-                targetX = currentArtboard.x + currentArtboard.width / 2;
-                targetY = currentArtboard.y + margin;
-                break;
-              case 'top-right':
-                targetX = currentArtboard.x + currentArtboard.width - margin;
-                targetY = currentArtboard.y + margin;
-                break;
-              case 'center-left':
-                targetX = currentArtboard.x + margin;
-                targetY = currentArtboard.y + currentArtboard.height / 2;
-                break;
-              case 'center':
-                targetX = currentArtboard.x + currentArtboard.width / 2;
-                targetY = currentArtboard.y + currentArtboard.height / 2;
-                break;
-              case 'center-right':
-                targetX = currentArtboard.x + currentArtboard.width - margin;
-                targetY = currentArtboard.y + currentArtboard.height / 2;
-                break;
-              case 'bottom-left':
-                targetX = currentArtboard.x + margin;
-                targetY = currentArtboard.y + currentArtboard.height - margin;
-                break;
-              case 'bottom-center':
-                targetX = currentArtboard.x + currentArtboard.width / 2;
-                targetY = currentArtboard.y + currentArtboard.height - margin;
-                break;
-              case 'bottom-right':
-                targetX = currentArtboard.x + currentArtboard.width - margin;
-                targetY = currentArtboard.y + currentArtboard.height - margin;
-                break;
+          // NOTE: Do NOT assign set's compositing operation to individual shapes
+          // Compositing operations should only be applied BETWEEN sets, not WITHIN sets
+          // Shapes within a set should always use 'source-over' to combine properly
+          // The set-level compositing is handled during rendering (Canvas.tsx for live, Sidebar.tsx for batch)
+
+          // Apply set visibility and opacity
+          if (set.setVisibility) {
+            if (!set.setVisibility.visible) {
+              console.log(`👁️ Set "${set.name}" is hidden, skipping render`);
+              return; // Skip this set entirely if not visible
             }
             
-            // Calculate offset and apply to all shapes
-            const offsetX = targetX - setCenterX;
-            const offsetY = targetY - setCenterY;
+            if (set.setVisibility.opacity < 1 || set.setVisibility.opacityVariance > 0) {
+              console.log(`🌫️ Applying set opacity ${set.setVisibility.opacity} with variance ${set.setVisibility.opacityVariance} to set "${set.name}"`);
+              setShapes.forEach(shape => {
+                const variance = (Math.random() - 0.5) * 2 * set.setVisibility.opacityVariance;
+                const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + variance));
+                
+                // Apply to both fill and stroke opacity
+                shape.properties.fillOpacity *= finalOpacity;
+                shape.properties.strokeOpacity *= finalOpacity;
+              });
+            }
+          }
+
+          // Apply setTransform if configured
+          if (set.setTransform && (set.setTransform.x !== 0 || set.setTransform.y !== 0 || 
+              set.setTransform.rotation !== 0 || set.setTransform.scaleX !== 1 || set.setTransform.scaleY !== 1)) {
+            console.log(`🔄 Applying setTransform to set "${set.name}": x=${set.setTransform.x}, y=${set.setTransform.y}, rotation=${set.setTransform.rotation}, scaleX=${set.setTransform.scaleX}, scaleY=${set.setTransform.scaleY}`);
             
             setShapes.forEach(shape => {
-              shape.transform.x += offsetX;
-              shape.transform.y += offsetY;
+              // Apply translation
+              shape.transform.x += set.setTransform!.x;
+              shape.transform.y += set.setTransform!.y;
+              
+              // Apply rotation
+              shape.transform.rotation += set.setTransform!.rotation;
+              
+              // Apply scale
+              shape.transform.scaleX *= set.setTransform!.scaleX;
+              shape.transform.scaleY *= set.setTransform!.scaleY;
             });
-            
-            console.log(`✅ Aligned set to ${set.artboardAlignment.alignmentType} with offset (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
           }
-        }
 
-        // Apply repetition by cloning the generated shapes
-        const totalReps = Math.max(1, repetitionCount);
-        for (let repIndex = 0; repIndex < totalReps; repIndex++) {
-          if (repIndex === 0) {
-            // First repetition: use original shapes
-            allNewShapes.push(...setShapes);
-          } else {
-            // Subsequent repetitions: clone the original shapes
-            console.log(`🔁 [REPETITION ${repIndex + 1}/${totalReps}] Duplicating ${setShapes.length} shapes for set "${set.name}"`);
-            const clonedShapes = setShapes.map(shape => shape.clone());
-            allNewShapes.push(...clonedShapes);
+          // Apply artboard alignment if configured
+          if (set.artboardAlignment && set.artboardAlignment.fitToArtboard && currentArtboard) {
+            console.log(`📐 Applying fitToArtboard for set "${set.name}"`);
+            
+            // Calculate bounding box of all shapes in this set using world bounds
+            if (setShapes.length > 0) {
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              
+              setShapes.forEach(shape => {
+                const worldBounds = shape.getWorldBounds();
+                
+                minX = Math.min(minX, worldBounds.x);
+                minY = Math.min(minY, worldBounds.y);
+                maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
+                maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
+              });
+              
+              const setBoundsWidth = maxX - minX;
+              const setBoundsHeight = maxY - minY;
+              const setCenterX = (minX + maxX) / 2;
+              const setCenterY = (minY + maxY) / 2;
+              
+              // Calculate scale to fit within artboard with margin
+              const margin = set.artboardAlignment.margin || 0;
+              const availableWidth = currentArtboard.width - (margin * 2);
+              const availableHeight = currentArtboard.height - (margin * 2);
+              
+              const scaleX = availableWidth / setBoundsWidth;
+              const scaleY = availableHeight / setBoundsHeight;
+              const fitScale = Math.min(scaleX, scaleY);
+              
+              // Apply scale and center to artboard
+              setShapes.forEach(shape => {
+                // Scale relative to set center
+                const relX = shape.transform.x - setCenterX;
+                const relY = shape.transform.y - setCenterY;
+                
+                shape.transform.x = currentArtboard.x + currentArtboard.width / 2 + (relX * fitScale);
+                shape.transform.y = currentArtboard.y + currentArtboard.height / 2 + (relY * fitScale);
+                shape.transform.scaleX *= fitScale;
+                shape.transform.scaleY *= fitScale;
+              });
+              
+              console.log(`✅ Fitted set to artboard with scale=${fitScale.toFixed(2)}`);
+            }
+          } else if (set.artboardAlignment && set.artboardAlignment.alignTo !== 'none' && currentArtboard) {
+            console.log(`🎯 Applying alignment for set "${set.name}": ${set.artboardAlignment.alignmentType}`);
+            
+            // Calculate bounding box center
+            if (setShapes.length > 0) {
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              
+              setShapes.forEach(shape => {
+                const x = shape.transform.x;
+                const y = shape.transform.y;
+                const halfWidth = (shape.width || 50) / 2;
+                const halfHeight = (shape.height || 50) / 2;
+                
+                minX = Math.min(minX, x - halfWidth);
+                minY = Math.min(minY, y - halfHeight);
+                maxX = Math.max(maxX, x + halfWidth);
+                maxY = Math.max(maxY, y + halfHeight);
+              });
+              
+              const setCenterX = (minX + maxX) / 2;
+              const setCenterY = (minY + maxY) / 2;
+              const margin = set.artboardAlignment.margin || 0;
+              
+              // Calculate target position based on alignment type
+              let targetX = currentArtboard.x + currentArtboard.width / 2;
+              let targetY = currentArtboard.y + currentArtboard.height / 2;
+              
+              switch (set.artboardAlignment.alignmentType) {
+                case 'top-left':
+                  targetX = currentArtboard.x + margin;
+                  targetY = currentArtboard.y + margin;
+                  break;
+                case 'top-center':
+                  targetX = currentArtboard.x + currentArtboard.width / 2;
+                  targetY = currentArtboard.y + margin;
+                  break;
+                case 'top-right':
+                  targetX = currentArtboard.x + currentArtboard.width - margin;
+                  targetY = currentArtboard.y + margin;
+                  break;
+                case 'center-left':
+                  targetX = currentArtboard.x + margin;
+                  targetY = currentArtboard.y + currentArtboard.height / 2;
+                  break;
+                case 'center':
+                  targetX = currentArtboard.x + currentArtboard.width / 2;
+                  targetY = currentArtboard.y + currentArtboard.height / 2;
+                  break;
+                case 'center-right':
+                  targetX = currentArtboard.x + currentArtboard.width - margin;
+                  targetY = currentArtboard.y + currentArtboard.height / 2;
+                  break;
+                case 'bottom-left':
+                  targetX = currentArtboard.x + margin;
+                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  break;
+                case 'bottom-center':
+                  targetX = currentArtboard.x + currentArtboard.width / 2;
+                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  break;
+                case 'bottom-right':
+                  targetX = currentArtboard.x + currentArtboard.width - margin;
+                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  break;
+              }
+              
+              // Calculate offset and apply to all shapes
+              const offsetX = targetX - setCenterX;
+              const offsetY = targetY - setCenterY;
+              
+              setShapes.forEach(shape => {
+                shape.transform.x += offsetX;
+                shape.transform.y += offsetY;
+              });
+              
+              console.log(`✅ Aligned set to ${set.artboardAlignment.alignmentType} with offset (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
+            }
           }
-        }
+
+          // Add the generated shapes to the collection
+          allNewShapes.push(...setShapes);
+        } // End of repetition loop
       });
 
       console.log(`✅ Generated total of ${allNewShapes.length} shapes from ${enabledGenerationSets.length} generation sets`);
