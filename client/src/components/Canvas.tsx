@@ -7,6 +7,7 @@ import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
 import { GenerationSet } from '@shared/schema';
 import { renderSetToOffscreenCanvas, compositeSetCanvases } from '@/lib/offscreenRenderer';
+import { getArtboardDisplayDimensions } from '@/lib/artboardUtils';
 
 
 interface CanvasProps {
@@ -291,10 +292,41 @@ export default function Canvas({
           ctx.strokeStyle = '#0066cc';
           ctx.lineWidth = 2 / effectiveZoom;
           ctx.strokeRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
-          
-          ctx.fillStyle = '#0066cc';
-          ctx.font = `${12 / effectiveZoom}px Arial`;
-          ctx.fillText(currentArtboard.name, currentArtboard.x, currentArtboard.y - 5 / effectiveZoom);
+        }
+        
+        // Display artboard information overlay (independent of border)
+        const fontSize = 12 / effectiveZoom;
+        const lineHeight = fontSize * 1.3;
+        let textYOffset = -5 / effectiveZoom;
+        const textXOffset = currentArtboard.x;
+        
+        ctx.fillStyle = '#0066cc';
+        ctx.font = `${fontSize}px Arial`;
+        
+        // Display artboard name if enabled
+        if (currentArtboard.displayName !== false) {
+          ctx.fillText(currentArtboard.name, textXOffset, currentArtboard.y + textYOffset);
+          textYOffset -= lineHeight;
+        }
+        
+        // Display dimensions if enabled
+        if (currentArtboard.displayDimensions === true) {
+          const displayDims = getArtboardDisplayDimensions(
+            currentArtboard.width,
+            currentArtboard.height,
+            currentArtboard.dpi ?? 72,
+            currentArtboard.unitType ?? 'pixels'
+          );
+          const dimensionText = `${displayDims.widthFormatted} × ${displayDims.heightFormatted}`;
+          ctx.fillText(dimensionText, textXOffset, currentArtboard.y + textYOffset);
+          textYOffset -= lineHeight;
+        }
+        
+        // Display resolution if enabled
+        if (currentArtboard.displayResolution === true) {
+          const dpi = currentArtboard.dpi ?? 72;
+          const resolutionText = `${dpi} DPI`;
+          ctx.fillText(resolutionText, textXOffset, currentArtboard.y + textYOffset);
         }
       }
 

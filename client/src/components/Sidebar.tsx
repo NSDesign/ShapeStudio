@@ -94,6 +94,7 @@ import { ModeField } from '@/components/ModeField';
 import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
 import { pixelsToUnit, unitToPixels, calculatePixelDimensions, getArtboardDisplayDimensions, getUnitLabel, DPI_PRESETS, type UnitType } from '@/lib/artboardUtils';
+import { embedDPI } from '@/lib/dpiEmbedder';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
@@ -1309,7 +1310,7 @@ export default function Sidebar({
       shape.selected = originalSelected;
     };
 
-    const exportCanvasAsFormat = (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number) => {
+    const exportCanvasAsFormat = (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
       switch (format) {
         case 'pdf':
           // Convert canvas to PDF
@@ -1327,9 +1328,12 @@ export default function Sidebar({
           const link = document.createElement('a');
           link.download = filename;
           
+          let dataURL: string;
           switch (format) {
             case 'jpg':
-              link.href = canvas.toDataURL('image/jpeg', quality / 100);
+              dataURL = canvas.toDataURL('image/jpeg', quality / 100);
+              // Embed DPI metadata for JPEG
+              link.href = embedDPI(dataURL, 'jpg', dpi);
               break;
             case 'webp':
               link.href = canvas.toDataURL('image/webp', quality / 100);
@@ -1342,12 +1346,14 @@ export default function Sidebar({
               break;
             case 'png':
             default:
-              link.href = canvas.toDataURL('image/png');
+              dataURL = canvas.toDataURL('image/png');
+              // Embed DPI metadata for PNG
+              link.href = embedDPI(dataURL, 'png', dpi);
               break;
           }
 
           link.click();
-          console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
+          console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata`);
           break;
       }
     };
@@ -1361,11 +1367,15 @@ export default function Sidebar({
       let translateX = 0;
       let translateY = 0;
       let filename = '';
+      let exportDPI = 72; // Default DPI
 
       if (exportMode === 'artboard' && selectedArtboardForExport) {
         // Export specific artboard
         const artboard = artboards.find(ab => ab.id === selectedArtboardForExport);
         if (!artboard) return;
+        
+        // Get artboard DPI
+        exportDPI = artboard.dpi ?? 72;
 
         // Filter shapes that overlap with the artboard bounds
         shapesToExport = shapes.filter(shape => {
@@ -1390,6 +1400,10 @@ export default function Sidebar({
       } else if (exportMode === 'selection' && selectedShapes.length > 0) {
         // Export selected shapes with bounds fitting
         shapesToExport = selectedShapes;
+        
+        // Use active artboard DPI if available
+        const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
+        exportDPI = activeArtboardData?.dpi ?? 72;
 
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
@@ -1443,6 +1457,11 @@ export default function Sidebar({
       } else {
         // Export all shapes with bounds fitting
         shapesToExport = shapes;
+        
+        // Use active artboard DPI if available
+        const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
+        exportDPI = activeArtboardData?.dpi ?? 72;
+        
         console.log(`Export attempt: Found ${shapesToExport.length} shapes to export`);
         if (shapesToExport.length === 0) {
           console.warn('No shapes found for export - creating blank canvas');
@@ -1531,7 +1550,7 @@ export default function Sidebar({
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale);
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale, exportDPI);
       
       // Add a small delay to show the loading state
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -1546,6 +1565,10 @@ export default function Sidebar({
       // Export all shapes for batch mode
       const shapesToExport = shapes;
       console.log(`Batch export: Found ${shapesToExport.length} shapes to export as ${filename}`);
+      
+      // Get DPI from active artboard
+      const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
+      const exportDPI = activeArtboardData?.dpi ?? 72;
       
       // Set canvas dimensions based on shapes or default size
       let canvasWidth = 800 * exportScale;
@@ -1619,7 +1642,7 @@ export default function Sidebar({
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale);
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale, exportDPI);
     };
 
     // NEW BATCH EXPORT WITH ZIP PACKAGING
