@@ -84,3 +84,14 @@ A controlled layering system that creates deliberate position offsets between re
 - **Combination Potential**: Could work with randomization (random properties + predictable position offsets) for creative effects
 
 Use cases: Depth simulation, vintage print registration effects, neon glow trails, kinetic typography.
+
+### Global Repetition Override
+A toggle feature that forces global repetition settings across all shape sets while preserving individual set configurations:
+- **Concept**: Temporarily override all per-set repetition settings with global values without losing the individual set configurations
+- **Use Case**: Quickly test different repetition counts across all sets without manually changing each one
+- **Behavior**: When enabled, all sets use global repetition settings regardless of their individual repetitionMode setting
+- **Preservation**: Individual set repetition configurations remain intact and are restored when override is disabled
+- **UI Implementation**: Simple checkbox/toggle in the Set Manager dialog near global repetition settings
+- **Difference from Use-Global Mode**: Sets retain their current mode (fixed/range/use-global) but temporarily act as if all are set to use-global
+
+Benefits: Rapid experimentation with different repetition counts across entire composition without modifying individual set configurations, useful for quick iteration and testing.
