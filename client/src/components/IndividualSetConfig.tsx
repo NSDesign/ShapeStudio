@@ -475,7 +475,7 @@ export function IndividualSetConfig({
             <Separator className="bg-slate-700" />
 
             {/* Advanced Configuration Sections */}
-            <Accordion type="multiple" className="space-y-2" defaultValue={["visibility", "zindex", "compositing", "transforms", "artboard"]}>
+            <Accordion type="multiple" className="space-y-2" defaultValue={[]}>
               {/* Repetition Settings */}
               <AccordionItem value="repetition" className="border-slate-700">
                 <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-repetition">
