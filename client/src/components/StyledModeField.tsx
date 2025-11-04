@@ -95,7 +95,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               min={bounds.min}
               max={bounds.max}
               step={step}
-              className="bg-slate-700 border-slate-600 text-slate-300"
+              className="h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
               data-testid={`input-${idBase}-start-value`}
             />
           </div>
@@ -107,7 +107,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               min={-1000}
               max={1000}
               step={step}
-              className="bg-slate-700 border-slate-600 text-slate-300"
+              className="h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
               data-testid={`input-${idBase}-increment`}
             />
           </div>
@@ -122,7 +122,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
           min={bounds.min}
           max={bounds.max}
           step={step}
-          className="bg-slate-700 border-slate-600 text-slate-300"
+          className="h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
           data-testid={`input-${idBase}-fixed`}
         />
       )}
@@ -148,7 +148,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               min={bounds.min}
               max={config.max}
               step={step}
-              className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
+              className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
               data-testid={`input-${idBase}-min`}
             />
             <NumericInput
@@ -160,7 +160,7 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
               min={config.min}
               max={bounds.max}
               step={step}
-              className="flex-1 bg-slate-700 border-slate-600 text-slate-300"
+              className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
               data-testid={`input-${idBase}-max`}
             />
           </div>
