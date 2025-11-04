@@ -100,7 +100,11 @@ export function useGenerationSets({
         margin: 0
       },
       generationOrder: generationSets.length > 0 ? Math.max(...generationSets.map(s => s.generationOrder)) + 1 : 0,
-      description: `Generated from current settings on ${new Date().toLocaleString()}`
+      description: `Generated from current settings on ${new Date().toLocaleString()}`,
+      // Repetition settings (defaults to use-global mode with no repetitions)
+      repetitionMode: 'use-global',
+      repetitionValue: 0,
+      repetitionRange: [0, 0]
     };
   }, [generationSets.length]);
 

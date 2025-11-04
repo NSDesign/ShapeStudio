@@ -206,6 +206,18 @@ export function IndividualSetConfig({
     onUpdate({ shapeCountRange: range });
   }, [onUpdate]);
 
+  const handleRepetitionModeChange = useCallback((mode: 'use-global' | 'fixed' | 'range') => {
+    onUpdate({ repetitionMode: mode });
+  }, [onUpdate]);
+
+  const handleRepetitionValueChange = useCallback((value: number) => {
+    onUpdate({ repetitionValue: value });
+  }, [onUpdate]);
+
+  const handleRepetitionRangeChange = useCallback((range: [number, number]) => {
+    onUpdate({ repetitionRange: range });
+  }, [onUpdate]);
+
   const handleShapeTypeToggle = useCallback((shapeType: SupportedShapeType, enabled: boolean) => {
     const currentTypes = generationSet.enabledShapeTypes;
     const updatedTypes = enabled
@@ -469,6 +481,104 @@ export function IndividualSetConfig({
 
             {/* Advanced Configuration Sections */}
             <Accordion type="multiple" className="space-y-2" defaultValue={["visibility", "zindex", "compositing", "transforms", "artboard"]}>
+              {/* Repetition Settings */}
+              <AccordionItem value="repetition" className="border-slate-700">
+                <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-repetition">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm font-medium">Repetition Settings</span>
+                    {generationSet.repetitionMode !== 'use-global' && (
+                      <Badge variant="outline" className="ml-2 text-xs border-blue-500 text-blue-400">
+                        Override
+                      </Badge>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="grid grid-cols-1 gap-4 pt-2">
+                    <div>
+                      <Label className="text-white text-xs">Mode</Label>
+                      <Select
+                        value={generationSet.repetitionMode}
+                        onValueChange={(value) => handleRepetitionModeChange(value as 'use-global' | 'fixed' | 'range')}
+                        data-testid="select-repetition-mode"
+                      >
+                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                          <SelectItem value="use-global" className="text-white hover:bg-slate-600">
+                            Use Global
+                          </SelectItem>
+                          <SelectItem value="fixed" className="text-white hover:bg-slate-600">
+                            Fixed
+                          </SelectItem>
+                          <SelectItem value="range" className="text-white hover:bg-slate-600">
+                            Range
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Override global repetition or use global settings
+                      </p>
+                    </div>
+
+                    {generationSet.repetitionMode === 'fixed' && (
+                      <div>
+                        <Label className="text-white text-xs">
+                          Count: {generationSet.repetitionValue}
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={generationSet.repetitionValue}
+                          onChange={(e) => handleRepetitionValueChange(parseInt(e.target.value) || 0)}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          data-testid="input-repetition-value"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Number of times to repeat this shape set
+                        </p>
+                      </div>
+                    )}
+
+                    {generationSet.repetitionMode === 'range' && (
+                      <div>
+                        <Label className="text-white text-xs">
+                          Range: {generationSet.repetitionRange[0]} - {generationSet.repetitionRange[1]}
+                        </Label>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={generationSet.repetitionRange[0]}
+                            onChange={(e) => handleRepetitionRangeChange([parseInt(e.target.value) || 0, generationSet.repetitionRange[1]])}
+                            className="bg-slate-700 border-slate-600 text-white"
+                            placeholder="Min"
+                            data-testid="input-repetition-range-min"
+                          />
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={generationSet.repetitionRange[1]}
+                            onChange={(e) => handleRepetitionRangeChange([generationSet.repetitionRange[0], parseInt(e.target.value) || 0])}
+                            className="bg-slate-700 border-slate-600 text-white"
+                            placeholder="Max"
+                            data-testid="input-repetition-range-max"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Random repetition count within this range
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
               {/* Z-Index Layering Controls - only when global z-index is disabled */}
               {!globalZIndexEnabled && (
                 <AccordionItem value="zindex" className="border-slate-700">

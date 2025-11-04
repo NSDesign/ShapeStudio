@@ -26,6 +26,13 @@ interface SetsManagerDialogBaseProps {
   // Edge case strategy for when set count < batch export count
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';
   onEdgeCaseStrategyChange?: (strategy: 'hold' | 'cycle' | 'random' | 'stop') => void;
+  // Global repetition settings
+  globalRepetitionMode?: 'fixed' | 'range';
+  globalRepetitionValue?: number;
+  globalRepetitionRange?: [number, number];
+  onGlobalRepetitionModeChange?: (mode: 'fixed' | 'range') => void;
+  onGlobalRepetitionValueChange?: (value: number) => void;
+  onGlobalRepetitionRangeChange?: (range: [number, number]) => void;
 }
 
 // When onCreateSetFromState is provided, all state capture props are REQUIRED
@@ -79,7 +86,14 @@ export function SetsManagerDialog({
   batchExportCount,
   // Edge case strategy
   edgeCaseStrategy = 'hold',
-  onEdgeCaseStrategyChange
+  onEdgeCaseStrategyChange,
+  // Global repetition settings
+  globalRepetitionMode = 'fixed',
+  globalRepetitionValue = 0,
+  globalRepetitionRange = [0, 0] as [number, number],
+  onGlobalRepetitionModeChange,
+  onGlobalRepetitionValueChange,
+  onGlobalRepetitionRangeChange
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
@@ -175,6 +189,73 @@ export function SetsManagerDialog({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
+          {/* Global Repetition Settings */}
+          <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-sm font-semibold text-slate-200">Global Repetitions</h4>
+                <p className="text-xs text-slate-400">Applies to all sets unless overridden</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-[120px_1fr] gap-3 items-center">
+              <Label className="text-sm text-slate-300">Mode</Label>
+              <Select
+                value={globalRepetitionMode}
+                onValueChange={(value) => onGlobalRepetitionModeChange?.(value as 'fixed' | 'range')}
+              >
+                <SelectTrigger className="h-9 bg-slate-900 border-slate-600" data-testid="global-repetition-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Fixed</SelectItem>
+                  <SelectItem value="range">Range</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {globalRepetitionMode === 'fixed' ? (
+                <>
+                  <Label className="text-sm text-slate-300">Count</Label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={globalRepetitionValue}
+                    onChange={(e) => onGlobalRepetitionValueChange?.(parseInt(e.target.value) || 0)}
+                    className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm"
+                    data-testid="global-repetition-value"
+                  />
+                </>
+              ) : (
+                <>
+                  <Label className="text-sm text-slate-300">Min-Max</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={globalRepetitionRange[0]}
+                      onChange={(e) => onGlobalRepetitionRangeChange?.([parseInt(e.target.value) || 0, globalRepetitionRange[1]])}
+                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1"
+                      placeholder="Min"
+                      data-testid="global-repetition-range-min"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={globalRepetitionRange[1]}
+                      onChange={(e) => onGlobalRepetitionRangeChange?.([globalRepetitionRange[0], parseInt(e.target.value) || 0])}
+                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1"
+                      placeholder="Max"
+                      data-testid="global-repetition-range-max"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Type-safe conditional rendering based on whether state capture props are ALL provided */}
           {/* Use explicit checks to avoid rejecting valid empty values (empty Set, [0,0] range, etc.) */}
           {enabledShapeTypes instanceof Set && scatterSettings !== undefined && batchConfigSettings !== undefined && 

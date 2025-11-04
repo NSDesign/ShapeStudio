@@ -547,6 +547,11 @@ export default function Sidebar({
   const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
   const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
   
+  // Global repetition settings for generation sets
+  const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
+  const [globalRepetitionValue, setGlobalRepetitionValue] = useState<number>(0);
+  const [globalRepetitionRange, setGlobalRepetitionRange] = useState<[number, number]>([0, 0]);
+  
   // Sets Manager Dialog state is now managed centrally via props
 
   // Get user preferences for sidebar section visibility
@@ -5960,6 +5965,12 @@ export default function Sidebar({
           return setId || '';
         }}
         batchExportCount={exportBatchCount}
+        globalRepetitionMode={globalRepetitionMode}
+        globalRepetitionValue={globalRepetitionValue}
+        globalRepetitionRange={globalRepetitionRange}
+        onGlobalRepetitionModeChange={setGlobalRepetitionMode}
+        onGlobalRepetitionValueChange={setGlobalRepetitionValue}
+        onGlobalRepetitionRangeChange={setGlobalRepetitionRange}
         edgeCaseStrategy={exportSettings.edgeCaseStrategy || 'hold'}
         onEdgeCaseStrategyChange={(strategy) => {
           console.log('Edge case strategy changed:', strategy);

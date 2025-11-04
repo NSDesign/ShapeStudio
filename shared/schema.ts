@@ -1521,6 +1521,11 @@ export interface GenerationSet {
   // Generation-specific metadata
   generationOrder: number;              // Order in which this set should be generated
   description?: string;                 // Optional description for the set
+  
+  // Per-set repetition settings (overrides global settings)
+  repetitionMode: 'use-global' | 'fixed' | 'range';  // Use global, fixed count, or range mode
+  repetitionValue: number;              // Count when mode is 'fixed'
+  repetitionRange: [number, number];    // Min/max when mode is 'range'
 }
 
 // Enhanced batch configuration supporting both single and multi-generation modes
@@ -1563,6 +1568,13 @@ export interface EnhancedBatchConfig {
       setSpacing: number;             // Z-index spacing between generation sets
       preventOverlap: boolean;        // Ensure sets don't overlap in z-space
       useGlobalSettings: boolean;     // If true, ignore per-set zIndexConfig
+    };
+    
+    // Global repetition settings (applies to all sets unless overridden)
+    globalRepetitionSettings: {
+      repetitionMode: 'fixed' | 'range';  // Fixed count or range mode
+      repetitionValue: number;            // Count when mode is 'fixed'
+      repetitionRange: [number, number];  // Min/max when mode is 'range'
     };
   };
   
@@ -2294,7 +2306,11 @@ export const GenerationSetUtils = {
       margin: 0
     },
     generationOrder: 0,
-    description: undefined
+    description: undefined,
+    // Repetition settings (defaults to use-global mode with no repetitions)
+    repetitionMode: 'use-global',
+    repetitionValue: 0,
+    repetitionRange: [0, 0]
   }),
 
   // Validate shape count settings
