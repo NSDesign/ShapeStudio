@@ -60,3 +60,27 @@ Preferred communication style: Simple, everyday language.
 - **Utility Libraries**: clsx, date-fns, jsPDF.
 - **Database**: Drizzle ORM, Neon Database (Serverless PostgreSQL), PostgreSQL.
 - **Build Tools**: TypeScript, ESBuild, PostCSS, Vite plugins.
+
+## Future Features
+
+### Randomization Per Repetition
+When generating multiple repetitions of a shape set, each repetition could receive independent random values for enhanced variety:
+- **Random Positions**: Each repetition uses fresh random scatter/distribution coordinates
+- **Random Colors**: Independent color selection from ranges or palettes per repetition
+- **Random Sizes**: Separate scale randomization with min/max ranges for each instance
+- **Random Rotations**: Unique rotation angles within defined ranges per repetition
+- **Random Shape Counts**: When count mode is "range", each repetition gets its own random count
+- **Fresh Random Seeds**: Each repetition generates with a new random seed, ensuring complete independence of all random properties (gradients, blur, effects, etc.)
+
+Result: Multiple repetitions would create truly diverse variations rather than duplicates, useful for creating organic, natural-looking compositions.
+
+### Echo/Spread Effect
+A controlled layering system that creates deliberate position offsets between repetitions:
+- **Concept**: Each repetition is positioned at a predictable offset from the previous instance
+- **Visual Result**: Creates a "motion blur trail," "drop shadow," or "echo" effect
+- **Implementation**: Apply incremental X/Y offset to each successive repetition (e.g., +5px X, +5px Y per instance)
+- **Example**: 5 repetitions with offset (5,5) would appear at positions (0,0), (5,5), (10,10), (15,15), (20,20)
+- **Difference from Randomization**: Produces controlled, predictable visual patterns rather than chaotic variety
+- **Combination Potential**: Could work with randomization (random properties + predictable position offsets) for creative effects
+
+Use cases: Depth simulation, vintage print registration effects, neon glow trails, kinetic typography.
