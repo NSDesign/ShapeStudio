@@ -270,7 +270,7 @@ export default function Canvas({
           const gridSize = 50;
           const adjustedGridSize = gridSize / effectiveZoom;
           
-          ctx.strokeStyle = '#cccccc';
+          ctx.strokeStyle = currentArtboard.gridColor || '#cccccc';
           ctx.lineWidth = 0.5 / effectiveZoom;
           ctx.globalAlpha = 0.3;
           

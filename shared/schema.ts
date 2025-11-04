@@ -137,6 +137,7 @@ export interface AppSettingsDefaults {
   artboardDpi: number;
   artboardUnitType: 'pixels' | 'mm' | 'cm' | 'inches';
   artboardBackgroundColor: string;
+  artboardGridColor: string;
   artboardDisplayGrid: boolean;
   artboardDisplayBorder: boolean;
   artboardDisplayName: boolean;
@@ -164,6 +165,7 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   artboardDpi: 72,
   artboardUnitType: 'pixels',
   artboardBackgroundColor: '#ffffff',
+  artboardGridColor: '#cccccc',
   artboardDisplayGrid: false,
   artboardDisplayBorder: true,
   artboardDisplayName: true,

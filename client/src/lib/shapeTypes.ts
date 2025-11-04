@@ -368,6 +368,7 @@ export interface Artboard {
   dpi?: number;   // Resolution in dots per inch (default 72)
   unitType?: 'pixels' | 'mm' | 'cm' | 'inches'; // Display unit (default 'pixels')
   backgroundColor?: string;
+  gridColor?: string;
   displayGrid?: boolean;
   displayBorder?: boolean;
   displayName?: boolean;

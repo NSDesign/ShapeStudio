@@ -626,8 +626,14 @@ export default function Sidebar({
       artboardWidth: activeBoard.width,
       artboardHeight: activeBoard.height,
       artboardBackgroundColor: activeBoard.backgroundColor || '#ffffff',
+      artboardGridColor: activeBoard.gridColor || '#cccccc',
       artboardDisplayGrid: activeBoard.displayGrid || false,
       artboardDisplayBorder: activeBoard.displayBorder !== undefined ? activeBoard.displayBorder : true,
+      artboardDpi: activeBoard.dpi ?? 72,
+      artboardUnitType: activeBoard.unitType ?? 'pixels',
+      artboardDisplayName: activeBoard.displayName !== false,
+      artboardDisplayDimensions: activeBoard.displayDimensions === true,
+      artboardDisplayResolution: activeBoard.displayResolution === true,
       canvasPanX: appSettingsDefaults?.canvasPanX ?? 0,
       canvasPanY: appSettingsDefaults?.canvasPanY ?? 0,
       canvasZoom: appSettingsDefaults?.canvasZoom ?? 1,
@@ -636,7 +642,7 @@ export default function Sidebar({
     
     console.log('Saving app settings:', settings);
     await saveAppSettings.mutateAsync(settings);
-  }, [exportFormat, exportQuality, exportScale, exportMode, artboards, activeArtboard, saveAppSettings]);
+  }, [exportFormat, exportQuality, exportScale, exportMode, artboards, activeArtboard, saveAppSettings, isCollapsed, appSettingsDefaults]);
 
   // Load app settings handler
   const handleLoadAppSettings = useCallback(() => {
@@ -654,8 +660,14 @@ export default function Sidebar({
           width: appSettingsDefaults.artboardWidth,
           height: appSettingsDefaults.artboardHeight,
           backgroundColor: appSettingsDefaults.artboardBackgroundColor,
+          gridColor: appSettingsDefaults.artboardGridColor,
           displayGrid: appSettingsDefaults.artboardDisplayGrid,
-          displayBorder: appSettingsDefaults.artboardDisplayBorder
+          displayBorder: appSettingsDefaults.artboardDisplayBorder,
+          dpi: appSettingsDefaults.artboardDpi,
+          unitType: appSettingsDefaults.artboardUnitType,
+          displayName: appSettingsDefaults.artboardDisplayName,
+          displayDimensions: appSettingsDefaults.artboardDisplayDimensions,
+          displayResolution: appSettingsDefaults.artboardDisplayResolution
         });
       }
     }
@@ -954,58 +966,6 @@ export default function Sidebar({
               <Label className="text-xs text-teal-300">Active Artboard Settings</Label>
               
               <div className="space-y-2">
-                {/* Background Color */}
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Background Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={currentArtboard.backgroundColor || '#ffffff'}
-                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
-                      className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
-                      data-testid="input-artboard-background-color"
-                    />
-                    <Input
-                      type="text"
-                      value={currentArtboard.backgroundColor || '#ffffff'}
-                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
-                      placeholder="#ffffff"
-                      className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                      data-testid="input-artboard-background-hex"
-                    />
-                  </div>
-                </div>
-
-                {/* Display Grid Toggle */}
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-slate-400">Display Grid</Label>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={currentArtboard.displayGrid !== false}
-                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayGrid: checked })}
-                      data-testid="switch-artboard-display-grid"
-                    />
-                    <span className="text-xs text-slate-400">
-                      {currentArtboard.displayGrid !== false ? 'On' : 'Off'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Display Border Toggle */}
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-slate-400">Display Border</Label>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={currentArtboard.displayBorder !== false}
-                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayBorder: checked })}
-                      data-testid="switch-artboard-display-border"
-                    />
-                    <span className="text-xs text-slate-400">
-                      {currentArtboard.displayBorder !== false ? 'On' : 'Off'}
-                    </span>
-                  </div>
-                </div>
-
                 {/* Artboard Name */}
                 <div className="space-y-1">
                   <Label className="text-xs text-slate-400">Artboard Name</Label>
@@ -1132,6 +1092,28 @@ export default function Sidebar({
                   )}
                 </div>
 
+                {/* Background Color */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Background Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={currentArtboard.backgroundColor || '#ffffff'}
+                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
+                      className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                      data-testid="input-artboard-background-color"
+                    />
+                    <Input
+                      type="text"
+                      value={currentArtboard.backgroundColor || '#ffffff'}
+                      onChange={(e) => onUpdateArtboard(currentArtboard.id, { backgroundColor: e.target.value })}
+                      placeholder="#ffffff"
+                      className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                      data-testid="input-artboard-background-hex"
+                    />
+                  </div>
+                </div>
+
                 <Separator className="bg-slate-600/50" />
 
                 {/* Display Name Toggle */}
@@ -1178,6 +1160,60 @@ export default function Sidebar({
                     </span>
                   </div>
                 </div>
+
+                {/* Display Border Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Border</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayBorder !== false}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayBorder: checked })}
+                      data-testid="switch-artboard-display-border"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayBorder !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Display Grid Toggle */}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Display Grid</Label>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={currentArtboard.displayGrid !== false}
+                      onCheckedChange={(checked) => onUpdateArtboard(currentArtboard.id, { displayGrid: checked })}
+                      data-testid="switch-artboard-display-grid"
+                    />
+                    <span className="text-xs text-slate-400">
+                      {currentArtboard.displayGrid !== false ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Grid Color */}
+                {currentArtboard.displayGrid !== false && (
+                  <div className="space-y-1 ml-4">
+                    <Label className="text-xs text-slate-400">Grid Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={currentArtboard.gridColor || '#cccccc'}
+                        onChange={(e) => onUpdateArtboard(currentArtboard.id, { gridColor: e.target.value })}
+                        className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                        data-testid="input-artboard-grid-color"
+                      />
+                      <Input
+                        type="text"
+                        value={currentArtboard.gridColor || '#cccccc'}
+                        onChange={(e) => onUpdateArtboard(currentArtboard.id, { gridColor: e.target.value })}
+                        placeholder="#cccccc"
+                        className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        data-testid="input-artboard-grid-hex"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           );
