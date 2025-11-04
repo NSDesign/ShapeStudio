@@ -127,7 +127,8 @@ export interface AppSettingsDefaults {
   // Export settings
   exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf';
   exportQuality: number;              // 10-100 for lossy formats
-  exportScale: number;                // 0.1-8x scaling (up to 600dpi)
+  exportScale: number;                // 0.1-20x scaling (up to 1200dpi)
+  exportAutoScaleFromDpi: boolean;    // Auto-calculate scale from artboard DPI
   exportMode: 'selection' | 'artboard' | 'all';
   
   // Artboard settings
@@ -158,6 +159,7 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   exportFormat: 'png',
   exportQuality: 90,
   exportScale: 1,
+  exportAutoScaleFromDpi: false,
   exportMode: 'all',
   artboardName: 'Artboard 1',
   artboardWidth: 400,

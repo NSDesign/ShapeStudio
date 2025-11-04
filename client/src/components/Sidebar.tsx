@@ -543,6 +543,7 @@ export default function Sidebar({
   const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf'>('png');
   const [exportQuality, setExportQuality] = useState(90);
   const [exportScale, setExportScale] = useState(1);
+  const [exportAutoScaleFromDpi, setExportAutoScaleFromDpi] = useState(false);
   const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
   
   // Sets Manager Dialog state is now managed centrally via props
@@ -590,6 +591,7 @@ export default function Sidebar({
       setExportFormat(appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
+      setExportAutoScaleFromDpi(appSettingsDefaults.exportAutoScaleFromDpi ?? false);
       setExportMode(appSettingsDefaults.exportMode);
       setIsCollapsed(appSettingsDefaults.sidebarCollapsed ?? false);
     }
@@ -621,6 +623,7 @@ export default function Sidebar({
       exportFormat,
       exportQuality,
       exportScale,
+      exportAutoScaleFromDpi,
       exportMode,
       artboardName: activeBoard.name,
       artboardWidth: activeBoard.width,
@@ -642,7 +645,7 @@ export default function Sidebar({
     
     console.log('Saving app settings:', settings);
     await saveAppSettings.mutateAsync(settings);
-  }, [exportFormat, exportQuality, exportScale, exportMode, artboards, activeArtboard, saveAppSettings, isCollapsed, appSettingsDefaults]);
+  }, [exportFormat, exportQuality, exportScale, exportAutoScaleFromDpi, exportMode, artboards, activeArtboard, saveAppSettings, isCollapsed, appSettingsDefaults]);
 
   // Load app settings handler
   const handleLoadAppSettings = useCallback(() => {
@@ -651,6 +654,7 @@ export default function Sidebar({
       setExportFormat(appSettingsDefaults.exportFormat);
       setExportQuality(appSettingsDefaults.exportQuality);
       setExportScale(appSettingsDefaults.exportScale);
+      setExportAutoScaleFromDpi(appSettingsDefaults.exportAutoScaleFromDpi ?? false);
       setExportMode(appSettingsDefaults.exportMode);
       
       // Apply artboard settings to the active artboard
@@ -689,6 +693,7 @@ export default function Sidebar({
         setExportFormat('png');
         setExportQuality(90);
         setExportScale(1);
+        setExportAutoScaleFromDpi(false);
         setExportMode('all');
         
         // Clear generation sets (start fresh)
@@ -717,6 +722,16 @@ export default function Sidebar({
       setIsLoadingProject(false);
     }
   }, [onLoadProject, onClearAll]);
+
+  // Calculate effective export scale (auto from DPI or manual)
+  const effectiveExportScale = useMemo(() => {
+    if (exportAutoScaleFromDpi) {
+      const activeBoard = artboards.find(a => a.id === activeArtboard);
+      const dpi = activeBoard?.dpi ?? 72;
+      return Number((dpi / 72).toFixed(2));
+    }
+    return exportScale;
+  }, [exportAutoScaleFromDpi, exportScale, artboards, activeArtboard]);
 
   // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
@@ -1428,8 +1443,8 @@ export default function Sidebar({
                    shapeTop > artboard.y + artboard.height);
         });
 
-        canvasWidth = artboard.width * exportScale;
-        canvasHeight = artboard.height * exportScale;
+        canvasWidth = artboard.width * effectiveExportScale;
+        canvasHeight = artboard.height * effectiveExportScale;
         translateX = -artboard.x;
         translateY = -artboard.y;
         filename = `${artboard.name}-export-${Date.now()}.${exportFormat}`;
@@ -1485,8 +1500,8 @@ export default function Sidebar({
         });
 
         const padding = 20;
-        canvasWidth = (maxX - minX + padding * 2) * exportScale;
-        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        canvasWidth = (maxX - minX + padding * 2) * effectiveExportScale;
+        canvasHeight = (maxY - minY + padding * 2) * effectiveExportScale;
         translateX = -minX + padding;
         translateY = -minY + padding;
         filename = `selection-export-${Date.now()}.${exportFormat}`;
@@ -1502,8 +1517,8 @@ export default function Sidebar({
         if (shapesToExport.length === 0) {
           console.warn('No shapes found for export - creating blank canvas');
           // Create a blank canvas instead of returning
-          canvasWidth = 800 * exportScale;
-          canvasHeight = 600 * exportScale;
+          canvasWidth = 800 * effectiveExportScale;
+          canvasHeight = 600 * effectiveExportScale;
           translateX = 0;
           translateY = 0;
           filename = `all-export-${Date.now()}.${exportFormat}`;
@@ -1552,8 +1567,8 @@ export default function Sidebar({
         });
 
           const padding = 20;
-          canvasWidth = (maxX - minX + padding * 2) * exportScale;
-          canvasHeight = (maxY - minY + padding * 2) * exportScale;
+          canvasWidth = (maxX - minX + padding * 2) * effectiveExportScale;
+          canvasHeight = (maxY - minY + padding * 2) * effectiveExportScale;
           translateX = -minX + padding;
           translateY = -minY + padding;
           filename = `all-shapes-export-${Date.now()}.${exportFormat}`;
@@ -1577,7 +1592,7 @@ export default function Sidebar({
       }
 
       // Apply scaling and translation
-      ctx.scale(exportScale, exportScale);
+      ctx.scale(effectiveExportScale, effectiveExportScale);
       ctx.translate(translateX, translateY);
 
       // Sort shapes by z-index and render them directly (no copying to avoid property corruption)
@@ -1586,7 +1601,7 @@ export default function Sidebar({
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale, exportDPI);
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
       
       // Add a small delay to show the loading state
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -1607,8 +1622,8 @@ export default function Sidebar({
       const exportDPI = activeArtboardData?.dpi ?? 72;
       
       // Set canvas dimensions based on shapes or default size
-      let canvasWidth = 800 * exportScale;
-      let canvasHeight = 600 * exportScale;
+      let canvasWidth = 800 * effectiveExportScale;
+      let canvasHeight = 600 * effectiveExportScale;
       let translateX = 0;
       let translateY = 0;
 
@@ -1648,8 +1663,8 @@ export default function Sidebar({
         });
 
         const padding = 20;
-        canvasWidth = (maxX - minX + padding * 2) * exportScale;
-        canvasHeight = (maxY - minY + padding * 2) * exportScale;
+        canvasWidth = (maxX - minX + padding * 2) * effectiveExportScale;
+        canvasHeight = (maxY - minY + padding * 2) * effectiveExportScale;
         translateX = -minX + padding;
         translateY = -minY + padding;
       }
@@ -1670,7 +1685,7 @@ export default function Sidebar({
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       // Apply scaling and translation
-      ctx.scale(exportScale, exportScale);
+      ctx.scale(effectiveExportScale, effectiveExportScale);
       ctx.translate(translateX, translateY);
 
       // Render shapes
@@ -1678,7 +1693,7 @@ export default function Sidebar({
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, exportScale, exportDPI);
+      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
     };
 
     // NEW BATCH EXPORT WITH ZIP PACKAGING
@@ -1954,8 +1969,8 @@ export default function Sidebar({
             
             if (targetArtboard) {
               // Use exact artboard dimensions (batch export always uses artboard)
-              canvasWidth = targetArtboard.width * exportScale;
-              canvasHeight = targetArtboard.height * exportScale;
+              canvasWidth = targetArtboard.width * effectiveExportScale;
+              canvasHeight = targetArtboard.height * effectiveExportScale;
               translateX = -targetArtboard.x;
               translateY = -targetArtboard.y;
               console.log(`📐 Using artboard bounds: ${targetArtboard.width}x${targetArtboard.height}`);
@@ -1997,11 +2012,11 @@ export default function Sidebar({
               });
 
               const padding = 20;
-              canvasWidth = (maxX - minX + padding * 2) * exportScale;
-              canvasHeight = (maxY - minY + padding * 2) * exportScale;
+              canvasWidth = (maxX - minX + padding * 2) * effectiveExportScale;
+              canvasHeight = (maxY - minY + padding * 2) * effectiveExportScale;
               translateX = -minX + padding;
               translateY = -minY + padding;
-              console.log(`📐 Using dynamic bounds: ${canvasWidth/exportScale}x${canvasHeight/exportScale}`);
+              console.log(`📐 Using dynamic bounds: ${canvasWidth/effectiveExportScale}x${canvasHeight/effectiveExportScale}`);
             }
 
             // Create canvas and render
@@ -2039,7 +2054,7 @@ export default function Sidebar({
                   throw new Error('Failed to create compositing canvas context');
                 }
                 
-                compositingCtx.scale(exportScale, exportScale);
+                compositingCtx.scale(effectiveExportScale, effectiveExportScale);
                 compositingCtx.translate(translateX, translateY);
                 
                 const enabledSets = generationSets
@@ -2075,8 +2090,8 @@ export default function Sidebar({
                 globalMaxY += padding;
 
                 // Calculate shared canvas dimensions in world coordinates (no translation yet)
-                const sharedWidth = Math.ceil((globalMaxX - globalMinX) * exportScale);
-                const sharedHeight = Math.ceil((globalMaxY - globalMinY) * exportScale);
+                const sharedWidth = Math.ceil((globalMaxX - globalMinX) * effectiveExportScale);
+                const sharedHeight = Math.ceil((globalMaxY - globalMinY) * effectiveExportScale);
 
                 console.log(`📐 Shared canvas dimensions: ${sharedWidth}x${sharedHeight} for all sets`);
                 
@@ -2099,7 +2114,7 @@ export default function Sidebar({
                   }
                   
                   // Apply transform for world coordinates (translate to align with global bounds)
-                  setCtx.scale(exportScale, exportScale);
+                  setCtx.scale(effectiveExportScale, effectiveExportScale);
                   setCtx.translate(-globalMinX, -globalMinY);
                   
                   // Render shapes for this set with their individual blend modes/comp ops
@@ -2120,8 +2135,8 @@ export default function Sidebar({
                   }
                   
                   // Draw at world coordinates - compositingCtx already has scale/translate applied
-                  const canvasX = (globalMinX + translateX) * exportScale;
-                  const canvasY = (globalMinY + translateY) * exportScale;
+                  const canvasX = (globalMinX + translateX) * effectiveExportScale;
+                  const canvasY = (globalMinY + translateY) * effectiveExportScale;
                   compositingCtx.drawImage(setCanvas, canvasX, canvasY);
                   
                   // Reset composite operation for next set
@@ -2147,7 +2162,7 @@ export default function Sidebar({
                 ctx.fillStyle = exportBackgroundColor;
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
                 
-                ctx.scale(exportScale, exportScale);
+                ctx.scale(effectiveExportScale, effectiveExportScale);
                 ctx.translate(translateX, translateY);
                 
                 const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
@@ -2160,9 +2175,9 @@ export default function Sidebar({
                 const pdf = new jsPDF({
                   orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
                   unit: 'pt',
-                  format: [canvasWidth / exportScale, canvasHeight / exportScale]
+                  format: [canvasWidth / effectiveExportScale, canvasHeight / effectiveExportScale]
                 });
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvasWidth / exportScale, canvasHeight / exportScale);
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvasWidth / effectiveExportScale, canvasHeight / effectiveExportScale);
                 const pdfBlob = pdf.output('blob');
                 if (packageAsZip && zip) {
                   zip.file(filename, pdfBlob);
@@ -2557,17 +2572,38 @@ export default function Sidebar({
           )}
 
           <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Scale (up to 8x for 600dpi)</Label>
+            <Label className="text-xs text-slate-400">Export Scale (up to 20x for 1200dpi)</Label>
             <Slider
               value={[exportScale]}
               onValueChange={([value]) => setExportScale(value)}
               min={0.1}
-              max={8}
+              max={20}
               step={0.1}
               className="w-full"
+              disabled={exportAutoScaleFromDpi}
             />
-            <span className="text-xs text-slate-500">{exportScale}x {exportScale >= 6 ? '(600dpi+)' : exportScale >= 4 ? '(High DPI)' : ''}</span>
+            <span className="text-xs text-slate-500">
+              {exportAutoScaleFromDpi ? '(Disabled - using auto-scale)' : `${exportScale}x`}
+            </span>
           </div>
+
+          <div className="flex items-center justify-between space-x-3">
+            <div className="flex-1">
+              <Label className="text-xs text-slate-400">Auto-scale from DPI</Label>
+              <p className="text-xs text-slate-500 mt-0.5">Calculate scale automatically based on artboard DPI</p>
+            </div>
+            <Switch
+              checked={exportAutoScaleFromDpi}
+              onCheckedChange={setExportAutoScaleFromDpi}
+              data-testid="toggle-auto-scale-dpi"
+            />
+          </div>
+
+          {exportAutoScaleFromDpi && (
+            <div className="p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300">
+              Auto: {effectiveExportScale}x from {artboards.find(a => a.id === activeArtboard)?.dpi ?? 72} DPI
+            </div>
+          )}
 
           <Button
             onClick={handleExportShapes}

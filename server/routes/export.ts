@@ -116,7 +116,7 @@ const LiveStateApiSchema = z.object({
     // Export settings from current UI
     exportFormat: z.enum(['png', 'jpeg', 'webp', 'avif', 'bmp']),
     exportQuality: z.number().min(1).max(100),
-    exportScale: z.number().min(0.1).max(8),
+    exportScale: z.number().min(0.1).max(20),
     exportScope: z.enum(['all', 'selected', 'artboard']),
     // Batch settings from UI
     exportBatchModeEnabled: z.boolean(),
