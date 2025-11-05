@@ -138,14 +138,14 @@
     overscroll-behavior: none;
   }
   
-  /* Hide default numeric input spinners */
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
+  /* Hide default numeric input spinners (except for .show-spinners) */
+  input[type="number"]:not(.show-spinners)::-webkit-inner-spin-button,
+  input[type="number"]:not(.show-spinners)::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
   
-  input[type="number"] {
+  input[type="number"]:not(.show-spinners) {
     -moz-appearance: textfield;
     appearance: textfield;
   }

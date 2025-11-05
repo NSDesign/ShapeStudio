@@ -223,7 +223,7 @@ export function SetsManagerDialog({
                     max="100"
                     value={globalRepetitionValue}
                     onChange={(e) => onGlobalRepetitionValueChange?.(parseInt(e.target.value) || 0)}
-                    className="h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
+                    className="!h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                     data-testid="global-repetition-value"
                   />
                 </>
@@ -237,7 +237,7 @@ export function SetsManagerDialog({
                       max="100"
                       value={globalRepetitionRange[0]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([parseInt(e.target.value) || 0, globalRepetitionRange[1]])}
-                      className="flex-1 h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
+                      className="flex-1 !h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                       placeholder="Min"
                       data-testid="global-repetition-range-min"
                     />
@@ -247,7 +247,7 @@ export function SetsManagerDialog({
                       max="100"
                       value={globalRepetitionRange[1]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([globalRepetitionRange[0], parseInt(e.target.value) || 0])}
-                      className="flex-1 h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
+                      className="flex-1 !h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                       placeholder="Max"
                       data-testid="global-repetition-range-max"
                     />
