@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { NumericInput } from '@/components/ui/numeric-input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -523,13 +524,12 @@ export function IndividualSetConfig({
                         <Label className="text-white text-xs">
                           Count: {generationSet.repetitionValue}
                         </Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
+                        <NumericInput
+                          min={0}
+                          max={100}
                           value={generationSet.repetitionValue}
-                          onChange={(e) => handleRepetitionValueChange(parseInt(e.target.value) || 0)}
-                          className="!h-9 bg-slate-700 border-slate-600 text-white mt-1 show-spinners"
+                          onChange={handleRepetitionValueChange}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
                           data-testid="input-repetition-value"
                         />
                         <p className="text-xs text-slate-500 mt-1">
@@ -544,23 +544,21 @@ export function IndividualSetConfig({
                           Range: {generationSet.repetitionRange[0]} - {generationSet.repetitionRange[1]}
                         </Label>
                         <div className="grid grid-cols-2 gap-2 mt-1">
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
+                          <NumericInput
+                            min={0}
+                            max={100}
                             value={generationSet.repetitionRange[0]}
-                            onChange={(e) => handleRepetitionRangeChange([parseInt(e.target.value) || 0, generationSet.repetitionRange[1]])}
-                            className="!h-9 bg-slate-700 border-slate-600 text-white show-spinners"
+                            onChange={(value) => handleRepetitionRangeChange([value, generationSet.repetitionRange[1]])}
+                            className="bg-slate-700 border-slate-600 text-white"
                             placeholder="Min"
                             data-testid="input-repetition-range-min"
                           />
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
+                          <NumericInput
+                            min={0}
+                            max={100}
                             value={generationSet.repetitionRange[1]}
-                            onChange={(e) => handleRepetitionRangeChange([generationSet.repetitionRange[0], parseInt(e.target.value) || 0])}
-                            className="!h-9 bg-slate-700 border-slate-600 text-white show-spinners"
+                            onChange={(value) => handleRepetitionRangeChange([generationSet.repetitionRange[0], value])}
+                            className="bg-slate-700 border-slate-600 text-white"
                             placeholder="Max"
                             data-testid="input-repetition-range-max"
                           />
