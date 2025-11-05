@@ -295,18 +295,21 @@
     }
   }
 
-  /* Mobile: Use native controls - webkit spinners don't work on mobile anyway */
+  /* Mobile: Use native controls for better touch interaction */
   @media (hover: none) and (pointer: coarse) {
     input[type="number"].show-spinners {
-      -webkit-appearance: auto;
-      -moz-appearance: auto;
-      appearance: auto;
+      -webkit-appearance: auto !important;
+      -moz-appearance: number-input !important;
+      appearance: auto !important;
     }
     
     input[type="number"].show-spinners::-webkit-inner-spin-button,
     input[type="number"].show-spinners::-webkit-outer-spin-button {
-      -webkit-appearance: auto;
-      opacity: 1;
+      -webkit-appearance: auto !important;
+      opacity: 1 !important;
+      display: block !important;
+      margin: 0;
+      height: auto;
     }
   }
 

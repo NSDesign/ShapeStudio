@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -216,13 +217,13 @@ export function SetsManagerDialog({
               {globalRepetitionMode === 'fixed' ? (
                 <>
                   <Label className="text-sm text-slate-300">Count</Label>
-                  <input
+                  <Input
                     type="number"
                     min="0"
                     max="100"
                     value={globalRepetitionValue}
                     onChange={(e) => onGlobalRepetitionValueChange?.(parseInt(e.target.value) || 0)}
-                    className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm show-spinners"
+                    className="h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                     data-testid="global-repetition-value"
                   />
                 </>
@@ -230,23 +231,23 @@ export function SetsManagerDialog({
                 <>
                   <Label className="text-sm text-slate-300">Min-Max</Label>
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       max="100"
                       value={globalRepetitionRange[0]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([parseInt(e.target.value) || 0, globalRepetitionRange[1]])}
-                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1 show-spinners"
+                      className="flex-1 h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                       placeholder="Min"
                       data-testid="global-repetition-range-min"
                     />
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       max="100"
                       value={globalRepetitionRange[1]}
                       onChange={(e) => onGlobalRepetitionRangeChange?.([globalRepetitionRange[0], parseInt(e.target.value) || 0])}
-                      className="h-9 px-3 rounded-md bg-slate-900 border border-slate-600 text-slate-200 text-sm flex-1 show-spinners"
+                      className="flex-1 h-9 bg-slate-900 border-slate-600 text-slate-200 show-spinners"
                       placeholder="Max"
                       data-testid="global-repetition-range-max"
                     />
