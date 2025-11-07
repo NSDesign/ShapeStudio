@@ -3081,29 +3081,110 @@ export default function BatchConfigDialog({
                       
                       {currentSettings.strokeEnabled && (
                         <div className="ml-6 space-y-4">
-                          {/* Stroke Probability and Width */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Stroke Probability: {currentSettings.strokeProbability}%</Label>
-                              <Slider
-                                value={[currentSettings.strokeProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
-                                max={100}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
+                          {/* Stroke Probability */}
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-300">Stroke Probability: {currentSettings.strokeProbability}%</Label>
+                            <Slider
+                              value={[currentSettings.strokeProbability]}
+                              onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
+                              max={100}
+                              step={5}
+                              className="[&_[role=slider]]:bg-blue-600"
+                            />
+                          </div>
+                          
+                          {/* Stroke Width with Mode Support */}
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Label className="text-sm font-medium text-slate-200">Stroke Width</Label>
+                              <Select value={currentSettings.strokeWidthMode} onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as any })}>
+                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Stroke Width: {currentSettings.strokeWidthRange?.[0] || 1} - {currentSettings.strokeWidthRange?.[1] || 5}px</Label>
-                              <Slider
-                                value={currentSettings.strokeWidthRange || [1, 5]}
-                                onValueChange={(value) => handleSettingsUpdate({ strokeWidthRange: value as [number, number] })}
-                                min={1}
-                                max={20}
-                                step={1}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
+                            
+                            {currentSettings.strokeWidthMode === 'range' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Width Range: {currentSettings.strokeWidthRange?.[0] || 1}px - {currentSettings.strokeWidthRange?.[1] || 5}px</Label>
+                                <Slider
+                                  value={currentSettings.strokeWidthRange || [1, 5]}
+                                  onValueChange={(value) => handleSettingsUpdate({ strokeWidthRange: value as [number, number] })}
+                                  min={0.5}
+                                  max={20}
+                                  step={0.5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.strokeWidthMode === 'define' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Width: {currentSettings.strokeWidthDefine || 3}px</Label>
+                                <Slider
+                                  value={[currentSettings.strokeWidthDefine || 3]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeWidthDefine: value })}
+                                  min={0.5}
+                                  max={20}
+                                  step={0.5}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {currentSettings.strokeWidthMode === 'incremental' && (
+                              <div className="space-y-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Start Value: {currentSettings.strokeWidthStartValue}px</Label>
+                                  <Slider
+                                    value={[currentSettings.strokeWidthStartValue]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthStartValue: value })}
+                                    min={0.5}
+                                    max={20}
+                                    step={0.5}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Increment: {currentSettings.strokeWidthIncrement}px per shape</Label>
+                                  <Slider
+                                    value={[currentSettings.strokeWidthIncrement]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthIncrement: value })}
+                                    min={0}
+                                    max={2}
+                                    step={0.1}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={currentSettings.strokeWidthModulationEnabled}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ strokeWidthModulationEnabled: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  />
+                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                </div>
+                                {currentSettings.strokeWidthModulationEnabled && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-300">Modulation: Wrap at {currentSettings.strokeWidthModulationValue}px</Label>
+                                    <Slider
+                                      value={[currentSettings.strokeWidthModulationValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
+                                      min={1}
+                                      max={20}
+                                      step={0.5}
+                                      className="[&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                )}
+                                <p className="text-xs text-slate-400">Progressive stroke width (start + index × increment, with optional modulation)</p>
+                              </div>
+                            )}
                           </div>
 
                           {/* Stroke Color Controls */}
@@ -4027,12 +4108,13 @@ export default function BatchConfigDialog({
                         />
                         <Label className="text-sm font-medium text-slate-200">Blur</Label>
                         <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
-                          <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                             <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -4075,6 +4157,55 @@ export default function BatchConfigDialog({
                                 step={1}
                                 className="[&_[role=slider]]:bg-purple-600"
                               />
+                            </div>
+                          )}
+
+                          {currentSettings.blurMode === 'incremental' && (
+                            <div className="space-y-3">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.blurStartValue}px</Label>
+                                <Slider
+                                  value={[currentSettings.blurStartValue]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ blurStartValue: value })}
+                                  min={0}
+                                  max={50}
+                                  step={0.5}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Increment: {currentSettings.blurIncrement}px per shape</Label>
+                                <Slider
+                                  value={[currentSettings.blurIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ blurIncrement: value })}
+                                  min={0}
+                                  max={5}
+                                  step={0.1}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.blurModulationEnabled}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ blurModulationEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                />
+                                <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                              </div>
+                              {currentSettings.blurModulationEnabled && (
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-300">Modulation: Wrap at {currentSettings.blurModulationValue}px</Label>
+                                  <Slider
+                                    value={[currentSettings.blurModulationValue]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ blurModulationValue: value })}
+                                    min={1}
+                                    max={50}
+                                    step={1}
+                                    className="[&_[role=slider]]:bg-purple-600"
+                                  />
+                                </div>
+                              )}
+                              <p className="text-xs text-slate-400">Progressive blur (start + index × increment, with optional modulation)</p>
                             </div>
                           )}
                         </div>
