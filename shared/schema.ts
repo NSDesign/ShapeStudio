@@ -386,7 +386,6 @@ export interface BatchConfigSettings {
   maximumSize: number; // absolute maximum size constraint
   
   // Enhanced Position Properties (removed percentage and edge-offset modes)
-  positionsEnabled: boolean; // Controls whether positions are applied to distribution layouts
   xPositionMode: 'range' | 'value' | 'directional' | 'incremental';
   yPositionMode: 'range' | 'value' | 'directional' | 'incremental';
   
@@ -865,7 +864,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   maximumSize: 500, // Maximum size constraint
   
   // Enhanced Position Properties
-  positionsEnabled: false, // Default: positions are not applied in distribution layouts
   xPositionMode: 'range',
   yPositionMode: 'range',
   
@@ -1886,7 +1884,6 @@ export const BatchConfigSettingsSchema = z.object({
   maximumSize: z.number(),
   
   // Enhanced positions
-  positionsEnabled: z.boolean(),
   xPositionMode: z.enum(['range', 'value', 'directional', 'incremental']),
   yPositionMode: z.enum(['range', 'value', 'directional', 'incremental']),
   incrementalResetPerBatch: z.boolean(),
