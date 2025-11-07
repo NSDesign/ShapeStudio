@@ -1338,9 +1338,9 @@ export const useShapeEditor = () => {
 
   // Helper functions for enhanced position calculation
   const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to sidebar settings
+    // If properties are disabled, return 0 (no position offset from shape properties)
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-      return (Math.random() - 0.5) * artboardWidth * 0.8; // Fallback to random position
+      return 0;
     }
 
     switch (settings.xPositionMode) {
@@ -1483,9 +1483,9 @@ export const useShapeEditor = () => {
 
 
   const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to sidebar settings
+    // If properties are disabled, return 0 (no position offset from shape properties)
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-      return (Math.random() - 0.5) * artboardHeight * 0.8; // Fallback to random position
+      return 0;
     }
 
     switch (settings.yPositionMode) {

@@ -45,7 +45,7 @@ function calculatePositionX(
   lastIncrementalIndex: number = 0
 ): number {
   if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-    return (Math.random() - 0.5) * artboardWidth * 0.8;
+    return 0;
   }
 
   switch (settings.xPositionMode) {
@@ -86,7 +86,7 @@ function calculatePositionY(
   lastIncrementalIndex: number = 0
 ): number {
   if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
-    return (Math.random() - 0.5) * artboardHeight * 0.8;
+    return 0;
   }
 
   switch (settings.yPositionMode) {
