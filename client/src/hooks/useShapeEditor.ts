@@ -1672,9 +1672,9 @@ export const useShapeEditor = () => {
       let shapeY = position.y;
 
       if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
-        // Enhanced position calculation based on mode
-        shapeX = calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-        shapeY = calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        // Enhanced position calculation based on mode (additive to distribution position)
+        shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       }
 
       // Combine batch config with scatter settings for complete configuration

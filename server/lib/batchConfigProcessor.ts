@@ -384,11 +384,11 @@ export function generateShapesWithBatchConfig(
     let shapeX = position.x;
     let shapeY = position.y;
 
-    // Apply batch config position overrides if properties are enabled (matching client logic)
+    // Apply batch config position offsets if properties are enabled (additive to distribution position)
     if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
-      // Always calculate positions when properties enabled (client doesn't check for xPositionMode)
-      shapeX = calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-      shapeY = calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      // Add position offsets from shape properties (additive, not replacement)
+      shapeX += calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      shapeY += calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
