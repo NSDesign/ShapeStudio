@@ -236,28 +236,25 @@ function filterEnabledBatchConfig(batchConfig: BatchConfigSettings, enabledShape
       filtered.maximumSize = batchConfig.maximumSize;
     }
 
-    // Position Properties
-    if (batchConfig.positionsEnabled) {
-      filtered.positionsEnabled = true;
-      filtered.xPositionMode = batchConfig.xPositionMode;
-      filtered.yPositionMode = batchConfig.yPositionMode;
-      filtered.incrementalResetPerBatch = batchConfig.incrementalResetPerBatch;
-      filtered.directionalEvenDistribution = batchConfig.directionalEvenDistribution;
-      filtered.directionalClusterAngle = batchConfig.directionalClusterAngle;
-      filtered.xPositionValue = batchConfig.xPositionValue;
-      filtered.yPositionValue = batchConfig.yPositionValue;
-      filtered.positionDirectionalMode = batchConfig.positionDirectionalMode;
-      filtered.positionDirectionalAngle = batchConfig.positionDirectionalAngle;
-      filtered.positionDirectionalDistance = batchConfig.positionDirectionalDistance;
-      filtered.xPositionIncrement = batchConfig.xPositionIncrement;
-      filtered.yPositionIncrement = batchConfig.yPositionIncrement;
-      filtered.xPositionStartValue = batchConfig.xPositionStartValue;
-      filtered.yPositionStartValue = batchConfig.yPositionStartValue;
-      filtered.xPositionModulationEnabled = batchConfig.xPositionModulationEnabled;
-      filtered.xPositionModulationValue = batchConfig.xPositionModulationValue;
-      filtered.yPositionModulationEnabled = batchConfig.yPositionModulationEnabled;
-      filtered.yPositionModulationValue = batchConfig.yPositionModulationValue;
-    }
+    // Position Properties (always included, position offsets are always additive)
+    filtered.xPositionMode = batchConfig.xPositionMode;
+    filtered.yPositionMode = batchConfig.yPositionMode;
+    filtered.incrementalResetPerBatch = batchConfig.incrementalResetPerBatch;
+    filtered.directionalEvenDistribution = batchConfig.directionalEvenDistribution;
+    filtered.directionalClusterAngle = batchConfig.directionalClusterAngle;
+    filtered.xPositionValue = batchConfig.xPositionValue;
+    filtered.yPositionValue = batchConfig.yPositionValue;
+    filtered.positionDirectionalMode = batchConfig.positionDirectionalMode;
+    filtered.positionDirectionalAngle = batchConfig.positionDirectionalAngle;
+    filtered.positionDirectionalDistance = batchConfig.positionDirectionalDistance;
+    filtered.xPositionIncrement = batchConfig.xPositionIncrement;
+    filtered.yPositionIncrement = batchConfig.yPositionIncrement;
+    filtered.xPositionStartValue = batchConfig.xPositionStartValue;
+    filtered.yPositionStartValue = batchConfig.yPositionStartValue;
+    filtered.xPositionModulationEnabled = batchConfig.xPositionModulationEnabled;
+    filtered.xPositionModulationValue = batchConfig.xPositionModulationValue;
+    filtered.yPositionModulationEnabled = batchConfig.yPositionModulationEnabled;
+    filtered.yPositionModulationValue = batchConfig.yPositionModulationValue;
 
     // Shape-specific properties (only include if relevant shapes are enabled)
     // Rectangle/Rounded-Rectangle corner radius (only if rounded variants are enabled)

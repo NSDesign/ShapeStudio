@@ -845,8 +845,7 @@ export function generateShapesWithBatchConfig(
       spiralTightness: batchConfig.spiralTightness,
       tangentAlignment: batchConfig.tangentAlignment,
       segmentDistribution: batchConfig.segmentDistribution,
-      reverseDirection: batchConfig.reverseDirection,
-      positionsEnabled: batchConfig.positionsEnabled
+      reverseDirection: batchConfig.reverseDirection
     };
 
     // Default generation info for single batch

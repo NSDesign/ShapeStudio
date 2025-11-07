@@ -2475,8 +2475,7 @@ export const useShapeEditor = () => {
         spiralTightness: effectiveBatchConfig.spiralTightness,
         tangentAlignment: effectiveBatchConfig.tangentAlignment,
         segmentDistribution: effectiveBatchConfig.segmentDistribution,
-        reverseDirection: effectiveBatchConfig.reverseDirection,
-        positionsEnabled: effectiveBatchConfig.positionsEnabled
+        reverseDirection: effectiveBatchConfig.reverseDirection
       };
 
       // Apply grid positioning additively with existing positions

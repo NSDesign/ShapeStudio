@@ -71,7 +71,6 @@ interface DistributionConfig {
   tangentAlignment?: boolean;
   segmentDistribution?: 'even' | 'clustered';
   reverseDirection?: boolean;
-  positionsEnabled?: boolean;
 }
 
 /**
@@ -321,16 +320,11 @@ export function applyGridDistribution(
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
     
-    let finalX, finalY;
-    if (config.positionsEnabled) {
-      const positionOffsetX = shape.transform?.x || 0;
-      const positionOffsetY = shape.transform?.y || 0;
-      finalX = offsetX + gridX + randomX + positionOffsetX;
-      finalY = offsetY + gridY + randomY + positionOffsetY;
-    } else {
-      finalX = offsetX + gridX + randomX;
-      finalY = offsetY + gridY + randomY;
-    }
+    // Always apply position offsets additively
+    const positionOffsetX = shape.transform?.x || 0;
+    const positionOffsetY = shape.transform?.y || 0;
+    const finalX = offsetX + gridX + randomX + positionOffsetX;
+    const finalY = offsetY + gridY + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
@@ -402,16 +396,11 @@ export function applyWaveDistribution(
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
     
-    let finalX, finalY;
-    if (config.positionsEnabled) {
-      const positionOffsetX = shape.transform?.x || 0;
-      const positionOffsetY = shape.transform?.y || 0;
-      finalX = x + randomX + positionOffsetX;
-      finalY = y + randomY + positionOffsetY;
-    } else {
-      finalX = x + randomX;
-      finalY = y + randomY;
-    }
+    // Always apply position offsets additively
+    const positionOffsetX = shape.transform?.x || 0;
+    const positionOffsetY = shape.transform?.y || 0;
+    const finalX = x + randomX + positionOffsetX;
+    const finalY = y + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
@@ -542,16 +531,11 @@ export function applyEllipseDistribution(
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
     
-    let finalX, finalY;
-    if (config.positionsEnabled) {
-      const positionOffsetX = shape.transform?.x || 0;
-      const positionOffsetY = shape.transform?.y || 0;
-      finalX = x + randomX + positionOffsetX;
-      finalY = y + randomY + positionOffsetY;
-    } else {
-      finalX = x + randomX;
-      finalY = y + randomY;
-    }
+    // Always apply position offsets additively
+    const positionOffsetX = shape.transform?.x || 0;
+    const positionOffsetY = shape.transform?.y || 0;
+    const finalX = x + randomX + positionOffsetX;
+    const finalY = y + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
@@ -642,16 +626,11 @@ export function applySpiralDistribution(
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
     
-    let finalX, finalY;
-    if (config.positionsEnabled) {
-      const positionOffsetX = shape.transform?.x || 0;
-      const positionOffsetY = shape.transform?.y || 0;
-      finalX = x + randomX + positionOffsetX;
-      finalY = y + randomY + positionOffsetY;
-    } else {
-      finalX = x + randomX;
-      finalY = y + randomY;
-    }
+    // Always apply position offsets additively
+    const positionOffsetX = shape.transform?.x || 0;
+    const positionOffsetY = shape.transform?.y || 0;
+    const finalX = x + randomX + positionOffsetX;
+    const finalY = y + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
@@ -701,16 +680,11 @@ export function applyAutoDistribution(
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
     
-    let finalX, finalY;
-    if (config.positionsEnabled) {
-      const positionOffsetX = shape.transform?.x || 0;
-      const positionOffsetY = shape.transform?.y || 0;
-      finalX = x + randomX + positionOffsetX;
-      finalY = y + randomY + positionOffsetY;
-    } else {
-      finalX = x + randomX;
-      finalY = y + randomY;
-    }
+    // Always apply position offsets additively
+    const positionOffsetX = shape.transform?.x || 0;
+    const positionOffsetY = shape.transform?.y || 0;
+    const finalX = x + randomX + positionOffsetX;
+    const finalY = y + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
