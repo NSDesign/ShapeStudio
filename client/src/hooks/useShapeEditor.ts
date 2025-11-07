@@ -1517,6 +1517,50 @@ export const useShapeEditor = () => {
     }
   };
 
+  // Helper function to calculate blur radius based on mode
+  const calculateBlur = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    switch (settings.blurMode) {
+      case 'range':
+        const [minBlur, maxBlur] = settings.blurRange;
+        return minBlur + Math.random() * (maxBlur - minBlur);
+      
+      case 'define':
+        return settings.blurDefine;
+      
+      case 'incremental':
+        let incrementAmount = (settings.blurIncrement || 0) * shapeIndex;
+        if (settings.blurModulationEnabled && settings.blurModulationValue > 0) {
+          incrementAmount = incrementAmount % settings.blurModulationValue;
+        }
+        return settings.blurStartValue + incrementAmount;
+      
+      default:
+        return 0;
+    }
+  };
+
+  // Helper function to calculate stroke width based on mode
+  const calculateStrokeWidth = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    switch (settings.strokeWidthMode) {
+      case 'range':
+        const [minWidth, maxWidth] = settings.strokeWidthRange;
+        return minWidth + Math.random() * (maxWidth - minWidth);
+      
+      case 'define':
+        return settings.strokeWidthDefine;
+      
+      case 'incremental':
+        let incrementAmount = (settings.strokeWidthIncrement || 0) * shapeIndex;
+        if (settings.strokeWidthModulationEnabled && settings.strokeWidthModulationValue > 0) {
+          incrementAmount = incrementAmount % settings.strokeWidthModulationValue;
+        }
+        return settings.strokeWidthStartValue + incrementAmount;
+      
+      default:
+        return 1; // Default stroke width
+    }
+  };
+
   const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
@@ -1975,9 +2019,8 @@ export const useShapeEditor = () => {
           } else {
             // Stroke enabled - apply all stroke properties
 
-            // Apply stroke width range
-            const [minWidth, maxWidth] = effectiveBatchConfig.strokeWidthRange;
-            shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
+            // Apply stroke width using helper function that supports all modes (range/define/incremental)
+            shape.properties.strokeWidth = calculateStrokeWidth(effectiveBatchConfig, index);
 
             // Apply stroke opacity based on mode
             if (effectiveBatchConfig.strokeOpacityMode === 'range') {
@@ -2029,14 +2072,9 @@ export const useShapeEditor = () => {
         if (effectiveBatchConfig.shapeEffectsEnabled && effectiveBatchConfig.blurEnabled) {
           const shouldHaveBlur = Math.random() * 100 < effectiveBatchConfig.blurProbability;
           if (shouldHaveBlur) {
-            // Apply blur based on mode
-            if (effectiveBatchConfig.blurMode === 'range') {
-              const [minBlur, maxBlur] = effectiveBatchConfig.blurRange;
-              shape.properties.blurRadius = minBlur + Math.random() * (maxBlur - minBlur);
-            } else if (effectiveBatchConfig.blurMode === 'define') {
-              shape.properties.blurRadius = effectiveBatchConfig.blurDefine;
-            }
-            console.log(`🌊 [BLUR] Shape ${index}: Applied blur radius=${shape.properties.blurRadius}px`);
+            // Apply blur using helper function that supports all modes (range/define/incremental)
+            shape.properties.blurRadius = calculateBlur(effectiveBatchConfig, index);
+            console.log(`🌊 [BLUR] Shape ${index}: Applied blur radius=${shape.properties.blurRadius}px (mode: ${effectiveBatchConfig.blurMode})`);
           } else {
             shape.properties.blurRadius = 0;
             console.log(`🌊 [BLUR] Shape ${index}: No blur applied (probability failed)`);
