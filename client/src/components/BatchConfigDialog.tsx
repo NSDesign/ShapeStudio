@@ -1920,28 +1920,9 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                           </div>
-                          
-
-                          {/* Positions Enabled Toggle */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded border border-slate-600">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Positions Enabled</Label>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.positionsEnabled}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ positionsEnabled: checked as boolean })}
-                                  disabled={currentSettings.distributionLayoutEnabled}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600 disabled:opacity-50"
-                                />
-                                <Label className={`text-xs ${currentSettings.distributionLayoutEnabled ? 'text-slate-500' : 'text-slate-300'}`}>
-                                  {currentSettings.distributionLayoutEnabled ? 'Disabled during distribution layout' : 'Add positions to layout'}
-                                </Label>
-                              </div>
-                            </div>
-                          </div>
 
                           {/* Enhanced X Position Controls */}
-                          <div className={`space-y-3 p-3 bg-slate-800 rounded ${!currentSettings.positionsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
                             <div className="flex items-center space-x-2">
                               <Label className="text-sm font-medium text-slate-200">X Position</Label>
                               <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
@@ -2103,7 +2084,7 @@ export default function BatchConfigDialog({
                           </div>
                           
                           {/* Enhanced Y Position Controls */}
-                          <div className={`space-y-3 p-3 bg-slate-800 rounded ${!currentSettings.positionsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <div className="space-y-3 p-3 bg-slate-800 rounded">
                             <div className="flex items-center space-x-2">
                               <Label className="text-sm font-medium text-slate-200">Y Position</Label>
                               <Select value={currentSettings.yPositionMode} onValueChange={(value) => handleSettingsUpdate({ yPositionMode: value as any })}>
