@@ -287,6 +287,53 @@ function calculateConstrainedSize(
   return Math.max(width, height);
 }
 
+/**
+ * Helper function to calculate blur radius based on mode
+ */
+function calculateBlur(settings: BatchConfigSettings, shapeIndex: number): number {
+  switch (settings.blurMode) {
+    case 'range':
+      const [minBlur, maxBlur] = settings.blurRange;
+      return minBlur + Math.random() * (maxBlur - minBlur);
+    
+    case 'define':
+      return settings.blurDefine;
+    
+    case 'incremental':
+      let incrementAmount = (settings.blurIncrement || 0) * shapeIndex;
+      if (settings.blurModulationEnabled && settings.blurModulationValue > 0) {
+        incrementAmount = incrementAmount % settings.blurModulationValue;
+      }
+      return settings.blurStartValue + incrementAmount;
+    
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Helper function to calculate stroke width based on mode
+ */
+function calculateStrokeWidth(settings: BatchConfigSettings, shapeIndex: number): number {
+  switch (settings.strokeWidthMode) {
+    case 'range':
+      const [minWidth, maxWidth] = settings.strokeWidthRange;
+      return minWidth + Math.random() * (maxWidth - minWidth);
+    
+    case 'define':
+      return settings.strokeWidthDefine;
+    
+    case 'incremental':
+      let incrementAmount = (settings.strokeWidthIncrement || 0) * shapeIndex;
+      if (settings.strokeWidthModulationEnabled && settings.strokeWidthModulationValue > 0) {
+        incrementAmount = incrementAmount % settings.strokeWidthModulationValue;
+      }
+      return settings.strokeWidthStartValue + incrementAmount;
+    
+    default:
+      return 1; // Default stroke width
+  }
+}
 
 /**
  * Main function to generate shapes with batch configuration
@@ -489,8 +536,8 @@ export function generateShapesWithBatchConfig(
           shape.properties.strokeOpacity = 0;
           shape.properties.strokeWidth = 0;
         } else {
-          const [minWidth, maxWidth] = batchConfig.strokeWidthRange;
-          shape.properties.strokeWidth = minWidth + Math.random() * (maxWidth - minWidth);
+          // Apply stroke width using helper function that supports all modes (range/define/incremental)
+          shape.properties.strokeWidth = calculateStrokeWidth(batchConfig, index);
 
           if (batchConfig.strokeOpacityMode === 'range') {
             const [minOpacity, maxOpacity] = batchConfig.strokeOpacityRange;
@@ -523,12 +570,8 @@ export function generateShapesWithBatchConfig(
       if (batchConfig.shapeEffectsEnabled && batchConfig.blurEnabled) {
         const shouldHaveBlur = Math.random() * 100 < batchConfig.blurProbability;
         if (shouldHaveBlur) {
-          if (batchConfig.blurMode === 'range') {
-            const [minBlur, maxBlur] = batchConfig.blurRange;
-            shape.properties.blurRadius = minBlur + Math.random() * (maxBlur - minBlur);
-          } else if (batchConfig.blurMode === 'define') {
-            shape.properties.blurRadius = batchConfig.blurDefine;
-          }
+          // Apply blur using helper function that supports all modes (range/define/incremental)
+          shape.properties.blurRadius = calculateBlur(batchConfig, index);
         } else {
           shape.properties.blurRadius = 0;
         }
