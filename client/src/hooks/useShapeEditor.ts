@@ -2208,13 +2208,9 @@ export const useShapeEditor = () => {
             const [minTransX, maxTransX] = effectiveBatchConfig.translateXRange;
             positionDeltaX = minTransX + Math.random() * (maxTransX - minTransX);
           } else if (effectiveBatchConfig.xTransformMode === 'value') {
-            const baseValue = effectiveBatchConfig.xTransformValue || 0;
-            const randomVariation = (Math.random() * 2 - 1) * 50;
-            positionDeltaX = baseValue + randomVariation;
+            positionDeltaX = effectiveBatchConfig.xTransformValue || 0;
           } else if (effectiveBatchConfig.xTransformMode === 'incremental') {
-            const incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * index;
-            const randomVariation = (Math.random() * 2 - 1) * 25;
-            positionDeltaX = incrementAmount + randomVariation;
+            positionDeltaX = (effectiveBatchConfig.xTransformIncrement || 0) * index;
           } else if (effectiveBatchConfig.xTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
@@ -2269,13 +2265,9 @@ export const useShapeEditor = () => {
             const [minTransY, maxTransY] = effectiveBatchConfig.translateYRange;
             positionDeltaY = minTransY + Math.random() * (maxTransY - minTransY);
           } else if (effectiveBatchConfig.yTransformMode === 'value') {
-            const baseValue = effectiveBatchConfig.yTransformValue || 0;
-            const randomVariation = (Math.random() * 2 - 1) * 50;
-            positionDeltaY = baseValue + randomVariation;
+            positionDeltaY = effectiveBatchConfig.yTransformValue || 0;
           } else if (effectiveBatchConfig.yTransformMode === 'incremental') {
-            const incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * index;
-            const randomVariation = (Math.random() * 2 - 1) * 25;
-            positionDeltaY = incrementAmount + randomVariation;
+            positionDeltaY = (effectiveBatchConfig.yTransformIncrement || 0) * index;
           } else if (effectiveBatchConfig.yTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const currentArtboard = artboards.find(ab => ab.id === activeArtboard);

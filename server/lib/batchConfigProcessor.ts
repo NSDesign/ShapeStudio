@@ -692,13 +692,9 @@ export function generateShapesWithBatchConfig(
           const [minTransX, maxTransX] = batchConfig.translateXRange;
           positionDeltaX = minTransX + Math.random() * (maxTransX - minTransX);
         } else if (batchConfig.xTransformMode === 'value') {
-          const baseValue = batchConfig.xTransformValue || 0;
-          const randomVariation = (Math.random() * 2 - 1) * 50;
-          positionDeltaX = baseValue + randomVariation;
+          positionDeltaX = batchConfig.xTransformValue || 0;
         } else if (batchConfig.xTransformMode === 'incremental') {
-          const incrementAmount = (batchConfig.xTransformIncrement || 0) * index;
-          const randomVariation = (Math.random() * 2 - 1) * 25;
-          positionDeltaX = incrementAmount + randomVariation;
+          positionDeltaX = (batchConfig.xTransformIncrement || 0) * index;
         }
 
         let positionDeltaY = 0;
@@ -706,13 +702,9 @@ export function generateShapesWithBatchConfig(
           const [minTransY, maxTransY] = batchConfig.translateYRange;
           positionDeltaY = minTransY + Math.random() * (maxTransY - minTransY);
         } else if (batchConfig.yTransformMode === 'value') {
-          const baseValue = batchConfig.yTransformValue || 0;
-          const randomVariation = (Math.random() * 2 - 1) * 50;
-          positionDeltaY = baseValue + randomVariation;
+          positionDeltaY = batchConfig.yTransformValue || 0;
         } else if (batchConfig.yTransformMode === 'incremental') {
-          const incrementAmount = (batchConfig.yTransformIncrement || 0) * index;
-          const randomVariation = (Math.random() * 2 - 1) * 25;
-          positionDeltaY = incrementAmount + randomVariation;
+          positionDeltaY = (batchConfig.yTransformIncrement || 0) * index;
         }
 
         let scaleX = shape.transform.scaleX;
