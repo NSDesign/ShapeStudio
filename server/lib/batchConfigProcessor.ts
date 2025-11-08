@@ -366,16 +366,26 @@ export function generateShapesWithBatchConfig(
     return [];
   }
 
+  // Check if any positioning system is active
+  const hasDistributionLayout = batchConfig.distributionLayoutEnabled;
+  const hasShapeProperties = batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled;
+  const hasTransforms = batchConfig.transformsEnabled;
+  const anyPositioningSystemActive = hasDistributionLayout || hasShapeProperties || hasTransforms;
+
   // Phase 1: Generate initial positions using scatter settings from generation sets (matching client)
-  console.log(`🎲 [SERVER] Phase 1: Generating initial positions for ${count} shapes`);
-  const positions = useSmartDistribution 
-    ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, scatterSettings.distribution)
-    : Array.from({ length: count }, () => ({
-        x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
-        y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
-      }));
+  // Only use random scatter if NO positioning systems are active (fallback behavior)
+  // Otherwise start with deterministic (0, 0) so positioning systems aren't polluted
+  console.log(`🎲 [SERVER] Phase 1: Generating initial positions for ${count} shapes (positioning systems active: ${anyPositioningSystemActive})`);
+  const positions = anyPositioningSystemActive
+    ? Array.from({ length: count }, () => ({ x: 0, y: 0 }))
+    : (useSmartDistribution 
+        ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, scatterSettings.distribution)
+        : Array.from({ length: count }, () => ({
+            x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
+            y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
+          })));
   
-  console.log(`✅ [SERVER] Phase 1: Generated ${positions.length} random positions`);
+  console.log(`✅ [SERVER] Phase 1: Generated ${positions.length} ${anyPositioningSystemActive ? 'deterministic (0,0)' : 'random scatter'} positions`);
 
   // Create shapes with initial positions
   const newShapes = positions.map((position, index) => {
