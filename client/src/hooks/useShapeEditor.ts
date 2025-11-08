@@ -1655,14 +1655,22 @@ export const useShapeEditor = () => {
       return [];
     }
 
-    const positions = useDistribution ? SmartDistributionAlgorithm.generatePositions(
-      count,
-      canvasBounds,
-      effectiveScatterSettings.distribution
-    ) : Array.from({ length: count }, (_, i) => ({
-      x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
-      y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
-    }));
+    // Check if any positioning system is active
+    const hasDistributionLayout = effectiveBatchConfig.distributionLayoutEnabled;
+    const hasShapeProperties = effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled;
+    const hasTransforms = effectiveBatchConfig.transformsEnabled;
+    const anyPositioningSystemActive = hasDistributionLayout || hasShapeProperties || hasTransforms;
+
+    // Only use random scatter if NO positioning systems are active (fallback behavior)
+    // Otherwise start with deterministic (0, 0) so positioning systems aren't polluted
+    const positions = anyPositioningSystemActive
+      ? Array.from({ length: count }, () => ({ x: 0, y: 0 }))
+      : (useDistribution 
+          ? SmartDistributionAlgorithm.generatePositions(count, canvasBounds, effectiveScatterSettings.distribution)
+          : Array.from({ length: count }, () => ({
+              x: canvasBounds.x + (Math.random() - 0.5) * (canvasBounds.width * 0.8),
+              y: canvasBounds.y + (Math.random() - 0.5) * (canvasBounds.height * 0.8)
+            })));
 
     const newShapes = positions.map((position, index) => {
       const randomType = effectiveEnabledTypes[Math.floor(Math.random() * effectiveEnabledTypes.length)];
