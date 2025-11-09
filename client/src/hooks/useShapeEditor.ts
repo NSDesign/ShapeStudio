@@ -205,6 +205,15 @@ export const useShapeEditor = () => {
         gridStartY: set.batchConfig.gridStartY ?? 0,
         gridSpacingXMode: set.batchConfig.gridSpacingXMode || 'define',
         gridSpacingYMode: set.batchConfig.gridSpacingYMode || 'define',
+        // Migrate legacy position modulation (boolean+value → mode enum)
+        xPositionModulationMode: set.batchConfig.xPositionModulationMode || 
+          ((set.batchConfig as any).xPositionModulationEnabled && (set.batchConfig as any).xPositionModulationValue > 0 
+            ? 'pixel-value' 
+            : 'off'),
+        yPositionModulationMode: set.batchConfig.yPositionModulationMode || 
+          ((set.batchConfig as any).yPositionModulationEnabled && (set.batchConfig as any).yPositionModulationValue > 0 
+            ? 'pixel-value' 
+            : 'off'),
       } : set.batchConfig;
 
       return {
@@ -1360,10 +1369,15 @@ export const useShapeEditor = () => {
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         let value = settings.xPositionStartValue + (effectiveIndex * settings.xPositionIncrement);
         
-        // Apply modulation if enabled
-        if (settings.xPositionModulationEnabled && settings.xPositionModulationValue > 0) {
+        // Apply modulation based on mode
+        if (settings.xPositionModulationMode === 'pixel-value' && settings.xPositionModulationValue > 0) {
           value = value % settings.xPositionModulationValue;
+        } else if (settings.xPositionModulationMode === 'shape-count' && settings.xPositionModulationValue > 0) {
+          // Modulate by shape count (e.g., every 3 shapes resets)
+          const moduloIndex = effectiveIndex % settings.xPositionModulationValue;
+          value = settings.xPositionStartValue + (moduloIndex * settings.xPositionIncrement);
         }
+        // Note: grid-row mode will be implemented in later task when refactoring to use grid cell index
         
         return value;
 
@@ -1505,10 +1519,15 @@ export const useShapeEditor = () => {
         const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
         let value = settings.yPositionStartValue + (effectiveIndex * settings.yPositionIncrement);
         
-        // Apply modulation if enabled
-        if (settings.yPositionModulationEnabled && settings.yPositionModulationValue > 0) {
+        // Apply modulation based on mode
+        if (settings.yPositionModulationMode === 'pixel-value' && settings.yPositionModulationValue > 0) {
           value = value % settings.yPositionModulationValue;
+        } else if (settings.yPositionModulationMode === 'shape-count' && settings.yPositionModulationValue > 0) {
+          // Modulate by shape count (e.g., every 3 shapes resets)
+          const moduloIndex = effectiveIndex % settings.yPositionModulationValue;
+          value = settings.yPositionStartValue + (moduloIndex * settings.yPositionIncrement);
         }
+        // Note: grid-row mode will be implemented in later task when refactoring to use grid cell index
         
         return value;
 

@@ -63,9 +63,15 @@ function calculatePositionX(
       const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
       let value = settings.xPositionStartValue + (effectiveIndex * settings.xPositionIncrement);
       
-      if (settings.xPositionModulationEnabled && settings.xPositionModulationValue > 0) {
+      // Apply modulation based on mode
+      if (settings.xPositionModulationMode === 'pixel-value' && settings.xPositionModulationValue > 0) {
         value = value % settings.xPositionModulationValue;
+      } else if (settings.xPositionModulationMode === 'shape-count' && settings.xPositionModulationValue > 0) {
+        // Modulate by shape count (e.g., every 3 shapes resets)
+        const moduloIndex = effectiveIndex % settings.xPositionModulationValue;
+        value = settings.xPositionStartValue + (moduloIndex * settings.xPositionIncrement);
       }
+      // Note: grid-row mode will be implemented when refactoring to use grid cell index
       
       return value;
 
@@ -104,9 +110,15 @@ function calculatePositionY(
       const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
       let value = settings.yPositionStartValue + (effectiveIndex * settings.yPositionIncrement);
       
-      if (settings.yPositionModulationEnabled && settings.yPositionModulationValue > 0) {
+      // Apply modulation based on mode
+      if (settings.yPositionModulationMode === 'pixel-value' && settings.yPositionModulationValue > 0) {
         value = value % settings.yPositionModulationValue;
+      } else if (settings.yPositionModulationMode === 'shape-count' && settings.yPositionModulationValue > 0) {
+        // Modulate by shape count (e.g., every 3 shapes resets)
+        const moduloIndex = effectiveIndex % settings.yPositionModulationValue;
+        value = settings.yPositionStartValue + (moduloIndex * settings.yPositionIncrement);
       }
+      // Note: grid-row mode will be implemented when refactoring to use grid cell index
       
       return value;
 

@@ -408,10 +408,10 @@ export interface BatchConfigSettings {
   yPositionIncrement: number;
   xPositionStartValue: number; // Start value for X position
   yPositionStartValue: number; // Start value for Y position
-  xPositionModulationEnabled: boolean; // Enable modulation for X position
-  xPositionModulationValue: number; // Modulation value for X position
-  yPositionModulationEnabled: boolean; // Enable modulation for Y position
-  yPositionModulationValue: number; // Modulation value for Y position
+  xPositionModulationMode: 'off' | 'grid-row' | 'pixel-value' | 'shape-count'; // Modulation mode for X position
+  xPositionModulationValue: number; // Modulation value for X position (used for pixel-value and shape-count modes)
+  yPositionModulationMode: 'off' | 'grid-row' | 'pixel-value' | 'shape-count'; // Modulation mode for Y position
+  yPositionModulationValue: number; // Modulation value for Y position (used for pixel-value and shape-count modes)
   
   // Rectangle-specific Properties
   rectangleCornerRadiusMode: 'range' | 'define' | 'incremental';
@@ -886,10 +886,10 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   yPositionIncrement: 50,
   xPositionStartValue: 0,
   yPositionStartValue: 0,
-  xPositionModulationEnabled: false,
-  xPositionModulationValue: 800,
-  yPositionModulationEnabled: false,
-  yPositionModulationValue: 600,
+  xPositionModulationMode: 'off',
+  xPositionModulationValue: 200,
+  yPositionModulationMode: 'off',
+  yPositionModulationValue: 200,
   
   // Rectangle-specific Properties
   rectangleCornerRadiusMode: 'range',
@@ -1898,9 +1898,9 @@ export const BatchConfigSettingsSchema = z.object({
   yPositionIncrement: z.number(),
   xPositionStartValue: z.number(),
   yPositionStartValue: z.number(),
-  xPositionModulationEnabled: z.boolean(),
+  xPositionModulationMode: z.enum(['off', 'grid-row', 'pixel-value', 'shape-count']),
   xPositionModulationValue: z.number(),
-  yPositionModulationEnabled: z.boolean(),
+  yPositionModulationMode: z.enum(['off', 'grid-row', 'pixel-value', 'shape-count']),
   yPositionModulationValue: z.number(),
   
   // Shape-specific properties
