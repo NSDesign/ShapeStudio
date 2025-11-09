@@ -2058,22 +2058,32 @@ export default function BatchConfigDialog({
                                   <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.xPositionModulationEnabled}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ xPositionModulationEnabled: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  <Label className="text-xs text-slate-300">Modulation Mode</Label>
+                                  <Select value={currentSettings.xPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ xPositionModulationMode: value as any })}>
+                                    <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">Off</SelectItem>
+                                      <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                      <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
+                                      <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                                {currentSettings.xPositionModulationEnabled && (
+                                {(currentSettings.xPositionModulationMode === 'pixel-value' || currentSettings.xPositionModulationMode === 'shape-count') && (
                                   <>
-                                    <Label className="text-xs text-slate-300">Modulation Value: {currentSettings.xPositionModulationValue}px</Label>
+                                    <Label className="text-xs text-slate-300">
+                                      {currentSettings.xPositionModulationMode === 'pixel-value' ? 'Modulation Value: ' : 'Shape Count: '}
+                                      {currentSettings.xPositionModulationValue}
+                                      {currentSettings.xPositionModulationMode === 'pixel-value' ? 'px' : ' shapes'}
+                                    </Label>
                                     <Slider
                                       value={[currentSettings.xPositionModulationValue]}
                                       onValueChange={([value]) => handleSettingsUpdate({ xPositionModulationValue: value })}
-                                      min={50}
-                                      max={1500}
-                                      step={50}
+                                      min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                      max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                      step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
                                       className="[&_[role=slider]]:bg-blue-600"
                                     />
                                   </>
@@ -2220,22 +2230,32 @@ export default function BatchConfigDialog({
                                   <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.yPositionModulationEnabled}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ yPositionModulationEnabled: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  <Label className="text-xs text-slate-300">Modulation Mode</Label>
+                                  <Select value={currentSettings.yPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ yPositionModulationMode: value as any })}>
+                                    <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">Off</SelectItem>
+                                      <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                      <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
+                                      <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                                {currentSettings.yPositionModulationEnabled && (
+                                {(currentSettings.yPositionModulationMode === 'pixel-value' || currentSettings.yPositionModulationMode === 'shape-count') && (
                                   <>
-                                    <Label className="text-xs text-slate-300">Modulation Value: {currentSettings.yPositionModulationValue}px</Label>
+                                    <Label className="text-xs text-slate-300">
+                                      {currentSettings.yPositionModulationMode === 'pixel-value' ? 'Modulation Value: ' : 'Shape Count: '}
+                                      {currentSettings.yPositionModulationValue}
+                                      {currentSettings.yPositionModulationMode === 'pixel-value' ? 'px' : ' shapes'}
+                                    </Label>
                                     <Slider
                                       value={[currentSettings.yPositionModulationValue]}
                                       onValueChange={([value]) => handleSettingsUpdate({ yPositionModulationValue: value })}
-                                      min={50}
-                                      max={1500}
-                                      step={50}
+                                      min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                      max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                      step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
                                       className="[&_[role=slider]]:bg-blue-600"
                                     />
                                   </>
