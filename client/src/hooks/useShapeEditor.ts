@@ -10,6 +10,7 @@ import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
+import { getEffectiveTranslateRange } from '../lib/artboardUtils';
 
 // Interface for overriding UI state during generation (used for generation sets)
 export interface GenerationContextOverrides {
@@ -2276,10 +2277,19 @@ export const useShapeEditor = () => {
           const shapeRelativeX = shape.transform.x - originX;
           const shapeRelativeY = shape.transform.y - originY;
 
+          // Get active artboard bounds for transforms
+          const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
+          const artboardBounds = {
+            x: currentArtboard?.x ?? canvasBounds.x,
+            y: currentArtboard?.y ?? canvasBounds.y,
+            width: currentArtboard?.width ?? canvasBounds.width,
+            height: currentArtboard?.height ?? canvasBounds.height
+          };
+          
           // Apply enhanced position transforms (X)
           let positionDeltaX = 0;
           if (effectiveBatchConfig.xTransformMode === 'range') {
-            const [minTransX, maxTransX] = effectiveBatchConfig.translateXRange;
+            const [minTransX, maxTransX] = getEffectiveTranslateRange('x', effectiveBatchConfig, artboardBounds);
             positionDeltaX = minTransX + Math.random() * (maxTransX - minTransX);
           } else if (effectiveBatchConfig.xTransformMode === 'value') {
             positionDeltaX = effectiveBatchConfig.xTransformValue || 0;
@@ -2287,9 +2297,8 @@ export const useShapeEditor = () => {
             positionDeltaX = (effectiveBatchConfig.xTransformIncrement || 0) * index;
           } else if (effectiveBatchConfig.xTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
-            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
-            const artboardWidth = currentArtboard?.width || canvasBounds.width;
-            const artboardX = currentArtboard?.x || canvasBounds.x;
+            const artboardWidth = artboardBounds.width;
+            const artboardX = artboardBounds.x;
             const shapeBounds = shape.getBounds();
             
             // Calculate shape X anchor point (relative to shape center)
@@ -2336,7 +2345,7 @@ export const useShapeEditor = () => {
           // Apply enhanced position transforms (Y)
           let positionDeltaY = 0;
           if (effectiveBatchConfig.yTransformMode === 'range') {
-            const [minTransY, maxTransY] = effectiveBatchConfig.translateYRange;
+            const [minTransY, maxTransY] = getEffectiveTranslateRange('y', effectiveBatchConfig, artboardBounds);
             positionDeltaY = minTransY + Math.random() * (maxTransY - minTransY);
           } else if (effectiveBatchConfig.yTransformMode === 'value') {
             positionDeltaY = effectiveBatchConfig.yTransformValue || 0;
@@ -2344,9 +2353,8 @@ export const useShapeEditor = () => {
             positionDeltaY = (effectiveBatchConfig.yTransformIncrement || 0) * index;
           } else if (effectiveBatchConfig.yTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
-            const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
-            const artboardHeight = currentArtboard?.height || canvasBounds.height;
-            const artboardY = currentArtboard?.y || canvasBounds.y;
+            const artboardHeight = artboardBounds.height;
+            const artboardY = artboardBounds.y;
             const shapeBounds = shape.getBounds();
             
             // Calculate shape Y anchor point (relative to shape center)

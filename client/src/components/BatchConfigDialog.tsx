@@ -3396,6 +3396,17 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.transformsEnabled && (
                   <div className="ml-6 space-y-4">
+                    {/* Artboard-Aware Toggle */}
+                    <div className="flex items-center space-x-2 p-2 bg-slate-700 rounded">
+                      <Checkbox
+                        checked={currentSettings.transformsArtboardAware}
+                        onCheckedChange={(checked) => handleSettingsUpdate({ transformsArtboardAware: checked as boolean })}
+                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                        data-testid="checkbox-transforms-artboard-aware"
+                      />
+                      <Label className="text-xs text-slate-300">Use Artboard Bounds for Translate X/Y Ranges</Label>
+                    </div>
+                    
                     {/* X and Y Translate Enhanced Controls */}
                     <div className="space-y-3 p-3 bg-slate-800 rounded">
                       <Label className="text-sm font-medium text-slate-200">Position (X/Y Translate)</Label>

@@ -120,3 +120,31 @@ export const DPI_PRESETS = [
   { label: 'Print High (600 DPI)', value: 600 },
   { label: 'Print Ultra (1200 DPI)', value: 1200 },
 ] as const;
+
+/**
+ * Get effective translate range for shape transforms based on artboard-aware setting
+ * 
+ * When transformsArtboardAware is enabled, returns artboard bounds.
+ * Otherwise, returns the user's manual translate range settings.
+ */
+export function getEffectiveTranslateRange(
+  axis: 'x' | 'y',
+  settings: { 
+    transformsArtboardAware: boolean; 
+    translateXRange?: [number, number]; 
+    translateYRange?: [number, number];
+  },
+  artboard: { x: number; y: number; width: number; height: number }
+): [number, number] {
+  if (!settings.transformsArtboardAware) {
+    // Use manual ranges when toggle is OFF
+    return axis === 'x' 
+      ? (settings.translateXRange || [-50, 50])
+      : (settings.translateYRange || [-50, 50]);
+  }
+  
+  // Use artboard bounds when toggle is ON
+  return axis === 'x'
+    ? [artboard.x, artboard.x + artboard.width]
+    : [artboard.y, artboard.y + artboard.height];
+}

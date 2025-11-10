@@ -17,6 +17,7 @@ import {
 } from './distributionLayouts';
 import { applyIncrementalPositionToShapes } from './positionModulationResolver';
 import type { GenerationMetadata } from '../../shared/distributionTypes';
+import { getEffectiveTranslateRange } from './artboardUtils';
 
 interface CanvasBounds {
   x: number;
@@ -730,7 +731,7 @@ export function generateShapesWithBatchConfig(
 
         let positionDeltaX = 0;
         if (batchConfig.xTransformMode === 'range') {
-          const [minTransX, maxTransX] = batchConfig.translateXRange;
+          const [minTransX, maxTransX] = getEffectiveTranslateRange('x', batchConfig, canvasBounds);
           positionDeltaX = minTransX + Math.random() * (maxTransX - minTransX);
         } else if (batchConfig.xTransformMode === 'value') {
           positionDeltaX = batchConfig.xTransformValue || 0;
@@ -740,7 +741,7 @@ export function generateShapesWithBatchConfig(
 
         let positionDeltaY = 0;
         if (batchConfig.yTransformMode === 'range') {
-          const [minTransY, maxTransY] = batchConfig.translateYRange;
+          const [minTransY, maxTransY] = getEffectiveTranslateRange('y', batchConfig, canvasBounds);
           positionDeltaY = minTransY + Math.random() * (maxTransY - minTransY);
         } else if (batchConfig.yTransformMode === 'value') {
           positionDeltaY = batchConfig.yTransformValue || 0;
