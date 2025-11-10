@@ -1345,6 +1345,43 @@ export const useShapeEditor = () => {
     });
   }, []);
 
+  // Helper function to calculate incremental position with modulation (for post-distribution application)
+  const calculateIncrementalPositionOffset = (
+    settings: BatchConfigSettings,
+    axis: 'x' | 'y',
+    shapeIndex: number,
+    gridColumnIndex?: number
+  ): number => {
+    const mode = axis === 'x' ? settings.xPositionMode : settings.yPositionMode;
+    if (mode !== 'incremental') return 0;
+
+    const startValue = axis === 'x' ? settings.xPositionStartValue : settings.yPositionStartValue;
+    const increment = axis === 'x' ? settings.xPositionIncrement : settings.yPositionIncrement;
+    const modulationMode = axis === 'x' ? settings.xPositionModulationMode : settings.yPositionModulationMode;
+    const modulationValue = axis === 'x' ? settings.xPositionModulationValue : settings.yPositionModulationValue;
+    const resetPerBatch = settings.incrementalResetPerBatch;
+
+    // Calculate effective index (with reset-per-batch support)
+    const effectiveIndex = resetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
+    
+    // Calculate base incremental value
+    let value = startValue + (effectiveIndex * increment);
+
+    // Apply modulation based on mode
+    if (modulationMode === 'pixel-value' && modulationValue > 0) {
+      value = value % modulationValue;
+    } else if (modulationMode === 'shape-count' && modulationValue > 0) {
+      const moduloIndex = effectiveIndex % modulationValue;
+      value = startValue + (moduloIndex * increment);
+    } else if (modulationMode === 'grid-row' && modulationValue > 0 && gridColumnIndex !== undefined) {
+      // Grid-row mode: modulate based on column position within the row
+      const moduloIndex = gridColumnIndex % modulationValue;
+      value = startValue + (moduloIndex * increment);
+    }
+
+    return value;
+  };
+
   // Helper functions for enhanced position calculation
   const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
     // If properties are disabled, return 0 (no position offset from shape properties)
@@ -1699,9 +1736,27 @@ export const useShapeEditor = () => {
       let shapeY = position.y;
 
       if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
-        // Enhanced position calculation based on mode (additive to distribution position)
-        shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-        shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        // Check if we're using grid distribution with incremental positions
+        const isGridDistribution = effectiveBatchConfig.distributionLayoutEnabled && 
+                                   effectiveBatchConfig.distributionPattern === 'grid';
+        const hasXIncremental = effectiveBatchConfig.xPositionMode === 'incremental';
+        const hasYIncremental = effectiveBatchConfig.yPositionMode === 'incremental';
+        const shouldDeferIncremental = isGridDistribution && (hasXIncremental || hasYIncremental);
+        
+        if (shouldDeferIncremental) {
+          // For grid + incremental: Skip incremental positions here, apply after grid distribution
+          // Still apply non-incremental modes (range, value, directional)
+          if (!hasXIncremental) {
+            shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+          }
+          if (!hasYIncremental) {
+            shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+          }
+        } else {
+          // Normal behavior: apply all position modes
+          shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+          shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        }
       }
 
       // Combine batch config with scatter settings for complete configuration
@@ -2565,8 +2620,39 @@ export const useShapeEditor = () => {
         finalShapes = applySpiralDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, artboardBounds);
         console.log(`🌀 Applied spiral distribution: ${effectiveBatchConfig.spiralTurnCount} turns, spacing=${effectiveBatchConfig.spiralSpacingMode}, direction=${effectiveBatchConfig.spiralDirection}, tightness=${effectiveBatchConfig.spiralTightness}`);
       } else {
-        finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
+        // Apply grid distribution and get results with grid context
+        const gridResults = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, artboardBounds);
         console.log(`🎯 Applied grid distribution: ${effectiveBatchConfig.gridRows}×${effectiveBatchConfig.gridColumns}, sort by ${effectiveBatchConfig.gridSortBy} (${effectiveBatchConfig.gridSortOrder}, ${effectiveBatchConfig.gridSortScope})`);
+        
+        // Apply incremental position modulation if enabled (post-distribution)
+        const hasXIncremental = effectiveBatchConfig.propertiesEnabled && 
+                               effectiveBatchConfig.shapePropertiesEnabled && 
+                               effectiveBatchConfig.xPositionMode === 'incremental';
+        const hasYIncremental = effectiveBatchConfig.propertiesEnabled && 
+                               effectiveBatchConfig.shapePropertiesEnabled && 
+                               effectiveBatchConfig.yPositionMode === 'incremental';
+        
+        if (hasXIncremental || hasYIncremental) {
+          gridResults.forEach((result, index) => {
+            const xOffset = hasXIncremental 
+              ? calculateIncrementalPositionOffset(effectiveBatchConfig, 'x', index, result.colIndex)
+              : 0;
+            const yOffset = hasYIncremental 
+              ? calculateIncrementalPositionOffset(effectiveBatchConfig, 'y', index, result.colIndex)
+              : 0;
+            
+            result.shape.transform.x += xOffset;
+            result.shape.transform.y += yOffset;
+            
+            if (index < 3) {
+              console.log(`📐 [CLIENT] Applied incremental modulation to shape ${index}: xOffset=${xOffset}, yOffset=${yOffset}, col=${result.colIndex}, row=${result.rowIndex}`);
+            }
+          });
+          console.log(`📐 [CLIENT] Applied incremental position modulation after grid distribution`);
+        }
+        
+        // Extract shapes from grid results
+        finalShapes = gridResults.map(r => r.shape);
       }
     }
 

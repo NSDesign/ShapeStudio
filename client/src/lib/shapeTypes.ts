@@ -853,14 +853,30 @@ function hexToHue(hex: string): number {
   return (hue * 60 + 360) % 360;
 }
 
+// Grid distribution result with context
+export interface GridDistributionResult {
+  shape: any;
+  rowIndex: number;
+  colIndex: number;
+  generationIndex: number;
+}
+
 export function applyGridDistribution(
   shapes: any[], 
   config: DistributionConfig,
   canvasCenter = { x: 0, y: 0 },
   generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number },
   artboardBounds?: { x: number; y: number; width: number; height: number }
-): any[] {
-  if (!config.enabled || config.pattern !== 'grid') return shapes;
+): GridDistributionResult[] {
+  // Early return: wrap shapes in result structure with default grid context
+  if (!config.enabled || config.pattern !== 'grid') {
+    return shapes.map((shape, index) => ({
+      shape,
+      rowIndex: 0,
+      colIndex: index,
+      generationIndex: index
+    }));
+  }
   
   let sortedShapes: any[];
   
@@ -896,10 +912,16 @@ export function applyGridDistribution(
   }
   
   return sortedShapes.map((shape, index) => {
+    // Calculate grid row and column indices
+    const colIndex = index % config.gridColumns;
+    const rowIndex = Math.floor(index / config.gridColumns);
+    
     // Debug: log original transform for first few shapes
     if (index < 3) {
       console.log(`🔍 [GRID DEBUG] applyGridDistribution - Shape ${index} BEFORE:`, {
         originalTransform: { ...shape.transform },
+        rowIndex,
+        colIndex,
         gridXRandomization: config.gridXRandomization,
         gridYRandomization: config.gridYRandomization
       });
@@ -936,6 +958,8 @@ export function applyGridDistribution(
     if (index < 3) {
       console.log(`🔍 [GRID DEBUG] Shape ${index} - Final position:`, {
         gridPos,
+        rowIndex,
+        colIndex,
         positionOffsetX,
         positionOffsetY,
         randomX,
@@ -951,11 +975,19 @@ export function applyGridDistribution(
     
     if (index < 3) {
       console.log(`🔍 [GRID DEBUG] Shape ${index} AFTER:`, {
-        finalTransform: { ...shape.transform }
+        finalTransform: { ...shape.transform },
+        rowIndex,
+        colIndex
       });
     }
     
-    return shape;
+    // Return shape with grid context
+    return {
+      shape,
+      rowIndex,
+      colIndex,
+      generationIndex: index
+    };
   });
 }
 
