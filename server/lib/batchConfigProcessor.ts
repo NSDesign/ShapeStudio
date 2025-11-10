@@ -15,6 +15,7 @@ import {
   applySpiralDistribution, 
   applyAutoDistribution 
 } from './distributionLayouts';
+import { applyIncrementalPositionToShapes } from './positionModulationResolver';
 
 interface CanvasBounds {
   x: number;
@@ -407,10 +408,24 @@ export function generateShapesWithBatchConfig(
     let shapeY = position.y;
 
     // Apply batch config position offsets if properties are enabled (additive to distribution position)
-    if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled) {
+    // SKIP incremental positions if grid distribution is enabled - they'll be applied post-distribution
+    const isGridDistribution = batchConfig.distributionLayoutEnabled && batchConfig.distributionPattern === 'grid';
+    const skipIncrementalForGrid = isGridDistribution && 
+                                   (batchConfig.xPositionMode === 'incremental' || 
+                                    batchConfig.yPositionMode === 'incremental');
+    
+    if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled && !skipIncrementalForGrid) {
       // Add position offsets from shape properties (additive, not replacement)
       shapeX += calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
       shapeY += calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+    } else if (batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled && skipIncrementalForGrid) {
+      // For grid distribution with incremental mode, apply non-incremental position modes only
+      const xPosNoIncremental = batchConfig.xPositionMode === 'incremental' ? 0 : 
+        calculatePositionX(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      const yPosNoIncremental = batchConfig.yPositionMode === 'incremental' ? 0 :
+        calculatePositionY(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+      shapeX += xPosNoIncremental;
+      shapeY += yPosNoIncremental;
     }
 
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
@@ -928,6 +943,37 @@ export function generateShapesWithBatchConfig(
     } else {
       finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
       console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
+      
+      // Apply incremental position modulation after grid distribution (if enabled)
+      const hasXIncremental = batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled && 
+                             batchConfig.xPositionMode === 'incremental';
+      const hasYIncremental = batchConfig.propertiesEnabled && batchConfig.shapePropertiesEnabled && 
+                             batchConfig.yPositionMode === 'incremental';
+      
+      if (hasXIncremental || hasYIncremental) {
+        const xSettings = hasXIncremental ? {
+          startValue: batchConfig.xPositionStartValue,
+          increment: batchConfig.xPositionIncrement,
+          modulationMode: batchConfig.xPositionModulationMode,
+          modulationValue: batchConfig.xPositionModulationValue,
+          resetPerBatch: batchConfig.incrementalResetPerBatch
+        } : null;
+        
+        const ySettings = hasYIncremental ? {
+          startValue: batchConfig.yPositionStartValue,
+          increment: batchConfig.yPositionIncrement,
+          modulationMode: batchConfig.yPositionModulationMode,
+          modulationValue: batchConfig.yPositionModulationValue,
+          resetPerBatch: batchConfig.incrementalResetPerBatch
+        } : null;
+        
+        applyIncrementalPositionToShapes(finalShapes, xSettings, ySettings, {
+          globalIndexOffset: 0,  // TODO: Support cross-batch index for multiple generations
+          gridColumns: batchConfig.gridColumns || 3
+        });
+        
+        console.log(`📐 [SERVER] Applied incremental position modulation after grid distribution`);
+      }
     }
   }
 
