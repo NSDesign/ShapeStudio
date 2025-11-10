@@ -275,7 +275,8 @@ function calculateHeight(
 }
 
 /**
- * Helper function to calculate constrained size for circular shapes
+ * Helper function to calculate constrained size based on width/height preferences
+ * Applies to ALL shape types now, not just circular shapes
  */
 function calculateConstrainedSize(
   settings: BatchConfigSettings,
@@ -283,14 +284,8 @@ function calculateConstrainedSize(
   height: number,
   shapeType: string
 ): number {
-  if (!['circle', 'star', 'ring', 'polygon', 'ellipse', 'spline-circle', 'spline-ellipse', 'spline-ring'].includes(shapeType)) {
-    return width;
-  }
-
-  if (settings.maintainAspectRatio) {
-    return width;
-  }
-
+  // Apply constraint preferences (min/max/avg)
+  // These determine which value to use when width and height differ
   if (settings.useMinWidthHeight) {
     return Math.min(width, height);
   }
@@ -299,6 +294,8 @@ function calculateConstrainedSize(
     return (width + height) / 2;
   }
 
+  // Default: use maximum value (useMaxWidthHeight is default)
+  // This also applies when maintainAspectRatio is enabled - the selected constraint determines the size
   return Math.max(width, height);
 }
 
@@ -446,11 +443,14 @@ export function generateShapesWithBatchConfig(
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
     let calculatedHeight = calculateHeight(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
 
+    // Calculate constrained size for ALL shapes based on min/max/avg settings
+    const constrainedSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
+    
+    // If 1:1 aspect ratio is enabled, both dimensions use the constrained size
     if (batchConfig.maintainAspectRatio) {
-      calculatedHeight = calculatedWidth;
+      calculatedWidth = constrainedSize;
+      calculatedHeight = constrainedSize;
     }
-
-    const finalSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
     
     // Create combined config matching client: batchConfig + scatterSettings
     const combinedConfig = {
@@ -461,23 +461,15 @@ export function generateShapesWithBatchConfig(
     // Pass combinedConfig to Shape constructor like client does
     const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
     
-    // Determine if constraints are active for this shape type
-    const isConstraintActive = batchConfig.maintainAspectRatio || 
-                               batchConfig.useMinWidthHeight || 
-                               batchConfig.useMaxWidthHeight || 
-                               batchConfig.useAvgWidthHeight;
+    // Apply size based on shape type (matching client logic)
+    const isRadiusBased = ['circle', 'star', 'ring', 'polygon', 'spline-circle', 'spline-ring', 'square', 'rounded-square'].includes(randomType);
     
-    // For circular shapes (circle, star, ring, spline-circle, spline-ring), always use radius-based sizing
-    const isAlwaysCircular = ['circle', 'star', 'ring', 'spline-circle', 'spline-ring'].includes(randomType);
-    
-    // For ellipse/spline-ellipse/polygon, use constrained size only when constraints are active
-    const isConditionallyCircular = ['polygon', 'ellipse', 'spline-ellipse'].includes(randomType);
-    
-    if (isAlwaysCircular || (isConditionallyCircular && isConstraintActive)) {
-      shape.width = finalSize;
-      shape.height = finalSize;
+    if (isRadiusBased) {
+      // Radius-based shapes always use constrained size
+      shape.width = constrainedSize;
+      shape.height = constrainedSize;
     } else {
-      // Use independent width/height for non-circular shapes or when constraints are disabled
+      // Rectangles and ellipses use independent width/height (which are already set to constrainedSize if 1:1 mode is enabled)
       shape.width = calculatedWidth;
       shape.height = calculatedHeight;
     }

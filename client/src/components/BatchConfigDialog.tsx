@@ -1869,19 +1869,24 @@ export default function BatchConfigDialog({
                             )}
                           </div>
                           
-                          {/* Size Constraints for Circular Shapes */}
+                          {/* Size Constraints for All Shapes */}
                           <div className="space-y-3 p-3 bg-slate-700 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Circular Shape Constraints</Label>
-                            <p className="text-xs text-slate-400">When width and height differ, which value should be used for circles, stars, and rings?</p>
+                            <Label className="text-sm font-medium text-slate-200">Size Constraints</Label>
+                            <p className="text-xs text-slate-400">When width and height differ, which value should be used for all shapes? (Select one option below)</p>
                             <div className="space-y-3">
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   checked={currentSettings.useMinWidthHeight}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                    useMinWidthHeight: checked as boolean,
-                                    useMaxWidthHeight: checked ? false : currentSettings.useMaxWidthHeight,
-                                    useAvgWidthHeight: checked ? false : currentSettings.useAvgWidthHeight
-                                  })}
+                                  onCheckedChange={(checked) => {
+                                    // Only allow checking, not unchecking (radio button behavior)
+                                    if (checked) {
+                                      handleSettingsUpdate({ 
+                                        useMinWidthHeight: true,
+                                        useMaxWidthHeight: false,
+                                        useAvgWidthHeight: false
+                                      });
+                                    }
+                                  }}
                                   className="border-slate-500 data-[state=checked]:bg-blue-600"
                                 />
                                 <Label className="text-xs text-slate-300">Use minimum value</Label>
@@ -1889,11 +1894,16 @@ export default function BatchConfigDialog({
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   checked={currentSettings.useMaxWidthHeight}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                    useMaxWidthHeight: checked as boolean,
-                                    useMinWidthHeight: checked ? false : currentSettings.useMinWidthHeight,
-                                    useAvgWidthHeight: checked ? false : currentSettings.useAvgWidthHeight
-                                  })}
+                                  onCheckedChange={(checked) => {
+                                    // Only allow checking, not unchecking (radio button behavior)
+                                    if (checked) {
+                                      handleSettingsUpdate({ 
+                                        useMaxWidthHeight: true,
+                                        useMinWidthHeight: false,
+                                        useAvgWidthHeight: false
+                                      });
+                                    }
+                                  }}
                                   className="border-slate-500 data-[state=checked]:bg-blue-600"
                                 />
                                 <Label className="text-xs text-slate-300">Use maximum value (default)</Label>
@@ -1901,11 +1911,16 @@ export default function BatchConfigDialog({
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   checked={currentSettings.useAvgWidthHeight}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                    useAvgWidthHeight: checked as boolean,
-                                    useMinWidthHeight: checked ? false : currentSettings.useMinWidthHeight,
-                                    useMaxWidthHeight: checked ? false : currentSettings.useMaxWidthHeight
-                                  })}
+                                  onCheckedChange={(checked) => {
+                                    // Only allow checking, not unchecking (radio button behavior)
+                                    if (checked) {
+                                      handleSettingsUpdate({ 
+                                        useAvgWidthHeight: true,
+                                        useMinWidthHeight: false,
+                                        useMaxWidthHeight: false
+                                      });
+                                    }
+                                  }}
                                   className="border-slate-500 data-[state=checked]:bg-blue-600"
                                 />
                                 <Label className="text-xs text-slate-300">Use average value</Label>
