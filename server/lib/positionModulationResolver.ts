@@ -119,10 +119,11 @@ export function applyIncrementalPositionToShapes(
     // Apply X position modulation if enabled
     if (xSettings) {
       const xOffset = calculateIncrementalPosition(xSettings, context);
-      shape.transform.x = (shape.transform?.x || 0) + xOffset;
+      const originalX = shape.transform?.x || 0;
+      shape.transform.x = originalX + xOffset;
       
       if (index < 3) {
-        console.log(`📐 [SERVER] Shape ${index}: xOffset=${xOffset}, col=${colIndex}, row=${rowIndex}`);
+        console.log(`📐 [SERVER] Shape ${index}: mode=${xSettings.modulationMode}, genIdx=${generationIndex}, col=${colIndex}, xOffset=${xOffset}, gridX=${originalX}, finalX=${shape.transform.x}`);
       }
     }
     
