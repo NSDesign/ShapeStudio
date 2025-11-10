@@ -7,7 +7,7 @@ import {
   BatchConfigSettingsSchema, 
   GenerationSetSchema, 
   SupportedShapeTypeSchema,
-  migrateSizeConstraintMode
+  migrateBatchConfigSettings
 } from '../../shared/schema';
 
 // Create service instances
@@ -267,7 +267,7 @@ export function registerExportRoutes(app: Express): void {
       const validatedSettings = BatchExportSchema.parse(exportSettingsInput);
       
       // Apply migration to batch config settings
-      const migratedBatchConfig = batchConfigSettings ? migrateSizeConstraintMode(batchConfigSettings) : undefined;
+      const migratedBatchConfig = batchConfigSettings ? migrateBatchConfigSettings(batchConfigSettings) : undefined;
       
       // For now, we'll use mock data since we don't have the actual shape generation
       // In a real implementation, this would get the current shapes and settings
@@ -720,7 +720,7 @@ export function registerExportRoutes(app: Express): void {
         const validatedSettings = BatchExportSchema.parse(exportSettingsInput);
         
         // Apply migration to batch config settings
-        const migratedBatchConfig = batchConfigSettings ? migrateSizeConstraintMode(batchConfigSettings) : undefined;
+        const migratedBatchConfig = batchConfigSettings ? migrateBatchConfigSettings(batchConfigSettings) : undefined;
         
         // Use the same logic as regular batch export
         const mockShapes: any[] = [];

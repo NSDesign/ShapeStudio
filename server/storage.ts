@@ -9,7 +9,7 @@ import {
   type SidebarSectionConfig,
   type GenerationSet,
   DEFAULT_SIDEBAR_SECTIONS,
-  migrateSizeConstraintMode,
+  migrateBatchConfigSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -161,7 +161,7 @@ export class DatabaseStorage implements IStorage {
     // Apply migration to remove legacy fields before saving
     const migratedSets = generationSets.map(set => ({
       ...set,
-      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+      batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
     }));
     
     await this.upsertUserPreferences(userId, {
@@ -179,7 +179,7 @@ export class DatabaseStorage implements IStorage {
     // Apply migration to ensure loaded sets have sizeConstraintMode
     const migratedSets = loadedSets.map(set => ({
       ...set,
-      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+      batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
     }));
     
     return {

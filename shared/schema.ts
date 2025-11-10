@@ -2450,3 +2450,37 @@ export function migrateSizeConstraintMode(settings: Partial<BatchConfigSettings>
     sizeConstraintMode
   };
 }
+
+/**
+ * Migrates rotation settings to ensure rotationIncrementStep has a default value
+ * This ensures backward compatibility with configs created before the step amount feature
+ * 
+ * @param settings - Batch config settings (may be missing rotationIncrementStep)
+ * @returns Settings with rotationIncrementStep defaulted to 15
+ */
+export function migrateRotationSettings(settings: Partial<BatchConfigSettings>): Partial<BatchConfigSettings> {
+  return {
+    ...settings,
+    rotationIncrementStep: settings.rotationIncrementStep ?? 15
+  };
+}
+
+/**
+ * Master migration function that applies all batch config migrations
+ * This should be called at all persistence boundaries (load/save)
+ * 
+ * @param settings - Batch config settings (may have legacy fields)
+ * @returns Fully migrated settings
+ */
+export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings> & {
+  useMinWidthHeight?: boolean;
+  useMaxWidthHeight?: boolean;
+  useAvgWidthHeight?: boolean;
+  maintainAspectRatio?: boolean;
+}): Partial<BatchConfigSettings> {
+  // Apply all migrations in sequence
+  let migrated = migrateSizeConstraintMode(settings);
+  migrated = migrateRotationSettings(migrated);
+  
+  return migrated;
+}

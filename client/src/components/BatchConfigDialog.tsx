@@ -3907,13 +3907,25 @@ export default function BatchConfigDialog({
                         {currentSettings.rotationMode === 'incremental' && (
                           <div className="space-y-2">
                             <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Step Amount: {currentSettings.rotationIncrementStep}°</Label>
+                              <Slider
+                                value={[currentSettings.rotationIncrementStep]}
+                                onValueChange={([value]) => handleSettingsUpdate({ rotationIncrementStep: value })}
+                                min={1}
+                                max={90}
+                                step={1}
+                                className="[&_[role=slider]]:bg-orange-600"
+                              />
+                            </div>
+                            
+                            <div className="space-y-1">
                               <Label className="text-xs text-slate-400">Increment: {currentSettings.rotationIncrement}°</Label>
                               <Slider
                                 value={[currentSettings.rotationIncrement]}
                                 onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
                                 min={-180}
                                 max={180}
-                                step={15}
+                                step={currentSettings.rotationIncrementStep}
                                 className="[&_[role=slider]]:bg-orange-600"
                               />
                             </div>

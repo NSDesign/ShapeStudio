@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { GenerationSet } from '@shared/schema';
-import { migrateSizeConstraintMode } from '@shared/schema';
+import { migrateBatchConfigSettings } from '@shared/schema';
 
 export interface GenerationSetsData {
   generationSets: GenerationSet[];
@@ -21,7 +21,7 @@ export function useGenerationSetsPersistence() {
     ...rawData,
     generationSets: rawData.generationSets.map(set => ({
       ...set,
-      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+      batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
     }))
   } : rawData;
 
