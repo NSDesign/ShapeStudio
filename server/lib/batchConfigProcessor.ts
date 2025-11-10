@@ -16,6 +16,7 @@ import {
   applyAutoDistribution 
 } from './distributionLayouts';
 import { applyIncrementalPositionToShapes } from './positionModulationResolver';
+import type { GenerationMetadata } from '../../shared/distributionTypes';
 
 interface CanvasBounds {
   x: number;
@@ -350,12 +351,17 @@ function calculateStrokeWidth(settings: BatchConfigSettings, shapeIndex: number)
 
 /**
  * Main function to generate shapes with batch configuration
+ * Returns both the generated shapes and metadata for tracking generation boundaries
  */
 export function generateShapesWithBatchConfig(
   count: number,
   canvasBounds: CanvasBounds,
-  options: GenerationOptions
-): Shape[] {
+  options: GenerationOptions,
+  generationContext?: {
+    generationIndex: number;  // Which generation this is (0, 1, 2... for repetitions)
+    startIndex: number;       // Cumulative index where this generation starts
+  }
+): { shapes: Shape[]; metadata: GenerationMetadata } {
   const enabledTypes = options.enabledShapeTypes || ['rectangle', 'circle', 'triangle'];
   const batchConfig = options.batchConfig;
   const scatterSettings = options.scatterSettings || { 
@@ -376,7 +382,15 @@ export function generateShapesWithBatchConfig(
   const useSmartDistribution = options.distributionEnabled !== false;
 
   if (enabledTypes.length === 0) {
-    return [];
+    return {
+      shapes: [],
+      metadata: {
+        generationId: `gen_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+        generationIndex: generationContext?.generationIndex ?? 0,
+        shapeCount: 0,
+        startIndex: generationContext?.startIndex ?? 0
+      }
+    };
   }
 
   // Check if any positioning system is active
@@ -942,7 +956,8 @@ export function generateShapesWithBatchConfig(
       console.log(`🌀 [SERVER] Applied spiral distribution: ${batchConfig.spiralTurnCount} turns`);
     } else {
       // Apply grid distribution and get results with grid context
-      const gridResults = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
+      const globalIndexOffset = generationContext?.startIndex ?? 0;
+      const gridResults = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds, globalIndexOffset);
       console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
       
       // Apply incremental position modulation after grid distribution (if enabled)
@@ -968,9 +983,9 @@ export function generateShapesWithBatchConfig(
           resetPerBatch: batchConfig.incrementalResetPerBatch
         } : null;
         
-        // Apply modulation with grid context and unwrap shapes
+        // Apply modulation with grid context (globalIndexOffset is already in batchIndex)
         finalShapes = applyIncrementalPositionToShapes(gridResults, xSettings, ySettings, {
-          globalIndexOffset: 0,  // TODO: Support cross-batch index for multiple generations
+          globalIndexOffset: generationContext?.startIndex ?? 0,
           gridColumns: batchConfig.gridColumns || 3
         });
         
@@ -982,5 +997,13 @@ export function generateShapesWithBatchConfig(
     }
   }
 
-  return finalShapes;
+  // Build generation metadata
+  const metadata: GenerationMetadata = {
+    generationId: `gen_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+    generationIndex: generationContext?.generationIndex ?? 0,
+    shapeCount: finalShapes.length,
+    startIndex: generationContext?.startIndex ?? 0
+  };
+
+  return { shapes: finalShapes, metadata };
 }

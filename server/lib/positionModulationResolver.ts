@@ -104,12 +104,15 @@ export function applyIncrementalPositionToShapes(
   const gridColumns = options.gridColumns;
   
   return gridResults.map((result, index) => {
-    const { shape, rowIndex, colIndex, generationIndex } = result;
+    const { shape, rowIndex, colIndex, generationIndex, batchIndex } = result;
+    
+    // Use batchIndex when available (includes cross-generation offset), otherwise fallback
+    const effectiveGlobalIndex = batchIndex ?? (globalIndexOffset + generationIndex);
     
     // Build modulation context using grid metadata from distribution result
     const context: ModulationContext = {
       generationIndex,
-      globalIndex: globalIndexOffset + generationIndex,
+      globalIndex: effectiveGlobalIndex,
       gridCellIndex: generationIndex,
       gridRowIndex: rowIndex,
       gridColIndex: colIndex,

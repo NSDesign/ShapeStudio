@@ -219,7 +219,8 @@ export function applyGridDistribution(
   config: DistributionConfig,
   canvasCenter = { x: 0, y: 0 },
   generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number },
-  artboardBounds?: { x: number; y: number; width: number; height: number }
+  artboardBounds?: { x: number; y: number; width: number; height: number },
+  globalIndexOffset = 0
 ): GridDistributionResult[] {
   // Early return: wrap shapes in result structure with default grid context
   if (!config.enabled || config.pattern !== 'grid') {
@@ -227,7 +228,8 @@ export function applyGridDistribution(
       shape,
       rowIndex: 0,
       colIndex: index,
-      generationIndex: index
+      generationIndex: index,
+      batchIndex: globalIndexOffset + index
     }));
   }
   
@@ -348,7 +350,8 @@ export function applyGridDistribution(
       shape,
       rowIndex,
       colIndex,
-      generationIndex: index
+      generationIndex: index,
+      batchIndex: globalIndexOffset + index
     };
   });
 }

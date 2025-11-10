@@ -117,7 +117,7 @@ export function processGenerationSets(
       shapeSpecific: set.shapeSpecificProperties || {}
     };
     
-    const setShapes = generateShapesWithBatchConfig(
+    const { shapes: setShapes } = generateShapesWithBatchConfig(
       setCount,
       canvasBounds,
       {
