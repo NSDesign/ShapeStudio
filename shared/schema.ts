@@ -1089,6 +1089,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Shape Transforms
   transformsEnabled: false,
+  transformsArtboardAware: false, // When enabled, translate ranges dynamically match artboard bounds
   translateXRange: [-50, 50],
   translateYRange: [-50, 50],
   scaleUniform: true,
@@ -2078,6 +2079,7 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Transform properties
   transformsEnabled: z.boolean(),
+  transformsArtboardAware: z.boolean(),
   translateXRange: z.tuple([z.number(), z.number()]),
   translateYRange: z.tuple([z.number(), z.number()]),
   scaleUniform: z.boolean(),
