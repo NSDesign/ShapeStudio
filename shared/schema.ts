@@ -610,6 +610,7 @@ export interface BatchConfigSettings {
   
   // Shape Transforms
   transformsEnabled: boolean;
+  transformsArtboardAware: boolean; // Scale transform values relative to artboard dimensions
   translateXRange: [number, number];
   translateYRange: [number, number];
   scaleUniform: boolean;
