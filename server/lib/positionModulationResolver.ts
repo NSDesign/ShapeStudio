@@ -5,6 +5,8 @@
  * Supports multiple modulation modes: pixel-value, shape-count, grid-row.
  */
 
+import type { GridDistributionResult } from '../../shared/distributionTypes';
+
 export interface ModulationContext {
   // Index within the current generation (0-based)
   generationIndex: number;
@@ -83,44 +85,54 @@ export function calculateIncrementalPosition(
 }
 
 /**
- * Apply incremental position modulation to an array of shapes after distribution
+ * Apply incremental position modulation to grid distribution results
  * 
- * This function modifies shapes in-place, applying X/Y position adjustments
- * based on incremental settings with modulation support.
+ * Accepts GridDistributionResult[] with embedded grid context, applies X/Y position
+ * adjustments based on incremental settings with modulation support, and returns
+ * unwrapped shapes.
  */
 export function applyIncrementalPositionToShapes(
-  shapes: any[],
+  gridResults: GridDistributionResult[],
   xSettings: IncrementalSettings | null,
   ySettings: IncrementalSettings | null,
   options: {
     globalIndexOffset?: number;  // Offset for cross-batch calculations
     gridColumns?: number;        // For grid-row modulation
   } = {}
-): void {
+): any[] {
   const globalIndexOffset = options.globalIndexOffset || 0;
   const gridColumns = options.gridColumns;
   
-  shapes.forEach((shape, index) => {
-    // Build modulation context
+  return gridResults.map((result, index) => {
+    const { shape, rowIndex, colIndex, generationIndex } = result;
+    
+    // Build modulation context using grid metadata from distribution result
     const context: ModulationContext = {
-      generationIndex: index,
-      globalIndex: globalIndexOffset + index,
-      gridCellIndex: index,  // Linear grid index (same as generation index after distribution)
-      gridRowIndex: gridColumns ? Math.floor(index / gridColumns) : undefined,
-      gridColIndex: gridColumns ? index % gridColumns : undefined,
-      gridColumns: gridColumns
+      generationIndex,
+      globalIndex: globalIndexOffset + generationIndex,
+      gridCellIndex: generationIndex,
+      gridRowIndex: rowIndex,
+      gridColIndex: colIndex,
+      gridColumns
     };
     
     // Apply X position modulation if enabled
     if (xSettings) {
       const xOffset = calculateIncrementalPosition(xSettings, context);
-      shape.x = (shape.x || 0) + xOffset;
+      shape.transform.x = (shape.transform?.x || 0) + xOffset;
+      
+      if (index < 3) {
+        console.log(`📐 [SERVER] Shape ${index}: xOffset=${xOffset}, col=${colIndex}, row=${rowIndex}`);
+      }
     }
     
     // Apply Y position modulation if enabled
     if (ySettings) {
       const yOffset = calculateIncrementalPosition(ySettings, context);
-      shape.y = (shape.y || 0) + yOffset;
+      shape.transform.y = (shape.transform?.y || 0) + yOffset;
     }
+    
+    // Return unwrapped shape
+    return shape;
   });
 }

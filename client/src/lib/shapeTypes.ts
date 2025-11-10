@@ -853,13 +853,8 @@ function hexToHue(hex: string): number {
   return (hue * 60 + 360) % 360;
 }
 
-// Grid distribution result with context
-export interface GridDistributionResult {
-  shape: any;
-  rowIndex: number;
-  colIndex: number;
-  generationIndex: number;
-}
+// Import shared grid distribution result type
+import type { GridDistributionResult } from '../../../shared/distributionTypes';
 
 export function applyGridDistribution(
   shapes: any[], 

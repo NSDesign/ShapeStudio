@@ -941,7 +941,8 @@ export function generateShapesWithBatchConfig(
       finalShapes = applySpiralDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, canvasBounds);
       console.log(`🌀 [SERVER] Applied spiral distribution: ${batchConfig.spiralTurnCount} turns`);
     } else {
-      finalShapes = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
+      // Apply grid distribution and get results with grid context
+      const gridResults = applyGridDistribution(newShapes, distributionConfig, { x: 0, y: 0 }, generationInfo, canvasBounds);
       console.log(`🎯 [SERVER] Applied grid distribution: ${batchConfig.gridRows}×${batchConfig.gridColumns}`);
       
       // Apply incremental position modulation after grid distribution (if enabled)
@@ -967,12 +968,16 @@ export function generateShapesWithBatchConfig(
           resetPerBatch: batchConfig.incrementalResetPerBatch
         } : null;
         
-        applyIncrementalPositionToShapes(finalShapes, xSettings, ySettings, {
+        // Apply modulation with grid context and unwrap shapes
+        finalShapes = applyIncrementalPositionToShapes(gridResults, xSettings, ySettings, {
           globalIndexOffset: 0,  // TODO: Support cross-batch index for multiple generations
           gridColumns: batchConfig.gridColumns || 3
         });
         
         console.log(`📐 [SERVER] Applied incremental position modulation after grid distribution`);
+      } else {
+        // Extract shapes from grid results (no modulation needed)
+        finalShapes = gridResults.map(r => r.shape);
       }
     }
   }

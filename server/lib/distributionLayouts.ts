@@ -10,6 +10,8 @@
  * - Auto-distribution for even spacing
  */
 
+import type { GridDistributionResult } from '../../shared/distributionTypes';
+
 interface DistributionConfig {
   enabled: boolean;
   pattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
@@ -210,6 +212,7 @@ function sortShapesWithinGroup(
 
 /**
  * Apply grid distribution to shapes
+ * Returns GridDistributionResult[] with grid context for modulation
  */
 export function applyGridDistribution(
   shapes: any[], 
@@ -217,8 +220,16 @@ export function applyGridDistribution(
   canvasCenter = { x: 0, y: 0 },
   generationInfo?: { currentGeneration?: number, totalGenerations?: number, shapesPerGeneration?: number },
   artboardBounds?: { x: number; y: number; width: number; height: number }
-): any[] {
-  if (!config.enabled || config.pattern !== 'grid') return shapes;
+): GridDistributionResult[] {
+  // Early return: wrap shapes in result structure with default grid context
+  if (!config.enabled || config.pattern !== 'grid') {
+    return shapes.map((shape, index) => ({
+      shape,
+      rowIndex: 0,
+      colIndex: index,
+      generationIndex: index
+    }));
+  }
   
   let sortedShapes: any[];
   
@@ -257,8 +268,11 @@ export function applyGridDistribution(
     const startX = config.gridStartX || 0;
     const startY = config.gridStartY || 0;
     
-    const row = Math.floor(index / columns);
-    const col = index % columns;
+    // Calculate grid row and column indices
+    const rowIndex = Math.floor(index / columns);
+    const colIndex = index % columns;
+    const row = rowIndex;
+    const col = colIndex;
     
     // Calculate spacing based on mode
     let columnSpacing, rowSpacing;
@@ -329,7 +343,13 @@ export function applyGridDistribution(
     shape.transform.x = finalX;
     shape.transform.y = finalY;
     
-    return shape;
+    // Return shape with grid context
+    return {
+      shape,
+      rowIndex,
+      colIndex,
+      generationIndex: index
+    };
   });
 }
 
