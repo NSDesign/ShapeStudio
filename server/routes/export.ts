@@ -6,7 +6,8 @@ import * as path from 'path';
 import { 
   BatchConfigSettingsSchema, 
   GenerationSetSchema, 
-  SupportedShapeTypeSchema 
+  SupportedShapeTypeSchema,
+  migrateSizeConstraintMode
 } from '../../shared/schema';
 
 // Create service instances
@@ -259,8 +260,14 @@ export function registerExportRoutes(app: Express): void {
         ...req.body
       };
       
+      // Extract batchConfigSettings before validation (BatchExportSchema doesn't include it)
+      const { batchConfigSettings, generationSets, ...exportSettingsInput } = requestWithDefaults;
+      
       // Validate request body
-      const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
+      const validatedSettings = BatchExportSchema.parse(exportSettingsInput);
+      
+      // Apply migration to batch config settings
+      const migratedBatchConfig = batchConfigSettings ? migrateSizeConstraintMode(batchConfigSettings) : undefined;
       
       // For now, we'll use mock data since we don't have the actual shape generation
       // In a real implementation, this would get the current shapes and settings
@@ -275,7 +282,7 @@ export function registerExportRoutes(app: Express): void {
         backgroundColor: '#1e293b',
         showGrid: false
       };
-      const mockBatchConfigSettings = {
+      const fallbackBatchConfig = {
         selectedPreset: 'none',
         distributionLayoutEnabled: false,
         propertiesEnabled: true,
@@ -293,7 +300,7 @@ export function registerExportRoutes(app: Express): void {
         mockShapes,
         mockGroups,
         mockCanvasSettings,
-        mockBatchConfigSettings as any,
+        (migratedBatchConfig ?? fallbackBatchConfig) as any,
         mockEnabledShapeTypes,
         validatedSettings,
         mockGenerateShapes
@@ -707,7 +714,13 @@ export function registerExportRoutes(app: Express): void {
           ...req.body
         };
         
-        const validatedSettings = BatchExportSchema.parse(requestWithDefaults);
+        // Extract batchConfigSettings before validation (BatchExportSchema doesn't include it)
+        const { batchConfigSettings, generationSets, ...exportSettingsInput } = requestWithDefaults;
+        
+        const validatedSettings = BatchExportSchema.parse(exportSettingsInput);
+        
+        // Apply migration to batch config settings
+        const migratedBatchConfig = batchConfigSettings ? migrateSizeConstraintMode(batchConfigSettings) : undefined;
         
         // Use the same logic as regular batch export
         const mockShapes: any[] = [];
@@ -721,7 +734,7 @@ export function registerExportRoutes(app: Express): void {
           backgroundColor: validatedSettings.backgroundColor || '#1e293b',
           showGrid: false
         };
-        const mockBatchConfigSettings = {
+        const fallbackBatchConfig = {
           selectedPreset: 'none',
           noiseEnabled: false,
           distributionLayoutEnabled: false,
@@ -737,7 +750,7 @@ export function registerExportRoutes(app: Express): void {
           mockShapes,
           mockGroups,
           mockCanvasSettings,
-          mockBatchConfigSettings as any,
+          (migratedBatchConfig ?? fallbackBatchConfig) as any,
           mockEnabledShapeTypes,
           validatedSettings,
           mockGenerateShapes

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
@@ -1872,68 +1873,29 @@ export default function BatchConfigDialog({
                           {/* Size Constraints for All Shapes */}
                           <div className="space-y-3 p-3 bg-slate-700 rounded">
                             <Label className="text-sm font-medium text-slate-200">Size Constraints</Label>
-                            <p className="text-xs text-slate-400">When width and height differ, which value should be used for all shapes? (Select one option below)</p>
-                            <div className="space-y-3">
+                            <p className="text-xs text-slate-400">How should width and height dimensions be constrained?</p>
+                            <RadioGroup 
+                              value={currentSettings.sizeConstraintMode} 
+                              onValueChange={(value: 'none' | 'min' | 'max' | 'avg') => handleSettingsUpdate({ sizeConstraintMode: value })}
+                              className="space-y-2"
+                            >
                               <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.useMinWidthHeight}
-                                  onCheckedChange={(checked) => {
-                                    // Only allow checking, not unchecking (radio button behavior)
-                                    if (checked) {
-                                      handleSettingsUpdate({ 
-                                        useMinWidthHeight: true,
-                                        useMaxWidthHeight: false,
-                                        useAvgWidthHeight: false
-                                      });
-                                    }
-                                  }}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Use minimum value</Label>
+                                <RadioGroupItem value="none" id="size-none" className="border-slate-500 text-blue-600" />
+                                <Label htmlFor="size-none" className="text-xs text-slate-300 cursor-pointer">None - Independent width/height</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.useMaxWidthHeight}
-                                  onCheckedChange={(checked) => {
-                                    // Only allow checking, not unchecking (radio button behavior)
-                                    if (checked) {
-                                      handleSettingsUpdate({ 
-                                        useMaxWidthHeight: true,
-                                        useMinWidthHeight: false,
-                                        useAvgWidthHeight: false
-                                      });
-                                    }
-                                  }}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Use maximum value (default)</Label>
+                                <RadioGroupItem value="min" id="size-min" className="border-slate-500 text-blue-600" />
+                                <Label htmlFor="size-min" className="text-xs text-slate-300 cursor-pointer">Min - Use smaller value for both dimensions</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.useAvgWidthHeight}
-                                  onCheckedChange={(checked) => {
-                                    // Only allow checking, not unchecking (radio button behavior)
-                                    if (checked) {
-                                      handleSettingsUpdate({ 
-                                        useAvgWidthHeight: true,
-                                        useMinWidthHeight: false,
-                                        useMaxWidthHeight: false
-                                      });
-                                    }
-                                  }}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Use average value</Label>
+                                <RadioGroupItem value="max" id="size-max" className="border-slate-500 text-blue-600" />
+                                <Label htmlFor="size-max" className="text-xs text-slate-300 cursor-pointer">Max - Use larger value for both dimensions</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={currentSettings.maintainAspectRatio}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ maintainAspectRatio: checked as boolean })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Force 1:1 aspect ratio for all shapes</Label>
+                                <RadioGroupItem value="avg" id="size-avg" className="border-slate-500 text-blue-600" />
+                                <Label htmlFor="size-avg" className="text-xs text-slate-300 cursor-pointer">Avg - Use average value for both dimensions</Label>
                               </div>
-                            </div>
+                            </RadioGroup>
                           </div>
 
                           {/* Enhanced X Position Controls */}

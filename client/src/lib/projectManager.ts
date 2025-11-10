@@ -1,6 +1,7 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, ScatterSettings, ShapeType, Artboard } from './shapeTypes';
 import type { GenerationSet, SidebarSectionConfig } from '@shared/schema';
+import { migrateSizeConstraintMode } from '@shared/schema';
 
 export interface AppSettingsDefaults {
   exportFormat?: string;

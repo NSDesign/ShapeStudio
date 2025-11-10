@@ -1507,22 +1507,21 @@ export const useShapeEditor = () => {
     return Math.max(10, Math.min(1000, baseHeight));
   };
 
-  // Helper function to determine final size based on width/height constraint preferences
-  // Applies to ALL shape types now, not just circular shapes
-  const calculateConstrainedSize = (settings: BatchConfigSettings, width: number, height: number, shapeType: string): number => {
-    // Apply constraint preferences first (min/max/avg)
-    // These determine which value to use when width and height differ
-    if (settings.useMinWidthHeight) {
-      return Math.min(width, height);
+  // Helper function to determine final size based on sizeConstraintMode
+  // Returns the constrained size based on mode, or width if mode is 'none'
+  const calculateConstrainedSize = (settings: BatchConfigSettings, width: number, height: number): number => {
+    switch (settings.sizeConstraintMode) {
+      case 'min':
+        return Math.min(width, height);
+      case 'max':
+        return Math.max(width, height);
+      case 'avg':
+        return (width + height) / 2;
+      case 'none':
+      default:
+        // Return width as-is, shapes will use independent dimensions
+        return width;
     }
-
-    if (settings.useAvgWidthHeight) {
-      return (width + height) / 2;
-    }
-
-    // Default: use maximum value (useMaxWidthHeight is default)
-    // This also applies when maintainAspectRatio is enabled - the selected constraint determines the size
-    return Math.max(width, height);
   };
 
 
@@ -1690,10 +1689,7 @@ export const useShapeEditor = () => {
       heightMode: effectiveBatchConfig.heightMode,
       heightValue: effectiveBatchConfig.heightValue,
       heightRange: effectiveBatchConfig.heightRange,
-      maintainAspectRatio: effectiveBatchConfig.maintainAspectRatio,
-      useMinWidthHeight: effectiveBatchConfig.useMinWidthHeight,
-      useMaxWidthHeight: effectiveBatchConfig.useMaxWidthHeight,
-      useAvgWidthHeight: effectiveBatchConfig.useAvgWidthHeight,
+      sizeConstraintMode: effectiveBatchConfig.sizeConstraintMode,
       fillColorMode: effectiveBatchConfig.fillColorMode,
       fillColorDefine: effectiveBatchConfig.fillColorDefine,
       fillOpacityDefine: effectiveBatchConfig.fillOpacityDefine,
@@ -1791,14 +1787,15 @@ export const useShapeEditor = () => {
         let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
         
         console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: Calculated width=${width}, height=${height}`);
-        console.log(`🔍 [CONSTRAINT DEBUG] Shape ${index}: maintainAspectRatio=${effectiveBatchConfig.maintainAspectRatio}, useMin=${effectiveBatchConfig.useMinWidthHeight}, useMax=${effectiveBatchConfig.useMaxWidthHeight}, useAvg=${effectiveBatchConfig.useAvgWidthHeight}`);
+        console.log(`🔍 [CONSTRAINT DEBUG] Shape ${index}: sizeConstraintMode=${effectiveBatchConfig.sizeConstraintMode}`);
 
-        // Calculate constrained size for ALL shapes based on min/max/avg settings
-        const constrainedSize = calculateConstrainedSize(effectiveBatchConfig, width, height, shape.type);
+        // Calculate constrained size based on mode
+        const constrainedSize = calculateConstrainedSize(effectiveBatchConfig, width, height);
         
-        // If 1:1 aspect ratio is enabled, both dimensions use the constrained size
-        // Otherwise, rectangles/ellipses can use independent dimensions
-        if (effectiveBatchConfig.maintainAspectRatio) {
+        // If constraint mode is active (min/max/avg), use constrained size for BOTH dimensions
+        const useConstrainedDimensions = effectiveBatchConfig.sizeConstraintMode !== 'none';
+        
+        if (useConstrainedDimensions) {
           width = constrainedSize;
           height = constrainedSize;
         }
@@ -1807,69 +1804,42 @@ export const useShapeEditor = () => {
         switch (shape.type) {
           case 'rectangle':
           case 'rounded-rectangle':
-            // Rectangles use independent width/height unless 1:1 mode is enabled
-            if (effectiveBatchConfig.maintainAspectRatio) {
-              // 1:1 mode: both dimensions use the constrained size
-              shape.width = width;
-              shape.height = height;
-            } else {
-              // Non-1:1 mode: use independent calculated dimensions
-              shape.width = width;
-              shape.height = height;
-            }
+            shape.width = width;
+            shape.height = height;
             console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): width=${shape.width}, height=${shape.height}`);
             break;
           case 'square':
           case 'rounded-square':
-            // Square always maintains 1:1 aspect ratio using constrained size
+            // Square always uses constrained size (even in 'none' mode, use calculated size)
             shape.width = constrainedSize;
             shape.height = constrainedSize;
             break;
           case 'circle':
           case 'spline-circle':
-            // Circular shapes always use constrained size for radius (inherently single-dimension)
+          case 'polygon':
+          case 'star':
+          case 'ring':
+          case 'spline-ring':
+            // Radius-based shapes always use constrained size
             shape.radius = constrainedSize / 2;
             console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): constrainedSize=${constrainedSize}, radius=${shape.radius}`);
             break;
-          case 'polygon':
-            // Polygon always uses constrained size for radius (inherently single-dimension)
-            shape.radius = constrainedSize / 2;
-            break;
-          case 'star':
-            // Star always uses constrained size for outer radius (inherently single-dimension)
-            shape.radius = constrainedSize / 2;
-            break;
-          case 'ring':
-          case 'spline-ring':
-            // Ring always uses constrained size for outer radius (inherently single-dimension)
-            shape.radius = constrainedSize / 2;
-            break;
           case 'ellipse':
           case 'spline-ellipse':
-            // Ellipse uses independent width/height unless 1:1 mode is enabled
-            if (effectiveBatchConfig.maintainAspectRatio) {
-              // 1:1 mode: both dimensions use the constrained size
-              shape.width = width;
-              shape.height = height;
-            } else {
-              // Non-1:1 mode: use independent calculated dimensions
-              shape.width = width;
-              shape.height = height;
-            }
+            shape.width = width;
+            shape.height = height;
             console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): width=${shape.width}, height=${shape.height}`);
             break;
           case 'line':
           case 'bezier':
           case 'cubic':
           case 'smooth-spline':
-            // For lines and splines, use constrained size
+            // For lines and splines, use current width/height (which may be constrained)
             if (shape.points.length >= 2) {
-              const lineWidth = effectiveBatchConfig.maintainAspectRatio ? constrainedSize : width;
-              const lineHeight = effectiveBatchConfig.maintainAspectRatio ? constrainedSize : height;
               const angle = Math.random() * Math.PI * 2;
               shape.points[1] = {
-                x: shape.points[0].x + Math.cos(angle) * lineWidth,
-                y: shape.points[0].y + Math.sin(angle) * lineHeight
+                x: shape.points[0].x + Math.cos(angle) * width,
+                y: shape.points[0].y + Math.sin(angle) * height
               };
             }
             break;

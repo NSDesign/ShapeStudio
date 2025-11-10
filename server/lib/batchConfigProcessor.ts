@@ -275,28 +275,26 @@ function calculateHeight(
 }
 
 /**
- * Helper function to calculate constrained size based on width/height preferences
- * Applies to ALL shape types now, not just circular shapes
+ * Helper function to calculate constrained size based on sizeConstraintMode
+ * Returns the constrained size based on mode, or width if mode is 'none'
  */
 function calculateConstrainedSize(
   settings: BatchConfigSettings,
   width: number,
-  height: number,
-  shapeType: string
+  height: number
 ): number {
-  // Apply constraint preferences (min/max/avg)
-  // These determine which value to use when width and height differ
-  if (settings.useMinWidthHeight) {
-    return Math.min(width, height);
+  switch (settings.sizeConstraintMode) {
+    case 'min':
+      return Math.min(width, height);
+    case 'max':
+      return Math.max(width, height);
+    case 'avg':
+      return (width + height) / 2;
+    case 'none':
+    default:
+      // Return width as-is, shapes will use independent dimensions
+      return width;
   }
-
-  if (settings.useAvgWidthHeight) {
-    return (width + height) / 2;
-  }
-
-  // Default: use maximum value (useMaxWidthHeight is default)
-  // This also applies when maintainAspectRatio is enabled - the selected constraint determines the size
-  return Math.max(width, height);
 }
 
 /**
@@ -443,11 +441,13 @@ export function generateShapesWithBatchConfig(
     let calculatedWidth = calculateWidth(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
     let calculatedHeight = calculateHeight(batchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
 
-    // Calculate constrained size for ALL shapes based on min/max/avg settings
-    const constrainedSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight, randomType);
+    // Calculate constrained size based on mode
+    const constrainedSize = calculateConstrainedSize(batchConfig, calculatedWidth, calculatedHeight);
     
-    // If 1:1 aspect ratio is enabled, both dimensions use the constrained size
-    if (batchConfig.maintainAspectRatio) {
+    // If constraint mode is active (min/max/avg), use constrained size for BOTH dimensions
+    const useConstrainedDimensions = batchConfig.sizeConstraintMode !== 'none';
+    
+    if (useConstrainedDimensions) {
       calculatedWidth = constrainedSize;
       calculatedHeight = constrainedSize;
     }
@@ -462,16 +462,36 @@ export function generateShapesWithBatchConfig(
     const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
     
     // Apply size based on shape type (matching client logic)
-    const isRadiusBased = ['circle', 'star', 'ring', 'polygon', 'spline-circle', 'spline-ring', 'square', 'rounded-square'].includes(randomType);
-    
-    if (isRadiusBased) {
-      // Radius-based shapes always use constrained size
-      shape.width = constrainedSize;
-      shape.height = constrainedSize;
-    } else {
-      // Rectangles and ellipses use independent width/height (which are already set to constrainedSize if 1:1 mode is enabled)
-      shape.width = calculatedWidth;
-      shape.height = calculatedHeight;
+    switch (randomType) {
+      case 'rectangle':
+      case 'rounded-rectangle':
+        shape.width = calculatedWidth;
+        shape.height = calculatedHeight;
+        break;
+      case 'square':
+      case 'rounded-square':
+        // Square always uses constrained size (even in 'none' mode, use calculated size)
+        shape.width = constrainedSize;
+        shape.height = constrainedSize;
+        break;
+      case 'circle':
+      case 'spline-circle':
+      case 'polygon':
+      case 'star':
+      case 'ring':
+      case 'spline-ring':
+        // Radius-based shapes always use constrained size
+        shape.radius = constrainedSize / 2;
+        break;
+      case 'ellipse':
+      case 'spline-ellipse':
+        shape.width = calculatedWidth;
+        shape.height = calculatedHeight;
+        break;
+      // Lines and splines would go here if supported on server
+      default:
+        shape.width = calculatedWidth;
+        shape.height = calculatedHeight;
     }
 
     if (batchConfig.propertiesEnabled) {

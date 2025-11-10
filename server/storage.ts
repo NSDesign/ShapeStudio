@@ -9,6 +9,7 @@ import {
   type SidebarSectionConfig,
   type GenerationSet,
   DEFAULT_SIDEBAR_SECTIONS,
+  migrateSizeConstraintMode,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -157,8 +158,14 @@ export class DatabaseStorage implements IStorage {
     generationSets: GenerationSet[], 
     currentSetId?: string | null
   ): Promise<void> {
+    // Apply migration to remove legacy fields before saving
+    const migratedSets = generationSets.map(set => ({
+      ...set,
+      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+    }));
+    
     await this.upsertUserPreferences(userId, {
-      generationSets: generationSets as any,
+      generationSets: migratedSets as any,
       currentGenerationSetId: currentSetId || null,
     });
   }
@@ -167,9 +174,16 @@ export class DatabaseStorage implements IStorage {
     userId: string
   ): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }> {
     const preferences = await this.getUserPreferences(userId);
+    const loadedSets = (preferences?.generationSets as GenerationSet[]) || [];
+    
+    // Apply migration to ensure loaded sets have sizeConstraintMode
+    const migratedSets = loadedSets.map(set => ({
+      ...set,
+      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+    }));
     
     return {
-      generationSets: (preferences?.generationSets as GenerationSet[]) || [],
+      generationSets: migratedSets,
       currentSetId: preferences?.currentGenerationSetId || null,
     };
   }

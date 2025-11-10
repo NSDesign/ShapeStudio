@@ -361,10 +361,8 @@ export interface BatchConfigSettings {
   // Width/Height Mode Toggles
   sizeIncrementalResetPerBatch: boolean; // true: reset count per batch, false: continuous increment
   
-  // Shape Constraint Value Selection (replaces separate constraint ranges)
-  useMinWidthHeight: boolean; // Use minimum of width/height for circular shapes
-  useMaxWidthHeight: boolean; // Use maximum of width/height for circular shapes  
-  useAvgWidthHeight: boolean; // Use average of width/height for circular shapes
+  // Size Constraint Mode - determines how width/height are constrained
+  sizeConstraintMode: 'none' | 'min' | 'max' | 'avg'; // 'none': independent W/H, 'min/max/avg': constrain both dimensions
   
   // Width/Height Value Mode
   widthValue: number;
@@ -381,7 +379,6 @@ export interface BatchConfigSettings {
   heightModulationValue: number; // Modulation value for height
   
   // Size Constraints
-  maintainAspectRatio: boolean; // force width/height to maintain shape proportions
   minimumSize: number; // absolute minimum size to prevent invisible shapes
   maximumSize: number; // absolute maximum size constraint
   
@@ -840,10 +837,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // Width/Height Mode Toggles
   sizeIncrementalResetPerBatch: true, // Default: reset count per batch
   
-  // Shape Constraint Value Selection (replaces separate constraint ranges)
-  useMinWidthHeight: false, // Use minimum of width/height for circular shapes
-  useMaxWidthHeight: true, // Use maximum of width/height for circular shapes (default)
-  useAvgWidthHeight: false, // Use average of width/height for circular shapes
+  // Size Constraint Mode
+  sizeConstraintMode: 'none', // Default: independent width/height (no constraint)
   
   // Width/Height Value Mode
   widthValue: 100,
@@ -860,7 +855,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   heightModulationValue: 500,
   
   // Size Constraints
-  maintainAspectRatio: false, // Default: independent width/height
   minimumSize: 10, // Minimum size to prevent invisible shapes
   maximumSize: 500, // Maximum size constraint
   
@@ -1868,9 +1862,7 @@ export const BatchConfigSettingsSchema = z.object({
   widthMode: z.enum(['range', 'value', 'incremental']),
   heightMode: z.enum(['range', 'value', 'incremental']),
   sizeIncrementalResetPerBatch: z.boolean(),
-  useMinWidthHeight: z.boolean(),
-  useMaxWidthHeight: z.boolean(),
-  useAvgWidthHeight: z.boolean(),
+  sizeConstraintMode: z.enum(['none', 'min', 'max', 'avg']),
   widthValue: z.number(),
   heightValue: z.number(),
   widthIncrement: z.number(),
@@ -1881,7 +1873,6 @@ export const BatchConfigSettingsSchema = z.object({
   widthModulationValue: z.number(),
   heightModulationEnabled: z.boolean(),
   heightModulationValue: z.number(),
-  maintainAspectRatio: z.boolean(),
   minimumSize: z.number(),
   maximumSize: z.number(),
   
@@ -2409,3 +2400,50 @@ export const exportJobs = pgTable("export_jobs", {
 
 export type ExportJob = typeof exportJobs.$inferSelect;
 export type InsertExportJob = typeof exportJobs.$inferInsert;
+
+// ===== MIGRATION UTILITIES =====
+/**
+ * Migrates legacy size constraint fields to new sizeConstraintMode field
+ * This ensures backward compatibility with old project files and generation sets
+ * 
+ * @param settings - Batch config settings (may have legacy fields)
+ * @returns Normalized settings with sizeConstraintMode
+ */
+export function migrateSizeConstraintMode(settings: Partial<BatchConfigSettings> & {
+  useMinWidthHeight?: boolean;
+  useMaxWidthHeight?: boolean;
+  useAvgWidthHeight?: boolean;
+  maintainAspectRatio?: boolean;
+}): Partial<BatchConfigSettings> {
+  // If already has sizeConstraintMode, no migration needed
+  if (settings.sizeConstraintMode) {
+    // Remove legacy fields if present
+    const { useMinWidthHeight, useMaxWidthHeight, useAvgWidthHeight, maintainAspectRatio, ...rest } = settings as any;
+    return rest;
+  }
+  
+  // Determine new sizeConstraintMode based on legacy flags
+  let sizeConstraintMode: 'none' | 'min' | 'max' | 'avg' = 'none';
+  
+  if (settings.useMinWidthHeight) {
+    sizeConstraintMode = 'min';
+  } else if (settings.useAvgWidthHeight) {
+    sizeConstraintMode = 'avg';
+  } else if (settings.useMaxWidthHeight) {
+    sizeConstraintMode = 'max';
+  } else if (settings.maintainAspectRatio) {
+    // If maintainAspectRatio was true but no constraint was set, default to 'max'
+    sizeConstraintMode = 'max';
+  } else {
+    // All false or undefined: use 'none' (independent dimensions)
+    sizeConstraintMode = 'none';
+  }
+  
+  // Remove legacy fields and add new field
+  const { useMinWidthHeight, useMaxWidthHeight, useAvgWidthHeight, maintainAspectRatio, ...rest } = settings as any;
+  
+  return {
+    ...rest,
+    sizeConstraintMode
+  };
+}

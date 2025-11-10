@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { GenerationSet } from '@shared/schema';
+import { migrateSizeConstraintMode } from '@shared/schema';
 
 export interface GenerationSetsData {
   generationSets: GenerationSet[];
@@ -9,11 +10,20 @@ export interface GenerationSetsData {
 
 export function useGenerationSetsPersistence() {
   // Load generation sets from server
-  const { data, isLoading, error } = useQuery<GenerationSetsData>({
+  const { data: rawData, isLoading, error } = useQuery<GenerationSetsData>({
     queryKey: ['/api/user/generation-sets'],
     retry: 2,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
+  
+  // Apply migration to loaded data
+  const data = rawData ? {
+    ...rawData,
+    generationSets: rawData.generationSets.map(set => ({
+      ...set,
+      batchConfig: migrateSizeConstraintMode(set.batchConfig) as typeof set.batchConfig
+    }))
+  } : rawData;
 
   // Save generation sets to server
   const saveMutation = useMutation({
