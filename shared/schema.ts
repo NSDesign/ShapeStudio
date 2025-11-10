@@ -671,6 +671,7 @@ export interface BatchConfigSettings {
   rotationMode: 'range' | 'value' | 'incremental';
   rotationValue: number;
   rotationIncrement: number;
+  rotationIncrementStep: number; // Step amount for rotation increment slider (1-90)
   rotationModulation: number; // Modulation value (e.g., 360 for full circle reset)
   rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
   
@@ -1143,6 +1144,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   rotationMode: 'range',
   rotationValue: 0,
   rotationIncrement: 15,
+  rotationIncrementStep: 15,
   rotationModulation: 360,
   rotationModulationEnabled: false,
   
@@ -2127,6 +2129,7 @@ export const BatchConfigSettingsSchema = z.object({
   rotationMode: z.enum(['range', 'value', 'incremental']),
   rotationValue: z.number(),
   rotationIncrement: z.number(),
+  rotationIncrementStep: z.number().min(1).max(90),
   rotationModulation: z.number(),
   rotationModulationEnabled: z.boolean(),
   
