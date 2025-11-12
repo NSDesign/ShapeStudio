@@ -2456,14 +2456,46 @@ export const useShapeEditor = () => {
             shape.transform.skewX = minSkewX + Math.random() * (maxSkewX - minSkewX);
             shape.transform.skewY = minSkewY + Math.random() * (maxSkewY - minSkewY);
           }
-        }
 
-        // Apply rotation randomization if enabled (additive to any existing rotation)
-        if (effectiveBatchConfig.rotationRandomizationScale > 0) {
-          const randomVariation = (Math.random() * 2 - 1) * 30; // ±30° base variation
-          const scaledVariation = randomVariation * (effectiveBatchConfig.rotationRandomizationScale / 100);
-          shape.transform.rotation += scaledVariation;
-          console.log(`🎲 [ROTATION RANDOMIZATION] Shape ${index}: Added ${scaledVariation.toFixed(2)}° variation (scale=${effectiveBatchConfig.rotationRandomizationScale}%)`);
+          // Apply rotation randomization if enabled (additive to any existing rotation)
+          // Uses transform origin to ensure rotation happens around configured pivot point
+          if (effectiveBatchConfig.rotationRandomizationScale > 0) {
+            const randomVariation = (Math.random() * 2 - 1) * 30; // ±30° base variation
+            const scaledVariation = randomVariation * (effectiveBatchConfig.rotationRandomizationScale / 100);
+            
+            // Get current shape position relative to transform origin
+            const relX = shape.transform.x - originX;
+            const relY = shape.transform.y - originY;
+            
+            // Calculate new total rotation
+            const newRotation = shape.transform.rotation + scaledVariation;
+            
+            // Rotate the relative position by the new total rotation
+            const totalRotationRad = (newRotation * Math.PI) / 180;
+            const cosTotal = Math.cos(totalRotationRad);
+            const sinTotal = Math.sin(totalRotationRad);
+            
+            // Calculate what the relative position SHOULD be after applying new rotation
+            // We need to reverse the old rotation first, then apply new rotation
+            const oldRotationRad = (shape.transform.rotation * Math.PI) / 180;
+            const cosOld = Math.cos(oldRotationRad);
+            const sinOld = Math.sin(oldRotationRad);
+            
+            // Unrotate to get unrotated relative position
+            const unrotatedX = relX * cosOld + relY * sinOld;
+            const unrotatedY = -relX * sinOld + relY * cosOld;
+            
+            // Apply new total rotation
+            const newRelX = unrotatedX * cosTotal - unrotatedY * sinTotal;
+            const newRelY = unrotatedX * sinTotal + unrotatedY * cosTotal;
+            
+            // Update shape position and rotation
+            shape.transform.x = originX + newRelX;
+            shape.transform.y = originY + newRelY;
+            shape.transform.rotation = newRotation;
+            
+            console.log(`🎲 [ROTATION RANDOMIZATION] Shape ${index}: Added ${scaledVariation.toFixed(2)}° variation (scale=${effectiveBatchConfig.rotationRandomizationScale}%) around origin=(${originX},${originY})`);
+          }
         }
       }
 

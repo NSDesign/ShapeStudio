@@ -843,12 +843,34 @@ export function generateShapesWithBatchConfig(
           shape.transform.skewX = minSkewX + Math.random() * (maxSkewX - minSkewX);
           shape.transform.skewY = minSkewY + Math.random() * (maxSkewY - minSkewY);
         }
-      }
 
-      if (batchConfig.rotationRandomizationScale > 0) {
-        const randomVariation = (Math.random() * 2 - 1) * 30;
-        const scaledVariation = randomVariation * (batchConfig.rotationRandomizationScale / 100);
-        shape.transform.rotation += scaledVariation;
+        if (batchConfig.rotationRandomizationScale > 0) {
+          const randomVariation = (Math.random() * 2 - 1) * 30;
+          const scaledVariation = randomVariation * (batchConfig.rotationRandomizationScale / 100);
+          
+          const relX = shape.transform.x - originX;
+          const relY = shape.transform.y - originY;
+          
+          const newRotation = shape.transform.rotation + scaledVariation;
+          
+          const totalRotationRad = (newRotation * Math.PI) / 180;
+          const cosTotal = Math.cos(totalRotationRad);
+          const sinTotal = Math.sin(totalRotationRad);
+          
+          const oldRotationRad = (shape.transform.rotation * Math.PI) / 180;
+          const cosOld = Math.cos(oldRotationRad);
+          const sinOld = Math.sin(oldRotationRad);
+          
+          const unrotatedX = relX * cosOld + relY * sinOld;
+          const unrotatedY = -relX * sinOld + relY * cosOld;
+          
+          const newRelX = unrotatedX * cosTotal - unrotatedY * sinTotal;
+          const newRelY = unrotatedX * sinTotal + unrotatedY * cosTotal;
+          
+          shape.transform.x = originX + newRelX;
+          shape.transform.y = originY + newRelY;
+          shape.transform.rotation = newRotation;
+        }
       }
     }
 
