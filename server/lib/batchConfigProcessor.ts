@@ -776,7 +776,8 @@ export function generateShapesWithBatchConfig(
             scaleY = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleXMode === 'incremental') {
             const incrementAmount = (batchConfig.scaleXIncrement || 0) * index;
-            const finalScale = 1 + incrementAmount;
+            const startScale = (batchConfig.scaleXStartValue ?? 100) / 100;
+            const finalScale = startScale + incrementAmount;
             scaleX = Math.max(0.1, finalScale);
             scaleY = Math.max(0.1, finalScale);
           }
@@ -790,7 +791,8 @@ export function generateShapesWithBatchConfig(
             scaleX = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleXMode === 'incremental') {
             const incrementAmount = (batchConfig.scaleXIncrement || 0) * index;
-            const finalScale = 1 + incrementAmount;
+            const startScale = (batchConfig.scaleXStartValue ?? 100) / 100;
+            const finalScale = startScale + incrementAmount;
             scaleX = Math.max(0.1, finalScale);
           }
 
@@ -803,7 +805,8 @@ export function generateShapesWithBatchConfig(
             scaleY = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleYMode === 'incremental') {
             const incrementAmount = (batchConfig.scaleYIncrement || 0) * index;
-            const finalScale = 1 + incrementAmount;
+            const startScale = (batchConfig.scaleYStartValue ?? 100) / 100;
+            const finalScale = startScale + incrementAmount;
             scaleY = Math.max(0.1, finalScale);
           }
         }

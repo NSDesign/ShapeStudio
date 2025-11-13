@@ -2380,9 +2380,11 @@ export const useShapeEditor = () => {
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
-              const finalScale = 1 + incrementAmount;
+              const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
+              const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
               scaleY = Math.max(0.1, finalScale);
+              console.log(`📐 [SCALE INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
           } else {
             if (effectiveBatchConfig.scaleXMode === 'range') {
@@ -2394,8 +2396,10 @@ export const useShapeEditor = () => {
               scaleX = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
-              const finalScale = 1 + incrementAmount;
+              const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
+              const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
+              console.log(`📐 [SCALE X INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
 
             if (effectiveBatchConfig.scaleYMode === 'range') {
@@ -2407,8 +2411,10 @@ export const useShapeEditor = () => {
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleYMode === 'incremental') {
               const incrementAmount = (effectiveBatchConfig.scaleYIncrement || 0) * index;
-              const finalScale = 1 + incrementAmount;
+              const startScale = (effectiveBatchConfig.scaleYStartValue ?? 100) / 100;
+              const finalScale = startScale + incrementAmount;
               scaleY = Math.max(0.1, finalScale);
+              console.log(`📐 [SCALE Y INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
           }
 
