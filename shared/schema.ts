@@ -2553,6 +2553,45 @@ export function migrateRotationSettings(settings: Partial<BatchConfigSettings>):
 }
 
 /**
+ * Migrates transform origin settings from legacy 'predefined-shape' to 'current-shape'
+ * and ensures all new transform origin fields have default values
+ * 
+ * @param settings - Batch config settings (may have legacy transformOriginMode)
+ * @returns Settings with updated transformOriginMode and default values for new fields
+ */
+export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & {
+  transformOriginMode?: 'define' | 'predefined-artboard' | 'predefined-shape' | 'current-shape' | 'shape-reference';
+}): Partial<BatchConfigSettings> {
+  const migrated = { ...settings };
+  
+  // Rename legacy 'predefined-shape' to 'current-shape'
+  if (migrated.transformOriginMode === 'predefined-shape') {
+    migrated.transformOriginMode = 'current-shape';
+  }
+  
+  // Ensure new fields have default values
+  return {
+    ...migrated,
+    transformOriginDefineMode: migrated.transformOriginDefineMode ?? 'fixed',
+    transformOriginXMin: migrated.transformOriginXMin ?? -100,
+    transformOriginXMax: migrated.transformOriginXMax ?? 100,
+    transformOriginYMin: migrated.transformOriginYMin ?? -100,
+    transformOriginYMax: migrated.transformOriginYMax ?? 100,
+    transformOriginXStartValue: migrated.transformOriginXStartValue ?? 0,
+    transformOriginXIncrement: migrated.transformOriginXIncrement ?? 10,
+    transformOriginXModulationEnabled: migrated.transformOriginXModulationEnabled ?? false,
+    transformOriginXModulationValue: migrated.transformOriginXModulationValue ?? 100,
+    transformOriginYStartValue: migrated.transformOriginYStartValue ?? 0,
+    transformOriginYIncrement: migrated.transformOriginYIncrement ?? 10,
+    transformOriginYModulationEnabled: migrated.transformOriginYModulationEnabled ?? false,
+    transformOriginYModulationValue: migrated.transformOriginYModulationValue ?? 100,
+    transformOriginShapeReference: migrated.transformOriginShapeReference ?? 'current',
+    transformOriginShapeIndex: migrated.transformOriginShapeIndex ?? 0,
+    transformOriginShapeAnchor: migrated.transformOriginShapeAnchor ?? 'center'
+  };
+}
+
+/**
  * Master migration function that applies all batch config migrations
  * This should be called at all persistence boundaries (load/save)
  * 
@@ -2568,6 +2607,7 @@ export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings
   // Apply all migrations in sequence
   let migrated = migrateSizeConstraintMode(settings);
   migrated = migrateRotationSettings(migrated);
+  migrated = migrateTransformOrigin(migrated);
   
   return migrated;
 }
