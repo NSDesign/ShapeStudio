@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
 - **Transform Controls**: Transform origin controls (Define, Predefined Artboard, Predefined Shape) and randomization scaling for position, scale, and rotation.
+- **Enhanced Incremental Transform Modes**: Position (X/Y) and Rotation transforms support incremental mode with start value, increment amount, and optional modulation for cyclic patterns. Uses formula: `result = startValue + ((increment × index) % modulation)`. Client/server parity maintained with non-negative modulo: `((value % m) + m) % m`. Note: Reset-per-batch controls removed due to architectural limitations (batch context not passed through generation pipeline).
 - **Position Alignment System**: Dual anchor point alignment for precise shape positioning relative to artboard boundaries (Shape Anchor, Artboard Anchor).
 - **Canvas-Based Blur System**: Gaussian blur implemented via direct canvas pixel manipulation.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity.
