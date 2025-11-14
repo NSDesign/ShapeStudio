@@ -3479,14 +3479,6 @@ export default function BatchConfigDialog({
                                   />
                                 </div>
                               )}
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  checked={currentSettings.xTransformResetPerBatch}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ xTransformResetPerBatch: checked })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Reset Per Batch</Label>
-                              </div>
                             </>
                           )}
                           
@@ -3667,14 +3659,6 @@ export default function BatchConfigDialog({
                                   />
                                 </div>
                               )}
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  checked={currentSettings.yTransformResetPerBatch}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ yTransformResetPerBatch: checked })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Reset Per Batch</Label>
-                              </div>
                             </>
                           )}
                           
@@ -4080,15 +4064,6 @@ export default function BatchConfigDialog({
                                 />
                               </div>
                             )}
-                            
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                checked={currentSettings.rotationResetPerBatch}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ rotationResetPerBatch: checked })}
-                                className="border-slate-500 data-[state=checked]:bg-orange-600"
-                              />
-                              <Label className="text-xs text-slate-300">Reset Per Batch</Label>
-                            </div>
                           </div>
                         )}
                       </div>
