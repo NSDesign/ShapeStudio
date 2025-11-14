@@ -603,6 +603,13 @@ export default function Sidebar({
     }
   }, [appSettingsDefaults, isLoadingPreferences]);
 
+  // Close all open popovers when sidebar collapses to prevent UI lock-up
+  useEffect(() => {
+    if (isCollapsed) {
+      setActivePopover(null);
+    }
+  }, [isCollapsed]);
+
   // Save sidebar collapsed state when it changes (debounced)
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSidebar.current) return;
