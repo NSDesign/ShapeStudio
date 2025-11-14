@@ -683,7 +683,7 @@ export interface BatchConfigSettings {
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
   // Transform Origin
-  transformOriginMode: 'define' | 'predefined-artboard' | 'current-shape' | 'shape-reference';
+  transformOriginMode: 'define' | 'predefined-artboard' | 'shape-reference';
   
   // Define mode - independent X and Y modes
   transformOriginXMode: 'fixed' | 'range' | 'incremental';
@@ -2196,7 +2196,7 @@ export const BatchConfigSettingsSchema = z.object({
   heightRandomizationScale: z.number(),
   
   // Transform Origin
-  transformOriginMode: z.enum(['define', 'predefined-artboard', 'current-shape', 'shape-reference']),
+  transformOriginMode: z.enum(['define', 'predefined-artboard', 'shape-reference']),
   
   // Define mode - independent X and Y modes
   transformOriginXMode: z.enum(['fixed', 'range', 'incremental']),
@@ -2556,7 +2556,7 @@ export function migrateRotationSettings(settings: Partial<BatchConfigSettings>):
 }
 
 /**
- * Migrates transform origin settings from legacy 'predefined-shape' to 'current-shape'
+ * Migrates transform origin settings from legacy modes to 'shape-reference'
  * and ensures all new transform origin fields have default values
  * 
  * @param settings - Batch config settings (may have legacy transformOriginMode)
@@ -2568,9 +2568,11 @@ export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & 
 }): Partial<BatchConfigSettings> {
   const migrated = { ...settings } as any;
   
-  // Rename legacy 'predefined-shape' to 'current-shape'
-  if (migrated.transformOriginMode === 'predefined-shape') {
-    migrated.transformOriginMode = 'current-shape';
+  // Convert legacy 'predefined-shape' and 'current-shape' to 'shape-reference' mode
+  if (migrated.transformOriginMode === 'predefined-shape' || migrated.transformOriginMode === 'current-shape') {
+    migrated.transformOriginMode = 'shape-reference';
+    // Set to 'current' mode to replicate the old 'current-shape' behavior
+    migrated.transformOriginShapeReference = 'current';
   }
   
   // Migrate legacy transformOriginDefineMode to independent X and Y modes
