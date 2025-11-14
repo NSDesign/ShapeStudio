@@ -2140,9 +2140,44 @@ export const useShapeEditor = () => {
           let originY = 0;
           
           if (effectiveBatchConfig.transformOriginMode === 'define') {
-            // Use custom coordinates
-            originX = effectiveBatchConfig.transformOriginX || 0;
-            originY = effectiveBatchConfig.transformOriginY || 0;
+            // Define mode with sub-modes (fixed, range, incremental)
+            const defineMode = effectiveBatchConfig.transformOriginDefineMode || 'fixed';
+            
+            if (defineMode === 'fixed') {
+              // Fixed mode: use custom coordinates
+              originX = effectiveBatchConfig.transformOriginX || 0;
+              originY = effectiveBatchConfig.transformOriginY || 0;
+            } else if (defineMode === 'range') {
+              // Range mode: random X/Y from ranges
+              const xMin = effectiveBatchConfig.transformOriginXMin ?? -100;
+              const xMax = effectiveBatchConfig.transformOriginXMax ?? 100;
+              const yMin = effectiveBatchConfig.transformOriginYMin ?? -100;
+              const yMax = effectiveBatchConfig.transformOriginYMax ?? 100;
+              originX = xMin + Math.random() * (xMax - xMin);
+              originY = yMin + Math.random() * (yMax - yMin);
+            } else if (defineMode === 'incremental') {
+              // Incremental mode: start + increment * index + modulation
+              const xStart = effectiveBatchConfig.transformOriginXStartValue ?? 0;
+              const xIncrement = effectiveBatchConfig.transformOriginXIncrement ?? 10;
+              const yStart = effectiveBatchConfig.transformOriginYStartValue ?? 0;
+              const yIncrement = effectiveBatchConfig.transformOriginYIncrement ?? 10;
+              
+              let xIncrementAmount = xIncrement * index;
+              let yIncrementAmount = yIncrement * index;
+              
+              // Apply modulation if enabled
+              if (effectiveBatchConfig.transformOriginXModulationEnabled && effectiveBatchConfig.transformOriginXModulationValue > 0) {
+                const m = effectiveBatchConfig.transformOriginXModulationValue;
+                xIncrementAmount = ((xIncrementAmount % m) + m) % m;
+              }
+              if (effectiveBatchConfig.transformOriginYModulationEnabled && effectiveBatchConfig.transformOriginYModulationValue > 0) {
+                const m = effectiveBatchConfig.transformOriginYModulationValue;
+                yIncrementAmount = ((yIncrementAmount % m) + m) % m;
+              }
+              
+              originX = xStart + xIncrementAmount;
+              originY = yStart + yIncrementAmount;
+            }
           } else if (effectiveBatchConfig.transformOriginMode === 'predefined-artboard') {
             // Use predefined artboard alignment points
             const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
@@ -2189,8 +2224,8 @@ export const useShapeEditor = () => {
                 originY = artboardY + artboardHeight;
                 break;
             }
-          } else if (effectiveBatchConfig.transformOriginMode === 'predefined-shape') {
-            // Use predefined shape alignment points - calculate based on shape's own bounds
+          } else if (effectiveBatchConfig.transformOriginMode === 'current-shape') {
+            // Current shape mode: use predefined shape alignment points based on shape's own bounds
             const shapeBounds = shape.getBounds();
             const shapeWidth = shapeBounds.width;
             const shapeHeight = shapeBounds.height;
@@ -2234,6 +2269,74 @@ export const useShapeEditor = () => {
                 originX = shapeX + shapeWidth;
                 originY = shapeY + shapeHeight;
                 break;
+            }
+          } else if (effectiveBatchConfig.transformOriginMode === 'shape-reference') {
+            // Shape reference mode: reference another shape's position and use its anchor point
+            const referenceType = effectiveBatchConfig.transformOriginShapeReference || 'current';
+            let referencedShape: Shape | undefined;
+            
+            if (referenceType === 'current') {
+              referencedShape = shape;
+            } else if (referenceType === 'previous') {
+              referencedShape = index > 0 ? finalShapes[index - 1] : undefined;
+            } else if (referenceType === 'next') {
+              referencedShape = index < finalShapes.length - 1 ? finalShapes[index + 1] : undefined;
+            } else if (referenceType === 'specific') {
+              const specificIndex = effectiveBatchConfig.transformOriginShapeIndex ?? 0;
+              referencedShape = finalShapes[specificIndex];
+            }
+            
+            // If referenced shape exists, calculate origin based on its bounds and anchor point
+            if (referencedShape) {
+              const refBounds = referencedShape.getBounds();
+              const refWidth = refBounds.width;
+              const refHeight = refBounds.height;
+              const refX = refBounds.x;
+              const refY = refBounds.y;
+              
+              switch (effectiveBatchConfig.transformOriginShapeAnchor) {
+                case 'center':
+                  originX = refX + refWidth / 2;
+                  originY = refY + refHeight / 2;
+                  break;
+                case 'top-left':
+                  originX = refX;
+                  originY = refY;
+                  break;
+                case 'top-center':
+                  originX = refX + refWidth / 2;
+                  originY = refY;
+                  break;
+                case 'top-right':
+                  originX = refX + refWidth;
+                  originY = refY;
+                  break;
+                case 'center-left':
+                  originX = refX;
+                  originY = refY + refHeight / 2;
+                  break;
+                case 'center-right':
+                  originX = refX + refWidth;
+                  originY = refY + refHeight / 2;
+                  break;
+                case 'bottom-left':
+                  originX = refX;
+                  originY = refY + refHeight;
+                  break;
+                case 'bottom-center':
+                  originX = refX + refWidth / 2;
+                  originY = refY + refHeight;
+                  break;
+                case 'bottom-right':
+                  originX = refX + refWidth;
+                  originY = refY + refHeight;
+                  break;
+              }
+            } else {
+              // Fallback if referenced shape doesn't exist
+              originX = 0;
+              originY = 0;
+              console.warn(`⚠️ [TRANSFORM ORIGIN] Shape ${index}: Referenced shape not found (type=${referenceType}), using (0, 0)`);
             }
           }
           
