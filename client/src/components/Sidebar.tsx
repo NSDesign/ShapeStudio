@@ -781,11 +781,6 @@ export default function Sidebar({
     onOpenGenerationSetsManager?.();
   }, [onOpenGenerationSetsManager]);
 
-  // Define handlePopoverToggle function
-  const handlePopoverToggle = (sectionId: string) => {
-    setActivePopover(activePopover === sectionId ? null : sectionId);
-  };
-
   // Helper functions for content sections
   function SelectionModesContent() {
     const editModes = [
@@ -5624,7 +5619,6 @@ export default function Sidebar({
                       section.color === 'violet' ? 'text-violet-400 hover:text-violet-300' :
                       'text-pink-400 hover:text-pink-300'
                     }`}
-                    onClick={() => handlePopoverToggle(section.id)}
                     data-testid={`sidebar-collapsed-${section.id}-button`}
                   >
                     <section.icon className="w-4 h-4" />
