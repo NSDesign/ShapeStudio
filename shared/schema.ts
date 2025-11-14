@@ -632,8 +632,6 @@ export interface BatchConfigSettings {
   xTransformModulationValue: number;
   yTransformModulationEnabled: boolean;
   yTransformModulationValue: number;
-  xTransformResetPerBatch: boolean;
-  yTransformResetPerBatch: boolean;
   
   // Position Alignment (when mode is 'align')
   // X Alignment - Shape Anchor
@@ -677,7 +675,6 @@ export interface BatchConfigSettings {
   rotationStartValue: number; // Starting rotation value for incremental mode
   rotationModulation: number; // Modulation value (e.g., 360 for full circle reset)
   rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
-  rotationResetPerBatch: boolean; // Reset incremental counter per batch
   
   // Transform Randomization Scaling (0-100%)
   scaleRandomizationScale: number; // Scale for scale randomization  
@@ -1113,8 +1110,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   xTransformModulationValue: 100,
   yTransformModulationEnabled: false,
   yTransformModulationValue: 100,
-  xTransformResetPerBatch: false,
-  yTransformResetPerBatch: false,
   
   // Position Alignment (when mode is 'align')
   xShapeAnchorMode: 'predefined',
@@ -1154,7 +1149,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   rotationStartValue: 0,
   rotationModulation: 360,
   rotationModulationEnabled: false,
-  rotationResetPerBatch: false,
   
   // Transform Randomization Scaling (0-100%)
   scaleRandomizationScale: 50,
@@ -2104,8 +2098,6 @@ export const BatchConfigSettingsSchema = z.object({
   xTransformModulationValue: z.number(),
   yTransformModulationEnabled: z.boolean(),
   yTransformModulationValue: z.number(),
-  xTransformResetPerBatch: z.boolean(),
-  yTransformResetPerBatch: z.boolean(),
   
   // Position Alignment (when mode is 'align')
   xShapeAnchorMode: z.enum(['predefined', 'define']),
@@ -2143,7 +2135,6 @@ export const BatchConfigSettingsSchema = z.object({
   rotationStartValue: z.number(),
   rotationModulation: z.number(),
   rotationModulationEnabled: z.boolean(),
-  rotationResetPerBatch: z.boolean(),
   
   scaleRandomizationScale: z.number(),
   rotationRandomizationScale: z.number(),
