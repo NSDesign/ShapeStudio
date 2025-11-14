@@ -28,10 +28,11 @@ Preferred communication style: Simple, everyday language.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
 - **Transform Origin System**: Comprehensive transform origin controls with multiple modes:
-  - **Define Mode**: Three sub-modes for precise control:
+  - **Define Mode**: Independent X and Y axis control with three modes each:
     - *Fixed*: Custom X/Y coordinates for static transform origin
-    - *Range*: Random origin selection from X/Y min/max ranges
-    - *Incremental*: Progressive origin shift using start value + increment × index with optional modulation for cyclic patterns
+    - *Range*: Random origin selection from X/Y min/max ranges (independent per axis)
+    - *Incremental*: Progressive origin shift using start value + increment × index with optional modulation for cyclic patterns (independent per axis)
+    - **Independent Axis Configuration**: X and Y can use different modes simultaneously (e.g., X fixed + Y incremental)
   - **Predefined Artboard**: 9-point alignment system anchored to artboard boundaries
   - **Current Shape**: 9-point alignment system anchored to each shape's own bounds
   - **Shape Reference**: Reference another shape's position with configurable anchor points:

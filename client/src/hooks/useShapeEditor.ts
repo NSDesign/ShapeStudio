@@ -2140,42 +2140,57 @@ export const useShapeEditor = () => {
           let originY = 0;
           
           if (effectiveBatchConfig.transformOriginMode === 'define') {
-            // Define mode with sub-modes (fixed, range, incremental)
-            const defineMode = effectiveBatchConfig.transformOriginDefineMode || 'fixed';
+            // Define mode with independent X and Y sub-modes (fixed, range, incremental)
+            const xMode = effectiveBatchConfig.transformOriginXMode || 'fixed';
+            const yMode = effectiveBatchConfig.transformOriginYMode || 'fixed';
             
-            if (defineMode === 'fixed') {
-              // Fixed mode: use custom coordinates
+            // Calculate X coordinate based on its mode
+            if (xMode === 'fixed') {
+              // Fixed mode: use custom X coordinate
               originX = effectiveBatchConfig.transformOriginX || 0;
-              originY = effectiveBatchConfig.transformOriginY || 0;
-            } else if (defineMode === 'range') {
-              // Range mode: random X/Y from ranges
+            } else if (xMode === 'range') {
+              // Range mode: random X from range
               const xMin = effectiveBatchConfig.transformOriginXMin ?? -100;
               const xMax = effectiveBatchConfig.transformOriginXMax ?? 100;
-              const yMin = effectiveBatchConfig.transformOriginYMin ?? -100;
-              const yMax = effectiveBatchConfig.transformOriginYMax ?? 100;
               originX = xMin + Math.random() * (xMax - xMin);
-              originY = yMin + Math.random() * (yMax - yMin);
-            } else if (defineMode === 'incremental') {
+            } else if (xMode === 'incremental') {
               // Incremental mode: start + increment * index + modulation
               const xStart = effectiveBatchConfig.transformOriginXStartValue ?? 0;
               const xIncrement = effectiveBatchConfig.transformOriginXIncrement ?? 10;
-              const yStart = effectiveBatchConfig.transformOriginYStartValue ?? 0;
-              const yIncrement = effectiveBatchConfig.transformOriginYIncrement ?? 10;
               
               let xIncrementAmount = xIncrement * index;
-              let yIncrementAmount = yIncrement * index;
               
               // Apply modulation if enabled
               if (effectiveBatchConfig.transformOriginXModulationEnabled && effectiveBatchConfig.transformOriginXModulationValue > 0) {
                 const m = effectiveBatchConfig.transformOriginXModulationValue;
                 xIncrementAmount = ((xIncrementAmount % m) + m) % m;
               }
+              
+              originX = xStart + xIncrementAmount;
+            }
+            
+            // Calculate Y coordinate based on its mode
+            if (yMode === 'fixed') {
+              // Fixed mode: use custom Y coordinate
+              originY = effectiveBatchConfig.transformOriginY || 0;
+            } else if (yMode === 'range') {
+              // Range mode: random Y from range
+              const yMin = effectiveBatchConfig.transformOriginYMin ?? -100;
+              const yMax = effectiveBatchConfig.transformOriginYMax ?? 100;
+              originY = yMin + Math.random() * (yMax - yMin);
+            } else if (yMode === 'incremental') {
+              // Incremental mode: start + increment * index + modulation
+              const yStart = effectiveBatchConfig.transformOriginYStartValue ?? 0;
+              const yIncrement = effectiveBatchConfig.transformOriginYIncrement ?? 10;
+              
+              let yIncrementAmount = yIncrement * index;
+              
+              // Apply modulation if enabled
               if (effectiveBatchConfig.transformOriginYModulationEnabled && effectiveBatchConfig.transformOriginYModulationValue > 0) {
                 const m = effectiveBatchConfig.transformOriginYModulationValue;
                 yIncrementAmount = ((yIncrementAmount % m) + m) % m;
               }
               
-              originX = xStart + xIncrementAmount;
               originY = yStart + yIncrementAmount;
             }
           } else if (effectiveBatchConfig.transformOriginMode === 'predefined-artboard') {
