@@ -775,7 +775,7 @@ export function generateShapesWithBatchConfig(
             scaleX = Math.max(0.1, baseScale);
             scaleY = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleXMode === 'incremental') {
-            const incrementAmount = (batchConfig.scaleXIncrement || 0) * index;
+            const incrementAmount = ((batchConfig.scaleXIncrement || 0) / 100) * index;
             const startScale = (batchConfig.scaleXStartValue ?? 100) / 100;
             const finalScale = startScale + incrementAmount;
             scaleX = Math.max(0.1, finalScale);
@@ -790,7 +790,7 @@ export function generateShapesWithBatchConfig(
             const baseScale = (batchConfig.scaleXValue || 100) / 100;
             scaleX = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleXMode === 'incremental') {
-            const incrementAmount = (batchConfig.scaleXIncrement || 0) * index;
+            const incrementAmount = ((batchConfig.scaleXIncrement || 0) / 100) * index;
             const startScale = (batchConfig.scaleXStartValue ?? 100) / 100;
             const finalScale = startScale + incrementAmount;
             scaleX = Math.max(0.1, finalScale);
@@ -804,7 +804,7 @@ export function generateShapesWithBatchConfig(
             const baseScale = (batchConfig.scaleYValue || 100) / 100;
             scaleY = Math.max(0.1, baseScale);
           } else if (batchConfig.scaleYMode === 'incremental') {
-            const incrementAmount = (batchConfig.scaleYIncrement || 0) * index;
+            const incrementAmount = ((batchConfig.scaleYIncrement || 0) / 100) * index;
             const startScale = (batchConfig.scaleYStartValue ?? 100) / 100;
             const finalScale = startScale + incrementAmount;
             scaleY = Math.max(0.1, finalScale);

@@ -2379,7 +2379,7 @@ export const useShapeEditor = () => {
               scaleX = Math.max(0.1, baseScale);
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
-              const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
+              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * index;
               const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
@@ -2395,7 +2395,7 @@ export const useShapeEditor = () => {
               const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100;
               scaleX = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
-              const incrementAmount = (effectiveBatchConfig.scaleXIncrement || 0) * index;
+              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * index;
               const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
@@ -2410,7 +2410,7 @@ export const useShapeEditor = () => {
               const baseScale = (effectiveBatchConfig.scaleYValue || 100) / 100;
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleYMode === 'incremental') {
-              const incrementAmount = (effectiveBatchConfig.scaleYIncrement || 0) * index;
+              const incrementAmount = ((effectiveBatchConfig.scaleYIncrement || 0) / 100) * index;
               const startScale = (effectiveBatchConfig.scaleYStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleY = Math.max(0.1, finalScale);

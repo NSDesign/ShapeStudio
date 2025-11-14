@@ -3770,22 +3770,40 @@ export default function BatchConfigDialog({
                           )}
                           
                           {currentSettings.scaleXMode === 'incremental' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleXIncrement}%</Label>
-                              <Slider
-                                value={[currentSettings.scaleXIncrement]}
-                                onValueChange={([value]) => {
-                                  handleSettingsUpdate({ scaleXIncrement: value });
-                                  if (currentSettings.maintainScaleAspectRatio) {
-                                    handleSettingsUpdate({ scaleYIncrement: value });
-                                  }
-                                }}
-                                min={-50}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-green-600"
-                              />
-                            </div>
+                            <>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Start: {currentSettings.scaleXStartValue ?? 100}%</Label>
+                                <Slider
+                                  value={[currentSettings.scaleXStartValue ?? 100]}
+                                  onValueChange={([value]) => {
+                                    handleSettingsUpdate({ scaleXStartValue: value });
+                                    if (currentSettings.maintainScaleAspectRatio) {
+                                      handleSettingsUpdate({ scaleYStartValue: value });
+                                    }
+                                  }}
+                                  min={0}
+                                  max={200}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-green-600"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleXIncrement}%</Label>
+                                <Slider
+                                  value={[currentSettings.scaleXIncrement]}
+                                  onValueChange={([value]) => {
+                                    handleSettingsUpdate({ scaleXIncrement: value });
+                                    if (currentSettings.maintainScaleAspectRatio) {
+                                      handleSettingsUpdate({ scaleYIncrement: value });
+                                    }
+                                  }}
+                                  min={-50}
+                                  max={50}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-green-600"
+                                />
+                              </div>
+                            </>
                           )}
                         </div>
                         
@@ -3840,18 +3858,32 @@ export default function BatchConfigDialog({
                           )}
                           
                           {currentSettings.scaleYMode === 'incremental' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleYIncrement}%</Label>
-                              <Slider
-                                value={[currentSettings.scaleYIncrement]}
-                                onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
-                                min={-50}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-green-600"
-                                disabled={currentSettings.maintainScaleAspectRatio}
-                              />
-                            </div>
+                            <>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Start: {currentSettings.scaleYStartValue ?? 100}%</Label>
+                                <Slider
+                                  value={[currentSettings.scaleYStartValue ?? 100]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ scaleYStartValue: value })}
+                                  min={0}
+                                  max={200}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-green-600"
+                                  disabled={currentSettings.maintainScaleAspectRatio}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleYIncrement}%</Label>
+                                <Slider
+                                  value={[currentSettings.scaleYIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
+                                  min={-50}
+                                  max={50}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-green-600"
+                                  disabled={currentSettings.maintainScaleAspectRatio}
+                                />
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
