@@ -758,7 +758,7 @@ export function generateShapesWithBatchConfig(
             referencedShape = index < finalShapes.length - 1 ? finalShapes[index + 1] : undefined;
           } else if (referenceType === 'specific') {
             const specificIndex = batchConfig.transformOriginShapeIndex ?? 0;
-            referencedShape = finalShapes[specificIndex];
+            referencedShape = specificIndex >= 0 && specificIndex < finalShapes.length ? finalShapes[specificIndex] : undefined;
           }
           
           // If referenced shape exists, calculate origin based on its bounds and anchor point

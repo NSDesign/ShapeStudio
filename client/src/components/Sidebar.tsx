@@ -5600,7 +5600,13 @@ export default function Sidebar({
             <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
-                onOpenChange={(open) => setActivePopover(open ? section.id : null)}
+                onOpenChange={(open) => {
+                  if (open) {
+                    setActivePopover(section.id);
+                  } else if (activePopover === section.id) {
+                    setActivePopover(null);
+                  }
+                }}
               >
                 <PopoverTrigger asChild>
                   <Button
