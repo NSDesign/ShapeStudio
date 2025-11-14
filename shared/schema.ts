@@ -683,10 +683,36 @@ export interface BatchConfigSettings {
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
   // Transform Origin
-  transformOriginMode: 'define' | 'predefined-artboard' | 'predefined-shape';
-  transformOriginX: number;
-  transformOriginY: number;
+  transformOriginMode: 'define' | 'predefined-artboard' | 'current-shape' | 'shape-reference';
+  
+  // Define mode sub-modes
+  transformOriginDefineMode: 'fixed' | 'range' | 'incremental';
+  transformOriginX: number; // Fixed mode X value
+  transformOriginY: number; // Fixed mode Y value
+  
+  // Range mode
+  transformOriginXMin: number;
+  transformOriginXMax: number;
+  transformOriginYMin: number;
+  transformOriginYMax: number;
+  
+  // Incremental mode
+  transformOriginXStartValue: number;
+  transformOriginXIncrement: number;
+  transformOriginXModulationEnabled: boolean;
+  transformOriginXModulationValue: number;
+  transformOriginYStartValue: number;
+  transformOriginYIncrement: number;
+  transformOriginYModulationEnabled: boolean;
+  transformOriginYModulationValue: number;
+  
+  // Predefined anchor points (for predefined-artboard and current-shape modes)
   transformOriginPredefined: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+  
+  // Shape reference mode
+  transformOriginShapeReference: 'current' | 'previous' | 'next' | 'specific';
+  transformOriginShapeIndex: number; // Used when shapeReference is 'specific'
+  transformOriginShapeAnchor: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
   
   // Shape Effects
   shapeEffectsEnabled: boolean;
@@ -1158,9 +1184,35 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Transform Origin
   transformOriginMode: 'predefined-artboard',
+  
+  // Define mode sub-modes
+  transformOriginDefineMode: 'fixed',
   transformOriginX: 0,
   transformOriginY: 0,
+  
+  // Range mode
+  transformOriginXMin: -100,
+  transformOriginXMax: 100,
+  transformOriginYMin: -100,
+  transformOriginYMax: 100,
+  
+  // Incremental mode
+  transformOriginXStartValue: 0,
+  transformOriginXIncrement: 10,
+  transformOriginXModulationEnabled: false,
+  transformOriginXModulationValue: 100,
+  transformOriginYStartValue: 0,
+  transformOriginYIncrement: 10,
+  transformOriginYModulationEnabled: false,
+  transformOriginYModulationValue: 100,
+  
+  // Predefined anchor points
   transformOriginPredefined: 'center',
+  
+  // Shape reference mode
+  transformOriginShapeReference: 'current',
+  transformOriginShapeIndex: 0,
+  transformOriginShapeAnchor: 'center',
   
   // Shape Effects
   shapeEffectsEnabled: false,
@@ -2140,6 +2192,38 @@ export const BatchConfigSettingsSchema = z.object({
   rotationRandomizationScale: z.number(),
   widthRandomizationScale: z.number(),
   heightRandomizationScale: z.number(),
+  
+  // Transform Origin
+  transformOriginMode: z.enum(['define', 'predefined-artboard', 'current-shape', 'shape-reference']),
+  
+  // Define mode sub-modes
+  transformOriginDefineMode: z.enum(['fixed', 'range', 'incremental']),
+  transformOriginX: z.number(),
+  transformOriginY: z.number(),
+  
+  // Range mode
+  transformOriginXMin: z.number(),
+  transformOriginXMax: z.number(),
+  transformOriginYMin: z.number(),
+  transformOriginYMax: z.number(),
+  
+  // Incremental mode
+  transformOriginXStartValue: z.number(),
+  transformOriginXIncrement: z.number(),
+  transformOriginXModulationEnabled: z.boolean(),
+  transformOriginXModulationValue: z.number(),
+  transformOriginYStartValue: z.number(),
+  transformOriginYIncrement: z.number(),
+  transformOriginYModulationEnabled: z.boolean(),
+  transformOriginYModulationValue: z.number(),
+  
+  // Predefined anchor points
+  transformOriginPredefined: z.enum(['center', 'top-left', 'top-center', 'top-right', 'center-left', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right']),
+  
+  // Shape reference mode
+  transformOriginShapeReference: z.enum(['current', 'previous', 'next', 'specific']),
+  transformOriginShapeIndex: z.number(),
+  transformOriginShapeAnchor: z.enum(['center', 'top-left', 'top-center', 'top-right', 'center-left', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right']),
   
   // Shape effects
   shapeEffectsEnabled: z.boolean(),
