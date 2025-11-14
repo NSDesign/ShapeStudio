@@ -685,8 +685,9 @@ export interface BatchConfigSettings {
   // Transform Origin
   transformOriginMode: 'define' | 'predefined-artboard' | 'current-shape' | 'shape-reference';
   
-  // Define mode sub-modes
-  transformOriginDefineMode: 'fixed' | 'range' | 'incremental';
+  // Define mode - independent X and Y modes
+  transformOriginXMode: 'fixed' | 'range' | 'incremental';
+  transformOriginYMode: 'fixed' | 'range' | 'incremental';
   transformOriginX: number; // Fixed mode X value
   transformOriginY: number; // Fixed mode Y value
   
@@ -1185,8 +1186,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // Transform Origin
   transformOriginMode: 'predefined-artboard',
   
-  // Define mode sub-modes
-  transformOriginDefineMode: 'fixed',
+  // Define mode - independent X and Y modes
+  transformOriginXMode: 'fixed',
+  transformOriginYMode: 'fixed',
   transformOriginX: 0,
   transformOriginY: 0,
   
@@ -2196,8 +2198,9 @@ export const BatchConfigSettingsSchema = z.object({
   // Transform Origin
   transformOriginMode: z.enum(['define', 'predefined-artboard', 'current-shape', 'shape-reference']),
   
-  // Define mode sub-modes
-  transformOriginDefineMode: z.enum(['fixed', 'range', 'incremental']),
+  // Define mode - independent X and Y modes
+  transformOriginXMode: z.enum(['fixed', 'range', 'incremental']),
+  transformOriginYMode: z.enum(['fixed', 'range', 'incremental']),
   transformOriginX: z.number(),
   transformOriginY: z.number(),
   
@@ -2561,18 +2564,27 @@ export function migrateRotationSettings(settings: Partial<BatchConfigSettings>):
  */
 export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & {
   transformOriginMode?: 'define' | 'predefined-artboard' | 'predefined-shape' | 'current-shape' | 'shape-reference';
+  transformOriginDefineMode?: 'fixed' | 'range' | 'incremental';
 }): Partial<BatchConfigSettings> {
-  const migrated = { ...settings };
+  const migrated = { ...settings } as any;
   
   // Rename legacy 'predefined-shape' to 'current-shape'
   if (migrated.transformOriginMode === 'predefined-shape') {
     migrated.transformOriginMode = 'current-shape';
   }
   
+  // Migrate legacy transformOriginDefineMode to independent X and Y modes
+  if (migrated.transformOriginDefineMode && !migrated.transformOriginXMode) {
+    migrated.transformOriginXMode = migrated.transformOriginDefineMode;
+    migrated.transformOriginYMode = migrated.transformOriginDefineMode;
+    delete migrated.transformOriginDefineMode;
+  }
+  
   // Ensure new fields have default values
   return {
     ...migrated,
-    transformOriginDefineMode: migrated.transformOriginDefineMode ?? 'fixed',
+    transformOriginXMode: migrated.transformOriginXMode ?? 'fixed',
+    transformOriginYMode: migrated.transformOriginYMode ?? 'fixed',
     transformOriginXMin: migrated.transformOriginXMin ?? -100,
     transformOriginXMax: migrated.transformOriginXMax ?? 100,
     transformOriginYMin: migrated.transformOriginYMin ?? -100,
