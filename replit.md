@@ -34,14 +34,13 @@ Preferred communication style: Simple, everyday language.
     - *Incremental*: Progressive origin shift using start value + increment × index with optional modulation for cyclic patterns (independent per axis)
     - **Independent Axis Configuration**: X and Y can use different modes simultaneously (e.g., X fixed + Y incremental)
   - **Predefined Artboard**: 9-point alignment system anchored to artboard boundaries
-  - **Current Shape**: 9-point alignment system anchored to each shape's own bounds
   - **Shape Reference**: Reference another shape's position with configurable anchor points:
-    - *Current*: Use the current shape (equivalent to Current Shape mode)
+    - *Current*: Use the current shape's bounds with 9-point alignment
     - *Previous*: Reference the previous shape in generation sequence
     - *Next*: Reference the next shape in generation sequence
     - *Specific*: Reference a shape at a specific index
   - **Fallback Logic**: When referenced shape is unavailable (out of bounds), falls back to current shape's center
-  - **Migration Support**: Legacy 'predefined-shape' mode automatically migrated to 'current-shape'
+  - **Migration Support**: Legacy 'predefined-shape' and 'current-shape' modes automatically migrated to 'shape-reference' with mode 'current'
   - **Client/Server Parity**: Identical transform origin calculations in both frontend preview and backend export
 - **Enhanced Incremental Transform Modes**: Position (X/Y) and Rotation transforms support incremental mode with start value, increment amount, and optional modulation for cyclic patterns. Uses formula: `result = startValue + ((increment × index) % modulation)`. Client/server parity maintained with non-negative modulo: `((value % m) + m) % m`. Note: Reset-per-batch controls removed due to architectural limitations (batch context not passed through generation pipeline).
 - **Position Alignment System**: Dual anchor point alignment for precise shape positioning relative to artboard boundaries (Shape Anchor, Artboard Anchor).

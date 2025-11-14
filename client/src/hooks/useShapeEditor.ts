@@ -2239,52 +2239,6 @@ export const useShapeEditor = () => {
                 originY = artboardY + artboardHeight;
                 break;
             }
-          } else if (effectiveBatchConfig.transformOriginMode === 'current-shape') {
-            // Current shape mode: use predefined shape alignment points based on shape's own bounds
-            const shapeBounds = shape.getBounds();
-            const shapeWidth = shapeBounds.width;
-            const shapeHeight = shapeBounds.height;
-            const shapeX = shapeBounds.x;
-            const shapeY = shapeBounds.y;
-            
-            switch (effectiveBatchConfig.transformOriginPredefined) {
-              case 'center':
-                originX = shapeX + shapeWidth / 2;
-                originY = shapeY + shapeHeight / 2;
-                break;
-              case 'top-left':
-                originX = shapeX;
-                originY = shapeY;
-                break;
-              case 'top-center':
-                originX = shapeX + shapeWidth / 2;
-                originY = shapeY;
-                break;
-              case 'top-right':
-                originX = shapeX + shapeWidth;
-                originY = shapeY;
-                break;
-              case 'center-left':
-                originX = shapeX;
-                originY = shapeY + shapeHeight / 2;
-                break;
-              case 'center-right':
-                originX = shapeX + shapeWidth;
-                originY = shapeY + shapeHeight / 2;
-                break;
-              case 'bottom-left':
-                originX = shapeX;
-                originY = shapeY + shapeHeight;
-                break;
-              case 'bottom-center':
-                originX = shapeX + shapeWidth / 2;
-                originY = shapeY + shapeHeight;
-                break;
-              case 'bottom-right':
-                originX = shapeX + shapeWidth;
-                originY = shapeY + shapeHeight;
-                break;
-            }
           } else if (effectiveBatchConfig.transformOriginMode === 'shape-reference') {
             // Shape reference mode: reference another shape's position and use its anchor point
             const referenceType = effectiveBatchConfig.transformOriginShapeReference || 'current';

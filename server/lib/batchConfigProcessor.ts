@@ -745,50 +745,6 @@ export function generateShapesWithBatchConfig(
               originY = artboardY + canvasBounds.height;
               break;
           }
-        } else if (batchConfig.transformOriginMode === 'current-shape') {
-          // Current shape mode: use predefined shape alignment points based on shape's own bounds
-          const shapeBounds = shape.getBounds();
-          const shapeX = shapeBounds.x;
-          const shapeY = shapeBounds.y;
-          
-          switch (batchConfig.transformOriginPredefined) {
-            case 'center':
-              originX = shapeX + shapeBounds.width / 2;
-              originY = shapeY + shapeBounds.height / 2;
-              break;
-            case 'top-left':
-              originX = shapeX;
-              originY = shapeY;
-              break;
-            case 'top-center':
-              originX = shapeX + shapeBounds.width / 2;
-              originY = shapeY;
-              break;
-            case 'top-right':
-              originX = shapeX + shapeBounds.width;
-              originY = shapeY;
-              break;
-            case 'center-left':
-              originX = shapeX;
-              originY = shapeY + shapeBounds.height / 2;
-              break;
-            case 'center-right':
-              originX = shapeX + shapeBounds.width;
-              originY = shapeY + shapeBounds.height / 2;
-              break;
-            case 'bottom-left':
-              originX = shapeX;
-              originY = shapeY + shapeBounds.height;
-              break;
-            case 'bottom-center':
-              originX = shapeX + shapeBounds.width / 2;
-              originY = shapeY + shapeBounds.height;
-              break;
-            case 'bottom-right':
-              originX = shapeX + shapeBounds.width;
-              originY = shapeY + shapeBounds.height;
-              break;
-          }
         } else if (batchConfig.transformOriginMode === 'shape-reference') {
           // Shape reference mode: reference another shape's position and use its anchor point
           const referenceType = batchConfig.transformOriginShapeReference || 'current';
