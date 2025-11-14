@@ -2333,10 +2333,11 @@ export const useShapeEditor = () => {
                   break;
               }
             } else {
-              // Fallback if referenced shape doesn't exist
-              originX = 0;
-              originY = 0;
-              console.warn(`⚠️ [TRANSFORM ORIGIN] Shape ${index}: Referenced shape not found (type=${referenceType}), using (0, 0)`);
+              // Fallback if referenced shape doesn't exist - use current shape's center
+              const shapeBounds = shape.getBounds();
+              originX = shapeBounds.x + shapeBounds.width / 2;
+              originY = shapeBounds.y + shapeBounds.height / 2;
+              console.warn(`⚠️ [TRANSFORM ORIGIN] Shape ${index}: Referenced shape not found (type=${referenceType}), falling back to current shape center`);
             }
           }
           
