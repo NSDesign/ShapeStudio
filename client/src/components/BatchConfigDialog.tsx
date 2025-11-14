@@ -4134,213 +4134,234 @@ export default function BatchConfigDialog({
                         {/* Define Mode - X and Y Coordinates with Sub-modes */}
                         {currentSettings.transformOriginMode === 'define' && (
                           <div className="space-y-3">
-                            {/* Sub-mode Selector */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Define Mode</Label>
-                              <Select 
-                                value={currentSettings.transformOriginDefineMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ transformOriginDefineMode: value as 'fixed' | 'range' | 'incremental' })}
-                              >
-                                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            {/* Independent X and Y Mode Selectors */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">X Mode</Label>
+                                <Select 
+                                  value={currentSettings.transformOriginXMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ transformOriginXMode: value as 'fixed' | 'range' | 'incremental' })}
+                                >
+                                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300">Y Mode</Label>
+                                <Select 
+                                  value={currentSettings.transformOriginYMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ transformOriginYMode: value as 'fixed' | 'range' | 'incremental' })}
+                                >
+                                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                             
-                            {/* Fixed Mode - Single X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'fixed' && (
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">X: {currentSettings.transformOriginX}</Label>
-                                  <Slider
-                                    value={[currentSettings.transformOriginX]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">Y: {currentSettings.transformOriginY}</Label>
-                                  <Slider
-                                    value={[currentSettings.transformOriginY]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
+                            {/* Fixed Mode - X */}
+                            {currentSettings.transformOriginXMode === 'fixed' && (
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-300">X (Fixed): {currentSettings.transformOriginX}</Label>
+                                <Slider
+                                  value={[currentSettings.transformOriginX]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={10}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
                               </div>
                             )}
                             
-                            {/* Range Mode - Min/Max for X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'range' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">X Range: [{currentSettings.transformOriginXMin}, {currentSettings.transformOriginXMax}]</Label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginXMin}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXMin]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMin: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginXMax}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXMax]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMax: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                            {/* Fixed Mode - Y */}
+                            {currentSettings.transformOriginYMode === 'fixed' && (
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-300">Y (Fixed): {currentSettings.transformOriginY}</Label>
+                                <Slider
+                                  value={[currentSettings.transformOriginY]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={10}
+                                  className="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Range Mode - X */}
+                            {currentSettings.transformOriginXMode === 'range' && (
+                              <div className="space-y-2 p-2 bg-slate-900 rounded">
+                                <Label className="text-xs font-medium text-slate-300">X Range: [{currentSettings.transformOriginXMin}, {currentSettings.transformOriginXMax}]</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginXMin}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginXMin]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMin: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Y Range: [{currentSettings.transformOriginYMin}, {currentSettings.transformOriginYMax}]</Label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginYMin}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYMin]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMin: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginYMax}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYMax]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMax: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginXMax}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginXMax]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMax: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                 </div>
                               </div>
                             )}
                             
-                            {/* Incremental Mode - Start, Increment, Modulation for X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'incremental' && (
-                              <div className="space-y-3">
-                                {/* X Incremental */}
-                                <div className="space-y-2 p-2 bg-slate-900 rounded">
-                                  <Label className="text-xs font-medium text-slate-300">X Incremental</Label>
-                                  <div className="space-y-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginXStartValue}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXStartValue]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXStartValue: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginXIncrement}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXIncrement]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXIncrement: value })}
-                                        min={-100}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.transformOriginXModulationEnabled}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginXModulationEnabled: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                    </div>
-                                    {currentSettings.transformOriginXModulationEnabled && (
-                                      <div className="space-y-1">
-                                        <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginXModulationValue}</Label>
-                                        <Slider
-                                          value={[currentSettings.transformOriginXModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginXModulationValue: value })}
-                                          min={1}
-                                          max={500}
-                                          step={10}
-                                          className="[&_[role=slider]]:bg-purple-600"
-                                        />
-                                      </div>
-                                    )}
+                            {/* Range Mode - Y */}
+                            {currentSettings.transformOriginYMode === 'range' && (
+                              <div className="space-y-2 p-2 bg-slate-900 rounded">
+                                <Label className="text-xs font-medium text-slate-300">Y Range: [{currentSettings.transformOriginYMin}, {currentSettings.transformOriginYMax}]</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginYMin}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginYMin]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMin: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginYMax}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginYMax]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMax: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                 </div>
-                                
-                                {/* Y Incremental */}
-                                <div className="space-y-2 p-2 bg-slate-900 rounded">
-                                  <Label className="text-xs font-medium text-slate-300">Y Incremental</Label>
-                                  <div className="space-y-2">
+                              </div>
+                            )}
+                            
+                            {/* Incremental Mode - X */}
+                            {currentSettings.transformOriginXMode === 'incremental' && (
+                              <div className="space-y-2 p-2 bg-slate-900 rounded">
+                                <Label className="text-xs font-medium text-slate-300">X Incremental</Label>
+                                <div className="space-y-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginXStartValue}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginXStartValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginXStartValue: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginXIncrement}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginXIncrement]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginXIncrement: value })}
+                                      min={-100}
+                                      max={100}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.transformOriginXModulationEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginXModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.transformOriginXModulationEnabled && (
                                     <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginYStartValue}</Label>
+                                      <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginXModulationValue}</Label>
                                       <Slider
-                                        value={[currentSettings.transformOriginYStartValue]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYStartValue: value })}
-                                        min={-500}
+                                        value={[currentSettings.transformOriginXModulationValue]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXModulationValue: value })}
+                                        min={1}
                                         max={500}
                                         step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
+                                        className="[&_[role=slider]]:bg-purple-600"
                                       />
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginYIncrement}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYIncrement]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYIncrement: value })}
-                                        min={-100}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.transformOriginYModulationEnabled}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginYModulationEnabled: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                    </div>
-                                    {currentSettings.transformOriginYModulationEnabled && (
-                                      <div className="space-y-1">
-                                        <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginYModulationValue}</Label>
-                                        <Slider
-                                          value={[currentSettings.transformOriginYModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginYModulationValue: value })}
-                                          min={1}
-                                          max={500}
-                                          step={10}
-                                          className="[&_[role=slider]]:bg-purple-600"
-                                        />
-                                      </div>
-                                    )}
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Incremental Mode - Y */}
+                            {currentSettings.transformOriginYMode === 'incremental' && (
+                              <div className="space-y-2 p-2 bg-slate-900 rounded">
+                                <Label className="text-xs font-medium text-slate-300">Y Incremental</Label>
+                                <div className="space-y-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginYStartValue}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginYStartValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginYStartValue: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={10}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginYIncrement}</Label>
+                                    <Slider
+                                      value={[currentSettings.transformOriginYIncrement]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ transformOriginYIncrement: value })}
+                                      min={-100}
+                                      max={100}
+                                      step={1}
+                                      className="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.transformOriginYModulationEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginYModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.transformOriginYModulationEnabled && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginYModulationValue}</Label>
+                                      <Slider
+                                        value={[currentSettings.transformOriginYModulationValue]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYModulationValue: value })}
+                                        min={1}
+                                        max={500}
+                                        step={10}
+                                        className="[&_[role=slider]]:bg-purple-600"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )}
