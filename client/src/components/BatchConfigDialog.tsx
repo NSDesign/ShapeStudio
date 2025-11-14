@@ -3435,17 +3435,59 @@ export default function BatchConfigDialog({
                           )}
                           
                           {currentSettings.xTransformMode === 'incremental' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Increment: {currentSettings.xTransformIncrement}</Label>
-                              <Slider
-                                value={[currentSettings.xTransformIncrement]}
-                                onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
-                                min={-50}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
+                            <>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Start: {currentSettings.xTransformStartValue ?? 0}</Label>
+                                <Slider
+                                  value={[currentSettings.xTransformStartValue ?? 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xTransformStartValue: value })}
+                                  min={-200}
+                                  max={200}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Increment: {currentSettings.xTransformIncrement}</Label>
+                                <Slider
+                                  value={[currentSettings.xTransformIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
+                                  min={-50}
+                                  max={50}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  checked={currentSettings.xTransformModulationEnabled}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ xTransformModulationEnabled: checked })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                              </div>
+                              {currentSettings.xTransformModulationEnabled && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Modulation: {currentSettings.xTransformModulationValue}</Label>
+                                  <Slider
+                                    value={[currentSettings.xTransformModulationValue]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ xTransformModulationValue: value })}
+                                    min={10}
+                                    max={500}
+                                    step={10}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  checked={currentSettings.xTransformResetPerBatch}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ xTransformResetPerBatch: checked })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Reset Per Batch</Label>
+                              </div>
+                            </>
                           )}
                           
                           {currentSettings.xTransformMode === 'align' && (
@@ -3581,17 +3623,59 @@ export default function BatchConfigDialog({
                           )}
                           
                           {currentSettings.yTransformMode === 'incremental' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Increment: {currentSettings.yTransformIncrement}</Label>
-                              <Slider
-                                value={[currentSettings.yTransformIncrement]}
-                                onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
-                                min={-50}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
+                            <>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Start: {currentSettings.yTransformStartValue ?? 0}</Label>
+                                <Slider
+                                  value={[currentSettings.yTransformStartValue ?? 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yTransformStartValue: value })}
+                                  min={-200}
+                                  max={200}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Increment: {currentSettings.yTransformIncrement}</Label>
+                                <Slider
+                                  value={[currentSettings.yTransformIncrement]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
+                                  min={-50}
+                                  max={50}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-blue-600"
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  checked={currentSettings.yTransformModulationEnabled}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ yTransformModulationEnabled: checked })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                              </div>
+                              {currentSettings.yTransformModulationEnabled && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Modulation: {currentSettings.yTransformModulationValue}</Label>
+                                  <Slider
+                                    value={[currentSettings.yTransformModulationValue]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ yTransformModulationValue: value })}
+                                    min={10}
+                                    max={500}
+                                    step={10}
+                                    className="[&_[role=slider]]:bg-blue-600"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  checked={currentSettings.yTransformResetPerBatch}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ yTransformResetPerBatch: checked })}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                />
+                                <Label className="text-xs text-slate-300">Reset Per Batch</Label>
+                              </div>
+                            </>
                           )}
                           
                           {currentSettings.yTransformMode === 'align' && (
@@ -3939,6 +4023,18 @@ export default function BatchConfigDialog({
                         {currentSettings.rotationMode === 'incremental' && (
                           <div className="space-y-2">
                             <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Start: {currentSettings.rotationStartValue ?? 0}°</Label>
+                              <Slider
+                                value={[currentSettings.rotationStartValue ?? 0]}
+                                onValueChange={([value]) => handleSettingsUpdate({ rotationStartValue: value })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                className="[&_[role=slider]]:bg-orange-600"
+                              />
+                            </div>
+                            
+                            <div className="space-y-1">
                               <Label className="text-xs text-slate-400">Step Amount: {currentSettings.rotationIncrementStep}°</Label>
                               <Slider
                                 value={[currentSettings.rotationIncrementStep]}
@@ -3984,6 +4080,15 @@ export default function BatchConfigDialog({
                                 />
                               </div>
                             )}
+                            
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                checked={currentSettings.rotationResetPerBatch}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ rotationResetPerBatch: checked })}
+                                className="border-slate-500 data-[state=checked]:bg-orange-600"
+                              />
+                              <Label className="text-xs text-slate-300">Reset Per Batch</Label>
+                            </div>
                           </div>
                         )}
                       </div>

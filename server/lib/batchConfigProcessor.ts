@@ -748,7 +748,13 @@ export function generateShapesWithBatchConfig(
         } else if (batchConfig.xTransformMode === 'value') {
           positionDeltaX = batchConfig.xTransformValue || 0;
         } else if (batchConfig.xTransformMode === 'incremental') {
-          positionDeltaX = (batchConfig.xTransformIncrement || 0) * index;
+          let incrementAmount = (batchConfig.xTransformIncrement || 0) * index;
+          const startValue = batchConfig.xTransformStartValue ?? 0;
+          if (batchConfig.xTransformModulationEnabled && batchConfig.xTransformModulationValue > 0) {
+            const m = batchConfig.xTransformModulationValue;
+            incrementAmount = ((incrementAmount % m) + m) % m;
+          }
+          positionDeltaX = startValue + incrementAmount;
         }
 
         let positionDeltaY = 0;
@@ -758,7 +764,13 @@ export function generateShapesWithBatchConfig(
         } else if (batchConfig.yTransformMode === 'value') {
           positionDeltaY = batchConfig.yTransformValue || 0;
         } else if (batchConfig.yTransformMode === 'incremental') {
-          positionDeltaY = (batchConfig.yTransformIncrement || 0) * index;
+          let incrementAmount = (batchConfig.yTransformIncrement || 0) * index;
+          const startValue = batchConfig.yTransformStartValue ?? 0;
+          if (batchConfig.yTransformModulationEnabled && batchConfig.yTransformModulationValue > 0) {
+            const m = batchConfig.yTransformModulationValue;
+            incrementAmount = ((incrementAmount % m) + m) % m;
+          }
+          positionDeltaY = startValue + incrementAmount;
         }
 
         let scaleX = shape.transform.scaleX;
@@ -819,10 +831,12 @@ export function generateShapesWithBatchConfig(
           rotation = batchConfig.rotationValue || 0;
         } else if (batchConfig.rotationMode === 'incremental') {
           let incrementAmount = (batchConfig.rotationIncrement || 0) * index;
+          const startValue = batchConfig.rotationStartValue ?? 0;
           if (batchConfig.rotationModulationEnabled && batchConfig.rotationModulation > 0) {
-            incrementAmount = incrementAmount % batchConfig.rotationModulation;
+            const m = batchConfig.rotationModulation;
+            incrementAmount = ((incrementAmount % m) + m) % m;
           }
-          rotation = incrementAmount;
+          rotation = startValue + incrementAmount;
         }
 
         const scaledRelativeX = shapeRelativeX * scaleX;

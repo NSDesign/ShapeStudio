@@ -2260,7 +2260,13 @@ export const useShapeEditor = () => {
           } else if (effectiveBatchConfig.xTransformMode === 'value') {
             positionDeltaX = effectiveBatchConfig.xTransformValue || 0;
           } else if (effectiveBatchConfig.xTransformMode === 'incremental') {
-            positionDeltaX = (effectiveBatchConfig.xTransformIncrement || 0) * index;
+            let incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * index;
+            const startValue = effectiveBatchConfig.xTransformStartValue ?? 0;
+            if (effectiveBatchConfig.xTransformModulationEnabled && effectiveBatchConfig.xTransformModulationValue > 0) {
+              const m = effectiveBatchConfig.xTransformModulationValue;
+              incrementAmount = ((incrementAmount % m) + m) % m;
+            }
+            positionDeltaX = startValue + incrementAmount;
           } else if (effectiveBatchConfig.xTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const artboardWidth = artboardBounds.width;
@@ -2316,7 +2322,13 @@ export const useShapeEditor = () => {
           } else if (effectiveBatchConfig.yTransformMode === 'value') {
             positionDeltaY = effectiveBatchConfig.yTransformValue || 0;
           } else if (effectiveBatchConfig.yTransformMode === 'incremental') {
-            positionDeltaY = (effectiveBatchConfig.yTransformIncrement || 0) * index;
+            let incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * index;
+            const startValue = effectiveBatchConfig.yTransformStartValue ?? 0;
+            if (effectiveBatchConfig.yTransformModulationEnabled && effectiveBatchConfig.yTransformModulationValue > 0) {
+              const m = effectiveBatchConfig.yTransformModulationValue;
+              incrementAmount = ((incrementAmount % m) + m) % m;
+            }
+            positionDeltaY = startValue + incrementAmount;
           } else if (effectiveBatchConfig.yTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const artboardHeight = artboardBounds.height;
@@ -2429,11 +2441,13 @@ export const useShapeEditor = () => {
             console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${rotation}°`);
           } else if (effectiveBatchConfig.rotationMode === 'incremental') {
             let incrementAmount = (effectiveBatchConfig.rotationIncrement || 0) * index;
+            const startValue = effectiveBatchConfig.rotationStartValue ?? 0;
             if (effectiveBatchConfig.rotationModulationEnabled && effectiveBatchConfig.rotationModulation > 0) {
-              incrementAmount = incrementAmount % effectiveBatchConfig.rotationModulation;
+              const m = effectiveBatchConfig.rotationModulation;
+              incrementAmount = ((incrementAmount % m) + m) % m;
             }
-            rotation = incrementAmount;
-            console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: increment=${incrementAmount}°`);
+            rotation = startValue + incrementAmount;
+            console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: start=${startValue}°, increment=${incrementAmount}°, final=${rotation}°`);
           }
 
           // Apply transforms relative to origin
