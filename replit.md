@@ -27,7 +27,21 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, predefined directions, radial center positioning, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
-- **Transform Controls**: Transform origin controls (Define, Predefined Artboard, Predefined Shape) and randomization scaling for position, scale, and rotation.
+- **Transform Origin System**: Comprehensive transform origin controls with multiple modes:
+  - **Define Mode**: Three sub-modes for precise control:
+    - *Fixed*: Custom X/Y coordinates for static transform origin
+    - *Range*: Random origin selection from X/Y min/max ranges
+    - *Incremental*: Progressive origin shift using start value + increment × index with optional modulation for cyclic patterns
+  - **Predefined Artboard**: 9-point alignment system anchored to artboard boundaries
+  - **Current Shape**: 9-point alignment system anchored to each shape's own bounds
+  - **Shape Reference**: Reference another shape's position with configurable anchor points:
+    - *Current*: Use the current shape (equivalent to Current Shape mode)
+    - *Previous*: Reference the previous shape in generation sequence
+    - *Next*: Reference the next shape in generation sequence
+    - *Specific*: Reference a shape at a specific index
+  - **Fallback Logic**: When referenced shape is unavailable (out of bounds), falls back to current shape's center
+  - **Migration Support**: Legacy 'predefined-shape' mode automatically migrated to 'current-shape'
+  - **Client/Server Parity**: Identical transform origin calculations in both frontend preview and backend export
 - **Enhanced Incremental Transform Modes**: Position (X/Y) and Rotation transforms support incremental mode with start value, increment amount, and optional modulation for cyclic patterns. Uses formula: `result = startValue + ((increment × index) % modulation)`. Client/server parity maintained with non-negative modulo: `((value % m) + m) % m`. Note: Reset-per-batch controls removed due to architectural limitations (batch context not passed through generation pipeline).
 - **Position Alignment System**: Dual anchor point alignment for precise shape positioning relative to artboard boundaries (Shape Anchor, Artboard Anchor).
 - **Canvas-Based Blur System**: Gaussian blur implemented via direct canvas pixel manipulation.
