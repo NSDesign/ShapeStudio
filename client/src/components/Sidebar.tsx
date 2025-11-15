@@ -603,9 +603,15 @@ export default function Sidebar({
     }
   }, [appSettingsDefaults, isLoadingPreferences]);
 
-  // Close all open popovers when sidebar collapses to prevent UI lock-up
+  // Clear opposite mode's state when sidebar toggles to prevent ghost layer
   useEffect(() => {
     if (isCollapsed) {
+      // When collapsing, clear accordion state to prevent ghost layer
+      console.log('[SIDEBAR] Collapsed - clearing accordion state');
+      setOpenAccordionSections(undefined);
+    } else {
+      // When expanding, clear popover state to prevent ghost layer
+      console.log('[SIDEBAR] Expanded - clearing popover state');
       setActivePopover(null);
     }
   }, [isCollapsed]);
