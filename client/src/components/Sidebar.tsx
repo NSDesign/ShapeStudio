@@ -5600,12 +5600,12 @@ export default function Sidebar({
             <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
+                onOpenChange={(open) => setActivePopover(open ? section.id : null)}
                 modal={false}
               >
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
-                    onClick={() => setActivePopover(activePopover === section.id ? null : section.id)}
                     className={`w-full h-8 p-0 rounded-none border-0 hover:bg-slate-800 ${
                       activePopover === section.id ? 'bg-slate-800' : ''
                     } ${
