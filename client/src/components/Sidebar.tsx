@@ -5600,6 +5600,7 @@ export default function Sidebar({
             <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
+                modal={false}
                 onOpenChange={(open) => {
                   if (open) {
                     setActivePopover(section.id);
