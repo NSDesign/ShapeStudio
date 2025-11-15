@@ -3114,7 +3114,7 @@ export default function Sidebar({
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>(undefined);
   
   // Add state for main sidebar accordion sections to prevent collapse on value changes
-  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>([]);
+  const [openAccordionSections, setOpenAccordionSections] = useState<string | undefined>(undefined);
   
   // Add state for shape categories accordion to prevent collapse when shapes are toggled
   const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
@@ -5600,7 +5600,11 @@ export default function Sidebar({
             <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
-                onOpenChange={(open) => setActivePopover(open ? section.id : null)}
+                onOpenChange={(open) => {
+                  console.log(`[POPOVER] onOpenChange fired - Section: ${section.id}, Opening: ${open}, Current activePopover: ${activePopover}`);
+                  setActivePopover(open ? section.id : null);
+                  console.log(`[POPOVER] State update queued - New activePopover will be: ${open ? section.id : null}`);
+                }}
                 modal={false}
               >
                 <PopoverTrigger asChild>
@@ -5675,9 +5679,14 @@ export default function Sidebar({
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
           >
           <Accordion 
-            type="multiple" 
+            type="single" 
             value={openAccordionSections} 
-            onValueChange={setOpenAccordionSections}
+            onValueChange={(value) => {
+              console.log(`[ACCORDION] onValueChange fired - New value: ${value}, Previous value: ${openAccordionSections}`);
+              setOpenAccordionSections(value);
+              console.log(`[ACCORDION] State update queued - New openAccordionSections will be: ${value}`);
+            }}
+            collapsible
             className="w-full px-2 py-1 flex flex-col"
           >
             {/* Shape Types Section */}
