@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import type { UserPreferences, SidebarSectionConfig, ExportSettingsConfig, AppSettingsDefaults } from '@shared/schema';
 import { DEFAULT_SIDEBAR_SECTIONS, DEFAULT_EXPORT_SETTINGS, DEFAULT_APP_SETTINGS } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -7,7 +8,8 @@ export function useUserPreferences() {
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
     retry: 2,
-    staleTime: 0, // Always refetch when invalidated
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevent unnecessary refetches
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
   });
 
   // Normalize sidebar sections from old boolean format to new object format
@@ -49,16 +51,28 @@ export function useUserPreferences() {
   };
 
   // Extract sidebar sections with fallback to defaults and normalization
-  const sidebarSections: SidebarSectionConfig = normalizeSidebarSections(preferences?.sidebarSections);
+  // Memoized to prevent object recreation on every render
+  const sidebarSections: SidebarSectionConfig = useMemo(
+    () => normalizeSidebarSections(preferences?.sidebarSections),
+    [preferences?.sidebarSections]
+  );
 
   // Extract export settings with fallback to defaults
-  const exportSettings: ExportSettingsConfig = {
-    ...DEFAULT_EXPORT_SETTINGS,
-    ...(preferences?.exportSettings as ExportSettingsConfig || {}),
-  };
+  // Memoized to prevent object recreation on every render
+  const exportSettings: ExportSettingsConfig = useMemo(
+    () => ({
+      ...DEFAULT_EXPORT_SETTINGS,
+      ...(preferences?.exportSettings as ExportSettingsConfig || {}),
+    }),
+    [preferences?.exportSettings]
+  );
 
   // Extract app settings defaults
-  const appSettingsDefaults: AppSettingsDefaults | null = preferences?.appSettingsDefaults as AppSettingsDefaults || null;
+  // Memoized to prevent object recreation on every render
+  const appSettingsDefaults: AppSettingsDefaults | null = useMemo(
+    () => preferences?.appSettingsDefaults as AppSettingsDefaults || null,
+    [preferences?.appSettingsDefaults]
+  );
 
   // Mutation for updating export settings
   const updateExportSettings = useMutation({
