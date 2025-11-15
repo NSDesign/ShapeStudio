@@ -5601,17 +5601,11 @@ export default function Sidebar({
               <Popover 
                 open={activePopover === section.id} 
                 modal={false}
-                onOpenChange={(open) => {
-                  if (open) {
-                    setActivePopover(section.id);
-                  } else if (activePopover === section.id) {
-                    setActivePopover(null);
-                  }
-                }}
               >
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
+                    onClick={() => setActivePopover(activePopover === section.id ? null : section.id)}
                     className={`w-full h-8 p-0 rounded-none border-0 hover:bg-slate-800 ${
                       activePopover === section.id ? 'bg-slate-800' : ''
                     } ${
