@@ -649,57 +649,42 @@ export function generateShapesWithBatchConfig(
         let originY = 0;
         
         if (batchConfig.transformOriginMode === 'define') {
-          // Define mode with independent X and Y sub-modes (fixed, range, incremental)
-          const xMode = batchConfig.transformOriginXMode || 'fixed';
-          const yMode = batchConfig.transformOriginYMode || 'fixed';
+          // Define mode with sub-modes (fixed, range, incremental)
+          const defineMode = batchConfig.transformOriginDefineMode || 'fixed';
           
-          // Calculate X coordinate based on its mode
-          if (xMode === 'fixed') {
-            // Fixed mode: use custom X coordinate
+          if (defineMode === 'fixed') {
+            // Fixed mode: use custom coordinates
             originX = batchConfig.transformOriginX || 0;
-          } else if (xMode === 'range') {
-            // Range mode: random X from range
+            originY = batchConfig.transformOriginY || 0;
+          } else if (defineMode === 'range') {
+            // Range mode: random X/Y from ranges
             const xMin = batchConfig.transformOriginXMin ?? -100;
             const xMax = batchConfig.transformOriginXMax ?? 100;
+            const yMin = batchConfig.transformOriginYMin ?? -100;
+            const yMax = batchConfig.transformOriginYMax ?? 100;
             originX = xMin + Math.random() * (xMax - xMin);
-          } else if (xMode === 'incremental') {
+            originY = yMin + Math.random() * (yMax - yMin);
+          } else if (defineMode === 'incremental') {
             // Incremental mode: start + increment * index + modulation
             const xStart = batchConfig.transformOriginXStartValue ?? 0;
             const xIncrement = batchConfig.transformOriginXIncrement ?? 10;
+            const yStart = batchConfig.transformOriginYStartValue ?? 0;
+            const yIncrement = batchConfig.transformOriginYIncrement ?? 10;
             
             let xIncrementAmount = xIncrement * index;
+            let yIncrementAmount = yIncrement * index;
             
             // Apply modulation if enabled
             if (batchConfig.transformOriginXModulationEnabled && batchConfig.transformOriginXModulationValue > 0) {
               const m = batchConfig.transformOriginXModulationValue;
               xIncrementAmount = ((xIncrementAmount % m) + m) % m;
             }
-            
-            originX = xStart + xIncrementAmount;
-          }
-          
-          // Calculate Y coordinate based on its mode
-          if (yMode === 'fixed') {
-            // Fixed mode: use custom Y coordinate
-            originY = batchConfig.transformOriginY || 0;
-          } else if (yMode === 'range') {
-            // Range mode: random Y from range
-            const yMin = batchConfig.transformOriginYMin ?? -100;
-            const yMax = batchConfig.transformOriginYMax ?? 100;
-            originY = yMin + Math.random() * (yMax - yMin);
-          } else if (yMode === 'incremental') {
-            // Incremental mode: start + increment * index + modulation
-            const yStart = batchConfig.transformOriginYStartValue ?? 0;
-            const yIncrement = batchConfig.transformOriginYIncrement ?? 10;
-            
-            let yIncrementAmount = yIncrement * index;
-            
-            // Apply modulation if enabled
             if (batchConfig.transformOriginYModulationEnabled && batchConfig.transformOriginYModulationValue > 0) {
               const m = batchConfig.transformOriginYModulationValue;
               yIncrementAmount = ((yIncrementAmount % m) + m) % m;
             }
             
+            originX = xStart + xIncrementAmount;
             originY = yStart + yIncrementAmount;
           }
         } else if (batchConfig.transformOriginMode === 'predefined-artboard') {
@@ -745,6 +730,50 @@ export function generateShapesWithBatchConfig(
               originY = artboardY + canvasBounds.height;
               break;
           }
+        } else if (batchConfig.transformOriginMode === 'current-shape') {
+          // Current shape mode: use predefined shape alignment points based on shape's own bounds
+          const shapeBounds = shape.getBounds();
+          const shapeX = shapeBounds.x;
+          const shapeY = shapeBounds.y;
+          
+          switch (batchConfig.transformOriginPredefined) {
+            case 'center':
+              originX = shapeX + shapeBounds.width / 2;
+              originY = shapeY + shapeBounds.height / 2;
+              break;
+            case 'top-left':
+              originX = shapeX;
+              originY = shapeY;
+              break;
+            case 'top-center':
+              originX = shapeX + shapeBounds.width / 2;
+              originY = shapeY;
+              break;
+            case 'top-right':
+              originX = shapeX + shapeBounds.width;
+              originY = shapeY;
+              break;
+            case 'center-left':
+              originX = shapeX;
+              originY = shapeY + shapeBounds.height / 2;
+              break;
+            case 'center-right':
+              originX = shapeX + shapeBounds.width;
+              originY = shapeY + shapeBounds.height / 2;
+              break;
+            case 'bottom-left':
+              originX = shapeX;
+              originY = shapeY + shapeBounds.height;
+              break;
+            case 'bottom-center':
+              originX = shapeX + shapeBounds.width / 2;
+              originY = shapeY + shapeBounds.height;
+              break;
+            case 'bottom-right':
+              originX = shapeX + shapeBounds.width;
+              originY = shapeY + shapeBounds.height;
+              break;
+          }
         } else if (batchConfig.transformOriginMode === 'shape-reference') {
           // Shape reference mode: reference another shape's position and use its anchor point
           const referenceType = batchConfig.transformOriginShapeReference || 'current';
@@ -758,7 +787,7 @@ export function generateShapesWithBatchConfig(
             referencedShape = index < finalShapes.length - 1 ? finalShapes[index + 1] : undefined;
           } else if (referenceType === 'specific') {
             const specificIndex = batchConfig.transformOriginShapeIndex ?? 0;
-            referencedShape = specificIndex >= 0 && specificIndex < finalShapes.length ? finalShapes[specificIndex] : undefined;
+            referencedShape = finalShapes[specificIndex];
           }
           
           // If referenced shape exists, calculate origin based on its bounds and anchor point

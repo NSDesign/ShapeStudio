@@ -518,7 +518,6 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
-  const [openAccordionSections, setOpenAccordionSections] = useState<string | undefined>(undefined);
   
   // Track if sidebar settings have been restored to prevent save loops
   const hasRestoredSidebar = useRef(false);
@@ -604,19 +603,6 @@ export default function Sidebar({
     }
   }, [appSettingsDefaults, isLoadingPreferences]);
 
-  // Clear opposite mode's state when sidebar toggles to prevent ghost layer
-  useEffect(() => {
-    if (isCollapsed) {
-      // When collapsing, clear accordion state to prevent ghost layer
-      console.log('[SIDEBAR] Collapsed - clearing accordion state');
-      setOpenAccordionSections(undefined);
-    } else {
-      // When expanding, clear popover state to prevent ghost layer
-      console.log('[SIDEBAR] Expanded - clearing popover state');
-      setActivePopover(null);
-    }
-  }, [isCollapsed]);
-
   // Save sidebar collapsed state when it changes (debounced)
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSidebar.current) return;
@@ -630,26 +616,6 @@ export default function Sidebar({
     
     return () => clearTimeout(timeoutId);
   }, [isCollapsed]);
-
-  // Handle sidebar toggle - clears popover/accordion state AND toggles in single operation
-  const handleSidebarToggle = useCallback(() => {
-    // If a popover or accordion is open, close it and defer the toggle to next frame
-    // This ensures the UI has time to unmount the blocking component before toggling
-    if (activePopover !== null || openAccordionSections !== undefined) {
-      console.log('[SIDEBAR TOGGLE] Popover/Accordion open - closing and deferring toggle');
-      setActivePopover(null);
-      setOpenAccordionSections(undefined);
-      // Defer toggle to next frame to allow React to unmount the blocking component
-      requestAnimationFrame(() => {
-        console.log('[SIDEBAR TOGGLE] Executing deferred toggle');
-        setIsCollapsed(prev => !prev);
-      });
-    } else {
-      // No popover/accordion open - toggle immediately
-      console.log('[SIDEBAR TOGGLE] No blocking UI - toggling immediately');
-      setIsCollapsed(prev => !prev);
-    }
-  }, [activePopover, openAccordionSections]);
 
   // Save app settings handler
   const handleSaveAppSettings = useCallback(async () => {
@@ -807,6 +773,11 @@ export default function Sidebar({
   const handleOpenManager = useCallback(() => {
     onOpenGenerationSetsManager?.();
   }, [onOpenGenerationSetsManager]);
+
+  // Define handlePopoverToggle function
+  const handlePopoverToggle = (sectionId: string) => {
+    setActivePopover(activePopover === sectionId ? null : sectionId);
+  };
 
   // Helper functions for content sections
   function SelectionModesContent() {
@@ -3139,6 +3110,9 @@ export default function Sidebar({
   
   // Add state for the shape list accordion to prevent auto-expansion
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>(undefined);
+  
+  // Add state for main sidebar accordion sections to prevent collapse on value changes
+  const [openAccordionSections, setOpenAccordionSections] = useState<string[]>([]);
   
   // Add state for shape categories accordion to prevent collapse when shapes are toggled
   const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
@@ -5589,15 +5563,7 @@ export default function Sidebar({
         <Button
           variant="ghost"
           size="sm"
-          onPointerDownCapture={(e) => {
-            console.log('[SIDEBAR TOGGLE] onPointerDownCapture fired');
-            if (activePopover !== null || openAccordionSections !== undefined) {
-              console.log('[SIDEBAR TOGGLE] Active overlay detected, calling handleSidebarToggle directly');
-              e.preventDefault();
-              handleSidebarToggle();
-            }
-          }}
-          onClick={handleSidebarToggle}
+          onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -5606,7 +5572,7 @@ export default function Sidebar({
 
       {/* Collapsed Content with Tight Popovers */}
       {isCollapsed && (
-        <div key="collapsed-sidebar" className="flex flex-col w-full items-center">
+        <div className="flex flex-col w-full items-center">
           {[
             { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
             { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
@@ -5632,12 +5598,7 @@ export default function Sidebar({
             <div key={section.id} className="flex flex-col items-center w-full">
               <Popover 
                 open={activePopover === section.id} 
-                onOpenChange={(open) => {
-                  console.log(`[POPOVER] onOpenChange fired - Section: ${section.id}, Opening: ${open}, Current activePopover: ${activePopover}`);
-                  setActivePopover(open ? section.id : null);
-                  console.log(`[POPOVER] State update queued - New activePopover will be: ${open ? section.id : null}`);
-                }}
-                modal={false}
+                onOpenChange={(open) => setActivePopover(open ? section.id : null)}
               >
                 <PopoverTrigger asChild>
                   <Button
@@ -5656,6 +5617,7 @@ export default function Sidebar({
                       section.color === 'violet' ? 'text-violet-400 hover:text-violet-300' :
                       'text-pink-400 hover:text-pink-300'
                     }`}
+                    onClick={() => handlePopoverToggle(section.id)}
                     data-testid={`sidebar-collapsed-${section.id}-button`}
                   >
                     <section.icon className="w-4 h-4" />
@@ -5666,10 +5628,6 @@ export default function Sidebar({
                   align="start" 
                   className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
                   sideOffset={4}
-                  onPointerDownOutside={(e) => {
-                    console.log('[POPOVER] onPointerDownOutside fired - closing popover');
-                    setActivePopover(null);
-                  }}
                 >
                   <div className="space-y-2">
                     <h3 className={`text-sm font-medium ${
@@ -5709,20 +5667,15 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <div key="expanded-sidebar" className="flex flex-col flex-1 overflow-hidden">
+        <>
           <div 
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
           >
           <Accordion 
-            type="single" 
+            type="multiple" 
             value={openAccordionSections} 
-            onValueChange={(value) => {
-              console.log(`[ACCORDION] onValueChange fired - New value: ${value}, Previous value: ${openAccordionSections}`);
-              setOpenAccordionSections(value);
-              console.log(`[ACCORDION] State update queued - New openAccordionSections will be: ${value}`);
-            }}
-            collapsible
+            onValueChange={setOpenAccordionSections}
             className="w-full px-2 py-1 flex flex-col"
           >
             {/* Shape Types Section */}
@@ -5969,7 +5922,7 @@ export default function Sidebar({
             )}
           </Accordion>
         </div>
-        </div>
+        </>
       )}
       
       {/* BatchConfigDialog - Moved to stable location to prevent mount/unmount cycles */}

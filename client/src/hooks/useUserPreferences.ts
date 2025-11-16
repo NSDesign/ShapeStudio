@@ -1,5 +1,4 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import type { UserPreferences, SidebarSectionConfig, ExportSettingsConfig, AppSettingsDefaults } from '@shared/schema';
 import { DEFAULT_SIDEBAR_SECTIONS, DEFAULT_EXPORT_SETTINGS, DEFAULT_APP_SETTINGS } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -8,8 +7,7 @@ export function useUserPreferences() {
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes - prevent unnecessary refetches
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    staleTime: 0, // Always refetch when invalidated
   });
 
   // Normalize sidebar sections from old boolean format to new object format
@@ -51,28 +49,16 @@ export function useUserPreferences() {
   };
 
   // Extract sidebar sections with fallback to defaults and normalization
-  // Memoized to prevent object recreation on every render
-  const sidebarSections: SidebarSectionConfig = useMemo(
-    () => normalizeSidebarSections(preferences?.sidebarSections),
-    [preferences?.sidebarSections]
-  );
+  const sidebarSections: SidebarSectionConfig = normalizeSidebarSections(preferences?.sidebarSections);
 
   // Extract export settings with fallback to defaults
-  // Memoized to prevent object recreation on every render
-  const exportSettings: ExportSettingsConfig = useMemo(
-    () => ({
-      ...DEFAULT_EXPORT_SETTINGS,
-      ...(preferences?.exportSettings as ExportSettingsConfig || {}),
-    }),
-    [preferences?.exportSettings]
-  );
+  const exportSettings: ExportSettingsConfig = {
+    ...DEFAULT_EXPORT_SETTINGS,
+    ...(preferences?.exportSettings as ExportSettingsConfig || {}),
+  };
 
   // Extract app settings defaults
-  // Memoized to prevent object recreation on every render
-  const appSettingsDefaults: AppSettingsDefaults | null = useMemo(
-    () => preferences?.appSettingsDefaults as AppSettingsDefaults || null,
-    [preferences?.appSettingsDefaults]
-  );
+  const appSettingsDefaults: AppSettingsDefaults | null = preferences?.appSettingsDefaults as AppSettingsDefaults || null;
 
   // Mutation for updating export settings
   const updateExportSettings = useMutation({

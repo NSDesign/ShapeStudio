@@ -683,11 +683,10 @@ export interface BatchConfigSettings {
   heightRandomizationScale: number; // Scale for height randomization in range mode
   
   // Transform Origin
-  transformOriginMode: 'define' | 'predefined-artboard' | 'shape-reference';
+  transformOriginMode: 'define' | 'predefined-artboard' | 'current-shape' | 'shape-reference';
   
-  // Define mode - independent X and Y modes
-  transformOriginXMode: 'fixed' | 'range' | 'incremental';
-  transformOriginYMode: 'fixed' | 'range' | 'incremental';
+  // Define mode sub-modes
+  transformOriginDefineMode: 'fixed' | 'range' | 'incremental';
   transformOriginX: number; // Fixed mode X value
   transformOriginY: number; // Fixed mode Y value
   
@@ -1186,9 +1185,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // Transform Origin
   transformOriginMode: 'predefined-artboard',
   
-  // Define mode - independent X and Y modes
-  transformOriginXMode: 'fixed',
-  transformOriginYMode: 'fixed',
+  // Define mode sub-modes
+  transformOriginDefineMode: 'fixed',
   transformOriginX: 0,
   transformOriginY: 0,
   
@@ -2196,11 +2194,10 @@ export const BatchConfigSettingsSchema = z.object({
   heightRandomizationScale: z.number(),
   
   // Transform Origin
-  transformOriginMode: z.enum(['define', 'predefined-artboard', 'shape-reference']),
+  transformOriginMode: z.enum(['define', 'predefined-artboard', 'current-shape', 'shape-reference']),
   
-  // Define mode - independent X and Y modes
-  transformOriginXMode: z.enum(['fixed', 'range', 'incremental']),
-  transformOriginYMode: z.enum(['fixed', 'range', 'incremental']),
+  // Define mode sub-modes
+  transformOriginDefineMode: z.enum(['fixed', 'range', 'incremental']),
   transformOriginX: z.number(),
   transformOriginY: z.number(),
   
@@ -2556,7 +2553,7 @@ export function migrateRotationSettings(settings: Partial<BatchConfigSettings>):
 }
 
 /**
- * Migrates transform origin settings from legacy modes to 'shape-reference'
+ * Migrates transform origin settings from legacy 'predefined-shape' to 'current-shape'
  * and ensures all new transform origin fields have default values
  * 
  * @param settings - Batch config settings (may have legacy transformOriginMode)
@@ -2564,29 +2561,18 @@ export function migrateRotationSettings(settings: Partial<BatchConfigSettings>):
  */
 export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & {
   transformOriginMode?: 'define' | 'predefined-artboard' | 'predefined-shape' | 'current-shape' | 'shape-reference';
-  transformOriginDefineMode?: 'fixed' | 'range' | 'incremental';
 }): Partial<BatchConfigSettings> {
-  const migrated = { ...settings } as any;
+  const migrated = { ...settings };
   
-  // Convert legacy 'predefined-shape' and 'current-shape' to 'shape-reference' mode
-  if (migrated.transformOriginMode === 'predefined-shape' || migrated.transformOriginMode === 'current-shape') {
-    migrated.transformOriginMode = 'shape-reference';
-    // Set to 'current' mode to replicate the old 'current-shape' behavior
-    migrated.transformOriginShapeReference = 'current';
-  }
-  
-  // Migrate legacy transformOriginDefineMode to independent X and Y modes
-  if (migrated.transformOriginDefineMode && !migrated.transformOriginXMode) {
-    migrated.transformOriginXMode = migrated.transformOriginDefineMode;
-    migrated.transformOriginYMode = migrated.transformOriginDefineMode;
-    delete migrated.transformOriginDefineMode;
+  // Rename legacy 'predefined-shape' to 'current-shape'
+  if (migrated.transformOriginMode === 'predefined-shape') {
+    migrated.transformOriginMode = 'current-shape';
   }
   
   // Ensure new fields have default values
   return {
     ...migrated,
-    transformOriginXMode: migrated.transformOriginXMode ?? 'fixed',
-    transformOriginYMode: migrated.transformOriginYMode ?? 'fixed',
+    transformOriginDefineMode: migrated.transformOriginDefineMode ?? 'fixed',
     transformOriginXMin: migrated.transformOriginXMin ?? -100,
     transformOriginXMax: migrated.transformOriginXMax ?? 100,
     transformOriginYMin: migrated.transformOriginYMin ?? -100,
