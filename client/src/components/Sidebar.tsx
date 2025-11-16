@@ -518,6 +518,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [openAccordionSections, setOpenAccordionSections] = useState<string | undefined>(undefined);
   
   // Track if sidebar settings have been restored to prevent save loops
   const hasRestoredSidebar = useRef(false);
@@ -632,12 +633,23 @@ export default function Sidebar({
 
   // Handle sidebar toggle - clears popover/accordion state AND toggles in single operation
   const handleSidebarToggle = useCallback(() => {
-    // Clear any open popovers or accordions
-    setActivePopover(null);
-    setOpenAccordionSections(undefined);
-    // Toggle the sidebar collapse state
-    setIsCollapsed(prev => !prev);
-  }, []);
+    // If a popover or accordion is open, close it and defer the toggle to next frame
+    // This ensures the UI has time to unmount the blocking component before toggling
+    if (activePopover !== null || openAccordionSections !== undefined) {
+      console.log('[SIDEBAR TOGGLE] Popover/Accordion open - closing and deferring toggle');
+      setActivePopover(null);
+      setOpenAccordionSections(undefined);
+      // Defer toggle to next frame to allow React to unmount the blocking component
+      requestAnimationFrame(() => {
+        console.log('[SIDEBAR TOGGLE] Executing deferred toggle');
+        setIsCollapsed(prev => !prev);
+      });
+    } else {
+      // No popover/accordion open - toggle immediately
+      console.log('[SIDEBAR TOGGLE] No blocking UI - toggling immediately');
+      setIsCollapsed(prev => !prev);
+    }
+  }, [activePopover, openAccordionSections]);
 
   // Save app settings handler
   const handleSaveAppSettings = useCallback(async () => {
@@ -3127,9 +3139,6 @@ export default function Sidebar({
   
   // Add state for the shape list accordion to prevent auto-expansion
   const [shapeListAccordionOpen, setShapeListAccordionOpen] = useState<string | undefined>(undefined);
-  
-  // Add state for main sidebar accordion sections to prevent collapse on value changes
-  const [openAccordionSections, setOpenAccordionSections] = useState<string | undefined>(undefined);
   
   // Add state for shape categories accordion to prevent collapse when shapes are toggled
   const [openShapeCategories, setOpenShapeCategories] = useState<string[]>(["Basic", "Geometric", "Special", "Lines & Curves", "Complex"]);
@@ -5649,6 +5658,10 @@ export default function Sidebar({
                   align="start" 
                   className="w-80 max-h-96 overflow-y-auto bg-slate-900 border-slate-700 text-white"
                   sideOffset={4}
+                  onPointerDownOutside={(e) => {
+                    console.log('[POPOVER] onPointerDownOutside fired - closing popover');
+                    setActivePopover(null);
+                  }}
                 >
                   <div className="space-y-2">
                     <h3 className={`text-sm font-medium ${
@@ -5688,7 +5701,7 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <div key="expanded-sidebar">
+        <div key="expanded-sidebar" className="flex flex-col flex-1 overflow-hidden">
           <div 
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
