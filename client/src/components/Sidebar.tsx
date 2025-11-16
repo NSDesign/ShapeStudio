@@ -630,6 +630,15 @@ export default function Sidebar({
     return () => clearTimeout(timeoutId);
   }, [isCollapsed]);
 
+  // Handle sidebar toggle - clears popover/accordion state AND toggles in single operation
+  const handleSidebarToggle = useCallback(() => {
+    // Clear any open popovers or accordions
+    setActivePopover(null);
+    setOpenAccordionSections(undefined);
+    // Toggle the sidebar collapse state
+    setIsCollapsed(prev => !prev);
+  }, []);
+
   // Save app settings handler
   const handleSaveAppSettings = useCallback(async () => {
     const activeBoard = artboards.find(a => a.id === activeArtboard);
@@ -5571,7 +5580,7 @@ export default function Sidebar({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={handleSidebarToggle}
           className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
