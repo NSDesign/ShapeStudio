@@ -5589,6 +5589,14 @@ export default function Sidebar({
         <Button
           variant="ghost"
           size="sm"
+          onPointerDownCapture={(e) => {
+            console.log('[SIDEBAR TOGGLE] onPointerDownCapture fired');
+            if (activePopover !== null || openAccordionSections !== undefined) {
+              console.log('[SIDEBAR TOGGLE] Active overlay detected, calling handleSidebarToggle directly');
+              e.preventDefault();
+              handleSidebarToggle();
+            }
+          }}
           onClick={handleSidebarToggle}
           className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 w-8 p-0"
         >
