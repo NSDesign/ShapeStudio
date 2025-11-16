@@ -5580,7 +5580,7 @@ export default function Sidebar({
 
       {/* Collapsed Content with Tight Popovers */}
       {isCollapsed && (
-        <div className="flex flex-col w-full items-center">
+        <div key="collapsed-sidebar" className="flex flex-col w-full items-center">
           {[
             { id: 'shapes', name: 'Shape Types', icon: Shapes, color: 'blue', content: ShapeTypesContent },
             { id: 'selection', name: 'Selection Mode', icon: Target, color: 'cyan', content: SelectionModesContent },
@@ -5679,7 +5679,7 @@ export default function Sidebar({
 
       {!isCollapsed && (
         /* Expanded sidebar with full content */
-        <>
+        <div key="expanded-sidebar">
           <div 
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
@@ -5939,7 +5939,7 @@ export default function Sidebar({
             )}
           </Accordion>
         </div>
-        </>
+        </div>
       )}
       
       {/* BatchConfigDialog - Moved to stable location to prevent mount/unmount cycles */}
