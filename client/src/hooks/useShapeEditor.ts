@@ -1778,16 +1778,8 @@ export const useShapeEditor = () => {
 
       // Apply width/height from batch config if properties are enabled
       if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
-        // Enhanced width and height calculation based on mode
-        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthMode=${effectiveBatchConfig.widthMode}, heightMode=${effectiveBatchConfig.heightMode}`);
-        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthValue=${effectiveBatchConfig.widthValue}, heightValue=${effectiveBatchConfig.heightValue}`);
-        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: widthRange=${JSON.stringify(effectiveBatchConfig.widthRange)}, heightRange=${JSON.stringify(effectiveBatchConfig.heightRange)}`);
-        
         let width = calculateWidth(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-        
-        console.log(`🔍 [WIDTH/HEIGHT DEBUG] Shape ${index}: Calculated width=${width}, height=${height}`);
-        console.log(`🔍 [CONSTRAINT DEBUG] Shape ${index}: sizeConstraintMode=${effectiveBatchConfig.sizeConstraintMode}`);
 
         // Calculate constrained size based on mode
         const constrainedSize = calculateConstrainedSize(effectiveBatchConfig, width, height);
@@ -1806,7 +1798,6 @@ export const useShapeEditor = () => {
           case 'rounded-rectangle':
             shape.width = width;
             shape.height = height;
-            console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): width=${shape.width}, height=${shape.height}`);
             break;
           case 'square':
           case 'rounded-square':
@@ -1822,13 +1813,11 @@ export const useShapeEditor = () => {
           case 'spline-ring':
             // Radius-based shapes always use constrained size
             shape.radius = constrainedSize / 2;
-            console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): constrainedSize=${constrainedSize}, radius=${shape.radius}`);
             break;
           case 'ellipse':
           case 'spline-ellipse':
             shape.width = width;
             shape.height = height;
-            console.log(`🔍 [FINAL SIZE] Shape ${index} (${shape.type}): width=${shape.width}, height=${shape.height}`);
             break;
           case 'line':
           case 'bezier':
@@ -1851,23 +1840,6 @@ export const useShapeEditor = () => {
 
       // Temporarily assign a placeholder z-index, will be fixed during state update
       shape.properties.zIndex = index + 1;
-
-      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: temporary z-index=${shape.properties.zIndex} (will be fixed in state update)`);
-      console.log(`🔢 [Z-INDEX DEBUG] Shape ${index}: Shape ID=${shape.id}, Type=${shape.type}`);
-
-      // Comprehensive shape summary
-      console.log(`📋 [SHAPE SUMMARY] Shape ${index} (${shape.type}):`, {
-        id: shape.id,
-        layerIndex: shape.properties.zIndex,
-        position: { x: shape.transform.x.toFixed(2), y: shape.transform.y.toFixed(2) },
-        rotation: `${shape.transform.rotation.toFixed(2)}°`,
-        scale: { x: shape.transform.scaleX.toFixed(3), y: shape.transform.scaleY.toFixed(3) },
-        skew: { x: shape.transform.skewX.toFixed(2), y: shape.transform.skewY.toFixed(2) },
-        fillColor: shape.properties.fillColor,
-        strokeColor: shape.properties.strokeColor,
-        hasGradient: !!shape.properties.gradient,
-        blurRadius: shape.properties.blurRadius
-      });
 
       // Apply color harmony if enabled
       if (effectiveBatchConfig.colorHarmonyEnabled) {
@@ -1920,7 +1892,6 @@ export const useShapeEditor = () => {
             const lightness = 30 + Math.random() * 40;
             const fillColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
             shape.properties.fillColor = fillColor;
-            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY HSL randomization applied! fillColor="${fillColor}" (properties disabled fallback) - propertiesEnabled=${effectiveBatchConfig.propertiesEnabled}`);
 
             // Random stroke color
             const strokeHue = Math.random() * 360;
@@ -1928,9 +1899,6 @@ export const useShapeEditor = () => {
             const strokeLightness = 20 + Math.random() * 60;
             const strokeColor = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
             shape.properties.strokeColor = strokeColor;
-            console.log(`🔥 [LEGACY RANDOM] Shape ${index}: LEGACY stroke color="${strokeColor}"`);
-          } else {
-            console.log(`🚫 [LEGACY SKIP] Shape ${index}: Skipping legacy randomization because propertiesEnabled=true. Current fillColor="${shape.properties.fillColor}"`);
           }
         }
 
@@ -1941,8 +1909,6 @@ export const useShapeEditor = () => {
           // Determine if this shape gets solid or gradient fill
           const shouldHaveSolidFill = Math.random() * 100 < effectiveBatchConfig.fillStyleProbability;
           const shouldHaveGradient = !shouldHaveSolidFill && effectiveBatchConfig.fillGradientEnabled;
-
-          console.log(`🎨 [FILL DEBUG] Shape ${index}: fillStyleProb=${effectiveBatchConfig.fillStyleProbability}%, shouldHaveSolidFill=${shouldHaveSolidFill}, shouldHaveGradient=${shouldHaveGradient}`);
 
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
@@ -2009,7 +1975,6 @@ export const useShapeEditor = () => {
 
             // When gradient is used, set transparent fill so gradient shows through
             shape.properties.fillColor = 'transparent';
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using ${gradientType.toUpperCase()} GRADIENT, fillColor set to transparent`);
 
             // Apply fill opacity based on mode
             if (effectiveBatchConfig.fillOpacityMode === 'range') {
@@ -2037,7 +2002,6 @@ export const useShapeEditor = () => {
               } : undefined
             );
             shape.properties.fillColor = fillColor;
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: Using SOLID FILL, fillColor="${fillColor}" from mode="${effectiveBatchConfig.fillColorMode}"`);
 
             // Apply fill opacity based on mode
             if (effectiveBatchConfig.fillOpacityMode === 'range') {
@@ -2050,7 +2014,6 @@ export const useShapeEditor = () => {
           } else {
             // This should not happen in the new system - every shape gets either solid or gradient
             // If neither solid nor gradient, default to a solid fill
-            console.log(`🎨 [FILL DEBUG] Shape ${index}: Fallback to default solid fill`);
             shape.properties.gradient = undefined;
             shape.properties.fillColor = '#3b82f6';
             shape.properties.fillOpacity = 0.8;
