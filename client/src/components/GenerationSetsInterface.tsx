@@ -127,11 +127,6 @@ export function GenerationSetsInterface({
     return GenerationSetValidator.validateGenerationSets(generationSets);
   }, [generationSets]);
 
-  // Calculate mismatch for export count banner - use enabled sets count
-  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
-  // FIX: Don't compare enabled sets to total export images - only show warning when generation sets mode is actually enabled
-  // TODO: This should compare to actual "Generation Sets per Export" value, not total batch export count
-  const hasSetsCountMismatch = false; // Disable incorrect warning until proper logic is implemented
 
   // Update parent validation state when validation changes
   useEffect(() => {
@@ -521,79 +516,11 @@ export function GenerationSetsInterface({
           </Alert>
         )}
 
-        {/* Mismatch notification banner */}
-        {hasSetsCountMismatch && (
-          <Alert className="border-yellow-500 bg-yellow-900/20" data-testid="alert-sets-count-mismatch">
-            <AlertTriangle className="h-4 w-4 text-yellow-400" />
-            <AlertDescription className="text-yellow-300">
-              <strong>Shape Sets Mismatch:</strong> You have {enabledSetsCount} enabled shape set{enabledSetsCount !== 1 ? 's' : ''} but need {batchExportCount} for export. Configure the mismatch sets strategy below.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Mismatch Sets Configuration */}
-        {hasSetsCountMismatch && (
-          <Card className="bg-slate-800 border-slate-700" data-testid="card-mismatch-sets-strategy">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium text-slate-200">
-                    Mismatch Sets
-                  </Label>
-                  <p className="text-xs text-slate-400">
-                    How to handle exports when fewer sets than batch count
-                  </p>
-                </div>
-                <div className="w-32">
-                  <Select 
-                    value="hold" 
-                    onValueChange={(value) => {
-                      // TODO: Implement mismatch sets strategy change
-                      console.log('Mismatch sets strategy changed:', value);
-                    }}
-                    data-testid="select-mismatch-sets-strategy"
-                  >
-                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
-                      <SelectItem value="cycle" className="text-white hover:bg-slate-600">
-                        <div className="flex flex-col">
-                          <span>Cycle</span>
-                          <span className="text-xs text-slate-400">Repeat through all sets</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="hold" className="text-white hover:bg-slate-600">
-                        <div className="flex flex-col">
-                          <span>Hold</span>
-                          <span className="text-xs text-slate-400">Repeat last set only</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="random" className="text-white hover:bg-slate-600">
-                        <div className="flex flex-col">
-                          <span>Random</span>
-                          <span className="text-xs text-slate-400">Pick sets randomly</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="stop" className="text-white hover:bg-slate-600">
-                        <div className="flex flex-col">
-                          <span>Stop</span>
-                          <span className="text-xs text-slate-400">Generate only available sets</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
           <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">
-            Shape Sets List ({generationSets.length}{batchExportCount !== undefined ? ` of ${batchExportCount}` : ''} set{generationSets.length !== 1 ? 's' : ''})
+            Shape Sets List ({generationSets.length} set{generationSets.length !== 1 ? 's' : ''})
           </h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
