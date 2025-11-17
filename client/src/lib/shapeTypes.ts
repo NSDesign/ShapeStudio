@@ -452,25 +452,6 @@ export function calculateGridPosition(
   const row = Math.floor(adjustedIndex / columns);
   const column = adjustedIndex % columns;
   
-  // Debug logging for first position only
-  if (index === 0) {
-    console.log('🔍 [GRID DEBUG] calculateGridPosition - Initial params:', {
-      rows,
-      columns,
-      rowOffset,
-      columnOffset,
-      centerX,
-      centerY,
-      artboardBounds,
-      gridStartX,
-      gridStartY,
-      spacingXMode,
-      spacingYMode,
-      marginEnabled,
-      marginValue
-    });
-  }
-  
   // Calculate effective spacing based on mode
   let effectiveColumnOffset = columnOffset;
   let effectiveRowOffset = rowOffset;
@@ -492,15 +473,6 @@ export function calculateGridPosition(
         const availableWidth = artboardBounds.width - (2 * marginValue);
         effectiveColumnOffset = columns > 1 ? availableWidth / (columns - 1) : 0;
         startX = artboardBounds.x - centerX + marginValue;
-        
-        if (index === 0) {
-          console.log('🔍 [GRID DEBUG] X-axis auto-centered with margin:', {
-            availableWidth,
-            effectiveColumnOffset,
-            calculation: `artboardBounds.x(${artboardBounds.x}) - centerX(${centerX}) + marginValue(${marginValue})`,
-            startX
-          });
-        }
       } else {
         // Auto margin: evenly distribute with auto-calculated margins
         effectiveColumnOffset = artboardBounds.width / (columns + 1);
@@ -526,15 +498,6 @@ export function calculateGridPosition(
         const availableHeight = artboardBounds.height - (2 * marginValue);
         effectiveRowOffset = rows > 1 ? availableHeight / (rows - 1) : 0;
         startY = artboardBounds.y - centerY + marginValue;
-        
-        if (index === 0) {
-          console.log('🔍 [GRID DEBUG] Y-axis auto-centered with margin:', {
-            availableHeight,
-            effectiveRowOffset,
-            calculation: `artboardBounds.y(${artboardBounds.y}) - centerY(${centerY}) + marginValue(${marginValue})`,
-            startY
-          });
-        }
       } else {
         // Auto margin: evenly distribute with auto-calculated margins
         effectiveRowOffset = artboardBounds.height / (rows + 1);
@@ -550,15 +513,6 @@ export function calculateGridPosition(
   
   const x = startX + (column * effectiveColumnOffset) + (ignoreGridStartX ? 0 : gridStartX);
   const y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
-  
-  if (index === 0 || index === columns - 1 || index === totalPositions - 1) {
-    console.log(`🔍 [GRID DEBUG] Position ${index} (row ${row}, col ${column}):`, {
-      calculation: `startX(${startX}) + column(${column}) * effectiveColumnOffset(${effectiveColumnOffset}) + gridStartX(${gridStartX})`,
-      x,
-      calculationY: `startY(${startY}) + row(${row}) * effectiveRowOffset(${effectiveRowOffset}) + gridStartY(${gridStartY})`,
-      y
-    });
-  }
   
   return { x, y, row, column };
 }
@@ -911,17 +865,6 @@ export function applyGridDistribution(
     const colIndex = index % config.gridColumns;
     const rowIndex = Math.floor(index / config.gridColumns);
     
-    // Debug: log original transform for first few shapes
-    if (index < 3) {
-      console.log(`🔍 [GRID DEBUG] applyGridDistribution - Shape ${index} BEFORE:`, {
-        originalTransform: { ...shape.transform },
-        rowIndex,
-        colIndex,
-        gridXRandomization: config.gridXRandomization,
-        gridYRandomization: config.gridYRandomization
-      });
-    }
-    
     const gridPos = calculateGridPosition(
       index,
       config.gridRows,
@@ -950,31 +893,9 @@ export function applyGridDistribution(
     const finalX = gridPos.x + positionOffsetX + randomX;
     const finalY = gridPos.y + positionOffsetY + randomY;
     
-    if (index < 3) {
-      console.log(`🔍 [GRID DEBUG] Shape ${index} - Final position:`, {
-        gridPos,
-        rowIndex,
-        colIndex,
-        positionOffsetX,
-        positionOffsetY,
-        randomX,
-        randomY,
-        finalX,
-        finalY
-      });
-    }
-    
     // Apply final grid position
     shape.transform.x = finalX;
     shape.transform.y = finalY;
-    
-    if (index < 3) {
-      console.log(`🔍 [GRID DEBUG] Shape ${index} AFTER:`, {
-        finalTransform: { ...shape.transform },
-        rowIndex,
-        colIndex
-      });
-    }
     
     // Return shape with grid context
     return {
