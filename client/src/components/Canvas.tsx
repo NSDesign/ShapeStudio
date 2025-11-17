@@ -369,21 +369,8 @@ export default function Canvas({
         (set.setBlendMode && set.setBlendMode !== 'source-over'))
       );
 
-      console.log('🔍 [COMPOSITING CHECK]', {
-        hasGenerationSets: !!generationSets,
-        generationSetsCount: generationSets?.length || 0,
-        hasCompositingOperations,
-        sets: generationSets?.map(s => ({
-          name: s.name,
-          enabled: s.enabled,
-          compositingOp: s.compositingOperation,
-          blendMode: s.setBlendMode
-        }))
-      });
-
       if (hasCompositingOperations && generationSets && shapes.length > 0) {
         // OFFSCREEN RENDERING PIPELINE: Render each set to isolated canvas, then composite
-        console.log('🎨 [LIVE GEN] Using offscreen rendering pipeline for set-level compositing');
         
         // Group shapes by set using z-index ranges (sets use 1000x multiplier)
         const shapesBySet: Map<number, typeof shapes> = new Map();
@@ -413,8 +400,6 @@ export default function Canvas({
         const setCanvases = enabledSets.map(set => {
           const setShapes = shapesBySet.get(set.generationOrder) || [];
           if (setShapes.length === 0) return null;
-
-          console.log('🖼️ [LIVE GEN] Rendering set', set.name, 'with', setShapes.length, 'shapes to offscreen canvas');
 
           const offscreenCanvas = renderSetToOffscreenCanvas(set, setShapes, renderContext);
           return { canvas: offscreenCanvas, set };
