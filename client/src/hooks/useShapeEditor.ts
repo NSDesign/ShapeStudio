@@ -753,12 +753,39 @@ export const useShapeEditor = () => {
 
   // Delete a generation set
   const handleDeleteGenerationSet = useCallback((setId: string) => {
+    // Prevent deletion if this is the last remaining set
+    if (generationSets.length <= 1) {
+      console.warn('Cannot delete the last remaining generation set');
+      return;
+    }
+    
+    // Find the index of the set being deleted
+    const deletedIndex = generationSets.findIndex(set => set.id === setId);
+    
+    // Guard against stale/invalid set IDs
+    if (deletedIndex === -1) {
+      console.warn('Cannot delete set - ID not found:', setId);
+      return;
+    }
+    
+    // Filter out the deleted set
     const newSets = generationSets.filter(set => set.id !== setId);
     setGenerationSets(newSets);
     
-    // If we deleted the current set, clear selection or select first available
+    // If we deleted the current set, select the next one intelligently
     if (currentGenerationSetId === setId) {
-      setCurrentGenerationSetId(newSets.length > 0 ? newSets[0].id : null);
+      let newCurrentSetId: string | null = null;
+      
+      // If there was a set after the deleted one, select it (same index in newSets)
+      if (deletedIndex < newSets.length) {
+        newCurrentSetId = newSets[deletedIndex].id;
+      }
+      // Otherwise, select the previous set (last set in newSets)
+      else if (newSets.length > 0) {
+        newCurrentSetId = newSets[newSets.length - 1].id;
+      }
+      
+      setCurrentGenerationSetId(newCurrentSetId);
     }
   }, [generationSets, currentGenerationSetId]);
 
