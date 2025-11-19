@@ -5122,10 +5122,10 @@ export default function Sidebar({
 
         {/* Save Preset Dialog */}
         <AlertDialog open={isSavePresetDialogOpen} onOpenChange={setIsSavePresetDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-slate-900 border-slate-700">
             <AlertDialogHeader>
-              <AlertDialogTitle>Save Shape Sets Preset</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-slate-200">Save Shape Sets Preset</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-400">
                 Enter a name for this preset configuration. This will save all current shape sets and their settings.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -5133,20 +5133,27 @@ export default function Sidebar({
               value={newPresetName}
               onChange={(e) => setNewPresetName(e.target.value)}
               placeholder="Preset name..."
-              className="mt-2"
+              className="mt-2 bg-slate-800 border-slate-600 text-slate-200 placeholder:text-slate-500"
+              autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && newPresetName.trim()) {
                   handleSavePreset();
                 }
               }}
             />
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => {
-                setNewPresetName('');
-              }}>
+              <AlertDialogCancel 
+                className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+                onClick={() => {
+                  setNewPresetName('');
+                }}
+              >
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={handleSavePreset}>
+              <AlertDialogAction 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={handleSavePreset}
+              >
                 Save Preset
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -5155,20 +5162,26 @@ export default function Sidebar({
 
         {/* Delete Preset Confirmation Dialog */}
         <AlertDialog open={isDeletePresetDialogOpen} onOpenChange={setIsDeletePresetDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-slate-900 border-slate-700">
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Preset</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-slate-200">Delete Preset</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-400">
                 Are you sure you want to delete "{presets.find(p => p.id === presetToDelete)?.presetName}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => {
-                setPresetToDelete('');
-              }}>
+              <AlertDialogCancel 
+                className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+                onClick={() => {
+                  setPresetToDelete('');
+                }}
+              >
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeletePreset} className="bg-red-600 hover:bg-red-700">
+              <AlertDialogAction 
+                onClick={handleDeletePreset} 
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
