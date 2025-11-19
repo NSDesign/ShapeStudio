@@ -243,6 +243,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Shape Set Presets routes
+  app.get("/api/user/shape-set-presets", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const presets = await storage.loadUserShapeSetPresets(userId);
+      res.json({ presets });
+    } catch (error) {
+      console.error("Error loading shape set presets:", error);
+      res.status(500).json({ message: "Failed to load shape set presets" });
+    }
+  });
+
+  app.post("/api/user/shape-set-presets", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { presetName, generationSetsData, currentSetId } = req.body;
+
+      // Validate request body
+      if (!presetName || typeof presetName !== 'string') {
+        return res.status(400).json({ message: "presetName is required and must be a string" });
+      }
+      
+      if (!Array.isArray(generationSetsData)) {
+        return res.status(400).json({ message: "generationSetsData must be an array" });
+      }
+
+      const preset = await storage.saveUserShapeSetPreset(userId, presetName, generationSetsData, currentSetId);
+      res.json({ preset });
+    } catch (error) {
+      console.error("Error saving shape set preset:", error);
+      res.status(500).json({ message: "Failed to save shape set preset" });
+    }
+  });
+
+  app.delete("/api/user/shape-set-presets/:id", conditionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Preset ID is required" });
+      }
+
+      await storage.deleteUserShapeSetPreset(userId, id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting shape set preset:", error);
+      res.status(500).json({ message: "Failed to delete shape set preset" });
+    }
+  });
+
   // Register export API routes
   registerExportRoutes(app);
   setupLiveApiRoutes(app, storage);

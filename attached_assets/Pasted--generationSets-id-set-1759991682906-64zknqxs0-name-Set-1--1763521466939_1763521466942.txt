@@ -1,0 +1,72 @@
+{
+  "generationSets": [
+    {
+      "id": "set-1759991682906-64zknqxs0",
+      "name": "Set 1",
+      "enabled": false,
+      
+      // 1. SHAPE TYPES DATA
+      "enabledShapeTypes": [...],           // Which shapes are enabled
+      "shapeSpecificProperties": {...},     // Properties for each shape type
+      "shapeCountMode": "range",            // How shapes are counted
+      "shapeCountFixed": 10,                // Fixed count value
+      "shapeCountRange": [5, 15],          // Range values
+      
+      // 2. GENERATION CONFIG SETTINGS (batchConfig contains ALL settings)
+      "batchConfig": {
+        "blurMode": "range",
+        "blurRange": [2, 15],
+        "blurEnabled": false,
+        "fillEnabled": true,
+        "fillColorMode": "range",
+        "fillColorRange": ["#f73b61", "#f7a85f"],
+        "fillOpacityMode": "define",
+        "fillOpacityDefine": 100,
+        "strokeEnabled": false,
+        "strokeColorMode": "range",
+        "gridRows": 5,
+        "gridColumns": 5,
+        "distributionPattern": "grid",
+        "rotationMode": "range",
+        "rotationRange": [0, 360],
+        "scaleRange": [50, 200],
+        "xPositionMode": "range",
+        "yPositionMode": "range",
+        // ... hundreds more settings for all generation features
+      },
+      
+      // 3. SET MANAGER DATA
+      "setBlendMode": "source-over",        // Set-level blend mode
+      "compositingOperation": "source-over", // Set-level compositing
+      "setTransform": {                      // Set-level transforms
+        "translateX": 0,
+        "translateY": 0,
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1
+      },
+      "setVisibility": {                     // Set-level visibility
+        "visible": true,
+        "opacity": 100,
+        "opacityVariance": 0
+      },
+      "artboardAlignment": {                 // Set-level positioning
+        "enabled": false,
+        "fitToArtboard": false,
+        "alignX": "center",
+        "alignY": "center"
+      },
+      "zIndexConfig": {                      // Layer ordering
+        "strategy": "generationOrder",
+        "offset": 0
+      },
+      "repetitionMode": "use-global",        // Repetition settings
+      "repetitionValue": 0,
+      "repetitionRange": [0, 0],
+      "generationOrder": 0,                  // Display order
+      "description": "Generated from current settings on 9/10/2025..."
+    },
+    // ... more sets
+  ],
+  "currentSetId": "set-1759991682906-64zknqxs0"
+}

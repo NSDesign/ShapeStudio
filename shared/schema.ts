@@ -194,6 +194,27 @@ export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type UpdateUserPreferences = z.infer<typeof updateUserPreferencesSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 
+// ===== SHAPE SET PRESETS =====
+// Table for storing user's shape set preset configurations
+export const shapeSetPresets = pgTable("shape_set_presets", {
+  id: varchar("id").primaryKey().notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  presetName: varchar("preset_name").notNull(),
+  generationSetsData: jsonb("generation_sets_data").notNull(),
+  currentSetId: varchar("current_set_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertShapeSetPresetSchema = createInsertSchema(shapeSetPresets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertShapeSetPreset = z.infer<typeof insertShapeSetPresetSchema>;
+export type ShapeSetPreset = typeof shapeSetPresets.$inferSelect;
+
 // ===== BATCH CONFIGURATION SETTINGS =====
 // Moved from client/src/components/BatchConfigDialog.tsx to shared for type safety
 

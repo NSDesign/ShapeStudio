@@ -10,9 +10,12 @@ import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
 import AuthHeader from './AuthHeader';
 import { useUserPreferences, useExportSettings } from '@/hooks/useUserPreferences';
+import { useShapeSetPresets } from '@/hooks/useShapeSetPresets';
+import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { NumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
@@ -38,13 +41,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   ChevronLeft,
   ChevronRight,
@@ -539,6 +535,13 @@ export default function Sidebar({
   const [pendingProjectFile, setPendingProjectFile] = useState<File | null>(null);
   const [dontAskAgainPref, setDontAskAgainPref] = useState(false);
   
+  // Shape set presets state
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [isDeletePresetDialogOpen, setIsDeletePresetDialogOpen] = useState(false);
+  const [presetToDelete, setPresetToDelete] = useState<string>('');
+  
   // Export settings state (lifted from ExportSaveContent for persistence)
   const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf'>('png');
   const [exportQuality, setExportQuality] = useState(90);
@@ -559,6 +562,12 @@ export default function Sidebar({
   
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
+  
+  // Shape set presets hook
+  const { presets, savePreset, deletePreset, isSaving, isDeleting } = useShapeSetPresets();
+  
+  // Toast notifications
+  const { toast } = useToast();
 
   // Use centralized generation sets state from parent (memoized to prevent re-renders)
   const effectiveGenerationSets = useMemo(() => generationSets || [], [generationSets]);
@@ -4713,8 +4722,149 @@ export default function Sidebar({
   }
 
   function ProjectManagementContent() {
+    // Handlers for preset operations
+    const handleSavePreset = async () => {
+      if (!newPresetName.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Preset name required",
+          description: "Please enter a name for the preset.",
+        });
+        return;
+      }
+      
+      try {
+        await savePreset(newPresetName, effectiveGenerationSets, effectiveCurrentSetId);
+        toast({
+          title: "Preset saved",
+          description: `"${newPresetName}" has been saved successfully.`,
+        });
+        setIsSavePresetDialogOpen(false);
+        setNewPresetName('');
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Save failed",
+          description: "Failed to save preset. Please try again.",
+        });
+      }
+    };
+    
+    const handleLoadPreset = () => {
+      const preset = presets.find(p => p.id === selectedPresetId);
+      if (!preset) return;
+      
+      try {
+        // Update generation sets with preset data
+        onGenerationSetsChange?.(preset.generationSetsData as GenerationSet[]);
+        onCurrentGenerationSetChange?.(preset.currentSetId || null);
+        
+        toast({
+          title: "Preset loaded",
+          description: `"${preset.presetName}" has been loaded successfully.`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Load failed",
+          description: "Failed to load preset. Please try again.",
+        });
+      }
+    };
+    
+    const handleDeletePreset = async () => {
+      try {
+        const preset = presets.find(p => p.id === presetToDelete);
+        await deletePreset(presetToDelete);
+        toast({
+          title: "Preset deleted",
+          description: `"${preset?.presetName}" has been deleted.`,
+        });
+        setIsDeletePresetDialogOpen(false);
+        setPresetToDelete('');
+        setSelectedPresetId('');
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Delete failed",
+          description: "Failed to delete preset. Please try again.",
+        });
+      }
+    };
+    
     return (
       <div className="space-y-4">
+        {/* Shape Sets Presets */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-300">Shape Sets Presets</Label>
+          <Select
+            value={selectedPresetId}
+            onValueChange={setSelectedPresetId}
+          >
+            <SelectTrigger className="w-full h-8 text-xs">
+              <SelectValue placeholder="Select a preset..." />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-slate-600">
+              {presets.length === 0 ? (
+                <SelectItem value="no-presets" disabled className="text-slate-400 text-xs">
+                  No presets saved
+                </SelectItem>
+              ) : (
+                presets.map((preset) => (
+                  <SelectItem 
+                    key={preset.id} 
+                    value={preset.id}
+                    className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white text-xs"
+                  >
+                    {preset.presetName}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              onClick={() => setIsSavePresetDialogOpen(true)}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={isSaving}
+              data-testid="button-save-preset"
+            >
+              <Save className="w-3 h-3 mr-1" />
+              Save As
+            </Button>
+            <Button
+              onClick={handleLoadPreset}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={!selectedPresetId || selectedPresetId === 'no-presets'}
+              data-testid="button-load-preset"
+            >
+              <FolderOpen className="w-3 h-3 mr-1" />
+              Load
+            </Button>
+            <Button
+              onClick={() => {
+                setPresetToDelete(selectedPresetId);
+                setIsDeletePresetDialogOpen(true);
+              }}
+              variant="secondary"
+              size="sm"
+              className="text-xs"
+              disabled={!selectedPresetId || selectedPresetId === 'no-presets' || isDeleting}
+              data-testid="button-delete-preset"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              Delete
+            </Button>
+          </div>
+        </div>
+
+        <Separator className="bg-slate-700" />
+
         {/* Save/Load Project */}
         <div className="space-y-2">
           <Label className="text-xs text-slate-300">Project Files</Label>
@@ -4965,6 +5115,61 @@ export default function Sidebar({
                 }
               }}>
                 Keep My Settings
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Save Preset Dialog */}
+        <AlertDialog open={isSavePresetDialogOpen} onOpenChange={setIsSavePresetDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Save Shape Sets Preset</AlertDialogTitle>
+              <AlertDialogDescription>
+                Enter a name for this preset configuration. This will save all current shape sets and their settings.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input
+              value={newPresetName}
+              onChange={(e) => setNewPresetName(e.target.value)}
+              placeholder="Preset name..."
+              className="mt-2"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSavePreset();
+                }
+              }}
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setNewPresetName('');
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleSavePreset}>
+                Save Preset
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Preset Confirmation Dialog */}
+        <AlertDialog open={isDeletePresetDialogOpen} onOpenChange={setIsDeletePresetDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Preset</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{presets.find(p => p.id === presetToDelete)?.presetName}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setPresetToDelete('');
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeletePreset} className="bg-red-600 hover:bg-red-700">
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

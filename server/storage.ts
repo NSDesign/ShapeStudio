@@ -1,6 +1,7 @@
 import {
   users,
   userPreferences,
+  shapeSetPresets,
   type User,
   type UpsertUser,
   type UserPreferences,
@@ -8,11 +9,12 @@ import {
   type UpdateUserPreferences,
   type SidebarSectionConfig,
   type GenerationSet,
+  type ShapeSetPreset,
   DEFAULT_SIDEBAR_SECTIONS,
   migrateBatchConfigSettings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -29,6 +31,11 @@ export interface IStorage {
   // Generation sets operations
   saveUserGenerationSets(userId: string, generationSets: GenerationSet[], currentSetId?: string | null): Promise<void>;
   loadUserGenerationSets(userId: string): Promise<{ generationSets: GenerationSet[], currentSetId?: string | null }>;
+  
+  // Shape set presets operations
+  saveUserShapeSetPreset(userId: string, presetName: string, generationSetsData: GenerationSet[], currentSetId?: string | null): Promise<ShapeSetPreset>;
+  loadUserShapeSetPresets(userId: string): Promise<ShapeSetPreset[]>;
+  deleteUserShapeSetPreset(userId: string, presetId: string): Promise<void>;
   
   // Other operations
 }
@@ -186,6 +193,50 @@ export class DatabaseStorage implements IStorage {
       generationSets: migratedSets,
       currentSetId: preferences?.currentGenerationSetId || null,
     };
+  }
+
+  // Shape set presets operations
+  async saveUserShapeSetPreset(
+    userId: string,
+    presetName: string,
+    generationSetsData: GenerationSet[],
+    currentSetId?: string | null
+  ): Promise<ShapeSetPreset> {
+    // Generate unique preset ID
+    const presetId = `preset-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    
+    const [preset] = await db
+      .insert(shapeSetPresets)
+      .values({
+        id: presetId,
+        userId,
+        presetName,
+        generationSetsData: generationSetsData as any,
+        currentSetId: currentSetId || null,
+      })
+      .returning();
+    
+    return preset;
+  }
+
+  async loadUserShapeSetPresets(userId: string): Promise<ShapeSetPreset[]> {
+    const presets = await db
+      .select()
+      .from(shapeSetPresets)
+      .where(eq(shapeSetPresets.userId, userId))
+      .orderBy(shapeSetPresets.createdAt);
+    
+    return presets;
+  }
+
+  async deleteUserShapeSetPreset(userId: string, presetId: string): Promise<void> {
+    // Verify the preset belongs to the user before deleting
+    await db
+      .delete(shapeSetPresets)
+      .where(and(
+        eq(shapeSetPresets.id, presetId),
+        eq(shapeSetPresets.userId, userId)
+      ));
   }
 
   // Other operations
