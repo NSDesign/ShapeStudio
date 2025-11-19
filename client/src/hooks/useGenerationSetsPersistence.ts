@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { GenerationSet } from '@shared/schema';
 import { migrateBatchConfigSettings } from '@shared/schema';
@@ -16,14 +17,16 @@ export function useGenerationSetsPersistence() {
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
   
-  // Apply migration to loaded data
-  const data = rawData ? {
-    ...rawData,
-    generationSets: rawData.generationSets.map(set => ({
-      ...set,
-      batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
-    }))
-  } : rawData;
+  // Apply migration to loaded data (memoized to prevent re-renders)
+  const data = useMemo(() => {
+    return rawData ? {
+      ...rawData,
+      generationSets: rawData.generationSets.map(set => ({
+        ...set,
+        batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
+      }))
+    } : rawData;
+  }, [rawData]);
 
   // Save generation sets to server
   const saveMutation = useMutation({
@@ -53,9 +56,12 @@ export function useGenerationSetsPersistence() {
     }
   };
 
+  // Memoize the generation sets array to prevent re-renders
+  const generationSets = useMemo(() => data?.generationSets || [], [data?.generationSets]);
+  
   return {
     // Data
-    generationSets: data?.generationSets || [],
+    generationSets,
     currentSetId: data?.currentSetId || null,
     
     // Loading states
