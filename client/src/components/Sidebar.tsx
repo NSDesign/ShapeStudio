@@ -573,6 +573,89 @@ export default function Sidebar({
   const effectiveGenerationSets = useMemo(() => generationSets || [], [generationSets]);
   const effectiveCurrentSetId = currentGenerationSetId;
 
+  // Preset handlers - memoized to prevent recreation on every render
+  // Use refs for frequently changing values to avoid recreating the callback
+  const newPresetNameRef = useRef('');
+  useEffect(() => {
+    newPresetNameRef.current = newPresetName;
+  }, [newPresetName]);
+  
+  const handleSavePreset = useCallback(async () => {
+    const name = newPresetNameRef.current;
+    if (!name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Preset name required",
+        description: "Please enter a name for the preset.",
+      });
+      return;
+    }
+    
+    try {
+      await savePreset(name, effectiveGenerationSets, effectiveCurrentSetId);
+      toast({
+        title: "Preset saved",
+        description: `"${name}" has been saved successfully.`,
+      });
+      setIsSavePresetDialogOpen(false);
+      setNewPresetName('');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "Failed to save preset. Please try again.",
+      });
+    }
+  }, [savePreset, effectiveGenerationSets, effectiveCurrentSetId, toast]);
+  
+  const handleLoadPreset = useCallback(() => {
+    const preset = presets.find(p => p.id === selectedPresetId);
+    if (!preset) return;
+    
+    try {
+      // Update generation sets with preset data
+      onGenerationSetsChange?.(preset.generationSetsData as GenerationSet[]);
+      onCurrentGenerationSetChange?.(preset.currentSetId || null);
+      
+      toast({
+        title: "Preset loaded",
+        description: `"${preset.presetName}" has been loaded successfully.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Load failed",
+        description: "Failed to load preset. Please try again.",
+      });
+    }
+  }, [presets, selectedPresetId, onGenerationSetsChange, onCurrentGenerationSetChange, toast]);
+  
+  const presetToDeleteRef = useRef('');
+  useEffect(() => {
+    presetToDeleteRef.current = presetToDelete;
+  }, [presetToDelete]);
+  
+  const handleDeletePreset = useCallback(async () => {
+    const idToDelete = presetToDeleteRef.current;
+    try {
+      const preset = presets.find(p => p.id === idToDelete);
+      await deletePreset(idToDelete);
+      toast({
+        title: "Preset deleted",
+        description: `"${preset?.presetName}" has been deleted.`,
+      });
+      setIsDeletePresetDialogOpen(false);
+      setPresetToDelete('');
+      setSelectedPresetId('');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: "Failed to delete preset. Please try again.",
+      });
+    }
+  }, [presets, deletePreset, toast]);
+
   // Generation sets are enabled when the main toggle is enabled
   // This allows users to save/load generation configurations with any count mode
   const effectiveMode = generationCountMode ?? 'fixed';
@@ -4722,76 +4805,6 @@ export default function Sidebar({
   }
 
   function ProjectManagementContent() {
-    // Handlers for preset operations
-    const handleSavePreset = async () => {
-      if (!newPresetName.trim()) {
-        toast({
-          variant: "destructive",
-          title: "Preset name required",
-          description: "Please enter a name for the preset.",
-        });
-        return;
-      }
-      
-      try {
-        await savePreset(newPresetName, effectiveGenerationSets, effectiveCurrentSetId);
-        toast({
-          title: "Preset saved",
-          description: `"${newPresetName}" has been saved successfully.`,
-        });
-        setIsSavePresetDialogOpen(false);
-        setNewPresetName('');
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Save failed",
-          description: "Failed to save preset. Please try again.",
-        });
-      }
-    };
-    
-    const handleLoadPreset = () => {
-      const preset = presets.find(p => p.id === selectedPresetId);
-      if (!preset) return;
-      
-      try {
-        // Update generation sets with preset data
-        onGenerationSetsChange?.(preset.generationSetsData as GenerationSet[]);
-        onCurrentGenerationSetChange?.(preset.currentSetId || null);
-        
-        toast({
-          title: "Preset loaded",
-          description: `"${preset.presetName}" has been loaded successfully.`,
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Load failed",
-          description: "Failed to load preset. Please try again.",
-        });
-      }
-    };
-    
-    const handleDeletePreset = async () => {
-      try {
-        const preset = presets.find(p => p.id === presetToDelete);
-        await deletePreset(presetToDelete);
-        toast({
-          title: "Preset deleted",
-          description: `"${preset?.presetName}" has been deleted.`,
-        });
-        setIsDeletePresetDialogOpen(false);
-        setPresetToDelete('');
-        setSelectedPresetId('');
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Delete failed",
-          description: "Failed to delete preset. Please try again.",
-        });
-      }
-    };
-    
     return (
       <div className="space-y-4">
         {/* Shape Sets Presets */}
@@ -5054,7 +5067,15 @@ export default function Sidebar({
             <div>Selected: {selectedCount}</div>
           </div>
         </div>
+      </div>
+    );
+  }
 
+  // Dialogs moved outside ProjectManagementContent to prevent recreation on state changes
+  
+  function renderDialogs() {
+    return (
+      <>
         {/* Load Project Dialog */}
         <AlertDialog open={isLoadDialogOpen} onOpenChange={setIsLoadDialogOpen}>
           <AlertDialogContent>
@@ -5187,7 +5208,7 @@ export default function Sidebar({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </>
     );
   }
 
@@ -6198,6 +6219,9 @@ export default function Sidebar({
         exportAllImages={exportAllImages}
         selectedImageIndices={selectedImageIndices}
       />
+      
+      {/* Render all dialogs outside the main component tree to prevent recreation */}
+      {renderDialogs()}
       
       {/* Sets Manager Dialog - Separate dialog for managing generation sets */}
       <SetsManagerDialog
