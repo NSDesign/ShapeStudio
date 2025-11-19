@@ -560,8 +560,8 @@ export default function Sidebar({
   // Get export settings from user preferences
   const { exportSettings, updateExportSettings, isLoading: isLoadingExportSettings } = useExportSettings();
 
-  // Use centralized generation sets state from parent
-  const effectiveGenerationSets = generationSets || [];
+  // Use centralized generation sets state from parent (memoized to prevent re-renders)
+  const effectiveGenerationSets = useMemo(() => generationSets || [], [generationSets]);
   const effectiveCurrentSetId = currentGenerationSetId;
 
   // Generation sets are enabled when the main toggle is enabled
