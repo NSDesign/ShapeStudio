@@ -2586,7 +2586,7 @@ export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & 
   const migrated = { ...settings };
   
   // Rename legacy 'predefined-shape' to 'current-shape'
-  if (migrated.transformOriginMode === 'predefined-shape') {
+  if (migrated.transformOriginMode === 'predefined-shape' as any) {
     migrated.transformOriginMode = 'current-shape';
   }
   
