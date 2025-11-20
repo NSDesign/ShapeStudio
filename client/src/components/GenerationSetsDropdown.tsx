@@ -146,9 +146,9 @@ export function GenerationSetsDropdown({
         data-testid={`${testId}-filter-button`}
       >
         {showOnlyEnabled ? (
-          <Eye className={`${iconSize} text-blue-400`} />
+          <EyeOff className={`${iconSize} text-blue-400`} />
         ) : (
-          <EyeOff className={`${iconSize} text-slate-300`} />
+          <Eye className={`${iconSize} text-slate-300`} />
         )}
       </Button>
     </div>
