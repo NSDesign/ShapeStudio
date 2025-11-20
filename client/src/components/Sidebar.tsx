@@ -580,6 +580,13 @@ export default function Sidebar({
     newPresetNameRef.current = newPresetName;
   }, [newPresetName]);
   
+  // Real-time validation for duplicate preset names
+  const isPresetNameDuplicate = useMemo(() => {
+    const name = newPresetName.trim();
+    if (!name) return false;
+    return presets.some(p => p.presetName.toLowerCase() === name.toLowerCase());
+  }, [newPresetName, presets]);
+
   const handleSavePreset = useCallback(async () => {
     const name = newPresetNameRef.current;
     if (!name.trim()) {
@@ -5103,19 +5110,24 @@ export default function Sidebar({
                 Enter a name for this preset configuration. This will save all current shape sets and their settings.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <Input
-              value={newPresetName}
-              onChange={(e) => setNewPresetName(e.target.value)}
-              placeholder="Preset name..."
-              className="mt-2 bg-slate-800 border-slate-600 text-slate-200 placeholder:text-slate-500"
-              autoFocus
-              list="preset-names-datalist"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newPresetName.trim()) {
-                  handleSavePreset();
-                }
-              }}
-            />
+            <div className="space-y-1">
+              <Input
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                placeholder="Preset name..."
+                className={`mt-2 ${isPresetNameDuplicate ? 'border-red-500 focus-visible:ring-red-500' : 'border-slate-600'} bg-slate-800 text-slate-200 placeholder:text-slate-500`}
+                autoFocus
+                list="preset-names-datalist"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newPresetName.trim() && !isPresetNameDuplicate) {
+                    handleSavePreset();
+                  }
+                }}
+              />
+              {isPresetNameDuplicate && (
+                <p className="text-xs text-red-400">A preset with this name already exists</p>
+              )}
+            </div>
             <datalist id="preset-names-datalist">
               {presets.map(preset => (
                 <option key={preset.id} value={preset.presetName} />
@@ -5130,12 +5142,13 @@ export default function Sidebar({
               >
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction 
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSavePreset}
+                disabled={!newPresetName.trim() || isPresetNameDuplicate}
               >
                 Save Preset
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
