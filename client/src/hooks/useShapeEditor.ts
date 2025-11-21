@@ -337,6 +337,10 @@ export const useShapeEditor = () => {
   const [editMode, setEditMode] = useState<'shapes' | 'points' | 'segments'>('shapes');
   const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
+  
+  // UI element visibility toggles
+  const [showMultiSelectButton, setShowMultiSelectButton] = useState(false);
+  const [showSelectedCount, setShowSelectedCount] = useState(false);
   const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
@@ -382,6 +386,14 @@ export const useShapeEditor = () => {
       setSelectedGroups(currentSelectedGroups);
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
+
+  // Auto-enable UI element toggles when a selection mode is chosen
+  useEffect(() => {
+    if (editMode === 'shapes' || editMode === 'points' || editMode === 'segments') {
+      setShowMultiSelectButton(true);
+      setShowSelectedCount(true);
+    }
+  }, [editMode]);
 
   const updateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
     setCanvasSettings(prev => ({ ...prev, ...updates }));
@@ -4126,6 +4138,10 @@ export const useShapeEditor = () => {
     isTouchDevice,
     isMultiTouch,
     isMultiSelectMode,
+    showMultiSelectButton,
+    showSelectedCount,
+    setShowMultiSelectButton,
+    setShowSelectedCount,
 
     // Canvas interaction
     canvasRef,

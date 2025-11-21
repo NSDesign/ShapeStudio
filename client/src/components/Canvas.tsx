@@ -21,6 +21,8 @@ interface CanvasProps {
   selectedPoints: { shapeId: string; pointIndex: number }[];
   selectedSegments: { shapeId: string; segmentIndex: number }[];
   isMultiSelectMode: boolean;
+  showMultiSelectButton: boolean;
+  showSelectedCount: boolean;
   marqueeStart: { x: number; y: number } | null;
   marqueeEnd: { x: number; y: number } | null;
   isMarqueeSelecting: boolean;
@@ -68,6 +70,8 @@ export default function Canvas({
   selectedPoints,
   selectedSegments,
   isMultiSelectMode,
+  showMultiSelectButton,
+  showSelectedCount,
   marqueeStart,
   marqueeEnd,
   isMarqueeSelecting,
@@ -623,28 +627,33 @@ export default function Canvas({
               </TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggleMultiSelect}
-                  className={cn(
-                    "text-slate-300 hover:text-white hover:bg-slate-700",
-                    isMultiSelectMode && "bg-blue-600 text-white hover:bg-blue-500"
-                  )}
-                >
-                  <MousePointer className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Toggle multi-select mode</p>
-              </TooltipContent>
-            </Tooltip>
+            {showMultiSelectButton && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggleMultiSelect}
+                    className={cn(
+                      "text-slate-300 hover:text-white hover:bg-slate-700",
+                      isMultiSelectMode && "bg-blue-600 text-white hover:bg-blue-500"
+                    )}
+                    data-testid="button-multi-select"
+                  >
+                    <MousePointer className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle multi-select mode</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             
-            <div className="text-sm text-slate-400 bg-slate-700 px-2 py-1 rounded">
-              Selected: {selectedCount}
-            </div>
+            {showSelectedCount && (
+              <div className="text-sm text-slate-400 bg-slate-700 px-2 py-1 rounded" data-testid="text-selected-count">
+                Selected: {selectedCount}
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-1">

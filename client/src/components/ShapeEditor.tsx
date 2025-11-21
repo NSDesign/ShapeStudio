@@ -24,6 +24,10 @@ export default function ShapeEditor() {
     selectedPoints,
     selectedSegments,
     isMultiSelectMode,
+    showMultiSelectButton,
+    showSelectedCount,
+    setShowMultiSelectButton,
+    setShowSelectedCount,
     marqueeStart,
     marqueeEnd,
     isMarqueeSelecting,
@@ -158,6 +162,10 @@ export default function ShapeEditor() {
           selectedPointsCount={selectedPointsCount}
           selectedSegmentsCount={selectedSegmentsCount}
           editMode={editMode}
+          showMultiSelectButton={showMultiSelectButton}
+          showSelectedCount={showSelectedCount}
+          onSetShowMultiSelectButton={setShowMultiSelectButton}
+          onSetShowSelectedCount={setShowSelectedCount}
           canComposeShapes={canComposeShapes}
           selectedShapes={selectedShapes}
           selectedGroups={selectedGroups}
@@ -231,6 +239,8 @@ export default function ShapeEditor() {
             selectedPoints={selectedPoints}
             selectedSegments={selectedSegments}
             isMultiSelectMode={isMultiSelectMode}
+            showMultiSelectButton={showMultiSelectButton}
+            showSelectedCount={showSelectedCount}
             marqueeStart={marqueeStart}
             marqueeEnd={marqueeEnd}
             isMarqueeSelecting={isMarqueeSelecting}

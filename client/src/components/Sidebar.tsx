@@ -363,6 +363,10 @@ interface SidebarProps {
   selectedPointsCount: number;
   selectedSegmentsCount: number;
   editMode: 'shapes' | 'points' | 'segments';
+  showMultiSelectButton: boolean;
+  showSelectedCount: boolean;
+  onSetShowMultiSelectButton: (show: boolean) => void;
+  onSetShowSelectedCount: (show: boolean) => void;
   canComposeShapes: boolean;
   selectedShapes: Shape[];
   selectedGroups: ShapeGroupClass[];
@@ -446,6 +450,10 @@ export default function Sidebar({
   selectedPointsCount,
   selectedSegmentsCount,
   editMode,
+  showMultiSelectButton,
+  showSelectedCount,
+  onSetShowMultiSelectButton,
+  onSetShowSelectedCount,
   canComposeShapes,
   selectedShapes,
   selectedGroups,
@@ -941,6 +949,38 @@ export default function Sidebar({
             </div>
           </div>
         )}
+
+        <Separator className="bg-slate-700" />
+
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+            UI Element Visibility
+          </div>
+
+          <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+            <Label htmlFor="toggle-multi-select" className="text-sm text-slate-300 cursor-pointer">
+              Show multi-select button
+            </Label>
+            <Switch
+              id="toggle-multi-select"
+              checked={showMultiSelectButton}
+              onCheckedChange={onSetShowMultiSelectButton}
+              data-testid="toggle-multi-select-button"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+            <Label htmlFor="toggle-selected-count" className="text-sm text-slate-300 cursor-pointer">
+              Show selected count
+            </Label>
+            <Switch
+              id="toggle-selected-count"
+              checked={showSelectedCount}
+              onCheckedChange={onSetShowSelectedCount}
+              data-testid="toggle-selected-count"
+            />
+          </div>
+        </div>
       </div>
     );
   }
