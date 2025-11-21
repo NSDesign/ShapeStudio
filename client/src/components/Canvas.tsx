@@ -675,7 +675,7 @@ export default function Canvas({
               min={5}
               max={500}
               step={5}
-              className="h-8 w-16 text-xs bg-slate-700 border-slate-600 text-slate-200 pt-[0px] pb-[0px] pl-[0px] pr-[0px]"
+              className="h-8 w-16 text-xs bg-slate-700 border-slate-600 text-slate-200 pt-[0px] pb-[0px] pl-[10px] pr-[10px]"
             />
             
             <Tooltip>
