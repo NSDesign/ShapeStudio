@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { NumericInput } from '@/components/ui/numeric-input';
 import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Maximize2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
@@ -41,6 +42,7 @@ interface CanvasProps {
   onToggleMultiSelect: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onZoomChange: (zoomPercentage: number) => void;
   onResetView: () => void;
   onFitToArtboard: () => void;
   onClearAll: () => void;
@@ -90,6 +92,7 @@ export default function Canvas({
   onToggleMultiSelect,
   onZoomIn,
   onZoomOut,
+  onZoomChange,
   onResetView,
   onFitToArtboard,
   onClearAll,
@@ -666,9 +669,14 @@ export default function Canvas({
               <TooltipContent><p>Zoom out</p></TooltipContent>
             </Tooltip>
             
-            <span className="text-sm text-slate-400 min-w-[60px] text-center">
-              {Math.round((canvasSettings.zoom && canvasSettings.zoom > 0.05 ? canvasSettings.zoom : 1) * 100)}%
-            </span>
+            <NumericInput
+              value={Math.round((canvasSettings.zoom && canvasSettings.zoom > 0.05 ? canvasSettings.zoom : 1) * 100)}
+              onChange={(value) => onZoomChange(value / 100)}
+              min={5}
+              max={500}
+              step={5}
+              className="h-8 w-16 text-xs bg-slate-700 border-slate-600 text-slate-200"
+            />
             
             <Tooltip>
               <TooltipTrigger asChild>

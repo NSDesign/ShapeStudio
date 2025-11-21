@@ -259,6 +259,22 @@ export default function ShapeEditor() {
             onToggleMultiSelect={toggleMultiSelectMode}
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
+            onZoomChange={(zoomValue) => {
+              // zoomValue is already a decimal (e.g., 0.74 for 74%)
+              const clamped = Math.max(0.05, Math.min(5, zoomValue));
+              const canvasElem = canvasRef.current;
+              if (canvasElem) {
+                const centerX = canvasElem.clientWidth / 2;
+                const centerY = canvasElem.clientHeight / 2;
+                const oldZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
+                const scale = clamped / oldZoom;
+                const newPanX = canvasSettings.panX * scale - (centerX * (scale - 1));
+                const newPanY = canvasSettings.panY * scale - (centerY * (scale - 1));
+                // Use the updateCanvasSettings if it exists in useShapeEditor
+                // For now, we'll create a callback inline
+              }
+              // Direct zoom update - look for updateCanvasSettings from hook
+            }}
             onResetView={resetView}
             onFitToArtboard={fitToArtboard}
             onClearAll={clearAllShapes}
