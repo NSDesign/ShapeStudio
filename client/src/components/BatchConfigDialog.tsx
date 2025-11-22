@@ -116,10 +116,6 @@ export default function BatchConfigDialog({
   }>({ errors: [], warnings: [] });
   const [isApplying, setIsApplying] = useState(false);
 
-  // Calculate mismatch detection for gear icon warning - use enabled sets count
-  const enabledSetsCount = generationSets.filter(set => set.enabled).length;
-  const hasSetsCountMismatch = batchExportCount > 0 && enabledSetsCount < batchExportCount;
-
   // Calculate available shape-specific sort options based on current generation set
   const availableShapeSpecificSortOptions = React.useMemo(() => {
     // Get current generation set's shape types
@@ -419,7 +415,6 @@ export default function BatchConfigDialog({
                   onDeleteSet={(setId) => onDeleteGenerationSet?.(setId)}
                   onOpenManager={() => onOpenGenerationSetsManager?.()}
                   enabled={generationSetsEnabled}
-                  hasMismatch={hasSetsCountMismatch}
                   variant="boxed"
                   size="sm"
                   className="bg-slate-800/50"
