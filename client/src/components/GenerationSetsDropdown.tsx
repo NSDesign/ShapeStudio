@@ -169,7 +169,7 @@ export function GenerationSetsDropdown({
           placeholder={enabled ? "Select generation set..." : "Enable generation sets to select"} 
         />
       </SelectTrigger>
-      <SelectContent className="bg-slate-800 border-slate-600">
+      <SelectContent className="bg-slate-800 border-slate-600 z-[10010]">
         {filteredGenerationSets.length === 0 ? (
           <SelectItem value="no-sets" disabled className="text-slate-400">
             {showOnlyEnabled ? "No enabled sets" : "No sets available"}
