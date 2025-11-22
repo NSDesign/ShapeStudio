@@ -3913,7 +3913,7 @@ export default function Sidebar({
               value={scatterSettings.shapeCountMode || 'range'} 
               onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
             >
-              <SelectTrigger className="h-6 w-16 text-xs bg-slate-700 border-slate-600 text-slate-200">
+              <SelectTrigger className="h-8 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200 px-2 py-3">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
