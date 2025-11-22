@@ -134,7 +134,7 @@ export function GenerationSetsDropdown({
         title="Open Generation Sets Manager"
         data-testid={`${testId}-manager-button`}
       >
-        <Layers className={`${iconSize} ${hasMismatch ? 'text-yellow-400' : 'text-slate-300'}`} />
+        <Layers className={`${iconSize} ${hasMismatch ? 'text-yellow-400' : 'text-slate-700'}`} />
       </Button>
       <Button
         variant="outline"
