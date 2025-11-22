@@ -3886,7 +3886,7 @@ export default function Sidebar({
                 }
               });
             }}
-            className="flex-1 h-7 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
           >
             All On
           </Button>
@@ -3899,7 +3899,7 @@ export default function Sidebar({
                 onToggleShapeType(type);
               });
             }}
-            className="flex-1 h-7 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
           >
             All Off
           </Button>
