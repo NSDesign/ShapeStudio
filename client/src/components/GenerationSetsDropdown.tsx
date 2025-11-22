@@ -247,7 +247,7 @@ export function GenerationSetsDropdown({
                 <Button
                   variant="outline"
                   onClick={() => setIsCreatingSet(false)}
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                  className="flex-1 border-slate-600 text-slate-700 hover:bg-slate-700"
                   data-testid={`${testId}-create-cancel`}
                 >
                   Cancel
@@ -302,7 +302,7 @@ export function GenerationSetsDropdown({
               <Button
                 variant="outline"
                 onClick={() => setIsCreatingSet(false)}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="flex-1 border-slate-600 text-slate-700 hover:bg-slate-700"
                 data-testid={`${testId}-create-cancel`}
               >
                 Cancel
