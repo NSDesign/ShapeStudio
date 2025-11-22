@@ -108,7 +108,7 @@ export function GenerationSetsDropdown({
         title="Create new generation set"
         data-testid={`${testId}-add-button`}
       >
-        <Plus className={`${iconSize} text-slate-700`} />
+        <Plus className={`${iconSize} text-slate-300`} />
       </Button>
       <Button
         variant="outline"
@@ -119,7 +119,7 @@ export function GenerationSetsDropdown({
         title={canDelete ? "Delete current generation set" : "Cannot delete - only one set remaining"}
         data-testid={`${testId}-remove-button`}
       >
-        <Minus className={`${iconSize} text-slate-700`} />
+        <Minus className={`${iconSize} text-slate-300`} />
       </Button>
       <Button
         variant="outline"
@@ -130,7 +130,7 @@ export function GenerationSetsDropdown({
         title="Open Generation Sets Manager"
         data-testid={`${testId}-manager-button`}
       >
-        <Layers className={`${iconSize} text-slate-700`} />
+        <Layers className={`${iconSize} text-slate-300`} />
       </Button>
       <Button
         variant="outline"
@@ -144,7 +144,7 @@ export function GenerationSetsDropdown({
         {showOnlyEnabled ? (
           <EyeOff className={`${iconSize} text-blue-400`} />
         ) : (
-          <Eye className={`${iconSize} text-slate-700`} />
+          <Eye className={`${iconSize} text-slate-300`} />
         )}
       </Button>
     </div>
