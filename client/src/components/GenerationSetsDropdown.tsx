@@ -31,9 +31,6 @@ interface GenerationSetsDropdownProps {
   // Conditional enabling
   enabled: boolean;
   
-  // Mismatch detection
-  hasMismatch?: boolean;
-  
   // Styling
   className?: string;
   size?: 'sm' | 'default';
@@ -57,7 +54,6 @@ export function GenerationSetsDropdown({
   onOpenManager,
   generateUniqueSetName,
   enabled,
-  hasMismatch = false,
   className = '',
   size = 'default',
   showLabel = false,
@@ -134,7 +130,7 @@ export function GenerationSetsDropdown({
         title="Open Generation Sets Manager"
         data-testid={`${testId}-manager-button`}
       >
-        <Layers className={`${iconSize} ${hasMismatch ? 'text-yellow-400' : 'text-slate-700'}`} />
+        <Layers className={`${iconSize} text-slate-700`} />
       </Button>
       <Button
         variant="outline"
