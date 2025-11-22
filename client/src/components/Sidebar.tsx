@@ -3961,7 +3961,7 @@ export default function Sidebar({
                 min={1}
                 max={50}
                 step={1}
-                className="w-full"
+                className="w-full pt-2"
                 minStepsBetweenThumbs={1}
               />
             </div>
@@ -3981,7 +3981,7 @@ export default function Sidebar({
                 min={1}
                 max={50}
                 step={1}
-                className="w-full"
+                className="w-full pt-2"
               />
             </div>
           )}
