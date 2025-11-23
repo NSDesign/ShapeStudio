@@ -22,7 +22,6 @@ import {
   AlertCircle,
   Info,
   Lock,
-  Unlock,
   Layers2
 } from 'lucide-react';
 import { 
@@ -583,37 +582,42 @@ export function GenerationSetsInterface({
                       <span className="text-xs text-slate-500" data-testid={`text-set-order-${set.id}`}>#{index + 1}</span>
                       {renderSetValidationIndicator(set.id)}
                       
-                      {/* Composite Lock Toggle */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-auto"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleCompositeLock(set.id);
-                              }}
-                              data-testid={`button-toggle-composite-lock-${set.id}`}
-                              aria-label={set.locks?.composite ? 'Unlock composite operations' : 'Lock composite operations'}
-                            >
-                              {set.locks?.composite ? (
-                                <Lock className="w-3 h-3 text-blue-400" data-testid={`icon-composite-locked-${set.id}`} />
-                              ) : (
-                                <Unlock className="w-3 h-3 text-slate-500" data-testid={`icon-composite-unlocked-${set.id}`} />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p className="text-xs">
-                              {set.locks?.composite 
-                                ? 'Composite lock enabled - this set is protected from compositing operations' 
-                                : 'Composite lock disabled - this set can be affected by compositing operations'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {/* Lock Features Section */}
+                      <div className="flex items-center gap-1 ml-auto">
+                        {/* Lock icon - static label indicating lockable features */}
+                        <Lock className="w-3 h-3 text-slate-500" data-testid={`icon-lock-label-${set.id}`} />
+                        
+                        {/* Composite Lock Toggle - Layers2 button */}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleCompositeLock(set.id);
+                                }}
+                                data-testid={`button-toggle-composite-lock-${set.id}`}
+                                aria-label={set.locks?.composite ? 'Unlock composite operations' : 'Lock composite operations'}
+                              >
+                                <Layers2 
+                                  className={`w-3 h-3 ${set.locks?.composite ? 'text-blue-400' : 'text-slate-500'}`}
+                                  data-testid={`icon-composite-${set.id}`} 
+                                />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p className="text-xs">
+                                {set.locks?.composite 
+                                  ? 'Composite lock enabled - this set is protected from compositing operations' 
+                                  : 'Composite lock disabled - click to lock compositing operations'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
 
                     <h5 className="font-medium text-slate-200 mb-1 truncate" data-testid={`text-set-name-${set.id}`}>
