@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Label } from '@/components/ui/label';
 import { 
   Plus, 
@@ -492,31 +493,61 @@ export function GenerationSetsInterface({
         </Button>
       </div>
 
-        {/* Overall validation summary */}
-        {showInlineValidation && !overallValidation.isValid && (
-          <Alert variant="destructive" data-testid="alert-overall-validation-errors">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-medium">Shape Sets Issues:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  {overallValidation.errors.map((error, index) => (
-                    <li key={`error-${index}`}>{error.message}</li>
-                  ))}
-                </ul>
-                {overallValidation.warnings.length > 0 && (
-                  <>
-                    <p className="font-medium text-yellow-400 mt-2">Warnings:</p>
+        {/* Overall validation summary with accordion */}
+        {showInlineValidation && (overallValidation.errors.length > 0 || overallValidation.warnings.length > 0) && (
+          <div className="border border-slate-700 rounded-lg bg-slate-900/50" data-testid="validation-accordion-container">
+            <Accordion type="multiple" defaultValue={["errors", "warnings"]} className="w-full">
+              {/* Errors Section */}
+              {overallValidation.errors.length > 0 && (
+                <AccordionItem value="errors" className="border-b border-slate-700">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-800/50">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="h-4 w-4 text-red-400" />
+                      <span className="text-sm font-medium text-red-400">Shape Sets Issues</span>
+                      <Badge 
+                        className="ml-auto bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
+                        data-testid="badge-errors-count"
+                      >
+                        {overallValidation.errors.length}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <ul className="list-disc list-inside space-y-1 text-sm text-red-400">
+                      {overallValidation.errors.map((error, index) => (
+                        <li key={`error-${index}`}>{error.message}</li>
+                      ))}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              
+              {/* Warnings Section */}
+              {overallValidation.warnings.length > 0 && (
+                <AccordionItem value="warnings" className="border-0">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-800/50">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="h-4 w-4 text-yellow-400" />
+                      <span className="text-sm font-medium text-yellow-400">Warnings</span>
+                      <Badge 
+                        className="ml-auto bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30"
+                        data-testid="badge-warnings-count"
+                      >
+                        {overallValidation.warnings.length}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
                     <ul className="list-disc list-inside space-y-1 text-sm text-yellow-400">
                       {overallValidation.warnings.map((warning, index) => (
                         <li key={`warning-${index}`}>{warning.message}</li>
                       ))}
                     </ul>
-                  </>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
+          </div>
         )}
         
         {/* Legacy validation errors for backward compatibility */}
