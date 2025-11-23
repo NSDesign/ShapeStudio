@@ -767,6 +767,7 @@ export function GenerationSetsInterface({
               generationSet={selectedSet}
               onUpdate={(updates: Partial<GenerationSet>) => handleUpdateSet(selectedSet.id, updates)}
               globalZIndexEnabled={globalZIndexEnabled}
+              allGenerationSets={generationSets}
             />
           ) : (
             <Card className="bg-slate-900 border-slate-700" data-testid="card-no-set-selected">
