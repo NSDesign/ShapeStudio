@@ -63,6 +63,12 @@ export function renderSetToOffscreenCanvas(
  * This function implements the hierarchical compositing system:
  * - Inner level: Shape blend modes (already applied in offscreen canvases)
  * - Outer level: Set compositing operations (applied here)
+ * 
+ * Composite Lock Support:
+ * - Locked sets (locks.composite = true) are protected from compositing operations
+ * - Unlocked sets composite to a temporary canvas first
+ * - Locked sets and unlocked composite are drawn to target with source-over
+ * - This ensures compositing operations (e.g., destination-out) don't affect locked sets
  */
 export function compositeSetCanvases(
   targetCtx: CanvasRenderingContext2D,
@@ -76,21 +82,45 @@ export function compositeSetCanvases(
     a.set.generationOrder - b.set.generationOrder
   );
   
-  // Composite each set canvas onto the target
-  sortedSets.forEach(({ canvas, set }) => {
-    // Determine effective compositing operation
-    // Compositing operation takes precedence over blend mode
-    const effectiveOperation = (set.compositingOperation && set.compositingOperation !== 'source-over')
-      ? set.compositingOperation
-      : set.setBlendMode || 'source-over';
-    
-    // Apply set-level compositing operation
-    targetCtx.globalCompositeOperation = effectiveOperation as GlobalCompositeOperation;
-    
-    // Draw the entire set canvas
-    targetCtx.drawImage(canvas, 0, 0);
-    
-    // Reset to default for next iteration
+  // Separate locked and unlocked sets
+  const lockedSets = sortedSets.filter(({ set }) => set.locks?.composite === true);
+  const unlockedSets = sortedSets.filter(({ set }) => set.locks?.composite !== true);
+  
+  // First, render locked sets with source-over (protected from compositing)
+  lockedSets.forEach(({ canvas }) => {
     targetCtx.globalCompositeOperation = 'source-over';
+    targetCtx.drawImage(canvas, 0, 0);
   });
+  
+  // If there are unlocked sets, composite them to a temporary canvas
+  if (unlockedSets.length > 0) {
+    // Create temporary canvas for unlocked sets compositing
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = targetCtx.canvas.width;
+    tempCanvas.height = targetCtx.canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (tempCtx) {
+      // Composite unlocked sets onto temporary canvas
+      unlockedSets.forEach(({ canvas, set }) => {
+        // Determine effective compositing operation
+        const effectiveOperation = (set.compositingOperation && set.compositingOperation !== 'source-over')
+          ? set.compositingOperation
+          : set.setBlendMode || 'source-over';
+        
+        // Apply set-level compositing operation
+        tempCtx.globalCompositeOperation = effectiveOperation as GlobalCompositeOperation;
+        
+        // Draw the entire set canvas
+        tempCtx.drawImage(canvas, 0, 0);
+        
+        // Reset to default for next iteration
+        tempCtx.globalCompositeOperation = 'source-over';
+      });
+      
+      // Draw the composited unlocked sets onto target with source-over
+      targetCtx.globalCompositeOperation = 'source-over';
+      targetCtx.drawImage(tempCanvas, 0, 0);
+    }
+  }
 }

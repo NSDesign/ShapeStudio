@@ -765,8 +765,156 @@ These features are marked for future development. Priority should be determined 
 
 ---
 
+## 4. Extended Locking System for Generation Sets
+
+### Overview
+A granular control system that allows users to selectively protect individual generation sets from specific operations, preventing unwanted interactions between layers while maintaining flexibility for intentional effects.
+
+### Current Implementation: Composite Lock ✅
+
+**Status:** Implemented (November 2025)
+
+The composite lock feature provides protection from compositing operations for specific generation sets. This is particularly useful for background layers or base elements that should remain unchanged regardless of foreground compositing effects.
+
+#### Functionality
+- **Purpose**: Prevent compositing operations (destination-in, destination-out, etc.) from affecting protected sets
+- **Default State**: All locks disabled (composite = false)
+- **Rendering Strategy**: 
+  - Locked sets render first with `source-over` (normal blending)
+  - Unlocked sets render after, with their configured compositing operations
+  - Compositing operations only affect other unlocked sets
+- **Use Cases**:
+  - Protecting background layers from foreground masking operations
+  - Preserving base shapes while applying destructive compositing to overlays
+  - Maintaining specific layer integrity in complex compositions
+
+#### Implementation Details
+- **Data Model**: `GenerationSet.locks.composite: boolean`
+- **UI**: Lock button on set cards (Lock + "|" + Layers2 icons)
+  - Blue background when locked
+  - Slate background when unlocked
+  - Positioned top-right on set card header
+- **Client Rendering**: `client/src/lib/offscreenRenderer.ts`
+- **Server Rendering**: `server/lib/generationSetProcessor.ts`
+- **Persistence**: Automatically saved/loaded via `useGenerationSetsPersistence`
+
+#### Example Workflow
+```
+Set 1: Background (LOCKED for composite)
+  └─ Rectangle, full artboard, blue fill
+  
+Set 2: Foreground (UNLOCKED)
+  └─ Circle, compositing op: destination-in
+  
+Result: Circle cuts itself out against unlocked content,
+        but Background set remains completely untouched
+```
+
+### Future Lock Types
+
+The composite lock is the foundation of a planned granular locking system. Future implementations may include:
+
+#### 1. Blend Lock 🔒
+**Purpose**: Prevent blend modes from affecting this set
+
+**Functionality**:
+- Locked sets always use `source-over` blend mode
+- Protects from global or probability-based blend mode changes
+- Useful for maintaining pure color appearance
+
+**Icon**: Lock + "|" + Droplet (or Palette)
+
+#### 2. Transform Lock 🔒
+**Purpose**: Prevent moving, scaling, or rotating the set
+
+**Functionality**:
+- Locks position (X/Y), rotation, and scale transforms
+- Set cannot be moved via Set Transform controls
+- Prevents accidental repositioning of fixed layouts
+
+**Icon**: Lock + "|" + Move (or Maximize2)
+
+**Granularity Options**:
+- Lock all transforms (position + rotation + scale)
+- Lock position only
+- Lock rotation only
+- Lock scale only
+
+#### 3. Point Edit Lock 🔒
+**Purpose**: Protect point-level geometry modifications
+
+**Functionality**:
+- Prevents adding, removing, or moving individual control points
+- Protects against point-level editing operations
+- Maintains exact shape geometry
+
+**Icon**: Lock + "|" + Edit3 (or PenTool)
+
+#### 4. Segment Edit Lock 🔒
+**Purpose**: Protect segment-level geometry modifications
+
+**Functionality**:
+- Prevents modifying curve segments between points
+- Locks tangent handles and curve tension
+- Maintains exact path curvature
+
+**Icon**: Lock + "|" + BezierCurve
+
+### Technical Implementation (Future)
+
+#### Data Model Extension
+```typescript
+interface SetLocks {
+  composite: boolean;      // Currently implemented
+  blend?: boolean;         // Future: blend mode protection
+  transform?: boolean;     // Future: transform protection
+  pointEdit?: boolean;     // Future: point-level edit protection
+  segmentEdit?: boolean;   // Future: segment-level edit protection
+}
+```
+
+#### UI Design Patterns
+All lock buttons follow the same visual pattern:
+- **Container**: Rounded rectangle button
+- **Icons**: Lock icon + "|" + operation-specific icon
+- **States**: 
+  - Unlocked: Slate/transparent background, outline style
+  - Locked: Blue/accent background, solid appearance
+- **Position**: Top-right on set card, left-to-right order
+- **Interaction**: Click to toggle, tooltip on hover
+
+#### Rendering Pipeline Considerations
+Each lock type requires different handling:
+- **Composite Lock**: Applied during canvas compositing (implemented)
+- **Blend Lock**: Applied before shape rendering
+- **Transform Lock**: UI-level prevention of transform controls
+- **Edit Locks**: Tool-level prevention of geometry editing
+
+### Priority & Complexity
+
+**Composite Lock**: ✅ **Implemented** - Foundation for system
+
+**Future Locks:**
+- **Blend Lock**: **Low Complexity** - Similar to composite lock, affects blend mode application
+- **Transform Lock**: **Low Complexity** - UI-level control disabling
+- **Edit Locks**: **Medium Complexity** - Requires tool-level integration
+
+**Priority Rationale:**
+- Composite lock solves the most critical use case (background protection)
+- Other locks are valuable but less urgent
+- Can be added incrementally as user demand grows
+- Architecture supports easy extension via `locks` object
+
+### Synergy with Existing Features
+- **Set Visibility**: Locks work alongside visibility controls
+- **Set Blending**: Blend lock would complement existing blend mode system
+- **Set Transform**: Transform lock would protect against accidental changes
+- **Compositing Operations**: Composite lock (implemented) protects from these
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: November 5, 2025
+Last updated: November 23, 2025

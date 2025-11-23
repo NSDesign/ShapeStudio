@@ -23,7 +23,11 @@ export function useGenerationSetsPersistence() {
       ...rawData,
       generationSets: rawData.generationSets.map(set => ({
         ...set,
-        batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig
+        batchConfig: migrateBatchConfigSettings(set.batchConfig) as typeof set.batchConfig,
+        // Migrate locks field: add default locks if missing
+        locks: set.locks ?? {
+          composite: false
+        }
       }))
     } : rawData;
   }, [rawData]);

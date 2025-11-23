@@ -104,7 +104,11 @@ export function useGenerationSets({
       // Repetition settings (defaults to use-global mode with no repetitions)
       repetitionMode: 'use-global',
       repetitionValue: 0,
-      repetitionRange: [0, 0]
+      repetitionRange: [0, 0],
+      // Lock settings (defaults to all locks disabled/off)
+      locks: {
+        composite: false
+      }
     };
   }, [generationSets.length]);
 
@@ -196,6 +200,23 @@ export function useGenerationSets({
     updateSets(newSets);
   }, [generationSets, updateSets]);
 
+  // Toggle lock state for a generation set
+  const toggleSetLock = useCallback((setId: string, lockType: keyof typeof generationSets[0]['locks']) => {
+    const setIndex = generationSets.findIndex(set => set.id === setId);
+    if (setIndex === -1) return;
+
+    const newSets = [...generationSets];
+    const currentLockState = newSets[setIndex].locks[lockType];
+    newSets[setIndex] = {
+      ...newSets[setIndex],
+      locks: {
+        ...newSets[setIndex].locks,
+        [lockType]: !currentLockState
+      }
+    };
+    updateSets(newSets);
+  }, [generationSets, updateSets]);
+
   // Reorder generation sets
   const reorderSets = useCallback((fromIndex: number, toIndex: number) => {
     const newSets = [...generationSets];
@@ -237,6 +258,7 @@ export function useGenerationSets({
     extractUIStateFromSet,
     deleteSet,
     renameSet,
+    toggleSetLock,
     reorderSets,
     
     // Utilities

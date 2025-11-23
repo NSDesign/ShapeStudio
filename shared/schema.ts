@@ -279,6 +279,11 @@ export interface SetVisibility {
   opacityVariance: number;     // Random variance in opacity (0-1)
 }
 
+// Set locks configuration - granular control over which operations can affect this set
+export interface SetLocks {
+  composite: boolean;          // Prevents compositing operations from affecting this set (protects backgrounds)
+}
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -1597,6 +1602,9 @@ export interface GenerationSet {
   repetitionMode: 'use-global' | 'fixed' | 'range';  // Use global, fixed count, or range mode
   repetitionValue: number;              // Count when mode is 'fixed'
   repetitionRange: [number, number];    // Min/max when mode is 'range'
+  
+  // Set locks - granular control over operations
+  locks: SetLocks;                      // Lock states for this set (composite, blend, transform, etc.)
 }
 
 // Enhanced batch configuration supporting both single and multi-generation modes
@@ -1722,6 +1730,10 @@ export const SetVisibilitySchema = z.object({
   visible: z.boolean(),
   opacity: z.number().min(0).max(1),
   opacityVariance: z.number().min(0).max(1)
+});
+
+export const SetLocksSchema = z.object({
+  composite: z.boolean()
 });
 
 export const SupportedShapeTypeSchema = z.enum([
@@ -2325,7 +2337,13 @@ export const GenerationSetSchema = z.object({
   artboardAlignment: ArtboardAlignmentSchema,
   // Metadata
   generationOrder: z.number().min(0),
-  description: z.string().optional()
+  description: z.string().optional(),
+  // Repetition settings
+  repetitionMode: z.enum(['use-global', 'fixed', 'range']),
+  repetitionValue: z.number().min(0),
+  repetitionRange: z.tuple([z.number().min(0), z.number().min(0)]),
+  // Lock settings
+  locks: SetLocksSchema
 });
 
 export const EnhancedBatchConfigSchema = z.object({
@@ -2412,7 +2430,11 @@ export const GenerationSetUtils = {
     // Repetition settings (defaults to use-global mode with no repetitions)
     repetitionMode: 'use-global',
     repetitionValue: 0,
-    repetitionRange: [0, 0]
+    repetitionRange: [0, 0],
+    // Lock settings (defaults to all locks disabled/off)
+    locks: {
+      composite: false
+    }
   }),
 
   // Validate shape count settings

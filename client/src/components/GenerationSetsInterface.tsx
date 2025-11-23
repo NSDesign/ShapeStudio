@@ -20,7 +20,9 @@ import {
   GripVertical,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Lock,
+  Layers2
 } from 'lucide-react';
 import { 
   GenerationSet, 
@@ -305,6 +307,21 @@ export function GenerationSetsInterface({
     });
   }, [generationSets, handleUpdateSet]);
 
+  // Toggle composite lock state
+  const handleToggleCompositeLock = useCallback((setId: string) => {
+    const currentSet = generationSets.find(set => set.id === setId);
+    if (!currentSet) return;
+    
+    // Safely toggle composite lock, ensuring locks object exists
+    const currentLocks = currentSet.locks || { composite: false };
+    handleUpdateSet(setId, {
+      locks: {
+        ...currentLocks,
+        composite: !currentLocks.composite
+      }
+    });
+  }, [generationSets, handleUpdateSet]);
+
   // Move set up/down in order
   const handleMoveSet = useCallback((setId: string, direction: 'up' | 'down') => {
     const currentIndex = generationSets.findIndex(set => set.id === setId);
@@ -564,6 +581,40 @@ export function GenerationSetsInterface({
                       </Button>
                       <span className="text-xs text-slate-500" data-testid={`text-set-order-${set.id}`}>#{index + 1}</span>
                       {renderSetValidationIndicator(set.id)}
+                      
+                      {/* Composite Lock Button */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`h-6 px-2 ml-auto rounded transition-colors ${
+                                set.locks?.composite 
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleCompositeLock(set.id);
+                              }}
+                              data-testid={`button-toggle-composite-lock-${set.id}`}
+                              aria-label={set.locks?.composite ? 'Unlock composite operations' : 'Lock composite operations'}
+                            >
+                              <Lock className="w-3 h-3" data-testid={`icon-lock-${set.id}`} />
+                              <span className="mx-1">|</span>
+                              <Layers2 className="w-3 h-3" data-testid={`icon-layers-${set.id}`} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p className="text-xs">
+                              {set.locks?.composite 
+                                ? 'Composite lock enabled - this set is protected from compositing operations' 
+                                : 'Composite lock disabled - this set can be affected by compositing operations'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <h5 className="font-medium text-slate-200 mb-1 truncate" data-testid={`text-set-name-${set.id}`}>
