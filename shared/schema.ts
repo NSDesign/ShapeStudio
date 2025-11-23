@@ -269,7 +269,7 @@ export interface ArtboardAlignment {
                  'center-left' | 'center-right' | 'bottom-left' | 
                  'bottom-center' | 'bottom-right';
   targetSetId?: string;         // ID of set to align to (when alignTo = 'set')
-  margin: number;              // Margin from alignment target in pixels
+  margin: number | { top: number; bottom: number; left: number; right: number }; // Margin from alignment target in pixels (uniform or individual)
 }
 
 // Set visibility and opacity configuration
