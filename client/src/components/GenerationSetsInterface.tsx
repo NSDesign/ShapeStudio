@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Info,
   Lock,
+  Unlock,
   Layers2
 } from 'lucide-react';
 import { 
@@ -582,18 +583,14 @@ export function GenerationSetsInterface({
                       <span className="text-xs text-slate-500" data-testid={`text-set-order-${set.id}`}>#{index + 1}</span>
                       {renderSetValidationIndicator(set.id)}
                       
-                      {/* Composite Lock Button */}
+                      {/* Composite Lock Toggle */}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`h-6 px-2 ml-auto rounded transition-colors ${
-                                set.locks?.composite 
-                                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                              }`}
+                              className="h-6 w-6 p-0 ml-auto"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleToggleCompositeLock(set.id);
@@ -601,9 +598,11 @@ export function GenerationSetsInterface({
                               data-testid={`button-toggle-composite-lock-${set.id}`}
                               aria-label={set.locks?.composite ? 'Unlock composite operations' : 'Lock composite operations'}
                             >
-                              <Lock className="w-3 h-3" data-testid={`icon-lock-${set.id}`} />
-                              <span className="mx-1">|</span>
-                              <Layers2 className="w-3 h-3" data-testid={`icon-layers-${set.id}`} />
+                              {set.locks?.composite ? (
+                                <Lock className="w-3 h-3 text-blue-400" data-testid={`icon-composite-locked-${set.id}`} />
+                              ) : (
+                                <Unlock className="w-3 h-3 text-slate-500" data-testid={`icon-composite-unlocked-${set.id}`} />
+                              )}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top">
