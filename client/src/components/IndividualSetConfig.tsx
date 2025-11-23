@@ -1044,12 +1044,36 @@ export function IndividualSetConfig({
                             />
                         </div>
 
+                        {/* Fit Mode (only shown when Fit to Artboard is enabled) */}
                         {generationSet.artboardAlignment.fitToArtboard && (
-                            <div className="bg-blue-900/20 border border-blue-700 p-3 rounded-lg">
-                                <p className="text-xs text-blue-300">
-                                    Scales and centers shapes to fit within artboard bounds with margin
-                                </p>
-                            </div>
+                            <>
+                                <div>
+                                    <Label className="text-white text-xs">Fit Mode</Label>
+                                    <Select
+                                        value={generationSet.artboardAlignment.fitMode || 'contain'}
+                                        onValueChange={(value: 'contain' | 'fill') => 
+                                            onUpdate({
+                                                artboardAlignment: {
+                                                    ...generationSet.artboardAlignment,
+                                                    fitMode: value
+                                                }
+                                            })
+                                        }
+                                        data-testid="select-fit-mode"
+                                    >
+                                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="contain" className="text-white hover:bg-slate-600">Contain (maintain aspect ratio)</SelectItem>
+                                            <SelectItem value="fill" className="text-white hover:bg-slate-600">Fill (stretch to fit both axes)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Contain maintains aspect ratio, Fill stretches to fill entire artboard
+                                    </p>
+                                </div>
+                            </>
                         )}
 
                         {/* Align To */}
@@ -1142,31 +1166,158 @@ export function IndividualSetConfig({
                             </div>
                         )}
 
-                        {/* Margin */}
-                        {generationSet.artboardAlignment.alignTo !== 'none' && (
-                            <div>
-                                <Label className="text-white text-xs">
-                                    Margin: {generationSet.artboardAlignment.margin}px
-                                </Label>
-                                <Slider
-                                    value={[generationSet.artboardAlignment.margin]}
-                                    onValueChange={([value]) => 
-                                        onUpdate({
-                                            artboardAlignment: {
-                                                ...generationSet.artboardAlignment,
-                                                margin: value
+                        {/* Margin Controls */}
+                        {(generationSet.artboardAlignment.fitToArtboard || generationSet.artboardAlignment.alignTo !== 'none') && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-white text-xs">Margin Mode</Label>
+                                    <Select
+                                        value={typeof generationSet.artboardAlignment.margin === 'number' ? 'uniform' : 'individual'}
+                                        onValueChange={(mode) => {
+                                            const currentMargin = generationSet.artboardAlignment.margin;
+                                            const uniformValue = typeof currentMargin === 'number' ? currentMargin : 0;
+                                            
+                                            onUpdate({
+                                                artboardAlignment: {
+                                                    ...generationSet.artboardAlignment,
+                                                    margin: mode === 'uniform' ? uniformValue : {
+                                                        top: uniformValue,
+                                                        bottom: uniformValue,
+                                                        left: uniformValue,
+                                                        right: uniformValue
+                                                    }
+                                                }
+                                            });
+                                        }}
+                                        data-testid="select-margin-mode"
+                                    >
+                                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white w-[140px] h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="uniform" className="text-white hover:bg-slate-600">Uniform</SelectItem>
+                                            <SelectItem value="individual" className="text-white hover:bg-slate-600">Individual</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                {typeof generationSet.artboardAlignment.margin === 'number' ? (
+                                    <div>
+                                        <Label className="text-white text-xs">
+                                            All Sides: {generationSet.artboardAlignment.margin}px
+                                        </Label>
+                                        <Slider
+                                            value={[generationSet.artboardAlignment.margin]}
+                                            onValueChange={([value]) => 
+                                                onUpdate({
+                                                    artboardAlignment: {
+                                                        ...generationSet.artboardAlignment,
+                                                        margin: value
+                                                    }
+                                                })
                                             }
-                                        })
-                                    }
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    className="mt-2"
-                                    data-testid="slider-alignment-margin"
-                                    aria-label="Alignment margin"
-                                />
-                                <p className="text-xs text-slate-500 mt-1">
-                                    Distance from alignment target in pixels
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            className="mt-2"
+                                            data-testid="slider-margin-uniform"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <Label className="text-white text-xs">Top: {generationSet.artboardAlignment.margin.top}px</Label>
+                                            <Slider
+                                                value={[generationSet.artboardAlignment.margin.top]}
+                                                onValueChange={([value]) => 
+                                                    onUpdate({
+                                                        artboardAlignment: {
+                                                            ...generationSet.artboardAlignment,
+                                                            margin: {
+                                                                ...(generationSet.artboardAlignment.margin as any),
+                                                                top: value
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                                min={0}
+                                                max={100}
+                                                step={1}
+                                                className="mt-1"
+                                                data-testid="slider-margin-top"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-white text-xs">Bottom: {generationSet.artboardAlignment.margin.bottom}px</Label>
+                                            <Slider
+                                                value={[generationSet.artboardAlignment.margin.bottom]}
+                                                onValueChange={([value]) => 
+                                                    onUpdate({
+                                                        artboardAlignment: {
+                                                            ...generationSet.artboardAlignment,
+                                                            margin: {
+                                                                ...(generationSet.artboardAlignment.margin as any),
+                                                                bottom: value
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                                min={0}
+                                                max={100}
+                                                step={1}
+                                                className="mt-1"
+                                                data-testid="slider-margin-bottom"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-white text-xs">Left: {generationSet.artboardAlignment.margin.left}px</Label>
+                                            <Slider
+                                                value={[generationSet.artboardAlignment.margin.left]}
+                                                onValueChange={([value]) => 
+                                                    onUpdate({
+                                                        artboardAlignment: {
+                                                            ...generationSet.artboardAlignment,
+                                                            margin: {
+                                                                ...(generationSet.artboardAlignment.margin as any),
+                                                                left: value
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                                min={0}
+                                                max={100}
+                                                step={1}
+                                                className="mt-1"
+                                                data-testid="slider-margin-left"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-white text-xs">Right: {generationSet.artboardAlignment.margin.right}px</Label>
+                                            <Slider
+                                                value={[generationSet.artboardAlignment.margin.right]}
+                                                onValueChange={([value]) => 
+                                                    onUpdate({
+                                                        artboardAlignment: {
+                                                            ...generationSet.artboardAlignment,
+                                                            margin: {
+                                                                ...(generationSet.artboardAlignment.margin as any),
+                                                                right: value
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                                min={0}
+                                                max={100}
+                                                step={1}
+                                                className="mt-1"
+                                                data-testid="slider-margin-right"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <p className="text-xs text-slate-500">
+                                    Distance from artboard edges in pixels
                                 </p>
                             </div>
                         )}

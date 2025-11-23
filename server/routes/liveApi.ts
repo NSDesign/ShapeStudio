@@ -566,7 +566,7 @@ function filterSetManagerSettings(set: GenerationSet): any {
     setBlendMode: 'source-over',
     compositingOperation: 'source-over',
     setTransform: { x: 0, y: 0, rotation: 0, scaleX: 1.0, scaleY: 1.0, transformOrigin: 'center' },
-    artboardAlignment: { fitToArtboard: false, alignTo: 'none', alignmentType: 'center', margin: 0 },
+    artboardAlignment: { fitToArtboard: false, fitMode: 'contain', alignTo: 'none', alignmentType: 'center', margin: 0 },
     zIndexConfig: { baseOffset: 0, incrementPerShape: 1, incrementPerGeneration: 1000 },
     generationOrder: 0,
   };

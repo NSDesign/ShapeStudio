@@ -263,7 +263,8 @@ function applyArtboardAlignment(
   if (!alignment || shapes.length === 0) return;
 
   if (alignment.fitToArtboard) {
-    console.log(`📐 [SERVER] Applying fitToArtboard for set "${setName}"`);
+    const fitMode = alignment.fitMode || 'contain';
+    console.log(`📐 [SERVER] Applying fitToArtboard for set "${setName}" (mode: ${fitMode})`);
     
     // Calculate bounding box of all shapes in this set using world bounds
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -286,14 +287,23 @@ function applyArtboardAlignment(
     const setCenterX = (minX + maxX) / 2;
     const setCenterY = (minY + maxY) / 2;
     
-    // Calculate scale to fit within artboard with margin
+    // Normalize margin to individual values
     const margin = alignment.margin || 0;
-    const availableWidth = artboard.width - (margin * 2);
-    const availableHeight = artboard.height - (margin * 2);
+    const marginTop = typeof margin === 'number' ? margin : margin.top;
+    const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+    const marginLeft = typeof margin === 'number' ? margin : margin.left;
+    const marginRight = typeof margin === 'number' ? margin : margin.right;
+    
+    // Calculate scale to fit within artboard with margin
+    const availableWidth = artboard.width - marginLeft - marginRight;
+    const availableHeight = artboard.height - marginTop - marginBottom;
     
     const scaleX = availableWidth / setBoundsWidth;
     const scaleY = availableHeight / setBoundsHeight;
-    const fitScale = Math.min(scaleX, scaleY);
+    
+    // fitMode: 'contain' maintains aspect ratio, 'fill' stretches to fill both axes
+    const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
+    const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
     
     // Apply scale and center to artboard
     shapes.forEach(shape => {
@@ -301,13 +311,13 @@ function applyArtboardAlignment(
       const relX = shape.transform.x - setCenterX;
       const relY = shape.transform.y - setCenterY;
       
-      shape.transform.x = artboard.x + artboard.width / 2 + (relX * fitScale);
-      shape.transform.y = artboard.y + artboard.height / 2 + (relY * fitScale);
-      shape.transform.scaleX *= fitScale;
-      shape.transform.scaleY *= fitScale;
+      shape.transform.x = artboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
+      shape.transform.y = artboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
+      shape.transform.scaleX *= finalScaleX;
+      shape.transform.scaleY *= finalScaleY;
     });
     
-    console.log(`✅ [SERVER] Fitted set to artboard with scale=${fitScale.toFixed(2)}`);
+    console.log(`✅ [SERVER] Fitted set to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
   } else if (alignment.alignTo !== 'none') {
     console.log(`🎯 [SERVER] Applying alignment for set "${setName}": ${alignment.alignmentType}`);
     
@@ -328,7 +338,13 @@ function applyArtboardAlignment(
     
     const setCenterX = (minX + maxX) / 2;
     const setCenterY = (minY + maxY) / 2;
+    
+    // Normalize margin to individual values
     const margin = alignment.margin || 0;
+    const marginTop = typeof margin === 'number' ? margin : margin.top;
+    const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+    const marginLeft = typeof margin === 'number' ? margin : margin.left;
+    const marginRight = typeof margin === 'number' ? margin : margin.right;
     
     // Calculate target position based on alignment type
     let targetX = artboard.x + artboard.width / 2;
@@ -336,19 +352,19 @@ function applyArtboardAlignment(
     
     switch (alignment.alignmentType) {
       case 'top-left':
-        targetX = artboard.x + margin;
-        targetY = artboard.y + margin;
+        targetX = artboard.x + marginLeft;
+        targetY = artboard.y + marginTop;
         break;
       case 'top-center':
         targetX = artboard.x + artboard.width / 2;
-        targetY = artboard.y + margin;
+        targetY = artboard.y + marginTop;
         break;
       case 'top-right':
-        targetX = artboard.x + artboard.width - margin;
-        targetY = artboard.y + margin;
+        targetX = artboard.x + artboard.width - marginRight;
+        targetY = artboard.y + marginTop;
         break;
       case 'center-left':
-        targetX = artboard.x + margin;
+        targetX = artboard.x + marginLeft;
         targetY = artboard.y + artboard.height / 2;
         break;
       case 'center':
@@ -356,20 +372,20 @@ function applyArtboardAlignment(
         targetY = artboard.y + artboard.height / 2;
         break;
       case 'center-right':
-        targetX = artboard.x + artboard.width - margin;
+        targetX = artboard.x + artboard.width - marginRight;
         targetY = artboard.y + artboard.height / 2;
         break;
       case 'bottom-left':
-        targetX = artboard.x + margin;
-        targetY = artboard.y + artboard.height - margin;
+        targetX = artboard.x + marginLeft;
+        targetY = artboard.y + artboard.height - marginBottom;
         break;
       case 'bottom-center':
         targetX = artboard.x + artboard.width / 2;
-        targetY = artboard.y + artboard.height - margin;
+        targetY = artboard.y + artboard.height - marginBottom;
         break;
       case 'bottom-right':
-        targetX = artboard.x + artboard.width - margin;
-        targetY = artboard.y + artboard.height - margin;
+        targetX = artboard.x + artboard.width - marginRight;
+        targetY = artboard.y + artboard.height - marginBottom;
         break;
     }
     

@@ -27,12 +27,13 @@ export interface GenerationContextOverrides {
   };
   artboardAlignment?: {
     fitToArtboard: boolean;
+    fitMode: 'contain' | 'fill';
     alignTo: 'artboard' | 'set' | 'none';
     alignmentType: 'center' | 'top-left' | 'top-center' | 'top-right' | 
                    'center-left' | 'center-right' | 'bottom-left' | 
                    'bottom-center' | 'bottom-right';
     targetSetId?: string;
-    margin: number;
+    margin: number | { top: number; bottom: number; left: number; right: number };
   };
 }
 
@@ -732,6 +733,7 @@ export const useShapeEditor = () => {
       },
       artboardAlignment: {
         fitToArtboard: false,
+        fitMode: 'contain',
         alignTo: 'none',
         alignmentType: 'center',
         margin: 0
@@ -739,7 +741,11 @@ export const useShapeEditor = () => {
       // Repetition settings (per-set defaults to use global)
       repetitionMode: 'use-global',
       repetitionValue: 0,
-      repetitionRange: [0, 0]
+      repetitionRange: [0, 0],
+      // Lock settings (defaults to all locks disabled/off)
+      locks: {
+        composite: false
+      }
     };
     
     // STEP 5: Add to generation sets
@@ -2810,7 +2816,8 @@ export const useShapeEditor = () => {
       const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
       
       if (overrides.artboardAlignment.fitToArtboard && currentArtboard && finalShapes.length > 0) {
-        console.log(`📐 Applying fitToArtboard from overrides`);
+        const fitMode = overrides.artboardAlignment.fitMode || 'contain';
+        console.log(`📐 Applying fitToArtboard from overrides (mode: ${fitMode})`);
         
         // Calculate bounding box of all shapes using world bounds
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -2829,27 +2836,36 @@ export const useShapeEditor = () => {
         const setCenterX = (minX + maxX) / 2;
         const setCenterY = (minY + maxY) / 2;
         
-        // Calculate scale to fit within artboard with margin
+        // Normalize margin to individual values
         const margin = overrides.artboardAlignment.margin || 0;
-        const availableWidth = currentArtboard.width - (margin * 2);
-        const availableHeight = currentArtboard.height - (margin * 2);
+        const marginTop = typeof margin === 'number' ? margin : margin.top;
+        const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+        const marginLeft = typeof margin === 'number' ? margin : margin.left;
+        const marginRight = typeof margin === 'number' ? margin : margin.right;
+        
+        // Calculate scale to fit within artboard with margin
+        const availableWidth = currentArtboard.width - marginLeft - marginRight;
+        const availableHeight = currentArtboard.height - marginTop - marginBottom;
         
         const scaleX = availableWidth / setBoundsWidth;
         const scaleY = availableHeight / setBoundsHeight;
-        const fitScale = Math.min(scaleX, scaleY);
+        
+        // fitMode: 'contain' maintains aspect ratio, 'fill' stretches to fill both axes
+        const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
+        const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
         
         // Apply scale and center to artboard
         finalShapes.forEach(shape => {
           const relX = shape.transform.x - setCenterX;
           const relY = shape.transform.y - setCenterY;
           
-          shape.transform.x = currentArtboard.x + currentArtboard.width / 2 + (relX * fitScale);
-          shape.transform.y = currentArtboard.y + currentArtboard.height / 2 + (relY * fitScale);
-          shape.transform.scaleX *= fitScale;
-          shape.transform.scaleY *= fitScale;
+          shape.transform.x = currentArtboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
+          shape.transform.y = currentArtboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
+          shape.transform.scaleX *= finalScaleX;
+          shape.transform.scaleY *= finalScaleY;
         });
         
-        console.log(`✅ Fitted shapes to artboard with scale=${fitScale.toFixed(2)}`);
+        console.log(`✅ Fitted shapes to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
       } else if (overrides.artboardAlignment.alignTo !== 'none' && currentArtboard && finalShapes.length > 0) {
         console.log(`🎯 Applying alignment from overrides: ${overrides.artboardAlignment.alignmentType}`);
         
@@ -2870,7 +2886,13 @@ export const useShapeEditor = () => {
         
         const setCenterX = (minX + maxX) / 2;
         const setCenterY = (minY + maxY) / 2;
+        
+        // Normalize margin to individual values
         const margin = overrides.artboardAlignment.margin || 0;
+        const marginTop = typeof margin === 'number' ? margin : margin.top;
+        const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+        const marginLeft = typeof margin === 'number' ? margin : margin.left;
+        const marginRight = typeof margin === 'number' ? margin : margin.right;
         
         // Calculate target position based on alignment type
         let targetX = currentArtboard.x + currentArtboard.width / 2;
@@ -2878,19 +2900,19 @@ export const useShapeEditor = () => {
         
         switch (overrides.artboardAlignment.alignmentType) {
           case 'top-left':
-            targetX = currentArtboard.x + margin;
-            targetY = currentArtboard.y + margin;
+            targetX = currentArtboard.x + marginLeft;
+            targetY = currentArtboard.y + marginTop;
             break;
           case 'top-center':
             targetX = currentArtboard.x + currentArtboard.width / 2;
-            targetY = currentArtboard.y + margin;
+            targetY = currentArtboard.y + marginTop;
             break;
           case 'top-right':
-            targetX = currentArtboard.x + currentArtboard.width - margin;
-            targetY = currentArtboard.y + margin;
+            targetX = currentArtboard.x + currentArtboard.width - marginRight;
+            targetY = currentArtboard.y + marginTop;
             break;
           case 'center-left':
-            targetX = currentArtboard.x + margin;
+            targetX = currentArtboard.x + marginLeft;
             targetY = currentArtboard.y + currentArtboard.height / 2;
             break;
           case 'center':
@@ -2898,20 +2920,20 @@ export const useShapeEditor = () => {
             targetY = currentArtboard.y + currentArtboard.height / 2;
             break;
           case 'center-right':
-            targetX = currentArtboard.x + currentArtboard.width - margin;
+            targetX = currentArtboard.x + currentArtboard.width - marginRight;
             targetY = currentArtboard.y + currentArtboard.height / 2;
             break;
           case 'bottom-left':
-            targetX = currentArtboard.x + margin;
-            targetY = currentArtboard.y + currentArtboard.height - margin;
+            targetX = currentArtboard.x + marginLeft;
+            targetY = currentArtboard.y + currentArtboard.height - marginBottom;
             break;
           case 'bottom-center':
             targetX = currentArtboard.x + currentArtboard.width / 2;
-            targetY = currentArtboard.y + currentArtboard.height - margin;
+            targetY = currentArtboard.y + currentArtboard.height - marginBottom;
             break;
           case 'bottom-right':
-            targetX = currentArtboard.x + currentArtboard.width - margin;
-            targetY = currentArtboard.y + currentArtboard.height - margin;
+            targetX = currentArtboard.x + currentArtboard.width - marginRight;
+            targetY = currentArtboard.y + currentArtboard.height - marginBottom;
             break;
         }
         
@@ -3087,7 +3109,8 @@ export const useShapeEditor = () => {
 
           // Apply artboard alignment if configured
           if (set.artboardAlignment && set.artboardAlignment.fitToArtboard && currentArtboard) {
-            console.log(`📐 Applying fitToArtboard for set "${set.name}"`);
+            const fitMode = set.artboardAlignment.fitMode || 'contain';
+            console.log(`📐 Applying fitToArtboard for set "${set.name}" (mode: ${fitMode})`);
             
             // Calculate bounding box of all shapes in this set using world bounds
             if (setShapes.length > 0) {
@@ -3107,14 +3130,23 @@ export const useShapeEditor = () => {
               const setCenterX = (minX + maxX) / 2;
               const setCenterY = (minY + maxY) / 2;
               
-              // Calculate scale to fit within artboard with margin
+              // Normalize margin to individual values
               const margin = set.artboardAlignment.margin || 0;
-              const availableWidth = currentArtboard.width - (margin * 2);
-              const availableHeight = currentArtboard.height - (margin * 2);
+              const marginTop = typeof margin === 'number' ? margin : margin.top;
+              const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+              const marginLeft = typeof margin === 'number' ? margin : margin.left;
+              const marginRight = typeof margin === 'number' ? margin : margin.right;
+              
+              // Calculate scale to fit within artboard with margin
+              const availableWidth = currentArtboard.width - marginLeft - marginRight;
+              const availableHeight = currentArtboard.height - marginTop - marginBottom;
               
               const scaleX = availableWidth / setBoundsWidth;
               const scaleY = availableHeight / setBoundsHeight;
-              const fitScale = Math.min(scaleX, scaleY);
+              
+              // fitMode: 'contain' maintains aspect ratio, 'fill' stretches to fill both axes
+              const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
+              const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
               
               // Apply scale and center to artboard
               setShapes.forEach(shape => {
@@ -3122,13 +3154,13 @@ export const useShapeEditor = () => {
                 const relX = shape.transform.x - setCenterX;
                 const relY = shape.transform.y - setCenterY;
                 
-                shape.transform.x = currentArtboard.x + currentArtboard.width / 2 + (relX * fitScale);
-                shape.transform.y = currentArtboard.y + currentArtboard.height / 2 + (relY * fitScale);
-                shape.transform.scaleX *= fitScale;
-                shape.transform.scaleY *= fitScale;
+                shape.transform.x = currentArtboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
+                shape.transform.y = currentArtboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
+                shape.transform.scaleX *= finalScaleX;
+                shape.transform.scaleY *= finalScaleY;
               });
               
-              console.log(`✅ Fitted set to artboard with scale=${fitScale.toFixed(2)}`);
+              console.log(`✅ Fitted set to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
             }
           } else if (set.artboardAlignment && set.artboardAlignment.alignTo !== 'none' && currentArtboard) {
             console.log(`🎯 Applying alignment for set "${set.name}": ${set.artboardAlignment.alignmentType}`);
@@ -3151,7 +3183,13 @@ export const useShapeEditor = () => {
               
               const setCenterX = (minX + maxX) / 2;
               const setCenterY = (minY + maxY) / 2;
+              
+              // Normalize margin to individual values
               const margin = set.artboardAlignment.margin || 0;
+              const marginTop = typeof margin === 'number' ? margin : margin.top;
+              const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
+              const marginLeft = typeof margin === 'number' ? margin : margin.left;
+              const marginRight = typeof margin === 'number' ? margin : margin.right;
               
               // Calculate target position based on alignment type
               let targetX = currentArtboard.x + currentArtboard.width / 2;
@@ -3159,19 +3197,19 @@ export const useShapeEditor = () => {
               
               switch (set.artboardAlignment.alignmentType) {
                 case 'top-left':
-                  targetX = currentArtboard.x + margin;
-                  targetY = currentArtboard.y + margin;
+                  targetX = currentArtboard.x + marginLeft;
+                  targetY = currentArtboard.y + marginTop;
                   break;
                 case 'top-center':
                   targetX = currentArtboard.x + currentArtboard.width / 2;
-                  targetY = currentArtboard.y + margin;
+                  targetY = currentArtboard.y + marginTop;
                   break;
                 case 'top-right':
-                  targetX = currentArtboard.x + currentArtboard.width - margin;
-                  targetY = currentArtboard.y + margin;
+                  targetX = currentArtboard.x + currentArtboard.width - marginRight;
+                  targetY = currentArtboard.y + marginTop;
                   break;
                 case 'center-left':
-                  targetX = currentArtboard.x + margin;
+                  targetX = currentArtboard.x + marginLeft;
                   targetY = currentArtboard.y + currentArtboard.height / 2;
                   break;
                 case 'center':
@@ -3179,20 +3217,20 @@ export const useShapeEditor = () => {
                   targetY = currentArtboard.y + currentArtboard.height / 2;
                   break;
                 case 'center-right':
-                  targetX = currentArtboard.x + currentArtboard.width - margin;
+                  targetX = currentArtboard.x + currentArtboard.width - marginRight;
                   targetY = currentArtboard.y + currentArtboard.height / 2;
                   break;
                 case 'bottom-left':
-                  targetX = currentArtboard.x + margin;
-                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  targetX = currentArtboard.x + marginLeft;
+                  targetY = currentArtboard.y + currentArtboard.height - marginBottom;
                   break;
                 case 'bottom-center':
                   targetX = currentArtboard.x + currentArtboard.width / 2;
-                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  targetY = currentArtboard.y + currentArtboard.height - marginBottom;
                   break;
                 case 'bottom-right':
-                  targetX = currentArtboard.x + currentArtboard.width - margin;
-                  targetY = currentArtboard.y + currentArtboard.height - margin;
+                  targetX = currentArtboard.x + currentArtboard.width - marginRight;
+                  targetY = currentArtboard.y + currentArtboard.height - marginBottom;
                   break;
               }
               

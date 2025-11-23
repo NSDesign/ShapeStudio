@@ -264,6 +264,7 @@ export interface SetTransform {
 // Artboard alignment configuration  
 export interface ArtboardAlignment {
   fitToArtboard: boolean;       // Automatically fit set to artboard bounds
+  fitMode: 'contain' | 'fill';  // contain = maintain aspect ratio, fill = stretch to fill both axes
   alignTo: 'artboard' | 'set' | 'none'; // What to align to
   alignmentType: 'center' | 'top-left' | 'top-center' | 'top-right' | 
                  'center-left' | 'center-right' | 'bottom-left' | 
@@ -2421,6 +2422,7 @@ export const GenerationSetUtils = {
     },
     artboardAlignment: {
       fitToArtboard: false,
+      fitMode: 'contain',
       alignTo: 'none',
       alignmentType: 'center',
       margin: 0

@@ -95,6 +95,7 @@ export function useGenerationSets({
       },
       artboardAlignment: {
         fitToArtboard: false,
+        fitMode: 'contain',
         alignTo: 'none',
         alignmentType: 'center',
         margin: 0
