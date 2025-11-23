@@ -437,12 +437,11 @@ function renderSetToOffscreenCanvas(
  * - Inner level: Shape blend modes (already applied in offscreen canvases)
  * - Outer level: Set compositing operations (applied here)
  * 
- * Composite Lock Support (Read-Only Locking):
- * - Locked sets are protected from modification but remain readable by other operations
- * - All sets render in generation order (locked and unlocked interleaved)
- * - After each unlocked set composites, locked pixels are selectively restored
- * - This allows operations like destination-over, source-atop to read from locked layers
- *   while preventing them from modifying locked pixels
+ * Composite Lock Support (Separate Buffer Approach):
+ * - Locked sets render directly to final canvas (never targets of composite ops)
+ * - Unlocked sets composite on separate buffer (isolated from locked content)
+ * - Unlocked buffer is flushed to final canvas with source-over
+ * - This protects locked pixels while allowing unlocked composite operations
  * 
  * @param targetCtx - Target canvas context to composite onto
  * @param setCanvases - Array of set canvases with their configurations
@@ -478,14 +477,14 @@ function compositeSetCanvases(
     return;
   }
   
-  // Buffers for read-only locking
-  const lockedSnapshot = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
-  const lockedSnapshotCtx = lockedSnapshot.getContext('2d')!;
+  // Separate buffer approach: unlocked sets composite on separate canvas
+  const unlockedBuffer = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
+  const unlockedCtx = unlockedBuffer.getContext('2d')!;
   
-  const lockedMask = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
-  const lockedMaskCtx = lockedMask.getContext('2d')!;
+  // Track if we have any unlocked content to flush
+  let hasUnlockedContent = false;
   
-  // Render all sets in order
+  // Render all sets in generation order
   for (const { canvas, set } of sortedSets) {
     // Skip invisible sets
     if (set.setVisibility && !set.setVisibility.visible) {
@@ -495,58 +494,37 @@ function compositeSetCanvases(
     const isLocked = set.locks?.composite === true;
     
     if (isLocked) {
-      // Locked set: render and update buffers
+      // Flush any accumulated unlocked content before rendering locked set
+      if (hasUnlockedContent) {
+        targetCtx.globalCompositeOperation = 'source-over';
+        targetCtx.drawImage(unlockedBuffer, 0, 0);
+        
+        // Clear unlocked buffer for next batch
+        unlockedCtx.clearRect(0, 0, unlockedBuffer.width, unlockedBuffer.height);
+        hasUnlockedContent = false;
+      }
+      
+      // Render locked set directly to final canvas (protected from compositing)
       targetCtx.globalCompositeOperation = 'source-over';
       targetCtx.drawImage(canvas, 0, 0);
-      
-      // Save current target state as locked snapshot
-      lockedSnapshotCtx.clearRect(0, 0, lockedSnapshot.width, lockedSnapshot.height);
-      lockedSnapshotCtx.drawImage(targetCtx.canvas, 0, 0);
-      
-      // Update locked mask
-      lockedMaskCtx.globalCompositeOperation = 'source-over';
-      lockedMaskCtx.drawImage(canvas, 0, 0);
     } else {
-      // Unlocked set: composite operation with locked pixel protection
+      // Render unlocked set to isolated buffer (composites only with other unlocked sets)
       const effectiveOperation = (set.compositingOperation && set.compositingOperation !== 'source-over')
         ? set.compositingOperation
         : set.setBlendMode || 'source-over';
       
-      // Step 1: Capture "before" state for delta calculation
-      const beforeCanvas = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
-      const beforeCtx = beforeCanvas.getContext('2d')!;
-      beforeCtx.drawImage(targetCtx.canvas, 0, 0);
+      unlockedCtx.globalCompositeOperation = effectiveOperation as GlobalCompositeOperation;
+      unlockedCtx.drawImage(canvas, 0, 0);
+      unlockedCtx.globalCompositeOperation = 'source-over';
       
-      // Step 2: Apply unlocked composite operation (can read from locked pixels)
-      targetCtx.globalCompositeOperation = effectiveOperation as GlobalCompositeOperation;
-      targetCtx.drawImage(canvas, 0, 0);
-      
-      // Step 3: Extract unlocked delta (changes in unlocked regions only)
-      // Create inverted mask (opaque where unlocked, transparent where locked)
-      const invertedMask = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
-      const invertedMaskCtx = invertedMask.getContext('2d')!;
-      
-      invertedMaskCtx.fillStyle = 'white';
-      invertedMaskCtx.fillRect(0, 0, invertedMask.width, invertedMask.height);
-      invertedMaskCtx.globalCompositeOperation = 'destination-out';
-      invertedMaskCtx.drawImage(lockedMask, 0, 0);
-      
-      // Mask current target to keep only unlocked regions
-      targetCtx.globalCompositeOperation = 'destination-in';
-      targetCtx.drawImage(invertedMask, 0, 0);
-      
-      // Step 4: Combine locked baseline + unlocked delta
-      // First add locked pixels back
-      const restoredLocked = createCanvas(targetCtx.canvas.width, targetCtx.canvas.height);
-      const restoredLockedCtx = restoredLocked.getContext('2d')!;
-      
-      restoredLockedCtx.drawImage(lockedSnapshot, 0, 0);
-      restoredLockedCtx.globalCompositeOperation = 'destination-in';
-      restoredLockedCtx.drawImage(lockedMask, 0, 0);
-      
-      targetCtx.globalCompositeOperation = 'destination-over';
-      targetCtx.drawImage(restoredLocked, 0, 0);
+      hasUnlockedContent = true;
     }
+  }
+  
+  // Flush any remaining unlocked content
+  if (hasUnlockedContent) {
+    targetCtx.globalCompositeOperation = 'source-over';
+    targetCtx.drawImage(unlockedBuffer, 0, 0);
   }
   
   // Reset to default
