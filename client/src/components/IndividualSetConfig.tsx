@@ -65,6 +65,7 @@ interface IndividualSetConfigProps {
   globalZIndexEnabled?: boolean;
   showInlineValidation?: boolean;
   validationResult?: ValidationResult;
+  allGenerationSets?: GenerationSet[];
 }
 
 // Available shape types grouped by category
@@ -143,11 +144,23 @@ export function IndividualSetConfig({
   onUpdate, 
   globalZIndexEnabled = false,
   showInlineValidation = true,
-  validationResult
+  validationResult,
+  allGenerationSets = []
 }: IndividualSetConfigProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationError | null>>({});
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, ValidationWarning | null>>({});
   
+  // Real-time validation for duplicate set names
+  const isDuplicateName = useMemo(() => {
+    const name = generationSet.name.trim();
+    if (!name) return false;
+    
+    // Check if any other set (excluding current set) has the same name
+    return allGenerationSets.some(
+      set => set.id !== generationSet.id && 
+      set.name.trim().toLowerCase() === name.toLowerCase()
+    );
+  }, [generationSet.name, generationSet.id, allGenerationSets]);
 
   // Real-time validation
   const currentValidation = useMemo(() => {
@@ -411,12 +424,17 @@ export function IndividualSetConfig({
                       onChange={(e) => handleNameChange(e.target.value)}
                       placeholder="Enter set name"
                       className={`bg-slate-800 border-slate-600 text-white ${
-                        getFieldValidation('name').hasError ? 'border-red-500' : ''
+                        getFieldValidation('name').hasError || isDuplicateName ? 'border-red-500' : ''
                       }`}
                       data-testid="input-set-name"
-                      aria-invalid={getFieldValidation('name').hasError}
-                      aria-describedby={getFieldValidation('name').hasError ? 'set-name-error' : undefined}
+                      aria-invalid={getFieldValidation('name').hasError || isDuplicateName}
+                      aria-describedby={getFieldValidation('name').hasError || isDuplicateName ? 'set-name-error' : undefined}
                     />
+                    {isDuplicateName && (
+                      <p className="text-xs text-red-400 mt-1" data-testid="error-duplicate-name">
+                        A set with this name already exists
+                      </p>
+                    )}
                     <div id="set-name-error" role="alert">
                       {renderFieldValidation('name')}
                     </div>
