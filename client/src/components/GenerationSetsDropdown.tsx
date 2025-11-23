@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -63,6 +63,13 @@ export function GenerationSetsDropdown({
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [newSetName, setNewSetName] = useState('');
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
+
+  // Real-time validation for duplicate set names (checks ALL sets, not just filtered ones)
+  const isDuplicateSetName = useMemo(() => {
+    const name = newSetName.trim();
+    if (!name) return false;
+    return generationSets.some(set => set.name.toLowerCase() === name.toLowerCase());
+  }, [newSetName, generationSets]);
 
   // Filter generation sets based on toggle, but always include the currently selected set
   const filteredGenerationSets = showOnlyEnabled 
@@ -223,19 +230,24 @@ export function GenerationSetsDropdown({
                 value={newSetName}
                 onChange={(e) => setNewSetName(e.target.value)}
                 placeholder="Enter set name..."
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 bg-slate-900 border rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                  isDuplicateSetName ? 'border-red-500 focus:ring-red-500' : 'border-slate-600 focus:ring-blue-500'
+                }`}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateSet();
+                  if (e.key === 'Enter' && newSetName.trim() && !isDuplicateSetName) handleCreateSet();
                   if (e.key === 'Escape') setIsCreatingSet(false);
                 }}
                 data-testid={`${testId}-create-input`}
               />
+              {isDuplicateSetName && (
+                <p className="text-xs text-red-400 mt-1">A set with this name already exists</p>
+              )}
               <div className="flex gap-2 mt-3">
                 <Button
                   onClick={handleCreateSet}
-                  disabled={!newSetName.trim()}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!newSetName.trim() || isDuplicateSetName}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid={`${testId}-create-confirm`}
                 >
                   Create
@@ -278,19 +290,24 @@ export function GenerationSetsDropdown({
               value={newSetName}
               onChange={(e) => setNewSetName(e.target.value)}
               placeholder="Enter set name..."
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 bg-slate-900 border rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                isDuplicateSetName ? 'border-red-500 focus:ring-red-500' : 'border-slate-600 focus:ring-blue-500'
+              }`}
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreateSet();
+                if (e.key === 'Enter' && newSetName.trim() && !isDuplicateSetName) handleCreateSet();
                 if (e.key === 'Escape') setIsCreatingSet(false);
               }}
               data-testid={`${testId}-create-input`}
             />
+            {isDuplicateSetName && (
+              <p className="text-xs text-red-400 mt-1">A set with this name already exists</p>
+            )}
             <div className="flex gap-2 mt-3">
               <Button
                 onClick={handleCreateSet}
-                disabled={!newSetName.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={!newSetName.trim() || isDuplicateSetName}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid={`${testId}-create-confirm`}
               >
                 Create
