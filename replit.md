@@ -110,3 +110,31 @@ A toggle feature that forces global repetition settings across all shape sets wh
 - **Difference from Use-Global Mode**: Sets retain their current mode (fixed/range/use-global) but temporarily act as if all are set to use-global
 
 Benefits: Rapid experimentation with different repetition counts across entire composition without modifying individual set configurations, useful for quick iteration and testing.
+
+### Advanced Multi-Filter System for Shape Sets
+A comprehensive filtering system for managing large numbers of shape sets in the Sets Manager dialog:
+- **Dual Filter Approach**: Combines name-based and property-based filtering
+  - **Name Filter**: Dropdown showing all set names for direct selection (single or multi-select)
+  - **Property Filters**: Add multiple filter criteria as removable chips/badges
+- **Filter Categories**:
+  - Hidden Status (Hidden, Not Hidden)
+  - Shape Types (multi-select: rectangle, circle, polygon, etc.)
+  - Lock Status (Locked, Unlocked)
+  - Count Mode (Fixed, Range)
+  - Blending (Enabled, Disabled)
+  - Transforms (Enabled, Disabled)
+  - Distribution Layout (Grid, Spiral, Wave, Ellipse, etc.)
+  - Z-index Ranges
+  - Repetition Settings
+- **Multi-Filter Logic**: Combine multiple filters with AND logic (sets must match ALL active filters)
+- **Filter Management**:
+  - Add filters via dropdown + value selector → appears as removable chip
+  - "Clear All Filters" button when filters are active
+  - Live count display: "5 of 20 sets shown"
+  - Filters persist during session
+- **UX Enhancements**:
+  - Visual feedback for filtered vs total sets
+  - Quick filter presets (e.g., "Show Hidden", "Show Grid Layouts Only")
+  - Filter state preserved when switching between dialog views
+
+Benefits: Efficiently navigate and manage projects with dozens of shape sets, quickly isolate sets by specific criteria, improve workflow for complex compositions.
