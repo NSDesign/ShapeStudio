@@ -124,6 +124,8 @@ export function GenerationSetsInterface({
   const [draggedSetId, setDraggedSetId] = useState<string | null>(null);
   const [dragOverSetId, setDragOverSetId] = useState<string | null>(null);
   const [setValidations, setSetValidations] = useState<Record<string, ValidationResult>>({});
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterValue, setFilterValue] = useState<string>('');
 
   // Comprehensive validation for all sets
   const overallValidation = useMemo(() => {
@@ -155,6 +157,30 @@ export function GenerationSetsInterface({
       setSelectedSetId(generationSets[0].id);
     }
   }, [selectedSetId, generationSets]);
+
+  // Filter generation sets based on filter type and value
+  const filteredSets = useMemo(() => {
+    if (filterType === 'all' || !filterValue) {
+      return generationSets;
+    }
+
+    return generationSets.filter(set => {
+      switch (filterType) {
+        case 'name':
+          return set.id === filterValue;
+        case 'hidden':
+          return filterValue === 'hidden' ? !set.enabled : set.enabled;
+        case 'shape-type':
+          return set.enabledShapeTypes.includes(filterValue as SupportedShapeType);
+        case 'count-mode':
+          return set.shapeCountMode === filterValue;
+        case 'distribution':
+          return set.scatterSettings.distributionType === filterValue;
+        default:
+          return true;
+      }
+    });
+  }, [generationSets, filterType, filterValue]);
 
   // Add new generation set
   const handleAddSet = useCallback(() => {
@@ -564,15 +590,71 @@ export function GenerationSetsInterface({
           </Alert>
         )}
 
+        {/* Filter Controls */}
+        <div className="flex items-center gap-2" data-testid="filter-controls">
+          <Label className="text-sm text-slate-300">Filter:</Label>
+          <Select value={filterType} onValueChange={(value) => { setFilterType(value); setFilterValue(''); }}>
+            <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sets</SelectItem>
+              <SelectItem value="name">Filter by Name</SelectItem>
+              <SelectItem value="hidden">Hidden Status</SelectItem>
+              <SelectItem value="shape-type">Shape Type</SelectItem>
+              <SelectItem value="count-mode">Count Mode</SelectItem>
+              <SelectItem value="distribution">Distribution Layout</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Dynamic value selector based on filter type */}
+          {filterType === 'name' && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
+                <SelectValue placeholder="Select set..." />
+              </SelectTrigger>
+              <SelectContent>
+                {generationSets.map(set => (
+                  <SelectItem key={set.id} value={set.id}>{set.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {filterType === 'hidden' && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
+                <SelectValue placeholder="Select status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hidden">Hidden</SelectItem>
+                <SelectItem value="visible">Not Hidden</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          {filterType === 'count-mode' && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
+                <SelectValue placeholder="Select mode..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">Fixed</SelectItem>
+                <SelectItem value="range">Range</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Generation Sets List */}
         <div className="lg:col-span-2 space-y-2">
           <h4 className="text-sm font-medium text-slate-300 mb-2" data-testid="heading-sets-list">
-            Shape Sets List ({generationSets.length} set{generationSets.length !== 1 ? 's' : ''})
+            Shape Sets List ({filterType !== 'all' && filterValue ? `${filteredSets.length} of ` : ''}{generationSets.length} set{generationSets.length !== 1 ? 's' : ''})
           </h4>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2 pr-2">
-              {generationSets.map((set, index) => (
+              {filteredSets.map((set, index) => (
                 <Card 
                   key={set.id}
                   className={`cursor-pointer transition-all border-slate-700 ${
