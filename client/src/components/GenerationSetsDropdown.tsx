@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,7 +62,19 @@ export function GenerationSetsDropdown({
 }: GenerationSetsDropdownProps) {
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [newSetName, setNewSetName] = useState('');
-  const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
+  
+  // Initialize showOnlyEnabled from localStorage
+  const [showOnlyEnabled, setShowOnlyEnabled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('generationSetsDropdownShowOnlyEnabled') === 'true';
+    }
+    return false;
+  });
+
+  // Persist showOnlyEnabled to localStorage
+  useEffect(() => {
+    localStorage.setItem('generationSetsDropdownShowOnlyEnabled', String(showOnlyEnabled));
+  }, [showOnlyEnabled]);
 
   // Real-time validation for duplicate set names (checks ALL sets, not just filtered ones)
   const isDuplicateSetName = useMemo(() => {
@@ -142,7 +154,7 @@ export function GenerationSetsDropdown({
       <Button
         variant="outline"
         size={buttonSize}
-        onClick={() => setShowOnlyEnabled(!showOnlyEnabled)}
+        onClick={() => setShowOnlyEnabled(prev => !prev)}
         disabled={!enabled}
         className={`px-2 bg-slate-800 border-slate-600 hover:bg-slate-700 ${!enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title={showOnlyEnabled ? "Show all sets" : "Show only enabled sets"}
