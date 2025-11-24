@@ -175,7 +175,7 @@ export function GenerationSetsInterface({
         case 'count-mode':
           return set.shapeCountMode === filterValue;
         case 'distribution':
-          return set.batchConfig.distributionPattern === filterValue;
+          return set.batchConfig.distributionLayoutEnabled && set.batchConfig.distributionPattern === filterValue;
         default:
           return true;
       }
