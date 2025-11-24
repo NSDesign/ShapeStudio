@@ -644,6 +644,62 @@ export function GenerationSetsInterface({
               </SelectContent>
             </Select>
           )}
+
+          {filterType === 'shape-type' && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
+                <SelectValue placeholder="Select shape type..." />
+              </SelectTrigger>
+              <SelectContent className="z-[10001]">
+                <SelectItem value="rectangle">Rectangle</SelectItem>
+                <SelectItem value="rounded-rectangle">Rounded Rectangle</SelectItem>
+                <SelectItem value="square">Square</SelectItem>
+                <SelectItem value="rounded-square">Rounded Square</SelectItem>
+                <SelectItem value="circle">Circle</SelectItem>
+                <SelectItem value="ellipse">Ellipse</SelectItem>
+                <SelectItem value="triangle">Triangle</SelectItem>
+                <SelectItem value="right-triangle">Right Triangle</SelectItem>
+                <SelectItem value="trapezoid">Trapezoid</SelectItem>
+                <SelectItem value="pentagon">Pentagon</SelectItem>
+                <SelectItem value="hexagon">Hexagon</SelectItem>
+                <SelectItem value="rhombus">Rhombus</SelectItem>
+                <SelectItem value="parallelogram">Parallelogram</SelectItem>
+                <SelectItem value="kite">Kite</SelectItem>
+                <SelectItem value="semicircle">Semicircle</SelectItem>
+                <SelectItem value="heart">Heart</SelectItem>
+                <SelectItem value="arrow">Arrow</SelectItem>
+                <SelectItem value="cross">Cross</SelectItem>
+                <SelectItem value="line-vector">Line Vector</SelectItem>
+                <SelectItem value="line">Line</SelectItem>
+                <SelectItem value="polygon">Polygon</SelectItem>
+                <SelectItem value="star">Star</SelectItem>
+                <SelectItem value="chunk">Chunk</SelectItem>
+                <SelectItem value="blob">Blob</SelectItem>
+                <SelectItem value="ring">Ring</SelectItem>
+                <SelectItem value="cubic">Cubic</SelectItem>
+                <SelectItem value="bezier">Bezier</SelectItem>
+                <SelectItem value="smooth-spline">Smooth Spline</SelectItem>
+                <SelectItem value="spline-circle">Spline Circle</SelectItem>
+                <SelectItem value="spline-ellipse">Spline Ellipse</SelectItem>
+                <SelectItem value="spline-ring">Spline Ring</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          {filterType === 'distribution' && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
+                <SelectValue placeholder="Select layout..." />
+              </SelectTrigger>
+              <SelectContent className="z-[10001]">
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="wave">Wave</SelectItem>
+                <SelectItem value="ellipse">Ellipse</SelectItem>
+                <SelectItem value="spiral">Spiral</SelectItem>
+                <SelectItem value="auto-distribute">Auto Distribute</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
