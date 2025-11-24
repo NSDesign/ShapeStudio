@@ -297,7 +297,7 @@ export class GenerationSetValidator {
       if (nameMap.has(name)) {
         errors.push({
           field: `sets.${index}.name`,
-          message: `Duplicate set name "${set.name}" (conflicts with set ${nameMap.get(name)! + 1})`,
+          message: `Duplicate set name "${set.name}" (conflicts with set item #${nameMap.get(name)! + 1})`,
           code: 'DUPLICATE_NAME'
         });
       }

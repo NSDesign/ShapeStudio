@@ -426,6 +426,7 @@ export function IndividualSetConfig({
                       className={`bg-slate-800 border-slate-600 text-white ${
                         getFieldValidation('name').hasError || isDuplicateName ? 'border-red-500' : ''
                       }`}
+                      autoComplete="off"
                       data-testid="input-set-name"
                       aria-invalid={getFieldValidation('name').hasError || isDuplicateName}
                       aria-describedby={getFieldValidation('name').hasError || isDuplicateName ? 'set-name-error' : undefined}
