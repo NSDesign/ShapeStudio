@@ -339,9 +339,28 @@ export const useShapeEditor = () => {
   const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
   
-  // UI element visibility toggles
-  const [showMultiSelectButton, setShowMultiSelectButton] = useState(false);
-  const [showSelectedCount, setShowSelectedCount] = useState(false);
+  // UI element visibility toggles (persisted to localStorage)
+  const [showMultiSelectButton, setShowMultiSelectButton] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectionShowMultiSelectButton') === 'true';
+    }
+    return false;
+  });
+  const [showSelectedCount, setShowSelectedCount] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectionShowSelectedCount') === 'true';
+    }
+    return false;
+  });
+  
+  // Persist UI element visibility settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('selectionShowMultiSelectButton', String(showMultiSelectButton));
+  }, [showMultiSelectButton]);
+  
+  useEffect(() => {
+    localStorage.setItem('selectionShowSelectedCount', String(showSelectedCount));
+  }, [showSelectedCount]);
   const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
