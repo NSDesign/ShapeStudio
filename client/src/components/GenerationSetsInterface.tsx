@@ -597,7 +597,7 @@ export function GenerationSetsInterface({
             <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-type">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[10001]">
               <SelectItem value="all">All Sets</SelectItem>
               <SelectItem value="name">Filter by Name</SelectItem>
               <SelectItem value="hidden">Hidden Status</SelectItem>
@@ -613,7 +613,7 @@ export function GenerationSetsInterface({
               <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
                 <SelectValue placeholder="Select set..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10001]">
                 {generationSets.map(set => (
                   <SelectItem key={set.id} value={set.id}>{set.name}</SelectItem>
                 ))}
@@ -626,7 +626,7 @@ export function GenerationSetsInterface({
               <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
                 <SelectValue placeholder="Select status..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10001]">
                 <SelectItem value="hidden">Hidden</SelectItem>
                 <SelectItem value="visible">Not Hidden</SelectItem>
               </SelectContent>
@@ -638,7 +638,7 @@ export function GenerationSetsInterface({
               <SelectTrigger className="w-[180px] bg-slate-800 border-slate-600 text-slate-200" data-testid="select-filter-value">
                 <SelectValue placeholder="Select mode..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10001]">
                 <SelectItem value="fixed">Fixed</SelectItem>
                 <SelectItem value="range">Range</SelectItem>
               </SelectContent>
