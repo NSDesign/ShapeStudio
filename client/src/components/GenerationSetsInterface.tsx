@@ -124,8 +124,44 @@ export function GenerationSetsInterface({
   const [draggedSetId, setDraggedSetId] = useState<string | null>(null);
   const [dragOverSetId, setDragOverSetId] = useState<string | null>(null);
   const [setValidations, setSetValidations] = useState<Record<string, ValidationResult>>({});
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterValue, setFilterValue] = useState<string>('');
+  
+  // Initialize filter state from localStorage
+  const [filterType, setFilterType] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('generationSetsFilterType') || 'all';
+    }
+    return 'all';
+  });
+  const [filterValue, setFilterValue] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('generationSetsFilterValue') || '';
+    }
+    return '';
+  });
+  
+  // Initialize accordion state from localStorage
+  const [accordionValue, setAccordionValue] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('generationSetsAccordionValue');
+      return saved ? JSON.parse(saved) : ['errors', 'warnings'];
+    }
+    return ['errors', 'warnings'];
+  });
+
+  // Persist filter type to localStorage
+  useEffect(() => {
+    localStorage.setItem('generationSetsFilterType', filterType);
+  }, [filterType]);
+
+  // Persist filter value to localStorage
+  useEffect(() => {
+    localStorage.setItem('generationSetsFilterValue', filterValue);
+  }, [filterValue]);
+
+  // Persist accordion value to localStorage
+  useEffect(() => {
+    localStorage.setItem('generationSetsAccordionValue', JSON.stringify(accordionValue));
+  }, [accordionValue]);
 
   // Comprehensive validation for all sets
   const overallValidation = useMemo(() => {
@@ -522,7 +558,7 @@ export function GenerationSetsInterface({
         {/* Overall validation summary with accordion */}
         {showInlineValidation && (overallValidation.errors.length > 0 || overallValidation.warnings.length > 0) && (
           <div className="border border-slate-700 rounded-lg bg-slate-900/50" data-testid="validation-accordion-container">
-            <Accordion type="multiple" defaultValue={["errors", "warnings"]} className="w-full">
+            <Accordion type="multiple" value={accordionValue} onValueChange={setAccordionValue} className="w-full">
               {/* Errors Section */}
               {overallValidation.errors.length > 0 && (
                 <AccordionItem value="errors" className="border-b border-slate-700">
