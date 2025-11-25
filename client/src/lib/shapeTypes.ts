@@ -1092,26 +1092,29 @@ export function applyGridDistribution(
         
         switch (cellConstraints.fitMode) {
           case 'contain':
-            // Scale to fit within cell, maintain aspect ratio
-            const containScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            // Scale DOWN to fit within cell if too large, but never scale up
+            // This ensures shapes fit inside the cell without exceeding boundaries
+            const rawContainScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            const containScale = Math.min(1, rawContainScale); // Cap at 1 - never scale up
             scaleX = containScale;
             scaleY = containScale;
             break;
           case 'cover':
-            // Scale to cover cell, maintain aspect ratio
+            // Scale to cover entire cell (may exceed cell boundaries), maintain aspect ratio
+            // This will scale up or down as needed to ensure cell is fully covered
             const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
             scaleX = coverScale;
             scaleY = coverScale;
             break;
           case 'fill':
-            // Stretch to fill cell
+            // Scale to exactly fill cell dimensions
             if (cellConstraints.maintainAspectRatio) {
-              // Use cover ratio (max) to fill the entire cell while maintaining aspect ratio
+              // Fill to match the larger dimension while maintaining aspect ratio
               const fillScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
               scaleX = fillScale;
               scaleY = fillScale;
             } else {
-              // Independent scaling - stretch to fill completely
+              // Independent scaling - stretch to fill completely (distorts aspect ratio)
               scaleX = availableWidth / shapeWidth;
               scaleY = availableHeight / shapeHeight;
             }

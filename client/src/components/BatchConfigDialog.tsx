@@ -1078,6 +1078,14 @@ export default function BatchConfigDialog({
                               : 'Shapes centered in cells with size constraints'}
                           </p>
                           
+                          {/* Cell Mode Warning */}
+                          {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell' && (
+                            <p className="text-xs text-amber-400 bg-amber-900/20 rounded px-2 py-1 border border-amber-700/30">
+                              Note: Cell mode limits shape count to (rows-1) × (cols-1) cells. 
+                              Currently: {Math.max(0, (currentSettings.gridRows - 1))} × {Math.max(0, (currentSettings.gridColumns - 1))} = {Math.max(0, (currentSettings.gridRows - 1)) * Math.max(0, (currentSettings.gridColumns - 1))} max shapes
+                            </p>
+                          )}
+                          
                           {/* Cell Mode Options */}
                           {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell' && (
                             <div className="space-y-3 mt-2 pt-3 border-t border-slate-600">

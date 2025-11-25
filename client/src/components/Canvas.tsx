@@ -743,8 +743,8 @@ export default function Canvas({
       if (dirtyRef.current) {
         renderInfiniteCanvas();
         renderArtboard();
-        renderDebugGrid(); // Debug grid overlay for cell vs point rendering
         renderShapes();
+        renderDebugGrid(); // Debug grid overlay - rendered LAST to appear on top of all shapes
         dirtyRef.current = false; // Reset dirty flag after rendering
       }
       
