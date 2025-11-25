@@ -913,8 +913,366 @@ Each lock type requires different handling:
 
 ---
 
+## 5. Grid Layout Enhancements
+
+### Overview
+A comprehensive set of enhancements to the grid distribution layout system, adding advanced offset controls, shape masking capabilities, and cell-based rendering options. These features enable more creative and precise control over how shapes are positioned and rendered within grid structures.
+
+### Current State
+The grid layout system currently supports:
+- Fixed rows and columns with customizable spacing
+- Start position offsets (X/Y)
+- Three spacing modes: Define, Auto-Centered, Auto-Edge-to-Edge
+- Sorting and grouping options
+- X/Y randomization for position jitter
+
+### Phased Implementation Plan
+
+---
+
+### Phase 1: Alternating Grid Offsets
+
+#### Overview
+Add the ability to offset every second row or column by a fixed pixel amount, with control over which row/column the alternation starts from.
+
+#### Use Cases
+- Brick/honeycomb patterns where rows are staggered
+- Hexagonal-style layouts
+- Visual rhythm variations in grid compositions
+
+#### Data Model
+```typescript
+gridOffsets: {
+  enabled: boolean;
+  mode: 'alternating';  // Phase 1 only supports alternating
+  row: {
+    enabled: boolean;
+    amount: number;           // Pixels to offset
+    startIndex: 0 | 1;        // Which row starts the offset (0 = first row, 1 = second row)
+    direction: 'left' | 'right';  // Direction of offset
+  };
+  column: {
+    enabled: boolean;
+    amount: number;           // Pixels to offset
+    startIndex: 0 | 1;        // Which column starts the offset
+    direction: 'up' | 'down';     // Direction of offset
+  };
+}
+```
+
+#### Offset Calculation Logic
+```typescript
+// For each shape at grid position (row, col):
+let offsetX = 0;
+let offsetY = 0;
+
+// Row offset affects X position (shifts row left/right)
+if (gridOffsets.row.enabled) {
+  const isOffsetRow = (row % 2) === gridOffsets.row.startIndex;
+  if (isOffsetRow) {
+    offsetX = gridOffsets.row.direction === 'right' 
+      ? gridOffsets.row.amount 
+      : -gridOffsets.row.amount;
+  }
+}
+
+// Column offset affects Y position (shifts column up/down)
+if (gridOffsets.column.enabled) {
+  const isOffsetColumn = (col % 2) === gridOffsets.column.startIndex;
+  if (isOffsetColumn) {
+    offsetY = gridOffsets.column.direction === 'down' 
+      ? gridOffsets.column.amount 
+      : -gridOffsets.column.amount;
+  }
+}
+
+finalX = baseX + offsetX;
+finalY = baseY + offsetY;
+```
+
+#### UI Controls
+Within the Grid Layout section:
+- **Grid Offsets** accordion/collapsible
+  - Enable toggle
+  - **Row Offset** subsection:
+    - Enable toggle
+    - Amount input (px)
+    - Start index: dropdown (0 or 1) with labels "1st row" / "2nd row"
+    - Direction: dropdown (left/right)
+  - **Column Offset** subsection:
+    - Enable toggle
+    - Amount input (px)
+    - Start index: dropdown (0 or 1) with labels "1st column" / "2nd column"
+    - Direction: dropdown (up/down)
+
+---
+
+### Phase 2: Pattern-Based Offsets
+
+#### Overview
+Extend the offset system to support explicit patterns defining which rows/columns receive offsets, rather than simple alternation.
+
+#### Use Cases
+- Complex staggered patterns (e.g., offset rows 0, 2, 3, 5 but not 1, 4)
+- Asymmetric visual rhythms
+- Architectural/design patterns requiring specific offset sequences
+
+#### Data Model Extension
+```typescript
+gridOffsets: {
+  enabled: boolean;
+  mode: 'alternating' | 'pattern';
+  row: {
+    enabled: boolean;
+    amount: number;
+    startIndex: 0 | 1;        // For alternating mode
+    direction: 'left' | 'right';
+    pattern: number[];        // For pattern mode: [0, 2, 3, 5] = offset these row indices
+  };
+  column: {
+    enabled: boolean;
+    amount: number;
+    startIndex: 0 | 1;
+    direction: 'up' | 'down';
+    pattern: number[];        // For pattern mode
+  };
+}
+```
+
+#### Pattern Input
+- **Absolute indices**: Pattern `[0, 2, 3, 5]` means exactly rows/columns 0, 2, 3, and 5 receive offset
+- **No repetition**: Patterns don't cycle - only specified indices are affected
+- **Input format**: Comma-separated numbers in text field (e.g., "0, 2, 3, 5")
+- **Future enhancement**: Could support range syntax like "0-3, 5, 7-10"
+
+#### Pattern Calculation Logic
+```typescript
+if (gridOffsets.mode === 'pattern') {
+  // Row offset
+  if (gridOffsets.row.enabled && gridOffsets.row.pattern.includes(row)) {
+    offsetX = gridOffsets.row.direction === 'right' 
+      ? gridOffsets.row.amount 
+      : -gridOffsets.row.amount;
+  }
+  
+  // Column offset
+  if (gridOffsets.column.enabled && gridOffsets.column.pattern.includes(col)) {
+    offsetY = gridOffsets.column.direction === 'down' 
+      ? gridOffsets.column.amount 
+      : -gridOffsets.column.amount;
+  }
+}
+```
+
+---
+
+### Phase 3: Shape Masking (Grid-Based)
+
+#### Overview
+A standalone section for controlling which grid positions render shapes and which are excluded. Named "Shape Masking" to accommodate future masking methods beyond grid-based exclusion.
+
+#### Section Architecture
+```typescript
+shapeMasking: {
+  enabled: boolean;
+  
+  // Grid-based masking (Phase 3)
+  grid: {
+    enabled: boolean;
+    mode: 'alternating' | 'pattern';
+    invert: boolean;              // false = exclude matched, true = render only matched
+    priority: 'row-first' | 'column-first';
+    
+    // Alternating mode settings
+    alternating: {
+      skipEvery: number;          // Skip every Nth row/column
+      startIndex: number;         // Where alternation begins
+    };
+    
+    // Pattern mode settings
+    pattern: Array<{
+      row: number;
+      columns: number[];          // Which columns to mask for this row
+    }>;
+    // Example: [
+    //   { row: 1, columns: [2, 5] },
+    //   { row: 3, columns: [1, 4] },
+    //   { row: 5, columns: [0, 3] }
+    // ]
+  };
+  
+  // Future masking methods (placeholders)
+  position: { ... };    // Exclude by X/Y range, distance from center
+  count: { ... };       // Exclude every Nth shape, random percentage
+  color: { ... };       // Exclude by hue range, lightness threshold
+}
+```
+
+#### Key Design Decision
+Shape Masking applies to **both** grid intersection-point rendering AND cell-based rendering (Phase 4). It defines which grid positions are valid for shape placement regardless of the rendering mode.
+
+#### Inversion Toggle
+- **Invert OFF (default)**: Matched positions are EXCLUDED (don't render)
+- **Invert ON**: Matched positions are the ONLY ones that render
+
+#### UI Controls
+Standalone "Shape Masking" section (not nested in Grid Layout):
+- Enable toggle
+- **Grid Masking** subsection:
+  - Enable toggle
+  - Mode: dropdown (alternating/pattern)
+  - Invert: toggle ("Exclude matched" / "Render only matched")
+  - Priority: dropdown (row-first / column-first)
+  - **Alternating settings** (when mode = alternating):
+    - Skip every: number input
+    - Start index: number input
+  - **Pattern settings** (when mode = pattern):
+    - Pattern definition table/list with row index and column indices
+
+---
+
+### Phase 4: Cell-Based Rendering
+
+#### Overview
+Currently shapes render at grid intersection points (where rows and columns meet). Cell-based rendering places shapes WITHIN grid cells, with options to constrain shape size to cell dimensions.
+
+#### Current vs Cell-Based Rendering
+| Aspect | Current (Intersection) | Cell-Based |
+|--------|----------------------|------------|
+| Position | Row/column intersection point | Center of cell area |
+| Size control | Independent of grid | Constrained by cell dimensions |
+| Use case | Points on a grid | Shapes filling a grid |
+
+#### Data Model
+```typescript
+cellConstraints: {
+  enabled: boolean;
+  renderMode: 'intersection' | 'cell';
+  
+  // Cell mode settings
+  fitMode: 'none' | 'fill' | 'contain' | 'cover';
+  // - none: Use original shape size
+  // - fill: Stretch to fill cell (may distort)
+  // - contain: Scale to fit within cell (maintain aspect ratio)
+  // - cover: Scale to cover cell (maintain aspect ratio, may crop)
+  
+  maintainAspectRatio: boolean;   // For 'fill' mode
+  padding: number;                // Inset from cell edges (px)
+  paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
+}
+```
+
+#### Cell Calculation
+```typescript
+// Cell dimensions based on grid spacing
+const cellWidth = gridSpacingX;
+const cellHeight = gridSpacingY;
+
+// Cell center position
+const cellCenterX = gridStartX + (col * cellWidth) + (cellWidth / 2);
+const cellCenterY = gridStartY + (row * cellHeight) + (cellHeight / 2);
+
+// Available space after padding
+const availableWidth = cellWidth - (padding * 2);
+const availableHeight = cellHeight - (padding * 2);
+
+// Scale shape based on fit mode
+switch (fitMode) {
+  case 'contain':
+    const scale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+    // Apply scale...
+    break;
+  case 'cover':
+    const scale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+    // Apply scale...
+    break;
+  case 'fill':
+    // Scale X and Y independently (or together if maintainAspectRatio)
+    break;
+}
+```
+
+#### Interaction with Shape Masking
+Shape Masking (Phase 3) defines which cells are valid for rendering. Cell-based rendering then determines HOW shapes are placed within those valid cells.
+
+---
+
+### Phase 5+: No-Overlap/Distance Maintenance (Future)
+
+#### Overview
+Advanced collision detection and resolution to ensure offset shapes don't overlap or maintain minimum distance from adjacent shapes.
+
+#### Complexity
+This phase involves:
+- Collision detection between shapes
+- Iterative position adjustment algorithms
+- Performance considerations for large shape counts
+- Edge case handling (when collision-free placement is impossible)
+
+#### Potential Approaches
+1. **Simple distance check**: Ensure minimum gap between shape bounds
+2. **Collision resolution**: Iteratively push overlapping shapes apart
+3. **Constraint-based placement**: Pre-calculate valid positions before placement
+4. **Fallback strategies**: What happens when shapes can't fit without overlap?
+
+#### Deferred Rationale
+This phase is deferred due to:
+- Significant algorithmic complexity
+- Performance implications
+- Need to establish Phases 1-4 first as foundation
+- User demand will inform priority
+
+---
+
+### Technical Considerations
+
+#### Client/Server Parity
+All offset and masking calculations must be identical on client (preview) and server (export) to ensure what users see matches what they export.
+
+#### Default Values
+```typescript
+// gridOffsets defaults
+gridOffsets: {
+  enabled: false,
+  mode: 'alternating',
+  row: { enabled: false, amount: 0, startIndex: 0, direction: 'right', pattern: [] },
+  column: { enabled: false, amount: 0, startIndex: 0, direction: 'down', pattern: [] }
+}
+
+// shapeMasking defaults
+shapeMasking: {
+  enabled: false,
+  grid: {
+    enabled: false,
+    mode: 'alternating',
+    invert: false,
+    priority: 'row-first',
+    alternating: { skipEvery: 2, startIndex: 0 },
+    pattern: []
+  }
+}
+
+// cellConstraints defaults
+cellConstraints: {
+  enabled: false,
+  renderMode: 'intersection',
+  fitMode: 'contain',
+  maintainAspectRatio: true,
+  padding: 0,
+  paddingUnit: 'px'
+}
+```
+
+#### Migration Strategy
+New properties should be added with defaults that preserve existing behavior:
+- `gridOffsets.enabled: false` → No offsets applied (current behavior)
+- `shapeMasking.enabled: false` → All positions render (current behavior)
+- `cellConstraints.renderMode: 'intersection'` → Current behavior
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: November 23, 2025
+Last updated: November 25, 2025

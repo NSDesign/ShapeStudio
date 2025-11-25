@@ -1,3 +1,5 @@
+import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS } from '@shared/schema';
+
 export interface Point {
   x: number;
   y: number;
@@ -39,6 +41,7 @@ export interface DistributionConfig {
   gridReverseGroups?: boolean;
   gridXRandomization: number;
   gridYRandomization: number;
+  gridOffsets?: GridOffsetsConfig;
   autoDistributeXCount?: number;
   autoDistributeYCount?: number;
   waveType?: 'sine' | 'triangle' | 'square' | 'sawtooth';
@@ -444,7 +447,8 @@ export function calculateGridPosition(
   spacingXMode: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge' = 'define',
   spacingYMode: 'define' | 'auto' | 'auto-centered' | 'auto-edge-to-edge' = 'define',
   marginEnabled: boolean = false,
-  marginValue: number = 50
+  marginValue: number = 50,
+  gridOffsets?: GridOffsetsConfig
 ): GridPosition {
   const totalPositions = rows * columns;
   const adjustedIndex = index % totalPositions;
@@ -511,8 +515,29 @@ export function calculateGridPosition(
     }
   }
   
-  const x = startX + (column * effectiveColumnOffset) + (ignoreGridStartX ? 0 : gridStartX);
-  const y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
+  let x = startX + (column * effectiveColumnOffset) + (ignoreGridStartX ? 0 : gridStartX);
+  let y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
+  
+  // Apply grid offsets (alternating row/column offsets)
+  if (gridOffsets?.enabled) {
+    // Row offset affects X position (shifts rows left/right)
+    if (gridOffsets.row?.enabled && gridOffsets.mode === 'alternating') {
+      const isOffsetRow = (row % 2) === (gridOffsets.row.startIndex ?? 0);
+      if (isOffsetRow) {
+        const amount = gridOffsets.row.amount ?? 0;
+        x += gridOffsets.row.direction === 'right' ? amount : -amount;
+      }
+    }
+    
+    // Column offset affects Y position (shifts columns up/down)
+    if (gridOffsets.column?.enabled && gridOffsets.mode === 'alternating') {
+      const isOffsetColumn = (column % 2) === (gridOffsets.column.startIndex ?? 0);
+      if (isOffsetColumn) {
+        const amount = gridOffsets.column.amount ?? 0;
+        y += gridOffsets.column.direction === 'down' ? amount : -amount;
+      }
+    }
+  }
   
   return { x, y, row, column };
 }
@@ -879,7 +904,8 @@ export function applyGridDistribution(
       config.gridSpacingXMode || 'define',
       config.gridSpacingYMode || 'define',
       config.gridMarginEnabled || false,
-      config.gridMarginValue || 50
+      config.gridMarginValue || 50,
+      config.gridOffsets
     );
     
     // Always apply position offsets additively to grid layout

@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -177,17 +177,20 @@ export default function BatchConfigDialog({
     setCurrentSettings(mergedSettings);
   }, [settings]);
 
-  const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings>) => {
+  const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings> | ((prev: BatchConfigSettings) => Partial<BatchConfigSettings>)) => {
     console.log('[BatchConfigDialog] Settings update triggered:', {
-      updates,
+      updates: typeof updates === 'function' ? 'functional updater' : updates,
       currentDialogOpen: isOpen,
       timestamp: new Date().toISOString()
     });
     
-    // Handle gradient probability auto-balancing
-    if ('fillGradientLinearProbability' in updates || 'fillGradientRadialProbability' in updates || 'fillGradientConicProbability' in updates) {
-      setCurrentSettings(prevSettings => {
-        const newSettings = { ...prevSettings, ...updates };
+    setCurrentSettings(prevSettings => {
+      // Resolve updates if it's a function
+      const resolvedUpdates = typeof updates === 'function' ? updates(prevSettings) : updates;
+      
+      // Handle gradient probability auto-balancing
+      if ('fillGradientLinearProbability' in resolvedUpdates || 'fillGradientRadialProbability' in resolvedUpdates || 'fillGradientConicProbability' in resolvedUpdates) {
+        const newSettings = { ...prevSettings, ...resolvedUpdates };
         
         // Get the current probabilities
         const linear = newSettings.fillGradientLinearProbability;
@@ -198,8 +201,8 @@ export default function BatchConfigDialog({
         const total = linear + radial + conic;
         if (total !== 100 && total > 0) {
           // Determine which property was changed
-          const changedKey = Object.keys(updates)[0];
-          const changedValue = updates[changedKey as keyof typeof updates] as number;
+          const changedKey = Object.keys(resolvedUpdates)[0];
+          const changedValue = resolvedUpdates[changedKey as keyof typeof resolvedUpdates] as number;
           
           if (changedKey === 'fillGradientLinearProbability') {
             const remaining = 100 - changedValue;
@@ -220,11 +223,11 @@ export default function BatchConfigDialog({
         }
         
         return newSettings;
-      });
-    } else {
-      // Only update internal state, don't call parent callback immediately
-      setCurrentSettings(prevSettings => ({ ...prevSettings, ...updates }));
-    }
+      } else {
+        // Only update internal state, don't call parent callback immediately
+        return { ...prevSettings, ...resolvedUpdates };
+      }
+    });
   }, [isOpen]);
 
   const resetToDefaults = useCallback(() => {
@@ -709,6 +712,217 @@ export default function BatchConfigDialog({
                               className="[&_[role=slider]]:bg-purple-600"
                             />
                           </div>
+                        </div>
+                        
+                        {/* Grid Offsets Section */}
+                        <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.gridOffsets?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                  gridOffsets: { 
+                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                    enabled: checked as boolean 
+                                  } 
+                                }))}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-grid-offsets-enabled"
+                              />
+                              <Label className="text-sm font-medium text-slate-200">Grid Offsets</Label>
+                            </div>
+                            <span className="text-xs text-slate-400">Alternating row/column offsets</span>
+                          </div>
+                          
+                          {(currentSettings.gridOffsets?.enabled ?? false) && (
+                            <div className="space-y-4 mt-3">
+                              {/* Row Offset Controls */}
+                              <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    checked={currentSettings.gridOffsets?.row?.enabled ?? false}
+                                    onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                      gridOffsets: { 
+                                        ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                        row: {
+                                          ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                          enabled: checked as boolean
+                                        }
+                                      } 
+                                    }))}
+                                    className="border-slate-500 data-[state=checked]:bg-green-600"
+                                    data-testid="checkbox-grid-row-offset-enabled"
+                                  />
+                                  <Label className="text-xs font-medium text-slate-300">Row Offset</Label>
+                                </div>
+                                
+                                {(currentSettings.gridOffsets?.row?.enabled ?? false) && (
+                                  <div className="grid grid-cols-3 gap-2 mt-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Amount (px)</Label>
+                                      <Input
+                                        type="number"
+                                        value={currentSettings.gridOffsets?.row?.amount ?? 0}
+                                        onChange={(e) => {
+                                          const newAmount = parseInt(e.target.value) || 0;
+                                          handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              row: {
+                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                amount: newAmount
+                                              }
+                                            } 
+                                          }));
+                                        }}
+                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-grid-row-offset-amount"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start From</Label>
+                                      <Select 
+                                        value={String(currentSettings.gridOffsets?.row?.startIndex ?? 0)}
+                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                          gridOffsets: { 
+                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                            row: {
+                                              ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                              startIndex: parseInt(value) as 0 | 1
+                                            }
+                                          } 
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-start">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">1st row</SelectItem>
+                                          <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">2nd row</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Direction</Label>
+                                      <Select 
+                                        value={currentSettings.gridOffsets?.row?.direction ?? 'right'}
+                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                          gridOffsets: { 
+                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                            row: {
+                                              ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                              direction: value as 'left' | 'right'
+                                            }
+                                          } 
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-direction">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
+                                          <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Column Offset Controls */}
+                              <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    checked={currentSettings.gridOffsets?.column?.enabled ?? false}
+                                    onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                      gridOffsets: { 
+                                        ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                        column: {
+                                          ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                          enabled: checked as boolean
+                                        }
+                                      } 
+                                    }))}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    data-testid="checkbox-grid-column-offset-enabled"
+                                  />
+                                  <Label className="text-xs font-medium text-slate-300">Column Offset</Label>
+                                </div>
+                                
+                                {(currentSettings.gridOffsets?.column?.enabled ?? false) && (
+                                  <div className="grid grid-cols-3 gap-2 mt-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Amount (px)</Label>
+                                      <Input
+                                        type="number"
+                                        value={currentSettings.gridOffsets?.column?.amount ?? 0}
+                                        onChange={(e) => {
+                                          const newAmount = parseInt(e.target.value) || 0;
+                                          handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              column: {
+                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                amount: newAmount
+                                              }
+                                            } 
+                                          }));
+                                        }}
+                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-grid-column-offset-amount"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start From</Label>
+                                      <Select 
+                                        value={String(currentSettings.gridOffsets?.column?.startIndex ?? 0)}
+                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                          gridOffsets: { 
+                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                            column: {
+                                              ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                              startIndex: parseInt(value) as 0 | 1
+                                            }
+                                          } 
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-start">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">1st column</SelectItem>
+                                          <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">2nd column</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Direction</Label>
+                                      <Select 
+                                        value={currentSettings.gridOffsets?.column?.direction ?? 'down'}
+                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                          gridOffsets: { 
+                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                            column: {
+                                              ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                              direction: value as 'up' | 'down'
+                                            }
+                                          } 
+                                        }))}
+                                      >
+                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-direction">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="up" className="text-slate-200 hover:bg-slate-700">Up</SelectItem>
+                                          <SelectItem value="down" className="text-slate-200 hover:bg-slate-700">Down</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="space-y-2">

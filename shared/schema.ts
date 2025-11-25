@@ -285,6 +285,43 @@ export interface SetLocks {
   composite: boolean;          // Prevents compositing operations from affecting this set (protects backgrounds)
 }
 
+// Grid offset axis configuration (for row or column)
+export interface GridOffsetAxisConfig {
+  enabled: boolean;
+  amount: number;                    // Pixels to offset
+  startIndex: 0 | 1;                 // Which row/column starts the offset (0 = first, 1 = second)
+  direction: 'left' | 'right' | 'up' | 'down';  // Direction of offset
+  pattern: number[];                 // For pattern mode: explicit indices to offset
+}
+
+// Grid offsets configuration for alternating/pattern offsets
+export interface GridOffsetsConfig {
+  enabled: boolean;
+  mode: 'alternating' | 'pattern';
+  row: GridOffsetAxisConfig;         // Row offset affects X position (shifts left/right)
+  column: GridOffsetAxisConfig;      // Column offset affects Y position (shifts up/down)
+}
+
+// Default grid offsets configuration
+export const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
+  enabled: false,
+  mode: 'alternating',
+  row: {
+    enabled: false,
+    amount: 0,
+    startIndex: 0,
+    direction: 'right',
+    pattern: []
+  },
+  column: {
+    enabled: false,
+    amount: 0,
+    startIndex: 0,
+    direction: 'down',
+    pattern: []
+  }
+};
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -314,6 +351,9 @@ export interface BatchConfigSettings {
   // Grid randomization amounts (additive pixel offsets)
   gridXRandomization: number; // 0-200 pixels additive randomization in X direction
   gridYRandomization: number; // 0-200 pixels additive randomization in Y direction
+  
+  // Grid alternating/pattern offsets (Phase 1: alternating, Phase 2: pattern)
+  gridOffsets: GridOffsetsConfig;
   
   // Auto Distribute Layout Settings
   autoDistributeXCount: number; // Number of shapes to distribute in X direction
@@ -826,6 +866,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   gridReverseGroups: false,
   gridXRandomization: 0,
   gridYRandomization: 0,
+  
+  // Grid alternating/pattern offsets
+  gridOffsets: DEFAULT_GRID_OFFSETS,
   
   autoDistributeXCount: 10,
   autoDistributeYCount: 10,

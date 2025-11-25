@@ -2716,6 +2716,7 @@ export const useShapeEditor = () => {
         gridSortOrder: effectiveBatchConfig.gridSortOrder,
         gridXRandomization: effectiveBatchConfig.gridXRandomization,
         gridYRandomization: effectiveBatchConfig.gridYRandomization,
+        gridOffsets: effectiveBatchConfig.gridOffsets,
         autoDistributeXCount: effectiveBatchConfig.autoDistributeXCount,
         autoDistributeYCount: effectiveBatchConfig.autoDistributeYCount,
         waveType: effectiveBatchConfig.waveType,
