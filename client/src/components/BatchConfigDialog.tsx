@@ -689,31 +689,6 @@ export default function BatchConfigDialog({
                           </div>
                         )}
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridXRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridYRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
-                        </div>
-                        
                         {/* Grid Offsets Section */}
                         <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
                           <div className="flex items-center justify-between">
@@ -923,6 +898,32 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                           )}
+                        </div>
+                        
+                        {/* Randomisation Section - kept at bottom */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridXRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
+                            <Slider
+                              value={[currentSettings.gridYRandomization]}
+                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                              min={0}
+                              max={200}
+                              step={5}
+                              className="[&_[role=slider]]:bg-purple-600"
+                            />
+                          </div>
                         </div>
                         
                         <div className="space-y-2">
