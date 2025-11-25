@@ -1998,6 +1998,7 @@ export const useShapeEditor = () => {
                   gradientType = 'conic';
                 }
               }
+              
             }
             const [minStops, maxStops] = effectiveBatchConfig.fillGradientStopsRange;
             const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));

@@ -548,6 +548,7 @@ export default function Sidebar({
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
   const [cleanPresetEnabled, setCleanPresetEnabled] = useState(false);
+  const [autoLoadAfterSave, setAutoLoadAfterSave] = useState(false);
   const [isDeletePresetDialogOpen, setIsDeletePresetDialogOpen] = useState(false);
   const [presetToDelete, setPresetToDelete] = useState<string>('');
   
@@ -600,6 +601,11 @@ export default function Sidebar({
   useEffect(() => {
     cleanPresetEnabledRef.current = cleanPresetEnabled;
   }, [cleanPresetEnabled]);
+  
+  const autoLoadAfterSaveRef = useRef(false);
+  useEffect(() => {
+    autoLoadAfterSaveRef.current = autoLoadAfterSave;
+  }, [autoLoadAfterSave]);
   
   const handleSavePreset = useCallback(async () => {
     const name = newPresetNameRef.current;
@@ -660,9 +666,21 @@ export default function Sidebar({
         title: "Preset saved",
         description,
       });
+      
+      // Auto-load the saved preset if enabled
+      if (autoLoadAfterSaveRef.current && cleanPresetEnabledRef.current) {
+        onGenerationSetsChange?.(setsToSave);
+        onCurrentGenerationSetChange?.(currentSetIdToSave || null);
+        toast({
+          title: "Preset loaded",
+          description: `Clean preset "${name}" has been applied.`,
+        });
+      }
+      
       setIsSavePresetDialogOpen(false);
       setNewPresetName('');
       setCleanPresetEnabled(false);
+      setAutoLoadAfterSave(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -670,7 +688,7 @@ export default function Sidebar({
         description: "Failed to save preset. Please try again.",
       });
     }
-  }, [presets, savePreset, effectiveGenerationSets, effectiveCurrentSetId, toast]);
+  }, [presets, savePreset, effectiveGenerationSets, effectiveCurrentSetId, onGenerationSetsChange, onCurrentGenerationSetChange, toast]);
   
   const handleLoadPreset = useCallback(() => {
     const preset = presets.find(p => p.id === selectedPresetId);
@@ -5222,12 +5240,29 @@ export default function Sidebar({
                 </label>
               </div>
               {cleanPresetEnabled && (
-                <p className={`text-xs pl-6 ${effectiveGenerationSets.filter(s => s.enabled).length === 0 ? 'text-red-400' : 'text-slate-400'}`}>
-                  {effectiveGenerationSets.filter(s => s.enabled).length === 0 
-                    ? 'No enabled sets - cannot save clean preset'
-                    : `${effectiveGenerationSets.filter(s => s.enabled).length} of ${effectiveGenerationSets.length} sets will be saved`
-                  }
-                </p>
+                <>
+                  <p className={`text-xs pl-6 ${effectiveGenerationSets.filter(s => s.enabled).length === 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                    {effectiveGenerationSets.filter(s => s.enabled).length === 0 
+                      ? 'No enabled sets - cannot save clean preset'
+                      : `${effectiveGenerationSets.filter(s => s.enabled).length} of ${effectiveGenerationSets.length} sets will be saved`
+                    }
+                  </p>
+                  <div className="flex items-center space-x-2 pl-6 pt-1">
+                    <Checkbox
+                      id="auto-load-after-save-checkbox"
+                      checked={autoLoadAfterSave}
+                      onCheckedChange={(checked) => setAutoLoadAfterSave(checked as boolean)}
+                      className="border-slate-500 data-[state=checked]:bg-green-600"
+                      data-testid="checkbox-auto-load-after-save"
+                    />
+                    <label 
+                      htmlFor="auto-load-after-save-checkbox" 
+                      className="text-sm text-slate-300 cursor-pointer select-none"
+                    >
+                      Auto-load after saving
+                    </label>
+                  </div>
+                </>
               )}
             </div>
             <datalist id="preset-names-datalist">
@@ -5241,6 +5276,7 @@ export default function Sidebar({
                 onClick={() => {
                   setNewPresetName('');
                   setCleanPresetEnabled(false);
+                  setAutoLoadAfterSave(false);
                 }}
               >
                 Cancel

@@ -102,6 +102,7 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       const bounds = shape.getBounds();
       let gradient: CanvasGradient;
       
+      
       if (shape.properties.gradient.type === 'linear') {
         gradient = ctx.createLinearGradient(
           bounds.x, bounds.y, 
