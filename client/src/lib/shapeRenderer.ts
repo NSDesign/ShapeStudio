@@ -109,8 +109,13 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
           bounds.x + bounds.width, bounds.y + bounds.height
         );
       } else if (shape.properties.gradient.type === 'radial') {
-        const centerX = bounds.x + bounds.width / 2;
-        const centerY = bounds.y + bounds.height / 2;
+        // Use radial gradient parameters if available, otherwise use center defaults
+        const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
+        const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
+        
+        // Convert percentage to actual position within bounds
+        const centerX = bounds.x + (bounds.width * radialCenterXPercent / 100);
+        const centerY = bounds.y + (bounds.height * radialCenterYPercent / 100);
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       } else if (shape.properties.gradient.type === 'conic') {
@@ -126,8 +131,12 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
         // createConicGradient(startAngle, centerX, centerY) - colors rotate around center point
         gradient = ctx.createConicGradient(conicAngle, centerX, centerY);
       } else {
-        const centerX = bounds.x + bounds.width / 2;
-        const centerY = bounds.y + bounds.height / 2;
+        // Default fallback to radial gradient with center positioning
+        const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
+        const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
+        
+        const centerX = bounds.x + (bounds.width * radialCenterXPercent / 100);
+        const centerY = bounds.y + (bounds.height * radialCenterYPercent / 100);
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       }

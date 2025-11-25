@@ -1768,6 +1768,70 @@ export const useShapeEditor = () => {
     return Math.max(0, Math.min(100, result));
   };
 
+  // Helper function to calculate radial gradient center X (returns 0-100 percentage, clamped)
+  const calculateRadialCenterX = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let result: number;
+    
+    switch (settings.fillGradientRadialCenterXMode) {
+      case 'range':
+        const [minX, maxX] = settings.fillGradientRadialCenterXRange || [25, 75];
+        result = minX + Math.random() * (maxX - minX);
+        break;
+      
+      case 'incremental':
+        const startX = settings.fillGradientRadialCenterXStartValue ?? 50;
+        const incrementX = (settings.fillGradientRadialCenterXIncrement || 0) * shapeIndex;
+        result = startX + incrementX;
+        
+        // Apply modulation to the final result, not just the increment
+        if (settings.fillGradientRadialCenterXModulationEnabled && settings.fillGradientRadialCenterXModulationValue > 0) {
+          const m = settings.fillGradientRadialCenterXModulationValue;
+          result = ((result % m) + m) % m;
+        }
+        break;
+      
+      case 'fixed':
+      default:
+        result = settings.fillGradientRadialCenterX ?? 50;
+        break;
+    }
+    
+    // Clamp to valid 0-100 percentage range
+    return Math.max(0, Math.min(100, result));
+  };
+
+  // Helper function to calculate radial gradient center Y (returns 0-100 percentage, clamped)
+  const calculateRadialCenterY = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let result: number;
+    
+    switch (settings.fillGradientRadialCenterYMode) {
+      case 'range':
+        const [minY, maxY] = settings.fillGradientRadialCenterYRange || [25, 75];
+        result = minY + Math.random() * (maxY - minY);
+        break;
+      
+      case 'incremental':
+        const startY = settings.fillGradientRadialCenterYStartValue ?? 50;
+        const incrementY = (settings.fillGradientRadialCenterYIncrement || 0) * shapeIndex;
+        result = startY + incrementY;
+        
+        // Apply modulation to the final result, not just the increment
+        if (settings.fillGradientRadialCenterYModulationEnabled && settings.fillGradientRadialCenterYModulationValue > 0) {
+          const m = settings.fillGradientRadialCenterYModulationValue;
+          result = ((result % m) + m) % m;
+        }
+        break;
+      
+      case 'fixed':
+      default:
+        result = settings.fillGradientRadialCenterY ?? 50;
+        break;
+    }
+    
+    // Clamp to valid 0-100 percentage range
+    return Math.max(0, Math.min(100, result));
+  };
+
   const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
@@ -2080,7 +2144,7 @@ export const useShapeEditor = () => {
             if (useShapeMatching) {
               // Match gradient type to shape type - deterministic override of probabilities
               const roundShapes = ['circle', 'ellipse', 'star', 'blob', 'ring', 'spline-circle', 'spline-ring', 'spline-star', 'spline-blob'];
-              const isRoundShape = roundShapes.includes(selectedShapeType);
+              const isRoundShape = roundShapes.includes(randomType);
               
               if (isRoundShape) {
                 // For round shapes: ONLY use radial or conic, never linear
@@ -2156,10 +2220,12 @@ export const useShapeEditor = () => {
               });
             }
 
-            // Build gradient object with conic-specific parameters if applicable
+            // Build gradient object with type-specific parameters
             const gradientObj: {
               type: 'linear' | 'radial' | 'conic';
               stops: { offset: number; color: string }[];
+              radialCenterX?: number;
+              radialCenterY?: number;
               conicAngle?: number;
               conicCenterX?: number;
               conicCenterY?: number;
@@ -2167,6 +2233,12 @@ export const useShapeEditor = () => {
               type: gradientType,
               stops: gradientStops
             };
+            
+            // Add radial-specific parameters when gradient type is radial
+            if (gradientType === 'radial') {
+              gradientObj.radialCenterX = calculateRadialCenterX(effectiveBatchConfig, index);
+              gradientObj.radialCenterY = calculateRadialCenterY(effectiveBatchConfig, index);
+            }
             
             // Add conic-specific parameters when gradient type is conic
             if (gradientType === 'conic') {

@@ -449,6 +449,74 @@ function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex: number
 }
 
 /**
+ * Helper function to calculate radial gradient center X (returns 0-100 percentage, clamped)
+ */
+function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex: number): number {
+  let result: number;
+  
+  switch (settings.fillGradientRadialCenterXMode) {
+    case 'range':
+      const [minX, maxX] = settings.fillGradientRadialCenterXRange || [25, 75];
+      result = minX + Math.random() * (maxX - minX);
+      break;
+    
+    case 'incremental':
+      const startX = settings.fillGradientRadialCenterXStartValue ?? 50;
+      const incrementX = (settings.fillGradientRadialCenterXIncrement || 0) * shapeIndex;
+      result = startX + incrementX;
+      
+      // Apply modulation to the final result, not just the increment
+      if (settings.fillGradientRadialCenterXModulationEnabled && settings.fillGradientRadialCenterXModulationValue > 0) {
+        const m = settings.fillGradientRadialCenterXModulationValue;
+        result = ((result % m) + m) % m;
+      }
+      break;
+    
+    case 'fixed':
+    default:
+      result = settings.fillGradientRadialCenterX ?? 50;
+      break;
+  }
+  
+  // Clamp to valid 0-100 percentage range
+  return Math.max(0, Math.min(100, result));
+}
+
+/**
+ * Helper function to calculate radial gradient center Y (returns 0-100 percentage, clamped)
+ */
+function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex: number): number {
+  let result: number;
+  
+  switch (settings.fillGradientRadialCenterYMode) {
+    case 'range':
+      const [minY, maxY] = settings.fillGradientRadialCenterYRange || [25, 75];
+      result = minY + Math.random() * (maxY - minY);
+      break;
+    
+    case 'incremental':
+      const startY = settings.fillGradientRadialCenterYStartValue ?? 50;
+      const incrementY = (settings.fillGradientRadialCenterYIncrement || 0) * shapeIndex;
+      result = startY + incrementY;
+      
+      // Apply modulation to the final result, not just the increment
+      if (settings.fillGradientRadialCenterYModulationEnabled && settings.fillGradientRadialCenterYModulationValue > 0) {
+        const m = settings.fillGradientRadialCenterYModulationValue;
+        result = ((result % m) + m) % m;
+      }
+      break;
+    
+    case 'fixed':
+    default:
+      result = settings.fillGradientRadialCenterY ?? 50;
+      break;
+  }
+  
+  // Clamp to valid 0-100 percentage range
+  return Math.max(0, Math.min(100, result));
+}
+
+/**
  * Main function to generate shapes with batch configuration
  * Returns both the generated shapes and metadata for tracking generation boundaries
  */
@@ -640,7 +708,7 @@ export function generateShapesWithBatchConfig(
             if (useShapeMatching) {
               // Match gradient type to shape type - deterministic override of probabilities
               const roundShapes = ['circle', 'ellipse', 'star', 'blob', 'ring', 'spline-circle', 'spline-ring', 'spline-star', 'spline-blob'];
-              const isRoundShape = roundShapes.includes(shapeType);
+              const isRoundShape = roundShapes.includes(randomType);
               
               if (isRoundShape) {
                 // For round shapes: ONLY use radial or conic, never linear
@@ -676,10 +744,12 @@ export function generateShapesWithBatchConfig(
               }
             }
 
-            // Build gradient object with conic-specific parameters if applicable
+            // Build gradient object with type-specific parameters
             const gradientObj: {
               type: 'linear' | 'radial' | 'conic';
               stops: { offset: number; color: string }[];
+              radialCenterX?: number;
+              radialCenterY?: number;
               conicAngle?: number;
               conicCenterX?: number;
               conicCenterY?: number;
@@ -687,6 +757,12 @@ export function generateShapesWithBatchConfig(
               type: gradientType,
               stops: stops
             };
+            
+            // Add radial-specific parameters when gradient type is radial
+            if (gradientType === 'radial') {
+              gradientObj.radialCenterX = calculateRadialCenterX(batchConfig, index);
+              gradientObj.radialCenterY = calculateRadialCenterY(batchConfig, index);
+            }
             
             // Add conic-specific parameters when gradient type is conic
             if (gradientType === 'conic') {
