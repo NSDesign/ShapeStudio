@@ -525,21 +525,43 @@ export function calculateGridPosition(
   let x = startX + (column * effectiveColumnOffset) + (ignoreGridStartX ? 0 : gridStartX);
   let y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
   
-  // Apply grid offsets (alternating row/column offsets)
+  // Apply grid offsets (alternating or pattern-based row/column offsets)
   if (gridOffsets?.enabled) {
+    const mode = gridOffsets.mode ?? 'alternating';
+    
     // Row offset affects X position (shifts rows left/right)
-    if (gridOffsets.row?.enabled && gridOffsets.mode === 'alternating') {
-      const isOffsetRow = (row % 2) === (gridOffsets.row.startIndex ?? 0);
-      if (isOffsetRow) {
+    if (gridOffsets.row?.enabled) {
+      let shouldApplyRowOffset = false;
+      
+      if (mode === 'alternating') {
+        // Alternating mode: check if row index modulo 2 matches startIndex
+        shouldApplyRowOffset = (row % 2) === (gridOffsets.row.startIndex ?? 0);
+      } else if (mode === 'pattern') {
+        // Pattern mode: check if row index is in the pattern array
+        const rowPattern = gridOffsets.row.pattern ?? [];
+        shouldApplyRowOffset = rowPattern.includes(row);
+      }
+      
+      if (shouldApplyRowOffset) {
         const amount = gridOffsets.row.amount ?? 0;
         x += gridOffsets.row.direction === 'right' ? amount : -amount;
       }
     }
     
     // Column offset affects Y position (shifts columns up/down)
-    if (gridOffsets.column?.enabled && gridOffsets.mode === 'alternating') {
-      const isOffsetColumn = (column % 2) === (gridOffsets.column.startIndex ?? 0);
-      if (isOffsetColumn) {
+    if (gridOffsets.column?.enabled) {
+      let shouldApplyColumnOffset = false;
+      
+      if (mode === 'alternating') {
+        // Alternating mode: check if column index modulo 2 matches startIndex
+        shouldApplyColumnOffset = (column % 2) === (gridOffsets.column.startIndex ?? 0);
+      } else if (mode === 'pattern') {
+        // Pattern mode: check if column index is in the pattern array
+        const columnPattern = gridOffsets.column.pattern ?? [];
+        shouldApplyColumnOffset = columnPattern.includes(column);
+      }
+      
+      if (shouldApplyColumnOffset) {
         const amount = gridOffsets.column.amount ?? 0;
         y += gridOffsets.column.direction === 'down' ? amount : -amount;
       }
