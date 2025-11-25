@@ -151,6 +151,9 @@ export interface ShapeProperties {
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
     stops: { offset: number; color: string }[];
+    // Radial gradient specific parameters
+    radialCenterX?: number; // Center X as percentage of shape bounds (0-100)
+    radialCenterY?: number; // Center Y as percentage of shape bounds (0-100)
     // Conic gradient specific parameters
     conicAngle?: number; // Start angle in radians (0-2π)
     conicCenterX?: number; // Center X as percentage of shape bounds (0-100)

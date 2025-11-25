@@ -1962,8 +1962,12 @@ export class Shape {
           const centerY = bounds.y + (bounds.height * conicCenterYPercent / 100);
           gradient = ctx.createConicGradient(conicAngle, centerX, centerY);
         } else {
-          const centerX = bounds.x + bounds.width / 2;
-          const centerY = bounds.y + bounds.height / 2;
+          // Use radial gradient parameters if available
+          const radialCenterXPercent = this.properties.gradient.radialCenterX ?? 50;
+          const radialCenterYPercent = this.properties.gradient.radialCenterY ?? 50;
+          
+          const centerX = bounds.x + (bounds.width * radialCenterXPercent / 100);
+          const centerY = bounds.y + (bounds.height * radialCenterYPercent / 100);
           const radius = Math.max(bounds.width, bounds.height) / 2;
           gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
         }
