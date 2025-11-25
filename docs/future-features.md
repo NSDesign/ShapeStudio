@@ -927,6 +927,7 @@ The grid layout system currently supports:
 - X/Y randomization for position jitter
 - ✅ Grid Offsets (Alternating & Pattern modes)
 - ✅ Shape Masking (Grid Position filtering)
+- ✅ Grid Render Mode (Point vs Cell-based positioning)
 
 ### Implementation Status
 | Phase | Feature | Status |
@@ -934,7 +935,7 @@ The grid layout system currently supports:
 | Phase 1 | Alternating Grid Offsets | ✅ Implemented |
 | Phase 2 | Pattern-Based Offsets | ✅ Implemented |
 | Phase 3 | Shape Masking (Grid-Based) | ✅ Implemented |
-| Phase 4 | Cell-Based Rendering | Planned |
+| Phase 4 | Grid Render Mode (Cell-Based) | ✅ Implemented |
 | Phase 5+ | No-Overlap/Distance Maintenance | Future |
 
 ### Phased Implementation Plan
@@ -1339,38 +1340,46 @@ interface ShapeMaskingOperation {
 
 ---
 
-### Phase 4: Cell-Based Rendering
+### Phase 4: Grid Render Mode (Cell-Based Rendering) ✅ IMPLEMENTED
 
 #### Overview
-Currently shapes render at grid intersection points (where rows and columns meet). Cell-based rendering places shapes WITHIN grid cells, with options to constrain shape size to cell dimensions.
+Controls how shapes are positioned within grid cells: either at intersection points (Point mode) or centered within cells with size constraints (Cell mode).
 
-#### Current vs Cell-Based Rendering
-| Aspect | Current (Intersection) | Cell-Based |
-|--------|----------------------|------------|
-| Position | Row/column intersection point | Center of cell area |
-| Size control | Independent of grid | Constrained by cell dimensions |
-| Use case | Points on a grid | Shapes filling a grid |
+**Implementation Status**: Complete  
+**Location**: Part of Grid distribution settings in Distribution Layout section of BatchConfigDialog.tsx
+
+#### Render Modes
+| Mode | Position | Size Control | Use Case |
+|------|----------|-------------|----------|
+| Point | Grid intersection points | Independent of grid | Traditional grid positioning |
+| Cell | Center of cell area | Constrained by cell dimensions | Shapes filling a grid |
 
 #### Data Model
 ```typescript
 cellConstraints: {
-  enabled: boolean;
-  renderMode: 'intersection' | 'cell';
+  enabled: boolean;           // Auto-set based on renderMode
+  renderMode: 'point' | 'cell';
   
-  // Cell mode settings
+  // Cell mode settings (only active when renderMode = 'cell')
   fitMode: 'none' | 'fill' | 'contain' | 'cover';
-  // - none: Use original shape size
-  // - fill: Stretch to fill cell (may distort)
+  // - none: Use original shape size, just center in cell
   // - contain: Scale to fit within cell (maintain aspect ratio)
-  // - cover: Scale to cover cell (maintain aspect ratio, may crop)
+  // - cover: Scale to cover cell (maintain aspect ratio)
+  // - fill: Stretch to fill cell (configurable aspect ratio)
   
-  maintainAspectRatio: boolean;   // For 'fill' mode
-  padding: number;                // Inset from cell edges (px)
+  maintainAspectRatio: boolean;   // For 'fill' mode - uses Math.max (cover ratio) when true
+  padding: number;                // Inset from cell edges
   paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
 }
 ```
 
-#### Cell Calculation
+#### Implementation Details
+- **UI Location**: Render Mode controls appear within the Grid distribution settings, after Grid Offsets
+- **Client-side**: Full implementation in `shapeTypes.ts` with live preview
+- **Server-side**: Placeholder for future export support (client preview fully functional)
+- **Fill Mode Fix**: When `maintainAspectRatio=true`, uses `Math.max` (cover ratio) to ensure shape fills entire cell
+
+#### Cell Calculation (Client Implementation)
 ```typescript
 // Cell dimensions based on grid spacing
 const cellWidth = gridSpacingX;
@@ -1388,20 +1397,25 @@ const availableHeight = cellHeight - (padding * 2);
 switch (fitMode) {
   case 'contain':
     const scale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-    // Apply scale...
     break;
   case 'cover':
     const scale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-    // Apply scale...
     break;
   case 'fill':
-    // Scale X and Y independently (or together if maintainAspectRatio)
+    if (maintainAspectRatio) {
+      // Use cover ratio (Math.max) to fill entire cell
+      const scale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+    } else {
+      // Independent X/Y scaling
+      scaleX = availableWidth / shapeWidth;
+      scaleY = availableHeight / shapeHeight;
+    }
     break;
 }
 ```
 
 #### Interaction with Shape Masking
-Shape Masking (Phase 3) defines which cells are valid for rendering. Cell-based rendering then determines HOW shapes are placed within those valid cells.
+Shape Masking (Phase 3) defines which cells are valid for rendering. Grid Render Mode then determines HOW shapes are placed within those valid cells.
 
 ---
 
@@ -1463,7 +1477,7 @@ shapeMasking: {
 // cellConstraints defaults
 cellConstraints: {
   enabled: false,
-  renderMode: 'intersection',
+  renderMode: 'point',        // 'point' (intersection) or 'cell' (cell-based)
   fitMode: 'contain',
   maintainAspectRatio: true,
   padding: 0,
@@ -1475,7 +1489,7 @@ cellConstraints: {
 New properties should be added with defaults that preserve existing behavior:
 - `gridOffsets.enabled: false` → No offsets applied (current behavior)
 - `shapeMasking.enabled: false` → All positions render (current behavior)
-- `cellConstraints.renderMode: 'intersection'` → Current behavior
+- `cellConstraints.renderMode: 'point'` → Current behavior (shapes at intersection points)
 
 ---
 
