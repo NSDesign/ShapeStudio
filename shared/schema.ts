@@ -370,6 +370,33 @@ export const DEFAULT_SHAPE_MASKING: ShapeMaskingConfig = {
   }
 };
 
+// Cell constraints configuration for cell-based rendering (Phase 4)
+export interface CellConstraintsConfig {
+  enabled: boolean;
+  renderMode: 'intersection' | 'cell';
+  
+  // Cell mode settings - how shapes fit within cells
+  fitMode: 'none' | 'fill' | 'contain' | 'cover';
+  // - none: Use original shape size, just center in cell
+  // - fill: Stretch to fill cell (may distort aspect ratio)
+  // - contain: Scale to fit within cell (maintain aspect ratio, may have gaps)
+  // - cover: Scale to cover cell (maintain aspect ratio, may overflow)
+  
+  maintainAspectRatio: boolean;   // For 'fill' mode - if true, uses contain behavior
+  padding: number;                // Inset from cell edges
+  paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
+}
+
+// Default cell constraints configuration
+export const DEFAULT_CELL_CONSTRAINTS: CellConstraintsConfig = {
+  enabled: false,
+  renderMode: 'intersection',
+  fitMode: 'contain',
+  maintainAspectRatio: true,
+  padding: 0,
+  paddingUnit: 'px'
+};
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -405,6 +432,9 @@ export interface BatchConfigSettings {
   
   // Shape masking for grid positions (Phase 3)
   shapeMasking: ShapeMaskingConfig;
+  
+  // Cell constraints for cell-based rendering (Phase 4)
+  cellConstraints: CellConstraintsConfig;
   
   // Auto Distribute Layout Settings
   autoDistributeXCount: number; // Number of shapes to distribute in X direction
@@ -977,6 +1007,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Shape masking for grid positions
   shapeMasking: DEFAULT_SHAPE_MASKING,
+  
+  // Cell constraints for cell-based rendering
+  cellConstraints: DEFAULT_CELL_CONSTRAINTS,
   
   autoDistributeXCount: 10,
   autoDistributeYCount: 10,
