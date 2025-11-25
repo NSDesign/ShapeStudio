@@ -584,7 +584,20 @@ export interface BatchConfigSettings {
   fillGradientTypeDirectionEnabled: boolean; // Whether the Gradient Type & Direction section overrides main gradient probabilities
   
   // Conic gradient controls
-  fillGradientConicCenter: 'center' | 'random' | 'coordinates'; // Conic center positioning (legacy, kept for compatibility)
+  fillGradientConicCenter: 'center' | 'corners' | 'midpoints' | 'coordinates'; // Conic center positioning (matching radial structure)
+  fillGradientConicCorners: {
+    topLeft: boolean;
+    topRight: boolean;
+    bottomLeft: boolean;
+    bottomRight: boolean;
+  }; // Which corners can be selected
+  fillGradientConicMidpoints: {
+    top: boolean;
+    right: boolean;
+    bottom: boolean;
+    left: boolean;
+  }; // Which midpoints can be selected
+  fillGradientConicSelectionMode: 'random' | 'cycle'; // How to select from enabled corners/midpoints
   
   // Conic Gradient Start Angle (0-360°)
   fillGradientConicAngleMode: 'fixed' | 'range' | 'incremental';
@@ -1133,7 +1146,20 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientTypeDirectionEnabled: false, // Default: disabled - use main gradient probabilities
   
   // Conic gradient controls
-  fillGradientConicCenter: 'center', // Legacy, kept for compatibility
+  fillGradientConicCenter: 'center', // Default center positioning (matching radial)
+  fillGradientConicCorners: {
+    topLeft: true,
+    topRight: true,
+    bottomLeft: true,
+    bottomRight: true,
+  }, // All corners enabled by default
+  fillGradientConicMidpoints: {
+    top: true,
+    right: true,
+    bottom: true,
+    left: true,
+  }, // All midpoints enabled by default
+  fillGradientConicSelectionMode: 'random', // Default to random selection
   
   // Conic Gradient Start Angle
   fillGradientConicAngleMode: 'fixed',
@@ -2209,7 +2235,20 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientRadialEllipseProbability: z.number(),
   fillGradientMatchShape: z.boolean(),
   fillGradientTypeDirectionEnabled: z.boolean(),
-  fillGradientConicCenter: z.enum(['center', 'random', 'coordinates']),
+  fillGradientConicCenter: z.enum(['center', 'corners', 'midpoints', 'coordinates']),
+  fillGradientConicCorners: z.object({
+    topLeft: z.boolean(),
+    topRight: z.boolean(),
+    bottomLeft: z.boolean(),
+    bottomRight: z.boolean()
+  }),
+  fillGradientConicMidpoints: z.object({
+    top: z.boolean(),
+    right: z.boolean(),
+    bottom: z.boolean(),
+    left: z.boolean()
+  }),
+  fillGradientConicSelectionMode: z.enum(['random', 'cycle']),
   
   // Conic Gradient Start Angle
   fillGradientConicAngleMode: z.enum(['fixed', 'range', 'incremental']),
