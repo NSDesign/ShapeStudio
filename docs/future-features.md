@@ -1271,6 +1271,259 @@ New properties should be added with defaults that preserve existing behavior:
 
 ---
 
+## Grid Offset Presets
+
+### Overview
+Pre-configured offset patterns that allow users to quickly apply common visual arrangements with a single click. These presets combine row and column offset settings to create recognizable patterns used in design, architecture, and nature.
+
+### Implementation Context
+Grid Offset Presets build upon the Phase 1 Grid Offsets implementation, providing pre-defined configurations for the existing offset controls (enabled state, amount, startIndex, direction for both row and column axes).
+
+### Preset Definitions
+
+#### 1. Brick Pattern
+**Description:** Classic brick wall or masonry layout where alternating rows are horizontally offset by half the column spacing.
+
+**Configuration:**
+```typescript
+{
+  row: {
+    enabled: true,
+    amount: gridSpacingX / 2,  // Half the horizontal grid spacing
+    startIndex: 1,              // Start offset on 2nd row
+    direction: 'right'
+  },
+  column: {
+    enabled: false
+  }
+}
+```
+
+**Visual Effect:**
+```
+[*] [*] [*] [*]        Row 0 (not offset)
+   [*] [*] [*] [*]     Row 1 (offset right by 50%)
+[*] [*] [*] [*]        Row 2 (not offset)
+   [*] [*] [*] [*]     Row 3 (offset right by 50%)
+```
+
+**Use Cases:**
+- Brick wall textures
+- Tiled floor patterns
+- Running bond layouts
+- Offset photo grids
+
+---
+
+#### 2. Honeycomb Pattern
+**Description:** Hexagonal-style arrangement mimicking natural honeycomb structure. Alternating rows offset horizontally AND alternating columns offset vertically to create interlocking pattern.
+
+**Configuration:**
+```typescript
+{
+  row: {
+    enabled: true,
+    amount: gridSpacingX / 2,  // Half horizontal spacing
+    startIndex: 1,
+    direction: 'right'
+  },
+  column: {
+    enabled: true,
+    amount: gridSpacingY / 4,  // Quarter vertical spacing
+    startIndex: 1,
+    direction: 'down'
+  }
+}
+```
+
+**Visual Effect:**
+```
+[*]   [*]   [*]   [*]      Row 0
+   [*]   [*]   [*]   [*]   Row 1 (offset right + down)
+[*]   [*]   [*]   [*]      Row 2
+   [*]   [*]   [*]   [*]   Row 3 (offset right + down)
+```
+
+**Use Cases:**
+- Hexagonal grids
+- Organic/natural patterns
+- Efficient packing layouts
+- Scientific/molecular diagrams
+
+---
+
+#### 3. Staircase Pattern
+**Description:** Progressive diagonal arrangement where each row offsets further in the same direction, creating a descending or ascending stair effect.
+
+**Configuration (Descending Right):**
+```typescript
+{
+  row: {
+    enabled: true,
+    amount: 20,           // Fixed step amount (or gridSpacingX / 4)
+    startIndex: 1,        // Apply to all rows from 2nd onwards
+    direction: 'right'    // or 'left' for descending left
+  },
+  column: {
+    enabled: false
+  }
+}
+```
+
+**Note:** True staircase requires incremental offset mode (Phase 2 enhancement) where amount increases per row. With alternating mode, this creates a simpler two-step pattern.
+
+**Visual Effect (with alternating mode):**
+```
+[*] [*] [*] [*]           Row 0
+    [*] [*] [*] [*]       Row 1 (offset)
+[*] [*] [*] [*]           Row 2 (back to baseline)
+    [*] [*] [*] [*]       Row 3 (offset)
+```
+
+**Use Cases:**
+- Cascade layouts
+- Timeline visualizations
+- Hierarchical diagrams
+- Motion/sequence illustrations
+
+---
+
+#### 4. Zigzag/Wave Pattern
+**Description:** Alternating offset direction creating a zigzag or wave-like visual rhythm. Odd rows offset one direction, even rows offset the opposite direction.
+
+**Configuration:**
+```typescript
+// Note: Current implementation doesn't support alternating direction per row.
+// This preset would require Phase 2 pattern-based offsets or direction alternation.
+
+// Workaround using column offset for vertical zigzag:
+{
+  row: {
+    enabled: false
+  },
+  column: {
+    enabled: true,
+    amount: gridSpacingY / 2,
+    startIndex: 1,
+    direction: 'down'  // Creates vertical zigzag
+  }
+}
+```
+
+**True Zigzag (requires Phase 2):**
+```
+   [*] [*] [*] [*]        Row 0 (offset right)
+[*] [*] [*] [*]           Row 1 (offset left)
+   [*] [*] [*] [*]        Row 2 (offset right)
+[*] [*] [*] [*]           Row 3 (offset left)
+```
+
+**Use Cases:**
+- Chevron patterns
+- Wave/water effects
+- Dynamic visual rhythm
+- Art deco styling
+
+---
+
+#### 5. Diamond/Checkerboard Pattern
+**Description:** Combined row and column offsets that create a diamond or checkerboard-like arrangement with shapes at diagonal intersections.
+
+**Configuration:**
+```typescript
+{
+  row: {
+    enabled: true,
+    amount: gridSpacingX / 2,
+    startIndex: 1,
+    direction: 'right'
+  },
+  column: {
+    enabled: true,
+    amount: gridSpacingY / 2,
+    startIndex: 1,
+    direction: 'down'
+  }
+}
+```
+
+**Visual Effect:**
+```
+[*]     [*]     [*]        Row 0
+    [*]     [*]     [*]    Row 1 (offset right + down)
+[*]     [*]     [*]        Row 2
+    [*]     [*]     [*]    Row 3 (offset right + down)
+```
+
+**Use Cases:**
+- Argyle patterns
+- Diamond tiling
+- Decorative geometric designs
+- Playing card patterns
+
+---
+
+### UI/UX Implementation
+
+#### Preset Selector
+- **Location:** Within Grid Offsets section, above manual controls
+- **Format:** Dropdown or button group with preset names and icons
+- **Options:** "None", "Brick", "Honeycomb", "Staircase", "Zigzag", "Diamond"
+
+#### Behavior
+1. User selects a preset
+2. Offset controls update to show preset values
+3. User can modify values after applying preset (exits "preset mode")
+4. Selecting "None" clears all offsets
+
+#### Visual Preview
+- Small icon/thumbnail next to each preset option showing the pattern
+- Tooltip with description on hover
+
+#### Smart Defaults
+- Preset amounts calculated from current grid spacing when possible
+- If grid spacing is 0 or undefined, use sensible pixel values (e.g., 20px)
+
+### Technical Notes
+
+#### Preset Application Logic
+```typescript
+function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: number): GridOffsets {
+  switch (preset) {
+    case 'brick':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: false, amount: 0, startIndex: 0, direction: 'down' }
+      };
+    case 'honeycomb':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: true, amount: gridSpacingY / 4, startIndex: 1, direction: 'down' }
+      };
+    case 'diamond':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: true, amount: gridSpacingY / 2, startIndex: 1, direction: 'down' }
+      };
+    // ... other presets
+  }
+}
+```
+
+#### Future Enhancements
+- User-defined presets (save current offset configuration as named preset)
+- Preset variations (e.g., "Brick Left", "Brick Right")
+- Preset combinations with pattern mode (Phase 2)
+- Animated preview showing pattern effect
+
+---
+
 ## Grid Offset Enhancements (Future Considerations)
 
 The current Grid Offsets implementation (Phase 1) provides alternating row/column offsets with dynamic start index selection and improved input field UX.
