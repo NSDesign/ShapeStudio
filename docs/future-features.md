@@ -1549,6 +1549,356 @@ The current Grid Offsets implementation (Phase 1) provides alternating row/colum
 
 ---
 
+## Echo/Spread Effect
+
+### Overview
+A controlled layering system that creates deliberate position offsets between repetitions of shape sets, producing visual effects like motion blur trails, drop shadows, or echo patterns.
+
+### Current State
+Shape Set repetitions are currently positioned identically—each repetition overlays exactly on top of previous instances. Users cannot create predictable offset patterns between repetitions without manually creating separate sets with different positions.
+
+### Proposed Feature
+
+#### Core Functionality
+1. **Echo/Spread Toggle**
+   - Enable/disable echo effect per Shape Set
+   - When enabled, each repetition is positioned at a calculated offset from the base position
+   - Works in conjunction with existing repetition settings (fixed count, range)
+
+2. **Offset Configuration**
+   - **X Offset per Instance:** Horizontal displacement per repetition (e.g., +5px)
+   - **Y Offset per Instance:** Vertical displacement per repetition (e.g., +5px)
+   - **Cumulative vs. Fixed:** Option for cumulative offsets (1st at 0, 2nd at +5, 3rd at +10) or fixed offset from base
+   - **Direction Modes:** 
+     - Linear (consistent direction)
+     - Radial (spreading outward from center)
+     - Random (controlled scatter around base position)
+
+3. **Visual Result Examples**
+   - **Motion Trail:** 5 repetitions with offset (10,0) creates horizontal trail effect
+   - **Drop Shadow Stack:** 5 repetitions with offset (2,2) creates depth illusion
+   - **Radial Echo:** 8 repetitions spreading outward in circular pattern
+   - **Cascade:** Repetitions stacking diagonally like cards
+
+4. **Additional Transform Options**
+   - **Opacity Fade:** Each repetition slightly more transparent
+   - **Scale Reduction:** Each repetition slightly smaller
+   - **Rotation Increment:** Each repetition rotated by N degrees
+   - **Color Shift:** Gradual hue/saturation shift across repetitions
+
+#### Technical Requirements
+
+**Schema Extensions:**
+```typescript
+interface EchoSpreadConfig {
+  enabled: boolean;
+  mode: 'linear' | 'radial' | 'random';
+  
+  // Linear/Radial mode
+  offsetX: number;           // Pixels per repetition in X
+  offsetY: number;           // Pixels per repetition in Y
+  cumulative: boolean;       // true = offsets accumulate, false = fixed from base
+  
+  // Radial mode
+  radialStartAngle: number;  // Starting angle for radial spread (degrees)
+  radialSpacing: number;     // Distance per repetition (pixels)
+  
+  // Random mode
+  randomRangeX: [number, number];  // Min/max X scatter
+  randomRangeY: [number, number];  // Min/max Y scatter
+  
+  // Additional transforms
+  opacityFade: boolean;
+  opacityStep: number;       // Opacity reduction per repetition (e.g., 0.1)
+  scaleReduction: boolean;
+  scaleStep: number;         // Scale reduction per repetition (e.g., 0.95)
+  rotationIncrement: boolean;
+  rotationStep: number;      // Rotation per repetition (degrees)
+}
+```
+
+**Generation Logic:**
+```typescript
+function applyEchoSpread(
+  baseShapes: Shape[],
+  repetitionIndex: number,
+  config: EchoSpreadConfig
+): Shape[] {
+  if (!config.enabled) return baseShapes;
+  
+  const offsetMultiplier = config.cumulative ? repetitionIndex : 1;
+  
+  return baseShapes.map(shape => {
+    const offsetShape = { ...shape };
+    
+    // Apply position offset
+    if (config.mode === 'linear') {
+      offsetShape.transform.x += config.offsetX * offsetMultiplier;
+      offsetShape.transform.y += config.offsetY * offsetMultiplier;
+    } else if (config.mode === 'radial') {
+      const angle = config.radialStartAngle + (360 / repetitionIndex);
+      const distance = config.radialSpacing * repetitionIndex;
+      offsetShape.transform.x += Math.cos(angle * Math.PI / 180) * distance;
+      offsetShape.transform.y += Math.sin(angle * Math.PI / 180) * distance;
+    }
+    
+    // Apply additional transforms
+    if (config.opacityFade) {
+      offsetShape.opacity *= Math.pow(1 - config.opacityStep, repetitionIndex);
+    }
+    if (config.scaleReduction) {
+      const scaleFactor = Math.pow(config.scaleStep, repetitionIndex);
+      offsetShape.width *= scaleFactor;
+      offsetShape.height *= scaleFactor;
+    }
+    if (config.rotationIncrement) {
+      offsetShape.rotation += config.rotationStep * repetitionIndex;
+    }
+    
+    return offsetShape;
+  });
+}
+```
+
+#### UI/UX Design
+
+**Location:** New "Echo/Spread" section in Set-level configuration (alongside Repetition settings)
+
+**Controls:**
+1. **Enable Toggle:** Checkbox to activate echo effect
+2. **Mode Selector:** Dropdown (Linear/Radial/Random)
+3. **Offset Inputs:** X/Y input fields with unit labels
+4. **Cumulative Toggle:** Checkbox for cumulative vs. fixed offset
+5. **Additional Effects:** Collapsible section with opacity/scale/rotation sliders
+6. **Preview:** Real-time preview showing echo pattern on canvas
+
+**Visual Indicators:**
+- Badge showing "Echo: 5 steps" or similar summary
+- Ghost preview lines showing offset direction
+
+#### Use Cases
+1. **Depth Simulation:** Create 3D-like depth by stacking slightly offset copies
+2. **Vintage Print Effect:** Simulate old print registration errors
+3. **Neon Glow Trails:** Create glowing trail effects behind shapes
+4. **Kinetic Typography:** Suggest motion through positioned repetitions
+5. **Layered Shadows:** Build complex shadow effects with controlled falloff
+
+#### Implementation Phases
+1. **Phase 1:** Basic linear offset with X/Y controls and cumulative option
+2. **Phase 2:** Radial and random modes
+3. **Phase 3:** Additional transforms (opacity, scale, rotation)
+4. **Phase 4:** Advanced color shifting and blend mode variations
+
+---
+
+## Advanced Multi-Filter System for Shape Sets
+
+### Overview
+A comprehensive filtering system for the Sets Manager dialog that enables efficient management of large numbers of shape sets through name-based and property-based filtering.
+
+### Current State
+The Sets Manager dialog displays all shape sets in a flat list. As projects grow to include dozens of sets, finding and managing specific sets becomes increasingly difficult. Users must scroll through the entire list to find sets with specific characteristics.
+
+### Proposed Feature
+
+#### Core Functionality
+
+1. **Dual Filter Approach**
+   - **Name Filter:** Quick-access dropdown showing all set names for direct selection
+   - **Property Filters:** Combinable filter criteria that work as removable chips/badges
+
+2. **Filter Categories**
+
+   | Category | Options |
+   |----------|---------|
+   | Hidden Status | Hidden, Not Hidden |
+   | Shape Types | Multi-select: rectangle, circle, polygon, star, etc. |
+   | Lock Status | Locked, Unlocked |
+   | Count Mode | Fixed, Range |
+   | Blending | Enabled, Disabled |
+   | Transforms | Enabled, Disabled |
+   | Distribution Layout | Grid, Spiral, Wave, Ellipse, Auto-Distribute, None |
+   | Z-index Range | Min/Max value inputs |
+   | Repetition Mode | Use Global, Fixed, Range |
+   | Has Pattern | Gradient, Solid, None |
+
+3. **Multi-Filter Logic**
+   - Filters combine with AND logic (sets must match ALL active filters)
+   - Each filter category is independent
+   - Clear visual indication of active filters
+
+4. **Filter Management**
+   - Add filters via dropdown + value selector → appears as removable chip
+   - "Clear All Filters" button when filters are active
+   - Live count display: "5 of 20 sets shown"
+   - Filters persist during session (optional: save with project)
+
+#### Technical Requirements
+
+**Schema Extensions:**
+```typescript
+interface SetFilter {
+  id: string;
+  category: FilterCategory;
+  value: string | number | boolean | string[];
+  operator?: 'equals' | 'contains' | 'greater' | 'less' | 'range';
+}
+
+type FilterCategory = 
+  | 'hidden' 
+  | 'shape-types' 
+  | 'locked' 
+  | 'count-mode'
+  | 'blending'
+  | 'transforms'
+  | 'distribution'
+  | 'z-index-min'
+  | 'z-index-max'
+  | 'repetition-mode'
+  | 'name';
+
+interface FilterState {
+  activeFilters: SetFilter[];
+  nameSearch: string;
+  showFilteredCount: boolean;
+}
+```
+
+**Filter Logic Implementation:**
+```typescript
+function applyFilters(
+  sets: GenerationSet[],
+  filters: FilterState
+): GenerationSet[] {
+  return sets.filter(set => {
+    // Name search (partial match)
+    if (filters.nameSearch && !set.name.toLowerCase().includes(filters.nameSearch.toLowerCase())) {
+      return false;
+    }
+    
+    // Apply each active filter
+    for (const filter of filters.activeFilters) {
+      if (!matchesFilter(set, filter)) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+}
+
+function matchesFilter(set: GenerationSet, filter: SetFilter): boolean {
+  switch (filter.category) {
+    case 'hidden':
+      return set.hidden === (filter.value === 'hidden');
+    case 'locked':
+      return set.locked === (filter.value === 'locked');
+    case 'shape-types':
+      const filterTypes = filter.value as string[];
+      return set.shapeTypes.some(type => filterTypes.includes(type));
+    case 'distribution':
+      return set.batchConfig.distributionPattern === filter.value;
+    case 'z-index-min':
+      return set.zIndexOffset >= (filter.value as number);
+    case 'z-index-max':
+      return set.zIndexOffset <= (filter.value as number);
+    case 'count-mode':
+      return set.batchConfig.generationCountMode === filter.value;
+    case 'blending':
+      return set.batchConfig.setBlendingEnabled === (filter.value === 'enabled');
+    case 'transforms':
+      return set.batchConfig.setTransformEnabled === (filter.value === 'enabled');
+    default:
+      return true;
+  }
+}
+```
+
+#### UI/UX Design
+
+**Filter Bar Layout:**
+```
+┌────────────────────────────────────────────────────────────────┐
+│ 🔍 [Search by name...  ▼]  [+ Add Filter ▼]  [Clear All]      │
+├────────────────────────────────────────────────────────────────┤
+│ Active: [Hidden: Yes ✕] [Shape: Circle ✕] [Layout: Grid ✕]   │
+├────────────────────────────────────────────────────────────────┤
+│                    Showing 5 of 20 sets                        │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Filter Chip Component:**
+```tsx
+function FilterChip({ filter, onRemove }: FilterChipProps) {
+  return (
+    <div className="flex items-center gap-1 px-2 py-1 bg-blue-600/20 
+                    border border-blue-500/50 rounded-full text-xs">
+      <span className="text-slate-400">{filter.category}:</span>
+      <span className="text-slate-200">{filter.value}</span>
+      <button onClick={onRemove} className="ml-1 hover:text-red-400">
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+```
+
+**Add Filter Dropdown:**
+1. Click "+ Add Filter" → opens category selector
+2. Select category (e.g., "Distribution Layout")
+3. Shows value options for that category
+4. Selecting value adds the filter chip immediately
+
+#### Quick Filter Presets
+Pre-defined filter combinations for common workflows:
+
+| Preset Name | Filters Applied |
+|-------------|-----------------|
+| Show Hidden Only | hidden = true |
+| Grid Layouts Only | distribution = grid |
+| Active Sets | hidden = false, locked = false |
+| Complex Sets | blending = enabled OR transforms = enabled |
+| High Z-Index | z-index-min = 1000 |
+
+#### Persistence Options
+- **Session Only:** Filters reset when dialog closes (default)
+- **Remember:** Filters persist across dialog open/close
+- **Save with Project:** Filter state saved in project file
+
+#### Implementation Phases
+
+1. **Phase 1: Core Filtering**
+   - Name search with partial matching
+   - Basic filter categories: hidden, locked, shape-types
+   - Filter chip UI with add/remove functionality
+   - Live count display
+
+2. **Phase 2: Extended Filters**
+   - Distribution layout filter
+   - Count mode filter
+   - Blending/transforms enabled filters
+   - Z-index range filters
+
+3. **Phase 3: Advanced Features**
+   - Quick filter presets
+   - Filter persistence options
+   - Bulk actions on filtered results
+   - Export filtered set list
+
+4. **Phase 4: UX Enhancements**
+   - Filter suggestions based on current sets
+   - Recently used filters
+   - Keyboard shortcuts for common filters
+   - Filter combinations saved as named presets
+
+#### Benefits
+1. **Efficiency:** Quickly isolate sets by specific criteria
+2. **Organization:** Manage complex projects with many sets
+3. **Workflow:** Create focused views for different tasks
+4. **Discoverability:** Find sets with specific properties easily
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
