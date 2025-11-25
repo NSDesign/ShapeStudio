@@ -1152,17 +1152,10 @@ export function applyGridDistribution(
             scaleY = coverScale;
             break;
           case 'fill':
-            // Scale to exactly fill cell dimensions
-            if (cellConstraints.maintainAspectRatio) {
-              // Fill to match the larger dimension while maintaining aspect ratio
-              const fillScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-              scaleX = fillScale;
-              scaleY = fillScale;
-            } else {
-              // Independent scaling - stretch to fill completely (distorts aspect ratio)
-              scaleX = availableWidth / shapeWidth;
-              scaleY = availableHeight / shapeHeight;
-            }
+            // Stretch to exactly match cell dimensions (distorts aspect ratio)
+            // This is the expected behavior for "fill" - shapes stretch to fill the cell
+            scaleX = availableWidth / shapeWidth;
+            scaleY = availableHeight / shapeHeight;
             break;
         }
         
@@ -1170,7 +1163,7 @@ export function applyGridDistribution(
         shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
         shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
         
-        console.log(`🔲 [CELL MODE] Shape ${index}: fitMode=${cellConstraints.fitMode}, scale=${scaleX.toFixed(2)}, cellSize=${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}, shapeSize=${shapeWidth}x${shapeHeight}`);
+        console.log(`🔲 [CELL MODE] Shape ${index}: fitMode=${cellConstraints.fitMode}, scale=${scaleX.toFixed(2)}x${scaleY.toFixed(2)}, cellSize=${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}, shapeSize=${shapeWidth}x${shapeHeight}`);
       }
     }
     

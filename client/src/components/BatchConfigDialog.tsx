@@ -1113,23 +1113,6 @@ export default function BatchConfigDialog({
                                 </Select>
                               </div>
                               
-                              {/* Maintain Aspect Ratio - Only for fill mode */}
-                              {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'fill' && (
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    checked={currentSettings.cellConstraints?.maintainAspectRatio ?? true}
-                                    onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
-                                      cellConstraints: { 
-                                        ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
-                                        maintainAspectRatio: checked as boolean
-                                      } 
-                                    }))}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                    data-testid="checkbox-maintain-aspect"
-                                  />
-                                  <Label className="text-xs text-slate-300">Maintain Aspect Ratio</Label>
-                                </div>
-                              )}
                               
                               {/* Padding */}
                               <div className="space-y-2">
