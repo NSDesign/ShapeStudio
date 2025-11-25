@@ -309,7 +309,7 @@ export default function BatchConfigDialog({
           className={`bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 ${
             sidebarCollapsed 
               ? 'h-8 w-8 p-0 flex items-center justify-center' 
-              : 'h-6 w-full justify-start gap-2'
+              : 'h-8 w-full justify-start gap-2'
           }`}
           onClick={() => setIsOpen(true)}
           data-testid="button-batch-settings"
@@ -324,7 +324,7 @@ export default function BatchConfigDialog({
           className={`bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 ${
             sidebarCollapsed 
               ? 'h-8 w-8 p-0 flex items-center justify-center' 
-              : 'h-6 w-full justify-start gap-2'
+              : 'h-8 w-full justify-start gap-2'
           }`}
           onClick={onOpenGenerationSetsManager}
           disabled={!onOpenGenerationSetsManager}
