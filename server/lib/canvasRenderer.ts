@@ -277,8 +277,18 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       } else if (shape.properties.gradient.type === 'conic') {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;
-        const radius = Math.max(bounds.width, bounds.height) / 2;
-        gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        // Try conic gradient, fall back to radial if node-canvas doesn't support it
+        try {
+          if (typeof (ctx as any).createConicGradient === 'function') {
+            gradient = (ctx as any).createConicGradient(0, centerX, centerY);
+          } else {
+            const radius = Math.max(bounds.width, bounds.height) / 2;
+            gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+          }
+        } catch {
+          const radius = Math.max(bounds.width, bounds.height) / 2;
+          gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        }
       } else {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;

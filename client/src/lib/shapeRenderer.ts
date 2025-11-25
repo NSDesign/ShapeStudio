@@ -116,12 +116,8 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       } else if (shape.properties.gradient.type === 'conic') {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;
-        if (typeof ctx.createConicGradient === 'function') {
-          gradient = ctx.createConicGradient(0, centerX, centerY);
-        } else {
-          const radius = Math.max(bounds.width, bounds.height) / 2;
-          gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-        }
+        // createConicGradient(startAngle, centerX, centerY) - colors rotate around center point
+        gradient = ctx.createConicGradient(0, centerX, centerY);
       } else {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;
