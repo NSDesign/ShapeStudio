@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -1042,6 +1042,292 @@ export default function BatchConfigDialog({
                                   </div>
                                 )}
                               </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Shape Masking Section */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.shapeMasking?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                  shapeMasking: { 
+                                    ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                    enabled: checked as boolean,
+                                    grid: {
+                                      ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                      enabled: checked as boolean
+                                    }
+                                  } 
+                                }))}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                data-testid="checkbox-shape-masking-enabled"
+                              />
+                              <Label className="text-sm font-medium text-slate-200">Shape Masking</Label>
+                              <span className="text-xs text-slate-400 ml-2">
+                                {(currentSettings.shapeMasking?.grid?.mode ?? 'alternating') === 'alternating' 
+                                  ? '(Skip every N)' 
+                                  : '(Pattern)'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {(currentSettings.shapeMasking?.enabled ?? false) && (
+                            <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                              {/* Mode and Priority Row */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Mode</Label>
+                                  <Select 
+                                    value={currentSettings.shapeMasking?.grid?.mode ?? 'alternating'}
+                                    onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                      shapeMasking: { 
+                                        ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                        grid: {
+                                          ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                          mode: value as 'alternating' | 'pattern'
+                                        }
+                                      } 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-shape-masking-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="alternating" className="text-slate-200 hover:bg-slate-700">Alternating</SelectItem>
+                                      <SelectItem value="pattern" className="text-slate-200 hover:bg-slate-700">Pattern</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Priority</Label>
+                                  <Select 
+                                    value={currentSettings.shapeMasking?.grid?.priority ?? 'row-first'}
+                                    onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                      shapeMasking: { 
+                                        ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                        grid: {
+                                          ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                          priority: value as 'row-first' | 'column-first'
+                                        }
+                                      } 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-shape-masking-priority">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="row-first" className="text-slate-200 hover:bg-slate-700">Row First</SelectItem>
+                                      <SelectItem value="column-first" className="text-slate-200 hover:bg-slate-700">Column First</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              {/* Invert Toggle */}
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  checked={currentSettings.shapeMasking?.grid?.invert ?? false}
+                                  onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                    shapeMasking: { 
+                                      ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                      grid: {
+                                        ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                        invert: checked as boolean
+                                      }
+                                    } 
+                                  }))}
+                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                  data-testid="checkbox-shape-masking-invert"
+                                />
+                                <Label className="text-xs text-slate-300">
+                                  Invert: {(currentSettings.shapeMasking?.grid?.invert ?? false) 
+                                    ? 'Render only matched positions' 
+                                    : 'Exclude matched positions'}
+                                </Label>
+                              </div>
+                              
+                              {/* Alternating Mode Controls */}
+                              {(currentSettings.shapeMasking?.grid?.mode ?? 'alternating') === 'alternating' && (
+                                <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                                  <Label className="text-xs font-medium text-slate-300">Alternating Settings</Label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Skip Every N</Label>
+                                      <Input
+                                        type="number"
+                                        min={1}
+                                        max={10}
+                                        value={currentSettings.shapeMasking?.grid?.alternating?.skipEvery ?? 2}
+                                        onChange={(e) => {
+                                          const value = Math.max(1, Math.min(10, parseInt(e.target.value) || 2));
+                                          handleSettingsUpdate((prev) => ({ 
+                                            shapeMasking: { 
+                                              ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                              grid: {
+                                                ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                alternating: {
+                                                  ...(prev.shapeMasking?.grid?.alternating || DEFAULT_SHAPE_MASKING.grid.alternating),
+                                                  skipEvery: value
+                                                }
+                                              }
+                                            } 
+                                          }));
+                                        }}
+                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-shape-masking-skip-every"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start Index</Label>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={currentSettings.shapeMasking?.grid?.alternating?.skipEvery ? currentSettings.shapeMasking.grid.alternating.skipEvery - 1 : 1}
+                                        value={currentSettings.shapeMasking?.grid?.alternating?.startIndex ?? 0}
+                                        onChange={(e) => {
+                                          const skipEvery = currentSettings.shapeMasking?.grid?.alternating?.skipEvery ?? 2;
+                                          const value = Math.max(0, Math.min(skipEvery - 1, parseInt(e.target.value) || 0));
+                                          handleSettingsUpdate((prev) => ({ 
+                                            shapeMasking: { 
+                                              ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                              grid: {
+                                                ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                alternating: {
+                                                  ...(prev.shapeMasking?.grid?.alternating || DEFAULT_SHAPE_MASKING.grid.alternating),
+                                                  startIndex: value
+                                                }
+                                              }
+                                            } 
+                                          }));
+                                        }}
+                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-shape-masking-start-index"
+                                      />
+                                    </div>
+                                  </div>
+                                  <span className="text-xs text-slate-500">
+                                    Masks {(currentSettings.shapeMasking?.grid?.priority ?? 'row-first') === 'row-first' ? 'rows' : 'columns'} at indices {currentSettings.shapeMasking?.grid?.alternating?.startIndex ?? 0}, {(currentSettings.shapeMasking?.grid?.alternating?.startIndex ?? 0) + (currentSettings.shapeMasking?.grid?.alternating?.skipEvery ?? 2)}, {(currentSettings.shapeMasking?.grid?.alternating?.startIndex ?? 0) + 2*(currentSettings.shapeMasking?.grid?.alternating?.skipEvery ?? 2)}, ...
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Pattern Mode Controls */}
+                              {(currentSettings.shapeMasking?.grid?.mode ?? 'alternating') === 'pattern' && (
+                                <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                                  <Label className="text-xs font-medium text-slate-300">Pattern Settings</Label>
+                                  <div className="space-y-2">
+                                    {(currentSettings.shapeMasking?.grid?.pattern ?? []).map((entry, idx) => (
+                                      <div key={idx} className="flex items-center gap-2">
+                                        <div className="flex-1 grid grid-cols-2 gap-2">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs text-slate-400">Row {idx + 1}</Label>
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              value={entry.row}
+                                              onChange={(e) => {
+                                                const newRow = Math.max(0, parseInt(e.target.value) || 0);
+                                                handleSettingsUpdate((prev) => {
+                                                  const patterns = [...(prev.shapeMasking?.grid?.pattern ?? [])];
+                                                  patterns[idx] = { ...patterns[idx], row: newRow };
+                                                  return { 
+                                                    shapeMasking: { 
+                                                      ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                                      grid: {
+                                                        ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                        pattern: patterns
+                                                      }
+                                                    } 
+                                                  };
+                                                });
+                                              }}
+                                              className="h-7 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid={`input-shape-masking-pattern-row-${idx}`}
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs text-slate-400">Columns</Label>
+                                            <Input
+                                              type="text"
+                                              value={entry.columns.join(', ')}
+                                              onChange={(e) => {
+                                                const cols = e.target.value
+                                                  .split(',')
+                                                  .map(s => s.trim())
+                                                  .filter(s => s !== '')
+                                                  .map(s => parseInt(s, 10))
+                                                  .filter(n => !isNaN(n) && n >= 0);
+                                                handleSettingsUpdate((prev) => {
+                                                  const patterns = [...(prev.shapeMasking?.grid?.pattern ?? [])];
+                                                  patterns[idx] = { ...patterns[idx], columns: cols };
+                                                  return { 
+                                                    shapeMasking: { 
+                                                      ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                                      grid: {
+                                                        ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                        pattern: patterns
+                                                      }
+                                                    } 
+                                                  };
+                                                });
+                                              }}
+                                              placeholder="0, 1, 3"
+                                              className="h-7 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid={`input-shape-masking-pattern-cols-${idx}`}
+                                            />
+                                          </div>
+                                        </div>
+                                        <button
+                                          onClick={() => {
+                                            handleSettingsUpdate((prev) => {
+                                              const patterns = [...(prev.shapeMasking?.grid?.pattern ?? [])];
+                                              patterns.splice(idx, 1);
+                                              return { 
+                                                shapeMasking: { 
+                                                  ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                                  grid: {
+                                                    ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                    pattern: patterns
+                                                  }
+                                                } 
+                                              };
+                                            });
+                                          }}
+                                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded"
+                                          data-testid={`button-shape-masking-pattern-remove-${idx}`}
+                                        >
+                                          <Minus className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                    <button
+                                      onClick={() => {
+                                        handleSettingsUpdate((prev) => {
+                                          const patterns = [...(prev.shapeMasking?.grid?.pattern ?? [])];
+                                          patterns.push({ row: patterns.length, columns: [] });
+                                          return { 
+                                            shapeMasking: { 
+                                              ...(prev.shapeMasking || DEFAULT_SHAPE_MASKING), 
+                                              grid: {
+                                                ...(prev.shapeMasking?.grid || DEFAULT_SHAPE_MASKING.grid),
+                                                pattern: patterns
+                                              }
+                                            } 
+                                          };
+                                        });
+                                      }}
+                                      className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 p-1 rounded hover:bg-slate-700"
+                                      data-testid="button-shape-masking-pattern-add"
+                                    >
+                                      <Plus className="h-3 w-3" /> Add Row Pattern
+                                    </button>
+                                  </div>
+                                  <span className="text-xs text-slate-500">Define specific row/column combinations to mask</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
