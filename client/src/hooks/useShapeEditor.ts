@@ -2930,6 +2930,7 @@ export const useShapeEditor = () => {
         gridYRandomization: effectiveBatchConfig.gridYRandomization,
         gridOffsets: effectiveBatchConfig.gridOffsets,
         shapeMasking: effectiveBatchConfig.shapeMasking,
+        cellConstraints: effectiveBatchConfig.cellConstraints,
         autoDistributeXCount: effectiveBatchConfig.autoDistributeXCount,
         autoDistributeYCount: effectiveBatchConfig.autoDistributeYCount,
         waveType: effectiveBatchConfig.waveType,

@@ -977,6 +977,10 @@ export function applyGridDistribution(
   const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
   const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
   
+  // Debug logging for cell mode
+  console.log('🔲 [GRID RENDER MODE] cellConstraints:', JSON.stringify(cellConstraints));
+  console.log('🔲 [GRID RENDER MODE] enabled:', cellConstraints.enabled, 'renderMode:', cellConstraints.renderMode, 'isCellMode:', isCellMode);
+  
   // In cell mode, cells are the spaces BETWEEN grid lines
   // For R rows × C columns of intersection points, there are (R-1) × (C-1) cells
   const effectiveRows = isCellMode ? Math.max(1, config.gridRows - 1) : config.gridRows;

@@ -150,6 +150,8 @@ export default function BatchConfigDialog({
   // Initialize settings with backward compatibility migration
   useEffect(() => {
     const mergedSettings = { ...defaultSettings, ...settings };
+    console.log('🔄 [DIALOG INIT] Incoming settings.cellConstraints:', JSON.stringify(settings.cellConstraints));
+    console.log('🔄 [DIALOG INIT] Merged cellConstraints:', JSON.stringify(mergedSettings.cellConstraints));
     
     // Migrate legacy 'auto' spacing mode to 'auto-centered'
     if ((mergedSettings.gridSpacingXMode as any) === 'auto') {
@@ -271,6 +273,7 @@ export default function BatchConfigDialog({
       // If generation sets are enabled, update only the batchConfig portion via partial update
       if (generationSetsEnabled && currentGenerationSetId && updateGenerationSetPartial) {
         console.log('📝 [GEN CONFIG APPLY] Updating batchConfig for set:', currentGenerationSetId);
+        console.log('📝 [GEN CONFIG APPLY] cellConstraints being saved:', JSON.stringify(currentSettings.cellConstraints));
         await updateGenerationSetPartial(currentGenerationSetId, {
           batchConfig: { ...currentSettings }
         });
