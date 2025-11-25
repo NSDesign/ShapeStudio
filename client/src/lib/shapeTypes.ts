@@ -1038,64 +1038,77 @@ export function applyGridDistribution(
       config.gridOffsets
     );
     
-    // Apply cell constraints scaling if in cell mode
-    if (isCellMode && cellConstraints.fitMode !== 'none') {
-      // Calculate padding
-      let paddingX = 0;
-      let paddingY = 0;
-      if (cellConstraints.padding > 0) {
-        if (cellConstraints.paddingUnit === '%') {
-          paddingX = (cellConstraints.padding / 100) * cellWidth;
-          paddingY = (cellConstraints.padding / 100) * cellHeight;
-        } else {
-          paddingX = cellConstraints.padding;
-          paddingY = cellConstraints.padding;
-        }
-      }
+    // Cell mode: offset position to cell center and apply scaling
+    let cellOffsetX = 0;
+    let cellOffsetY = 0;
+    
+    if (isCellMode) {
+      // In cell mode, offset from intersection point to cell center
+      // Cell center is half a cell width/height from the intersection point
+      cellOffsetX = cellWidth / 2;
+      cellOffsetY = cellHeight / 2;
       
-      // Available space within cell after padding
-      const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
-      const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
-      
-      // Get shape dimensions (use width/height from shape or reasonable defaults)
-      const shapeWidth = shape.width || 50;
-      const shapeHeight = shape.height || 50;
-      
-      // Calculate scale based on fit mode
-      let scaleX = 1;
-      let scaleY = 1;
-      
-      switch (cellConstraints.fitMode) {
-        case 'contain':
-          // Scale to fit within cell, maintain aspect ratio
-          const containScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-          scaleX = containScale;
-          scaleY = containScale;
-          break;
-        case 'cover':
-          // Scale to cover cell, maintain aspect ratio
-          const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-          scaleX = coverScale;
-          scaleY = coverScale;
-          break;
-        case 'fill':
-          // Stretch to fill cell
-          if (cellConstraints.maintainAspectRatio) {
-            // Use cover ratio (max) to fill the entire cell while maintaining aspect ratio
-            const fillScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-            scaleX = fillScale;
-            scaleY = fillScale;
+      // Apply fit mode scaling
+      if (cellConstraints.fitMode !== 'none') {
+        // Calculate padding
+        let paddingX = 0;
+        let paddingY = 0;
+        if (cellConstraints.padding > 0) {
+          if (cellConstraints.paddingUnit === '%') {
+            paddingX = (cellConstraints.padding / 100) * cellWidth;
+            paddingY = (cellConstraints.padding / 100) * cellHeight;
           } else {
-            // Independent scaling - stretch to fill completely
-            scaleX = availableWidth / shapeWidth;
-            scaleY = availableHeight / shapeHeight;
+            paddingX = cellConstraints.padding;
+            paddingY = cellConstraints.padding;
           }
-          break;
+        }
+        
+        // Available space within cell after padding
+        const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
+        const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
+        
+        // Get shape dimensions (use width/height from shape or reasonable defaults)
+        const shapeWidth = shape.width || 50;
+        const shapeHeight = shape.height || 50;
+        
+        // Calculate scale based on fit mode
+        let scaleX = 1;
+        let scaleY = 1;
+        
+        switch (cellConstraints.fitMode) {
+          case 'contain':
+            // Scale to fit within cell, maintain aspect ratio
+            const containScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            scaleX = containScale;
+            scaleY = containScale;
+            break;
+          case 'cover':
+            // Scale to cover cell, maintain aspect ratio
+            const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            scaleX = coverScale;
+            scaleY = coverScale;
+            break;
+          case 'fill':
+            // Stretch to fill cell
+            if (cellConstraints.maintainAspectRatio) {
+              // Use cover ratio (max) to fill the entire cell while maintaining aspect ratio
+              const fillScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+              scaleX = fillScale;
+              scaleY = fillScale;
+            } else {
+              // Independent scaling - stretch to fill completely
+              scaleX = availableWidth / shapeWidth;
+              scaleY = availableHeight / shapeHeight;
+            }
+            break;
+        }
+        
+        // Apply the calculated scale to the shape's transform
+        shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
+        shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
+        
+        console.log(`🔲 [CELL MODE] Shape ${index}: fitMode=${cellConstraints.fitMode}, scale=${scaleX.toFixed(2)}, cellSize=${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}, shapeSize=${shapeWidth}x${shapeHeight}`);
       }
-      
-      // Apply the calculated scale to the shape's transform
-      shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
-      shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
     }
     
     // Always apply position offsets additively to grid layout
@@ -1106,8 +1119,8 @@ export function applyGridDistribution(
     const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
     const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
     
-    const finalX = gridPos.x + positionOffsetX + randomX;
-    const finalY = gridPos.y + positionOffsetY + randomY;
+    const finalX = gridPos.x + positionOffsetX + randomX + cellOffsetX;
+    const finalY = gridPos.y + positionOffsetY + randomY + cellOffsetY;
     
     // Apply final grid position
     shape.transform.x = finalX;
