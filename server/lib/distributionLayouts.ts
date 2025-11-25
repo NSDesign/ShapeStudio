@@ -433,13 +433,8 @@ export function applyGridDistribution(
     baseOffsetY = artboardCenterY - totalGridHeight / 2;
   }
   
-  // Cell constraints for cell-based rendering
-  const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
-  const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
-  
-  // Cell dimensions are the spacing values
-  const cellWidth = columnSpacing;
-  const cellHeight = rowSpacing;
+  // TODO: Cell constraints for cell-based rendering - to be implemented later
+  // See client/src/lib/shapeTypes.ts applyGridDistribution for reference implementation
   
   // Map shapes to valid positions only (1:1 mapping, no wrapping)
   return shapesToPlace.map((shape, index) => {
@@ -455,66 +450,6 @@ export function applyGridDistribution(
     // Apply start position offset
     gridX += startX;
     gridY += startY;
-    
-    // Apply cell constraints scaling if in cell mode
-    if (isCellMode && cellConstraints.fitMode !== 'none') {
-      // Calculate padding
-      let paddingX = 0;
-      let paddingY = 0;
-      if (cellConstraints.padding > 0) {
-        if (cellConstraints.paddingUnit === '%') {
-          paddingX = (cellConstraints.padding / 100) * cellWidth;
-          paddingY = (cellConstraints.padding / 100) * cellHeight;
-        } else {
-          paddingX = cellConstraints.padding;
-          paddingY = cellConstraints.padding;
-        }
-      }
-      
-      // Available space within cell after padding
-      const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
-      const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
-      
-      // Get shape dimensions (use width/height from shape or reasonable defaults)
-      const shapeWidth = shape.width || 50;
-      const shapeHeight = shape.height || 50;
-      
-      // Calculate scale based on fit mode
-      let scaleX = 1;
-      let scaleY = 1;
-      
-      switch (cellConstraints.fitMode) {
-        case 'contain':
-          // Scale to fit within cell, maintain aspect ratio
-          const containScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-          scaleX = containScale;
-          scaleY = containScale;
-          break;
-        case 'cover':
-          // Scale to cover cell, maintain aspect ratio
-          const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-          scaleX = coverScale;
-          scaleY = coverScale;
-          break;
-        case 'fill':
-          // Stretch to fill cell
-          if (cellConstraints.maintainAspectRatio) {
-            // Same as contain when maintaining aspect ratio
-            const fillScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-            scaleX = fillScale;
-            scaleY = fillScale;
-          } else {
-            // Independent scaling
-            scaleX = availableWidth / shapeWidth;
-            scaleY = availableHeight / shapeHeight;
-          }
-          break;
-      }
-      
-      // Apply the calculated scale to the shape's transform
-      shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
-      shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
-    }
     
     // Apply additive random offset
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);

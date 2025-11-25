@@ -1081,12 +1081,12 @@ export function applyGridDistribution(
         case 'fill':
           // Stretch to fill cell
           if (cellConstraints.maintainAspectRatio) {
-            // Same as contain when maintaining aspect ratio
-            const fillScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            // Use cover ratio (max) to fill the entire cell while maintaining aspect ratio
+            const fillScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
             scaleX = fillScale;
             scaleY = fillScale;
           } else {
-            // Independent scaling
+            // Independent scaling - stretch to fill completely
             scaleX = availableWidth / shapeWidth;
             scaleY = availableHeight / shapeHeight;
           }

@@ -56,6 +56,13 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity.
 - **Advanced Grid Layout Sorting**: Comprehensive sorting criteria (layer, creation-time, shape-type, size, color, opacity, angle, id) with configurable order and scope.
 - **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets, three spacing modes (Define, Auto-Centered, Auto-Edge-to-Edge), and independent axis configuration.
+- **Grid Render Mode**: Controls how shapes are positioned within grid cells:
+  - **Point Mode**: Traditional positioning at grid intersection points (default)
+  - **Cell Mode**: Shapes centered in grid cells with size constraints
+    - *Fit Modes*: None (original size), Contain (fit within cell), Cover (fill cell), Fill (stretch with optional aspect ratio)
+    - *Padding*: Configurable inset from cell edges in pixels or percentage
+  - **UI Location**: Part of Grid distribution settings in Distribution Layout section
+  - **Client-side Implementation**: Full support in preview rendering (server-side export to be implemented)
 - **Shape Type Architecture**: Clear distinction between standard and rounded shapes (rectangle, rounded-rectangle, square, rounded-square) with specific corner radius properties.
 - **Shape Sets System**: Layer management with synchronized dropdowns for shape types and generation config settings. Supports set-level positioning, blending, compositing, transforms, and alignment.
 - **Fill Opacity Mode**: Full functionality for 'define' and 'range' modes.
