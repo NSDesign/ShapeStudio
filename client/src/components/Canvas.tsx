@@ -468,19 +468,22 @@ export default function Canvas({
         ctx.stroke();
       }
       
+      // In cell mode, cells are BETWEEN the lines: (rows-1) × (cols-1) cells
+      const effectiveRows = isCellMode ? Math.max(1, rows - 1) : rows;
+      const effectiveCols = isCellMode ? Math.max(1, columns - 1) : columns;
+      
       // Draw cell boundaries (if in cell mode, draw cell rectangles)
       if (isCellMode && spacingX > 0 && spacingY > 0) {
         ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
         ctx.lineWidth = 2 / effectiveZoom;
         ctx.setLineDash([4 / effectiveZoom, 4 / effectiveZoom]);
         
-        for (let row = 0; row < rows; row++) {
-          for (let col = 0; col < columns; col++) {
+        // Draw cells between intersection points
+        for (let row = 0; row < effectiveRows; row++) {
+          for (let col = 0; col < effectiveCols; col++) {
             const x = startX + (col * spacingX);
             const y = startY + (row * spacingY);
-            const cellX = x - spacingX / 2;
-            const cellY = y - spacingY / 2;
-            ctx.strokeRect(cellX, cellY, spacingX, spacingY);
+            ctx.strokeRect(x, y, spacingX, spacingY);
           }
         }
         ctx.setLineDash([]);
@@ -489,13 +492,14 @@ export default function Canvas({
       // Draw markers at grid positions
       const markerSize = 6 / effectiveZoom;
       
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < columns; col++) {
-          const x = startX + (col * spacingX);
-          const y = startY + (row * spacingY);
-          
-          if (isCellMode) {
-            // Cell mode: draw cross at cell center
+      if (isCellMode) {
+        // Cell mode: draw cross at cell centers (between intersection points)
+        for (let row = 0; row < effectiveRows; row++) {
+          for (let col = 0; col < effectiveCols; col++) {
+            // Cell center is at intersection point + half spacing
+            const x = startX + (col * spacingX) + spacingX / 2;
+            const y = startY + (row * spacingY) + spacingY / 2;
+            
             ctx.strokeStyle = 'rgba(0, 200, 0, 0.8)';
             ctx.lineWidth = 2 / effectiveZoom;
             ctx.beginPath();
@@ -504,8 +508,15 @@ export default function Canvas({
             ctx.moveTo(x, y - markerSize);
             ctx.lineTo(x, y + markerSize);
             ctx.stroke();
-          } else {
-            // Point mode: draw filled circle at intersection
+          }
+        }
+      } else {
+        // Point mode: draw filled circle at intersection points
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < columns; col++) {
+            const x = startX + (col * spacingX);
+            const y = startY + (row * spacingY);
+            
             ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
             ctx.beginPath();
             ctx.arc(x, y, markerSize / 2, 0, Math.PI * 2);
@@ -517,8 +528,9 @@ export default function Canvas({
       // Draw mode label
       ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
       ctx.font = `${12 / effectiveZoom}px Arial`;
+      const positionCount = isCellMode ? `${effectiveRows}×${effectiveCols} cells` : `${rows}×${columns} points`;
       ctx.fillText(
-        `DEBUG: ${isCellMode ? 'Cell Mode' : 'Point Mode'} | ${rows}×${columns} grid`,
+        `DEBUG: ${isCellMode ? 'Cell Mode' : 'Point Mode'} | ${positionCount}`,
         artboardBounds.x + 5 / effectiveZoom,
         artboardBounds.y + artboardBounds.height - 5 / effectiveZoom
       );

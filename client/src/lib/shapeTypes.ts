@@ -973,13 +973,22 @@ export function applyGridDistribution(
     );
   }
   
+  // Calculate cell dimensions for cell-based rendering
+  const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
+  const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
+  
+  // In cell mode, cells are the spaces BETWEEN grid lines
+  // For R rows × C columns of intersection points, there are (R-1) × (C-1) cells
+  const effectiveRows = isCellMode ? Math.max(1, config.gridRows - 1) : config.gridRows;
+  const effectiveCols = isCellMode ? Math.max(1, config.gridColumns - 1) : config.gridColumns;
+  
   // Build list of valid (non-masked) grid positions
   const validPositions: Array<{ rowIndex: number; colIndex: number; linearIndex: number }> = [];
-  const totalPositions = config.gridRows * config.gridColumns;
+  const totalPositions = effectiveRows * effectiveCols;
   
   for (let i = 0; i < totalPositions; i++) {
-    const rowIndex = Math.floor(i / config.gridColumns);
-    const colIndex = i % config.gridColumns;
+    const rowIndex = Math.floor(i / effectiveCols);
+    const colIndex = i % effectiveCols;
     
     // Check if this position is masked
     if (!isPositionMasked(rowIndex, colIndex, config.shapeMasking)) {
@@ -990,10 +999,6 @@ export function applyGridDistribution(
   // Only use shapes that fit within valid positions - excess shapes are excluded
   // This ensures masked positions result in shapes being removed, not repositioned
   const shapesToPlace = sortedShapes.slice(0, validPositions.length);
-  
-  // Calculate cell dimensions for cell-based rendering
-  const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
-  const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
   
   // Calculate spacing for cell dimensions
   let cellWidth = config.gridColumnOffset;
@@ -1018,10 +1023,20 @@ export function applyGridDistribution(
   // Map shapes to valid positions only (1:1 mapping, no wrapping)
   return shapesToPlace.map((shape, index) => {
     const positionEntry = validPositions[index] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
-    const { rowIndex, colIndex, linearIndex } = positionEntry;
+    const { rowIndex, colIndex } = positionEntry;
+    
+    // Cell mode: offset position to cell center and apply scaling
+    let cellOffsetX = 0;
+    let cellOffsetY = 0;
+    
+    // In cell mode, use the cell's top-left corner intersection point, then offset to center
+    // The cell at (row, col) has its top-left corner at intersection point (row, col)
+    const gridLinearIndex = isCellMode 
+      ? (rowIndex * config.gridColumns) + colIndex  // Use original grid dimensions for intersection lookup
+      : (rowIndex * effectiveCols) + colIndex;
     
     const gridPos = calculateGridPosition(
-      linearIndex,
+      gridLinearIndex,
       config.gridRows,
       config.gridColumns,
       config.gridRowOffset,
@@ -1038,12 +1053,8 @@ export function applyGridDistribution(
       config.gridOffsets
     );
     
-    // Cell mode: offset position to cell center and apply scaling
-    let cellOffsetX = 0;
-    let cellOffsetY = 0;
-    
     if (isCellMode) {
-      // In cell mode, offset from intersection point to cell center
+      // In cell mode, offset from intersection point (top-left of cell) to cell center
       // Cell center is half a cell width/height from the intersection point
       cellOffsetX = cellWidth / 2;
       cellOffsetY = cellHeight / 2;
