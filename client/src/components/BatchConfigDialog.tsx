@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -2262,6 +2262,161 @@ export default function BatchConfigDialog({
                     {/* Future filter types will be added here: Position, Color, Size, etc. */}
                     <div className="text-xs text-slate-500 italic p-2 bg-slate-800/50 rounded border border-dashed border-slate-600">
                       Additional filter types (Position, Color, Size) coming soon
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              {/* Cell Constraints Section - Phase 4: Cell-Based Rendering */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={currentSettings.cellConstraints?.enabled ?? false}
+                    onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                      cellConstraints: { 
+                        ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                        enabled: checked as boolean 
+                      } 
+                    }))}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                    data-testid="checkbox-cell-constraints-enabled"
+                  />
+                  <Label className="font-medium text-slate-200">Cell Constraints</Label>
+                  <span className="text-xs text-slate-400 ml-2">
+                    {(currentSettings.cellConstraints?.renderMode ?? 'intersection') === 'cell' 
+                      ? '(Cell-based)' 
+                      : '(Intersection)'}
+                  </span>
+                </div>
+                
+                {(currentSettings.cellConstraints?.enabled ?? false) && (
+                  <div className="ml-6 space-y-4">
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      {/* Render Mode */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-400">Render Mode</Label>
+                        <Select 
+                          value={currentSettings.cellConstraints?.renderMode ?? 'intersection'}
+                          onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                            cellConstraints: { 
+                              ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                              renderMode: value as 'intersection' | 'cell'
+                            } 
+                          }))}
+                        >
+                          <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-cell-render-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="intersection" className="text-slate-200 hover:bg-slate-700">Intersection (Default)</SelectItem>
+                            <SelectItem value="cell" className="text-slate-200 hover:bg-slate-700">Cell-Based</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-slate-500">
+                          {(currentSettings.cellConstraints?.renderMode ?? 'intersection') === 'intersection'
+                            ? 'Shapes placed at grid intersection points'
+                            : 'Shapes placed at center of grid cells, with size constraints'}
+                        </p>
+                      </div>
+                      
+                      {/* Cell Mode Options - Only show when cell mode is selected */}
+                      {(currentSettings.cellConstraints?.renderMode ?? 'intersection') === 'cell' && (
+                        <div className="space-y-3 mt-3 pt-3 border-t border-slate-600">
+                          {/* Fit Mode */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Fit Mode</Label>
+                            <Select 
+                              value={currentSettings.cellConstraints?.fitMode ?? 'contain'}
+                              onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                cellConstraints: { 
+                                  ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                  fitMode: value as 'none' | 'fill' | 'contain' | 'cover'
+                                } 
+                              }))}
+                            >
+                              <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-cell-fit-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="none" className="text-slate-200 hover:bg-slate-700">None (Original Size)</SelectItem>
+                                <SelectItem value="contain" className="text-slate-200 hover:bg-slate-700">Contain (Fit Inside)</SelectItem>
+                                <SelectItem value="cover" className="text-slate-200 hover:bg-slate-700">Cover (Fill Cell)</SelectItem>
+                                <SelectItem value="fill" className="text-slate-200 hover:bg-slate-700">Fill (Stretch)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500">
+                              {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'none' && 'Use original shape size, just center in cell'}
+                              {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'contain' && 'Scale to fit within cell, maintain aspect ratio'}
+                              {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'cover' && 'Scale to cover cell, maintain aspect ratio (may overflow)'}
+                              {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'fill' && 'Stretch to fill cell (may distort aspect ratio)'}
+                            </p>
+                          </div>
+                          
+                          {/* Maintain Aspect Ratio - Only for fill mode */}
+                          {(currentSettings.cellConstraints?.fitMode ?? 'contain') === 'fill' && (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.cellConstraints?.maintainAspectRatio ?? true}
+                                onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                  cellConstraints: { 
+                                    ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                    maintainAspectRatio: checked as boolean
+                                  } 
+                                }))}
+                                className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                data-testid="checkbox-cell-maintain-aspect"
+                              />
+                              <Label className="text-xs text-slate-300">Maintain Aspect Ratio</Label>
+                            </div>
+                          )}
+                          
+                          {/* Padding */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs text-slate-400">Cell Padding</Label>
+                              <Select 
+                                value={currentSettings.cellConstraints?.paddingUnit ?? 'px'}
+                                onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                  cellConstraints: { 
+                                    ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                    paddingUnit: value as 'px' | '%'
+                                  } 
+                                }))}
+                              >
+                                <SelectTrigger className="h-6 w-16 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-cell-padding-unit">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="px" className="text-slate-200 hover:bg-slate-700">px</SelectItem>
+                                  <SelectItem value="%" className="text-slate-200 hover:bg-slate-700">%</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Slider
+                                value={[currentSettings.cellConstraints?.padding ?? 0]}
+                                onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                  cellConstraints: { 
+                                    ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                    padding: value
+                                  } 
+                                }))}
+                                min={0}
+                                max={(currentSettings.cellConstraints?.paddingUnit ?? 'px') === '%' ? 50 : 100}
+                                step={(currentSettings.cellConstraints?.paddingUnit ?? 'px') === '%' ? 1 : 5}
+                                className="flex-1"
+                                data-testid="slider-cell-padding"
+                              />
+                              <span className="text-xs text-slate-400 w-12 text-right">
+                                {currentSettings.cellConstraints?.padding ?? 0}{currentSettings.cellConstraints?.paddingUnit ?? 'px'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500">Inset from cell edges</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
