@@ -1,4 +1,4 @@
-import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS } from '@shared/schema';
+import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING } from '@shared/schema';
 
 export interface Point {
   x: number;
@@ -42,6 +42,7 @@ export interface DistributionConfig {
   gridXRandomization: number;
   gridYRandomization: number;
   gridOffsets?: GridOffsetsConfig;
+  shapeMasking?: ShapeMaskingConfig;
   autoDistributeXCount?: number;
   autoDistributeYCount?: number;
   waveType?: 'sine' | 'triangle' | 'square' | 'sawtooth';
@@ -572,6 +573,63 @@ export function calculateGridPosition(
 }
 
 /**
+ * Determines if a grid position should be masked (excluded from shape rendering)
+ * @param row - Row index (0-indexed)
+ * @param column - Column index (0-indexed)
+ * @param shapeMasking - Shape masking configuration
+ * @returns true if the position should be masked (no shape rendered), false if shape should render
+ */
+export function isPositionMasked(
+  row: number,
+  column: number,
+  shapeMasking?: ShapeMaskingConfig
+): boolean {
+  // If masking is not enabled or not provided, render all positions
+  if (!shapeMasking?.enabled || !shapeMasking?.grid?.enabled) {
+    return false;
+  }
+  
+  const grid = shapeMasking.grid;
+  const mode = grid.mode ?? 'alternating';
+  const invert = grid.invert ?? false;
+  
+  let isMatched = false;
+  
+  if (mode === 'alternating') {
+    const { skipEvery, startIndex } = grid.alternating;
+    const skipN = skipEvery ?? 2;
+    const start = startIndex ?? 0;
+    
+    // In row-first priority, determine masking based on row index first
+    // In column-first priority, determine masking based on column index first
+    if (grid.priority === 'row-first') {
+      // Row determines if the entire row is masked
+      isMatched = ((row - start) % skipN) === 0 && row >= start;
+    } else {
+      // Column determines if the entire column is masked
+      isMatched = ((column - start) % skipN) === 0 && column >= start;
+    }
+  } else if (mode === 'pattern') {
+    // Pattern mode: check explicit row/column combinations
+    const patterns = grid.pattern ?? [];
+    
+    for (const patternEntry of patterns) {
+      if (patternEntry.row === row) {
+        // Check if this column is in the columns array for this row
+        if (patternEntry.columns.includes(column)) {
+          isMatched = true;
+          break;
+        }
+      }
+    }
+  }
+  
+  // invert=false: matched positions are excluded (masked)
+  // invert=true: only matched positions are rendered (non-matched are masked)
+  return invert ? !isMatched : isMatched;
+}
+
+/**
  * Detects which shape-specific sort options are available based on enabled shape types
  * @param enabledShapeTypes - Array of enabled shape type strings
  * @returns Object indicating which sort criteria are available
@@ -914,13 +972,28 @@ export function applyGridDistribution(
     );
   }
   
+  // Build list of valid (non-masked) grid positions
+  const validPositions: Array<{ rowIndex: number; colIndex: number; linearIndex: number }> = [];
+  const totalPositions = config.gridRows * config.gridColumns;
+  
+  for (let i = 0; i < totalPositions; i++) {
+    const rowIndex = Math.floor(i / config.gridColumns);
+    const colIndex = i % config.gridColumns;
+    
+    // Check if this position is masked
+    if (!isPositionMasked(rowIndex, colIndex, config.shapeMasking)) {
+      validPositions.push({ rowIndex, colIndex, linearIndex: i });
+    }
+  }
+  
+  // Map shapes to valid positions only
   return sortedShapes.map((shape, index) => {
-    // Calculate grid row and column indices
-    const colIndex = index % config.gridColumns;
-    const rowIndex = Math.floor(index / config.gridColumns);
+    // Use modulo to wrap around if we have more shapes than valid positions
+    const positionEntry = validPositions[index % validPositions.length] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
+    const { rowIndex, colIndex, linearIndex } = positionEntry;
     
     const gridPos = calculateGridPosition(
-      index,
+      linearIndex,
       config.gridRows,
       config.gridColumns,
       config.gridRowOffset,
