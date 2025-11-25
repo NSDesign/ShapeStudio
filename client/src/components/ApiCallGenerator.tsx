@@ -433,7 +433,7 @@ curl.exe -X POST \`
         <Button 
           variant="secondary" 
           size="sm" 
-          className={`${sidebarCollapsed ? 'h-8 w-8 p-0 flex items-center justify-center' : 'h-6 gap-2'} ${className}`}
+          className={`${sidebarCollapsed ? 'h-8 w-8 p-0 flex items-center justify-center' : 'h-8 gap-2'} ${className}`}
         >
           <Code2 className="h-4 w-4" />
           {!sidebarCollapsed && 'Generate API Call'}
