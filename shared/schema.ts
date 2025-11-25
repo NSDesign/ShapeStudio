@@ -545,9 +545,25 @@ export interface BatchConfigSettings {
   fillGradientLinearAngleRange: [number, number]; // Min-max angle range for range mode
   fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
   fillGradientLinearAlignToShape: boolean; // Whether to align gradient to shape orientation/rotation
-  fillGradientRadialCenter: 'center' | 'random' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
-  fillGradientRadialCenterX: number; // X coordinate for specific positioning (0-100%)
-  fillGradientRadialCenterY: number; // Y coordinate for specific positioning (0-100%)
+  fillGradientRadialCenter: 'center' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
+  
+  // Radial Gradient Center X (0-100% of shape bounds)
+  fillGradientRadialCenterXMode: 'fixed' | 'range' | 'incremental';
+  fillGradientRadialCenterX: number; // Fixed mode value
+  fillGradientRadialCenterXRange: [number, number]; // Range mode min/max
+  fillGradientRadialCenterXStartValue: number; // Incremental mode start
+  fillGradientRadialCenterXIncrement: number; // Incremental mode step
+  fillGradientRadialCenterXModulationEnabled: boolean; // Enable modulation
+  fillGradientRadialCenterXModulationValue: number; // Modulation value
+  
+  // Radial Gradient Center Y (0-100% of shape bounds)
+  fillGradientRadialCenterYMode: 'fixed' | 'range' | 'incremental';
+  fillGradientRadialCenterY: number; // Fixed mode value
+  fillGradientRadialCenterYRange: [number, number]; // Range mode min/max
+  fillGradientRadialCenterYStartValue: number; // Incremental mode start
+  fillGradientRadialCenterYIncrement: number; // Incremental mode step
+  fillGradientRadialCenterYModulationEnabled: boolean; // Enable modulation
+  fillGradientRadialCenterYModulationValue: number; // Modulation value
   fillGradientRadialCorners: {
     topLeft: boolean;
     topRight: boolean;
@@ -1078,8 +1094,25 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientLinearPredefined: 'diagonal-down', // Default predefined direction
   fillGradientLinearAlignToShape: false, // Default: don't align to shape
   fillGradientRadialCenter: 'center', // Default center positioning
-  fillGradientRadialCenterX: 50, // 50% (center) X coordinate
-  fillGradientRadialCenterY: 50, // 50% (center) Y coordinate
+  
+  // Radial Gradient Center X
+  fillGradientRadialCenterXMode: 'fixed',
+  fillGradientRadialCenterX: 50,
+  fillGradientRadialCenterXRange: [25, 75],
+  fillGradientRadialCenterXStartValue: 50,
+  fillGradientRadialCenterXIncrement: 10,
+  fillGradientRadialCenterXModulationEnabled: false,
+  fillGradientRadialCenterXModulationValue: 100,
+  
+  // Radial Gradient Center Y
+  fillGradientRadialCenterYMode: 'fixed',
+  fillGradientRadialCenterY: 50,
+  fillGradientRadialCenterYRange: [25, 75],
+  fillGradientRadialCenterYStartValue: 50,
+  fillGradientRadialCenterYIncrement: 10,
+  fillGradientRadialCenterYModulationEnabled: false,
+  fillGradientRadialCenterYModulationValue: 100,
+  
   fillGradientRadialCorners: {
     topLeft: true,
     topRight: true,
@@ -2138,9 +2171,26 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientLinearAngleRange: z.tuple([z.number(), z.number()]),
   fillGradientLinearPredefined: z.enum(['horizontal', 'vertical', 'diagonal-down', 'diagonal-up']),
   fillGradientLinearAlignToShape: z.boolean(),
-  fillGradientRadialCenter: z.enum(['center', 'random', 'corners', 'midpoints', 'coordinates']),
+  fillGradientRadialCenter: z.enum(['center', 'corners', 'midpoints', 'coordinates']),
+  
+  // Radial Gradient Center X
+  fillGradientRadialCenterXMode: z.enum(['fixed', 'range', 'incremental']),
   fillGradientRadialCenterX: z.number(),
+  fillGradientRadialCenterXRange: z.tuple([z.number(), z.number()]),
+  fillGradientRadialCenterXStartValue: z.number(),
+  fillGradientRadialCenterXIncrement: z.number(),
+  fillGradientRadialCenterXModulationEnabled: z.boolean(),
+  fillGradientRadialCenterXModulationValue: z.number(),
+  
+  // Radial Gradient Center Y
+  fillGradientRadialCenterYMode: z.enum(['fixed', 'range', 'incremental']),
   fillGradientRadialCenterY: z.number(),
+  fillGradientRadialCenterYRange: z.tuple([z.number(), z.number()]),
+  fillGradientRadialCenterYStartValue: z.number(),
+  fillGradientRadialCenterYIncrement: z.number(),
+  fillGradientRadialCenterYModulationEnabled: z.boolean(),
+  fillGradientRadialCenterYModulationValue: z.number(),
+  
   fillGradientRadialCorners: z.object({
     topLeft: z.boolean(),
     topRight: z.boolean(),
