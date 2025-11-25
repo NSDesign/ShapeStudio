@@ -114,10 +114,17 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       } else if (shape.properties.gradient.type === 'conic') {
-        const centerX = bounds.x + bounds.width / 2;
-        const centerY = bounds.y + bounds.height / 2;
+        // Use gradient parameters if available, otherwise use center defaults
+        const conicCenterXPercent = shape.properties.gradient.conicCenterX ?? 50;
+        const conicCenterYPercent = shape.properties.gradient.conicCenterY ?? 50;
+        const conicAngle = shape.properties.gradient.conicAngle ?? 0;
+        
+        // Convert percentage to actual position within bounds
+        const centerX = bounds.x + (bounds.width * conicCenterXPercent / 100);
+        const centerY = bounds.y + (bounds.height * conicCenterYPercent / 100);
+        
         // createConicGradient(startAngle, centerX, centerY) - colors rotate around center point
-        gradient = ctx.createConicGradient(0, centerX, centerY);
+        gradient = ctx.createConicGradient(conicAngle, centerX, centerY);
       } else {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;

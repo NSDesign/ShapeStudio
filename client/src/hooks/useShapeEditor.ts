@@ -1674,6 +1674,103 @@ export const useShapeEditor = () => {
     }
   };
 
+  // Helper function to calculate conic gradient start angle (returns radians)
+  const calculateConicAngle = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let angleDegrees: number;
+    
+    switch (settings.fillGradientConicAngleMode) {
+      case 'range':
+        const [minAngle, maxAngle] = settings.fillGradientConicAngleRange || [0, 360];
+        angleDegrees = minAngle + Math.random() * (maxAngle - minAngle);
+        break;
+      
+      case 'incremental':
+        let incrementAmount = (settings.fillGradientConicAngleIncrement || 0) * shapeIndex;
+        if (settings.fillGradientConicAngleModulationEnabled && settings.fillGradientConicAngleModulationValue > 0) {
+          // Non-negative modulo to handle negative increments
+          const m = settings.fillGradientConicAngleModulationValue;
+          incrementAmount = ((incrementAmount % m) + m) % m;
+        }
+        angleDegrees = (settings.fillGradientConicAngleStartValue || 0) + incrementAmount;
+        break;
+      
+      case 'fixed':
+      default:
+        angleDegrees = settings.fillGradientConicAngle || 0;
+        break;
+    }
+    
+    // Wrap angle to 0-360 range before converting to radians
+    angleDegrees = ((angleDegrees % 360) + 360) % 360;
+    
+    // Convert degrees to radians
+    return (angleDegrees * Math.PI) / 180;
+  };
+
+  // Helper function to calculate conic gradient center X (returns 0-100 percentage, clamped)
+  const calculateConicCenterX = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let result: number;
+    
+    switch (settings.fillGradientConicCenterXMode) {
+      case 'range':
+        const [minX, maxX] = settings.fillGradientConicCenterXRange || [25, 75];
+        result = minX + Math.random() * (maxX - minX);
+        break;
+      
+      case 'incremental':
+        const startX = settings.fillGradientConicCenterXStartValue ?? 50;
+        const incrementX = (settings.fillGradientConicCenterXIncrement || 0) * shapeIndex;
+        result = startX + incrementX;
+        
+        // Apply modulation to the final result, not just the increment
+        if (settings.fillGradientConicCenterXModulationEnabled && settings.fillGradientConicCenterXModulationValue > 0) {
+          const m = settings.fillGradientConicCenterXModulationValue;
+          result = ((result % m) + m) % m;
+        }
+        break;
+      
+      case 'fixed':
+      default:
+        result = settings.fillGradientConicCenterX ?? 50;
+        break;
+    }
+    
+    // Clamp to valid 0-100 percentage range
+    return Math.max(0, Math.min(100, result));
+  };
+
+  // Helper function to calculate conic gradient center Y (returns 0-100 percentage, clamped)
+  const calculateConicCenterY = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let result: number;
+    
+    switch (settings.fillGradientConicCenterYMode) {
+      case 'range':
+        const [minY, maxY] = settings.fillGradientConicCenterYRange || [25, 75];
+        result = minY + Math.random() * (maxY - minY);
+        break;
+      
+      case 'incremental':
+        const startY = settings.fillGradientConicCenterYStartValue ?? 50;
+        const incrementY = (settings.fillGradientConicCenterYIncrement || 0) * shapeIndex;
+        result = startY + incrementY;
+        
+        // Apply modulation to the final result, not just the increment
+        if (settings.fillGradientConicCenterYModulationEnabled && settings.fillGradientConicCenterYModulationValue > 0) {
+          const m = settings.fillGradientConicCenterYModulationValue;
+          result = ((result % m) + m) % m;
+        }
+        break;
+      
+      case 'fixed':
+      default:
+        result = settings.fillGradientConicCenterY ?? 50;
+        break;
+    }
+    
+    // Clamp to valid 0-100 percentage range
+    return Math.max(0, Math.min(100, result));
+  };
+
   const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
@@ -1976,29 +2073,58 @@ export const useShapeEditor = () => {
 
           // Determine fill type based on probabilities
           if (shouldHaveGradient) {
-            // Determine gradient type based on individual probabilities
-            const totalGradientProb = effectiveBatchConfig.fillGradientLinearProbability + 
-                                    effectiveBatchConfig.fillGradientRadialProbability + 
-                                    effectiveBatchConfig.fillGradientConicProbability;
-            
+            // Determine gradient type based on settings
             let gradientType: 'linear' | 'radial' | 'conic' = 'linear';
             
-            if (totalGradientProb > 0) {
-              const random = Math.random() * totalGradientProb;
-              let cumulative = 0;
+            // Check if shape-matching mode is enabled
+            const useShapeMatching = effectiveBatchConfig.fillGradientTypeDirectionEnabled && 
+                                    effectiveBatchConfig.fillGradientMatchShape;
+            
+            if (useShapeMatching) {
+              // Match gradient type to shape type - deterministic override of probabilities
+              const roundShapes = ['circle', 'ellipse', 'star', 'blob', 'ring', 'spline-circle', 'spline-ring', 'spline-star', 'spline-blob'];
+              const isRoundShape = roundShapes.includes(selectedShapeType);
               
-              cumulative += effectiveBatchConfig.fillGradientLinearProbability;
-              if (random < cumulative) {
-                gradientType = 'linear';
-              } else {
-                cumulative += effectiveBatchConfig.fillGradientRadialProbability;
-                if (random < cumulative) {
-                  gradientType = 'radial';
+              if (isRoundShape) {
+                // For round shapes: ONLY use radial or conic, never linear
+                // Use relative probabilities to determine which one, but exclude linear entirely
+                const radialProb = effectiveBatchConfig.fillGradientRadialProbability;
+                const conicProb = effectiveBatchConfig.fillGradientConicProbability;
+                const totalRoundProb = radialProb + conicProb;
+                
+                if (totalRoundProb > 0) {
+                  const random = Math.random() * totalRoundProb;
+                  gradientType = random < radialProb ? 'radial' : 'conic';
                 } else {
-                  gradientType = 'conic';
+                  // If both radial and conic are 0, default to radial (never linear)
+                  gradientType = 'radial';
+                }
+              } else {
+                // For geometric shapes: ONLY use linear, never radial or conic
+                gradientType = 'linear';
+              }
+            } else {
+              // Use probability-based selection (original behavior)
+              const totalGradientProb = effectiveBatchConfig.fillGradientLinearProbability + 
+                                      effectiveBatchConfig.fillGradientRadialProbability + 
+                                      effectiveBatchConfig.fillGradientConicProbability;
+              
+              if (totalGradientProb > 0) {
+                const random = Math.random() * totalGradientProb;
+                let cumulative = 0;
+                
+                cumulative += effectiveBatchConfig.fillGradientLinearProbability;
+                if (random < cumulative) {
+                  gradientType = 'linear';
+                } else {
+                  cumulative += effectiveBatchConfig.fillGradientRadialProbability;
+                  if (random < cumulative) {
+                    gradientType = 'radial';
+                  } else {
+                    gradientType = 'conic';
+                  }
                 }
               }
-              
             }
             const [minStops, maxStops] = effectiveBatchConfig.fillGradientStopsRange;
             const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
@@ -2033,10 +2159,26 @@ export const useShapeEditor = () => {
               });
             }
 
-            shape.properties.gradient = {
+            // Build gradient object with conic-specific parameters if applicable
+            const gradientObj: {
+              type: 'linear' | 'radial' | 'conic';
+              stops: { offset: number; color: string }[];
+              conicAngle?: number;
+              conicCenterX?: number;
+              conicCenterY?: number;
+            } = {
               type: gradientType,
               stops: gradientStops
             };
+            
+            // Add conic-specific parameters when gradient type is conic
+            if (gradientType === 'conic') {
+              gradientObj.conicAngle = calculateConicAngle(effectiveBatchConfig, index);
+              gradientObj.conicCenterX = calculateConicCenterX(effectiveBatchConfig, index);
+              gradientObj.conicCenterY = calculateConicCenterY(effectiveBatchConfig, index);
+            }
+            
+            shape.properties.gradient = gradientObj;
 
             // When gradient is used, set transparent fill so gradient shows through
             shape.properties.fillColor = 'transparent';

@@ -275,12 +275,19 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       } else if (shape.properties.gradient.type === 'conic') {
-        const centerX = bounds.x + bounds.width / 2;
-        const centerY = bounds.y + bounds.height / 2;
+        // Use gradient parameters if available, otherwise use center defaults
+        const conicCenterXPercent = (shape.properties.gradient as any).conicCenterX ?? 50;
+        const conicCenterYPercent = (shape.properties.gradient as any).conicCenterY ?? 50;
+        const conicAngle = (shape.properties.gradient as any).conicAngle ?? 0;
+        
+        // Convert percentage to actual position within bounds
+        const centerX = bounds.x + (bounds.width * conicCenterXPercent / 100);
+        const centerY = bounds.y + (bounds.height * conicCenterYPercent / 100);
+        
         // Try conic gradient, fall back to radial if node-canvas doesn't support it
         try {
           if (typeof (ctx as any).createConicGradient === 'function') {
-            gradient = (ctx as any).createConicGradient(0, centerX, centerY);
+            gradient = (ctx as any).createConicGradient(conicAngle, centerX, centerY);
           } else {
             const radius = Math.max(bounds.width, bounds.height) / 2;
             gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);

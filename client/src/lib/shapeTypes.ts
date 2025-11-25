@@ -151,6 +151,10 @@ export interface ShapeProperties {
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
     stops: { offset: number; color: string }[];
+    // Conic gradient specific parameters
+    conicAngle?: number; // Start angle in radians (0-2π)
+    conicCenterX?: number; // Center X as percentage of shape bounds (0-100)
+    conicCenterY?: number; // Center Y as percentage of shape bounds (0-100)
   };
   // Boolean operation properties
   booleanOperation?: 'union' | 'subtract' | 'intersect' | 'exclude';

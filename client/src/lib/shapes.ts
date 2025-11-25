@@ -1952,6 +1952,15 @@ export class Shape {
             bounds.x, bounds.y, 
             bounds.x + bounds.width, bounds.y + bounds.height
           );
+        } else if (this.properties.gradient.type === 'conic') {
+          // Use conic gradient parameters if available
+          const conicCenterXPercent = this.properties.gradient.conicCenterX ?? 50;
+          const conicCenterYPercent = this.properties.gradient.conicCenterY ?? 50;
+          const conicAngle = this.properties.gradient.conicAngle ?? 0;
+          
+          const centerX = bounds.x + (bounds.width * conicCenterXPercent / 100);
+          const centerY = bounds.y + (bounds.height * conicCenterYPercent / 100);
+          gradient = ctx.createConicGradient(conicAngle, centerX, centerY);
         } else {
           const centerX = bounds.x + bounds.width / 2;
           const centerY = bounds.y + bounds.height / 2;

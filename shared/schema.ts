@@ -559,12 +559,37 @@ export interface BatchConfigSettings {
   fillGradientRadialCircleProbability: number; // 0-100% probability for circle shape
   fillGradientRadialEllipseProbability: number; // 0-100% probability for ellipse shape
   fillGradientMatchShape: boolean; // Whether gradient type should match shape type
+  fillGradientTypeDirectionEnabled: boolean; // Whether the Gradient Type & Direction section overrides main gradient probabilities
   
   // Conic gradient controls
-  fillGradientConicCenter: 'center' | 'random' | 'coordinates'; // Conic center positioning
-  fillGradientConicCenterX: number; // X coordinate for specific positioning (0-100%)
-  fillGradientConicCenterY: number; // Y coordinate for specific positioning (0-100%)
-  fillGradientConicAngle: number; // Starting angle for conic gradient (0-360°)
+  fillGradientConicCenter: 'center' | 'random' | 'coordinates'; // Conic center positioning (legacy, kept for compatibility)
+  
+  // Conic Gradient Start Angle (0-360°)
+  fillGradientConicAngleMode: 'fixed' | 'range' | 'incremental';
+  fillGradientConicAngle: number; // Fixed mode value
+  fillGradientConicAngleRange: [number, number]; // Range mode min/max
+  fillGradientConicAngleStartValue: number; // Incremental mode start
+  fillGradientConicAngleIncrement: number; // Incremental mode step
+  fillGradientConicAngleModulationEnabled: boolean; // Enable modulation
+  fillGradientConicAngleModulationValue: number; // Modulation value (wraps at this value)
+  
+  // Conic Gradient Center X (0-100% of shape bounds)
+  fillGradientConicCenterXMode: 'fixed' | 'range' | 'incremental';
+  fillGradientConicCenterX: number; // Fixed mode value
+  fillGradientConicCenterXRange: [number, number]; // Range mode min/max
+  fillGradientConicCenterXStartValue: number; // Incremental mode start
+  fillGradientConicCenterXIncrement: number; // Incremental mode step
+  fillGradientConicCenterXModulationEnabled: boolean; // Enable modulation
+  fillGradientConicCenterXModulationValue: number; // Modulation value
+  
+  // Conic Gradient Center Y (0-100% of shape bounds)
+  fillGradientConicCenterYMode: 'fixed' | 'range' | 'incremental';
+  fillGradientConicCenterY: number; // Fixed mode value
+  fillGradientConicCenterYRange: [number, number]; // Range mode min/max
+  fillGradientConicCenterYStartValue: number; // Incremental mode start
+  fillGradientConicCenterYIncrement: number; // Incremental mode step
+  fillGradientConicCenterYModulationEnabled: boolean; // Enable modulation
+  fillGradientConicCenterYModulationValue: number; // Modulation value
   
   // Fill Opacity Settings
   fillOpacityMode: 'range' | 'define' | 'incremental';
@@ -1066,12 +1091,37 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientRadialCircleProbability: 60, // 60% circle probability
   fillGradientRadialEllipseProbability: 40, // 40% ellipse probability
   fillGradientMatchShape: false, // Default: don't match shape type
+  fillGradientTypeDirectionEnabled: false, // Default: disabled - use main gradient probabilities
   
   // Conic gradient controls
-  fillGradientConicCenter: 'center',
-  fillGradientConicCenterX: 50,
-  fillGradientConicCenterY: 50,
+  fillGradientConicCenter: 'center', // Legacy, kept for compatibility
+  
+  // Conic Gradient Start Angle
+  fillGradientConicAngleMode: 'fixed',
   fillGradientConicAngle: 0,
+  fillGradientConicAngleRange: [0, 360],
+  fillGradientConicAngleStartValue: 0,
+  fillGradientConicAngleIncrement: 30,
+  fillGradientConicAngleModulationEnabled: false,
+  fillGradientConicAngleModulationValue: 360,
+  
+  // Conic Gradient Center X
+  fillGradientConicCenterXMode: 'fixed',
+  fillGradientConicCenterX: 50,
+  fillGradientConicCenterXRange: [25, 75],
+  fillGradientConicCenterXStartValue: 50,
+  fillGradientConicCenterXIncrement: 10,
+  fillGradientConicCenterXModulationEnabled: false,
+  fillGradientConicCenterXModulationValue: 100,
+  
+  // Conic Gradient Center Y
+  fillGradientConicCenterYMode: 'fixed',
+  fillGradientConicCenterY: 50,
+  fillGradientConicCenterYRange: [25, 75],
+  fillGradientConicCenterYStartValue: 50,
+  fillGradientConicCenterYIncrement: 10,
+  fillGradientConicCenterYModulationEnabled: false,
+  fillGradientConicCenterYModulationValue: 100,
   
   // Fill Opacity Settings
   fillOpacityMode: 'range',
@@ -2102,10 +2152,35 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientRadialCircleProbability: z.number(),
   fillGradientRadialEllipseProbability: z.number(),
   fillGradientMatchShape: z.boolean(),
+  fillGradientTypeDirectionEnabled: z.boolean(),
   fillGradientConicCenter: z.enum(['center', 'random', 'coordinates']),
-  fillGradientConicCenterX: z.number(),
-  fillGradientConicCenterY: z.number(),
+  
+  // Conic Gradient Start Angle
+  fillGradientConicAngleMode: z.enum(['fixed', 'range', 'incremental']),
   fillGradientConicAngle: z.number(),
+  fillGradientConicAngleRange: z.tuple([z.number(), z.number()]),
+  fillGradientConicAngleStartValue: z.number(),
+  fillGradientConicAngleIncrement: z.number(),
+  fillGradientConicAngleModulationEnabled: z.boolean(),
+  fillGradientConicAngleModulationValue: z.number(),
+  
+  // Conic Gradient Center X
+  fillGradientConicCenterXMode: z.enum(['fixed', 'range', 'incremental']),
+  fillGradientConicCenterX: z.number(),
+  fillGradientConicCenterXRange: z.tuple([z.number(), z.number()]),
+  fillGradientConicCenterXStartValue: z.number(),
+  fillGradientConicCenterXIncrement: z.number(),
+  fillGradientConicCenterXModulationEnabled: z.boolean(),
+  fillGradientConicCenterXModulationValue: z.number(),
+  
+  // Conic Gradient Center Y
+  fillGradientConicCenterYMode: z.enum(['fixed', 'range', 'incremental']),
+  fillGradientConicCenterY: z.number(),
+  fillGradientConicCenterYRange: z.tuple([z.number(), z.number()]),
+  fillGradientConicCenterYStartValue: z.number(),
+  fillGradientConicCenterYIncrement: z.number(),
+  fillGradientConicCenterYModulationEnabled: z.boolean(),
+  fillGradientConicCenterYModulationValue: z.number(),
   
   // Fill opacity
   fillOpacityMode: z.enum(['range', 'define', 'incremental']),
