@@ -706,11 +706,41 @@ export default function BatchConfigDialog({
                               />
                               <Label className="text-sm font-medium text-slate-200">Grid Offsets</Label>
                             </div>
-                            <span className="text-xs text-slate-400">Alternating row/column offsets</span>
+                            <span className="text-xs text-slate-400">
+                              {(currentSettings.gridOffsets?.mode ?? 'alternating') === 'alternating' 
+                                ? 'Alternating row/column offsets' 
+                                : 'Pattern-based row/column offsets'}
+                            </span>
                           </div>
                           
                           {(currentSettings.gridOffsets?.enabled ?? false) && (
                             <div className="space-y-4 mt-3">
+                              {/* Mode Selector */}
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Offset Mode</Label>
+                                <Select 
+                                  value={currentSettings.gridOffsets?.mode ?? 'alternating'}
+                                  onValueChange={(value: 'alternating' | 'pattern') => handleSettingsUpdate((prev) => ({ 
+                                    gridOffsets: { 
+                                      ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                      mode: value 
+                                    } 
+                                  }))}
+                                >
+                                  <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-offsets-mode">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600">
+                                    <SelectItem value="alternating" className="text-slate-200 focus:bg-slate-700">
+                                      Alternating (every other row/column)
+                                    </SelectItem>
+                                    <SelectItem value="pattern" className="text-slate-200 focus:bg-slate-700">
+                                      Pattern (specific indices)
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
                               {/* Row Offset Controls */}
                               <div className="space-y-2 p-2 bg-slate-700/50 rounded">
                                 <div className="flex items-center space-x-2">
