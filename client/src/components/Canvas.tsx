@@ -444,6 +444,8 @@ export default function Canvas({
       
       const cellConstraints = batchConfig.cellConstraints;
       const isCellMode = cellConstraints?.renderMode === 'cell';
+      const isCellPointMode = cellConstraints?.renderMode === 'cell-point';
+      const hasFitConstraints = isCellMode || isCellPointMode;
       
       // Draw grid lines (red semi-transparent)
       ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
@@ -468,22 +470,36 @@ export default function Canvas({
         ctx.stroke();
       }
       
-      // In cell mode, cells are BETWEEN the lines: (rows-1) × (cols-1) cells
+      // Position count depends on mode:
+      // - Cell mode: cells are BETWEEN the lines, (rows-1) × (cols-1) cells
+      // - Point/Cell-Point mode: shapes at intersection points, rows × cols positions
       const effectiveRows = isCellMode ? Math.max(1, rows - 1) : rows;
       const effectiveCols = isCellMode ? Math.max(1, columns - 1) : columns;
       
-      // Draw cell boundaries (if in cell mode, draw cell rectangles)
-      if (isCellMode && spacingX > 0 && spacingY > 0) {
+      // Draw cell boundaries based on mode
+      if (hasFitConstraints && spacingX > 0 && spacingY > 0) {
         ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
         ctx.lineWidth = 2 / effectiveZoom;
         ctx.setLineDash([4 / effectiveZoom, 4 / effectiveZoom]);
         
-        // Draw cells between intersection points
-        for (let row = 0; row < effectiveRows; row++) {
-          for (let col = 0; col < effectiveCols; col++) {
-            const x = startX + (col * spacingX);
-            const y = startY + (row * spacingY);
-            ctx.strokeRect(x, y, spacingX, spacingY);
+        if (isCellMode) {
+          // Cell mode: cells are BETWEEN intersection points (top-left corner at intersection)
+          for (let row = 0; row < effectiveRows; row++) {
+            for (let col = 0; col < effectiveCols; col++) {
+              const x = startX + (col * spacingX);
+              const y = startY + (row * spacingY);
+              ctx.strokeRect(x, y, spacingX, spacingY);
+            }
+          }
+        } else if (isCellPointMode) {
+          // Cell Points mode: cells CENTERED on intersection points
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < columns; col++) {
+              const x = startX + (col * spacingX);
+              const y = startY + (row * spacingY);
+              // Draw cell rectangle centered on the intersection point
+              ctx.strokeRect(x - spacingX / 2, y - spacingY / 2, spacingX, spacingY);
+            }
           }
         }
         ctx.setLineDash([]);
@@ -510,6 +526,30 @@ export default function Canvas({
             ctx.stroke();
           }
         }
+      } else if (isCellPointMode) {
+        // Cell Points mode: draw cross at intersection points (they're both cell centers AND grid points)
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < columns; col++) {
+            const x = startX + (col * spacingX);
+            const y = startY + (row * spacingY);
+            
+            // Draw cell-style cross marker (green)
+            ctx.strokeStyle = 'rgba(0, 200, 0, 0.8)';
+            ctx.lineWidth = 2 / effectiveZoom;
+            ctx.beginPath();
+            ctx.moveTo(x - markerSize, y);
+            ctx.lineTo(x + markerSize, y);
+            ctx.moveTo(x, y - markerSize);
+            ctx.lineTo(x, y + markerSize);
+            ctx.stroke();
+            
+            // Also draw a small point marker (to show it's on the grid intersection)
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+            ctx.beginPath();
+            ctx.arc(x, y, markerSize / 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
       } else {
         // Point mode: draw filled circle at intersection points
         for (let row = 0; row < rows; row++) {
@@ -528,9 +568,20 @@ export default function Canvas({
       // Draw mode label
       ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
       ctx.font = `${12 / effectiveZoom}px Arial`;
-      const positionCount = isCellMode ? `${effectiveRows}×${effectiveCols} cells` : `${rows}×${columns} points`;
+      let modeLabel: string;
+      let positionCount: string;
+      if (isCellMode) {
+        modeLabel = 'Cell Mode';
+        positionCount = `${effectiveRows}×${effectiveCols} cells`;
+      } else if (isCellPointMode) {
+        modeLabel = 'Cell Points Mode';
+        positionCount = `${rows}×${columns} cells at points`;
+      } else {
+        modeLabel = 'Point Mode';
+        positionCount = `${rows}×${columns} points`;
+      }
       ctx.fillText(
-        `DEBUG: ${isCellMode ? 'Cell Mode' : 'Point Mode'} | ${positionCount}`,
+        `DEBUG: ${modeLabel} | ${positionCount}`,
         artboardBounds.x + 5 / effectiveZoom,
         artboardBounds.y + artboardBounds.height - 5 / effectiveZoom
       );

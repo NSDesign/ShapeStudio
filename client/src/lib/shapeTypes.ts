@@ -976,13 +976,16 @@ export function applyGridDistribution(
   // Calculate cell dimensions for cell-based rendering
   const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
   const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
+  const isCellPointMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell-point';
+  const hasFitConstraints = isCellMode || isCellPointMode; // Either mode can apply fit constraints
   
-  // Debug logging for cell mode
+  // Debug logging for render mode
   console.log('🔲 [GRID RENDER MODE] cellConstraints:', JSON.stringify(cellConstraints));
-  console.log('🔲 [GRID RENDER MODE] enabled:', cellConstraints.enabled, 'renderMode:', cellConstraints.renderMode, 'isCellMode:', isCellMode);
+  console.log('🔲 [GRID RENDER MODE] enabled:', cellConstraints.enabled, 'renderMode:', cellConstraints.renderMode, 'isCellMode:', isCellMode, 'isCellPointMode:', isCellPointMode);
   
-  // In cell mode, cells are the spaces BETWEEN grid lines
-  // For R rows × C columns of intersection points, there are (R-1) × (C-1) cells
+  // Position count depends on mode:
+  // - Cell mode: cells are BETWEEN grid lines, so (R-1) × (C-1) cells
+  // - Point/Cell-Point mode: shapes at intersection points, R × C positions
   const effectiveRows = isCellMode ? Math.max(1, config.gridRows - 1) : config.gridRows;
   const effectiveCols = isCellMode ? Math.max(1, config.gridColumns - 1) : config.gridColumns;
   
@@ -1082,89 +1085,92 @@ export function applyGridDistribution(
       // Cell center is half a cell width/height from the intersection point
       cellOffsetX = cellWidth / 2;
       cellOffsetY = cellHeight / 2;
-      
-      // Apply fit mode scaling
-      if (cellConstraints.fitMode !== 'none') {
-        // Calculate padding
-        let paddingX = 0;
-        let paddingY = 0;
-        if (cellConstraints.padding > 0) {
-          if (cellConstraints.paddingUnit === '%') {
-            paddingX = (cellConstraints.padding / 100) * cellWidth;
-            paddingY = (cellConstraints.padding / 100) * cellHeight;
-          } else {
-            paddingX = cellConstraints.padding;
-            paddingY = cellConstraints.padding;
-          }
-        }
-        
-        // Available space within cell after padding
-        const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
-        const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
-        
-        // Get shape dimensions based on shape type
-        // For radius-based shapes (circle, polygon, star, ring), calculate from radius
-        // For rectangular shapes, use width/height directly
-        let shapeWidth: number;
-        let shapeHeight: number;
-        
-        if (shape.radius !== undefined && shape.radius > 0) {
-          // Radius-based shapes: diameter is 2 * radius
-          shapeWidth = shape.radius * 2;
-          shapeHeight = shape.radius * 2;
-        } else if (shape.width !== undefined && shape.height !== undefined) {
-          // Rectangular/elliptical shapes: use direct dimensions
-          shapeWidth = shape.width;
-          shapeHeight = shape.height;
-        } else if (shape.points && shape.points.length > 0) {
-          // Point-based shapes: calculate bounding box from points
-          const xs = shape.points.map((p: any) => p.x);
-          const ys = shape.points.map((p: any) => p.y);
-          shapeWidth = Math.max(...xs) - Math.min(...xs);
-          shapeHeight = Math.max(...ys) - Math.min(...ys);
-          // Ensure minimum size
-          shapeWidth = Math.max(10, shapeWidth);
-          shapeHeight = Math.max(10, shapeHeight);
+    }
+    // Cell Points mode: shapes stay at intersection points (no offset) but get fit constraints
+    // No cellOffset needed - shapes are centered ON the intersection point
+    
+    // Apply fit mode scaling for both Cell and Cell Points modes
+    if (hasFitConstraints && cellConstraints.fitMode !== 'none') {
+      // Calculate padding
+      let paddingX = 0;
+      let paddingY = 0;
+      if (cellConstraints.padding > 0) {
+        if (cellConstraints.paddingUnit === '%') {
+          paddingX = (cellConstraints.padding / 100) * cellWidth;
+          paddingY = (cellConstraints.padding / 100) * cellHeight;
         } else {
-          // Fallback defaults
-          shapeWidth = 50;
-          shapeHeight = 50;
+          paddingX = cellConstraints.padding;
+          paddingY = cellConstraints.padding;
         }
-        
-        // Calculate scale based on fit mode
-        let scaleX = 1;
-        let scaleY = 1;
-        
-        switch (cellConstraints.fitMode) {
-          case 'contain':
-            // Scale DOWN to fit within cell if too large, but never scale up
-            // This ensures shapes fit inside the cell without exceeding boundaries
-            const rawContainScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-            const containScale = Math.min(1, rawContainScale); // Cap at 1 - never scale up
-            scaleX = containScale;
-            scaleY = containScale;
-            break;
-          case 'cover':
-            // Scale to cover entire cell (may exceed cell boundaries), maintain aspect ratio
-            // This will scale up or down as needed to ensure cell is fully covered
-            const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-            scaleX = coverScale;
-            scaleY = coverScale;
-            break;
-          case 'fill':
-            // Stretch to exactly match cell dimensions (distorts aspect ratio)
-            // This is the expected behavior for "fill" - shapes stretch to fill the cell
-            scaleX = availableWidth / shapeWidth;
-            scaleY = availableHeight / shapeHeight;
-            break;
-        }
-        
-        // Apply the calculated scale to the shape's transform
-        shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
-        shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
-        
-        console.log(`🔲 [CELL MODE] Shape ${index}: fitMode=${cellConstraints.fitMode}, scale=${scaleX.toFixed(2)}x${scaleY.toFixed(2)}, cellSize=${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}, shapeSize=${shapeWidth}x${shapeHeight}`);
       }
+      
+      // Available space within cell after padding
+      const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
+      const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
+      
+      // Get shape dimensions based on shape type
+      // For radius-based shapes (circle, polygon, star, ring), calculate from radius
+      // For rectangular shapes, use width/height directly
+      let shapeWidth: number;
+      let shapeHeight: number;
+      
+      if (shape.radius !== undefined && shape.radius > 0) {
+        // Radius-based shapes: diameter is 2 * radius
+        shapeWidth = shape.radius * 2;
+        shapeHeight = shape.radius * 2;
+      } else if (shape.width !== undefined && shape.height !== undefined) {
+        // Rectangular/elliptical shapes: use direct dimensions
+        shapeWidth = shape.width;
+        shapeHeight = shape.height;
+      } else if (shape.points && shape.points.length > 0) {
+        // Point-based shapes: calculate bounding box from points
+        const xs = shape.points.map((p: any) => p.x);
+        const ys = shape.points.map((p: any) => p.y);
+        shapeWidth = Math.max(...xs) - Math.min(...xs);
+        shapeHeight = Math.max(...ys) - Math.min(...ys);
+        // Ensure minimum size
+        shapeWidth = Math.max(10, shapeWidth);
+        shapeHeight = Math.max(10, shapeHeight);
+      } else {
+        // Fallback defaults
+        shapeWidth = 50;
+        shapeHeight = 50;
+      }
+      
+      // Calculate scale based on fit mode
+      let scaleX = 1;
+      let scaleY = 1;
+      
+      switch (cellConstraints.fitMode) {
+        case 'contain':
+          // Scale DOWN to fit within cell if too large, but never scale up
+          // This ensures shapes fit inside the cell without exceeding boundaries
+          const rawContainScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+          const containScale = Math.min(1, rawContainScale); // Cap at 1 - never scale up
+          scaleX = containScale;
+          scaleY = containScale;
+          break;
+        case 'cover':
+          // Scale to cover entire cell (may exceed cell boundaries), maintain aspect ratio
+          // This will scale up or down as needed to ensure cell is fully covered
+          const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+          scaleX = coverScale;
+          scaleY = coverScale;
+          break;
+        case 'fill':
+          // Stretch to exactly match cell dimensions (distorts aspect ratio)
+          // This is the expected behavior for "fill" - shapes stretch to fill the cell
+          scaleX = availableWidth / shapeWidth;
+          scaleY = availableHeight / shapeHeight;
+          break;
+      }
+      
+      // Apply the calculated scale to the shape's transform
+      shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
+      shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
+      
+      const modeLabel = isCellMode ? 'CELL' : 'CELL-POINT';
+      console.log(`🔲 [${modeLabel} MODE] Shape ${index}: fitMode=${cellConstraints.fitMode}, scale=${scaleX.toFixed(2)}x${scaleY.toFixed(2)}, cellSize=${cellWidth.toFixed(0)}x${cellHeight.toFixed(0)}, shapeSize=${shapeWidth}x${shapeHeight}`);
     }
     
     // Always apply position offsets additively to grid layout

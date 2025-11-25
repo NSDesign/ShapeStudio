@@ -373,16 +373,19 @@ export const DEFAULT_SHAPE_MASKING: ShapeMaskingConfig = {
 // Cell constraints configuration for cell-based rendering (Phase 4)
 export interface CellConstraintsConfig {
   enabled: boolean;
-  renderMode: 'point' | 'cell';
+  renderMode: 'point' | 'cell' | 'cell-point';
+  // - point: Shapes at intersection points, original size (rows × cols positions)
+  // - cell: Shapes in cells between grid lines with fit constraints ((rows-1) × (cols-1) cells)
+  // - cell-point: Shapes at intersection points but with cell-based fit constraints (rows × cols positions with sizing)
   
-  // Cell mode settings - how shapes fit within cells
+  // Cell/Cell-Point mode settings - how shapes fit within cells
   fitMode: 'none' | 'fill' | 'contain' | 'cover';
   // - none: Use original shape size, just center in cell
   // - fill: Stretch to fill cell (may distort aspect ratio)
   // - contain: Scale to fit within cell (maintain aspect ratio, may have gaps)
   // - cover: Scale to cover cell (maintain aspect ratio, may overflow)
   
-  maintainAspectRatio: boolean;   // For 'fill' mode - if true, uses cover behavior to fill cell
+  maintainAspectRatio: boolean;   // Legacy field, no longer used (fill always stretches)
   padding: number;                // Inset from cell edges
   paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
   

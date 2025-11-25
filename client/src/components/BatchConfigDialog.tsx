@@ -1055,30 +1055,39 @@ export default function BatchConfigDialog({
                             <Label className="text-sm font-medium text-slate-200">Render Mode</Label>
                             <Select 
                               value={currentSettings.cellConstraints?.renderMode ?? 'point'}
-                              onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                cellConstraints: { 
-                                  ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
-                                  enabled: value === 'cell',
-                                  renderMode: value as 'point' | 'cell'
-                                } 
-                              }))}
+                              onValueChange={(value) => handleSettingsUpdate((prev) => {
+                                const newRenderMode = value as 'point' | 'cell' | 'cell-point';
+                                // Cell and Cell-Point modes require enabled=true for fit constraints
+                                // Point mode doesn't use fit constraints so enabled=false
+                                const newEnabled = newRenderMode !== 'point';
+                                return { 
+                                  cellConstraints: { 
+                                    ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                    enabled: newEnabled,
+                                    renderMode: newRenderMode
+                                  } 
+                                };
+                              })}
                             >
-                              <SelectTrigger className="h-8 w-36 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-render-mode">
+                              <SelectTrigger className="h-8 w-40 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-render-mode">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="point" className="text-slate-200 hover:bg-slate-700">Point</SelectItem>
                                 <SelectItem value="cell" className="text-slate-200 hover:bg-slate-700">Cell</SelectItem>
+                                <SelectItem value="cell-point" className="text-slate-200 hover:bg-slate-700">Cell Points</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <p className="text-xs text-slate-500">
                             {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'point'
                               ? 'Shapes placed at grid intersection points'
-                              : 'Shapes centered in cells with size constraints'}
+                              : (currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell'
+                                ? 'Shapes centered in cells between grid lines with size constraints'
+                                : 'Shapes at intersection points with cell-based size constraints'}
                           </p>
                           
-                          {/* Cell Mode Warning */}
+                          {/* Cell Mode Warning - only for 'cell' mode which reduces shape count */}
                           {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell' && (
                             <p className="text-xs text-amber-400 bg-amber-900/20 rounded px-2 py-1 border border-amber-700/30">
                               Note: Cell mode limits shape count to (rows-1) × (cols-1) cells. 
@@ -1086,8 +1095,16 @@ export default function BatchConfigDialog({
                             </p>
                           )}
                           
-                          {/* Cell Mode Options */}
-                          {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell' && (
+                          {/* Cell Points Mode Info */}
+                          {(currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell-point' && (
+                            <p className="text-xs text-blue-400 bg-blue-900/20 rounded px-2 py-1 border border-blue-700/30">
+                              Cell Points: {currentSettings.gridRows} × {currentSettings.gridColumns} = {currentSettings.gridRows * currentSettings.gridColumns} shapes with fit constraints. 
+                              Edge cells extend beyond artboard.
+                            </p>
+                          )}
+                          
+                          {/* Cell/Cell-Point Mode Options - show for both modes that have fit constraints */}
+                          {((currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell' || (currentSettings.cellConstraints?.renderMode ?? 'point') === 'cell-point') && (
                             <div className="space-y-3 mt-2 pt-3 border-t border-slate-600">
                               {/* Fit Mode */}
                               <div className="space-y-1">
