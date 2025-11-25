@@ -1082,9 +1082,34 @@ export function applyGridDistribution(
         const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
         const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
         
-        // Get shape dimensions (use width/height from shape or reasonable defaults)
-        const shapeWidth = shape.width || 50;
-        const shapeHeight = shape.height || 50;
+        // Get shape dimensions based on shape type
+        // For radius-based shapes (circle, polygon, star, ring), calculate from radius
+        // For rectangular shapes, use width/height directly
+        let shapeWidth: number;
+        let shapeHeight: number;
+        
+        if (shape.radius !== undefined && shape.radius > 0) {
+          // Radius-based shapes: diameter is 2 * radius
+          shapeWidth = shape.radius * 2;
+          shapeHeight = shape.radius * 2;
+        } else if (shape.width !== undefined && shape.height !== undefined) {
+          // Rectangular/elliptical shapes: use direct dimensions
+          shapeWidth = shape.width;
+          shapeHeight = shape.height;
+        } else if (shape.points && shape.points.length > 0) {
+          // Point-based shapes: calculate bounding box from points
+          const xs = shape.points.map((p: any) => p.x);
+          const ys = shape.points.map((p: any) => p.y);
+          shapeWidth = Math.max(...xs) - Math.min(...xs);
+          shapeHeight = Math.max(...ys) - Math.min(...ys);
+          // Ensure minimum size
+          shapeWidth = Math.max(10, shapeWidth);
+          shapeHeight = Math.max(10, shapeHeight);
+        } else {
+          // Fallback defaults
+          shapeWidth = 50;
+          shapeHeight = 50;
+        }
         
         // Calculate scale based on fit mode
         let scaleX = 1;
