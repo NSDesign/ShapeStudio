@@ -2964,7 +2964,6 @@ export default function BatchConfigDialog({
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
                                             <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                            <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
                                             <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
                                             <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
                                             <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
@@ -2972,32 +2971,209 @@ export default function BatchConfigDialog({
                                         </Select>
                                       </div>
 
-                                      {/* Enhanced Position Controls */}
+                                      {/* Enhanced Position Controls with Modes */}
                                       {currentSettings.fillGradientRadialCenter === 'coordinates' && (
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <>
+                                          {/* Radial Center X */}
                                           <div className="space-y-2">
-                                            <Label className="text-xs text-slate-300">X: {currentSettings.fillGradientRadialCenterX}%</Label>
-                                            <Slider
-                                              value={[currentSettings.fillGradientRadialCenterX]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterX: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="[&_[role=slider]]:bg-pink-600"
-                                            />
+                                            <div className="flex items-center space-x-2">
+                                              <Label className="text-xs text-slate-300">Center X</Label>
+                                              <Select 
+                                                value={currentSettings.fillGradientRadialCenterXMode || 'fixed'} 
+                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenterXMode: value as any })}
+                                              >
+                                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            
+                                            {currentSettings.fillGradientRadialCenterXMode === 'fixed' && (
+                                              <div className="space-y-1">
+                                                <Label className="text-xs text-slate-400">X: {currentSettings.fillGradientRadialCenterX || 50}%</Label>
+                                                <Slider
+                                                  value={[currentSettings.fillGradientRadialCenterX || 50]}
+                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterX: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="[&_[role=slider]]:bg-pink-600"
+                                                />
+                                              </div>
+                                            )}
+                                            
+                                            {currentSettings.fillGradientRadialCenterXMode === 'range' && (
+                                              <div className="space-y-1">
+                                                <Label className="text-xs text-slate-400">
+                                                  Range: {currentSettings.fillGradientRadialCenterXRange?.[0] || 25}% - {currentSettings.fillGradientRadialCenterXRange?.[1] || 75}%
+                                                </Label>
+                                                <Slider
+                                                  value={currentSettings.fillGradientRadialCenterXRange || [25, 75]}
+                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenterXRange: value as [number, number] })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="[&_[role=slider]]:bg-pink-600"
+                                                />
+                                              </div>
+                                            )}
+                                            
+                                            {currentSettings.fillGradientRadialCenterXMode === 'incremental' && (
+                                              <div className="space-y-2">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  <div className="space-y-1">
+                                                    <Label className="text-xs text-slate-400">Start: {currentSettings.fillGradientRadialCenterXStartValue || 50}%</Label>
+                                                    <Slider
+                                                      value={[currentSettings.fillGradientRadialCenterXStartValue || 50]}
+                                                      onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterXStartValue: value })}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      className="[&_[role=slider]]:bg-pink-600"
+                                                    />
+                                                  </div>
+                                                  <div className="space-y-1">
+                                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.fillGradientRadialCenterXIncrement || 10}%</Label>
+                                                    <Slider
+                                                      value={[currentSettings.fillGradientRadialCenterXIncrement || 10]}
+                                                      onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterXIncrement: value })}
+                                                      min={-50}
+                                                      max={50}
+                                                      step={5}
+                                                      className="[&_[role=slider]]:bg-pink-600"
+                                                    />
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                  <Checkbox
+                                                    checked={currentSettings.fillGradientRadialCenterXModulationEnabled}
+                                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientRadialCenterXModulationEnabled: checked as boolean })}
+                                                    className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                  />
+                                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                                  {currentSettings.fillGradientRadialCenterXModulationEnabled && (
+                                                    <div className="flex items-center space-x-2 ml-2">
+                                                      <Label className="text-xs text-slate-400">at {currentSettings.fillGradientRadialCenterXModulationValue || 100}%</Label>
+                                                      <Slider
+                                                        value={[currentSettings.fillGradientRadialCenterXModulationValue || 100]}
+                                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterXModulationValue: value })}
+                                                        min={1}
+                                                        max={200}
+                                                        step={5}
+                                                        className="w-24 [&_[role=slider]]:bg-pink-600"
+                                                      />
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
+
+                                          {/* Radial Center Y */}
                                           <div className="space-y-2">
-                                            <Label className="text-xs text-slate-300">Y: {currentSettings.fillGradientRadialCenterY}%</Label>
-                                            <Slider
-                                              value={[currentSettings.fillGradientRadialCenterY]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterY: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="[&_[role=slider]]:bg-pink-600"
-                                            />
+                                            <div className="flex items-center space-x-2">
+                                              <Label className="text-xs text-slate-300">Center Y</Label>
+                                              <Select 
+                                                value={currentSettings.fillGradientRadialCenterYMode || 'fixed'} 
+                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenterYMode: value as any })}
+                                              >
+                                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            
+                                            {currentSettings.fillGradientRadialCenterYMode === 'fixed' && (
+                                              <div className="space-y-1">
+                                                <Label className="text-xs text-slate-400">Y: {currentSettings.fillGradientRadialCenterY || 50}%</Label>
+                                                <Slider
+                                                  value={[currentSettings.fillGradientRadialCenterY || 50]}
+                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterY: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="[&_[role=slider]]:bg-pink-600"
+                                                />
+                                              </div>
+                                            )}
+                                            
+                                            {currentSettings.fillGradientRadialCenterYMode === 'range' && (
+                                              <div className="space-y-1">
+                                                <Label className="text-xs text-slate-400">
+                                                  Range: {currentSettings.fillGradientRadialCenterYRange?.[0] || 25}% - {currentSettings.fillGradientRadialCenterYRange?.[1] || 75}%
+                                                </Label>
+                                                <Slider
+                                                  value={currentSettings.fillGradientRadialCenterYRange || [25, 75]}
+                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenterYRange: value as [number, number] })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="[&_[role=slider]]:bg-pink-600"
+                                                />
+                                              </div>
+                                            )}
+                                            
+                                            {currentSettings.fillGradientRadialCenterYMode === 'incremental' && (
+                                              <div className="space-y-2">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  <div className="space-y-1">
+                                                    <Label className="text-xs text-slate-400">Start: {currentSettings.fillGradientRadialCenterYStartValue || 50}%</Label>
+                                                    <Slider
+                                                      value={[currentSettings.fillGradientRadialCenterYStartValue || 50]}
+                                                      onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterYStartValue: value })}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      className="[&_[role=slider]]:bg-pink-600"
+                                                    />
+                                                  </div>
+                                                  <div className="space-y-1">
+                                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.fillGradientRadialCenterYIncrement || 10}%</Label>
+                                                    <Slider
+                                                      value={[currentSettings.fillGradientRadialCenterYIncrement || 10]}
+                                                      onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterYIncrement: value })}
+                                                      min={-50}
+                                                      max={50}
+                                                      step={5}
+                                                      className="[&_[role=slider]]:bg-pink-600"
+                                                    />
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                  <Checkbox
+                                                    checked={currentSettings.fillGradientRadialCenterYModulationEnabled}
+                                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientRadialCenterYModulationEnabled: checked as boolean })}
+                                                    className="border-slate-500 data-[state=checked]:bg-pink-600"
+                                                  />
+                                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                                  {currentSettings.fillGradientRadialCenterYModulationEnabled && (
+                                                    <div className="flex items-center space-x-2 ml-2">
+                                                      <Label className="text-xs text-slate-400">at {currentSettings.fillGradientRadialCenterYModulationValue || 100}%</Label>
+                                                      <Slider
+                                                        value={[currentSettings.fillGradientRadialCenterYModulationValue || 100]}
+                                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialCenterYModulationValue: value })}
+                                                        min={1}
+                                                        max={200}
+                                                        step={5}
+                                                        className="w-24 [&_[role=slider]]:bg-pink-600"
+                                                      />
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
-                                        </div>
+                                        </>
                                       )}
 
                                       {/* Corners Selection */}
