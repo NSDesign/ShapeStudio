@@ -373,7 +373,7 @@ export const DEFAULT_SHAPE_MASKING: ShapeMaskingConfig = {
 // Cell constraints configuration for cell-based rendering (Phase 4)
 export interface CellConstraintsConfig {
   enabled: boolean;
-  renderMode: 'intersection' | 'cell';
+  renderMode: 'point' | 'cell';
   
   // Cell mode settings - how shapes fit within cells
   fitMode: 'none' | 'fill' | 'contain' | 'cover';
@@ -382,19 +382,23 @@ export interface CellConstraintsConfig {
   // - contain: Scale to fit within cell (maintain aspect ratio, may have gaps)
   // - cover: Scale to cover cell (maintain aspect ratio, may overflow)
   
-  maintainAspectRatio: boolean;   // For 'fill' mode - if true, uses contain behavior
+  maintainAspectRatio: boolean;   // For 'fill' mode - if true, uses cover behavior to fill cell
   padding: number;                // Inset from cell edges
   paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
+  
+  // Debug visualization
+  showDebugGrid: boolean;         // Show red semi-transparent grid lines for debugging
 }
 
 // Default cell constraints configuration
 export const DEFAULT_CELL_CONSTRAINTS: CellConstraintsConfig = {
   enabled: false,
-  renderMode: 'intersection',
+  renderMode: 'point',
   fitMode: 'contain',
   maintainAspectRatio: true,
   padding: 0,
-  paddingUnit: 'px'
+  paddingUnit: 'px',
+  showDebugGrid: false
 };
 
 export interface BatchConfigSettings {

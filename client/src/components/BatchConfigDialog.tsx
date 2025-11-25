@@ -1163,6 +1163,23 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                           )}
+                          
+                          {/* Debug Grid Toggle */}
+                          <div className="flex items-center space-x-2 pt-2 border-t border-slate-600">
+                            <Checkbox 
+                              checked={currentSettings.cellConstraints?.showDebugGrid ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate((prev) => ({ 
+                                cellConstraints: { 
+                                  ...(prev.cellConstraints || DEFAULT_CELL_CONSTRAINTS), 
+                                  showDebugGrid: checked as boolean
+                                } 
+                              }))}
+                              className="border-red-500 data-[state=checked]:bg-red-600"
+                              data-testid="checkbox-show-debug-grid"
+                            />
+                            <Label className="text-xs text-slate-300">Show Debug Grid</Label>
+                            <span className="text-xs text-slate-500">(red overlay)</span>
+                          </div>
                         </div>
                         
                         {/* Randomisation Section - kept at bottom */}

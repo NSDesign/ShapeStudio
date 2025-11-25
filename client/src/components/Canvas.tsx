@@ -340,6 +340,160 @@ export default function Canvas({
       ctx.restore();
     };
 
+    // Debug Grid Overlay: Shows distribution grid for debugging cell vs point rendering
+    const renderDebugGrid = () => {
+      // Check if any generation set has debug grid enabled
+      const activeSet = generationSets?.find(set => set.enabled && set.batchConfig?.cellConstraints?.showDebugGrid);
+      if (!activeSet) return;
+      
+      const batchConfig = activeSet.batchConfig;
+      if (!batchConfig || !batchConfig.distributionLayoutEnabled || batchConfig.distributionPattern !== 'grid') return;
+      
+      const currentArtboard = artboards.find(a => a.id === activeArtboard);
+      if (!currentArtboard) return;
+      
+      const canvas = artboardCanvasRef.current;
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      let effectiveZoom = canvasSettings.zoom;
+      let effectivePanX = canvasSettings.panX;
+      let effectivePanY = canvasSettings.panY;
+      
+      if (effectiveZoom < 0.05) {
+        effectiveZoom = 1.0;
+        effectivePanX = 0;
+        effectivePanY = 0;
+      }
+      
+      ctx.save();
+      
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      
+      ctx.translate(displayWidth / 2, displayHeight / 2);
+      ctx.scale(effectiveZoom, effectiveZoom);
+      ctx.translate(effectivePanX, effectivePanY);
+      
+      const rows = batchConfig.gridRows;
+      const columns = batchConfig.gridColumns;
+      const artboardBounds = {
+        x: currentArtboard.x,
+        y: currentArtboard.y,
+        width: currentArtboard.width,
+        height: currentArtboard.height
+      };
+      
+      // Calculate spacing based on mode
+      let spacingX = batchConfig.gridColumnOffset;
+      let spacingY = batchConfig.gridRowOffset;
+      let startX = artboardBounds.x + (batchConfig.gridStartX || 0);
+      let startY = artboardBounds.y + (batchConfig.gridStartY || 0);
+      
+      const margin = batchConfig.gridMarginEnabled ? (batchConfig.gridMarginValue || 50) : 40;
+      
+      if (batchConfig.gridSpacingXMode === 'auto-centered') {
+        const availableWidth = artboardBounds.width - (margin * 2);
+        spacingX = columns > 1 ? availableWidth / (columns - 1) : availableWidth;
+        startX = artboardBounds.x + margin;
+      } else if (batchConfig.gridSpacingXMode === 'auto-edge-to-edge') {
+        spacingX = columns > 1 ? artboardBounds.width / (columns - 1) : artboardBounds.width;
+        startX = artboardBounds.x;
+      }
+      
+      if (batchConfig.gridSpacingYMode === 'auto-centered') {
+        const availableHeight = artboardBounds.height - (margin * 2);
+        spacingY = rows > 1 ? availableHeight / (rows - 1) : availableHeight;
+        startY = artboardBounds.y + margin;
+      } else if (batchConfig.gridSpacingYMode === 'auto-edge-to-edge') {
+        spacingY = rows > 1 ? artboardBounds.height / (rows - 1) : artboardBounds.height;
+        startY = artboardBounds.y;
+      }
+      
+      const cellConstraints = batchConfig.cellConstraints;
+      const isCellMode = cellConstraints?.renderMode === 'cell';
+      
+      // Draw grid lines (red semi-transparent)
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+      ctx.lineWidth = 1 / effectiveZoom;
+      ctx.setLineDash([]);
+      
+      // Draw vertical lines
+      for (let col = 0; col < columns; col++) {
+        const x = startX + (col * spacingX);
+        ctx.beginPath();
+        ctx.moveTo(x, artboardBounds.y);
+        ctx.lineTo(x, artboardBounds.y + artboardBounds.height);
+        ctx.stroke();
+      }
+      
+      // Draw horizontal lines
+      for (let row = 0; row < rows; row++) {
+        const y = startY + (row * spacingY);
+        ctx.beginPath();
+        ctx.moveTo(artboardBounds.x, y);
+        ctx.lineTo(artboardBounds.x + artboardBounds.width, y);
+        ctx.stroke();
+      }
+      
+      // Draw cell boundaries (if in cell mode, draw cell rectangles)
+      if (isCellMode && spacingX > 0 && spacingY > 0) {
+        ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
+        ctx.lineWidth = 2 / effectiveZoom;
+        ctx.setLineDash([4 / effectiveZoom, 4 / effectiveZoom]);
+        
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < columns; col++) {
+            const cellX = startX + (col * spacingX) - spacingX / 2;
+            const cellY = startY + (row * spacingY) - spacingY / 2;
+            ctx.strokeRect(cellX, cellY, spacingX, spacingY);
+          }
+        }
+        ctx.setLineDash([]);
+      }
+      
+      // Draw markers at grid positions
+      const markerSize = 6 / effectiveZoom;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          const x = startX + (col * spacingX);
+          const y = startY + (row * spacingY);
+          
+          if (isCellMode) {
+            // Cell mode: draw cross at cell center
+            ctx.strokeStyle = 'rgba(0, 200, 0, 0.8)';
+            ctx.lineWidth = 2 / effectiveZoom;
+            ctx.beginPath();
+            ctx.moveTo(x - markerSize, y);
+            ctx.lineTo(x + markerSize, y);
+            ctx.moveTo(x, y - markerSize);
+            ctx.lineTo(x, y + markerSize);
+            ctx.stroke();
+          } else {
+            // Point mode: draw filled circle at intersection
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            ctx.beginPath();
+            ctx.arc(x, y, markerSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      
+      // Draw mode label
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+      ctx.font = `${12 / effectiveZoom}px Arial`;
+      ctx.fillText(
+        `DEBUG: ${isCellMode ? 'Cell Mode' : 'Point Mode'} | ${rows}×${columns} grid`,
+        artboardBounds.x + 5 / effectiveZoom,
+        artboardBounds.y + artboardBounds.height - 5 / effectiveZoom
+      );
+      
+      ctx.restore();
+    };
+
     // Layer 3: Shapes (transparent background, compositing happens here)
     const renderShapes = () => {
       const canvas = canvasRef.current;
@@ -545,6 +699,7 @@ export default function Canvas({
       if (dirtyRef.current) {
         renderInfiniteCanvas();
         renderArtboard();
+        renderDebugGrid(); // Debug grid overlay for cell vs point rendering
         renderShapes();
         dirtyRef.current = false; // Reset dirty flag after rendering
       }
