@@ -1271,6 +1271,72 @@ return sortedShapes.map((shape, index) => {
 - Filter by opacity thresholds
 - Filter transparent/opaque shapes
 
+#### Future Enhancement: Masked Shape Operations
+
+**Concept**: The current shape masking system identifies shapes at specific grid positions and excludes them from rendering. Using the same selection logic, we could apply various transformations to these shapes instead of simply removing them. This transforms Shape Masking from a binary "show/hide" system into a powerful selective modification tool.
+
+**Operation Types**:
+
+**Transform Operations**:
+- **Move/Translate**: Shift matched shapes by X/Y offset (create staggered effects)
+- **Scale**: Resize matched shapes (alternating large/small patterns)
+- **Rotate**: Apply rotation to matched shapes (directional emphasis)
+- **Skew**: Apply skew transformations to matched shapes
+
+**Visual Operations**:
+- **Recolor Fill**: Change fill color of matched shapes (checkerboard color patterns)
+- **Recolor Stroke**: Change stroke color/width of matched shapes
+- **Adjust Opacity**: Modify opacity of matched shapes (fade alternate rows/columns)
+- **Apply Blur**: Add blur effect to matched shapes (depth-of-field effects)
+- **Apply Gradient**: Override gradient on matched shapes
+
+**Compositional Operations**:
+- **Change Blend Mode**: Apply different blend mode to matched shapes
+- **Change Compositing**: Apply different compositing operation
+- **Adjust Z-Index**: Modify layer order of matched shapes
+
+**Shape Operations**:
+- **Change Shape Type**: Transform matched shapes to a different type
+- **Modify Properties**: Adjust shape-specific properties (corner radius, point count, etc.)
+
+**Implementation Approach**:
+```typescript
+interface ShapeMaskingOperation {
+  mode: 'exclude' | 'transform';  // Current 'exclude' is default
+  
+  // When mode is 'transform', apply these operations to matched shapes
+  operations?: {
+    translate?: { x: number; y: number };
+    scale?: { x: number; y: number };
+    rotate?: number;
+    fillColor?: string;
+    strokeColor?: string;
+    opacity?: number;
+    blur?: number;
+    blendMode?: string;
+    // ... additional operation types
+  };
+}
+```
+
+**UI Considerations**:
+- Mode selector: "Exclude Shapes" (current) vs "Transform Shapes"
+- When "Transform" mode selected, show operation configuration panel
+- Multiple operations can be stacked (e.g., scale + recolor + rotate)
+- Preview shows matched shapes with operations applied
+
+**Use Cases**:
+1. **Checkerboard patterns**: Alternate shapes with different colors/sizes
+2. **Emphasis effects**: Scale up or highlight shapes at specific positions
+3. **Depth simulation**: Reduce opacity/apply blur to create layered depth
+4. **Pattern variation**: Rotate alternate shapes for visual interest
+5. **Color gradients across grid**: Progressive color changes based on position
+
+**Synergy with Existing Features**:
+- Combines with all existing filter types (alternating, pattern, position, color, size, count)
+- Works with Set Repetition Index Control for index-based operations
+- Enables complex visual patterns without creating multiple shape sets
+
 ---
 
 ### Phase 4: Cell-Based Rendering
