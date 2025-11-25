@@ -386,30 +386,60 @@ export default function Canvas({
         height: currentArtboard.height
       };
       
-      // Calculate spacing based on mode
+      // Calculate spacing and start position matching calculateGridPosition logic
+      // Note: calculateGridPosition uses centerX/centerY which is typically 0
+      const centerX = 0;
+      const centerY = 0;
+      const marginEnabled = batchConfig.gridMarginEnabled ?? false;
+      const marginValue = batchConfig.gridMarginValue ?? 50;
+      
       let spacingX = batchConfig.gridColumnOffset;
       let spacingY = batchConfig.gridRowOffset;
-      let startX = artboardBounds.x + (batchConfig.gridStartX || 0);
-      let startY = artboardBounds.y + (batchConfig.gridStartY || 0);
+      let startX = centerX - ((columns - 1) * spacingX) / 2;
+      let startY = centerY - ((rows - 1) * spacingY) / 2;
+      let ignoreGridStartX = false;
+      let ignoreGridStartY = false;
       
-      const margin = batchConfig.gridMarginEnabled ? (batchConfig.gridMarginValue || 50) : 40;
-      
+      // Handle X spacing mode (matching calculateGridPosition)
       if (batchConfig.gridSpacingXMode === 'auto-centered') {
-        const availableWidth = artboardBounds.width - (margin * 2);
-        spacingX = columns > 1 ? availableWidth / (columns - 1) : availableWidth;
-        startX = artboardBounds.x + margin;
+        ignoreGridStartX = true;
+        if (marginEnabled) {
+          const availableWidth = artboardBounds.width - (2 * marginValue);
+          spacingX = columns > 1 ? availableWidth / (columns - 1) : 0;
+          startX = artboardBounds.x - centerX + marginValue;
+        } else {
+          spacingX = artboardBounds.width / (columns + 1);
+          startX = artboardBounds.x - centerX + spacingX;
+        }
       } else if (batchConfig.gridSpacingXMode === 'auto-edge-to-edge') {
-        spacingX = columns > 1 ? artboardBounds.width / (columns - 1) : artboardBounds.width;
-        startX = artboardBounds.x;
+        ignoreGridStartX = true;
+        spacingX = columns > 1 ? artboardBounds.width / (columns - 1) : 0;
+        startX = artboardBounds.x - centerX;
       }
       
+      // Handle Y spacing mode (matching calculateGridPosition)
       if (batchConfig.gridSpacingYMode === 'auto-centered') {
-        const availableHeight = artboardBounds.height - (margin * 2);
-        spacingY = rows > 1 ? availableHeight / (rows - 1) : availableHeight;
-        startY = artboardBounds.y + margin;
+        ignoreGridStartY = true;
+        if (marginEnabled) {
+          const availableHeight = artboardBounds.height - (2 * marginValue);
+          spacingY = rows > 1 ? availableHeight / (rows - 1) : 0;
+          startY = artboardBounds.y - centerY + marginValue;
+        } else {
+          spacingY = artboardBounds.height / (rows + 1);
+          startY = artboardBounds.y - centerY + spacingY;
+        }
       } else if (batchConfig.gridSpacingYMode === 'auto-edge-to-edge') {
-        spacingY = rows > 1 ? artboardBounds.height / (rows - 1) : artboardBounds.height;
-        startY = artboardBounds.y;
+        ignoreGridStartY = true;
+        spacingY = rows > 1 ? artboardBounds.height / (rows - 1) : 0;
+        startY = artboardBounds.y - centerY;
+      }
+      
+      // Apply grid start offsets if not using auto modes
+      if (!ignoreGridStartX) {
+        startX += batchConfig.gridStartX || 0;
+      }
+      if (!ignoreGridStartY) {
+        startY += batchConfig.gridStartY || 0;
       }
       
       const cellConstraints = batchConfig.cellConstraints;
@@ -420,7 +450,7 @@ export default function Canvas({
       ctx.lineWidth = 1 / effectiveZoom;
       ctx.setLineDash([]);
       
-      // Draw vertical lines
+      // Draw vertical lines at each column position
       for (let col = 0; col < columns; col++) {
         const x = startX + (col * spacingX);
         ctx.beginPath();
@@ -429,7 +459,7 @@ export default function Canvas({
         ctx.stroke();
       }
       
-      // Draw horizontal lines
+      // Draw horizontal lines at each row position
       for (let row = 0; row < rows; row++) {
         const y = startY + (row * spacingY);
         ctx.beginPath();
@@ -446,8 +476,10 @@ export default function Canvas({
         
         for (let row = 0; row < rows; row++) {
           for (let col = 0; col < columns; col++) {
-            const cellX = startX + (col * spacingX) - spacingX / 2;
-            const cellY = startY + (row * spacingY) - spacingY / 2;
+            const x = startX + (col * spacingX);
+            const y = startY + (row * spacingY);
+            const cellX = x - spacingX / 2;
+            const cellY = y - spacingY / 2;
             ctx.strokeRect(cellX, cellY, spacingX, spacingY);
           }
         }
