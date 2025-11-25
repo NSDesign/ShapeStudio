@@ -730,7 +730,7 @@ export default function BatchConfigDialog({
                                   <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-offsets-mode">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600">
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                     <SelectItem value="alternating" className="text-slate-200 focus:bg-slate-700">
                                       Alternating (every other row/column)
                                     </SelectItem>
