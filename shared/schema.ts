@@ -328,6 +328,48 @@ export const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
   }
 };
 
+// Shape masking configuration for controlling which grid positions render shapes
+export interface ShapeMaskingGridConfig {
+  enabled: boolean;
+  mode: 'alternating' | 'pattern';
+  invert: boolean;                    // false = exclude matched, true = render only matched
+  priority: 'row-first' | 'column-first';
+  
+  // Alternating mode settings
+  alternating: {
+    skipEvery: number;                // Skip every Nth row/column (2 = every other)
+    startIndex: number;               // Where alternation begins (0-indexed)
+  };
+  
+  // Pattern mode settings - explicit row/column combinations to mask
+  pattern: Array<{
+    row: number;
+    columns: number[];                // Which columns to mask for this row
+  }>;
+}
+
+// Shape masking configuration (Phase 3)
+export interface ShapeMaskingConfig {
+  enabled: boolean;
+  grid: ShapeMaskingGridConfig;
+}
+
+// Default shape masking configuration
+export const DEFAULT_SHAPE_MASKING: ShapeMaskingConfig = {
+  enabled: false,
+  grid: {
+    enabled: false,
+    mode: 'alternating',
+    invert: false,
+    priority: 'row-first',
+    alternating: {
+      skipEvery: 2,
+      startIndex: 0
+    },
+    pattern: []
+  }
+};
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -360,6 +402,9 @@ export interface BatchConfigSettings {
   
   // Grid alternating/pattern offsets (Phase 1: alternating, Phase 2: pattern)
   gridOffsets: GridOffsetsConfig;
+  
+  // Shape masking for grid positions (Phase 3)
+  shapeMasking: ShapeMaskingConfig;
   
   // Auto Distribute Layout Settings
   autoDistributeXCount: number; // Number of shapes to distribute in X direction
@@ -929,6 +974,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Grid alternating/pattern offsets
   gridOffsets: DEFAULT_GRID_OFFSETS,
+  
+  // Shape masking for grid positions
+  shapeMasking: DEFAULT_SHAPE_MASKING,
   
   autoDistributeXCount: 10,
   autoDistributeYCount: 10,
