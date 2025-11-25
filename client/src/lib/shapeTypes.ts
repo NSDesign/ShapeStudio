@@ -977,27 +977,15 @@ export function applyGridDistribution(
   const validPositions: Array<{ rowIndex: number; colIndex: number; linearIndex: number }> = [];
   const totalPositions = config.gridRows * config.gridColumns;
   
-  // Debug: Log masking config state
-  console.log(`🔍 [MASKING DEBUG] shapeMasking config:`, {
-    exists: !!config.shapeMasking,
-    enabled: config.shapeMasking?.enabled,
-    gridEnabled: config.shapeMasking?.grid?.enabled,
-    mode: config.shapeMasking?.grid?.mode,
-    totalPositions
-  });
-  
   for (let i = 0; i < totalPositions; i++) {
     const rowIndex = Math.floor(i / config.gridColumns);
     const colIndex = i % config.gridColumns;
     
     // Check if this position is masked
-    const isMasked = isPositionMasked(rowIndex, colIndex, config.shapeMasking);
-    if (!isMasked) {
+    if (!isPositionMasked(rowIndex, colIndex, config.shapeMasking)) {
       validPositions.push({ rowIndex, colIndex, linearIndex: i });
     }
   }
-  
-  console.log(`🔍 [MASKING DEBUG] Valid positions: ${validPositions.length} / ${totalPositions}`);
   
   // Only use shapes that fit within valid positions - excess shapes are excluded
   // This ensures masked positions result in shapes being removed, not repositioned

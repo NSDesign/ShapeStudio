@@ -2107,11 +2107,6 @@ export default function BatchConfigDialog({
                     data-testid="checkbox-shape-masking-enabled"
                   />
                   <Label className="font-medium text-slate-200">Shape Masking</Label>
-                  <span className="text-xs text-slate-400 ml-2">
-                    {(currentSettings.shapeMasking?.grid?.mode ?? 'alternating') === 'alternating' 
-                      ? '(Skip every N)' 
-                      : '(Pattern)'}
-                  </span>
                 </div>
                 
                 {(currentSettings.shapeMasking?.enabled ?? false) && (
