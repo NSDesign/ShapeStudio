@@ -762,93 +762,132 @@ export default function BatchConfigDialog({
                                 </div>
                                 
                                 {(currentSettings.gridOffsets?.row?.enabled ?? false) && (
-                                  <div className="grid grid-cols-3 gap-2 mt-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                      <Input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={currentSettings.gridOffsets?.row?.amount ?? 0}
-                                        onChange={(e) => {
-                                          const rawValue = e.target.value;
-                                          if (rawValue === '') {
+                                  <div className="space-y-2 mt-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Amount (px)</Label>
+                                        <Input
+                                          type="text"
+                                          inputMode="numeric"
+                                          value={currentSettings.gridOffsets?.row?.amount ?? 0}
+                                          onChange={(e) => {
+                                            const rawValue = e.target.value;
+                                            if (rawValue === '') {
+                                              handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  row: {
+                                                    ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                    amount: 0
+                                                  }
+                                                } 
+                                              }));
+                                              return;
+                                            }
+                                            const parsed = parseInt(rawValue, 10);
+                                            if (!isNaN(parsed)) {
+                                              handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  row: {
+                                                    ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                    amount: parsed
+                                                  }
+                                                } 
+                                              }));
+                                            }
+                                          }}
+                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-grid-row-offset-amount"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Direction</Label>
+                                        <Select 
+                                          value={currentSettings.gridOffsets?.row?.direction ?? 'right'}
+                                          onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              row: {
+                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                direction: value as 'left' | 'right'
+                                              }
+                                            } 
+                                          }))}
+                                        >
+                                          <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-direction">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
+                                            <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Alternating mode: Start From selector */}
+                                    {(currentSettings.gridOffsets?.mode ?? 'alternating') === 'alternating' && (
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Start From</Label>
+                                        <Select 
+                                          value={String(Math.min(currentSettings.gridOffsets?.row?.startIndex ?? 0, currentSettings.gridRows - 1))}
+                                          onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              row: {
+                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                startIndex: parseInt(value)
+                                              }
+                                            } 
+                                          }))}
+                                        >
+                                          <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-start">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            {Array.from({ length: currentSettings.gridRows }, (_, i) => (
+                                              <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
+                                                {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} row
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Pattern mode: Row indices input */}
+                                    {(currentSettings.gridOffsets?.mode ?? 'alternating') === 'pattern' && (
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Row Indices (comma-separated, 0-based)</Label>
+                                        <Input
+                                          type="text"
+                                          value={(currentSettings.gridOffsets?.row?.pattern ?? []).join(', ')}
+                                          onChange={(e) => {
+                                            const rawValue = e.target.value;
+                                            const indices = rawValue
+                                              .split(',')
+                                              .map(s => s.trim())
+                                              .filter(s => s !== '')
+                                              .map(s => parseInt(s, 10))
+                                              .filter(n => !isNaN(n) && n >= 0);
                                             handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 row: {
                                                   ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amount: 0
+                                                  pattern: indices
                                                 }
                                               } 
                                             }));
-                                            return;
-                                          }
-                                          const parsed = parseInt(rawValue, 10);
-                                          if (!isNaN(parsed)) {
-                                            handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                row: {
-                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amount: parsed
-                                                }
-                                              } 
-                                            }));
-                                          }
-                                        }}
-                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-grid-row-offset-amount"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start From</Label>
-                                      <Select 
-                                        value={String(Math.min(currentSettings.gridOffsets?.row?.startIndex ?? 0, currentSettings.gridRows - 1))}
-                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                          gridOffsets: { 
-                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                            row: {
-                                              ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                              startIndex: parseInt(value)
-                                            }
-                                          } 
-                                        }))}
-                                      >
-                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-start">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          {Array.from({ length: currentSettings.gridRows }, (_, i) => (
-                                            <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
-                                              {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} row
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Direction</Label>
-                                      <Select 
-                                        value={currentSettings.gridOffsets?.row?.direction ?? 'right'}
-                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                          gridOffsets: { 
-                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                            row: {
-                                              ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                              direction: value as 'left' | 'right'
-                                            }
-                                          } 
-                                        }))}
-                                      >
-                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-row-offset-direction">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
-                                          <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                          }}
+                                          placeholder="e.g., 0, 2, 4"
+                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-grid-row-offset-pattern"
+                                        />
+                                        <span className="text-xs text-slate-500">Rows at these indices will be offset</span>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -874,93 +913,132 @@ export default function BatchConfigDialog({
                                 </div>
                                 
                                 {(currentSettings.gridOffsets?.column?.enabled ?? false) && (
-                                  <div className="grid grid-cols-3 gap-2 mt-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                      <Input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={currentSettings.gridOffsets?.column?.amount ?? 0}
-                                        onChange={(e) => {
-                                          const rawValue = e.target.value;
-                                          if (rawValue === '') {
+                                  <div className="space-y-2 mt-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Amount (px)</Label>
+                                        <Input
+                                          type="text"
+                                          inputMode="numeric"
+                                          value={currentSettings.gridOffsets?.column?.amount ?? 0}
+                                          onChange={(e) => {
+                                            const rawValue = e.target.value;
+                                            if (rawValue === '') {
+                                              handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  column: {
+                                                    ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                    amount: 0
+                                                  }
+                                                } 
+                                              }));
+                                              return;
+                                            }
+                                            const parsed = parseInt(rawValue, 10);
+                                            if (!isNaN(parsed)) {
+                                              handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  column: {
+                                                    ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                    amount: parsed
+                                                  }
+                                                } 
+                                              }));
+                                            }
+                                          }}
+                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-grid-column-offset-amount"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Direction</Label>
+                                        <Select 
+                                          value={currentSettings.gridOffsets?.column?.direction ?? 'down'}
+                                          onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              column: {
+                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                direction: value as 'up' | 'down'
+                                              }
+                                            } 
+                                          }))}
+                                        >
+                                          <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-direction">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="up" className="text-slate-200 hover:bg-slate-700">Up</SelectItem>
+                                            <SelectItem value="down" className="text-slate-200 hover:bg-slate-700">Down</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Alternating mode: Start From selector */}
+                                    {(currentSettings.gridOffsets?.mode ?? 'alternating') === 'alternating' && (
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Start From</Label>
+                                        <Select 
+                                          value={String(Math.min(currentSettings.gridOffsets?.column?.startIndex ?? 0, currentSettings.gridColumns - 1))}
+                                          onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              column: {
+                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                startIndex: parseInt(value)
+                                              }
+                                            } 
+                                          }))}
+                                        >
+                                          <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-start">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            {Array.from({ length: currentSettings.gridColumns }, (_, i) => (
+                                              <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
+                                                {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} column
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Pattern mode: Column indices input */}
+                                    {(currentSettings.gridOffsets?.mode ?? 'alternating') === 'pattern' && (
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Column Indices (comma-separated, 0-based)</Label>
+                                        <Input
+                                          type="text"
+                                          value={(currentSettings.gridOffsets?.column?.pattern ?? []).join(', ')}
+                                          onChange={(e) => {
+                                            const rawValue = e.target.value;
+                                            const indices = rawValue
+                                              .split(',')
+                                              .map(s => s.trim())
+                                              .filter(s => s !== '')
+                                              .map(s => parseInt(s, 10))
+                                              .filter(n => !isNaN(n) && n >= 0);
                                             handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 column: {
                                                   ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amount: 0
+                                                  pattern: indices
                                                 }
                                               } 
                                             }));
-                                            return;
-                                          }
-                                          const parsed = parseInt(rawValue, 10);
-                                          if (!isNaN(parsed)) {
-                                            handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                column: {
-                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amount: parsed
-                                                }
-                                              } 
-                                            }));
-                                          }
-                                        }}
-                                        className="h-8 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-grid-column-offset-amount"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start From</Label>
-                                      <Select 
-                                        value={String(Math.min(currentSettings.gridOffsets?.column?.startIndex ?? 0, currentSettings.gridColumns - 1))}
-                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                          gridOffsets: { 
-                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                            column: {
-                                              ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                              startIndex: parseInt(value)
-                                            }
-                                          } 
-                                        }))}
-                                      >
-                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-start">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          {Array.from({ length: currentSettings.gridColumns }, (_, i) => (
-                                            <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
-                                              {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} column
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Direction</Label>
-                                      <Select 
-                                        value={currentSettings.gridOffsets?.column?.direction ?? 'down'}
-                                        onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                          gridOffsets: { 
-                                            ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                            column: {
-                                              ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                              direction: value as 'up' | 'down'
-                                            }
-                                          } 
-                                        }))}
-                                      >
-                                        <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-grid-column-offset-direction">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          <SelectItem value="up" className="text-slate-200 hover:bg-slate-700">Up</SelectItem>
-                                          <SelectItem value="down" className="text-slate-200 hover:bg-slate-700">Down</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                          }}
+                                          placeholder="e.g., 0, 2, 4"
+                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-grid-column-offset-pattern"
+                                        />
+                                        <span className="text-xs text-slate-500">Columns at these indices will be offset</span>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
