@@ -23,7 +23,14 @@ Preferred communication style: Simple, everyday language.
 - **Canvas Engine**: Three-layer infinite canvas with pan/zoom, multi-touch, multi-selection, and optimized real-time rendering.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation.
   - **Server-Side Distribution**: Full support for all distribution layouts (grid, wave, ellipse, spiral, auto-distribute) with batch config settings. Server implementation matches client's two-phase approach: initial scatter followed by distribution layout application.
-  - **Grid Shape Masking (Phase 3)**: Controls which grid positions render shapes via alternating or pattern-based masking modes, with invert toggle, row-first/column-first priority, and skip every Nth row/column configuration.
+- **Shape Masking System**: Standalone top-level configuration section for filtering which shapes render:
+  - **Architecture**: Independent of Distribution Layout - works as a separate filtering layer
+  - **Grid Position Filter**: First filter type for row/column-based masking in grid layouts:
+    - *Alternating Mode*: Skip every Nth row/column with configurable start index
+    - *Pattern Mode*: Explicit row/column combinations for precise control
+    - *Invert Toggle*: Exclude matched positions or render only matched positions
+    - *Priority*: Row-first or column-first traversal order
+  - **Future Filters**: Position-based, color-based, size-based, and count-based masking (planned)
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and enhanced project save/load with complete application state persistence.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, predefined directions, radial center positioning, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation for maximum color variety across ranges.
