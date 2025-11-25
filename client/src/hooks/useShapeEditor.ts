@@ -2929,6 +2929,7 @@ export const useShapeEditor = () => {
         gridXRandomization: effectiveBatchConfig.gridXRandomization,
         gridYRandomization: effectiveBatchConfig.gridYRandomization,
         gridOffsets: effectiveBatchConfig.gridOffsets,
+        shapeMasking: effectiveBatchConfig.shapeMasking,
         autoDistributeXCount: effectiveBatchConfig.autoDistributeXCount,
         autoDistributeYCount: effectiveBatchConfig.autoDistributeYCount,
         waveType: effectiveBatchConfig.waveType,
