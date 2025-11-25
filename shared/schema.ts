@@ -289,7 +289,7 @@ export interface SetLocks {
 export interface GridOffsetAxisConfig {
   enabled: boolean;
   amount: number;                    // Pixels to offset
-  startIndex: 0 | 1;                 // Which row/column starts the offset (0 = first, 1 = second)
+  startIndex: number;                // Which row/column starts the offset (0-indexed)
   direction: 'left' | 'right' | 'up' | 'down';  // Direction of offset
   pattern: number[];                 // For pattern mode: explicit indices to offset
 }

@@ -736,19 +736,35 @@ export default function BatchConfigDialog({
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Amount (px)</Label>
                                       <Input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
                                         value={currentSettings.gridOffsets?.row?.amount ?? 0}
                                         onChange={(e) => {
-                                          const newAmount = parseInt(e.target.value) || 0;
-                                          handleSettingsUpdate((prev) => ({ 
-                                            gridOffsets: { 
-                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                              row: {
-                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                amount: newAmount
-                                              }
-                                            } 
-                                          }));
+                                          const rawValue = e.target.value;
+                                          if (rawValue === '') {
+                                            handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amount: 0
+                                                }
+                                              } 
+                                            }));
+                                            return;
+                                          }
+                                          const parsed = parseInt(rawValue, 10);
+                                          if (!isNaN(parsed)) {
+                                            handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amount: parsed
+                                                }
+                                              } 
+                                            }));
+                                          }
                                         }}
                                         className="h-8 bg-slate-800 border-slate-600 text-slate-200"
                                         data-testid="input-grid-row-offset-amount"
@@ -757,13 +773,13 @@ export default function BatchConfigDialog({
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start From</Label>
                                       <Select 
-                                        value={String(currentSettings.gridOffsets?.row?.startIndex ?? 0)}
+                                        value={String(Math.min(currentSettings.gridOffsets?.row?.startIndex ?? 0, currentSettings.gridRows - 1))}
                                         onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
                                           gridOffsets: { 
                                             ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                             row: {
                                               ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                              startIndex: parseInt(value) as 0 | 1
+                                              startIndex: parseInt(value)
                                             }
                                           } 
                                         }))}
@@ -772,8 +788,11 @@ export default function BatchConfigDialog({
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">1st row</SelectItem>
-                                          <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">2nd row</SelectItem>
+                                          {Array.from({ length: currentSettings.gridRows }, (_, i) => (
+                                            <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
+                                              {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} row
+                                            </SelectItem>
+                                          ))}
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -829,19 +848,35 @@ export default function BatchConfigDialog({
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Amount (px)</Label>
                                       <Input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
                                         value={currentSettings.gridOffsets?.column?.amount ?? 0}
                                         onChange={(e) => {
-                                          const newAmount = parseInt(e.target.value) || 0;
-                                          handleSettingsUpdate((prev) => ({ 
-                                            gridOffsets: { 
-                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                              column: {
-                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                amount: newAmount
-                                              }
-                                            } 
-                                          }));
+                                          const rawValue = e.target.value;
+                                          if (rawValue === '') {
+                                            handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amount: 0
+                                                }
+                                              } 
+                                            }));
+                                            return;
+                                          }
+                                          const parsed = parseInt(rawValue, 10);
+                                          if (!isNaN(parsed)) {
+                                            handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amount: parsed
+                                                }
+                                              } 
+                                            }));
+                                          }
                                         }}
                                         className="h-8 bg-slate-800 border-slate-600 text-slate-200"
                                         data-testid="input-grid-column-offset-amount"
@@ -850,13 +885,13 @@ export default function BatchConfigDialog({
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start From</Label>
                                       <Select 
-                                        value={String(currentSettings.gridOffsets?.column?.startIndex ?? 0)}
+                                        value={String(Math.min(currentSettings.gridOffsets?.column?.startIndex ?? 0, currentSettings.gridColumns - 1))}
                                         onValueChange={(value) => handleSettingsUpdate((prev) => ({ 
                                           gridOffsets: { 
                                             ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                             column: {
                                               ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                              startIndex: parseInt(value) as 0 | 1
+                                              startIndex: parseInt(value)
                                             }
                                           } 
                                         }))}
@@ -865,8 +900,11 @@ export default function BatchConfigDialog({
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                          <SelectItem value="0" className="text-slate-200 hover:bg-slate-700">1st column</SelectItem>
-                                          <SelectItem value="1" className="text-slate-200 hover:bg-slate-700">2nd column</SelectItem>
+                                          {Array.from({ length: currentSettings.gridColumns }, (_, i) => (
+                                            <SelectItem key={i} value={String(i)} className="text-slate-200 hover:bg-slate-700">
+                                              {i === 0 ? '1st' : i === 1 ? '2nd' : i === 2 ? '3rd' : `${i + 1}th`} column
+                                            </SelectItem>
+                                          ))}
                                         </SelectContent>
                                       </Select>
                                     </div>
