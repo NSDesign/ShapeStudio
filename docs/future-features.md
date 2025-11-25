@@ -925,15 +925,29 @@ The grid layout system currently supports:
 - Three spacing modes: Define, Auto-Centered, Auto-Edge-to-Edge
 - Sorting and grouping options
 - X/Y randomization for position jitter
+- ✅ Grid Offsets (Alternating & Pattern modes)
+- ✅ Shape Masking (Grid Position filtering)
+
+### Implementation Status
+| Phase | Feature | Status |
+|-------|---------|--------|
+| Phase 1 | Alternating Grid Offsets | ✅ Implemented |
+| Phase 2 | Pattern-Based Offsets | ✅ Implemented |
+| Phase 3 | Shape Masking (Grid-Based) | ✅ Implemented |
+| Phase 4 | Cell-Based Rendering | Planned |
+| Phase 5+ | No-Overlap/Distance Maintenance | Future |
 
 ### Phased Implementation Plan
 
 ---
 
-### Phase 1: Alternating Grid Offsets
+### Phase 1: Alternating Grid Offsets ✅ IMPLEMENTED
 
 #### Overview
 Add the ability to offset every second row or column by a fixed pixel amount, with control over which row/column the alternation starts from.
+
+**Implementation Status**: Complete  
+**Location**: Grid Layout section in BatchConfigDialog.tsx
 
 #### Use Cases
 - Brick/honeycomb patterns where rows are staggered
@@ -1007,10 +1021,13 @@ Within the Grid Layout section:
 
 ---
 
-### Phase 2: Pattern-Based Offsets
+### Phase 2: Pattern-Based Offsets ✅ IMPLEMENTED
 
 #### Overview
 Extend the offset system to support explicit patterns defining which rows/columns receive offsets, rather than simple alternation.
+
+**Implementation Status**: Complete  
+**Location**: Grid Layout section in BatchConfigDialog.tsx (Grid Offsets subsection)
 
 #### Use Cases
 - Complex staggered patterns (e.g., offset rows 0, 2, 3, 5 but not 1, 4)
@@ -1066,27 +1083,32 @@ if (gridOffsets.mode === 'pattern') {
 
 ---
 
-### Phase 3: Shape Masking (Grid-Based)
+### Phase 3: Shape Masking (Grid-Based) ✅ IMPLEMENTED
 
 #### Overview
-A standalone section for controlling which grid positions render shapes and which are excluded. Named "Shape Masking" to accommodate future masking methods beyond grid-based exclusion.
+A standalone top-level section for controlling which grid positions render shapes and which are excluded. Named "Shape Masking" to accommodate future masking methods beyond grid-based exclusion.
 
-#### Section Architecture
+**Implementation Status**: Complete  
+**Location**: BatchConfigDialog.tsx - Standalone section between Distribution Layout and Properties
+
+#### Architecture Design
+Shape Masking is structured as an independent filtering layer that operates separately from Distribution Layout:
+
 ```typescript
 shapeMasking: {
-  enabled: boolean;
+  enabled: boolean;              // Master toggle for all masking
   
-  // Grid-based masking (Phase 3)
+  // Grid Position Filter (IMPLEMENTED)
   grid: {
-    enabled: boolean;
+    enabled: boolean;            // Toggle for grid-based masking specifically
     mode: 'alternating' | 'pattern';
     invert: boolean;              // false = exclude matched, true = render only matched
     priority: 'row-first' | 'column-first';
     
     // Alternating mode settings
     alternating: {
-      skipEvery: number;          // Skip every Nth row/column
-      startIndex: number;         // Where alternation begins
+      skipEvery: number;          // Skip every Nth row/column (1-10)
+      startIndex: number;         // Where alternation begins (0-indexed)
     };
     
     // Pattern mode settings
@@ -1094,40 +1116,160 @@ shapeMasking: {
       row: number;
       columns: number[];          // Which columns to mask for this row
     }>;
-    // Example: [
-    //   { row: 1, columns: [2, 5] },
-    //   { row: 3, columns: [1, 4] },
-    //   { row: 5, columns: [0, 3] }
-    // ]
   };
   
-  // Future masking methods (placeholders)
-  position: { ... };    // Exclude by X/Y range, distance from center
-  count: { ... };       // Exclude every Nth shape, random percentage
-  color: { ... };       // Exclude by hue range, lightness threshold
+  // Future Filter Types (PLANNED)
+  position: { ... };    // Filter by X/Y range, distance from center/edges
+  count: { ... };       // Filter by shape index, random percentage
+  color: { ... };       // Filter by hue range, saturation, lightness
+  size: { ... };        // Filter by shape dimensions
+  rotation: { ... };    // Filter by rotation angle ranges
+  opacity: { ... };     // Filter by opacity thresholds
 }
 ```
 
-#### Key Design Decision
-Shape Masking applies to **both** grid intersection-point rendering AND cell-based rendering (Phase 4). It defines which grid positions are valid for shape placement regardless of the rendering mode.
+#### Key Design Decisions
+
+1. **Standalone Section**: Shape Masking is NOT nested inside Distribution Layout. It appears as its own top-level section in the BatchConfigDialog, positioned between Distribution Layout and Properties sections.
+
+2. **Dual Enable Toggles**: 
+   - Master toggle enables/disables the entire Shape Masking feature
+   - Each filter type (grid, position, etc.) has its own enable toggle
+   - This allows enabling Shape Masking while selectively activating filter types
+
+3. **Grid-Specific Application**: Grid Position masking only applies when Distribution Layout is set to "grid" pattern. For non-grid layouts (wave, spiral, ellipse, auto-distribute), the grid filter has no effect since there are no row/column concepts.
+
+4. **Future Extensibility**: The architecture supports adding new filter types as subsections. Each filter type will have its own configuration panel and enable toggle.
 
 #### Inversion Toggle
-- **Invert OFF (default)**: Matched positions are EXCLUDED (don't render)
-- **Invert ON**: Matched positions are the ONLY ones that render
+- **Invert OFF (default)**: Matched positions are EXCLUDED (shapes don't render at those positions)
+- **Invert ON**: Matched positions are the ONLY ones that render (non-matched are excluded)
 
-#### UI Controls
-Standalone "Shape Masking" section (not nested in Grid Layout):
-- Enable toggle
-- **Grid Masking** subsection:
-  - Enable toggle
-  - Mode: dropdown (alternating/pattern)
-  - Invert: toggle ("Exclude matched" / "Render only matched")
-  - Priority: dropdown (row-first / column-first)
-  - **Alternating settings** (when mode = alternating):
-    - Skip every: number input
-    - Start index: number input
-  - **Pattern settings** (when mode = pattern):
-    - Pattern definition table/list with row index and column indices
+#### Implemented UI Controls
+
+**Shape Masking Section** (Top-level, between Distribution Layout and Properties):
+- Master enable checkbox with label "Shape Masking"
+- Mode indicator showing current mode (Skip every N) or (Pattern)
+
+**Grid Position Subsection** (when Shape Masking enabled):
+- Enable checkbox with label "Grid Position" and description "Filter by row/column indices"
+- **Mode dropdown**: Alternating or Pattern
+- **Priority dropdown**: Row First or Column First
+- **Invert checkbox**: Dynamic label showing current behavior
+- **Alternating Settings** (when mode = alternating):
+  - Skip Every N: Number input (1-10)
+  - Start Index: Number input (0 to skipEvery-1)
+  - Helper text showing which indices will be masked
+- **Pattern Settings** (when mode = pattern):
+  - Dynamic list of row/column pattern entries
+  - Each entry: Row index input + Columns input (comma-separated)
+  - Add/Remove buttons for pattern entries
+  - Helper text explaining pattern usage
+
+**Future Filters Placeholder**:
+- Informational text: "Additional filter types (Position, Color, Size) coming soon"
+
+#### Masking Logic (isPositionMasked function)
+
+Located in `client/src/lib/shapeTypes.ts`:
+
+```typescript
+export function isPositionMasked(
+  row: number,
+  column: number,
+  shapeMasking?: ShapeMaskingConfig
+): boolean {
+  // Returns true if position should be masked (excluded from rendering)
+  
+  // Early return if masking disabled
+  if (!shapeMasking?.enabled || !shapeMasking?.grid?.enabled) {
+    return false;
+  }
+  
+  const grid = shapeMasking.grid;
+  let isMatched = false;
+  
+  if (grid.mode === 'alternating') {
+    // Check if row/column matches alternating pattern
+    const { skipEvery, startIndex } = grid.alternating;
+    if (grid.priority === 'row-first') {
+      isMatched = ((row - startIndex) % skipEvery) === 0 && row >= startIndex;
+    } else {
+      isMatched = ((column - startIndex) % skipEvery) === 0 && column >= startIndex;
+    }
+  } else if (grid.mode === 'pattern') {
+    // Check explicit row/column combinations
+    for (const entry of grid.pattern) {
+      if (entry.row === row && entry.columns.includes(column)) {
+        isMatched = true;
+        break;
+      }
+    }
+  }
+  
+  // Apply inversion
+  return grid.invert ? !isMatched : isMatched;
+}
+```
+
+#### Usage in Distribution
+
+The `applyGridDistribution` function in `shapeTypes.ts` uses masking:
+
+```typescript
+// Build list of valid (non-masked) grid positions
+const validPositions = [];
+for (let i = 0; i < totalPositions; i++) {
+  const rowIndex = Math.floor(i / config.gridColumns);
+  const colIndex = i % config.gridColumns;
+  
+  // Check if this position is masked
+  if (!isPositionMasked(rowIndex, colIndex, config.shapeMasking)) {
+    validPositions.push({ rowIndex, colIndex, linearIndex: i });
+  }
+}
+
+// Map shapes to valid positions only
+return sortedShapes.map((shape, index) => {
+  const position = validPositions[index % validPositions.length];
+  // Apply position to shape...
+});
+```
+
+#### Interaction with Other Features
+- Shape Masking applies to grid distribution specifically
+- Works with Grid Offsets (Phase 1 & 2) - offsets are applied to non-masked positions
+- Will work with Cell-Based Rendering (Phase 4) - defines valid cells for placement
+
+#### Future Filter Types (Planned)
+
+**Position-Based Masking**:
+- Filter by absolute X/Y coordinate ranges
+- Filter by distance from artboard center/edges
+- Filter by quadrant or region
+
+**Count-Based Masking**:
+- Filter every Nth shape regardless of grid position
+- Random percentage filtering
+- First N / Last N shapes only
+
+**Color-Based Masking**:
+- Filter by hue range
+- Filter by saturation/lightness thresholds
+- Filter by specific color match
+
+**Size-Based Masking**:
+- Filter by shape dimensions (width/height)
+- Filter by area
+- Filter by aspect ratio
+
+**Rotation-Based Masking**:
+- Filter by rotation angle ranges
+- Filter by specific angle values
+
+**Opacity-Based Masking**:
+- Filter by opacity thresholds
+- Filter transparent/opaque shapes
 
 ---
 
