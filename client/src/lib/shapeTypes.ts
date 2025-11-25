@@ -1004,24 +1004,44 @@ export function applyGridDistribution(
   // This ensures masked positions result in shapes being removed, not repositioned
   const shapesToPlace = sortedShapes.slice(0, validPositions.length);
   
-  // Calculate spacing for cell dimensions
+  // Calculate spacing for cell dimensions - MUST match calculateGridPosition logic exactly
   let cellWidth = config.gridColumnOffset;
   let cellHeight = config.gridRowOffset;
   
-  if (config.gridSpacingXMode === 'auto-centered' && artboardBounds) {
-    const margin = config.gridMarginEnabled ? config.gridMarginValue || 50 : 40;
-    const availableWidth = artboardBounds.width - (margin * 2);
-    cellWidth = config.gridColumns > 1 ? availableWidth / (config.gridColumns - 1) : availableWidth;
-  } else if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
-    cellWidth = config.gridColumns > 1 ? artboardBounds.width / (config.gridColumns - 1) : artboardBounds.width;
-  }
-  
-  if (config.gridSpacingYMode === 'auto-centered' && artboardBounds) {
-    const margin = config.gridMarginEnabled ? config.gridMarginValue || 50 : 40;
-    const availableHeight = artboardBounds.height - (margin * 2);
-    cellHeight = config.gridRows > 1 ? availableHeight / (config.gridRows - 1) : availableHeight;
-  } else if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
-    cellHeight = config.gridRows > 1 ? artboardBounds.height / (config.gridRows - 1) : artboardBounds.height;
+  if (artboardBounds) {
+    // Backward compatibility: treat 'auto' as 'auto-centered' (same as calculateGridPosition)
+    const effectiveXMode = config.gridSpacingXMode === 'auto' ? 'auto-centered' : config.gridSpacingXMode;
+    const effectiveYMode = config.gridSpacingYMode === 'auto' ? 'auto-centered' : config.gridSpacingYMode;
+    
+    if (effectiveXMode === 'auto-centered') {
+      if (config.gridMarginEnabled) {
+        // Custom margin: calculate spacing within margin-reduced area
+        const marginValue = config.gridMarginValue || 50;
+        const availableWidth = artboardBounds.width - (2 * marginValue);
+        cellWidth = config.gridColumns > 1 ? availableWidth / (config.gridColumns - 1) : 0;
+      } else {
+        // Auto margin: evenly distribute with auto-calculated margins (matches calculateGridPosition)
+        cellWidth = artboardBounds.width / (config.gridColumns + 1);
+      }
+    } else if (effectiveXMode === 'auto-edge-to-edge') {
+      // Edge to edge: spacing = artboard width / (columns - 1)
+      cellWidth = config.gridColumns > 1 ? artboardBounds.width / (config.gridColumns - 1) : 0;
+    }
+    
+    if (effectiveYMode === 'auto-centered') {
+      if (config.gridMarginEnabled) {
+        // Custom margin: calculate spacing within margin-reduced area
+        const marginValue = config.gridMarginValue || 50;
+        const availableHeight = artboardBounds.height - (2 * marginValue);
+        cellHeight = config.gridRows > 1 ? availableHeight / (config.gridRows - 1) : 0;
+      } else {
+        // Auto margin: evenly distribute with auto-calculated margins (matches calculateGridPosition)
+        cellHeight = artboardBounds.height / (config.gridRows + 1);
+      }
+    } else if (effectiveYMode === 'auto-edge-to-edge') {
+      // Edge to edge: spacing = artboard height / (rows - 1)
+      cellHeight = config.gridRows > 1 ? artboardBounds.height / (config.gridRows - 1) : 0;
+    }
   }
   
   // Map shapes to valid positions only (1:1 mapping, no wrapping)
