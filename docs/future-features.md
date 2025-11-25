@@ -2121,6 +2121,119 @@ Pre-defined filter combinations for common workflows:
 
 ---
 
+## 7. Grid Render Mode: Cell Points
+
+### Overview
+A hybrid grid positioning mode that combines the positioning of Point mode (shapes at intersection points) with the fit constraints of Cell mode (shapes sized relative to cells). This provides the best of both worlds: maintaining the expected rows × cols shape count while enabling automatic shape sizing.
+
+### Current State (Implemented)
+The Grid Render Mode currently supports two modes:
+
+1. **Point Mode** (Traditional)
+   - Shapes positioned at grid intersection points
+   - rows × cols positions (e.g., 5×4 = 20 shapes)
+   - No automatic sizing constraints
+   - Debug grid shows intersection markers
+
+2. **Cell Mode**
+   - Shapes positioned in cells between grid lines
+   - (rows-1) × (cols-1) cells (e.g., 5×4 grid = 4×3 = 12 cells)
+   - Fit mode constraints (contain, cover, fill)
+   - Debug grid shows cell rectangles between lines
+
+### Proposed Feature: Cell Points Mode
+
+**Concept:** Shapes positioned at intersection points (like Point), but each position treated as a cell center with fit constraints applied (like Cell).
+
+**Key Characteristics:**
+- **Position count:** rows × cols (same as Point mode)
+- **Cell size:** columnSpacing × rowSpacing (same spacing as between grid points)
+- **Cell alignment:** Cells centered ON intersection points, not between them
+- **Edge behavior:** Edge cells extend beyond artboard by half a cell width/height
+- **Fit modes:** All fit modes available (none, contain, cover, fill)
+
+### Comparison Table
+
+| Aspect | Point | Cell | Cell Points |
+|--------|-------|------|-------------|
+| Positions | rows × cols | (rows-1) × (cols-1) | rows × cols |
+| Cell constraints | None | Yes | Yes |
+| Cell location | N/A | Between lines | Centered on points |
+| Cell size | N/A | spacing × spacing | spacing × spacing |
+| Edge overflow | No | No | Yes (half cell) |
+| Debug grid | Intersection markers | Cell rectangles between lines | Cell rectangles on points |
+
+### Technical Implementation
+
+#### Position Calculation
+Cell Points uses the same position formula as Point mode:
+```typescript
+// Point/Cell Points: shapes at intersection points
+const x = startX + (col * columnSpacing);
+const y = startY + (row * rowSpacing);
+```
+
+#### Cell Size Calculation
+```typescript
+// Cell size equals the grid spacing
+const cellWidth = columnSpacing;
+const cellHeight = rowSpacing;
+
+// Cell bounds are centered on the grid point
+const cellLeft = x - (cellWidth / 2);
+const cellTop = y - (cellHeight / 2);
+const cellRight = x + (cellWidth / 2);
+const cellBottom = y + (cellHeight / 2);
+```
+
+#### Debug Grid Rendering
+For Cell Points mode, the debug grid shows cell rectangles centered on each intersection point:
+```typescript
+if (renderMode === 'cell-point') {
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = startX + (col * columnSpacing);
+      const y = startY + (row * rowSpacing);
+      
+      // Draw cell rectangle centered on point
+      ctx.strokeRect(
+        x - cellWidth / 2,
+        y - cellHeight / 2,
+        cellWidth,
+        cellHeight
+      );
+      
+      // Optionally mark center point
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+    }
+  }
+}
+```
+
+### Use Cases
+
+1. **Consistent Shape Count:** User wants exactly rows × cols shapes, but also wants automatic sizing
+2. **Tile-like Layouts:** Creating tile patterns where shapes should fill their allocated space
+3. **Responsive Grids:** Shapes that automatically scale to grid density changes
+4. **Edge-to-Edge Designs:** Compositions where edge shapes intentionally extend beyond artboard
+
+### UI/UX
+
+**Dropdown Options:**
+- Point (at intersections)
+- Cell (between lines)
+- Cell Points (at intersections, with fit)
+
+**Tooltip Descriptions:**
+- Point: "Shapes at grid intersection points, original size"
+- Cell: "Shapes in cells between grid lines, with size constraints"
+- Cell Points: "Shapes at intersections with cell-based size constraints"
+
+### Implementation Status
+**Status:** Planned for immediate implementation (November 2025)
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
