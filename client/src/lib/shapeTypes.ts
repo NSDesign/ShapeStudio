@@ -1,4 +1,4 @@
-import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING } from '@shared/schema';
+import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING, CellConstraintsConfig, DEFAULT_CELL_CONSTRAINTS } from '@shared/schema';
 
 export interface Point {
   x: number;
@@ -43,6 +43,7 @@ export interface DistributionConfig {
   gridYRandomization: number;
   gridOffsets?: GridOffsetsConfig;
   shapeMasking?: ShapeMaskingConfig;
+  cellConstraints?: CellConstraintsConfig;
   autoDistributeXCount?: number;
   autoDistributeYCount?: number;
   waveType?: 'sine' | 'triangle' | 'square' | 'sawtooth';
@@ -990,6 +991,30 @@ export function applyGridDistribution(
   // This ensures masked positions result in shapes being removed, not repositioned
   const shapesToPlace = sortedShapes.slice(0, validPositions.length);
   
+  // Calculate cell dimensions for cell-based rendering
+  const cellConstraints = config.cellConstraints || DEFAULT_CELL_CONSTRAINTS;
+  const isCellMode = cellConstraints.enabled && cellConstraints.renderMode === 'cell';
+  
+  // Calculate spacing for cell dimensions
+  let cellWidth = config.gridColumnOffset;
+  let cellHeight = config.gridRowOffset;
+  
+  if (config.gridSpacingXMode === 'auto-centered' && artboardBounds) {
+    const margin = config.gridMarginEnabled ? config.gridMarginValue || 50 : 40;
+    const availableWidth = artboardBounds.width - (margin * 2);
+    cellWidth = config.gridColumns > 1 ? availableWidth / (config.gridColumns - 1) : availableWidth;
+  } else if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
+    cellWidth = config.gridColumns > 1 ? artboardBounds.width / (config.gridColumns - 1) : artboardBounds.width;
+  }
+  
+  if (config.gridSpacingYMode === 'auto-centered' && artboardBounds) {
+    const margin = config.gridMarginEnabled ? config.gridMarginValue || 50 : 40;
+    const availableHeight = artboardBounds.height - (margin * 2);
+    cellHeight = config.gridRows > 1 ? availableHeight / (config.gridRows - 1) : availableHeight;
+  } else if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
+    cellHeight = config.gridRows > 1 ? artboardBounds.height / (config.gridRows - 1) : artboardBounds.height;
+  }
+  
   // Map shapes to valid positions only (1:1 mapping, no wrapping)
   return shapesToPlace.map((shape, index) => {
     const positionEntry = validPositions[index] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
@@ -1012,6 +1037,66 @@ export function applyGridDistribution(
       config.gridMarginValue || 50,
       config.gridOffsets
     );
+    
+    // Apply cell constraints scaling if in cell mode
+    if (isCellMode && cellConstraints.fitMode !== 'none') {
+      // Calculate padding
+      let paddingX = 0;
+      let paddingY = 0;
+      if (cellConstraints.padding > 0) {
+        if (cellConstraints.paddingUnit === '%') {
+          paddingX = (cellConstraints.padding / 100) * cellWidth;
+          paddingY = (cellConstraints.padding / 100) * cellHeight;
+        } else {
+          paddingX = cellConstraints.padding;
+          paddingY = cellConstraints.padding;
+        }
+      }
+      
+      // Available space within cell after padding
+      const availableWidth = Math.max(1, cellWidth - (paddingX * 2));
+      const availableHeight = Math.max(1, cellHeight - (paddingY * 2));
+      
+      // Get shape dimensions (use width/height from shape or reasonable defaults)
+      const shapeWidth = shape.width || 50;
+      const shapeHeight = shape.height || 50;
+      
+      // Calculate scale based on fit mode
+      let scaleX = 1;
+      let scaleY = 1;
+      
+      switch (cellConstraints.fitMode) {
+        case 'contain':
+          // Scale to fit within cell, maintain aspect ratio
+          const containScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+          scaleX = containScale;
+          scaleY = containScale;
+          break;
+        case 'cover':
+          // Scale to cover cell, maintain aspect ratio
+          const coverScale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
+          scaleX = coverScale;
+          scaleY = coverScale;
+          break;
+        case 'fill':
+          // Stretch to fill cell
+          if (cellConstraints.maintainAspectRatio) {
+            // Same as contain when maintaining aspect ratio
+            const fillScale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
+            scaleX = fillScale;
+            scaleY = fillScale;
+          } else {
+            // Independent scaling
+            scaleX = availableWidth / shapeWidth;
+            scaleY = availableHeight / shapeHeight;
+          }
+          break;
+      }
+      
+      // Apply the calculated scale to the shape's transform
+      shape.transform.scaleX = (shape.transform.scaleX || 1) * scaleX;
+      shape.transform.scaleY = (shape.transform.scaleY || 1) * scaleY;
+    }
     
     // Always apply position offsets additively to grid layout
     const positionOffsetX = shape.transform?.x || 0;
