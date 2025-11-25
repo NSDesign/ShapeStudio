@@ -112,11 +112,20 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
         const centerY = bounds.y + bounds.height / 2;
         const radius = Math.max(bounds.width, bounds.height) / 2;
         gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-      } else {
-        // Conic gradient
+      } else if (shape.properties.gradient.type === 'conic') {
         const centerX = bounds.x + bounds.width / 2;
         const centerY = bounds.y + bounds.height / 2;
-        gradient = ctx.createConicGradient(0, centerX, centerY);
+        if (typeof ctx.createConicGradient === 'function') {
+          gradient = ctx.createConicGradient(0, centerX, centerY);
+        } else {
+          const radius = Math.max(bounds.width, bounds.height) / 2;
+          gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        }
+      } else {
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        const radius = Math.max(bounds.width, bounds.height) / 2;
+        gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       }
       
       shape.properties.gradient.stops.forEach(stop => {

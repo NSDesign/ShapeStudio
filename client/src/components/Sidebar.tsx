@@ -547,6 +547,7 @@ export default function Sidebar({
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
+  const [cleanPresetEnabled, setCleanPresetEnabled] = useState(false);
   const [isDeletePresetDialogOpen, setIsDeletePresetDialogOpen] = useState(false);
   const [presetToDelete, setPresetToDelete] = useState<string>('');
   
@@ -595,6 +596,11 @@ export default function Sidebar({
     return presets.some(p => p.presetName.toLowerCase() === name.toLowerCase());
   }, [newPresetName, presets]);
 
+  const cleanPresetEnabledRef = useRef(false);
+  useEffect(() => {
+    cleanPresetEnabledRef.current = cleanPresetEnabled;
+  }, [cleanPresetEnabled]);
+  
   const handleSavePreset = useCallback(async () => {
     const name = newPresetNameRef.current;
     if (!name.trim()) {
@@ -618,13 +624,45 @@ export default function Sidebar({
     }
     
     try {
-      await savePreset(name, effectiveGenerationSets, effectiveCurrentSetId);
+      // Filter out disabled sets if clean preset is enabled
+      const setsToSave = cleanPresetEnabledRef.current 
+        ? effectiveGenerationSets.filter(set => set.enabled)
+        : effectiveGenerationSets;
+      
+      // Prevent saving if clean preset would result in no sets
+      if (cleanPresetEnabledRef.current && setsToSave.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No enabled sets",
+          description: "Cannot save a clean preset with no enabled sets. Enable at least one set first.",
+        });
+        return;
+      }
+      
+      // Determine the current set ID - if the current set was filtered out, use the first enabled set
+      let currentSetIdToSave = effectiveCurrentSetId;
+      if (cleanPresetEnabledRef.current && currentSetIdToSave) {
+        const currentSetStillExists = setsToSave.some(set => set.id === currentSetIdToSave);
+        if (!currentSetStillExists && setsToSave.length > 0) {
+          currentSetIdToSave = setsToSave[0].id;
+        }
+      }
+      
+      await savePreset(name, setsToSave, currentSetIdToSave);
+      
+      const savedCount = setsToSave.length;
+      const filteredCount = effectiveGenerationSets.length - savedCount;
+      const description = cleanPresetEnabledRef.current && filteredCount > 0
+        ? `"${name}" saved with ${savedCount} enabled set${savedCount !== 1 ? 's' : ''} (${filteredCount} disabled set${filteredCount !== 1 ? 's' : ''} excluded).`
+        : `"${name}" has been saved successfully.`;
+      
       toast({
         title: "Preset saved",
-        description: `"${name}" has been saved successfully.`,
+        description,
       });
       setIsSavePresetDialogOpen(false);
       setNewPresetName('');
+      setCleanPresetEnabled(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -5150,7 +5188,7 @@ export default function Sidebar({
                 Enter a name for this preset configuration. This will save all current shape sets and their settings.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="space-y-1">
+            <div className="space-y-3">
               <Input
                 value={newPresetName}
                 onChange={(e) => setNewPresetName(e.target.value)}
@@ -5163,9 +5201,33 @@ export default function Sidebar({
                     handleSavePreset();
                   }
                 }}
+                data-testid="input-preset-name"
               />
               {isPresetNameDuplicate && (
                 <p className="text-xs text-red-400">A preset with this name already exists</p>
+              )}
+              <div className="flex items-center space-x-2 pt-1">
+                <Checkbox
+                  id="clean-preset-checkbox"
+                  checked={cleanPresetEnabled}
+                  onCheckedChange={(checked) => setCleanPresetEnabled(checked as boolean)}
+                  className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  data-testid="checkbox-clean-preset"
+                />
+                <label 
+                  htmlFor="clean-preset-checkbox" 
+                  className="text-sm text-slate-300 cursor-pointer select-none"
+                >
+                  Clean preset (only save enabled sets)
+                </label>
+              </div>
+              {cleanPresetEnabled && (
+                <p className={`text-xs pl-6 ${effectiveGenerationSets.filter(s => s.enabled).length === 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                  {effectiveGenerationSets.filter(s => s.enabled).length === 0 
+                    ? 'No enabled sets - cannot save clean preset'
+                    : `${effectiveGenerationSets.filter(s => s.enabled).length} of ${effectiveGenerationSets.length} sets will be saved`
+                  }
+                </p>
               )}
             </div>
             <datalist id="preset-names-datalist">
@@ -5178,6 +5240,7 @@ export default function Sidebar({
                 className="bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
                 onClick={() => {
                   setNewPresetName('');
+                  setCleanPresetEnabled(false);
                 }}
               >
                 Cancel
@@ -5185,7 +5248,8 @@ export default function Sidebar({
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSavePreset}
-                disabled={!newPresetName.trim() || isPresetNameDuplicate}
+                disabled={!newPresetName.trim() || isPresetNameDuplicate || (cleanPresetEnabled && effectiveGenerationSets.filter(s => s.enabled).length === 0)}
+                data-testid="button-save-preset"
               >
                 Save Preset
               </Button>
