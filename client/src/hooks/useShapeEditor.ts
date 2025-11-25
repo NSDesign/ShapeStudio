@@ -339,28 +339,9 @@ export const useShapeEditor = () => {
   const [selectedPoints, setSelectedPoints] = useState<{ shapeId: string; pointIndex: number }[]>([]);
   const [selectedSegments, setSelectedSegments] = useState<{ shapeId: string; segmentIndex: number }[]>([]);
   
-  // UI element visibility toggles (persisted to localStorage)
-  const [showMultiSelectButton, setShowMultiSelectButton] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('selectionShowMultiSelectButton') === 'true';
-    }
-    return false;
-  });
-  const [showSelectedCount, setShowSelectedCount] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('selectionShowSelectedCount') === 'true';
-    }
-    return false;
-  });
-  
-  // Persist UI element visibility settings to localStorage
-  useEffect(() => {
-    localStorage.setItem('selectionShowMultiSelectButton', String(showMultiSelectButton));
-  }, [showMultiSelectButton]);
-  
-  useEffect(() => {
-    localStorage.setItem('selectionShowSelectedCount', String(showSelectedCount));
-  }, [showSelectedCount]);
+  // UI element visibility toggles (persisted to appSettingsDefaults)
+  const [showMultiSelectButton, setShowMultiSelectButton] = useState<boolean>(true);
+  const [showSelectedCount, setShowSelectedCount] = useState<boolean>(true);
   const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
@@ -407,13 +388,6 @@ export const useShapeEditor = () => {
     }
   }, [shapes, groups, selectedShapes, selectedGroups]);
 
-  // Auto-enable UI element toggles when a selection mode is chosen
-  useEffect(() => {
-    if (editMode === 'shapes' || editMode === 'points' || editMode === 'segments') {
-      setShowMultiSelectButton(true);
-      setShowSelectedCount(true);
-    }
-  }, [editMode]);
 
   const updateCanvasSettings = useCallback((updates: Partial<CanvasSettings>) => {
     setCanvasSettings(prev => ({ ...prev, ...updates }));
@@ -450,6 +424,14 @@ export const useShapeEditor = () => {
           displayResolution: appSettingsDefaults.artboardDisplayResolution ?? ab.displayResolution ?? false,
         } : ab
       ));
+      
+      // Restore UI visibility settings
+      if (appSettingsDefaults.showMultiSelectButton !== undefined) {
+        setShowMultiSelectButton(appSettingsDefaults.showMultiSelectButton);
+      }
+      if (appSettingsDefaults.showSelectedCount !== undefined) {
+        setShowSelectedCount(appSettingsDefaults.showSelectedCount);
+      }
     }
   }, [appSettingsDefaults, activeArtboard]); // Re-run when appSettingsDefaults loads
 
@@ -498,6 +480,21 @@ export const useShapeEditor = () => {
     
     return () => clearTimeout(timeoutId);
   }, [artboards, activeArtboard]);
+
+  // Save UI visibility settings when they change (debounced)
+  useEffect(() => {
+    if (!appSettingsDefaults || !hasRestoredSettings.current) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveAppSettings.mutate({
+        ...appSettingsDefaults,
+        showMultiSelectButton,
+        showSelectedCount,
+      });
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [showMultiSelectButton, showSelectedCount]);
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));

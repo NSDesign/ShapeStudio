@@ -152,6 +152,10 @@ export interface AppSettingsDefaults {
   
   // UI settings
   sidebarCollapsed: boolean;
+  
+  // Selection UI visibility settings
+  showMultiSelectButton: boolean;
+  showSelectedCount: boolean;
 }
 
 // Default app settings
@@ -177,6 +181,8 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   canvasPanY: 0,
   canvasZoom: 1,
   sidebarCollapsed: false,
+  showMultiSelectButton: true,
+  showSelectedCount: true,
 };
 
 // User preferences schemas
