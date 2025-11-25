@@ -986,10 +986,13 @@ export function applyGridDistribution(
     }
   }
   
-  // Map shapes to valid positions only
-  return sortedShapes.map((shape, index) => {
-    // Use modulo to wrap around if we have more shapes than valid positions
-    const positionEntry = validPositions[index % validPositions.length] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
+  // Only use shapes that fit within valid positions - excess shapes are excluded
+  // This ensures masked positions result in shapes being removed, not repositioned
+  const shapesToPlace = sortedShapes.slice(0, validPositions.length);
+  
+  // Map shapes to valid positions only (1:1 mapping, no wrapping)
+  return shapesToPlace.map((shape, index) => {
+    const positionEntry = validPositions[index] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
     const { rowIndex, colIndex, linearIndex } = positionEntry;
     
     const gridPos = calculateGridPosition(

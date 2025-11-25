@@ -12,6 +12,27 @@
 
 import type { GridDistributionResult } from '../../shared/distributionTypes';
 
+// Shape masking configuration for grid positions
+interface ShapeMaskingGridConfig {
+  enabled: boolean;
+  mode: 'alternating' | 'pattern';
+  invert: boolean;
+  priority: 'row-first' | 'column-first';
+  alternating: {
+    skipEvery: number;
+    startIndex: number;
+  };
+  pattern: Array<{
+    row: number;
+    columns: number[];
+  }>;
+}
+
+interface ShapeMaskingConfig {
+  enabled: boolean;
+  grid: ShapeMaskingGridConfig;
+}
+
 interface DistributionConfig {
   enabled: boolean;
   pattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
@@ -34,6 +55,9 @@ interface DistributionConfig {
   gridReverseGroups?: boolean;
   gridXRandomization?: number;
   gridYRandomization?: number;
+  
+  // Shape Masking Settings
+  shapeMasking?: ShapeMaskingConfig;
   
   // Auto Distribute Settings
   autoDistributeXCount?: number;
@@ -73,6 +97,59 @@ interface DistributionConfig {
   tangentAlignment?: boolean;
   segmentDistribution?: 'even' | 'clustered';
   reverseDirection?: boolean;
+}
+
+/**
+ * Check if a grid position should be masked (excluded from rendering)
+ * Returns true if the position should be masked, false if it should render
+ */
+function isPositionMasked(
+  row: number,
+  column: number,
+  shapeMasking?: ShapeMaskingConfig
+): boolean {
+  // If masking is not enabled or not provided, render all positions
+  if (!shapeMasking?.enabled || !shapeMasking?.grid?.enabled) {
+    return false;
+  }
+  
+  const grid = shapeMasking.grid;
+  const mode = grid.mode ?? 'alternating';
+  const invert = grid.invert ?? false;
+  
+  let isMatched = false;
+  
+  if (mode === 'alternating') {
+    const skipEvery = grid.alternating?.skipEvery ?? 2;
+    const startIndex = grid.alternating?.startIndex ?? 0;
+    
+    // In row-first priority, determine masking based on row index first
+    // In column-first priority, determine masking based on column index first
+    if (grid.priority === 'row-first') {
+      // Row determines if the entire row is masked
+      isMatched = ((row - startIndex) % skipEvery) === 0 && row >= startIndex;
+    } else {
+      // Column determines if the entire column is masked
+      isMatched = ((column - startIndex) % skipEvery) === 0 && column >= startIndex;
+    }
+  } else if (mode === 'pattern') {
+    // Pattern mode: check explicit row/column combinations
+    const patterns = grid.pattern ?? [];
+    
+    for (const patternEntry of patterns) {
+      if (patternEntry.row === row) {
+        // Check if this column is in the columns array for this row
+        if (patternEntry.columns.includes(column)) {
+          isMatched = true;
+          break;
+        }
+      }
+    }
+  }
+  
+  // invert=false: matched positions are excluded (masked)
+  // invert=true: only matched positions are rendered (non-matched are masked)
+  return invert ? !isMatched : isMatched;
 }
 
 /**
@@ -233,6 +310,11 @@ export function applyGridDistribution(
     }));
   }
   
+  const rows = config.gridRows || 3;
+  const columns = config.gridColumns || 3;
+  const startX = config.gridStartX || 0;
+  const startY = config.gridStartY || 0;
+  
   let sortedShapes: any[];
   
   if (config.gridSortScope === 'per-generation' && generationInfo) {
@@ -264,40 +346,78 @@ export function applyGridDistribution(
     );
   }
   
-  return sortedShapes.map((shape, index) => {
-    const rows = config.gridRows || 3;
-    const columns = config.gridColumns || 3;
-    const startX = config.gridStartX || 0;
-    const startY = config.gridStartY || 0;
+  // Build list of valid (non-masked) grid positions
+  const validPositions: Array<{ rowIndex: number; colIndex: number; linearIndex: number }> = [];
+  const totalPositions = rows * columns;
+  
+  for (let i = 0; i < totalPositions; i++) {
+    const rowIndex = Math.floor(i / columns);
+    const colIndex = i % columns;
     
-    // Calculate grid row and column indices
-    const rowIndex = Math.floor(index / columns);
-    const colIndex = index % columns;
+    // Check if this position is masked
+    if (!isPositionMasked(rowIndex, colIndex, config.shapeMasking)) {
+      validPositions.push({ rowIndex, colIndex, linearIndex: i });
+    }
+  }
+  
+  // Only use shapes that fit within valid positions - excess shapes are excluded
+  // This ensures masked positions result in shapes being removed, not repositioned
+  const shapesToPlace = sortedShapes.slice(0, validPositions.length);
+  
+  // Calculate spacing based on mode
+  let columnSpacing, rowSpacing;
+  
+  if (config.gridSpacingXMode === 'auto-centered' && artboardBounds) {
+    const margin = config.gridMarginEnabled ? config.gridMarginValue || 20 : 40;
+    const availableWidth = artboardBounds.width - (margin * 2);
+    columnSpacing = columns > 1 ? availableWidth / (columns - 1) : 0;
+  } else if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
+    columnSpacing = columns > 1 ? artboardBounds.width / (columns - 1) : 0;
+  } else {
+    columnSpacing = config.gridColumnOffset || 50;
+  }
+  
+  if (config.gridSpacingYMode === 'auto-centered' && artboardBounds) {
+    const margin = config.gridMarginEnabled ? config.gridMarginValue || 20 : 40;
+    const availableHeight = artboardBounds.height - (margin * 2);
+    rowSpacing = rows > 1 ? availableHeight / (rows - 1) : 0;
+  } else if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
+    rowSpacing = rows > 1 ? artboardBounds.height / (rows - 1) : 0;
+  } else {
+    rowSpacing = config.gridRowOffset || 50;
+  }
+  
+  // Center the grid
+  const totalGridWidth = (columns - 1) * columnSpacing;
+  const totalGridHeight = (rows - 1) * rowSpacing;
+  
+  const artboardCenterX = artboardBounds 
+    ? artboardBounds.x + artboardBounds.width / 2 
+    : canvasCenter.x;
+  const artboardCenterY = artboardBounds 
+    ? artboardBounds.y + artboardBounds.height / 2 
+    : canvasCenter.y;
+  
+  // Adjust for auto-edge-to-edge mode
+  let baseOffsetX, baseOffsetY;
+  if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
+    baseOffsetX = artboardBounds.x - totalGridWidth / 2;
+  } else {
+    baseOffsetX = artboardCenterX - totalGridWidth / 2;
+  }
+  
+  if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
+    baseOffsetY = artboardBounds.y - totalGridHeight / 2;
+  } else {
+    baseOffsetY = artboardCenterY - totalGridHeight / 2;
+  }
+  
+  // Map shapes to valid positions only (1:1 mapping, no wrapping)
+  return shapesToPlace.map((shape, index) => {
+    const positionEntry = validPositions[index] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
+    const { rowIndex, colIndex } = positionEntry;
     const row = rowIndex;
     const col = colIndex;
-    
-    // Calculate spacing based on mode
-    let columnSpacing, rowSpacing;
-    
-    if (config.gridSpacingXMode === 'auto-centered' && artboardBounds) {
-      const margin = config.gridMarginEnabled ? config.gridMarginValue || 20 : 40;
-      const availableWidth = artboardBounds.width - (margin * 2);
-      columnSpacing = columns > 1 ? availableWidth / (columns - 1) : 0;
-    } else if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
-      columnSpacing = columns > 1 ? artboardBounds.width / (columns - 1) : 0;
-    } else {
-      columnSpacing = config.gridColumnOffset || 50;
-    }
-    
-    if (config.gridSpacingYMode === 'auto-centered' && artboardBounds) {
-      const margin = config.gridMarginEnabled ? config.gridMarginValue || 20 : 40;
-      const availableHeight = artboardBounds.height - (margin * 2);
-      rowSpacing = rows > 1 ? availableHeight / (rows - 1) : 0;
-    } else if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
-      rowSpacing = rows > 1 ? artboardBounds.height / (rows - 1) : 0;
-    } else {
-      rowSpacing = config.gridRowOffset || 50;
-    }
     
     // Calculate base position
     let gridX = col * columnSpacing;
@@ -307,31 +427,6 @@ export function applyGridDistribution(
     gridX += startX;
     gridY += startY;
     
-    // Center the grid
-    const totalGridWidth = (columns - 1) * columnSpacing;
-    const totalGridHeight = (rows - 1) * rowSpacing;
-    
-    const artboardCenterX = artboardBounds 
-      ? artboardBounds.x + artboardBounds.width / 2 
-      : canvasCenter.x;
-    const artboardCenterY = artboardBounds 
-      ? artboardBounds.y + artboardBounds.height / 2 
-      : canvasCenter.y;
-    
-    // Adjust for auto-edge-to-edge mode
-    let offsetX, offsetY;
-    if (config.gridSpacingXMode === 'auto-edge-to-edge' && artboardBounds) {
-      offsetX = artboardBounds.x - totalGridWidth / 2;
-    } else {
-      offsetX = artboardCenterX - totalGridWidth / 2;
-    }
-    
-    if (config.gridSpacingYMode === 'auto-edge-to-edge' && artboardBounds) {
-      offsetY = artboardBounds.y - totalGridHeight / 2;
-    } else {
-      offsetY = artboardCenterY - totalGridHeight / 2;
-    }
-    
     // Apply additive random offset
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);
     const randomY = (Math.random() - 0.5) * 2 * (config.gridYRandomization || 0);
@@ -339,8 +434,8 @@ export function applyGridDistribution(
     // Always apply position offsets additively
     const positionOffsetX = shape.transform?.x || 0;
     const positionOffsetY = shape.transform?.y || 0;
-    const finalX = offsetX + gridX + randomX + positionOffsetX;
-    const finalY = offsetY + gridY + randomY + positionOffsetY;
+    const finalX = baseOffsetX + gridX + randomX + positionOffsetX;
+    const finalY = baseOffsetY + gridY + randomY + positionOffsetY;
     
     shape.transform.x = finalX;
     shape.transform.y = finalY;
