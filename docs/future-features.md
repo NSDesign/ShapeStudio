@@ -1271,6 +1271,79 @@ New properties should be added with defaults that preserve existing behavior:
 
 ---
 
+## Grid Offset Enhancements (Future Considerations)
+
+The current Grid Offsets implementation (Phase 1) provides alternating row/column offsets. The following enhancements have been identified for future development:
+
+### 1. Dynamic Start Index List
+**Current:** Start From dropdown limited to "1st row/column" (index 0) or "2nd row/column" (index 1).
+
+**Enhancement:** Dynamically generate Start From options based on actual grid dimensions.
+- If grid has 5 rows, show options: 1st, 2nd, 3rd, 4th, 5th row
+- If grid has 4 columns, show options: 1st, 2nd, 3rd, 4th column
+- The list updates when gridRows/gridColumns values change
+
+**Benefits:**
+- More precise control over which row/column starts the offset pattern
+- Enables offset patterns that start mid-grid
+- More intuitive user experience
+
+### 2. Value Mode Pattern for Offset Properties
+**Current:** Amount and Start From use simple fixed values.
+
+**Enhancement:** Apply the standard value mode pattern (fixed/range/incremental) to offset properties:
+
+#### Amount Value Modes:
+- **Fixed:** Single value (current behavior) - e.g., 20px offset
+- **Range:** Random value within min/max bounds - e.g., 10-30px offset per alternating row
+- **Incremental:** Progressive offset that grows - e.g., 1st=10px, 3rd=20px, 5th=30px
+
+#### Start Index Value Modes:
+- **Fixed:** Single starting index (current behavior)
+- **Range:** Random starting index within bounds
+- **Incremental:** Could cycle through different starting patterns
+
+**Use Cases:**
+- Range mode: More organic, irregular offset patterns
+- Incremental mode: Progressively shifting offset patterns creating perspective or wave effects
+
+### 3. Input Field UX Improvements
+**Current Issues:**
+- Amount field value (e.g., "0") cannot be deleted, only replaced
+- Leading zeros can be input (e.g., "050") - auto-corrects on dialog reopen but confusing during input
+
+**Proposed Fixes:**
+- Allow field to be cleared to empty state, treat empty as 0
+- Strip leading zeros on blur/change
+- Use controlled input with proper number validation
+- Consider min value validation (prevent negative if inappropriate)
+
+**Technical Approach:**
+```typescript
+// Improved onChange handler
+onChange={(e) => {
+  const rawValue = e.target.value;
+  // Allow empty for user to type fresh value
+  if (rawValue === '') {
+    setTempValue('');
+    return;
+  }
+  // Parse and strip leading zeros
+  const parsed = parseInt(rawValue, 10);
+  if (!isNaN(parsed)) {
+    handleSettingsUpdate({ amount: parsed });
+  }
+}}
+onBlur={() => {
+  // On blur, ensure we have a valid number
+  if (tempValue === '' || isNaN(parseInt(tempValue))) {
+    handleSettingsUpdate({ amount: 0 });
+  }
+}}
+```
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
