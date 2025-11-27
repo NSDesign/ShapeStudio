@@ -37,7 +37,6 @@ const AccordionTrigger = React.forwardRef<
 
   return (
     <AccordionPrimitive.Header className="flex items-center">
-      {leading}
       <AccordionPrimitive.Trigger
         ref={ref}
         className={cn(
@@ -47,7 +46,10 @@ const AccordionTrigger = React.forwardRef<
         onMouseDown={handleMouseDown}
         {...props}
       >
-        {children}
+        <div className="flex items-center">
+          {leading}
+          {children}
+        </div>
         <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
