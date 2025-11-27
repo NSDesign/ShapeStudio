@@ -7055,122 +7055,486 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 
-                                {/* Conic Settings */}
+                                {/* Conic Settings - Two Column Layout */}
                                 <div className="space-y-2 p-2 bg-slate-900/30 rounded">
                                   <Label className="text-xs font-medium text-slate-300">Conic Settings</Label>
                                   <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Position</Label>
-                                      <Select 
-                                        value={currentSettings.fillGradientConicCenter || 'center'} 
-                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}
-                                      >
-                                        <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-conic-position">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                          <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                          <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
-                                          <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
-                                          <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Angle Mode</Label>
-                                      <Select 
-                                        value={currentSettings.fillGradientConicAngleMode || 'fixed'} 
-                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleMode: value as any })}
-                                      >
-                                        <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-conic-angle-mode">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                          <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                          <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                          <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Conic Angle Controls */}
-                                  {currentSettings.fillGradientConicAngleMode === 'fixed' && (
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-400">Start Angle (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.fillGradientConicAngle ?? 0}
-                                          onChange={(value) => handleSettingsUpdate({ fillGradientConicAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={15}
-                                          className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                          data-testid="input-new-conic-angle"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.fillGradientConicAngle ?? 0]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={15}
-                                          className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                        />
+                                    {/* Left Column: Position Controls */}
+                                    <div className="space-y-2 p-2 bg-slate-800/40 rounded border border-slate-700">
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Position</Label>
+                                        <Select 
+                                          value={currentSettings.fillGradientConicCenter || 'center'} 
+                                          onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}
+                                        >
+                                          <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-conic-position">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                            <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                            <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
+                                            <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
+                                            <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
+                                          </SelectContent>
+                                        </Select>
                                       </div>
-                                    </div>
-                                  )}
-                                  
-                                  {currentSettings.fillGradientConicAngleMode === 'range' && (
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-400">Angle Range (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.fillGradientConicAngleRange?.[0] ?? 0}
-                                          onChange={(value) => handleSettingsUpdate({ 
-                                            fillGradientConicAngleRange: [value, currentSettings.fillGradientConicAngleRange?.[1] ?? 360] 
-                                          })}
-                                          min={0}
-                                          max={360}
-                                          step={15}
-                                          className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                          data-testid="input-new-conic-angle-min"
-                                        />
-                                        <Slider
-                                          value={currentSettings.fillGradientConicAngleRange || [0, 360]}
-                                          onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
-                                          min={0}
-                                          max={360}
-                                          step={15}
-                                          className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                        />
-                                        <NumericInput
-                                          value={currentSettings.fillGradientConicAngleRange?.[1] ?? 360}
-                                          onChange={(value) => handleSettingsUpdate({ 
-                                            fillGradientConicAngleRange: [currentSettings.fillGradientConicAngleRange?.[0] ?? 0, value] 
-                                          })}
-                                          min={0}
-                                          max={360}
-                                          step={15}
-                                          className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                          data-testid="input-new-conic-angle-max"
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {currentSettings.fillGradientConicAngleMode === 'incremental' && (
-                                    <div className="space-y-2">
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Start (°)</Label>
+                                      
+                                      {/* Corners Selection - inline in left column */}
+                                      {currentSettings.fillGradientConicCenter === 'corners' && (
+                                        <div className="space-y-2 pt-1">
                                           <div className="flex items-center gap-2">
+                                            <Label className="text-xs text-slate-400">Selection</Label>
+                                            <Select 
+                                              value={currentSettings.fillGradientConicSelectionMode || 'random'} 
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicSelectionMode: value as any })}
+                                            >
+                                              <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                                <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-1">
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicCorners?.topLeft ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, topLeft: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">TL</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicCorners?.topRight ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, topRight: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">TR</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicCorners?.bottomLeft ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, bottomLeft: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">BL</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicCorners?.bottomRight ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, bottomRight: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">BR</Label>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Midpoints Selection - inline in left column */}
+                                      {currentSettings.fillGradientConicCenter === 'midpoints' && (
+                                        <div className="space-y-2 pt-1">
+                                          <div className="flex items-center gap-2">
+                                            <Label className="text-xs text-slate-400">Selection</Label>
+                                            <Select 
+                                              value={currentSettings.fillGradientConicSelectionMode || 'random'} 
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicSelectionMode: value as any })}
+                                            >
+                                              <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                                <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-1">
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicMidpoints?.top ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, top: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">Top</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicMidpoints?.right ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, right: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">Right</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicMidpoints?.bottom ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, bottom: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">Bottom</Label>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Checkbox
+                                                checked={currentSettings.fillGradientConicMidpoints?.left ?? true}
+                                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                                  fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, left: checked as boolean } 
+                                                })}
+                                                className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                              />
+                                              <Label className="text-xs text-slate-300">Left</Label>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Coordinates Controls - inline in left column */}
+                                      {currentSettings.fillGradientConicCenter === 'coordinates' && (
+                                        <div className="space-y-2 pt-1">
+                                          {/* Center X */}
+                                          <div className="space-y-1">
+                                            <div className="flex items-center justify-between">
+                                              <Label className="text-xs text-slate-300">X</Label>
+                                              <Select 
+                                                value={currentSettings.fillGradientConicCenterXMode || 'fixed'} 
+                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXMode: value as any })}
+                                              >
+                                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incr</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            {currentSettings.fillGradientConicCenterXMode === 'fixed' && (
+                                              <div className="flex items-center gap-1">
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterX ?? 50}
+                                                  onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                                <Slider
+                                                  value={[currentSettings.fillGradientConicCenterX ?? 50]}
+                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                />
+                                              </div>
+                                            )}
+                                            {currentSettings.fillGradientConicCenterXMode === 'range' && (
+                                              <div className="flex items-center gap-1">
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterXRange?.[0] ?? 25}
+                                                  onChange={(value) => handleSettingsUpdate({ 
+                                                    fillGradientConicCenterXRange: [value, currentSettings.fillGradientConicCenterXRange?.[1] ?? 75] 
+                                                  })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                                <Slider
+                                                  value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
+                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                />
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterXRange?.[1] ?? 75}
+                                                  onChange={(value) => handleSettingsUpdate({ 
+                                                    fillGradientConicCenterXRange: [currentSettings.fillGradientConicCenterXRange?.[0] ?? 25, value] 
+                                                  })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                              </div>
+                                            )}
+                                            {currentSettings.fillGradientConicCenterXMode === 'incremental' && (
+                                              <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                  <Label className="text-xs text-slate-500 w-8">Start</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXStartValue ?? 50}
+                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXStartValue: value })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                  <Label className="text-xs text-slate-500 w-6">Inc</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXIncrement ?? 10}
+                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXIncrement: value })}
+                                                    min={-50}
+                                                    max={50}
+                                                    step={5}
+                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  <Checkbox
+                                                    checked={currentSettings.fillGradientConicCenterXModulationEnabled ?? false}
+                                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterXModulationEnabled: checked as boolean })}
+                                                    className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                                  />
+                                                  <Label className="text-xs text-slate-400">Mod</Label>
+                                                  {currentSettings.fillGradientConicCenterXModulationEnabled && (
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterXModulationValue ?? 100}
+                                                      onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXModulationValue: value })}
+                                                      min={10}
+                                                      max={100}
+                                                      step={5}
+                                                      className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    />
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* Center Y */}
+                                          <div className="space-y-1">
+                                            <div className="flex items-center justify-between">
+                                              <Label className="text-xs text-slate-300">Y</Label>
+                                              <Select 
+                                                value={currentSettings.fillGradientConicCenterYMode || 'fixed'} 
+                                                onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYMode: value as any })}
+                                              >
+                                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incr</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            {currentSettings.fillGradientConicCenterYMode === 'fixed' && (
+                                              <div className="flex items-center gap-1">
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterY ?? 50}
+                                                  onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                                <Slider
+                                                  value={[currentSettings.fillGradientConicCenterY ?? 50]}
+                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                />
+                                              </div>
+                                            )}
+                                            {currentSettings.fillGradientConicCenterYMode === 'range' && (
+                                              <div className="flex items-center gap-1">
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterYRange?.[0] ?? 25}
+                                                  onChange={(value) => handleSettingsUpdate({ 
+                                                    fillGradientConicCenterYRange: [value, currentSettings.fillGradientConicCenterYRange?.[1] ?? 75] 
+                                                  })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                                <Slider
+                                                  value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
+                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                />
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicCenterYRange?.[1] ?? 75}
+                                                  onChange={(value) => handleSettingsUpdate({ 
+                                                    fillGradientConicCenterYRange: [currentSettings.fillGradientConicCenterYRange?.[0] ?? 25, value] 
+                                                  })}
+                                                  min={0}
+                                                  max={100}
+                                                  step={5}
+                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                />
+                                              </div>
+                                            )}
+                                            {currentSettings.fillGradientConicCenterYMode === 'incremental' && (
+                                              <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                  <Label className="text-xs text-slate-500 w-8">Start</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYStartValue ?? 50}
+                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYStartValue: value })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                  <Label className="text-xs text-slate-500 w-6">Inc</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYIncrement ?? 10}
+                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYIncrement: value })}
+                                                    min={-50}
+                                                    max={50}
+                                                    step={5}
+                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  <Checkbox
+                                                    checked={currentSettings.fillGradientConicCenterYModulationEnabled ?? false}
+                                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterYModulationEnabled: checked as boolean })}
+                                                    className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                                  />
+                                                  <Label className="text-xs text-slate-400">Mod</Label>
+                                                  {currentSettings.fillGradientConicCenterYModulationEnabled && (
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterYModulationValue ?? 100}
+                                                      onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYModulationValue: value })}
+                                                      min={10}
+                                                      max={100}
+                                                      step={5}
+                                                      className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    />
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Right Column: Angle Mode Controls */}
+                                    <div className="space-y-2 p-2 bg-slate-800/40 rounded border border-slate-700">
+                                      <div className="space-y-1">
+                                        <Label className="text-xs text-slate-400">Angle Mode</Label>
+                                        <Select 
+                                          value={currentSettings.fillGradientConicAngleMode || 'fixed'} 
+                                          onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleMode: value as any })}
+                                        >
+                                          <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-conic-angle-mode">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                            <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      
+                                      {/* Fixed Angle */}
+                                      {currentSettings.fillGradientConicAngleMode === 'fixed' && (
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Start Angle (°)</Label>
+                                          <div className="flex items-center gap-1">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngle ?? 0}
+                                              onChange={(value) => handleSettingsUpdate({ fillGradientConicAngle: value })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-new-conic-angle"
+                                            />
+                                            <Slider
+                                              value={[currentSettings.fillGradientConicAngle ?? 0]}
+                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Range Angle */}
+                                      {currentSettings.fillGradientConicAngleMode === 'range' && (
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Angle Range (°)</Label>
+                                          <div className="flex items-center gap-1">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngleRange?.[0] ?? 0}
+                                              onChange={(value) => handleSettingsUpdate({ 
+                                                fillGradientConicAngleRange: [value, currentSettings.fillGradientConicAngleRange?.[1] ?? 360] 
+                                              })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-new-conic-angle-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillGradientConicAngleRange || [0, 360]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngleRange?.[1] ?? 360}
+                                              onChange={(value) => handleSettingsUpdate({ 
+                                                fillGradientConicAngleRange: [currentSettings.fillGradientConicAngleRange?.[0] ?? 0, value] 
+                                              })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-new-conic-angle-max"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Incremental Angle */}
+                                      {currentSettings.fillGradientConicAngleMode === 'incremental' && (
+                                        <div className="space-y-1">
+                                          <div className="flex items-center gap-1">
+                                            <Label className="text-xs text-slate-500 w-8">Start</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleStartValue ?? 0}
                                               onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleStartValue: value })}
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             />
                                             <Slider
                                               value={[currentSettings.fillGradientConicAngleStartValue ?? 0]}
@@ -7181,17 +7545,15 @@ export default function BatchConfigDialog({
                                               className="flex-1 [&_[role=slider]]:bg-amber-600"
                                             />
                                           </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Increment (°)</Label>
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-1">
+                                            <Label className="text-xs text-slate-500 w-8">Inc</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleIncrement ?? 30}
                                               onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleIncrement: value })}
                                               min={-180}
                                               max={180}
                                               step={15}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             />
                                             <Slider
                                               value={[currentSettings.fillGradientConicAngleIncrement ?? 30]}
@@ -7202,441 +7564,28 @@ export default function BatchConfigDialog({
                                               className="flex-1 [&_[role=slider]]:bg-amber-600"
                                             />
                                           </div>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Checkbox
-                                          checked={currentSettings.fillGradientConicAngleModulationEnabled ?? false}
-                                          onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
-                                          className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                        />
-                                        <Label className="text-xs text-slate-300">Modulation</Label>
-                                        {currentSettings.fillGradientConicAngleModulationEnabled && (
-                                          <NumericInput
-                                            value={currentSettings.fillGradientConicAngleModulationValue ?? 360}
-                                            onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleModulationValue: value })}
-                                            min={30}
-                                            max={360}
-                                            step={15}
-                                            className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                          />
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Conic Corners Selection */}
-                                  {currentSettings.fillGradientConicCenter === 'corners' && (
-                                    <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                                      <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-400">Selection</Label>
-                                        <Select 
-                                          value={currentSettings.fillGradientConicSelectionMode || 'random'} 
-                                          onValueChange={(value) => handleSettingsUpdate({ fillGradientConicSelectionMode: value as any })}
-                                        >
-                                          <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
-                                            <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicCorners?.topLeft ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, topLeft: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Top Left</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicCorners?.topRight ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, topRight: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Top Right</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicCorners?.bottomLeft ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, bottomLeft: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Bottom Left</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicCorners?.bottomRight ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicCorners: { ...currentSettings.fillGradientConicCorners, bottomRight: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Bottom Right</Label>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Conic Midpoints Selection */}
-                                  {currentSettings.fillGradientConicCenter === 'midpoints' && (
-                                    <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                                      <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-400">Selection</Label>
-                                        <Select 
-                                          value={currentSettings.fillGradientConicSelectionMode || 'random'} 
-                                          onValueChange={(value) => handleSettingsUpdate({ fillGradientConicSelectionMode: value as any })}
-                                        >
-                                          <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
-                                            <SelectItem value="cycle" className="text-slate-200 hover:bg-slate-700">Cycle</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicMidpoints?.top ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, top: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Top</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicMidpoints?.right ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, right: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Right</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicMidpoints?.bottom ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, bottom: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Bottom</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Checkbox
-                                            checked={currentSettings.fillGradientConicMidpoints?.left ?? true}
-                                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                              fillGradientConicMidpoints: { ...currentSettings.fillGradientConicMidpoints, left: checked as boolean } 
-                                            })}
-                                            className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                          />
-                                          <Label className="text-xs text-slate-300">Left</Label>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Conic Coordinates Controls */}
-                                  {currentSettings.fillGradientConicCenter === 'coordinates' && (
-                                    <div className="space-y-3 p-2 bg-slate-800/50 rounded">
-                                      {/* Conic Center X */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                          <Label className="text-xs text-slate-300">Center X</Label>
-                                          <Select 
-                                            value={currentSettings.fillGradientConicCenterXMode || 'fixed'} 
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXMode: value as any })}
-                                          >
-                                            <SelectTrigger className="h-7 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        
-                                        {currentSettings.fillGradientConicCenterXMode === 'fixed' && (
-                                          <div className="flex items-center gap-2">
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterX ?? 50}
-                                              onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                          <div className="flex items-center gap-1">
+                                            <Checkbox
+                                              checked={currentSettings.fillGradientConicAngleModulationEnabled ?? false}
+                                              onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
+                                              className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
                                             />
-                                            <Slider
-                                              value={[currentSettings.fillGradientConicCenterX ?? 50]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                            />
-                                          </div>
-                                        )}
-                                        
-                                        {currentSettings.fillGradientConicCenterXMode === 'range' && (
-                                          <div className="flex items-center gap-2">
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterXRange?.[0] ?? 25}
-                                              onChange={(value) => handleSettingsUpdate({ 
-                                                fillGradientConicCenterXRange: [value, currentSettings.fillGradientConicCenterXRange?.[1] ?? 75] 
-                                              })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            />
-                                            <Slider
-                                              value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
-                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                            />
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterXRange?.[1] ?? 75}
-                                              onChange={(value) => handleSettingsUpdate({ 
-                                                fillGradientConicCenterXRange: [currentSettings.fillGradientConicCenterXRange?.[0] ?? 25, value] 
-                                              })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            />
-                                          </div>
-                                        )}
-                                        
-                                        {currentSettings.fillGradientConicCenterXMode === 'incremental' && (
-                                          <div className="space-y-2">
-                                            <div className="grid grid-cols-2 gap-2">
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Start</Label>
-                                                <div className="flex items-center gap-2">
-                                                  <NumericInput
-                                                    value={currentSettings.fillGradientConicCenterXStartValue ?? 50}
-                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXStartValue: value })}
-                                                    min={0}
-                                                    max={100}
-                                                    step={5}
-                                                    className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                  />
-                                                  <Slider
-                                                    value={[currentSettings.fillGradientConicCenterXStartValue ?? 50]}
-                                                    onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterXStartValue: value })}
-                                                    min={0}
-                                                    max={100}
-                                                    step={5}
-                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Increment</Label>
-                                                <div className="flex items-center gap-2">
-                                                  <NumericInput
-                                                    value={currentSettings.fillGradientConicCenterXIncrement ?? 10}
-                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXIncrement: value })}
-                                                    min={-50}
-                                                    max={50}
-                                                    step={5}
-                                                    className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                  />
-                                                  <Slider
-                                                    value={[currentSettings.fillGradientConicCenterXIncrement ?? 10]}
-                                                    onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterXIncrement: value })}
-                                                    min={-50}
-                                                    max={50}
-                                                    step={5}
-                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                  />
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <Checkbox
-                                                checked={currentSettings.fillGradientConicCenterXModulationEnabled ?? false}
-                                                onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterXModulationEnabled: checked as boolean })}
-                                                className="border-slate-500 data-[state=checked]:bg-amber-600"
+                                            <Label className="text-xs text-slate-400">Modulation</Label>
+                                            {currentSettings.fillGradientConicAngleModulationEnabled && (
+                                              <NumericInput
+                                                value={currentSettings.fillGradientConicAngleModulationValue ?? 360}
+                                                onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleModulationValue: value })}
+                                                min={30}
+                                                max={360}
+                                                step={15}
+                                                className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                               />
-                                              <Label className="text-xs text-slate-300">Modulation</Label>
-                                              {currentSettings.fillGradientConicCenterXModulationEnabled && (
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterXModulationValue ?? 100}
-                                                  onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXModulationValue: value })}
-                                                  min={10}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                />
-                                              )}
-                                            </div>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
-                                      
-                                      {/* Conic Center Y */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                          <Label className="text-xs text-slate-300">Center Y</Label>
-                                          <Select 
-                                            value={currentSettings.fillGradientConicCenterYMode || 'fixed'} 
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYMode: value as any })}
-                                          >
-                                            <SelectTrigger className="h-7 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                            </SelectContent>
-                                          </Select>
                                         </div>
-                                        
-                                        {currentSettings.fillGradientConicCenterYMode === 'fixed' && (
-                                          <div className="flex items-center gap-2">
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterY ?? 50}
-                                              onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            />
-                                            <Slider
-                                              value={[currentSettings.fillGradientConicCenterY ?? 50]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                            />
-                                          </div>
-                                        )}
-                                        
-                                        {currentSettings.fillGradientConicCenterYMode === 'range' && (
-                                          <div className="flex items-center gap-2">
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterYRange?.[0] ?? 25}
-                                              onChange={(value) => handleSettingsUpdate({ 
-                                                fillGradientConicCenterYRange: [value, currentSettings.fillGradientConicCenterYRange?.[1] ?? 75] 
-                                              })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            />
-                                            <Slider
-                                              value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
-                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                            />
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicCenterYRange?.[1] ?? 75}
-                                              onChange={(value) => handleSettingsUpdate({ 
-                                                fillGradientConicCenterYRange: [currentSettings.fillGradientConicCenterYRange?.[0] ?? 25, value] 
-                                              })}
-                                              min={0}
-                                              max={100}
-                                              step={5}
-                                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            />
-                                          </div>
-                                        )}
-                                        
-                                        {currentSettings.fillGradientConicCenterYMode === 'incremental' && (
-                                          <div className="space-y-2">
-                                            <div className="grid grid-cols-2 gap-2">
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Start</Label>
-                                                <div className="flex items-center gap-2">
-                                                  <NumericInput
-                                                    value={currentSettings.fillGradientConicCenterYStartValue ?? 50}
-                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYStartValue: value })}
-                                                    min={0}
-                                                    max={100}
-                                                    step={5}
-                                                    className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                  />
-                                                  <Slider
-                                                    value={[currentSettings.fillGradientConicCenterYStartValue ?? 50]}
-                                                    onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterYStartValue: value })}
-                                                    min={0}
-                                                    max={100}
-                                                    step={5}
-                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Increment</Label>
-                                                <div className="flex items-center gap-2">
-                                                  <NumericInput
-                                                    value={currentSettings.fillGradientConicCenterYIncrement ?? 10}
-                                                    onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYIncrement: value })}
-                                                    min={-50}
-                                                    max={50}
-                                                    step={5}
-                                                    className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                  />
-                                                  <Slider
-                                                    value={[currentSettings.fillGradientConicCenterYIncrement ?? 10]}
-                                                    onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterYIncrement: value })}
-                                                    min={-50}
-                                                    max={50}
-                                                    step={5}
-                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                  />
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <Checkbox
-                                                checked={currentSettings.fillGradientConicCenterYModulationEnabled ?? false}
-                                                onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterYModulationEnabled: checked as boolean })}
-                                                className="border-slate-500 data-[state=checked]:bg-amber-600"
-                                              />
-                                              <Label className="text-xs text-slate-300">Modulation</Label>
-                                              {currentSettings.fillGradientConicCenterYModulationEnabled && (
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterYModulationValue ?? 100}
-                                                  onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYModulationValue: value })}
-                                                  min={10}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                />
-                                              )}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
+                                      )}
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                             )}
