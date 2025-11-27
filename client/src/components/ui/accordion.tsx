@@ -18,10 +18,14 @@ const AccordionItem = React.forwardRef<
 ))
 AccordionItem.displayName = "AccordionItem"
 
+interface AccordionTriggerProps extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger> {
+  leading?: React.ReactNode;
+}
+
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, onMouseDown, ...props }, ref) => {
+  AccordionTriggerProps
+>(({ className, children, onMouseDown, leading, ...props }, ref) => {
   const handleMouseDown = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     // Prevent sidebar auto-scroll when accordion triggers receive focus via mouse clicks
     // Using preventScroll preserves accessibility (keyboard navigation still works normally)
@@ -32,7 +36,8 @@ const AccordionTrigger = React.forwardRef<
   }, [onMouseDown]);
 
   return (
-    <AccordionPrimitive.Header className="flex">
+    <AccordionPrimitive.Header className="flex items-center">
+      {leading}
       <AccordionPrimitive.Trigger
         ref={ref}
         className={cn(

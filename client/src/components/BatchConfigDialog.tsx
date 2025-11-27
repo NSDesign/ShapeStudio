@@ -3923,7 +3923,20 @@ export default function BatchConfigDialog({
 
                             {/* Gradient Fill Accordion */}
                             <AccordionItem value="gradient" className="border border-slate-700/80 rounded-md bg-slate-800/60">
-                              <AccordionTrigger className="px-3 py-2 hover:no-underline">
+                              <AccordionTrigger 
+                                className="px-3 py-2 hover:no-underline"
+                                leading={
+                                  <Checkbox 
+                                    checked={currentSettings.fillGradientEnabled}
+                                    onCheckedChange={(checked) => {
+                                      handleSettingsUpdate({ fillGradientEnabled: checked as boolean });
+                                    }}
+                                    className="border-slate-500 data-[state=checked]:bg-blue-600 mr-2"
+                                    data-testid="checkbox-fill-gradient-enabled"
+                                    aria-label="Enable gradients"
+                                  />
+                                }
+                              >
                                 <div className="flex items-center space-x-2">
                                   <Label className="text-sm font-medium text-slate-200">Gradient</Label>
                                   <div className="flex items-center space-x-1 text-xs text-slate-400">
@@ -3933,16 +3946,6 @@ export default function BatchConfigDialog({
                               </AccordionTrigger>
                               <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-3">
-                                  {/* Gradient Enable Control */}
-                                  <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                    <Checkbox 
-                                      checked={currentSettings.fillGradientEnabled}
-                                      onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
-                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                    />
-                                    <Label className="text-sm font-medium text-slate-200">Enable Gradients</Label>
-                                  </div>
-
                                   {/* Gradient Type Probabilities */}
                                   <div className="space-y-3 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
                                     <Label className="text-sm font-medium text-slate-200">Gradient Type Probabilities</Label>
@@ -4140,8 +4143,6 @@ export default function BatchConfigDialog({
                                   </div>
 
                                   {/* Enhanced Gradient Type & Direction Controls */}
-                                  <Separator className="bg-slate-600" />
-                                  
                                   <div className="space-y-4 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                     {/* Enable/Disable Toggle for Gradient Type & Direction Section */}
                                     <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/40 rounded-md">
