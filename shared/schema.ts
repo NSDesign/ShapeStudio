@@ -427,7 +427,7 @@ export interface BatchConfigSettings {
   
   // Distribution Layout
   distributionLayoutEnabled: boolean;
-  distributionPattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
+  distributionPattern: 'grid' | 'wave' | 'ellipse' | 'spiral';
   
   // Grid Layout Settings
   gridRows: number;
@@ -460,9 +460,6 @@ export interface BatchConfigSettings {
   // Cell constraints for cell-based rendering (Phase 4)
   cellConstraints: CellConstraintsConfig;
   
-  // Auto Distribute Layout Settings
-  autoDistributeXCount: number; // Number of shapes to distribute in X direction
-  autoDistributeYCount: number; // Number of shapes to distribute in Y direction (auto-balanced with X to maintain total)
   
   // Wave Pattern Settings
   waveType: 'sine' | 'triangle' | 'square' | 'sawtooth';
@@ -1034,9 +1031,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Cell constraints for cell-based rendering
   cellConstraints: DEFAULT_CELL_CONSTRAINTS,
-  
-  autoDistributeXCount: 10,
-  autoDistributeYCount: 10,
   
   waveType: 'sine',
   waveAmplitude: 50,
@@ -2129,7 +2123,7 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Distribution settings
   distributionLayoutEnabled: z.boolean(),
-  distributionPattern: z.enum(['grid', 'wave', 'ellipse', 'spiral', 'auto-distribute']),
+  distributionPattern: z.enum(['grid', 'wave', 'ellipse', 'spiral']),
   gridRows: z.number(),
   gridColumns: z.number(),
   gridStartX: z.number(),
@@ -2149,9 +2143,6 @@ export const BatchConfigSettingsSchema = z.object({
   gridReverseGroups: z.boolean(),
   gridXRandomization: z.number(),
   gridYRandomization: z.number(),
-  
-  autoDistributeXCount: z.number(),
-  autoDistributeYCount: z.number(),
   
   waveType: z.enum(['sine', 'triangle', 'square', 'sawtooth']),
   waveAmplitude: z.number(),

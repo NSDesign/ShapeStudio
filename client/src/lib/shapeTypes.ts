@@ -21,7 +21,7 @@ export interface GridPosition {
 
 export interface DistributionConfig {
   enabled: boolean;
-  pattern: 'grid' | 'wave' | 'ellipse' | 'spiral' | 'auto-distribute';
+  pattern: 'grid' | 'wave' | 'ellipse' | 'spiral';
   gridRows: number;
   gridColumns: number;
   gridStartX?: number;
@@ -44,8 +44,6 @@ export interface DistributionConfig {
   gridOffsets?: GridOffsetsConfig;
   shapeMasking?: ShapeMaskingConfig;
   cellConstraints?: CellConstraintsConfig;
-  autoDistributeXCount?: number;
-  autoDistributeYCount?: number;
   waveType?: 'sine' | 'triangle' | 'square' | 'sawtooth';
   waveAmplitude?: number;
   waveFrequency?: number;
@@ -1243,64 +1241,6 @@ export function applyGridDistribution(
   });
 }
 
-// Apply auto-distribute layout: shapes distributed in X and Y directions based on counts
-export function applyAutoDistribution(
-  shapes: any[],
-  config: DistributionConfig,
-  canvasCenter = { x: 0, y: 0 },
-  artboardBounds?: { x: number; y: number; width: number; height: number }
-): any[] {
-  if (!config.enabled || config.pattern !== 'auto-distribute') return shapes;
-  
-  const xCount = config.autoDistributeXCount || 0;
-  const yCount = config.autoDistributeYCount || 0;
-  const totalShapes = shapes.length;
-  
-  // Calculate artboard center from bounds (or use canvas center as fallback)
-  const artboardCenterX = artboardBounds 
-    ? artboardBounds.x + artboardBounds.width / 2 
-    : canvasCenter.x;
-  const artboardCenterY = artboardBounds 
-    ? artboardBounds.y + artboardBounds.height / 2 
-    : canvasCenter.y;
-  
-  // Auto-calculate spacing based on artboard dimensions
-  const xSpacing = artboardBounds ? artboardBounds.width / (xCount + 1) : 100;
-  const ySpacing = artboardBounds ? artboardBounds.height / (yCount + 1) : 100;
-  
-  // Distribute shapes
-  return shapes.map((shape, index) => {
-    let x, y;
-    
-    if (index < xCount) {
-      // First xCount shapes distributed along X axis
-      const xIndex = index + 1;
-      x = artboardCenterX - (artboardBounds?.width || 400) / 2 + (xIndex * xSpacing);
-      y = artboardCenterY;
-    } else {
-      // Remaining shapes distributed along Y axis
-      const yIndex = (index - xCount) + 1;
-      x = artboardCenterX;
-      y = artboardCenterY - (artboardBounds?.height || 400) / 2 + (yIndex * ySpacing);
-    }
-    
-    // Apply additive random offset
-    const randomX = (Math.random() - 0.5) * 2 * config.gridXRandomization;
-    const randomY = (Math.random() - 0.5) * 2 * config.gridYRandomization;
-    
-    // Always apply position offsets additively
-    const positionOffsetX = shape.transform?.x || 0;
-    const positionOffsetY = shape.transform?.y || 0;
-    
-    const finalX = x + randomX + positionOffsetX;
-    const finalY = y + randomY + positionOffsetY;
-    
-    shape.transform.x = finalX;
-    shape.transform.y = finalY;
-    
-    return shape;
-  });
-}
 
 // Apply wave distribution: shapes positioned along a wave pattern (sine, triangle, square, sawtooth)
 export function applyWaveDistribution(

@@ -732,7 +732,6 @@ export function GenerationSetsInterface({
                 <SelectItem value="wave">Wave</SelectItem>
                 <SelectItem value="ellipse">Ellipse</SelectItem>
                 <SelectItem value="spiral">Spiral</SelectItem>
-                <SelectItem value="auto-distribute">Auto Distribute</SelectItem>
               </SelectContent>
             </Select>
           )}

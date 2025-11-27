@@ -544,7 +544,6 @@ export default function BatchConfigDialog({
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
-                            <SelectItem value="auto-distribute" className="text-slate-200 hover:bg-slate-700">Auto Distribute</SelectItem>
                             <SelectItem value="wave" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
                             <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
                             <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
@@ -1626,39 +1625,65 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                         
-                        {/* Randomisation Section - kept at bottom */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridXRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridYRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
+                        {/* Randomization Container */}
+                        <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                          <Label className="text-xs font-medium text-slate-300">Position Randomization</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">X Random (px)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.gridXRandomization}
+                                  onChange={(value) => handleSettingsUpdate({ gridXRandomization: value })}
+                                  min={0}
+                                  max={500}
+                                  step={5}
+                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-grid-x-random"
+                                />
+                                <Slider
+                                  value={[currentSettings.gridXRandomization]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
+                                  min={0}
+                                  max={500}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-400">Y Random (px)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.gridYRandomization}
+                                  onChange={(value) => handleSettingsUpdate({ gridYRandomization: value })}
+                                  min={0}
+                                  max={500}
+                                  step={5}
+                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-grid-y-random"
+                                />
+                                <Slider
+                                  value={[currentSettings.gridYRandomization]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
+                                  min={0}
+                                  max={500}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label className="text-sm text-slate-300">Sort Grid By</Label>
+                        {/* Sorting Container */}
+                        <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                          <Label className="text-xs font-medium text-slate-300">Sort By</Label>
                           <Select 
                             value={currentSettings.gridSortBy}
                             onValueChange={(value) => handleSettingsUpdate({ gridSortBy: value as any })}
                           >
-                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                            <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -1746,150 +1771,65 @@ export default function BatchConfigDialog({
                               </SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
                         
-                        {currentSettings.gridSortBy !== 'none' && (
-                          <div className="space-y-3">
-                            <div className="space-y-2">
-                              <Label className="text-sm text-slate-300">Sort Scope</Label>
-                              <Select 
-                                value={currentSettings.gridSortScope}
-                                onValueChange={(value) => handleSettingsUpdate({ gridSortScope: value as any })}
-                              >
-                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="per-generation" className="text-slate-200 hover:bg-slate-700">Per Generation</SelectItem>
-                                  <SelectItem value="per-batch" className="text-slate-200 hover:bg-slate-700">Per Batch (all generations)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-xs text-slate-400">
-                                Per Generation: Sort shapes within each generation separately<br />
-                                Per Batch: Sort all shapes across all generations together
-                              </p>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label className="text-sm text-slate-300">Sort Order</Label>
-                              <Select 
-                                value={currentSettings.gridSortOrder}
-                                onValueChange={(value) => handleSettingsUpdate({ gridSortOrder: value as any })}
-                              >
-                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="ascending" className="text-slate-200 hover:bg-slate-700">Ascending (low → high)</SelectItem>
-                                  <SelectItem value="descending" className="text-slate-200 hover:bg-slate-700">Descending (high → low)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-3 pt-2">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-sm text-slate-300">Group by Shape Type</Label>
-                                <Switch
-                                  checked={currentSettings.gridGroupByShapeType}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridGroupByShapeType: checked })}
-                                  className="data-[state=checked]:bg-purple-600"
-                                />
-                              </div>
-                              <p className="text-xs text-slate-400">
-                                Group shapes by type first, then sort within each group
-                              </p>
-                            </div>
-                            
-                            {currentSettings.gridGroupByShapeType && (
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <Label className="text-sm text-slate-300">Reverse Groups</Label>
-                                  <Switch
-                                    checked={currentSettings.gridReverseGroups}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ gridReverseGroups: checked })}
-                                    className="data-[state=checked]:bg-purple-600"
-                                  />
+                          {currentSettings.gridSortBy !== 'none' && (
+                            <div className="space-y-2 mt-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Scope</Label>
+                                  <Select 
+                                    value={currentSettings.gridSortScope}
+                                    onValueChange={(value) => handleSettingsUpdate({ gridSortScope: value as any })}
+                                  >
+                                    <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="per-generation" className="text-slate-200 hover:bg-slate-700">Per Generation</SelectItem>
+                                      <SelectItem value="per-batch" className="text-slate-200 hover:bg-slate-700">Per Batch</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                                <p className="text-xs text-slate-400">
-                                  Reverse the order of shape-type groups
-                                </p>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Order</Label>
+                                  <Select 
+                                    value={currentSettings.gridSortOrder}
+                                    onValueChange={(value) => handleSettingsUpdate({ gridSortOrder: value as any })}
+                                  >
+                                    <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="ascending" className="text-slate-200 hover:bg-slate-700">Ascending</SelectItem>
+                                      <SelectItem value="descending" className="text-slate-200 hover:bg-slate-700">Descending</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {currentSettings.distributionPattern === 'auto-distribute' && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Shapes X Count: {currentSettings.autoDistributeXCount}</Label>
-                            <Slider
-                              value={[currentSettings.autoDistributeXCount]}
-                              onValueChange={([value]) => {
-                                const totalShapes = currentSettings.generationCountMode === 'fixed' 
-                                  ? currentSettings.generationCountDefine 
-                                  : 20;
-                                const yCount = totalShapes - value;
-                                handleSettingsUpdate({ 
-                                  autoDistributeXCount: value,
-                                  autoDistributeYCount: Math.max(0, yCount)
-                                });
-                              }}
-                              min={0}
-                              max={currentSettings.generationCountMode === 'fixed' ? currentSettings.generationCountDefine : 50}
-                              step={1}
-                              className="[&_[role=slider]]:bg-green-600"
-                              data-testid="slider-auto-distribute-x"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Shapes Y Count: {currentSettings.autoDistributeYCount}</Label>
-                            <Slider
-                              value={[currentSettings.autoDistributeYCount]}
-                              onValueChange={([value]) => {
-                                const totalShapes = currentSettings.generationCountMode === 'fixed' 
-                                  ? currentSettings.generationCountDefine 
-                                  : 20;
-                                const xCount = totalShapes - value;
-                                handleSettingsUpdate({ 
-                                  autoDistributeXCount: Math.max(0, xCount),
-                                  autoDistributeYCount: value
-                                });
-                              }}
-                              min={0}
-                              max={currentSettings.generationCountMode === 'fixed' ? currentSettings.generationCountDefine : 50}
-                              step={1}
-                              className="[&_[role=slider]]:bg-green-600"
-                              data-testid="slider-auto-distribute-y"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">X Random Amount: {currentSettings.gridXRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridXRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-sm text-slate-300">Y Random Amount: {currentSettings.gridYRandomization}px</Label>
-                            <Slider
-                              value={[currentSettings.gridYRandomization]}
-                              onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
-                              min={0}
-                              max={200}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
+                              
+                              <div className="flex items-center space-x-2 pt-1">
+                                <Checkbox 
+                                  checked={currentSettings.gridGroupByShapeType}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridGroupByShapeType: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                  data-testid="checkbox-group-by-shape-type"
+                                />
+                                <Label className="text-xs text-slate-400">Group by Shape Type</Label>
+                              </div>
+                              
+                              {currentSettings.gridGroupByShapeType && (
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    checked={currentSettings.gridReverseGroups}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ gridReverseGroups: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                    data-testid="checkbox-reverse-groups"
+                                  />
+                                  <Label className="text-xs text-slate-400">Reverse Groups</Label>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
