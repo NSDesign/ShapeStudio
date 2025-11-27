@@ -6125,6 +6125,43 @@ export default function BatchConfigDialog({
                             </div>
                           </div>
 
+                          {/* Color Stops Range */}
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Color Stops Range</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.fillGradientStopsRange?.[0] ?? 2}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientStopsRange: [value, currentSettings.fillGradientStopsRange?.[1] ?? 5] 
+                                })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-gradient-stops-min"
+                              />
+                              <Slider
+                                value={currentSettings.fillGradientStopsRange || [2, 5]}
+                                onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                              <NumericInput
+                                value={currentSettings.fillGradientStopsRange?.[1] ?? 5}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientStopsRange: [currentSettings.fillGradientStopsRange?.[0] ?? 2, value] 
+                                })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-gradient-stops-max"
+                              />
+                            </div>
+                          </div>
+
                           {/* Gradient Color Controls */}
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
@@ -6339,43 +6376,6 @@ export default function BatchConfigDialog({
                                 <p className="text-xs text-slate-500">Exact colors for gradient stops (min 2)</p>
                               </div>
                             )}
-                          </div>
-
-                          {/* Gradient Stops Range */}
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-400">Color Stops Range</Label>
-                            <div className="flex items-center gap-2">
-                              <NumericInput
-                                value={currentSettings.fillGradientStopsRange?.[0] ?? 2}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  fillGradientStopsRange: [value, currentSettings.fillGradientStopsRange?.[1] ?? 5] 
-                                })}
-                                min={2}
-                                max={10}
-                                step={1}
-                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-new-gradient-stops-min"
-                              />
-                              <Slider
-                                value={currentSettings.fillGradientStopsRange || [2, 5]}
-                                onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
-                                min={2}
-                                max={10}
-                                step={1}
-                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                              />
-                              <NumericInput
-                                value={currentSettings.fillGradientStopsRange?.[1] ?? 5}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  fillGradientStopsRange: [currentSettings.fillGradientStopsRange?.[0] ?? 2, value] 
-                                })}
-                                min={2}
-                                max={10}
-                                step={1}
-                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-new-gradient-stops-max"
-                              />
-                            </div>
                           </div>
 
                           {/* Gradient Type & Direction Controls */}
