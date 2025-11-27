@@ -5767,304 +5767,13 @@ export default function BatchConfigDialog({
                       )}
                     </div>
 
-                    <Separator className="bg-slate-700" />
-
-                    {/* Stroke Properties */}
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          checked={currentSettings.strokeEnabled}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ strokeEnabled: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-sm font-medium text-slate-200">Stroke Properties</Label>
-                      </div>
-                      
-                      {currentSettings.strokeEnabled && (
-                        <div className="ml-6 space-y-4">
-                          {/* Stroke Probability */}
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Stroke Probability: {currentSettings.strokeProbability}%</Label>
-                            <Slider
-                              value={[currentSettings.strokeProbability]}
-                              onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
-                              max={100}
-                              step={5}
-                              className="[&_[role=slider]]:bg-blue-600"
-                            />
-                          </div>
-                          
-                          {/* Stroke Width with Mode Support */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Width</Label>
-                              <Select value={currentSettings.strokeWidthMode} onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as any })}>
-                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {currentSettings.strokeWidthMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Width Range: {currentSettings.strokeWidthRange?.[0] || 1}px - {currentSettings.strokeWidthRange?.[1] || 5}px</Label>
-                                <Slider
-                                  value={currentSettings.strokeWidthRange || [1, 5]}
-                                  onValueChange={(value) => handleSettingsUpdate({ strokeWidthRange: value as [number, number] })}
-                                  min={0.5}
-                                  max={20}
-                                  step={0.5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-                            {currentSettings.strokeWidthMode === 'define' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Width: {currentSettings.strokeWidthDefine || 3}px</Label>
-                                <Slider
-                                  value={[currentSettings.strokeWidthDefine || 3]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ strokeWidthDefine: value })}
-                                  min={0.5}
-                                  max={20}
-                                  step={0.5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-                            {currentSettings.strokeWidthMode === 'incremental' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Start Value: {currentSettings.strokeWidthStartValue}px</Label>
-                                  <Slider
-                                    value={[currentSettings.strokeWidthStartValue]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthStartValue: value })}
-                                    min={0.5}
-                                    max={20}
-                                    step={0.5}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Increment: {currentSettings.strokeWidthIncrement}px per shape</Label>
-                                  <Slider
-                                    value={[currentSettings.strokeWidthIncrement]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthIncrement: value })}
-                                    min={0}
-                                    max={2}
-                                    step={0.1}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.strokeWidthModulationEnabled}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ strokeWidthModulationEnabled: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                </div>
-                                {currentSettings.strokeWidthModulationEnabled && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Modulation: Wrap at {currentSettings.strokeWidthModulationValue}px</Label>
-                                    <Slider
-                                      value={[currentSettings.strokeWidthModulationValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
-                                      min={1}
-                                      max={20}
-                                      step={0.5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
-                                )}
-                                <p className="text-xs text-slate-400">Progressive stroke width (start + index × increment, with optional modulation)</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Stroke Color Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Color</Label>
-                              <Select value={currentSettings.strokeColorMode} onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as any })}>
-                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {currentSettings.strokeColorMode === 'range' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Color Range</Label>
-                                  <div className="flex space-x-2">
-                                    <Input
-                                      type="color"
-                                      value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
-                                      onChange={(e) => handleSettingsUpdate({
-                                        strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
-                                      })}
-                                      className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                                    />
-                                    <Input
-                                      type="color"
-                                      value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
-                                      onChange={(e) => handleSettingsUpdate({
-                                        strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
-                                      })}
-                                      className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                                    />
-                                  </div>
-                                </div>
-                                
-                                {/* Flip Colour Range Toggle */}
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    checked={currentSettings.strokeColorRangeFlip || false}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ strokeColorRangeFlip: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                    data-testid="checkbox-stroke-color-range-flip"
-                                  />
-                                  <Label className="text-xs text-slate-300">Flip Colour Range</Label>
-                                </div>
-                                
-                                {/* Saturation Range */}
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.strokeColorSaturationRange?.[0] || 60}% - {currentSettings.strokeColorSaturationRange?.[1] || 100}%</Label>
-                                  <Slider
-                                    value={currentSettings.strokeColorSaturationRange || [60, 100]}
-                                    onValueChange={(value) => handleSettingsUpdate({ strokeColorSaturationRange: value as [number, number] })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-green-500"
-                                  />
-                                </div>
-                                
-                                {/* Lightness Range */}
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.strokeColorLightnessRange?.[0] || 20}% - {currentSettings.strokeColorLightnessRange?.[1] || 60}%</Label>
-                                  <Slider
-                                    value={currentSettings.strokeColorLightnessRange || [20, 60]}
-                                    onValueChange={(value) => handleSettingsUpdate({ strokeColorLightnessRange: value as [number, number] })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-blue-500"
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {currentSettings.strokeColorMode === 'palette' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Color Palette</Label>
-                                <div className="flex flex-wrap gap-2">
-                                  {currentSettings.strokeColorPalette?.map((color, index) => (
-                                    <Input
-                                      key={index}
-                                      type="color"
-                                      value={color}
-                                      onChange={(e) => {
-                                        const newPalette = [...(currentSettings.strokeColorPalette || [])];
-                                        newPalette[index] = e.target.value;
-                                        handleSettingsUpdate({ strokeColorPalette: newPalette });
-                                      }}
-                                      className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
-                                    />
-                                  ))}
-                                  <button
-                                    onClick={() => {
-                                      const newPalette = [...(currentSettings.strokeColorPalette || []), '#ffffff'];
-                                      handleSettingsUpdate({ strokeColorPalette: newPalette });
-                                    }}
-                                    className="w-12 h-8 bg-slate-700 border border-slate-600 rounded text-slate-300 text-xs hover:bg-slate-600"
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                                <p className="text-xs text-slate-400">Shapes cycle through palette colors</p>
-                              </div>
-                            )}
-
-                            {currentSettings.strokeColorMode === 'define' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Defined Color</Label>
-                                <Input
-                                  type="color"
-                                  value={currentSettings.strokeColorDefine || '#ef4444'}
-                                  onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
-                                  className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
-                                />
-                                <p className="text-xs text-slate-400">All shapes use this exact color</p>
-                              </div>
-                            )}
-
-
-                          </div>
-
-                          {/* Stroke Opacity Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Opacity</Label>
-                              <Select value={currentSettings.strokeOpacityMode} onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as any })}>
-                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {currentSettings.strokeOpacityMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.strokeOpacityRange?.[0] || 40}% - {currentSettings.strokeOpacityRange?.[1] || 100}%</Label>
-                                <Slider
-                                  value={currentSettings.strokeOpacityRange || [40, 100]}
-                                  onValueChange={(value) => handleSettingsUpdate({ strokeOpacityRange: value as [number, number] })}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-
-                            {currentSettings.strokeOpacityMode === 'define' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Opacity: {currentSettings.strokeOpacityDefine || 80}%</Label>
-                                <Slider
-                                  value={[currentSettings.strokeOpacityDefine || 80]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityDefine: value })}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
 
               <Separator className="bg-slate-600" />
 
-              {/* New Stroke Properties Section - Enhanced styling */}
+              {/* Stroke Properties Section - Enhanced styling */}
               <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -6072,9 +5781,9 @@ export default function BatchConfigDialog({
                       checked={currentSettings.strokeEnabled}
                       onCheckedChange={(checked) => handleSettingsUpdate({ strokeEnabled: checked as boolean })}
                       className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                      data-testid="checkbox-new-stroke-enabled"
+                      data-testid="checkbox-stroke-enabled"
                     />
-                    <Label className="text-sm font-medium text-slate-200">New Stroke Properties</Label>
+                    <Label className="text-sm font-medium text-slate-200">Stroke Properties</Label>
                   </div>
                   <span className="text-xs text-slate-400">
                     {currentSettings.strokeEnabled ? `${currentSettings.strokeProbability}% probability` : 'Disabled'}
@@ -6094,7 +5803,7 @@ export default function BatchConfigDialog({
                           max={100}
                           step={5}
                           className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                          data-testid="input-new-stroke-probability"
+                          data-testid="input-stroke-probability"
                         />
                         <span className="text-xs text-slate-400">%</span>
                         <Slider
@@ -6116,7 +5825,7 @@ export default function BatchConfigDialog({
                           value={currentSettings.strokeWidthMode} 
                           onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as 'range' | 'define' | 'incremental' })}
                         >
-                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-width-mode">
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-width-mode">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -6140,7 +5849,7 @@ export default function BatchConfigDialog({
                               max={20}
                               step={0.5}
                               className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-width-min"
+                              data-testid="input-stroke-width-min"
                             />
                             <Slider
                               value={currentSettings.strokeWidthRange || [1, 5]}
@@ -6159,7 +5868,7 @@ export default function BatchConfigDialog({
                               max={20}
                               step={0.5}
                               className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-width-max"
+                              data-testid="input-stroke-width-max"
                             />
                           </div>
                         </div>
@@ -6176,7 +5885,7 @@ export default function BatchConfigDialog({
                               max={20}
                               step={0.5}
                               className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-width-define"
+                              data-testid="input-stroke-width-define"
                             />
                             <Slider
                               value={[currentSettings.strokeWidthDefine ?? 3]}
@@ -6203,7 +5912,7 @@ export default function BatchConfigDialog({
                                   max={20}
                                   step={0.5}
                                   className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-new-stroke-width-start"
+                                  data-testid="input-stroke-width-start"
                                 />
                                 <Slider
                                   value={[currentSettings.strokeWidthStartValue ?? 1]}
@@ -6225,7 +5934,7 @@ export default function BatchConfigDialog({
                                   max={2}
                                   step={0.1}
                                   className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-new-stroke-width-increment"
+                                  data-testid="input-stroke-width-increment"
                                 />
                                 <Slider
                                   value={[currentSettings.strokeWidthIncrement ?? 0.5]}
@@ -6244,7 +5953,7 @@ export default function BatchConfigDialog({
                                 checked={currentSettings.strokeWidthModulationEnabled ?? false}
                                 onCheckedChange={(checked) => handleSettingsUpdate({ strokeWidthModulationEnabled: checked as boolean })}
                                 className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-new-stroke-width-modulation"
+                                data-testid="checkbox-stroke-width-modulation"
                               />
                               <Label className="text-xs text-slate-300">Enable Modulation</Label>
                             </div>
@@ -6259,7 +5968,7 @@ export default function BatchConfigDialog({
                                     max={20}
                                     step={0.5}
                                     className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-new-stroke-width-modulation"
+                                    data-testid="input-stroke-width-modulation"
                                   />
                                   <Slider
                                     value={[currentSettings.strokeWidthModulationValue ?? 10]}
@@ -6286,7 +5995,7 @@ export default function BatchConfigDialog({
                           value={currentSettings.strokeColorMode} 
                           onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as 'range' | 'palette' | 'define' })}
                         >
-                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-color-mode">
+                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-color-mode">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -6309,7 +6018,7 @@ export default function BatchConfigDialog({
                                   strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
                                 })}
                                 className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
-                                data-testid="input-new-stroke-color-start"
+                                data-testid="input-stroke-color-start"
                               />
                               <div className="flex-1 h-6 rounded" style={{
                                 background: `linear-gradient(to right, ${currentSettings.strokeColorRange?.[0] || '#ef4444'}, ${currentSettings.strokeColorRange?.[1] || '#f59e0b'})`
@@ -6321,7 +6030,7 @@ export default function BatchConfigDialog({
                                   strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
                                 })}
                                 className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
-                                data-testid="input-new-stroke-color-end"
+                                data-testid="input-stroke-color-end"
                               />
                             </div>
                           </div>
@@ -6331,7 +6040,7 @@ export default function BatchConfigDialog({
                               checked={currentSettings.strokeColorRangeFlip || false}
                               onCheckedChange={(checked) => handleSettingsUpdate({ strokeColorRangeFlip: checked as boolean })}
                               className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-new-stroke-color-flip"
+                              data-testid="checkbox-stroke-color-flip"
                             />
                             <Label className="text-xs text-slate-300">Flip Color Range</Label>
                           </div>
@@ -6348,7 +6057,7 @@ export default function BatchConfigDialog({
                                 max={100}
                                 step={5}
                                 className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                data-testid="input-new-stroke-saturation-min"
+                                data-testid="input-stroke-saturation-min"
                               />
                               <Slider
                                 value={currentSettings.strokeColorSaturationRange || [60, 100]}
@@ -6367,7 +6076,7 @@ export default function BatchConfigDialog({
                                 max={100}
                                 step={5}
                                 className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                data-testid="input-new-stroke-saturation-max"
+                                data-testid="input-stroke-saturation-max"
                               />
                             </div>
                           </div>
@@ -6384,7 +6093,7 @@ export default function BatchConfigDialog({
                                 max={100}
                                 step={5}
                                 className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                data-testid="input-new-stroke-lightness-min"
+                                data-testid="input-stroke-lightness-min"
                               />
                               <Slider
                                 value={currentSettings.strokeColorLightnessRange || [20, 60]}
@@ -6403,7 +6112,7 @@ export default function BatchConfigDialog({
                                 max={100}
                                 step={5}
                                 className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                data-testid="input-new-stroke-lightness-max"
+                                data-testid="input-stroke-lightness-max"
                               />
                             </div>
                           </div>
@@ -6463,7 +6172,7 @@ export default function BatchConfigDialog({
                               value={currentSettings.strokeColorDefine || '#ef4444'}
                               onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
                               className="w-12 h-10 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
-                              data-testid="input-new-stroke-color-define"
+                              data-testid="input-stroke-color-define"
                             />
                             <div 
                               className="flex-1 h-8 rounded border border-slate-600"
@@ -6474,7 +6183,7 @@ export default function BatchConfigDialog({
                               value={currentSettings.strokeColorDefine || '#ef4444'}
                               onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
                               className="w-24 h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs"
-                              data-testid="input-new-stroke-color-hex"
+                              data-testid="input-stroke-color-hex"
                             />
                           </div>
                           <p className="text-xs text-slate-500">All shapes use this exact color</p>
@@ -6490,7 +6199,7 @@ export default function BatchConfigDialog({
                           value={currentSettings.strokeOpacityMode} 
                           onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as 'range' | 'define' | 'incremental' })}
                         >
-                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-opacity-mode">
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-opacity-mode">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -6514,7 +6223,7 @@ export default function BatchConfigDialog({
                               max={100}
                               step={5}
                               className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-opacity-min"
+                              data-testid="input-stroke-opacity-min"
                             />
                             <Slider
                               value={currentSettings.strokeOpacityRange || [40, 100]}
@@ -6533,7 +6242,7 @@ export default function BatchConfigDialog({
                               max={100}
                               step={5}
                               className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-opacity-max"
+                              data-testid="input-stroke-opacity-max"
                             />
                           </div>
                         </div>
@@ -6550,7 +6259,7 @@ export default function BatchConfigDialog({
                               max={100}
                               step={5}
                               className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                              data-testid="input-new-stroke-opacity-define"
+                              data-testid="input-stroke-opacity-define"
                             />
                             <Slider
                               value={[currentSettings.strokeOpacityDefine ?? 80]}
@@ -6577,7 +6286,7 @@ export default function BatchConfigDialog({
                                   max={100}
                                   step={5}
                                   className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-new-stroke-opacity-start"
+                                  data-testid="input-stroke-opacity-start"
                                 />
                                 <Slider
                                   value={[currentSettings.strokeOpacityStartValue ?? 100]}
@@ -6599,7 +6308,7 @@ export default function BatchConfigDialog({
                                   max={20}
                                   step={1}
                                   className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-new-stroke-opacity-increment"
+                                  data-testid="input-stroke-opacity-increment"
                                 />
                                 <Slider
                                   value={[currentSettings.strokeOpacityIncrement ?? -5]}
@@ -6618,7 +6327,7 @@ export default function BatchConfigDialog({
                                 checked={currentSettings.strokeOpacityModulationEnabled ?? false}
                                 onCheckedChange={(checked) => handleSettingsUpdate({ strokeOpacityModulationEnabled: checked as boolean })}
                                 className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-new-stroke-opacity-modulation"
+                                data-testid="checkbox-stroke-opacity-modulation"
                               />
                               <Label className="text-xs text-slate-300">Enable Modulation</Label>
                             </div>
@@ -6633,7 +6342,7 @@ export default function BatchConfigDialog({
                                     max={100}
                                     step={5}
                                     className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-new-stroke-opacity-modulation"
+                                    data-testid="input-stroke-opacity-modulation"
                                   />
                                   <Slider
                                     value={[currentSettings.strokeOpacityModulationValue ?? 50]}
