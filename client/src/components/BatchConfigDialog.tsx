@@ -530,8 +530,8 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.distributionLayoutEnabled && (
                   <div className="ml-6 space-y-4">
-                    {/* Grid Settings Container - Pattern, Dimensions, Spacing, Margins */}
-                    <div className="space-y-4 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                    {/* Main Layout Controls Container */}
+                    <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
                       {/* Pattern Type */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-200">Pattern Type</Label>
@@ -555,10 +555,10 @@ export default function BatchConfigDialog({
                       {currentSettings.distributionPattern === 'grid' && (
                         <>
                           {/* Grid Dimensions */}
-                          <div className="space-y-2 pt-2 border-t border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Grid Dimensions</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
+                          <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Grid Dimensions</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
                                 <Label className="text-xs text-slate-400">Rows</Label>
                                 <div className="flex items-center gap-2">
                                   <NumericInput
@@ -580,7 +580,7 @@ export default function BatchConfigDialog({
                                   />
                                 </div>
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-1">
                                 <Label className="text-xs text-slate-400">Columns</Label>
                                 <div className="flex items-center gap-2">
                                   <NumericInput
@@ -606,13 +606,13 @@ export default function BatchConfigDialog({
                           </div>
                         
                           {/* X Spacing */}
-                          <div className="space-y-2 pt-2 border-t border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">X Spacing</Label>
+                          <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">X Spacing</Label>
                             <Select 
                               value={((currentSettings.gridSpacingXMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingXMode) || 'define'}
                               onValueChange={(value) => handleSettingsUpdate({ gridSpacingXMode: value as 'define' | 'auto-centered' | 'auto-edge-to-edge' })}
                             >
-                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-x-spacing">
+                              <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-x-spacing">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -622,8 +622,8 @@ export default function BatchConfigDialog({
                               </SelectContent>
                             </Select>
                             {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
-                              <div className="space-y-3 mt-2">
-                                <div className="space-y-2">
+                              <div className="space-y-2 mt-2">
+                                <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Grid Start X (px)</Label>
                                   <div className="flex items-center gap-2">
                                     <NumericInput
@@ -645,7 +645,7 @@ export default function BatchConfigDialog({
                                     />
                                   </div>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Column Offset (px)</Label>
                                   <div className="flex items-center gap-2">
                                     <NumericInput
@@ -672,13 +672,13 @@ export default function BatchConfigDialog({
                           </div>
                         
                           {/* Y Spacing */}
-                          <div className="space-y-2 pt-2 border-t border-slate-600">
-                            <Label className="text-sm font-medium text-slate-200">Y Spacing</Label>
+                          <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Y Spacing</Label>
                             <Select 
                               value={((currentSettings.gridSpacingYMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingYMode) || 'define'}
                               onValueChange={(value) => handleSettingsUpdate({ gridSpacingYMode: value as 'define' | 'auto-centered' | 'auto-edge-to-edge' })}
                             >
-                              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200" data-testid="select-y-spacing">
+                              <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200" data-testid="select-y-spacing">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -688,8 +688,8 @@ export default function BatchConfigDialog({
                               </SelectContent>
                             </Select>
                             {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
-                              <div className="space-y-3 mt-2">
-                                <div className="space-y-2">
+                              <div className="space-y-2 mt-2">
+                                <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Grid Start Y (px)</Label>
                                   <div className="flex items-center gap-2">
                                     <NumericInput
@@ -711,7 +711,7 @@ export default function BatchConfigDialog({
                                     />
                                   </div>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Row Offset (px)</Label>
                                   <div className="flex items-center gap-2">
                                     <NumericInput
@@ -740,7 +740,7 @@ export default function BatchConfigDialog({
                           {/* Custom Margin */}
                           {((currentSettings.gridSpacingXMode === 'auto-centered' || (currentSettings.gridSpacingXMode as any) === 'auto') || 
                             (currentSettings.gridSpacingYMode === 'auto-centered' || (currentSettings.gridSpacingYMode as any) === 'auto')) && (
-                            <div className="space-y-2 pt-2 border-t border-slate-600">
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
                               <div className="flex items-center space-x-2">
                                 <Checkbox 
                                   checked={currentSettings.gridMarginEnabled || false}
@@ -748,10 +748,10 @@ export default function BatchConfigDialog({
                                   className="border-slate-500 data-[state=checked]:bg-orange-600"
                                   data-testid="checkbox-custom-margin"
                                 />
-                                <Label className="text-sm font-medium text-slate-200">Custom Margin</Label>
+                                <Label className="text-xs font-medium text-slate-300">Custom Margin</Label>
                               </div>
                               {currentSettings.gridMarginEnabled && (
-                                <div className="space-y-2 ml-6">
+                                <div className="space-y-1 mt-2">
                                   <Label className="text-xs text-slate-400">Margin (px)</Label>
                                   <div className="flex items-center gap-2">
                                     <NumericInput
