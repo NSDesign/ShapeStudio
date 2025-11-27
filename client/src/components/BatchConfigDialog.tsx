@@ -3755,22 +3755,21 @@ export default function BatchConfigDialog({
                       )}
                     </div>
 
-                    <Separator className="bg-slate-700" />
-
                     {/* Fill Properties */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
                       <div className="flex items-center gap-3">
                         <Checkbox 
                           checked={currentSettings.fillEnabled}
                           onCheckedChange={(checked) => handleSettingsUpdate({ fillEnabled: checked as boolean })}
                           className="border-slate-500 data-[state=checked]:bg-blue-600"
+                          data-testid="checkbox-fill-enabled"
                         />
                         <Label className="text-sm font-medium text-slate-200">Fill Properties</Label>
                       </div>
                       
                       {currentSettings.fillEnabled && (
-                        <div className="ml-4 space-y-4">
-                          <Accordion type="multiple" className="w-full space-y-2 border border-slate-700/80 rounded-lg bg-slate-900/60 p-2">
+                        <div className="space-y-4 mt-3">
+                          <Accordion type="multiple" className="w-full space-y-2">
                             {/* Solid Fill Accordion */}
                             <AccordionItem value="solid" className="border border-slate-700/80 rounded-md bg-slate-800/60">
                               <AccordionTrigger className="px-3 py-2 hover:no-underline">
@@ -3801,7 +3800,7 @@ export default function BatchConfigDialog({
                                     <div className="flex items-center space-x-2">
                                       <Label className="text-sm font-medium text-slate-200">Solid Colors</Label>
                                       <Select value={currentSettings.fillColorMode} onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as any })}>
-                                        <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                        <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -3823,7 +3822,7 @@ export default function BatchConfigDialog({
                                               onChange={(e) => handleSettingsUpdate({
                                                 fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
                                               })}
-                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                             <Input
                                               type="color"
@@ -3831,7 +3830,7 @@ export default function BatchConfigDialog({
                                               onChange={(e) => handleSettingsUpdate({
                                                 fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
                                               })}
-                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                           </div>
                                         </div>
@@ -3889,7 +3888,7 @@ export default function BatchConfigDialog({
                                                 newPalette[index] = e.target.value;
                                                 handleSettingsUpdate({ fillColorPalette: newPalette });
                                               }}
-                                              className="w-12 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                           ))}
                                           <button
@@ -3897,7 +3896,7 @@ export default function BatchConfigDialog({
                                               const newPalette = [...(currentSettings.fillColorPalette || []), '#ffffff'];
                                               handleSettingsUpdate({ fillColorPalette: newPalette });
                                             }}
-                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
+                                            className="w-12 h-8 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
@@ -3912,7 +3911,7 @@ export default function BatchConfigDialog({
                                           type="color"
                                           value={currentSettings.fillColorDefine || '#3b82f6'}
                                           onChange={(e) => handleSettingsUpdate({ fillColorDefine: e.target.value })}
-                                          className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                          className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                         />
                                         <p className="text-xs text-slate-400">All shapes use this exact color</p>
                                       </div>
@@ -4004,7 +4003,7 @@ export default function BatchConfigDialog({
                                     <div className="flex items-center space-x-2">
                                       <Label className="text-sm font-medium text-slate-200">Gradient Colors</Label>
                                       <Select value={currentSettings.fillGradientColorMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientColorMode: value as any })}>
-                                        <SelectTrigger className="h-7 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                        <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -4026,7 +4025,7 @@ export default function BatchConfigDialog({
                                               onChange={(e) => handleSettingsUpdate({
                                                 fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
                                               })}
-                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                             <Input
                                               type="color"
@@ -4034,7 +4033,7 @@ export default function BatchConfigDialog({
                                               onChange={(e) => handleSettingsUpdate({
                                                 fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
                                               })}
-                                              className="w-16 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-16 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                           </div>
                                         </div>
@@ -4092,7 +4091,7 @@ export default function BatchConfigDialog({
                                                 newPalette[index] = e.target.value;
                                                 handleSettingsUpdate({ fillGradientColorPalette: newPalette });
                                               }}
-                                              className="w-12 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                           ))}
                                           <button
@@ -4100,7 +4099,7 @@ export default function BatchConfigDialog({
                                               const newPalette = [...(currentSettings.fillGradientColorPalette || []), '#ffffff'];
                                               handleSettingsUpdate({ fillGradientColorPalette: newPalette });
                                             }}
-                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
+                                            className="w-12 h-8 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
@@ -4122,7 +4121,7 @@ export default function BatchConfigDialog({
                                                 newColors[index] = e.target.value;
                                                 handleSettingsUpdate({ fillGradientColorDefine: newColors });
                                               }}
-                                              className="w-12 h-8 p-1 bg-slate-700 border-slate-600"
+                                              className="w-12 h-8 p-1 bg-slate-800 border-slate-600"
                                             />
                                           ))}
                                           <button
@@ -4130,7 +4129,7 @@ export default function BatchConfigDialog({
                                               const newColors = [...(currentSettings.fillGradientColorDefine || []), '#ffffff'];
                                               handleSettingsUpdate({ fillGradientColorDefine: newColors });
                                             }}
-                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
+                                            className="w-12 h-8 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
