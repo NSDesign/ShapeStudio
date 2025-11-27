@@ -7055,13 +7055,13 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 
-                                {/* Conic Settings - Two Column Layout */}
-                                <div className="space-y-2 p-2 bg-slate-900/30 rounded">
+                                {/* Conic Settings - Responsive Two Column Layout */}
+                                <div className="space-y-3 p-3 bg-slate-900/30 rounded">
                                   <Label className="text-xs font-medium text-slate-300">Conic Settings</Label>
-                                  <div className="grid grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                     {/* Left Column: Position Controls */}
-                                    <div className="space-y-2 p-2 bg-slate-800/40 rounded border border-slate-700">
-                                      <div className="space-y-1">
+                                    <div className="space-y-3 p-3 bg-slate-800/40 rounded border border-slate-700">
+                                      <div className="space-y-2">
                                         <Label className="text-xs text-slate-400">Position</Label>
                                         <Select 
                                           value={currentSettings.fillGradientConicCenter || 'center'} 
@@ -7247,8 +7247,8 @@ export default function BatchConfigDialog({
                                               </div>
                                             )}
                                             {currentSettings.fillGradientConicCenterXMode === 'range' && (
-                                              <div className="space-y-1">
-                                                <div className="flex items-center gap-1">
+                                              <div className="space-y-2">
+                                                <div className="flex flex-col md:flex-row gap-2 md:gap-1">
                                                   <NumericInput
                                                     value={currentSettings.fillGradientConicCenterXRange?.[0] ?? 25}
                                                     onChange={(value) => handleSettingsUpdate({ 
@@ -7365,8 +7365,8 @@ export default function BatchConfigDialog({
                                               </div>
                                             )}
                                             {currentSettings.fillGradientConicCenterYMode === 'range' && (
-                                              <div className="space-y-1">
-                                                <div className="flex items-center gap-1">
+                                              <div className="space-y-2">
+                                                <div className="flex flex-col md:flex-row gap-2 md:gap-1">
                                                   <NumericInput
                                                     value={currentSettings.fillGradientConicCenterYRange?.[0] ?? 25}
                                                     onChange={(value) => handleSettingsUpdate({ 
@@ -7448,8 +7448,8 @@ export default function BatchConfigDialog({
                                     </div>
                                     
                                     {/* Right Column: Angle Mode Controls */}
-                                    <div className="space-y-2 p-2 bg-slate-800/40 rounded border border-slate-700">
-                                      <div className="space-y-1">
+                                    <div className="space-y-3 p-3 bg-slate-800/40 rounded border border-slate-700">
+                                      <div className="space-y-2">
                                         <Label className="text-xs text-slate-400">Angle Mode</Label>
                                         <Select 
                                           value={currentSettings.fillGradientConicAngleMode || 'fixed'} 
@@ -7468,7 +7468,7 @@ export default function BatchConfigDialog({
                                       
                                       {/* Fixed Angle */}
                                       {currentSettings.fillGradientConicAngleMode === 'fixed' && (
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Start Angle (°)</Label>
                                           <NumericInput
                                             value={currentSettings.fillGradientConicAngle ?? 0}
@@ -7492,9 +7492,9 @@ export default function BatchConfigDialog({
                                       
                                       {/* Range Angle */}
                                       {currentSettings.fillGradientConicAngleMode === 'range' && (
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Angle Range (°)</Label>
-                                          <div className="flex items-center gap-1">
+                                          <div className="flex flex-col md:flex-row gap-2 md:gap-1">
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleRange?.[0] ?? 0}
                                               onChange={(value) => handleSettingsUpdate({ 
@@ -7531,8 +7531,8 @@ export default function BatchConfigDialog({
                                       
                                       {/* Incremental Angle */}
                                       {currentSettings.fillGradientConicAngleMode === 'incremental' && (
-                                        <div className="space-y-1">
-                                          <div className="space-y-1">
+                                        <div className="space-y-2">
+                                          <div className="space-y-2">
                                             <Label className="text-xs text-slate-400">Start (°)</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleStartValue ?? 0}
@@ -7551,7 +7551,7 @@ export default function BatchConfigDialog({
                                               className="[&_[role=slider]]:bg-amber-600"
                                             />
                                           </div>
-                                          <div className="space-y-1">
+                                          <div className="space-y-2">
                                             <Label className="text-xs text-slate-400">Increment (°)</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleIncrement ?? 30}
