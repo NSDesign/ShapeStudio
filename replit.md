@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 - **Grid Render Mode**: Controls how shapes are positioned within grid cells (Point Mode, Cell Mode with fit options and padding), including a debug grid overlay.
 - **Shape Type Architecture**: Clear distinction between standard and rounded shapes with specific corner radius properties.
 - **Shape Sets System**: Layer management with synchronized dropdowns for shape types and generation config settings, supporting set-level positioning, blending, compositing, transforms, and alignment.
+- **Hierarchical Shape Properties**: Shape Properties section with independent Dimensions (width/height/radius/innerRadius/cornerRadius) and Position (X/Y offsets) sub-toggles for granular control over which properties are applied during generation.
 - **Fill Opacity Mode**: Full functionality for 'define' and 'range' modes.
 - **Set Transform**: Implementation for translation, rotation, and scaling applied to all shapes within a Shape Set.
 - **Artboard Alignment**: FitToArtboard and 9-point alignment for precise Shape Set positioning.
