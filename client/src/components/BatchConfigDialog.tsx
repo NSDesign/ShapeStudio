@@ -3969,7 +3969,7 @@ export default function BatchConfigDialog({
                                             min={0}
                                             max={100}
                                             step={5}
-                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                             data-testid="input-gradient-linear-prob"
                                           />
                                           <Slider
@@ -3995,7 +3995,7 @@ export default function BatchConfigDialog({
                                             min={0}
                                             max={100}
                                             step={5}
-                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                             data-testid="input-gradient-radial-prob"
                                           />
                                           <Slider
@@ -4021,7 +4021,7 @@ export default function BatchConfigDialog({
                                             min={0}
                                             max={100}
                                             step={5}
-                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                             data-testid="input-gradient-conic-prob"
                                           />
                                           <Slider
@@ -4052,7 +4052,7 @@ export default function BatchConfigDialog({
                                         min={2}
                                         max={8}
                                         step={1}
-                                        className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                         data-testid="input-gradient-stops-min"
                                       />
                                       <Slider
@@ -4075,7 +4075,7 @@ export default function BatchConfigDialog({
                                         min={2}
                                         max={8}
                                         step={1}
-                                        className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                         data-testid="input-gradient-stops-max"
                                       />
                                     </div>
@@ -4148,7 +4148,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={100}
                                               step={5}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-saturation-min"
                                             />
                                             <Slider
@@ -4171,7 +4171,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={100}
                                               step={5}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-saturation-max"
                                             />
                                           </div>
@@ -4193,7 +4193,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={100}
                                               step={5}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-lightness-min"
                                             />
                                             <Slider
@@ -4216,7 +4216,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={100}
                                               step={5}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-lightness-max"
                                             />
                                           </div>
@@ -4388,7 +4388,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-linear-angle-min"
                                             />
                                             <Slider
@@ -4411,7 +4411,7 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                               data-testid="input-linear-angle-max"
                                             />
                                           </div>
