@@ -341,6 +341,7 @@ export default function Canvas({
     };
 
     // Debug Grid Overlay: Shows distribution grid for debugging cell vs point rendering
+    // Renders on the shapes canvas (canvasRef) so it appears on TOP of all shapes
     const renderDebugGrid = () => {
       // Check if any generation set has debug grid enabled
       const activeSet = generationSets?.find(set => set.enabled && set.batchConfig?.cellConstraints?.showDebugGrid);
@@ -352,7 +353,8 @@ export default function Canvas({
       const currentArtboard = artboards.find(a => a.id === activeArtboard);
       if (!currentArtboard) return;
       
-      const canvas = artboardCanvasRef.current;
+      // Use canvasRef (shapes layer) instead of artboardCanvasRef so debug grid appears on top of shapes
+      const canvas = canvasRef.current;
       if (!canvas) return;
       
       const ctx = canvas.getContext('2d');
