@@ -4525,19 +4525,34 @@ export default function BatchConfigDialog({
                                     {/* Radial Gradient Controls */}
                                     <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
-                                      <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-300">Position</Label>
-                                        <Select value={currentSettings.fillGradientRadialCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-radial-position">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                            <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
-                                            <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
-                                            <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
-                                          </SelectContent>
-                                        </Select>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Position</Label>
+                                          <Select value={currentSettings.fillGradientRadialCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenter: value as any })}>
+                                            <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-radial-position">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                              <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
+                                              <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
+                                              <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Radial Shape</Label>
+                                          <Select value={currentSettings.fillGradientRadialShape} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialShape: value as any })}>
+                                            <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-radial-shape">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                              <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle</SelectItem>
+                                              <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                       </div>
 
                                       {/* Enhanced Position Controls with Modes */}
@@ -4897,21 +4912,6 @@ export default function BatchConfigDialog({
                                         </div>
                                       )}
 
-                                      {/* Radial Shape */}
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">Radial Shape</Label>
-                                        <Select value={currentSettings.fillGradientRadialShape} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialShape: value as any })}>
-                                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
-                                            <SelectItem value="circle" className="text-slate-200 hover:bg-slate-700">Circle</SelectItem>
-                                            <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-
                                       {currentSettings.fillGradientRadialShape === 'auto' && (
                                         <div className="grid grid-cols-2 gap-3">
                                           <div className="space-y-2">
@@ -4953,19 +4953,37 @@ export default function BatchConfigDialog({
                                     {/* Conic Gradient Controls */}
                                     <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
-                                      <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-300">Position</Label>
-                                        <Select value={currentSettings.fillGradientConicCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-conic-position">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                            <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                            <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
-                                            <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
-                                            <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
-                                          </SelectContent>
-                                        </Select>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Position</Label>
+                                          <Select value={currentSettings.fillGradientConicCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}>
+                                            <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-conic-position">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                                              <SelectItem value="corners" className="text-slate-200 hover:bg-slate-700">Corners</SelectItem>
+                                              <SelectItem value="midpoints" className="text-slate-200 hover:bg-slate-700">Midpoints</SelectItem>
+                                              <SelectItem value="coordinates" className="text-slate-200 hover:bg-slate-700">Coordinates</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">Start Angle</Label>
+                                          <Select 
+                                            value={currentSettings.fillGradientConicAngleMode || 'fixed'} 
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleMode: value as any })}
+                                          >
+                                            <SelectTrigger className="h-8 w-full text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-conic-angle-mode">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                       </div>
 
                                       {/* Conic Corners Selection */}
@@ -5120,105 +5138,169 @@ export default function BatchConfigDialog({
                                         </div>
                                       )}
                                       
-                                      {/* Conic Start Angle */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center space-x-2">
-                                          <Label className="text-xs text-slate-300">Start Angle</Label>
-                                          <Select 
-                                            value={currentSettings.fillGradientConicAngleMode || 'fixed'} 
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleMode: value as any })}
-                                          >
-                                            <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                            </SelectContent>
-                                          </Select>
+                                      {/* Conic Start Angle Value Controls */}
+                                      {currentSettings.fillGradientConicAngleMode === 'fixed' && (
+                                        <div className="space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <Label className="text-xs text-slate-400">Angle</Label>
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngle || 0}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  handleSettingsUpdate({ fillGradientConicAngle: Math.max(0, Math.min(360, value)) });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={360}
+                                              step={5}
+                                              suffix="°"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            />
+                                          </div>
+                                          <Slider
+                                            value={[currentSettings.fillGradientConicAngle || 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
+                                            min={0}
+                                            max={360}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-amber-600"
+                                          />
                                         </div>
+                                      )}
                                         
-                                        {currentSettings.fillGradientConicAngleMode === 'fixed' && (
-                                          <div className="space-y-1">
-                                            <Label className="text-xs text-slate-400">Angle: {currentSettings.fillGradientConicAngle || 0}°</Label>
-                                            <Slider
-                                              value={[currentSettings.fillGradientConicAngle || 0]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
-                                              min={0}
-                                              max={360}
-                                              step={5}
-                                              className="[&_[role=slider]]:bg-amber-600"
-                                            />
+                                      {currentSettings.fillGradientConicAngleMode === 'range' && (
+                                        <div className="space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <Label className="text-xs text-slate-400">Range</Label>
+                                            <div className="flex items-center gap-2">
+                                              <NumericInput
+                                                value={currentSettings.fillGradientConicAngleRange?.[0] || 0}
+                                                onChange={(value) => {
+                                                  if (Number.isFinite(value)) {
+                                                    const clampedValue = Math.max(0, Math.min(360, value));
+                                                    const currentMax = currentSettings.fillGradientConicAngleRange?.[1] || 360;
+                                                    handleSettingsUpdate({ fillGradientConicAngleRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                  }
+                                                }}
+                                                min={0}
+                                                max={360}
+                                                step={5}
+                                                suffix="°"
+                                                className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              />
+                                              <span className="text-slate-400">-</span>
+                                              <NumericInput
+                                                value={currentSettings.fillGradientConicAngleRange?.[1] || 360}
+                                                onChange={(value) => {
+                                                  if (Number.isFinite(value)) {
+                                                    const clampedValue = Math.max(0, Math.min(360, value));
+                                                    const currentMin = currentSettings.fillGradientConicAngleRange?.[0] || 0;
+                                                    handleSettingsUpdate({ fillGradientConicAngleRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                  }
+                                                }}
+                                                min={0}
+                                                max={360}
+                                                step={5}
+                                                suffix="°"
+                                                className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              />
+                                            </div>
                                           </div>
-                                        )}
+                                          <Slider
+                                            value={currentSettings.fillGradientConicAngleRange || [0, 360]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
+                                            min={0}
+                                            max={360}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-amber-600"
+                                          />
+                                        </div>
+                                      )}
                                         
-                                        {currentSettings.fillGradientConicAngleMode === 'range' && (
-                                          <div className="space-y-1">
-                                            <Label className="text-xs text-slate-400">
-                                              Range: {currentSettings.fillGradientConicAngleRange?.[0] || 0}° - {currentSettings.fillGradientConicAngleRange?.[1] || 360}°
-                                            </Label>
-                                            <Slider
-                                              value={currentSettings.fillGradientConicAngleRange || [0, 360]}
-                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
-                                              min={0}
-                                              max={360}
-                                              step={5}
-                                              className="[&_[role=slider]]:bg-amber-600"
-                                            />
-                                          </div>
-                                        )}
-                                        
-                                        {currentSettings.fillGradientConicAngleMode === 'incremental' && (
-                                          <div className="space-y-2">
-                                            <div className="grid grid-cols-2 gap-2">
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Start: {currentSettings.fillGradientConicAngleStartValue || 0}°</Label>
-                                                <Slider
-                                                  value={[currentSettings.fillGradientConicAngleStartValue || 0]}
-                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngleStartValue: value })}
+                                      {currentSettings.fillGradientConicAngleMode === 'incremental' && (
+                                        <div className="space-y-2">
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                              <div className="flex items-center justify-between">
+                                                <Label className="text-xs text-slate-400">Start</Label>
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicAngleStartValue || 0}
+                                                  onChange={(value) => {
+                                                    if (Number.isFinite(value)) {
+                                                      handleSettingsUpdate({ fillGradientConicAngleStartValue: Math.max(0, Math.min(360, value)) });
+                                                    }
+                                                  }}
                                                   min={0}
                                                   max={360}
                                                   step={5}
-                                                  className="[&_[role=slider]]:bg-amber-600"
+                                                  suffix="°"
+                                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                                 />
                                               </div>
-                                              <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Increment: {currentSettings.fillGradientConicAngleIncrement || 30}°</Label>
-                                                <Slider
-                                                  value={[currentSettings.fillGradientConicAngleIncrement || 30]}
-                                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngleIncrement: value })}
+                                              <Slider
+                                                value={[currentSettings.fillGradientConicAngleStartValue || 0]}
+                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngleStartValue: value })}
+                                                min={0}
+                                                max={360}
+                                                step={5}
+                                                className="[&_[role=slider]]:bg-amber-600"
+                                              />
+                                            </div>
+                                            <div className="space-y-1">
+                                              <div className="flex items-center justify-between">
+                                                <Label className="text-xs text-slate-400">Increment</Label>
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicAngleIncrement || 30}
+                                                  onChange={(value) => {
+                                                    if (Number.isFinite(value)) {
+                                                      handleSettingsUpdate({ fillGradientConicAngleIncrement: Math.max(-180, Math.min(180, value)) });
+                                                    }
+                                                  }}
                                                   min={-180}
                                                   max={180}
                                                   step={5}
-                                                  className="[&_[role=slider]]:bg-amber-600"
+                                                  suffix="°"
+                                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                                 />
                                               </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                              <Checkbox
-                                                checked={currentSettings.fillGradientConicAngleModulationEnabled}
-                                                onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
-                                                className="border-slate-500 data-[state=checked]:bg-amber-600"
+                                              <Slider
+                                                value={[currentSettings.fillGradientConicAngleIncrement || 30]}
+                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngleIncrement: value })}
+                                                min={-180}
+                                                max={180}
+                                                step={5}
+                                                className="[&_[role=slider]]:bg-amber-600"
                                               />
-                                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                              {currentSettings.fillGradientConicAngleModulationEnabled && (
-                                                <div className="flex items-center space-x-2 ml-2">
-                                                  <Label className="text-xs text-slate-400">at {currentSettings.fillGradientConicAngleModulationValue || 360}°</Label>
-                                                  <Slider
-                                                    value={[currentSettings.fillGradientConicAngleModulationValue || 360]}
-                                                    onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngleModulationValue: value })}
-                                                    min={1}
-                                                    max={720}
-                                                    step={15}
-                                                    className="w-24 [&_[role=slider]]:bg-amber-600"
-                                                  />
-                                                </div>
-                                              )}
                                             </div>
                                           </div>
-                                        )}
-                                      </div>
+                                          <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                              checked={currentSettings.fillGradientConicAngleModulationEnabled}
+                                              onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
+                                              className="border-slate-500 data-[state=checked]:bg-amber-600"
+                                            />
+                                            <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                            {currentSettings.fillGradientConicAngleModulationEnabled && (
+                                              <div className="flex items-center space-x-2 ml-2">
+                                                <Label className="text-xs text-slate-400">at</Label>
+                                                <NumericInput
+                                                  value={currentSettings.fillGradientConicAngleModulationValue || 360}
+                                                  onChange={(value) => {
+                                                    if (Number.isFinite(value)) {
+                                                      handleSettingsUpdate({ fillGradientConicAngleModulationValue: Math.max(1, Math.min(720, value)) });
+                                                    }
+                                                  }}
+                                                  min={1}
+                                                  max={720}
+                                                  step={15}
+                                                  suffix="°"
+                                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                />
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
 
                                       {/* Enhanced Position Controls with Modes - Only shown for Coordinates */}
                                       {currentSettings.fillGradientConicCenter === 'coordinates' && (
@@ -5244,7 +5326,22 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterXMode === 'fixed' && (
                                               <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">X: {currentSettings.fillGradientConicCenterX || 50}%</Label>
+                                                <div className="flex items-center justify-between">
+                                                  <Label className="text-xs text-slate-400">X</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterX || 50}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        handleSettingsUpdate({ fillGradientConicCenterX: Math.max(0, Math.min(100, value)) });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
+                                                </div>
                                                 <Slider
                                                   value={[currentSettings.fillGradientConicCenterX || 50]}
                                                   onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
@@ -5258,9 +5355,42 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterXMode === 'range' && (
                                               <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">
-                                                  Range: {currentSettings.fillGradientConicCenterXRange?.[0] || 25}% - {currentSettings.fillGradientConicCenterXRange?.[1] || 75}%
-                                                </Label>
+                                                <div className="flex items-center justify-between">
+                                                  <Label className="text-xs text-slate-400">Range</Label>
+                                                  <div className="flex items-center gap-2">
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterXRange?.[0] || 25}
+                                                      onChange={(value) => {
+                                                        if (Number.isFinite(value)) {
+                                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                                          const currentMax = currentSettings.fillGradientConicCenterXRange?.[1] || 75;
+                                                          handleSettingsUpdate({ fillGradientConicCenterXRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                        }
+                                                      }}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      suffix="%"
+                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                    />
+                                                    <span className="text-slate-400">-</span>
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterXRange?.[1] || 75}
+                                                      onChange={(value) => {
+                                                        if (Number.isFinite(value)) {
+                                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                                          const currentMin = currentSettings.fillGradientConicCenterXRange?.[0] || 25;
+                                                          handleSettingsUpdate({ fillGradientConicCenterXRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                        }
+                                                      }}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      suffix="%"
+                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                    />
+                                                  </div>
+                                                </div>
                                                 <Slider
                                                   value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
                                                   onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
@@ -5276,7 +5406,22 @@ export default function BatchConfigDialog({
                                               <div className="space-y-2">
                                                 <div className="grid grid-cols-2 gap-2">
                                                   <div className="space-y-1">
-                                                    <Label className="text-xs text-slate-400">Start: {currentSettings.fillGradientConicCenterXStartValue || 50}%</Label>
+                                                    <div className="flex items-center justify-between">
+                                                      <Label className="text-xs text-slate-400">Start</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterXStartValue || 50}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterXStartValue: Math.max(0, Math.min(100, value)) });
+                                                          }
+                                                        }}
+                                                        min={0}
+                                                        max={100}
+                                                        step={5}
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                      />
+                                                    </div>
                                                     <Slider
                                                       value={[currentSettings.fillGradientConicCenterXStartValue || 50]}
                                                       onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterXStartValue: value })}
@@ -5287,7 +5432,22 @@ export default function BatchConfigDialog({
                                                     />
                                                   </div>
                                                   <div className="space-y-1">
-                                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.fillGradientConicCenterXIncrement || 10}%</Label>
+                                                    <div className="flex items-center justify-between">
+                                                      <Label className="text-xs text-slate-400">Increment</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterXIncrement || 10}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterXIncrement: Math.max(-50, Math.min(50, value)) });
+                                                          }
+                                                        }}
+                                                        min={-50}
+                                                        max={50}
+                                                        step={5}
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                      />
+                                                    </div>
                                                     <Slider
                                                       value={[currentSettings.fillGradientConicCenterXIncrement || 10]}
                                                       onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterXIncrement: value })}
@@ -5307,14 +5467,19 @@ export default function BatchConfigDialog({
                                                   <Label className="text-xs text-slate-300">Enable Modulation</Label>
                                                   {currentSettings.fillGradientConicCenterXModulationEnabled && (
                                                     <div className="flex items-center space-x-2 ml-2">
-                                                      <Label className="text-xs text-slate-400">at {currentSettings.fillGradientConicCenterXModulationValue || 100}%</Label>
-                                                      <Slider
-                                                        value={[currentSettings.fillGradientConicCenterXModulationValue || 100]}
-                                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterXModulationValue: value })}
+                                                      <Label className="text-xs text-slate-400">at</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterXModulationValue || 100}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterXModulationValue: Math.max(1, Math.min(200, value)) });
+                                                          }
+                                                        }}
                                                         min={1}
                                                         max={200}
                                                         step={5}
-                                                        className="w-24 [&_[role=slider]]:bg-amber-600"
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                                       />
                                                     </div>
                                                   )}
@@ -5344,7 +5509,22 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterYMode === 'fixed' && (
                                               <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">Y: {currentSettings.fillGradientConicCenterY || 50}%</Label>
+                                                <div className="flex items-center justify-between">
+                                                  <Label className="text-xs text-slate-400">Y</Label>
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterY || 50}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        handleSettingsUpdate({ fillGradientConicCenterY: Math.max(0, Math.min(100, value)) });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
+                                                </div>
                                                 <Slider
                                                   value={[currentSettings.fillGradientConicCenterY || 50]}
                                                   onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
@@ -5358,9 +5538,42 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterYMode === 'range' && (
                                               <div className="space-y-1">
-                                                <Label className="text-xs text-slate-400">
-                                                  Range: {currentSettings.fillGradientConicCenterYRange?.[0] || 25}% - {currentSettings.fillGradientConicCenterYRange?.[1] || 75}%
-                                                </Label>
+                                                <div className="flex items-center justify-between">
+                                                  <Label className="text-xs text-slate-400">Range</Label>
+                                                  <div className="flex items-center gap-2">
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterYRange?.[0] || 25}
+                                                      onChange={(value) => {
+                                                        if (Number.isFinite(value)) {
+                                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                                          const currentMax = currentSettings.fillGradientConicCenterYRange?.[1] || 75;
+                                                          handleSettingsUpdate({ fillGradientConicCenterYRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                        }
+                                                      }}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      suffix="%"
+                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                    />
+                                                    <span className="text-slate-400">-</span>
+                                                    <NumericInput
+                                                      value={currentSettings.fillGradientConicCenterYRange?.[1] || 75}
+                                                      onChange={(value) => {
+                                                        if (Number.isFinite(value)) {
+                                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                                          const currentMin = currentSettings.fillGradientConicCenterYRange?.[0] || 25;
+                                                          handleSettingsUpdate({ fillGradientConicCenterYRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                        }
+                                                      }}
+                                                      min={0}
+                                                      max={100}
+                                                      step={5}
+                                                      suffix="%"
+                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                    />
+                                                  </div>
+                                                </div>
                                                 <Slider
                                                   value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
                                                   onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
@@ -5376,7 +5589,22 @@ export default function BatchConfigDialog({
                                               <div className="space-y-2">
                                                 <div className="grid grid-cols-2 gap-2">
                                                   <div className="space-y-1">
-                                                    <Label className="text-xs text-slate-400">Start: {currentSettings.fillGradientConicCenterYStartValue || 50}%</Label>
+                                                    <div className="flex items-center justify-between">
+                                                      <Label className="text-xs text-slate-400">Start</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterYStartValue || 50}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterYStartValue: Math.max(0, Math.min(100, value)) });
+                                                          }
+                                                        }}
+                                                        min={0}
+                                                        max={100}
+                                                        step={5}
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                      />
+                                                    </div>
                                                     <Slider
                                                       value={[currentSettings.fillGradientConicCenterYStartValue || 50]}
                                                       onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterYStartValue: value })}
@@ -5387,7 +5615,22 @@ export default function BatchConfigDialog({
                                                     />
                                                   </div>
                                                   <div className="space-y-1">
-                                                    <Label className="text-xs text-slate-400">Increment: {currentSettings.fillGradientConicCenterYIncrement || 10}%</Label>
+                                                    <div className="flex items-center justify-between">
+                                                      <Label className="text-xs text-slate-400">Increment</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterYIncrement || 10}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterYIncrement: Math.max(-50, Math.min(50, value)) });
+                                                          }
+                                                        }}
+                                                        min={-50}
+                                                        max={50}
+                                                        step={5}
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                      />
+                                                    </div>
                                                     <Slider
                                                       value={[currentSettings.fillGradientConicCenterYIncrement || 10]}
                                                       onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterYIncrement: value })}
@@ -5407,14 +5650,19 @@ export default function BatchConfigDialog({
                                                   <Label className="text-xs text-slate-300">Enable Modulation</Label>
                                                   {currentSettings.fillGradientConicCenterYModulationEnabled && (
                                                     <div className="flex items-center space-x-2 ml-2">
-                                                      <Label className="text-xs text-slate-400">at {currentSettings.fillGradientConicCenterYModulationValue || 100}%</Label>
-                                                      <Slider
-                                                        value={[currentSettings.fillGradientConicCenterYModulationValue || 100]}
-                                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicCenterYModulationValue: value })}
+                                                      <Label className="text-xs text-slate-400">at</Label>
+                                                      <NumericInput
+                                                        value={currentSettings.fillGradientConicCenterYModulationValue || 100}
+                                                        onChange={(value) => {
+                                                          if (Number.isFinite(value)) {
+                                                            handleSettingsUpdate({ fillGradientConicCenterYModulationValue: Math.max(1, Math.min(200, value)) });
+                                                          }
+                                                        }}
                                                         min={1}
                                                         max={200}
                                                         step={5}
-                                                        className="w-24 [&_[role=slider]]:bg-amber-600"
+                                                        suffix="%"
+                                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
                                                       />
                                                     </div>
                                                   )}
@@ -5450,8 +5698,43 @@ export default function BatchConfigDialog({
                             </div>
 
                             {currentSettings.fillOpacityMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Opacity Range: {currentSettings.fillOpacityRange?.[0] ?? 0}% - {currentSettings.fillOpacityRange?.[1] ?? 100}%</Label>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-slate-400">Opacity Range</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.fillOpacityRange?.[0] ?? 0}
+                                      onChange={(value) => {
+                                        if (Number.isFinite(value)) {
+                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                          const currentMax = currentSettings.fillOpacityRange?.[1] ?? 100;
+                                          handleSettingsUpdate({ fillOpacityRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                        }
+                                      }}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      suffix="%"
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    />
+                                    <span className="text-slate-400">-</span>
+                                    <NumericInput
+                                      value={currentSettings.fillOpacityRange?.[1] ?? 100}
+                                      onChange={(value) => {
+                                        if (Number.isFinite(value)) {
+                                          const clampedValue = Math.max(0, Math.min(100, value));
+                                          const currentMin = currentSettings.fillOpacityRange?.[0] ?? 0;
+                                          handleSettingsUpdate({ fillOpacityRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                        }
+                                      }}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      suffix="%"
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    />
+                                  </div>
+                                </div>
                                 <Slider
                                   value={currentSettings.fillOpacityRange || [0, 100]}
                                   onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
@@ -5464,8 +5747,23 @@ export default function BatchConfigDialog({
                             )}
 
                             {currentSettings.fillOpacityMode === 'define' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Opacity: {currentSettings.fillOpacityDefine || 80}%</Label>
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-slate-400">Opacity</Label>
+                                  <NumericInput
+                                    value={currentSettings.fillOpacityDefine || 80}
+                                    onChange={(value) => {
+                                      if (Number.isFinite(value)) {
+                                        handleSettingsUpdate({ fillOpacityDefine: Math.max(0, Math.min(100, value)) });
+                                      }
+                                    }}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    suffix="%"
+                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  />
+                                </div>
                                 <Slider
                                   value={[currentSettings.fillOpacityDefine || 80]}
                                   onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
