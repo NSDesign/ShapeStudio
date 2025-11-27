@@ -6064,6 +6064,599 @@ export default function BatchConfigDialog({
 
               <Separator className="bg-slate-600" />
 
+              {/* New Stroke Properties Section - Enhanced styling */}
+              <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={currentSettings.strokeEnabled}
+                      onCheckedChange={(checked) => handleSettingsUpdate({ strokeEnabled: checked as boolean })}
+                      className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                      data-testid="checkbox-new-stroke-enabled"
+                    />
+                    <Label className="text-sm font-medium text-slate-200">New Stroke Properties</Label>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {currentSettings.strokeEnabled ? `${currentSettings.strokeProbability}% probability` : 'Disabled'}
+                  </span>
+                </div>
+                
+                {currentSettings.strokeEnabled && (
+                  <div className="space-y-4 mt-3">
+                    {/* Stroke Probability */}
+                    <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                      <Label className="text-xs font-medium text-slate-300">Stroke Probability</Label>
+                      <div className="flex items-center gap-3">
+                        <NumericInput
+                          value={currentSettings.strokeProbability}
+                          onChange={(value) => handleSettingsUpdate({ strokeProbability: Math.max(0, Math.min(100, value)) })}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                          data-testid="input-new-stroke-probability"
+                        />
+                        <span className="text-xs text-slate-400">%</span>
+                        <Slider
+                          value={[currentSettings.strokeProbability]}
+                          onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Stroke Width Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-slate-200">Stroke Width</Label>
+                        <Select 
+                          value={currentSettings.strokeWidthMode} 
+                          onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as 'range' | 'define' | 'incremental' })}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-width-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {currentSettings.strokeWidthMode === 'range' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Width Range (px)</Label>
+                          <div className="flex items-center gap-2">
+                            <NumericInput
+                              value={currentSettings.strokeWidthRange?.[0] ?? 1}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                strokeWidthRange: [value, currentSettings.strokeWidthRange?.[1] ?? 5] 
+                              })}
+                              min={0.5}
+                              max={20}
+                              step={0.5}
+                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-width-min"
+                            />
+                            <Slider
+                              value={currentSettings.strokeWidthRange || [1, 5]}
+                              onValueChange={(value) => handleSettingsUpdate({ strokeWidthRange: value as [number, number] })}
+                              min={0.5}
+                              max={20}
+                              step={0.5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                            <NumericInput
+                              value={currentSettings.strokeWidthRange?.[1] ?? 5}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                strokeWidthRange: [currentSettings.strokeWidthRange?.[0] ?? 1, value] 
+                              })}
+                              min={0.5}
+                              max={20}
+                              step={0.5}
+                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-width-max"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {currentSettings.strokeWidthMode === 'define' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Width (px)</Label>
+                          <div className="flex items-center gap-3">
+                            <NumericInput
+                              value={currentSettings.strokeWidthDefine ?? 3}
+                              onChange={(value) => handleSettingsUpdate({ strokeWidthDefine: value })}
+                              min={0.5}
+                              max={20}
+                              step={0.5}
+                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-width-define"
+                            />
+                            <Slider
+                              value={[currentSettings.strokeWidthDefine ?? 3]}
+                              onValueChange={([value]) => handleSettingsUpdate({ strokeWidthDefine: value })}
+                              min={0.5}
+                              max={20}
+                              step={0.5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {currentSettings.strokeWidthMode === 'incremental' && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Start Value (px)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.strokeWidthStartValue ?? 1}
+                                  onChange={(value) => handleSettingsUpdate({ strokeWidthStartValue: value })}
+                                  min={0.5}
+                                  max={20}
+                                  step={0.5}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-new-stroke-width-start"
+                                />
+                                <Slider
+                                  value={[currentSettings.strokeWidthStartValue ?? 1]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeWidthStartValue: value })}
+                                  min={0.5}
+                                  max={20}
+                                  step={0.5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Increment (px/shape)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.strokeWidthIncrement ?? 0.5}
+                                  onChange={(value) => handleSettingsUpdate({ strokeWidthIncrement: value })}
+                                  min={0}
+                                  max={2}
+                                  step={0.1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-new-stroke-width-increment"
+                                />
+                                <Slider
+                                  value={[currentSettings.strokeWidthIncrement ?? 0.5]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeWidthIncrement: value })}
+                                  min={0}
+                                  max={2}
+                                  step={0.1}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentSettings.strokeWidthModulationEnabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ strokeWidthModulationEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-new-stroke-width-modulation"
+                              />
+                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                            </div>
+                            {currentSettings.strokeWidthModulationEnabled && (
+                              <div className="space-y-2 mt-2">
+                                <Label className="text-xs text-slate-400">Wrap at (px)</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.strokeWidthModulationValue ?? 10}
+                                    onChange={(value) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
+                                    min={1}
+                                    max={20}
+                                    step={0.5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                    data-testid="input-new-stroke-width-modulation"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.strokeWidthModulationValue ?? 10]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
+                                    min={1}
+                                    max={20}
+                                    step={0.5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500">Progressive stroke width with optional modulation wrap</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Stroke Color Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-slate-200">Stroke Color</Label>
+                        <Select 
+                          value={currentSettings.strokeColorMode} 
+                          onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as 'range' | 'palette' | 'define' })}
+                        >
+                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-color-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {currentSettings.strokeColorMode === 'range' && (
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Color Range</Label>
+                            <div className="flex items-center gap-3">
+                              <Input
+                                type="color"
+                                value={currentSettings.strokeColorRange?.[0] || '#ef4444'}
+                                onChange={(e) => handleSettingsUpdate({
+                                  strokeColorRange: [e.target.value, currentSettings.strokeColorRange?.[1] || '#f59e0b']
+                                })}
+                                className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                data-testid="input-new-stroke-color-start"
+                              />
+                              <div className="flex-1 h-6 rounded" style={{
+                                background: `linear-gradient(to right, ${currentSettings.strokeColorRange?.[0] || '#ef4444'}, ${currentSettings.strokeColorRange?.[1] || '#f59e0b'})`
+                              }} />
+                              <Input
+                                type="color"
+                                value={currentSettings.strokeColorRange?.[1] || '#f59e0b'}
+                                onChange={(e) => handleSettingsUpdate({
+                                  strokeColorRange: [currentSettings.strokeColorRange?.[0] || '#ef4444', e.target.value]
+                                })}
+                                className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                data-testid="input-new-stroke-color-end"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={currentSettings.strokeColorRangeFlip || false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ strokeColorRangeFlip: checked as boolean })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-new-stroke-color-flip"
+                            />
+                            <Label className="text-xs text-slate-300">Flip Color Range</Label>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Saturation Range (%)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.strokeColorSaturationRange?.[0] ?? 60}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  strokeColorSaturationRange: [value, currentSettings.strokeColorSaturationRange?.[1] ?? 100] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                data-testid="input-new-stroke-saturation-min"
+                              />
+                              <Slider
+                                value={currentSettings.strokeColorSaturationRange || [60, 100]}
+                                onValueChange={(value) => handleSettingsUpdate({ strokeColorSaturationRange: value as [number, number] })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-green-500"
+                              />
+                              <NumericInput
+                                value={currentSettings.strokeColorSaturationRange?.[1] ?? 100}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  strokeColorSaturationRange: [currentSettings.strokeColorSaturationRange?.[0] ?? 60, value] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                data-testid="input-new-stroke-saturation-max"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Lightness Range (%)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.strokeColorLightnessRange?.[0] ?? 20}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  strokeColorLightnessRange: [value, currentSettings.strokeColorLightnessRange?.[1] ?? 60] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                data-testid="input-new-stroke-lightness-min"
+                              />
+                              <Slider
+                                value={currentSettings.strokeColorLightnessRange || [20, 60]}
+                                onValueChange={(value) => handleSettingsUpdate({ strokeColorLightnessRange: value as [number, number] })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-blue-500"
+                              />
+                              <NumericInput
+                                value={currentSettings.strokeColorLightnessRange?.[1] ?? 60}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  strokeColorLightnessRange: [currentSettings.strokeColorLightnessRange?.[0] ?? 20, value] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                data-testid="input-new-stroke-lightness-max"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.strokeColorMode === 'palette' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Color Palette</Label>
+                          <div className="flex flex-wrap gap-2 p-2 bg-slate-800/50 rounded">
+                            {currentSettings.strokeColorPalette?.map((color, index) => (
+                              <div key={index} className="relative group">
+                                <Input
+                                  type="color"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const newPalette = [...(currentSettings.strokeColorPalette || [])];
+                                    newPalette[index] = e.target.value;
+                                    handleSettingsUpdate({ strokeColorPalette: newPalette });
+                                  }}
+                                  className="w-10 h-10 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                  data-testid={`input-new-stroke-palette-${index}`}
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newPalette = (currentSettings.strokeColorPalette || []).filter((_, i) => i !== index);
+                                    handleSettingsUpdate({ strokeColorPalette: newPalette });
+                                  }}
+                                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                  data-testid={`btn-remove-stroke-palette-${index}`}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => {
+                                const newPalette = [...(currentSettings.strokeColorPalette || []), '#ffffff'];
+                                handleSettingsUpdate({ strokeColorPalette: newPalette });
+                              }}
+                              className="w-10 h-10 bg-slate-700 border border-dashed border-slate-500 rounded text-slate-400 text-lg hover:bg-slate-600 hover:border-slate-400 transition-colors flex items-center justify-center"
+                              data-testid="btn-add-stroke-palette"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500">Shapes cycle through palette colors</p>
+                        </div>
+                      )}
+
+                      {currentSettings.strokeColorMode === 'define' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Defined Color</Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              type="color"
+                              value={currentSettings.strokeColorDefine || '#ef4444'}
+                              onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
+                              className="w-12 h-10 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                              data-testid="input-new-stroke-color-define"
+                            />
+                            <div 
+                              className="flex-1 h-8 rounded border border-slate-600"
+                              style={{ backgroundColor: currentSettings.strokeColorDefine || '#ef4444' }}
+                            />
+                            <Input
+                              type="text"
+                              value={currentSettings.strokeColorDefine || '#ef4444'}
+                              onChange={(e) => handleSettingsUpdate({ strokeColorDefine: e.target.value })}
+                              className="w-24 h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                              data-testid="input-new-stroke-color-hex"
+                            />
+                          </div>
+                          <p className="text-xs text-slate-500">All shapes use this exact color</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Stroke Opacity Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-slate-200">Stroke Opacity</Label>
+                        <Select 
+                          value={currentSettings.strokeOpacityMode} 
+                          onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as 'range' | 'define' | 'incremental' })}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-stroke-opacity-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {currentSettings.strokeOpacityMode === 'range' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Opacity Range (%)</Label>
+                          <div className="flex items-center gap-2">
+                            <NumericInput
+                              value={currentSettings.strokeOpacityRange?.[0] ?? 40}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                strokeOpacityRange: [value, currentSettings.strokeOpacityRange?.[1] ?? 100] 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-opacity-min"
+                            />
+                            <Slider
+                              value={currentSettings.strokeOpacityRange || [40, 100]}
+                              onValueChange={(value) => handleSettingsUpdate({ strokeOpacityRange: value as [number, number] })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                            <NumericInput
+                              value={currentSettings.strokeOpacityRange?.[1] ?? 100}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                strokeOpacityRange: [currentSettings.strokeOpacityRange?.[0] ?? 40, value] 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-opacity-max"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.strokeOpacityMode === 'define' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Opacity (%)</Label>
+                          <div className="flex items-center gap-3">
+                            <NumericInput
+                              value={currentSettings.strokeOpacityDefine ?? 80}
+                              onChange={(value) => handleSettingsUpdate({ strokeOpacityDefine: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                              data-testid="input-new-stroke-opacity-define"
+                            />
+                            <Slider
+                              value={[currentSettings.strokeOpacityDefine ?? 80]}
+                              onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityDefine: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.strokeOpacityMode === 'incremental' && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Start Value (%)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.strokeOpacityStartValue ?? 100}
+                                  onChange={(value) => handleSettingsUpdate({ strokeOpacityStartValue: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-new-stroke-opacity-start"
+                                />
+                                <Slider
+                                  value={[currentSettings.strokeOpacityStartValue ?? 100]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityStartValue: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Increment (%/shape)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.strokeOpacityIncrement ?? -5}
+                                  onChange={(value) => handleSettingsUpdate({ strokeOpacityIncrement: value })}
+                                  min={-20}
+                                  max={20}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                  data-testid="input-new-stroke-opacity-increment"
+                                />
+                                <Slider
+                                  value={[currentSettings.strokeOpacityIncrement ?? -5]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityIncrement: value })}
+                                  min={-20}
+                                  max={20}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentSettings.strokeOpacityModulationEnabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ strokeOpacityModulationEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-new-stroke-opacity-modulation"
+                              />
+                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                            </div>
+                            {currentSettings.strokeOpacityModulationEnabled && (
+                              <div className="space-y-2 mt-2">
+                                <Label className="text-xs text-slate-400">Wrap at (%)</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.strokeOpacityModulationValue ?? 50}
+                                    onChange={(value) => handleSettingsUpdate({ strokeOpacityModulationValue: value })}
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                    data-testid="input-new-stroke-opacity-modulation"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.strokeOpacityModulationValue ?? 50]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityModulationValue: value })}
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
               {/* Transforms Section */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
