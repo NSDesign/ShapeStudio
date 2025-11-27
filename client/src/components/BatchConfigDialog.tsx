@@ -5773,6 +5773,707 @@ export default function BatchConfigDialog({
 
               <Separator className="bg-slate-600" />
 
+              {/* New Fill Properties Section - Enhanced styling */}
+              <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={currentSettings.fillEnabled}
+                      onCheckedChange={(checked) => handleSettingsUpdate({ fillEnabled: checked as boolean })}
+                      className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                      data-testid="checkbox-new-fill-enabled"
+                    />
+                    <Label className="text-sm font-medium text-slate-200">New Fill Properties</Label>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {currentSettings.fillEnabled ? `${currentSettings.fillStyleProbability}% solid / ${100 - currentSettings.fillStyleProbability}% gradient` : 'Disabled'}
+                  </span>
+                </div>
+                
+                {currentSettings.fillEnabled && (
+                  <div className="space-y-4 mt-3">
+                    {/* Fill Type Probability - Controls solid vs gradient */}
+                    <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                      <Label className="text-xs font-medium text-slate-300">Fill Type Probability</Label>
+                      <div className="flex items-center gap-2">
+                        <NumericInput
+                          value={currentSettings.fillStyleProbability}
+                          onChange={(value) => handleSettingsUpdate({ fillStyleProbability: Math.max(0, Math.min(100, value)) })}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                          data-testid="input-new-fill-type-probability"
+                        />
+                        <Slider
+                          value={[currentSettings.fillStyleProbability]}
+                          onValueChange={([value]) => handleSettingsUpdate({ fillStyleProbability: value })}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500">{currentSettings.fillStyleProbability}% solid, {100 - currentSettings.fillStyleProbability}% gradient</p>
+                    </div>
+                    
+                    {/* Solid Fill Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            checked={currentSettings.fillStyleProbability > 0}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ fillStyleProbability: checked ? 50 : 0 })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-new-solid-fill-enabled"
+                          />
+                          <Label className="text-sm font-medium text-slate-200">Solid Fill</Label>
+                        </div>
+                        <Select 
+                          value={currentSettings.fillColorMode} 
+                          onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as 'range' | 'palette' | 'define' })}
+                        >
+                          <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-fill-color-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {currentSettings.fillColorMode === 'range' && (
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Color Range</Label>
+                            <div className="flex items-center gap-3">
+                              <Input
+                                type="color"
+                                value={currentSettings.fillColorRange?.[0] || '#3b82f6'}
+                                onChange={(e) => handleSettingsUpdate({
+                                  fillColorRange: [e.target.value, currentSettings.fillColorRange?.[1] || '#8b5cf6']
+                                })}
+                                className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                data-testid="input-new-fill-color-start"
+                              />
+                              <div className="flex-1 h-6 rounded" style={{
+                                background: `linear-gradient(to right, ${currentSettings.fillColorRange?.[0] || '#3b82f6'}, ${currentSettings.fillColorRange?.[1] || '#8b5cf6'})`
+                              }} />
+                              <Input
+                                type="color"
+                                value={currentSettings.fillColorRange?.[1] || '#8b5cf6'}
+                                onChange={(e) => handleSettingsUpdate({
+                                  fillColorRange: [currentSettings.fillColorRange?.[0] || '#3b82f6', e.target.value]
+                                })}
+                                className="w-12 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                data-testid="input-new-fill-color-end"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={currentSettings.fillColorRangeFlip || false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ fillColorRangeFlip: checked as boolean })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-new-fill-color-flip"
+                            />
+                            <Label className="text-xs text-slate-300">Flip Color Range</Label>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Saturation Range (%)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.fillColorSaturationRange?.[0] ?? 50}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillColorSaturationRange: [value, currentSettings.fillColorSaturationRange?.[1] ?? 100] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-fill-saturation-min"
+                              />
+                              <Slider
+                                value={currentSettings.fillColorSaturationRange || [50, 100]}
+                                onValueChange={(value) => handleSettingsUpdate({ fillColorSaturationRange: value as [number, number] })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-green-500"
+                              />
+                              <NumericInput
+                                value={currentSettings.fillColorSaturationRange?.[1] ?? 100}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillColorSaturationRange: [currentSettings.fillColorSaturationRange?.[0] ?? 50, value] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-fill-saturation-max"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Lightness Range (%)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.fillColorLightnessRange?.[0] ?? 30}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillColorLightnessRange: [value, currentSettings.fillColorLightnessRange?.[1] ?? 70] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-fill-lightness-min"
+                              />
+                              <Slider
+                                value={currentSettings.fillColorLightnessRange || [30, 70]}
+                                onValueChange={(value) => handleSettingsUpdate({ fillColorLightnessRange: value as [number, number] })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-blue-500"
+                              />
+                              <NumericInput
+                                value={currentSettings.fillColorLightnessRange?.[1] ?? 70}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillColorLightnessRange: [currentSettings.fillColorLightnessRange?.[0] ?? 30, value] 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-fill-lightness-max"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.fillColorMode === 'palette' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Color Palette</Label>
+                          <div className="flex flex-wrap gap-2 p-2 bg-slate-800/50 rounded">
+                            {currentSettings.fillColorPalette?.map((color, index) => (
+                              <div key={index} className="relative group">
+                                <Input
+                                  type="color"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const newPalette = [...(currentSettings.fillColorPalette || [])];
+                                    newPalette[index] = e.target.value;
+                                    handleSettingsUpdate({ fillColorPalette: newPalette });
+                                  }}
+                                  className="w-10 h-10 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                  data-testid={`input-new-fill-palette-${index}`}
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newPalette = (currentSettings.fillColorPalette || []).filter((_, i) => i !== index);
+                                    handleSettingsUpdate({ fillColorPalette: newPalette });
+                                  }}
+                                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                  data-testid={`btn-remove-fill-palette-${index}`}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => {
+                                const newPalette = [...(currentSettings.fillColorPalette || []), '#ffffff'];
+                                handleSettingsUpdate({ fillColorPalette: newPalette });
+                              }}
+                              className="w-10 h-10 bg-slate-700 border border-dashed border-slate-500 rounded text-slate-400 text-lg hover:bg-slate-600 hover:border-slate-400 transition-colors flex items-center justify-center"
+                              data-testid="btn-add-fill-palette"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500">Shapes cycle through palette colors</p>
+                        </div>
+                      )}
+
+                      {currentSettings.fillColorMode === 'define' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Defined Color</Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              type="color"
+                              value={currentSettings.fillColorDefine || '#3b82f6'}
+                              onChange={(e) => handleSettingsUpdate({ fillColorDefine: e.target.value })}
+                              className="w-12 h-10 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                              data-testid="input-new-fill-color-define"
+                            />
+                            <div 
+                              className="flex-1 h-8 rounded border border-slate-600"
+                              style={{ backgroundColor: currentSettings.fillColorDefine || '#3b82f6' }}
+                            />
+                            <Input
+                              type="text"
+                              value={currentSettings.fillColorDefine || '#3b82f6'}
+                              onChange={(e) => handleSettingsUpdate({ fillColorDefine: e.target.value })}
+                              className="w-24 h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                              data-testid="input-new-fill-color-hex"
+                            />
+                          </div>
+                          <p className="text-xs text-slate-500">All shapes use this exact color</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Gradient Fill Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            checked={currentSettings.fillGradientEnabled}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-new-gradient-fill-enabled"
+                          />
+                          <Label className="text-sm font-medium text-slate-200">Gradient Fill</Label>
+                        </div>
+                        <span className="text-xs text-slate-400">
+                          {currentSettings.fillGradientEnabled ? 
+                            `L:${currentSettings.fillGradientLinearProbability}% R:${currentSettings.fillGradientRadialProbability}% C:${currentSettings.fillGradientConicProbability}%` : 
+                            'Disabled'}
+                        </span>
+                      </div>
+
+                      {currentSettings.fillGradientEnabled && (
+                        <div className="space-y-3">
+                          {/* Gradient Type Probabilities */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Type Probabilities</Label>
+                              <span className="text-xs text-slate-400">
+                                Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}%
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs text-slate-400 w-12">Linear</Label>
+                                <NumericInput
+                                  value={currentSettings.fillGradientLinearProbability}
+                                  onChange={(value) => handleSettingsUpdate({ fillGradientLinearProbability: Math.max(0, Math.min(100, value)) })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-new-gradient-linear-prob"
+                                />
+                                <Slider
+                                  value={[currentSettings.fillGradientLinearProbability]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs text-slate-400 w-12">Radial</Label>
+                                <NumericInput
+                                  value={currentSettings.fillGradientRadialProbability}
+                                  onChange={(value) => handleSettingsUpdate({ fillGradientRadialProbability: Math.max(0, Math.min(100, value)) })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-new-gradient-radial-prob"
+                                />
+                                <Slider
+                                  value={[currentSettings.fillGradientRadialProbability]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-purple-500"
+                                />
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs text-slate-400 w-12">Conic</Label>
+                                <NumericInput
+                                  value={currentSettings.fillGradientConicProbability}
+                                  onChange={(value) => handleSettingsUpdate({ fillGradientConicProbability: Math.max(0, Math.min(100, value)) })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-new-gradient-conic-prob"
+                                />
+                                <Slider
+                                  value={[currentSettings.fillGradientConicProbability]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-orange-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Gradient Color Controls */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Gradient Colors</Label>
+                              <Select 
+                                value={currentSettings.fillGradientColorMode} 
+                                onValueChange={(value) => handleSettingsUpdate({ fillGradientColorMode: value as 'range' | 'palette' | 'define' })}
+                              >
+                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-gradient-color-mode">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {currentSettings.fillGradientColorMode === 'range' && (
+                              <div className="space-y-2 p-2 bg-slate-800/30 rounded">
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillGradientColorRange: [e.target.value, currentSettings.fillGradientColorRange?.[1] || '#8b5cf6']
+                                    })}
+                                    className="w-10 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                    data-testid="input-new-gradient-color-start"
+                                  />
+                                  <div className="flex-1 h-6 rounded" style={{
+                                    background: `linear-gradient(to right, ${currentSettings.fillGradientColorRange?.[0] || '#3b82f6'}, ${currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'})`
+                                  }} />
+                                  <Input
+                                    type="color"
+                                    value={currentSettings.fillGradientColorRange?.[1] || '#8b5cf6'}
+                                    onChange={(e) => handleSettingsUpdate({
+                                      fillGradientColorRange: [currentSettings.fillGradientColorRange?.[0] || '#3b82f6', e.target.value]
+                                    })}
+                                    className="w-10 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                    data-testid="input-new-gradient-color-end"
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    checked={currentSettings.fillGradientColorRangeFlip || false}
+                                    onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientColorRangeFlip: checked as boolean })}
+                                    className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                    data-testid="checkbox-new-gradient-color-flip"
+                                  />
+                                  <Label className="text-xs text-slate-300">Flip Color Range</Label>
+                                </div>
+                              </div>
+                            )}
+
+                            {currentSettings.fillGradientColorMode === 'palette' && (
+                              <div className="flex flex-wrap gap-2 p-2 bg-slate-800/30 rounded">
+                                {currentSettings.fillGradientColorPalette?.map((color, index) => (
+                                  <div key={index} className="relative group">
+                                    <Input
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newPalette = [...(currentSettings.fillGradientColorPalette || [])];
+                                        newPalette[index] = e.target.value;
+                                        handleSettingsUpdate({ fillGradientColorPalette: newPalette });
+                                      }}
+                                      className="w-8 h-8 p-1 bg-slate-800 border-slate-600 rounded cursor-pointer"
+                                      data-testid={`input-new-gradient-palette-${index}`}
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const newPalette = (currentSettings.fillGradientColorPalette || []).filter((_, i) => i !== index);
+                                        handleSettingsUpdate({ fillGradientColorPalette: newPalette });
+                                      }}
+                                      className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newPalette = [...(currentSettings.fillGradientColorPalette || []), '#ffffff'];
+                                    handleSettingsUpdate({ fillGradientColorPalette: newPalette });
+                                  }}
+                                  className="w-8 h-8 bg-slate-700 border border-dashed border-slate-500 rounded text-slate-400 hover:bg-slate-600 flex items-center justify-center"
+                                  data-testid="btn-add-gradient-palette"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Gradient Stops Range */}
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Color Stops Range</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.fillGradientStopsRange?.[0] ?? 2}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientStopsRange: [value, currentSettings.fillGradientStopsRange?.[1] ?? 5] 
+                                })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-gradient-stops-min"
+                              />
+                              <Slider
+                                value={currentSettings.fillGradientStopsRange || [2, 5]}
+                                onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                              <NumericInput
+                                value={currentSettings.fillGradientStopsRange?.[1] ?? 5}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientStopsRange: [currentSettings.fillGradientStopsRange?.[0] ?? 2, value] 
+                                })}
+                                min={2}
+                                max={10}
+                                step={1}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-gradient-stops-max"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Linear Gradient Angle */}
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Linear Angle Range (°)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.fillGradientLinearAngleRange?.[0] ?? 0}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientLinearAngleRange: [value, currentSettings.fillGradientLinearAngleRange?.[1] ?? 360] 
+                                })}
+                                min={0}
+                                max={360}
+                                step={15}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-linear-angle-min"
+                              />
+                              <Slider
+                                value={currentSettings.fillGradientLinearAngleRange || [0, 360]}
+                                onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearAngleRange: value as [number, number] })}
+                                min={0}
+                                max={360}
+                                step={15}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                              <NumericInput
+                                value={currentSettings.fillGradientLinearAngleRange?.[1] ?? 360}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  fillGradientLinearAngleRange: [currentSettings.fillGradientLinearAngleRange?.[0] ?? 0, value] 
+                                })}
+                                min={0}
+                                max={360}
+                                step={15}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-new-linear-angle-max"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Fill Opacity Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
+                        <Select 
+                          value={currentSettings.fillOpacityMode} 
+                          onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as 'range' | 'define' | 'incremental' })}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-new-fill-opacity-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {currentSettings.fillOpacityMode === 'range' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Opacity Range (%)</Label>
+                          <div className="flex items-center gap-2">
+                            <NumericInput
+                              value={currentSettings.fillOpacityRange?.[0] ?? 70}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                fillOpacityRange: [value, currentSettings.fillOpacityRange?.[1] ?? 100] 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-new-fill-opacity-min"
+                            />
+                            <Slider
+                              value={currentSettings.fillOpacityRange || [70, 100]}
+                              onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                            <NumericInput
+                              value={currentSettings.fillOpacityRange?.[1] ?? 100}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                fillOpacityRange: [currentSettings.fillOpacityRange?.[0] ?? 70, value] 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-new-fill-opacity-max"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.fillOpacityMode === 'define' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-slate-400">Opacity (%)</Label>
+                          <div className="flex items-center gap-3">
+                            <NumericInput
+                              value={currentSettings.fillOpacityDefine ?? 80}
+                              onChange={(value) => handleSettingsUpdate({ fillOpacityDefine: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-new-fill-opacity-define"
+                            />
+                            <Slider
+                              value={[currentSettings.fillOpacityDefine ?? 80]}
+                              onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {currentSettings.fillOpacityMode === 'incremental' && (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Start Value (%)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.fillOpacityStartValue ?? 70}
+                                  onChange={(value) => handleSettingsUpdate({ fillOpacityStartValue: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-new-fill-opacity-start"
+                                />
+                                <Slider
+                                  value={[currentSettings.fillOpacityStartValue ?? 70]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillOpacityStartValue: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Increment (%/shape)</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.fillOpacityIncrement ?? 5}
+                                  onChange={(value) => handleSettingsUpdate({ fillOpacityIncrement: value })}
+                                  min={-20}
+                                  max={20}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-new-fill-opacity-increment"
+                                />
+                                <Slider
+                                  value={[currentSettings.fillOpacityIncrement ?? 5]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ fillOpacityIncrement: value })}
+                                  min={-20}
+                                  max={20}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentSettings.fillOpacityModulationEnabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ fillOpacityModulationEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-new-fill-opacity-modulation"
+                              />
+                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                            </div>
+                            {currentSettings.fillOpacityModulationEnabled && (
+                              <div className="space-y-2 mt-2">
+                                <Label className="text-xs text-slate-400">Wrap at (%)</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.fillOpacityModulationValue ?? 100}
+                                    onChange={(value) => handleSettingsUpdate({ fillOpacityModulationValue: value })}
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    data-testid="input-new-fill-opacity-modulation"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.fillOpacityModulationValue ?? 100]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ fillOpacityModulationValue: value })}
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-slate-600" />
+
               {/* Stroke Properties Section - Enhanced styling */}
               <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
                 <div className="flex items-center justify-between">
