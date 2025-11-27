@@ -518,6 +518,8 @@ export interface BatchConfigSettings {
   
   // Shape Properties
   shapePropertiesEnabled: boolean;
+  shapePropertiesDimensionsEnabled: boolean;
+  shapePropertiesPositionEnabled: boolean;
   widthRange: [number, number];
   heightRange: [number, number];
   xPositionRange: [number, number];
@@ -1082,6 +1084,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Shape Properties
   shapePropertiesEnabled: false,
+  shapePropertiesDimensionsEnabled: true,
+  shapePropertiesPositionEnabled: true,
   widthRange: [50, 200],
   heightRange: [50, 200],
   xPositionRange: [-100, 100],
@@ -2195,6 +2199,8 @@ export const BatchConfigSettingsSchema = z.object({
   // Properties
   propertiesEnabled: z.boolean(),
   shapePropertiesEnabled: z.boolean(),
+  shapePropertiesDimensionsEnabled: z.boolean(),
+  shapePropertiesPositionEnabled: z.boolean(),
   
   // Basic shape properties
   widthRange: z.tuple([z.number(), z.number()]),
