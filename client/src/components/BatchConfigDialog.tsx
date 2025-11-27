@@ -530,82 +530,83 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.distributionLayoutEnabled && (
                   <div className="ml-6 space-y-4">
-                    {/* Pattern Type Container */}
-                    <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                      <Label className="text-sm font-medium text-slate-200">Pattern Type</Label>
-                      <Select 
-                        value={currentSettings.distributionPattern}
-                        onValueChange={(value) => handleSettingsUpdate({ distributionPattern: value as any })}
-                      >
-                        <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                          <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
-                          <SelectItem value="auto-distribute" className="text-slate-200 hover:bg-slate-700">Auto Distribute</SelectItem>
-                          <SelectItem value="wave" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
-                          <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
-                          <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {/* Grid Settings Container - Pattern, Dimensions, Spacing, Margins */}
+                    <div className="space-y-4 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                      {/* Pattern Type */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-slate-200">Pattern Type</Label>
+                        <Select 
+                          value={currentSettings.distributionPattern}
+                          onValueChange={(value) => handleSettingsUpdate({ distributionPattern: value as any })}
+                        >
+                          <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="grid" className="text-slate-200 hover:bg-slate-700">Grid (rows × columns)</SelectItem>
+                            <SelectItem value="auto-distribute" className="text-slate-200 hover:bg-slate-700">Auto Distribute</SelectItem>
+                            <SelectItem value="wave" className="text-slate-200 hover:bg-slate-700">Wave</SelectItem>
+                            <SelectItem value="ellipse" className="text-slate-200 hover:bg-slate-700">Ellipse</SelectItem>
+                            <SelectItem value="spiral" className="text-slate-200 hover:bg-slate-700">Spiral</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     
-                    {currentSettings.distributionPattern === 'grid' && (
-                      <div className="space-y-4">
-                        {/* Rows/Cols Container */}
-                        <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                          <Label className="text-sm font-medium text-slate-200">Grid Dimensions</Label>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-400">Rows</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.gridRows}
-                                  onChange={(value) => handleSettingsUpdate({ gridRows: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-grid-rows"
-                                />
-                                <Slider
-                                  value={[currentSettings.gridRows]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ gridRows: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="flex-1 [&_[role=slider]]:bg-green-600"
-                                />
+                      {currentSettings.distributionPattern === 'grid' && (
+                        <>
+                          {/* Grid Dimensions */}
+                          <div className="space-y-2 pt-2 border-t border-slate-600">
+                            <Label className="text-sm font-medium text-slate-200">Grid Dimensions</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Rows</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.gridRows}
+                                    onChange={(value) => handleSettingsUpdate({ gridRows: value })}
+                                    min={1}
+                                    max={50}
+                                    step={1}
+                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    data-testid="input-grid-rows"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.gridRows]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ gridRows: value })}
+                                    min={1}
+                                    max={50}
+                                    step={1}
+                                    className="flex-1 [&_[role=slider]]:bg-green-600"
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-400">Columns</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.gridColumns}
-                                  onChange={(value) => handleSettingsUpdate({ gridColumns: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-grid-columns"
-                                />
-                                <Slider
-                                  value={[currentSettings.gridColumns]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ gridColumns: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="flex-1 [&_[role=slider]]:bg-green-600"
-                                />
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">Columns</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.gridColumns}
+                                    onChange={(value) => handleSettingsUpdate({ gridColumns: value })}
+                                    min={1}
+                                    max={50}
+                                    step={1}
+                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    data-testid="input-grid-columns"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.gridColumns]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ gridColumns: value })}
+                                    min={1}
+                                    max={50}
+                                    step={1}
+                                    className="flex-1 [&_[role=slider]]:bg-green-600"
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
                         
-                        {/* X Spacing Container */}
-                        <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                          <div className="space-y-2">
+                          {/* X Spacing */}
+                          <div className="space-y-2 pt-2 border-t border-slate-600">
                             <Label className="text-sm font-medium text-slate-200">X Spacing</Label>
                             <Select 
                               value={((currentSettings.gridSpacingXMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingXMode) || 'define'}
@@ -620,60 +621,58 @@ export default function BatchConfigDialog({
                                 <SelectItem value="auto-edge-to-edge" className="text-slate-200 hover:bg-slate-700">Auto - Edge to Edge</SelectItem>
                               </SelectContent>
                             </Select>
+                            {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
+                              <div className="space-y-3 mt-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Grid Start X (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.gridStartX || 0}
+                                      onChange={(value) => handleSettingsUpdate({ gridStartX: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-grid-start-x"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.gridStartX || 0]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ gridStartX: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Column Offset (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.gridColumnOffset}
+                                      onChange={(value) => handleSettingsUpdate({ gridColumnOffset: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-grid-column-offset"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.gridColumnOffset]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ gridColumnOffset: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-green-600"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          {(currentSettings.gridSpacingXMode || 'define') === 'define' && (
-                            <div className="space-y-3 mt-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Grid Start X (px)</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridStartX || 0}
-                                    onChange={(value) => handleSettingsUpdate({ gridStartX: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-start-x"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridStartX || 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridStartX: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Column Offset (px)</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridColumnOffset}
-                                    onChange={(value) => handleSettingsUpdate({ gridColumnOffset: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-column-offset"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridColumnOffset]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridColumnOffset: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
                         
-                        {/* Y Spacing Container */}
-                        <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                          <div className="space-y-2">
+                          {/* Y Spacing */}
+                          <div className="space-y-2 pt-2 border-t border-slate-600">
                             <Label className="text-sm font-medium text-slate-200">Y Spacing</Label>
                             <Select 
                               value={((currentSettings.gridSpacingYMode as any) === 'auto' ? 'auto-centered' : currentSettings.gridSpacingYMode) || 'define'}
@@ -688,95 +687,101 @@ export default function BatchConfigDialog({
                                 <SelectItem value="auto-edge-to-edge" className="text-slate-200 hover:bg-slate-700">Auto - Edge to Edge</SelectItem>
                               </SelectContent>
                             </Select>
-                          </div>
-                          {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
-                            <div className="space-y-3 mt-2">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Grid Start Y (px)</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridStartY || 0}
-                                    onChange={(value) => handleSettingsUpdate({ gridStartY: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-start-y"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridStartY || 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridStartY: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
+                            {(currentSettings.gridSpacingYMode || 'define') === 'define' && (
+                              <div className="space-y-3 mt-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Grid Start Y (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.gridStartY || 0}
+                                      onChange={(value) => handleSettingsUpdate({ gridStartY: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-grid-start-y"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.gridStartY || 0]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ gridStartY: value })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Row Offset (px)</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridRowOffset}
-                                    onChange={(value) => handleSettingsUpdate({ gridRowOffset: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-row-offset"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridRowOffset]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridRowOffset: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Margins Container */}
-                        {((currentSettings.gridSpacingXMode === 'auto-centered' || (currentSettings.gridSpacingXMode as any) === 'auto') || 
-                          (currentSettings.gridSpacingYMode === 'auto-centered' || (currentSettings.gridSpacingYMode as any) === 'auto')) && (
-                          <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Custom Margin</Label>
-                              <Switch
-                                checked={currentSettings.gridMarginEnabled || false}
-                                onCheckedChange={(checked: boolean) => handleSettingsUpdate({ gridMarginEnabled: checked })}
-                                data-testid="switch-custom-margin"
-                              />
-                            </div>
-                            {currentSettings.gridMarginEnabled && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Margin (px)</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridMarginValue || 50}
-                                    onChange={(value) => handleSettingsUpdate({ gridMarginValue: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-margin"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridMarginValue || 50]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridMarginValue: value })}
-                                    min={0}
-                                    max={500}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                  />
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Row Offset (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.gridRowOffset}
+                                      onChange={(value) => handleSettingsUpdate({ gridRowOffset: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-grid-row-offset"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.gridRowOffset]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ gridRowOffset: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-green-600"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
                           </div>
-                        )}
+                        
+                          {/* Custom Margin */}
+                          {((currentSettings.gridSpacingXMode === 'auto-centered' || (currentSettings.gridSpacingXMode as any) === 'auto') || 
+                            (currentSettings.gridSpacingYMode === 'auto-centered' || (currentSettings.gridSpacingYMode as any) === 'auto')) && (
+                            <div className="space-y-2 pt-2 border-t border-slate-600">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  checked={currentSettings.gridMarginEnabled || false}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ gridMarginEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-orange-600"
+                                  data-testid="checkbox-custom-margin"
+                                />
+                                <Label className="text-sm font-medium text-slate-200">Custom Margin</Label>
+                              </div>
+                              {currentSettings.gridMarginEnabled && (
+                                <div className="space-y-2 ml-6">
+                                  <Label className="text-xs text-slate-400">Margin (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.gridMarginValue || 50}
+                                      onChange={(value) => handleSettingsUpdate({ gridMarginValue: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-grid-margin"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.gridMarginValue || 50]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ gridMarginValue: value })}
+                                      min={0}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-orange-600"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    {currentSettings.distributionPattern === 'grid' && (
+                      <div className="space-y-4">
                         
                         {/* Grid Offsets Section */}
                         <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
