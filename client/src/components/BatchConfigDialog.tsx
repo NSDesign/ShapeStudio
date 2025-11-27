@@ -3784,14 +3784,29 @@ export default function BatchConfigDialog({
                                 <div className="space-y-3">
                                   {/* Fill Style Probability - Controls solid vs gradient */}
                                   <div className="space-y-2 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
-                                    <Label className="text-xs text-slate-300">Solid Fill Probability: {currentSettings.fillStyleProbability}%</Label>
-                                    <Slider
-                                      value={[currentSettings.fillStyleProbability]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ fillStyleProbability: value })}
-                                      max={100}
-                                      step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
+                                    <Label className="text-xs text-slate-300">Solid Fill Probability</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.fillStyleProbability}
+                                        onChange={(value) => {
+                                          if (Number.isFinite(value)) {
+                                            handleSettingsUpdate({ fillStyleProbability: Math.max(0, Math.min(100, value)) });
+                                          }
+                                        }}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-solid-fill-probability"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.fillStyleProbability]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ fillStyleProbability: value })}
+                                        max={100}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                    </div>
                                     <p className="text-xs text-slate-400">{currentSettings.fillStyleProbability}% solid fill, {100 - currentSettings.fillStyleProbability}% gradient fill</p>
                                   </div>
 
@@ -3847,29 +3862,93 @@ export default function BatchConfigDialog({
                                         </div>
                                         
                                         {/* Saturation Range */}
-                                        <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillColorSaturationRange?.[0] || 50}% - {currentSettings.fillColorSaturationRange?.[1] || 100}%</Label>
-                                          <Slider
-                                            value={currentSettings.fillColorSaturationRange || [50, 100]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillColorSaturationRange: value as [number, number] })}
-                                            min={0}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-green-500"
-                                          />
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-300">Saturation Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillColorSaturationRange?.[0] || 50}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const maxVal = currentSettings.fillColorSaturationRange?.[1] || 100;
+                                                  handleSettingsUpdate({ fillColorSaturationRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              data-testid="input-solid-saturation-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillColorSaturationRange || [50, 100]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillColorSaturationRange: value as [number, number] })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="flex-1 [&_[role=slider]]:bg-green-500"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillColorSaturationRange?.[1] || 100}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const minVal = currentSettings.fillColorSaturationRange?.[0] || 50;
+                                                  handleSettingsUpdate({ fillColorSaturationRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              data-testid="input-solid-saturation-max"
+                                            />
+                                          </div>
                                         </div>
                                         
                                         {/* Lightness Range */}
-                                        <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillColorLightnessRange?.[0] || 30}% - {currentSettings.fillColorLightnessRange?.[1] || 70}%</Label>
-                                          <Slider
-                                            value={currentSettings.fillColorLightnessRange || [30, 70]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillColorLightnessRange: value as [number, number] })}
-                                            min={0}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-blue-500"
-                                          />
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-300">Lightness Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillColorLightnessRange?.[0] || 30}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const maxVal = currentSettings.fillColorLightnessRange?.[1] || 70;
+                                                  handleSettingsUpdate({ fillColorLightnessRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              data-testid="input-solid-lightness-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillColorLightnessRange || [30, 70]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillColorLightnessRange: value as [number, number] })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="flex-1 [&_[role=slider]]:bg-blue-500"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillColorLightnessRange?.[1] || 70}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const minVal = currentSettings.fillColorLightnessRange?.[0] || 30;
+                                                  handleSettingsUpdate({ fillColorLightnessRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                              data-testid="input-solid-lightness-max"
+                                            />
+                                          </div>
                                         </div>
                                       </div>
                                     )}
