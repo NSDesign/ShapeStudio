@@ -3957,51 +3957,128 @@ export default function BatchConfigDialog({
                                     
                                     <div className="grid grid-cols-3 gap-3">
                                       <div className="space-y-1">
-                                        <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
-                                        <Slider
-                                          value={[currentSettings.fillGradientLinearProbability]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
-                                          max={100}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-blue-600"
-                                        />
+                                        <Label className="text-xs text-slate-300">Linear</Label>
+                                        <div className="flex items-center gap-2">
+                                          <NumericInput
+                                            value={currentSettings.fillGradientLinearProbability}
+                                            onChange={(value) => {
+                                              if (Number.isFinite(value)) {
+                                                handleSettingsUpdate({ fillGradientLinearProbability: Math.max(0, Math.min(100, value)) });
+                                              }
+                                            }}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            data-testid="input-gradient-linear-prob"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.fillGradientLinearProbability]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
+                                            max={100}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                          />
+                                        </div>
                                       </div>
                                       
                                       <div className="space-y-1">
-                                        <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
-                                        <Slider
-                                          value={[currentSettings.fillGradientRadialProbability]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
-                                          max={100}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-purple-600"
-                                        />
+                                        <Label className="text-xs text-slate-300">Radial</Label>
+                                        <div className="flex items-center gap-2">
+                                          <NumericInput
+                                            value={currentSettings.fillGradientRadialProbability}
+                                            onChange={(value) => {
+                                              if (Number.isFinite(value)) {
+                                                handleSettingsUpdate({ fillGradientRadialProbability: Math.max(0, Math.min(100, value)) });
+                                              }
+                                            }}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            data-testid="input-gradient-radial-prob"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.fillGradientRadialProbability]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
+                                            max={100}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                          />
+                                        </div>
                                       </div>
                                       
                                       <div className="space-y-1">
-                                        <Label className="text-xs text-slate-300">Conic: {currentSettings.fillGradientConicProbability}%</Label>
-                                        <Slider
-                                          value={[currentSettings.fillGradientConicProbability]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
-                                          max={100}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-green-600"
-                                        />
+                                        <Label className="text-xs text-slate-300">Conic</Label>
+                                        <div className="flex items-center gap-2">
+                                          <NumericInput
+                                            value={currentSettings.fillGradientConicProbability}
+                                            onChange={(value) => {
+                                              if (Number.isFinite(value)) {
+                                                handleSettingsUpdate({ fillGradientConicProbability: Math.max(0, Math.min(100, value)) });
+                                              }
+                                            }}
+                                            min={0}
+                                            max={100}
+                                            step={5}
+                                            className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                            data-testid="input-gradient-conic-prob"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.fillGradientConicProbability]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
+                                            max={100}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-green-600"
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
 
                                   {/* Gradient Stops */}
-                                  <div className="space-y-2 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
-                                    <Label className="text-xs text-slate-300">Gradient Stops: {currentSettings.fillGradientStopsRange?.[0] || 2} - {currentSettings.fillGradientStopsRange?.[1] || 4}</Label>
-                                    <Slider
-                                      value={currentSettings.fillGradientStopsRange || [2, 4]}
-                                      onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
-                                      min={2}
-                                      max={8}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
+                                  <div className="space-y-1 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
+                                    <Label className="text-xs text-slate-300">Gradient Stops</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.fillGradientStopsRange?.[0] || 2}
+                                        onChange={(value) => {
+                                          if (Number.isFinite(value)) {
+                                            const clamped = Math.max(2, Math.min(8, value));
+                                            const maxVal = currentSettings.fillGradientStopsRange?.[1] || 4;
+                                            handleSettingsUpdate({ fillGradientStopsRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                          }
+                                        }}
+                                        min={2}
+                                        max={8}
+                                        step={1}
+                                        className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                        data-testid="input-gradient-stops-min"
+                                      />
+                                      <Slider
+                                        value={currentSettings.fillGradientStopsRange || [2, 4]}
+                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
+                                        min={2}
+                                        max={8}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                      <NumericInput
+                                        value={currentSettings.fillGradientStopsRange?.[1] || 4}
+                                        onChange={(value) => {
+                                          if (Number.isFinite(value)) {
+                                            const clamped = Math.max(2, Math.min(8, value));
+                                            const minVal = currentSettings.fillGradientStopsRange?.[0] || 2;
+                                            handleSettingsUpdate({ fillGradientStopsRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                          }
+                                        }}
+                                        min={2}
+                                        max={8}
+                                        step={1}
+                                        className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                        data-testid="input-gradient-stops-max"
+                                      />
+                                    </div>
                                   </div>
 
                                   {/* Gradient Colors */}
@@ -4056,29 +4133,93 @@ export default function BatchConfigDialog({
                                         </div>
                                         
                                         {/* Saturation Range */}
-                                        <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Saturation Range: {currentSettings.fillGradientColorSaturationRange?.[0] || 40}% - {currentSettings.fillGradientColorSaturationRange?.[1] || 90}%</Label>
-                                          <Slider
-                                            value={currentSettings.fillGradientColorSaturationRange || [40, 90]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientColorSaturationRange: value as [number, number] })}
-                                            min={0}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-green-500"
-                                          />
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-300">Saturation Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientColorSaturationRange?.[0] || 40}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const maxVal = currentSettings.fillGradientColorSaturationRange?.[1] || 90;
+                                                  handleSettingsUpdate({ fillGradientColorSaturationRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-saturation-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillGradientColorSaturationRange || [40, 90]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientColorSaturationRange: value as [number, number] })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="flex-1 [&_[role=slider]]:bg-green-500"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillGradientColorSaturationRange?.[1] || 90}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const minVal = currentSettings.fillGradientColorSaturationRange?.[0] || 40;
+                                                  handleSettingsUpdate({ fillGradientColorSaturationRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-saturation-max"
+                                            />
+                                          </div>
                                         </div>
                                         
                                         {/* Lightness Range */}
-                                        <div className="space-y-2">
-                                          <Label className="text-xs text-slate-300">Lightness Range: {currentSettings.fillGradientColorLightnessRange?.[0] || 20}% - {currentSettings.fillGradientColorLightnessRange?.[1] || 80}%</Label>
-                                          <Slider
-                                            value={currentSettings.fillGradientColorLightnessRange || [20, 80]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientColorLightnessRange: value as [number, number] })}
-                                            min={0}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-blue-500"
-                                          />
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-300">Lightness Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientColorLightnessRange?.[0] || 20}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const maxVal = currentSettings.fillGradientColorLightnessRange?.[1] || 80;
+                                                  handleSettingsUpdate({ fillGradientColorLightnessRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-lightness-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillGradientColorLightnessRange || [20, 80]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientColorLightnessRange: value as [number, number] })}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="flex-1 [&_[role=slider]]:bg-blue-500"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillGradientColorLightnessRange?.[1] || 80}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(100, value));
+                                                  const minVal = currentSettings.fillGradientColorLightnessRange?.[0] || 20;
+                                                  handleSettingsUpdate({ fillGradientColorLightnessRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={100}
+                                              step={5}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-lightness-max"
+                                            />
+                                          </div>
                                         </div>
                                       </div>
                                     )}
@@ -4233,17 +4374,47 @@ export default function BatchConfigDialog({
 
                                       {currentSettings.fillGradientLinearDirection === 'range' && (
                                         <div className="space-y-1">
-                                          <Label className="text-xs text-slate-300">
-                                            Angle Range: {currentSettings.fillGradientLinearAngleRange?.[0] || 0}° - {currentSettings.fillGradientLinearAngleRange?.[1] || 360}°
-                                          </Label>
-                                          <Slider
-                                            value={currentSettings.fillGradientLinearAngleRange || [0, 360]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearAngleRange: value as [number, number] })}
-                                            min={0}
-                                            max={360}
-                                            step={15}
-                                            className="[&_[role=slider]]:bg-purple-600"
-                                          />
+                                          <Label className="text-xs text-slate-300">Angle Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientLinearAngleRange?.[0] || 0}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(360, value));
+                                                  const maxVal = currentSettings.fillGradientLinearAngleRange?.[1] || 360;
+                                                  handleSettingsUpdate({ fillGradientLinearAngleRange: [Math.min(clamped, maxVal), maxVal] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-linear-angle-min"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillGradientLinearAngleRange || [0, 360]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearAngleRange: value as [number, number] })}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillGradientLinearAngleRange?.[1] || 360}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clamped = Math.max(0, Math.min(360, value));
+                                                  const minVal = currentSettings.fillGradientLinearAngleRange?.[0] || 0;
+                                                  handleSettingsUpdate({ fillGradientLinearAngleRange: [minVal, Math.max(clamped, minVal)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={360}
+                                              step={15}
+                                              className="h-7 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                              data-testid="input-linear-angle-max"
+                                            />
+                                          </div>
                                         </div>
                                       )}
 
