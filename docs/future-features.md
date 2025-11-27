@@ -927,7 +927,7 @@ The grid layout system currently supports:
 - X/Y randomization for position jitter
 - ✅ Grid Offsets (Alternating & Pattern modes)
 - ✅ Shape Masking (Grid Position filtering)
-- ✅ Grid Render Mode (Point vs Cell-based positioning)
+- ✅ Grid Render Mode (Point, Cell, and Cell Points positioning)
 
 ### Implementation Status
 | Phase | Feature | Status |
@@ -935,8 +935,11 @@ The grid layout system currently supports:
 | Phase 1 | Alternating Grid Offsets | ✅ Implemented |
 | Phase 2 | Pattern-Based Offsets | ✅ Implemented |
 | Phase 3 | Shape Masking (Grid-Based) | ✅ Implemented |
-| Phase 4 | Grid Render Mode (Cell-Based) | ⚠️ Implemented - Untested |
-| Phase 5+ | No-Overlap/Distance Maintenance | Future |
+| Phase 4 | Grid Render Mode (Point, Cell, Cell Points) | ✅ Implemented |
+| Phase 5 | Grid Offset Presets | 🔄 Planned |
+| Phase 6 | Grid Offset Value Modes | 🔄 Planned |
+| Phase 7 | Future Shape Masking Filter Types | 📋 Future |
+| Phase 8 | No-Overlap/Distance Maintenance | 📋 Future |
 
 ### Phased Implementation Plan
 
@@ -1340,27 +1343,28 @@ interface ShapeMaskingOperation {
 
 ---
 
-### Phase 4: Grid Render Mode (Cell-Based Rendering) ⚠️ IMPLEMENTED - UNTESTED
+### Phase 4: Grid Render Mode ✅ IMPLEMENTED
 
 #### Overview
-Controls how shapes are positioned within grid cells: either at intersection points (Point mode) or centered within cells with size constraints (Cell mode).
+Controls how shapes are positioned within grid cells with three distinct modes: Point (intersection-based), Cell (cell-centered), and Cell Points (hybrid approach).
 
-**Implementation Status**: Complete (Untested)  
+**Implementation Status**: Complete  
 **Location**: Part of Grid distribution settings in Distribution Layout section of BatchConfigDialog.tsx
 
 #### Render Modes
-| Mode | Position | Size Control | Use Case |
-|------|----------|-------------|----------|
-| Point | Grid intersection points | Independent of grid | Traditional grid positioning |
-| Cell | Center of cell area | Constrained by cell dimensions | Shapes filling a grid |
+| Mode | Position | Size Control | Position Count | Use Case |
+|------|----------|-------------|----------------|----------|
+| Point | Grid intersection points | Independent of grid | rows × cols | Traditional grid positioning |
+| Cell | Center of cell area | Constrained by cell dimensions | (rows-1) × (cols-1) | Shapes filling cells between grid lines |
+| Cell Points | Grid intersection points | Constrained by cell dimensions | rows × cols | Hybrid: intersection positioning with fit constraints |
 
 #### Data Model
 ```typescript
 cellConstraints: {
-  enabled: boolean;           // Auto-set based on renderMode
-  renderMode: 'point' | 'cell';
+  enabled: boolean;           // Auto-set based on renderMode (true for cell/cell-point)
+  renderMode: 'point' | 'cell' | 'cell-point';
   
-  // Cell mode settings (only active when renderMode = 'cell')
+  // Cell/Cell-Point mode settings (active when renderMode !== 'point')
   fitMode: 'none' | 'fill' | 'contain' | 'cover';
   // - none: Use original shape size, just center in cell
   // - contain: Scale to fit within cell (maintain aspect ratio)
@@ -1370,59 +1374,231 @@ cellConstraints: {
   maintainAspectRatio: boolean;   // For 'fill' mode - uses Math.max (cover ratio) when true
   padding: number;                // Inset from cell edges
   paddingUnit: 'px' | '%';        // Pixel or percentage of cell size
+  showDebugGrid: boolean;         // Toggle debug overlay visualization
 }
 ```
 
+#### Key Differences Between Modes
+
+**Point Mode:**
+- Shapes positioned at grid intersection points
+- No size constraints applied
+- Count: rows × cols positions
+
+**Cell Mode:**
+- Shapes centered in cells BETWEEN grid lines
+- Cell top-left corner aligns with intersection point
+- Fit constraints (contain/cover/fill) applied based on cell size
+- Count: (rows-1) × (cols-1) positions (fewer than Point mode)
+
+**Cell Points Mode:**
+- Shapes positioned at grid intersection points (like Point mode)
+- Cells are CENTERED on intersection points (not between them)
+- Fit constraints applied (like Cell mode)
+- Count: rows × cols positions (same as Point mode)
+- Note: Edge cells extend beyond artboard boundaries
+
 #### Implementation Details
-- **UI Location**: Render Mode controls appear within the Grid distribution settings, after Grid Offsets
+- **UI Location**: Render Mode dropdown within Grid distribution settings, after Grid Offsets
 - **Client-side**: Full implementation in `shapeTypes.ts` with live preview
-- **Server-side**: Placeholder for future export support (client preview fully functional)
+- **Server-side**: Full implementation in `distributionLayouts.ts` for export parity
+- **Debug Grid**: Shows cell boundaries and position markers for all three modes
 - **Fill Mode Fix**: When `maintainAspectRatio=true`, uses `Math.max` (cover ratio) to ensure shape fills entire cell
 
-#### Cell Calculation (Client Implementation)
+#### Cell Calculation Logic
+
+**Cell Mode:**
 ```typescript
 // Cell dimensions based on grid spacing
 const cellWidth = gridSpacingX;
 const cellHeight = gridSpacingY;
 
-// Cell center position
+// Cell center position (cell starts at intersection, center is offset by half)
 const cellCenterX = gridStartX + (col * cellWidth) + (cellWidth / 2);
 const cellCenterY = gridStartY + (row * cellHeight) + (cellHeight / 2);
-
-// Available space after padding
-const availableWidth = cellWidth - (padding * 2);
-const availableHeight = cellHeight - (padding * 2);
-
-// Scale shape based on fit mode
-switch (fitMode) {
-  case 'contain':
-    const scale = Math.min(availableWidth / shapeWidth, availableHeight / shapeHeight);
-    break;
-  case 'cover':
-    const scale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-    break;
-  case 'fill':
-    if (maintainAspectRatio) {
-      // Use cover ratio (Math.max) to fill entire cell
-      const scale = Math.max(availableWidth / shapeWidth, availableHeight / shapeHeight);
-    } else {
-      // Independent X/Y scaling
-      scaleX = availableWidth / shapeWidth;
-      scaleY = availableHeight / shapeHeight;
-    }
-    break;
-}
 ```
+
+**Cell Points Mode:**
+```typescript
+// Cell dimensions same as grid spacing
+const cellWidth = gridSpacingX;
+const cellHeight = gridSpacingY;
+
+// Position is AT the intersection point (cell is centered ON it)
+const positionX = gridStartX + (col * cellWidth);
+const positionY = gridStartY + (row * cellHeight);
+// No offset needed - shape placed directly at intersection
+```
+
+#### Debug Grid Visualization
+The debug grid renders on the shapes layer (top) and shows:
+- **Point Mode**: Red dots at intersection points, red grid lines
+- **Cell Mode**: Orange dashed cell rectangles between lines, green crosses at cell centers
+- **Cell Points Mode**: Orange dashed cell rectangles centered ON intersections, combined green cross + red dot markers
 
 #### Interaction with Shape Masking
 Shape Masking (Phase 3) defines which cells are valid for rendering. Grid Render Mode then determines HOW shapes are placed within those valid cells.
 
 ---
 
-### Phase 5+: No-Overlap/Distance Maintenance (Future)
+### Phase 5: Grid Offset Presets 🔄 PLANNED
+
+#### Overview
+Pre-configured offset patterns that allow users to quickly apply common visual arrangements with a single click. These presets combine row and column offset settings to create recognizable patterns used in design, architecture, and nature.
+
+**Implementation Status**: Planned  
+**Location**: Within Grid Offsets section in BatchConfigDialog.tsx
+
+#### Preset Definitions
+
+| Preset | Description | Row Offset | Column Offset |
+|--------|-------------|------------|---------------|
+| None | Clear all offsets | Disabled | Disabled |
+| Brick | Classic brick wall layout | 50% spacing, alternating rows | Disabled |
+| Honeycomb | Hexagonal-style arrangement | 50% spacing, alternating rows | 25% spacing, alternating cols |
+| Staircase | Progressive diagonal arrangement | Fixed step amount, alternating | Disabled |
+| Zigzag | Alternating offset directions | Column-based vertical zigzag | Enabled |
+| Diamond | Combined row/column offsets | 50% spacing, alternating | 50% spacing, alternating |
+
+#### UI Implementation
+- **Location**: Dropdown/button group above manual offset controls
+- **Behavior**: 
+  1. User selects a preset
+  2. Offset controls update to show preset values (calculated from current grid spacing)
+  3. User can modify values after applying (exits "preset mode")
+  4. Selecting "None" clears all offsets
+
+#### Preset Application Logic
+```typescript
+function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: number): GridOffsets {
+  switch (preset) {
+    case 'brick':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: false, amount: 0, startIndex: 0, direction: 'down' }
+      };
+    case 'honeycomb':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: true, amount: gridSpacingY / 4, startIndex: 1, direction: 'down' }
+      };
+    case 'diamond':
+      return {
+        enabled: true,
+        mode: 'alternating',
+        row: { enabled: true, amount: gridSpacingX / 2, startIndex: 1, direction: 'right' },
+        column: { enabled: true, amount: gridSpacingY / 2, startIndex: 1, direction: 'down' }
+      };
+    // ... other presets
+  }
+}
+```
+
+---
+
+### Phase 6: Grid Offset Value Modes 🔄 PLANNED
+
+#### Overview
+Apply the standard value mode pattern (fixed/range/incremental) to the Grid Offset Amount property, enabling more dynamic and varied offset patterns.
+
+**Implementation Status**: Planned  
+**Location**: Within Grid Offsets row/column Amount controls
+
+#### Value Modes
+| Mode | Description | Example |
+|------|-------------|---------|
+| Fixed | Single value (current behavior) | 20px offset for all alternating rows |
+| Range | Random value within min/max bounds | 10-30px offset, varies per row |
+| Incremental | Progressive offset that grows | 1st row: 10px, 3rd row: 20px, 5th row: 30px |
+
+#### Use Cases
+- **Range mode**: More organic, irregular offset patterns with random variation
+- **Incremental mode**: Progressively shifting offset patterns creating perspective or wave effects
+
+#### Data Model Extension
+```typescript
+// Extend existing amount property
+row: {
+  enabled: boolean;
+  amountMode: 'fixed' | 'range' | 'incremental';
+  amount: number;              // For fixed mode
+  amountMin: number;           // For range mode
+  amountMax: number;           // For range mode
+  amountBase: number;          // For incremental mode
+  amountIncrement: number;     // For incremental mode
+  startIndex: 0 | 1;
+  direction: 'left' | 'right';
+  pattern: number[];
+}
+```
+
+#### Implementation Notes
+- Follow established pattern used elsewhere in the application for value modes
+- UI changes: Add mode selector and conditional inputs for range (min/max) or incremental (base/increment)
+- Generation logic: Calculate offset based on mode and row/column index
+
+---
+
+### Phase 7: Future Shape Masking Filter Types 📋 FUTURE
+
+#### Overview
+Extend the Shape Masking system with additional filter types beyond grid position filtering.
+
+**Implementation Status**: Future  
+**Priority**: Low - depends on user demand
+
+#### Planned Filter Types
+
+**Position-Based Masking**:
+- Filter by absolute X/Y coordinate ranges
+- Filter by distance from artboard center/edges
+- Filter by quadrant or region
+
+**Count-Based Masking**:
+- Filter every Nth shape regardless of grid position
+- Random percentage filtering
+- First N / Last N shapes only
+
+**Color-Based Masking**:
+- Filter by hue range
+- Filter by saturation/lightness thresholds
+- Filter by specific color match
+
+**Size-Based Masking**:
+- Filter by shape dimensions (width/height)
+- Filter by area
+- Filter by aspect ratio
+
+**Rotation-Based Masking**:
+- Filter by rotation angle ranges
+- Filter by specific angle values
+
+**Opacity-Based Masking**:
+- Filter by opacity thresholds
+- Filter transparent/opaque shapes
+
+#### Masked Shape Operations Enhancement
+Transform matched shapes instead of simply excluding them:
+
+**Operation Types**:
+- **Transform**: Move, scale, rotate, skew matched shapes
+- **Visual**: Recolor fill/stroke, adjust opacity, apply blur, override gradient
+- **Compositional**: Change blend mode, compositing operation, z-index
+- **Shape**: Change shape type, modify type-specific properties
+
+---
+
+### Phase 8: No-Overlap/Distance Maintenance 📋 FUTURE
 
 #### Overview
 Advanced collision detection and resolution to ensure offset shapes don't overlap or maintain minimum distance from adjacent shapes.
+
+**Implementation Status**: Future  
+**Priority**: Low - significant complexity
 
 #### Complexity
 This phase involves:
@@ -1477,11 +1653,12 @@ shapeMasking: {
 // cellConstraints defaults
 cellConstraints: {
   enabled: false,
-  renderMode: 'point',        // 'point' (intersection) or 'cell' (cell-based)
+  renderMode: 'point',        // 'point' | 'cell' | 'cell-point'
   fitMode: 'contain',
   maintainAspectRatio: true,
   padding: 0,
-  paddingUnit: 'px'
+  paddingUnit: 'px',
+  showDebugGrid: false
 }
 ```
 
@@ -1493,10 +1670,9 @@ New properties should be added with defaults that preserve existing behavior:
 
 ---
 
-## Grid Offset Presets
+## Grid Offset Presets (Phase 5 Reference)
 
-### Overview
-Pre-configured offset patterns that allow users to quickly apply common visual arrangements with a single click. These presets combine row and column offset settings to create recognizable patterns used in design, architecture, and nature.
+> **Note**: This section provides detailed documentation for Phase 5 implementation. See [Phase 5: Grid Offset Presets](#phase-5-grid-offset-presets--planned) above for the summary.
 
 ### Implementation Context
 Grid Offset Presets build upon the Phase 1 Grid Offsets implementation, providing pre-defined configurations for the existing offset controls (enabled state, amount, startIndex, direction for both row and column axes).
@@ -1746,9 +1922,9 @@ function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: n
 
 ---
 
-## Grid Offset Enhancements (Future Considerations)
+## Grid Offset Value Modes (Phase 6 Reference)
 
-The current Grid Offsets implementation (Phase 1) provides alternating row/column offsets with dynamic start index selection and improved input field UX.
+> **Note**: This section provides detailed documentation for Phase 6 implementation. See [Phase 6: Grid Offset Value Modes](#phase-6-grid-offset-value-modes--planned) above for the summary.
 
 ### Value Mode Pattern for Offset Properties
 **Current:** Amount uses a simple fixed value.
