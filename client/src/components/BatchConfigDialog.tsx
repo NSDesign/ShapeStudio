@@ -5170,50 +5170,47 @@ export default function BatchConfigDialog({
                                         
                                       {currentSettings.fillGradientConicAngleMode === 'range' && (
                                         <div className="space-y-1">
-                                          <div className="flex items-center justify-between">
-                                            <Label className="text-xs text-slate-400">Range</Label>
-                                            <div className="flex items-center gap-2">
-                                              <NumericInput
-                                                value={currentSettings.fillGradientConicAngleRange?.[0] || 0}
-                                                onChange={(value) => {
-                                                  if (Number.isFinite(value)) {
-                                                    const clampedValue = Math.max(0, Math.min(360, value));
-                                                    const currentMax = currentSettings.fillGradientConicAngleRange?.[1] || 360;
-                                                    handleSettingsUpdate({ fillGradientConicAngleRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
-                                                  }
-                                                }}
-                                                min={0}
-                                                max={360}
-                                                step={5}
-                                                suffix="°"
-                                                className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                              />
-                                              <span className="text-slate-400">-</span>
-                                              <NumericInput
-                                                value={currentSettings.fillGradientConicAngleRange?.[1] || 360}
-                                                onChange={(value) => {
-                                                  if (Number.isFinite(value)) {
-                                                    const clampedValue = Math.max(0, Math.min(360, value));
-                                                    const currentMin = currentSettings.fillGradientConicAngleRange?.[0] || 0;
-                                                    handleSettingsUpdate({ fillGradientConicAngleRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
-                                                  }
-                                                }}
-                                                min={0}
-                                                max={360}
-                                                step={5}
-                                                suffix="°"
-                                                className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                              />
-                                            </div>
+                                          <Label className="text-xs text-slate-400">Angle Range</Label>
+                                          <div className="flex items-center gap-2">
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngleRange?.[0] || 0}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clampedValue = Math.max(0, Math.min(360, value));
+                                                  const currentMax = currentSettings.fillGradientConicAngleRange?.[1] || 360;
+                                                  handleSettingsUpdate({ fillGradientConicAngleRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={360}
+                                              step={5}
+                                              suffix="°"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            />
+                                            <Slider
+                                              value={currentSettings.fillGradientConicAngleRange || [0, 360]}
+                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
+                                              min={0}
+                                              max={360}
+                                              step={5}
+                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.fillGradientConicAngleRange?.[1] || 360}
+                                              onChange={(value) => {
+                                                if (Number.isFinite(value)) {
+                                                  const clampedValue = Math.max(0, Math.min(360, value));
+                                                  const currentMin = currentSettings.fillGradientConicAngleRange?.[0] || 0;
+                                                  handleSettingsUpdate({ fillGradientConicAngleRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                }
+                                              }}
+                                              min={0}
+                                              max={360}
+                                              step={5}
+                                              suffix="°"
+                                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            />
                                           </div>
-                                          <Slider
-                                            value={currentSettings.fillGradientConicAngleRange || [0, 360]}
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
-                                            min={0}
-                                            max={360}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-amber-600"
-                                          />
                                         </div>
                                       )}
                                         
@@ -5355,50 +5352,47 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterXMode === 'range' && (
                                               <div className="space-y-1">
-                                                <div className="flex items-center justify-between">
-                                                  <Label className="text-xs text-slate-400">Range</Label>
-                                                  <div className="flex items-center gap-2">
-                                                    <NumericInput
-                                                      value={currentSettings.fillGradientConicCenterXRange?.[0] || 25}
-                                                      onChange={(value) => {
-                                                        if (Number.isFinite(value)) {
-                                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                                          const currentMax = currentSettings.fillGradientConicCenterXRange?.[1] || 75;
-                                                          handleSettingsUpdate({ fillGradientConicCenterXRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
-                                                        }
-                                                      }}
-                                                      min={0}
-                                                      max={100}
-                                                      step={5}
-                                                      suffix="%"
-                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                                    />
-                                                    <span className="text-slate-400">-</span>
-                                                    <NumericInput
-                                                      value={currentSettings.fillGradientConicCenterXRange?.[1] || 75}
-                                                      onChange={(value) => {
-                                                        if (Number.isFinite(value)) {
-                                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                                          const currentMin = currentSettings.fillGradientConicCenterXRange?.[0] || 25;
-                                                          handleSettingsUpdate({ fillGradientConicCenterXRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
-                                                        }
-                                                      }}
-                                                      min={0}
-                                                      max={100}
-                                                      step={5}
-                                                      suffix="%"
-                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                                    />
-                                                  </div>
+                                                <Label className="text-xs text-slate-400">X Range</Label>
+                                                <div className="flex items-center gap-2">
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXRange?.[0] || 25}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                                        const currentMax = currentSettings.fillGradientConicCenterXRange?.[1] || 75;
+                                                        handleSettingsUpdate({ fillGradientConicCenterXRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
+                                                  <Slider
+                                                    value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
+                                                    onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                  />
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXRange?.[1] || 75}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                                        const currentMin = currentSettings.fillGradientConicCenterXRange?.[0] || 25;
+                                                        handleSettingsUpdate({ fillGradientConicCenterXRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
                                                 </div>
-                                                <Slider
-                                                  value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
-                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="[&_[role=slider]]:bg-amber-600"
-                                                />
                                               </div>
                                             )}
                                             
@@ -5538,50 +5532,47 @@ export default function BatchConfigDialog({
                                             
                                             {currentSettings.fillGradientConicCenterYMode === 'range' && (
                                               <div className="space-y-1">
-                                                <div className="flex items-center justify-between">
-                                                  <Label className="text-xs text-slate-400">Range</Label>
-                                                  <div className="flex items-center gap-2">
-                                                    <NumericInput
-                                                      value={currentSettings.fillGradientConicCenterYRange?.[0] || 25}
-                                                      onChange={(value) => {
-                                                        if (Number.isFinite(value)) {
-                                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                                          const currentMax = currentSettings.fillGradientConicCenterYRange?.[1] || 75;
-                                                          handleSettingsUpdate({ fillGradientConicCenterYRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
-                                                        }
-                                                      }}
-                                                      min={0}
-                                                      max={100}
-                                                      step={5}
-                                                      suffix="%"
-                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                                    />
-                                                    <span className="text-slate-400">-</span>
-                                                    <NumericInput
-                                                      value={currentSettings.fillGradientConicCenterYRange?.[1] || 75}
-                                                      onChange={(value) => {
-                                                        if (Number.isFinite(value)) {
-                                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                                          const currentMin = currentSettings.fillGradientConicCenterYRange?.[0] || 25;
-                                                          handleSettingsUpdate({ fillGradientConicCenterYRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
-                                                        }
-                                                      }}
-                                                      min={0}
-                                                      max={100}
-                                                      step={5}
-                                                      suffix="%"
-                                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                                    />
-                                                  </div>
+                                                <Label className="text-xs text-slate-400">Y Range</Label>
+                                                <div className="flex items-center gap-2">
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYRange?.[0] || 25}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                                        const currentMax = currentSettings.fillGradientConicCenterYRange?.[1] || 75;
+                                                        handleSettingsUpdate({ fillGradientConicCenterYRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
+                                                  <Slider
+                                                    value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
+                                                    onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                  />
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYRange?.[1] || 75}
+                                                    onChange={(value) => {
+                                                      if (Number.isFinite(value)) {
+                                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                                        const currentMin = currentSettings.fillGradientConicCenterYRange?.[0] || 25;
+                                                        handleSettingsUpdate({ fillGradientConicCenterYRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                                      }
+                                                    }}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    suffix="%"
+                                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                                  />
                                                 </div>
-                                                <Slider
-                                                  value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
-                                                  onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="[&_[role=slider]]:bg-amber-600"
-                                                />
                                               </div>
                                             )}
                                             
@@ -5699,50 +5690,47 @@ export default function BatchConfigDialog({
 
                             {currentSettings.fillOpacityMode === 'range' && (
                               <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <Label className="text-xs text-slate-400">Opacity Range</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.fillOpacityRange?.[0] ?? 0}
-                                      onChange={(value) => {
-                                        if (Number.isFinite(value)) {
-                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                          const currentMax = currentSettings.fillOpacityRange?.[1] ?? 100;
-                                          handleSettingsUpdate({ fillOpacityRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
-                                        }
-                                      }}
-                                      min={0}
-                                      max={100}
-                                      step={5}
-                                      suffix="%"
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    />
-                                    <span className="text-slate-400">-</span>
-                                    <NumericInput
-                                      value={currentSettings.fillOpacityRange?.[1] ?? 100}
-                                      onChange={(value) => {
-                                        if (Number.isFinite(value)) {
-                                          const clampedValue = Math.max(0, Math.min(100, value));
-                                          const currentMin = currentSettings.fillOpacityRange?.[0] ?? 0;
-                                          handleSettingsUpdate({ fillOpacityRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
-                                        }
-                                      }}
-                                      min={0}
-                                      max={100}
-                                      step={5}
-                                      suffix="%"
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    />
-                                  </div>
+                                <Label className="text-xs text-slate-400">Opacity Range</Label>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.fillOpacityRange?.[0] ?? 0}
+                                    onChange={(value) => {
+                                      if (Number.isFinite(value)) {
+                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                        const currentMax = currentSettings.fillOpacityRange?.[1] ?? 100;
+                                        handleSettingsUpdate({ fillOpacityRange: [Math.min(clampedValue, currentMax), currentMax] as [number, number] });
+                                      }
+                                    }}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    suffix="%"
+                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  />
+                                  <Slider
+                                    value={currentSettings.fillOpacityRange || [0, 100]}
+                                    onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
+                                  <NumericInput
+                                    value={currentSettings.fillOpacityRange?.[1] ?? 100}
+                                    onChange={(value) => {
+                                      if (Number.isFinite(value)) {
+                                        const clampedValue = Math.max(0, Math.min(100, value));
+                                        const currentMin = currentSettings.fillOpacityRange?.[0] ?? 0;
+                                        handleSettingsUpdate({ fillOpacityRange: [currentMin, Math.max(clampedValue, currentMin)] as [number, number] });
+                                      }
+                                    }}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    suffix="%"
+                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  />
                                 </div>
-                                <Slider
-                                  value={currentSettings.fillOpacityRange || [0, 100]}
-                                  onValueChange={(value) => handleSettingsUpdate({ fillOpacityRange: value as [number, number] })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
                               </div>
                             )}
 
