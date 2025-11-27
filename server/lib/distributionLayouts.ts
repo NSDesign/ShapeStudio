@@ -60,6 +60,7 @@ interface GridOffsetAxisConfig {
 interface GridOffsetsConfig {
   enabled: boolean;
   mode: 'alternating' | 'pattern';
+  preset: 'custom' | 'none' | 'brick' | 'honeycomb' | 'staircase' | 'zigzag' | 'diamond';
   row: GridOffsetAxisConfig;
   column: GridOffsetAxisConfig;
 }
@@ -67,6 +68,7 @@ interface GridOffsetsConfig {
 const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
   enabled: false,
   mode: 'alternating',
+  preset: 'custom',
   row: {
     enabled: false,
     amountMode: 'fixed',

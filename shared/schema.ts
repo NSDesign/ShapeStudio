@@ -309,6 +309,7 @@ export interface GridOffsetAxisConfig {
 export interface GridOffsetsConfig {
   enabled: boolean;
   mode: 'alternating' | 'pattern';
+  preset: 'custom' | 'none' | 'brick' | 'honeycomb' | 'staircase' | 'zigzag' | 'diamond';  // Track selected preset
   row: GridOffsetAxisConfig;         // Row offset affects X position (shifts left/right)
   column: GridOffsetAxisConfig;      // Column offset affects Y position (shifts up/down)
 }
@@ -317,6 +318,7 @@ export interface GridOffsetsConfig {
 export const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
   enabled: false,
   mode: 'alternating',
+  preset: 'custom',
   row: {
     enabled: false,
     amountMode: 'fixed',

@@ -722,12 +722,13 @@ export default function BatchConfigDialog({
                               <div className="space-y-1">
                                 <Label className="text-xs text-slate-400">Quick Presets</Label>
                                 <Select 
-                                  value="custom"
-                                  onValueChange={(preset: string) => {
+                                  value={currentSettings.gridOffsets?.preset ?? 'custom'}
+                                  onValueChange={(preset: 'custom' | 'none' | 'brick' | 'honeycomb' | 'staircase' | 'zigzag' | 'diamond') => {
                                     if (preset === 'none' || preset === 'custom') {
                                       handleSettingsUpdate((prev) => ({ 
                                         gridOffsets: { 
                                           ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                          preset: preset,
                                           enabled: preset === 'custom' ? prev.gridOffsets?.enabled ?? true : false,
                                           row: { ...DEFAULT_GRID_OFFSETS.row },
                                           column: { ...DEFAULT_GRID_OFFSETS.column }
@@ -746,6 +747,7 @@ export default function BatchConfigDialog({
                                         newOffsets = {
                                           enabled: true,
                                           mode: 'alternating',
+                                          preset: 'brick',
                                           row: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingX / 2), startIndex: 1, direction: 'right', pattern: [] },
                                           column: { ...defaultAxisConfig, enabled: false, amount: 0, startIndex: 0, direction: 'down', pattern: [] }
                                         };
@@ -754,6 +756,7 @@ export default function BatchConfigDialog({
                                         newOffsets = {
                                           enabled: true,
                                           mode: 'alternating',
+                                          preset: 'honeycomb',
                                           row: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingX / 2), startIndex: 1, direction: 'right', pattern: [] },
                                           column: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingY / 4), startIndex: 1, direction: 'down', pattern: [] }
                                         };
@@ -762,6 +765,7 @@ export default function BatchConfigDialog({
                                         newOffsets = {
                                           enabled: true,
                                           mode: 'alternating',
+                                          preset: 'staircase',
                                           row: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingX / 4), startIndex: 1, direction: 'right', pattern: [] },
                                           column: { ...defaultAxisConfig, enabled: false, amount: 0, startIndex: 0, direction: 'down', pattern: [] }
                                         };
@@ -770,6 +774,7 @@ export default function BatchConfigDialog({
                                         newOffsets = {
                                           enabled: true,
                                           mode: 'alternating',
+                                          preset: 'zigzag',
                                           row: { ...defaultAxisConfig, enabled: false, amount: 0, startIndex: 0, direction: 'right', pattern: [] },
                                           column: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingY / 2), startIndex: 1, direction: 'down', pattern: [] }
                                         };
@@ -778,6 +783,7 @@ export default function BatchConfigDialog({
                                         newOffsets = {
                                           enabled: true,
                                           mode: 'alternating',
+                                          preset: 'diamond',
                                           row: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingX / 2), startIndex: 1, direction: 'right', pattern: [] },
                                           column: { ...defaultAxisConfig, enabled: true, amount: Math.round(spacingY / 2), startIndex: 1, direction: 'down', pattern: [] }
                                         };
