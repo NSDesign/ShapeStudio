@@ -6068,7 +6068,7 @@ export default function BatchConfigDialog({
                                   min={0}
                                   max={100}
                                   step={5}
-                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                   data-testid="input-new-gradient-linear-prob"
                                 />
                                 <Slider
@@ -6089,7 +6089,7 @@ export default function BatchConfigDialog({
                                   min={0}
                                   max={100}
                                   step={5}
-                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                   data-testid="input-new-gradient-radial-prob"
                                 />
                                 <Slider
@@ -6110,7 +6110,7 @@ export default function BatchConfigDialog({
                                   min={0}
                                   max={100}
                                   step={5}
-                                  className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                   data-testid="input-new-gradient-conic-prob"
                                 />
                                 <Slider
@@ -6234,7 +6234,7 @@ export default function BatchConfigDialog({
                                 min={2}
                                 max={10}
                                 step={1}
-                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                 data-testid="input-new-gradient-stops-min"
                               />
                               <Slider
@@ -6253,7 +6253,7 @@ export default function BatchConfigDialog({
                                 min={2}
                                 max={10}
                                 step={1}
-                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                 data-testid="input-new-gradient-stops-max"
                               />
                             </div>
@@ -6271,7 +6271,7 @@ export default function BatchConfigDialog({
                                 min={0}
                                 max={360}
                                 step={15}
-                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                 data-testid="input-new-linear-angle-min"
                               />
                               <Slider
@@ -6290,7 +6290,7 @@ export default function BatchConfigDialog({
                                 min={0}
                                 max={360}
                                 step={15}
-                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                 data-testid="input-new-linear-angle-max"
                               />
                             </div>
