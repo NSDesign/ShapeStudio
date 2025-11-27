@@ -3947,11 +3947,16 @@ export default function BatchConfigDialog({
                               <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-3">
                                   {/* Gradient Type Probabilities */}
-                                  <div className="space-y-3 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
-                                    <Label className="text-sm font-medium text-slate-200">Gradient Type Probabilities</Label>
+                                  <div className="space-y-2 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
+                                    <div className="flex items-center justify-between">
+                                      <Label className="text-sm font-medium text-slate-200">Gradient Type Probabilities</Label>
+                                      <span className="text-xs text-slate-400">
+                                        Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}%
+                                      </span>
+                                    </div>
                                     
-                                    <div className="grid gap-3">
-                                      <div className="space-y-2">
+                                    <div className="grid grid-cols-3 gap-3">
+                                      <div className="space-y-1">
                                         <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
                                         <Slider
                                           value={[currentSettings.fillGradientLinearProbability]}
@@ -3962,7 +3967,7 @@ export default function BatchConfigDialog({
                                         />
                                       </div>
                                       
-                                      <div className="space-y-2">
+                                      <div className="space-y-1">
                                         <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
                                         <Slider
                                           value={[currentSettings.fillGradientRadialProbability]}
@@ -3973,7 +3978,7 @@ export default function BatchConfigDialog({
                                         />
                                       </div>
                                       
-                                      <div className="space-y-2">
+                                      <div className="space-y-1">
                                         <Label className="text-xs text-slate-300">Conic: {currentSettings.fillGradientConicProbability}%</Label>
                                         <Slider
                                           value={[currentSettings.fillGradientConicProbability]}
@@ -3984,8 +3989,6 @@ export default function BatchConfigDialog({
                                         />
                                       </div>
                                     </div>
-                                    
-                                    <p className="text-xs text-slate-400">Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}% (normalization applied during generation)</p>
                                   </div>
 
                                   {/* Gradient Stops */}
@@ -4002,8 +4005,8 @@ export default function BatchConfigDialog({
                                   </div>
 
                                   {/* Gradient Colors */}
-                                  <div className="space-y-3 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
-                                    <div className="flex items-center space-x-2">
+                                  <div className="space-y-2 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
+                                    <div className="flex items-center justify-between">
                                       <Label className="text-sm font-medium text-slate-200">Gradient Colors</Label>
                                       <Select value={currentSettings.fillGradientColorMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientColorMode: value as any })}>
                                         <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200">
@@ -4214,11 +4217,9 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {/* Linear Gradient Direction */}
-                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                      <Label className="text-sm font-medium text-slate-200">Linear Direction</Label>
-                                      
-                                      <div className="flex items-center space-x-2">
-                                        <Label className="text-xs text-slate-300">Mode</Label>
+                                    <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-slate-200">Linear Direction</Label>
                                         <Select value={currentSettings.fillGradientLinearDirection} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearDirection: value as any })}>
                                           <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                             <SelectValue />
@@ -4231,7 +4232,7 @@ export default function BatchConfigDialog({
                                       </div>
 
                                       {currentSettings.fillGradientLinearDirection === 'range' && (
-                                        <div className="space-y-2">
+                                        <div className="space-y-1">
                                           <Label className="text-xs text-slate-300">
                                             Angle Range: {currentSettings.fillGradientLinearAngleRange?.[0] || 0}° - {currentSettings.fillGradientLinearAngleRange?.[1] || 360}°
                                           </Label>
@@ -4247,46 +4248,36 @@ export default function BatchConfigDialog({
                                       )}
 
                                       {currentSettings.fillGradientLinearDirection === 'predefined' && (
-                                        <div className="space-y-3">
-                                          <div className="space-y-2">
-                                            <Label className="text-xs text-slate-300">Direction</Label>
-                                            <Select value={currentSettings.fillGradientLinearPredefined} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearPredefined: value as any })}>
-                                              <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
-                                                <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
-                                                <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
-                                                <SelectItem value="diagonal-down" className="text-slate-200 hover:bg-slate-700">Diagonal ↘</SelectItem>
-                                                <SelectItem value="diagonal-up" className="text-slate-200 hover:bg-slate-700">Diagonal ↗</SelectItem>
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          
+                                        <div className="flex items-center gap-3">
+                                          <Select value={currentSettings.fillGradientLinearPredefined} onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearPredefined: value as any })}>
+                                            <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="horizontal" className="text-slate-200 hover:bg-slate-700">Horizontal</SelectItem>
+                                              <SelectItem value="vertical" className="text-slate-200 hover:bg-slate-700">Vertical</SelectItem>
+                                              <SelectItem value="diagonal-down" className="text-slate-200 hover:bg-slate-700">Diagonal ↘</SelectItem>
+                                              <SelectItem value="diagonal-up" className="text-slate-200 hover:bg-slate-700">Diagonal ↗</SelectItem>
+                                            </SelectContent>
+                                          </Select>
                                           <div className="flex items-center space-x-2">
                                             <Checkbox
                                               checked={currentSettings.fillGradientLinearAlignToShape}
                                               onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientLinearAlignToShape: checked as boolean })}
                                               className="border-slate-500 data-[state=checked]:bg-purple-600"
                                             />
-                                            <Label className="text-xs text-slate-300">Align to shape orientation</Label>
+                                            <Label className="text-xs text-slate-300">Align to shape</Label>
                                           </div>
-                                          <p className="text-xs text-slate-400 ml-6">
-                                            Adjust gradient direction based on shape rotation and orientation
-                                          </p>
                                         </div>
                                       )}
                                     </div>
 
                                     {/* Radial Gradient Controls */}
-                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                      <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
-                                      
-                                      {/* Radial Center Position */}
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">Center Position</Label>
+                                    <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
                                         <Select value={currentSettings.fillGradientRadialCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
@@ -4709,14 +4700,11 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {/* Conic Gradient Controls */}
-                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                      <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
-                                      
-                                      {/* Conic Center Position */}
-                                      <div className="space-y-2">
-                                        <Label className="text-xs text-slate-300">Center Position</Label>
+                                    <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
                                         <Select value={currentSettings.fillGradientConicCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
