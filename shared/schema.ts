@@ -610,7 +610,6 @@ export interface BatchConfigSettings {
   
   // Fill Properties - Controls solid vs gradient vs pattern
   fillEnabled: boolean;
-  fillSolidEnabled: boolean; // Enable/disable solid fill sub-section
   fillStyleProbability: number; // 0-100% - probability for solid fill vs gradient fill
   
   // Fill Color Settings (for solid fills)
@@ -1177,7 +1176,6 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Fill Properties
   fillEnabled: true,
-  fillSolidEnabled: true, // Solid fill sub-section enabled by default
   fillStyleProbability: 60, // 60% solid fill, 40% gradient fill
   
   // Fill Color Settings
@@ -2275,7 +2273,6 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Fill properties
   fillEnabled: z.boolean(),
-  fillSolidEnabled: z.boolean(),
   fillStyleProbability: z.number(),
   fillColorMode: z.enum(['range', 'palette', 'define']),
   fillColorRange: z.tuple([z.string(), z.string()]),
