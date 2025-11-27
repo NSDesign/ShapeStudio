@@ -3759,7 +3759,7 @@ export default function BatchConfigDialog({
 
                     {/* Fill Properties */}
                     <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-3">
                         <Checkbox 
                           checked={currentSettings.fillEnabled}
                           onCheckedChange={(checked) => handleSettingsUpdate({ fillEnabled: checked as boolean })}
@@ -3769,10 +3769,10 @@ export default function BatchConfigDialog({
                       </div>
                       
                       {currentSettings.fillEnabled && (
-                        <div className="ml-6 space-y-4">
-                          <Accordion type="multiple" className="w-full space-y-1">
+                        <div className="ml-4 space-y-4">
+                          <Accordion type="multiple" className="w-full space-y-2 border border-slate-700/80 rounded-lg bg-slate-900/60 p-2">
                             {/* Solid Fill Accordion */}
-                            <AccordionItem value="solid" className="border border-slate-600 rounded bg-slate-800">
+                            <AccordionItem value="solid" className="border border-slate-700/80 rounded-md bg-slate-800/60">
                               <AccordionTrigger className="px-3 py-2 hover:no-underline">
                                 <div className="flex items-center space-x-2">
                                   <Label className="text-sm font-medium text-slate-200">Solid</Label>
@@ -3781,10 +3781,10 @@ export default function BatchConfigDialog({
                                   </div>
                                 </div>
                               </AccordionTrigger>
-                              <AccordionContent className="px-3 pb-2">
+                              <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-3">
                                   {/* Fill Style Probability - Controls solid vs gradient */}
-                                  <div className="space-y-2">
+                                  <div className="space-y-2 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
                                     <Label className="text-xs text-slate-300">Solid Fill Probability: {currentSettings.fillStyleProbability}%</Label>
                                     <Slider
                                       value={[currentSettings.fillStyleProbability]}
@@ -3797,7 +3797,7 @@ export default function BatchConfigDialog({
                                   </div>
 
                                   {/* Solid Colors */}
-                                  <div className="space-y-3">
+                                  <div className="space-y-3 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                     <div className="flex items-center space-x-2">
                                       <Label className="text-sm font-medium text-slate-200">Solid Colors</Label>
                                       <Select value={currentSettings.fillColorMode} onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as any })}>
@@ -3813,7 +3813,7 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {currentSettings.fillColorMode === 'range' && (
-                                      <div className="space-y-3">
+                                      <div className="space-y-3 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-300">Color Range</Label>
                                           <div className="flex space-x-2">
@@ -3876,7 +3876,7 @@ export default function BatchConfigDialog({
                                     )}
 
                                     {currentSettings.fillColorMode === 'palette' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-2 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <Label className="text-xs text-slate-300">Color Palette</Label>
                                         <div className="flex flex-wrap gap-2">
                                           {currentSettings.fillColorPalette?.map((color, index) => (
@@ -3897,7 +3897,7 @@ export default function BatchConfigDialog({
                                               const newPalette = [...(currentSettings.fillColorPalette || []), '#ffffff'];
                                               handleSettingsUpdate({ fillColorPalette: newPalette });
                                             }}
-                                            className="w-12 h-8 bg-slate-600 border border-slate-500 rounded text-slate-300 text-xs hover:bg-slate-500"
+                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
@@ -3906,7 +3906,7 @@ export default function BatchConfigDialog({
                                     )}
 
                                     {currentSettings.fillColorMode === 'define' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-2 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <Label className="text-xs text-slate-300">Defined Color</Label>
                                         <Input
                                           type="color"
@@ -3917,15 +3917,13 @@ export default function BatchConfigDialog({
                                         <p className="text-xs text-slate-400">All shapes use this exact color</p>
                                       </div>
                                     )}
-
-
                                   </div>
                                 </div>
                               </AccordionContent>
                             </AccordionItem>
 
                             {/* Gradient Fill Accordion */}
-                            <AccordionItem value="gradient" className="border border-slate-600 rounded bg-slate-800">
+                            <AccordionItem value="gradient" className="border border-slate-700/80 rounded-md bg-slate-800/60">
                               <AccordionTrigger className="px-3 py-2 hover:no-underline">
                                 <div className="flex items-center space-x-2">
                                   <Label className="text-sm font-medium text-slate-200">Gradient</Label>
@@ -3934,10 +3932,10 @@ export default function BatchConfigDialog({
                                   </div>
                                 </div>
                               </AccordionTrigger>
-                              <AccordionContent className="px-3 pb-2">
+                              <AccordionContent className="px-3 pb-3">
                                 <div className="space-y-3">
                                   {/* Gradient Enable Control */}
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                     <Checkbox 
                                       checked={currentSettings.fillGradientEnabled}
                                       onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientEnabled: checked as boolean })}
@@ -3947,47 +3945,49 @@ export default function BatchConfigDialog({
                                   </div>
 
                                   {/* Gradient Type Probabilities */}
-                                  <div className="space-y-3">
+                                  <div className="space-y-3 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
                                     <Label className="text-sm font-medium text-slate-200">Gradient Type Probabilities</Label>
                                     
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
-                                      <Slider
-                                        value={[currentSettings.fillGradientLinearProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
-                                        max={100}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-blue-600"
-                                      />
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
-                                      <Slider
-                                        value={[currentSettings.fillGradientRadialProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
-                                        max={100}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-purple-600"
-                                      />
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                      <Label className="text-xs text-slate-300">Conic: {currentSettings.fillGradientConicProbability}%</Label>
-                                      <Slider
-                                        value={[currentSettings.fillGradientConicProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
-                                        max={100}
-                                        step={5}
-                                        className="[&_[role=slider]]:bg-green-600"
-                                      />
+                                    <div className="grid gap-3">
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-300">Linear: {currentSettings.fillGradientLinearProbability}%</Label>
+                                        <Slider
+                                          value={[currentSettings.fillGradientLinearProbability]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
+                                          max={100}
+                                          step={5}
+                                          className="[&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-300">Radial: {currentSettings.fillGradientRadialProbability}%</Label>
+                                        <Slider
+                                          value={[currentSettings.fillGradientRadialProbability]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
+                                          max={100}
+                                          step={5}
+                                          className="[&_[role=slider]]:bg-purple-600"
+                                        />
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-300">Conic: {currentSettings.fillGradientConicProbability}%</Label>
+                                        <Slider
+                                          value={[currentSettings.fillGradientConicProbability]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
+                                          max={100}
+                                          step={5}
+                                          className="[&_[role=slider]]:bg-green-600"
+                                        />
+                                      </div>
                                     </div>
                                     
                                     <p className="text-xs text-slate-400">Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}% (normalization applied during generation)</p>
                                   </div>
 
                                   {/* Gradient Stops */}
-                                  <div className="space-y-2">
+                                  <div className="space-y-2 bg-slate-900/40 border border-slate-700/60 rounded-md p-3">
                                     <Label className="text-xs text-slate-300">Gradient Stops: {currentSettings.fillGradientStopsRange?.[0] || 2} - {currentSettings.fillGradientStopsRange?.[1] || 4}</Label>
                                     <Slider
                                       value={currentSettings.fillGradientStopsRange || [2, 4]}
@@ -4000,7 +4000,7 @@ export default function BatchConfigDialog({
                                   </div>
 
                                   {/* Gradient Colors */}
-                                  <div className="space-y-3">
+                                  <div className="space-y-3 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                     <div className="flex items-center space-x-2">
                                       <Label className="text-sm font-medium text-slate-200">Gradient Colors</Label>
                                       <Select value={currentSettings.fillGradientColorMode} onValueChange={(value) => handleSettingsUpdate({ fillGradientColorMode: value as any })}>
@@ -4016,7 +4016,7 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {currentSettings.fillGradientColorMode === 'range' && (
-                                      <div className="space-y-3">
+                                      <div className="space-y-3 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-300">Color Range</Label>
                                           <div className="flex space-x-2">
@@ -4079,7 +4079,7 @@ export default function BatchConfigDialog({
                                     )}
 
                                     {currentSettings.fillGradientColorMode === 'palette' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-2 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <Label className="text-xs text-slate-300">Gradient Palette</Label>
                                         <div className="flex flex-wrap gap-2">
                                           {currentSettings.fillGradientColorPalette?.map((color, index) => (
@@ -4100,7 +4100,7 @@ export default function BatchConfigDialog({
                                               const newPalette = [...(currentSettings.fillGradientColorPalette || []), '#ffffff'];
                                               handleSettingsUpdate({ fillGradientColorPalette: newPalette });
                                             }}
-                                            className="w-12 h-8 bg-slate-600 border border-slate-500 rounded text-slate-300 text-xs hover:bg-slate-500"
+                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
@@ -4109,7 +4109,7 @@ export default function BatchConfigDialog({
                                     )}
 
                                     {currentSettings.fillGradientColorMode === 'define' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-2 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                         <Label className="text-xs text-slate-300">Gradient Colors</Label>
                                         <div className="flex flex-wrap gap-2">
                                           {currentSettings.fillGradientColorDefine?.map((color, index) => (
@@ -4130,7 +4130,7 @@ export default function BatchConfigDialog({
                                               const newColors = [...(currentSettings.fillGradientColorDefine || []), '#ffffff'];
                                               handleSettingsUpdate({ fillGradientColorDefine: newColors });
                                             }}
-                                            className="w-12 h-8 bg-slate-600 border border-slate-500 rounded text-slate-300 text-xs hover:bg-slate-500"
+                                            className="w-12 h-8 bg-slate-700/80 hover:bg-slate-600/80 border border-slate-500 rounded text-slate-200 text-xs"
                                           >
                                             +
                                           </button>
@@ -4143,9 +4143,9 @@ export default function BatchConfigDialog({
                                   {/* Enhanced Gradient Type & Direction Controls */}
                                   <Separator className="bg-slate-600" />
                                   
-                                  <div className="space-y-4">
+                                  <div className="space-y-4 bg-slate-900/30 border border-slate-700/50 rounded-md p-3">
                                     {/* Enable/Disable Toggle for Gradient Type & Direction Section */}
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/40 rounded-md">
                                       <Checkbox
                                         checked={currentSettings.fillGradientTypeDirectionEnabled}
                                         onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientTypeDirectionEnabled: checked as boolean })}
@@ -4153,14 +4153,14 @@ export default function BatchConfigDialog({
                                       />
                                       <Label className="text-sm font-medium text-slate-200">Gradient Type & Direction Controls</Label>
                                     </div>
-                                    <p className="text-xs text-slate-400 ml-6">
+                                    <p className="text-xs text-slate-400 ml-5">
                                       When enabled, overrides the gradient type probabilities above with shape-matching or custom controls
                                     </p>
                                     
                                     {currentSettings.fillGradientTypeDirectionEnabled && (
                                     <>
                                     {/* Gradient Type Probability */}
-                                    <div className="space-y-3 p-3 bg-slate-700/50 rounded">
+                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <div className="flex items-center space-x-2">
                                         <Checkbox
                                           checked={currentSettings.fillGradientMatchShape}
@@ -4169,7 +4169,7 @@ export default function BatchConfigDialog({
                                         />
                                         <Label className="text-xs text-slate-300">Match gradient type to shape</Label>
                                       </div>
-                                      <p className="text-xs text-slate-400 ml-6">
+                                      <p className="text-xs text-slate-400 ml-5">
                                         When enabled: radial/conic gradients for round shapes (circles, stars, blobs), linear gradients for geometric shapes (rectangles, polygons)
                                       </p>
                                       
@@ -4214,7 +4214,7 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {/* Linear Gradient Direction */}
-                                    <div className="space-y-3 p-3 bg-slate-700 rounded">
+                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <Label className="text-sm font-medium text-slate-200">Linear Direction</Label>
                                       
                                       <div className="flex items-center space-x-2">
@@ -4279,7 +4279,7 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {/* Radial Gradient Controls */}
-                                    <div className="space-y-3 p-3 bg-slate-700 rounded">
+                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
                                       
                                       {/* Radial Center Position */}
@@ -4709,7 +4709,7 @@ export default function BatchConfigDialog({
                                     </div>
 
                                     {/* Conic Gradient Controls */}
-                                    <div className="space-y-3 p-3 bg-slate-700 rounded">
+                                    <div className="space-y-3 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
                                       <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
                                       
                                       {/* Conic Center Position */}
