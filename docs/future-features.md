@@ -936,8 +936,8 @@ The grid layout system currently supports:
 | Phase 2 | Pattern-Based Offsets | ✅ Implemented |
 | Phase 3 | Shape Masking (Grid-Based) | ✅ Implemented |
 | Phase 4 | Grid Render Mode (Point, Cell, Cell Points) | ✅ Implemented |
-| Phase 5 | Grid Offset Presets | 🔄 Planned |
-| Phase 6 | Grid Offset Value Modes | 🔄 Planned |
+| Phase 5 | Grid Offset Presets | ✅ Completed |
+| Phase 6 | Grid Offset Value Modes | ✅ Completed |
 | Phase 7 | Future Shape Masking Filter Types | 📋 Future |
 | Phase 8 | No-Overlap/Distance Maintenance | 📋 Future |
 
@@ -1441,7 +1441,7 @@ Shape Masking (Phase 3) defines which cells are valid for rendering. Grid Render
 
 ---
 
-### Phase 5: Grid Offset Presets 🔄 PLANNED
+### Phase 5: Grid Offset Presets ✅ COMPLETED
 
 #### Overview
 Pre-configured offset patterns that allow users to quickly apply common visual arrangements with a single click. These presets combine row and column offset settings to create recognizable patterns used in design, architecture, and nature.
@@ -1500,12 +1500,12 @@ function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: n
 
 ---
 
-### Phase 6: Grid Offset Value Modes 🔄 PLANNED
+### Phase 6: Grid Offset Value Modes ✅ COMPLETED
 
 #### Overview
 Apply the standard value mode pattern (fixed/range/incremental) to the Grid Offset Amount property, enabling more dynamic and varied offset patterns.
 
-**Implementation Status**: Planned  
+**Implementation Status**: Completed  
 **Location**: Within Grid Offsets row/column Amount controls
 
 #### Value Modes

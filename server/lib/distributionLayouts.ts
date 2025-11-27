@@ -42,6 +42,57 @@ interface CellConstraintsConfig {
   paddingUnit: 'px' | '%';
 }
 
+// Grid offset axis configuration (for row or column)
+interface GridOffsetAxisConfig {
+  enabled: boolean;
+  amountMode: 'fixed' | 'range' | 'incremental';
+  amount: number;
+  amountMin: number;
+  amountMax: number;
+  amountBase: number;
+  amountIncrement: number;
+  startIndex: number;
+  direction: 'left' | 'right' | 'up' | 'down';
+  pattern: number[];
+}
+
+// Grid offsets configuration
+interface GridOffsetsConfig {
+  enabled: boolean;
+  mode: 'alternating' | 'pattern';
+  row: GridOffsetAxisConfig;
+  column: GridOffsetAxisConfig;
+}
+
+const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
+  enabled: false,
+  mode: 'alternating',
+  row: {
+    enabled: false,
+    amountMode: 'fixed',
+    amount: 0,
+    amountMin: 0,
+    amountMax: 50,
+    amountBase: 0,
+    amountIncrement: 10,
+    startIndex: 0,
+    direction: 'right',
+    pattern: []
+  },
+  column: {
+    enabled: false,
+    amountMode: 'fixed',
+    amount: 0,
+    amountMin: 0,
+    amountMax: 50,
+    amountBase: 0,
+    amountIncrement: 10,
+    startIndex: 0,
+    direction: 'down',
+    pattern: []
+  }
+};
+
 const DEFAULT_CELL_CONSTRAINTS: CellConstraintsConfig = {
   enabled: false,
   renderMode: 'point',
@@ -79,6 +130,9 @@ interface DistributionConfig {
   
   // Cell Constraints Settings
   cellConstraints?: CellConstraintsConfig;
+  
+  // Grid Offsets Settings
+  gridOffsets?: GridOffsetsConfig;
   
   // Auto Distribute Settings
   autoDistributeXCount?: number;
@@ -436,6 +490,94 @@ export function applyGridDistribution(
   // TODO: Cell constraints for cell-based rendering - to be implemented later
   // See client/src/lib/shapeTypes.ts applyGridDistribution for reference implementation
   
+  // Helper to calculate offset amount based on mode and occurrence index
+  const calculateOffsetAmount = (
+    axisConfig: GridOffsetAxisConfig,
+    occurrenceIndex: number
+  ): number => {
+    const amountMode = axisConfig.amountMode ?? 'fixed';
+    
+    if (amountMode === 'fixed') {
+      return axisConfig.amount ?? 0;
+    } else if (amountMode === 'range') {
+      const min = axisConfig.amountMin ?? 0;
+      const max = axisConfig.amountMax ?? 50;
+      return min + Math.random() * (max - min);
+    } else if (amountMode === 'incremental') {
+      const base = axisConfig.amountBase ?? 0;
+      const increment = axisConfig.amountIncrement ?? 10;
+      return base + (increment * occurrenceIndex);
+    }
+    return 0;
+  };
+  
+  // Compute grid offsets helper
+  const getGridOffsets = (row: number, col: number): { offsetX: number; offsetY: number } => {
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    const gridOffsets = config.gridOffsets;
+    if (!gridOffsets?.enabled) {
+      return { offsetX, offsetY };
+    }
+    
+    const mode = gridOffsets.mode ?? 'alternating';
+    
+    // Row offset affects X position (shifts rows left/right)
+    if (gridOffsets.row?.enabled) {
+      let shouldApplyRowOffset = false;
+      let rowOccurrenceIndex = 0;
+      
+      if (mode === 'alternating') {
+        const startIndex = gridOffsets.row.startIndex ?? 0;
+        shouldApplyRowOffset = (row % 2) === startIndex;
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = Math.floor((row - startIndex) / 2);
+        }
+      } else if (mode === 'pattern') {
+        const rowPattern = gridOffsets.row.pattern ?? [];
+        const patternIndex = rowPattern.indexOf(row);
+        shouldApplyRowOffset = patternIndex >= 0;
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = patternIndex;
+        }
+      }
+      
+      if (shouldApplyRowOffset) {
+        const amount = calculateOffsetAmount(gridOffsets.row, rowOccurrenceIndex);
+        offsetX = gridOffsets.row.direction === 'right' ? amount : -amount;
+      }
+    }
+    
+    // Column offset affects Y position (shifts columns up/down)
+    if (gridOffsets.column?.enabled) {
+      let shouldApplyColumnOffset = false;
+      let columnOccurrenceIndex = 0;
+      
+      if (mode === 'alternating') {
+        const startIndex = gridOffsets.column.startIndex ?? 0;
+        shouldApplyColumnOffset = (col % 2) === startIndex;
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = Math.floor((col - startIndex) / 2);
+        }
+      } else if (mode === 'pattern') {
+        const columnPattern = gridOffsets.column.pattern ?? [];
+        const patternIndex = columnPattern.indexOf(col);
+        shouldApplyColumnOffset = patternIndex >= 0;
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = patternIndex;
+        }
+      }
+      
+      if (shouldApplyColumnOffset) {
+        const amount = calculateOffsetAmount(gridOffsets.column, columnOccurrenceIndex);
+        offsetY = gridOffsets.column.direction === 'down' ? amount : -amount;
+      }
+    }
+    
+    return { offsetX, offsetY };
+  };
+  
   // Map shapes to valid positions only (1:1 mapping, no wrapping)
   return shapesToPlace.map((shape, index) => {
     const positionEntry = validPositions[index] || { rowIndex: 0, colIndex: 0, linearIndex: 0 };
@@ -450,6 +592,11 @@ export function applyGridDistribution(
     // Apply start position offset
     gridX += startX;
     gridY += startY;
+    
+    // Apply grid offsets (alternating or pattern-based row/column offsets)
+    const { offsetX: gridOffsetX, offsetY: gridOffsetY } = getGridOffsets(row, col);
+    gridX += gridOffsetX;
+    gridY += gridOffsetY;
     
     // Apply additive random offset
     const randomX = (Math.random() - 0.5) * 2 * (config.gridXRandomization || 0);

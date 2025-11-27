@@ -294,7 +294,12 @@ export interface SetLocks {
 // Grid offset axis configuration (for row or column)
 export interface GridOffsetAxisConfig {
   enabled: boolean;
-  amount: number;                    // Pixels to offset
+  amountMode: 'fixed' | 'range' | 'incremental';  // Value mode for amount
+  amount: number;                    // Pixels to offset (for fixed mode)
+  amountMin: number;                 // Min offset for range mode
+  amountMax: number;                 // Max offset for range mode
+  amountBase: number;                // Base offset for incremental mode
+  amountIncrement: number;           // Increment per alternating row/col for incremental mode
   startIndex: number;                // Which row/column starts the offset (0-indexed)
   direction: 'left' | 'right' | 'up' | 'down';  // Direction of offset
   pattern: number[];                 // For pattern mode: explicit indices to offset
@@ -314,14 +319,24 @@ export const DEFAULT_GRID_OFFSETS: GridOffsetsConfig = {
   mode: 'alternating',
   row: {
     enabled: false,
+    amountMode: 'fixed',
     amount: 0,
+    amountMin: 0,
+    amountMax: 50,
+    amountBase: 0,
+    amountIncrement: 10,
     startIndex: 0,
     direction: 'right',
     pattern: []
   },
   column: {
     enabled: false,
+    amountMode: 'fixed',
     amount: 0,
+    amountMin: 0,
+    amountMax: 50,
+    amountBase: 0,
+    amountIncrement: 10,
     startIndex: 0,
     direction: 'down',
     pattern: []

@@ -56,6 +56,13 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines with proper tangent handle continuity.
 - **Advanced Grid Layout Sorting**: Comprehensive sorting criteria (layer, creation-time, shape-type, size, color, opacity, angle, id) with configurable order and scope.
 - **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets, three spacing modes (Define, Auto-Centered, Auto-Edge-to-Edge), and independent axis configuration.
+- **Grid Offset System**: Row/column offset controls for creating varied grid patterns:
+  - **Offset Presets**: Pre-configured patterns (Brick, Honeycomb, Staircase, Zigzag, Diamond) that calculate offset amounts from grid spacing
+  - **Offset Value Modes**: Three modes for offset amount calculation:
+    - *Fixed*: Single value applied to all alternating rows/columns
+    - *Range*: Random value within min/max bounds for organic variation
+    - *Incremental*: Progressive offset that grows (base + increment × occurrence_index)
+  - **Client/Server Parity**: Identical offset calculations in frontend preview and backend export
 - **Grid Render Mode** (Untested): Controls how shapes are positioned within grid cells:
   - **Point Mode**: Traditional positioning at grid intersection points (default)
   - **Cell Mode**: Shapes centered in grid cells with size constraints

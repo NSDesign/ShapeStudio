@@ -1,4 +1,4 @@
-import { GridOffsetsConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING, CellConstraintsConfig, DEFAULT_CELL_CONSTRAINTS } from '@shared/schema';
+import { GridOffsetsConfig, GridOffsetAxisConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING, CellConstraintsConfig, DEFAULT_CELL_CONSTRAINTS } from '@shared/schema';
 
 export interface Point {
   x: number;
@@ -531,21 +531,56 @@ export function calculateGridPosition(
   if (gridOffsets?.enabled) {
     const mode = gridOffsets.mode ?? 'alternating';
     
+    // Helper to calculate offset amount based on mode and occurrence index
+    const calculateOffsetAmount = (
+      axisConfig: GridOffsetAxisConfig,
+      occurrenceIndex: number
+    ): number => {
+      const amountMode = axisConfig.amountMode ?? 'fixed';
+      
+      if (amountMode === 'fixed') {
+        return axisConfig.amount ?? 0;
+      } else if (amountMode === 'range') {
+        const min = axisConfig.amountMin ?? 0;
+        const max = axisConfig.amountMax ?? 50;
+        return min + Math.random() * (max - min);
+      } else if (amountMode === 'incremental') {
+        const base = axisConfig.amountBase ?? 0;
+        const increment = axisConfig.amountIncrement ?? 10;
+        return base + (increment * occurrenceIndex);
+      }
+      return 0;
+    };
+    
+    // Count how many times this row/column has had an offset applied (for incremental mode)
+    // For alternating mode, occurrence = row/2 or column/2 (roughly)
+    // For pattern mode, we use the position in the pattern array
+    
     // Row offset affects X position (shifts rows left/right)
     if (gridOffsets.row?.enabled) {
       let shouldApplyRowOffset = false;
+      let rowOccurrenceIndex = 0;
       
       if (mode === 'alternating') {
         // Alternating mode: check if row index modulo 2 matches startIndex
-        shouldApplyRowOffset = (row % 2) === (gridOffsets.row.startIndex ?? 0);
+        const startIndex = gridOffsets.row.startIndex ?? 0;
+        shouldApplyRowOffset = (row % 2) === startIndex;
+        // Calculate occurrence index: how many alternating rows have been offset before this one
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = Math.floor((row - startIndex) / 2);
+        }
       } else if (mode === 'pattern') {
         // Pattern mode: check if row index is in the pattern array
         const rowPattern = gridOffsets.row.pattern ?? [];
-        shouldApplyRowOffset = rowPattern.includes(row);
+        const patternIndex = rowPattern.indexOf(row);
+        shouldApplyRowOffset = patternIndex >= 0;
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = patternIndex;
+        }
       }
       
       if (shouldApplyRowOffset) {
-        const amount = gridOffsets.row.amount ?? 0;
+        const amount = calculateOffsetAmount(gridOffsets.row, rowOccurrenceIndex);
         x += gridOffsets.row.direction === 'right' ? amount : -amount;
       }
     }
@@ -553,18 +588,28 @@ export function calculateGridPosition(
     // Column offset affects Y position (shifts columns up/down)
     if (gridOffsets.column?.enabled) {
       let shouldApplyColumnOffset = false;
+      let columnOccurrenceIndex = 0;
       
       if (mode === 'alternating') {
         // Alternating mode: check if column index modulo 2 matches startIndex
-        shouldApplyColumnOffset = (column % 2) === (gridOffsets.column.startIndex ?? 0);
+        const startIndex = gridOffsets.column.startIndex ?? 0;
+        shouldApplyColumnOffset = (column % 2) === startIndex;
+        // Calculate occurrence index: how many alternating columns have been offset before this one
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = Math.floor((column - startIndex) / 2);
+        }
       } else if (mode === 'pattern') {
         // Pattern mode: check if column index is in the pattern array
         const columnPattern = gridOffsets.column.pattern ?? [];
-        shouldApplyColumnOffset = columnPattern.includes(column);
+        const patternIndex = columnPattern.indexOf(column);
+        shouldApplyColumnOffset = patternIndex >= 0;
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = patternIndex;
+        }
       }
       
       if (shouldApplyColumnOffset) {
-        const amount = gridOffsets.column.amount ?? 0;
+        const amount = calculateOffsetAmount(gridOffsets.column, columnOccurrenceIndex);
         y += gridOffsets.column.direction === 'down' ? amount : -amount;
       }
     }
