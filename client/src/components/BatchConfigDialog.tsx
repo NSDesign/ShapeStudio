@@ -2812,557 +2812,906 @@ export default function BatchConfigDialog({
                       
                       {currentSettings.shapePropertiesEnabled && (
                         <div className="ml-6 space-y-4">
-                          {/* Enhanced Width Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Width</Label>
-                              <Select value={currentSettings.widthMode} onValueChange={(value) => handleSettingsUpdate({ widthMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
+                          {/* Dimensions Container - Width & Height */}
+                          <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                            <Label className="text-sm font-medium text-slate-200">Dimensions</Label>
                             
-                            {currentSettings.widthMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Range: {currentSettings.widthRange?.[0] || 50} - {currentSettings.widthRange?.[1] || 200}</Label>
-                                <Slider
-                                  value={currentSettings.widthRange || [50, 200]}
-                                  onValueChange={(value) => handleSettingsUpdate({ widthRange: value as [number, number] })}
-                                  min={10}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Width Randomization: {currentSettings.widthRandomizationScale}%</Label>
-                                <Slider
-                                  value={[currentSettings.widthRandomizationScale]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ widthRandomizationScale: value })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full range randomization</p>
+                            {/* Width Controls */}
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium text-slate-300">Width</Label>
+                                <Select value={currentSettings.widthMode} onValueChange={(value) => handleSettingsUpdate({ widthMode: value as any })}>
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            )}
-                            
-                            {currentSettings.widthMode === 'value' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.widthValue}</Label>
-                                <Slider
-                                  value={[currentSettings.widthValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ widthValue: value })}
-                                  min={10}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-
-                            
-                            {currentSettings.widthMode === 'incremental' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.widthStartValue}px</Label>
-                                <Slider
-                                  value={[currentSettings.widthStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ widthStartValue: value })}
-                                  min={10}
-                                  max={200}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Increment: {currentSettings.widthIncrement}px</Label>
-                                <Slider
-                                  value={[currentSettings.widthIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ widthIncrement: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <p className="text-xs text-slate-400">Stepped sizing (start value + increment per shape)</p>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.sizeIncrementalResetPerBatch}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ sizeIncrementalResetPerBatch: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Enhanced Height Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Height</Label>
-                              <Select value={currentSettings.heightMode} onValueChange={(value) => handleSettingsUpdate({ heightMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {currentSettings.heightMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Range: {currentSettings.heightRange?.[0] || 50} - {currentSettings.heightRange?.[1] || 200}</Label>
-                                <Slider
-                                  value={currentSettings.heightRange || [50, 200]}
-                                  onValueChange={(value) => handleSettingsUpdate({ heightRange: value as [number, number] })}
-                                  min={10}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Height Randomization: {currentSettings.heightRandomizationScale}%</Label>
-                                <Slider
-                                  value={[currentSettings.heightRandomizationScale]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ heightRandomizationScale: value })}
-                                  min={0}
-                                  max={100}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                                <p className="text-xs text-slate-400">0% = deterministic sizing, 100% = full range randomization</p>
-                              </div>
-                            )}
-                            
-                            {currentSettings.heightMode === 'value' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.heightValue}</Label>
-                                <Slider
-                                  value={[currentSettings.heightValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ heightValue: value })}
-                                  min={10}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-
-                            
-                            {currentSettings.heightMode === 'incremental' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.heightStartValue}px</Label>
-                                <Slider
-                                  value={[currentSettings.heightStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ heightStartValue: value })}
-                                  min={10}
-                                  max={200}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Increment: {currentSettings.heightIncrement}px</Label>
-                                <Slider
-                                  value={[currentSettings.heightIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ heightIncrement: value })}
-                                  min={1}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <p className="text-xs text-slate-400">Stepped sizing (start value + increment per shape)</p>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.sizeIncrementalResetPerBatch}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ sizeIncrementalResetPerBatch: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Size Constraints for All Shapes */}
-                          <div className="space-y-3 p-3 bg-slate-700 rounded">
-                            <Label className="text-sm font-medium text-slate-200">Size Constraints</Label>
-                            <p className="text-xs text-slate-400">How should width and height dimensions be constrained?</p>
-                            <RadioGroup 
-                              value={currentSettings.sizeConstraintMode} 
-                              onValueChange={(value: 'none' | 'min' | 'max' | 'avg') => handleSettingsUpdate({ sizeConstraintMode: value })}
-                              className="space-y-2"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="none" id="size-none" className="border-slate-500 text-blue-600" />
-                                <Label htmlFor="size-none" className="text-xs text-slate-300 cursor-pointer">None - Independent width/height</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="min" id="size-min" className="border-slate-500 text-blue-600" />
-                                <Label htmlFor="size-min" className="text-xs text-slate-300 cursor-pointer">Min - Use smaller value for both dimensions</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="max" id="size-max" className="border-slate-500 text-blue-600" />
-                                <Label htmlFor="size-max" className="text-xs text-slate-300 cursor-pointer">Max - Use larger value for both dimensions</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="avg" id="size-avg" className="border-slate-500 text-blue-600" />
-                                <Label htmlFor="size-avg" className="text-xs text-slate-300 cursor-pointer">Avg - Use average value for both dimensions</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-
-                          {/* Enhanced X Position Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">X Position</Label>
-                              <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {currentSettings.xPositionMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Range: {currentSettings.xPositionRange?.[0] || -100} - {currentSettings.xPositionRange?.[1] || 100}</Label>
-                                <Slider
-                                  value={currentSettings.xPositionRange || [-100, 100]}
-                                  onValueChange={(value) => handleSettingsUpdate({ xPositionRange: value as [number, number] })}
-                                  min={-500}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-                            {currentSettings.xPositionMode === 'value' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.xPositionValue}</Label>
-                                <Slider
-                                  value={[currentSettings.xPositionValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionValue: value })}
-                                  min={-400}
-                                  max={400}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-                            {currentSettings.xPositionMode === 'directional' && (
-                              <div className="space-y-3">
+                              
+                              {currentSettings.widthMode === 'range' && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
-                                  <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
-                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
-                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
-                                  <Slider
-                                    value={[currentSettings.positionDirectionalDistance]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                    min={10}
-                                    max={200}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                {currentSettings.positionDirectionalMode === 'angle-based' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.positionDirectionalAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                      min={0}
-                                      max={360}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Min / Max (px)</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.widthRange?.[0] || 50}
+                                        onChange={(value) => handleSettingsUpdate({ widthRange: [value, currentSettings.widthRange?.[1] || 200] as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-width-min"
+                                      />
+                                      <Slider
+                                        value={currentSettings.widthRange || [50, 200]}
+                                        onValueChange={(value) => handleSettingsUpdate({ widthRange: value as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                      <NumericInput
+                                        value={currentSettings.widthRange?.[1] || 200}
+                                        onChange={(value) => handleSettingsUpdate({ widthRange: [currentSettings.widthRange?.[0] || 50, value] as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-width-max"
+                                      />
+                                    </div>
                                   </div>
-                                )}
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.directionalEvenDistribution}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Even 360° Distribution</Label>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Randomization (%)</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.widthRandomizationScale}
+                                        onChange={(value) => handleSettingsUpdate({ widthRandomizationScale: value })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-width-random"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.widthRandomizationScale]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ widthRandomizationScale: value })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                                {!currentSettings.directionalEvenDistribution && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.directionalClusterAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.directionalClusterAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                              )}
+                              
+                              {currentSettings.widthMode === 'value' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.widthValue}
+                                      onChange={(value) => handleSettingsUpdate({ widthValue: value })}
                                       min={10}
-                                      max={180}
+                                      max={500}
                                       step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-width-fixed"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.widthValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ widthValue: value })}
+                                      min={10}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
                                     />
                                   </div>
-                                )}
-                              </div>
-                            )}
-                            
-                            {currentSettings.xPositionMode === 'incremental' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.xPositionStartValue}px</Label>
-                                <Slider
-                                  value={[currentSettings.xPositionStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionStartValue: value })}
-                                  min={0}
-                                  max={200}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Increment: {currentSettings.xPositionIncrement}px</Label>
-                                <Slider
-                                  value={[currentSettings.xPositionIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xPositionIncrement: value })}
-                                  min={1}
-                                  max={100}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.incrementalResetPerBatch}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Modulation Mode</Label>
-                                  <Select value={currentSettings.xPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ xPositionModulationMode: value as any })}>
-                                    <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">Off</SelectItem>
-                                      <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
-                                      <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
-                                      <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                {(currentSettings.xPositionModulationMode === 'pixel-value' || currentSettings.xPositionModulationMode === 'shape-count') && (
-                                  <>
-                                    <Label className="text-xs text-slate-300">
-                                      {currentSettings.xPositionModulationMode === 'pixel-value' ? 'Modulation Value: ' : 'Shape Count: '}
-                                      {currentSettings.xPositionModulationValue}
-                                      {currentSettings.xPositionModulationMode === 'pixel-value' ? 'px' : ' shapes'}
-                                    </Label>
-                                    <Slider
-                                      value={[currentSettings.xPositionModulationValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xPositionModulationValue: value })}
-                                      min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                      max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                      step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                      className="[&_[role=slider]]:bg-blue-600"
+                              )}
+                              
+                              {currentSettings.widthMode === 'incremental' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.widthStartValue}
+                                          onChange={(value) => handleSettingsUpdate({ widthStartValue: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-width-start"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.widthStartValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ widthStartValue: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Increment (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.widthIncrement}
+                                          onChange={(value) => handleSettingsUpdate({ widthIncrement: value })}
+                                          min={1}
+                                          max={50}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-width-increment"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.widthIncrement]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ widthIncrement: value })}
+                                          min={1}
+                                          max={50}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.sizeIncrementalResetPerBatch}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ sizeIncrementalResetPerBatch: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
                                     />
-                                  </>
-                                )}
-                                <p className="text-xs text-slate-400">Stepped positioning (start + index × increment, with optional modulation)</p>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Enhanced Y Position Controls */}
-                          <div className="space-y-3 p-3 bg-slate-800 rounded">
-                            <div className="flex items-center space-x-2">
-                              <Label className="text-sm font-medium text-slate-200">Y Position</Label>
-                              <Select value={currentSettings.yPositionMode} onValueChange={(value) => handleSettingsUpdate({ yPositionMode: value as any })}>
-                                <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed Value</SelectItem>
-                                  <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                    <Label className="text-xs text-slate-400">Reset per batch</Label>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             
-                            {currentSettings.yPositionMode === 'range' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Range: {currentSettings.yPositionRange?.[0] || -100} - {currentSettings.yPositionRange?.[1] || 100}</Label>
-                                <Slider
-                                  value={currentSettings.yPositionRange || [-100, 100]}
-                                  onValueChange={(value) => handleSettingsUpdate({ yPositionRange: value as [number, number] })}
-                                  min={-500}
-                                  max={500}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
+                            {/* Height Controls */}
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium text-slate-300">Height</Label>
+                                <Select value={currentSettings.heightMode} onValueChange={(value) => handleSettingsUpdate({ heightMode: value as any })}>
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            )}
-                            
-                            {currentSettings.yPositionMode === 'value' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Fixed Value: {currentSettings.yPositionValue}</Label>
-                                <Slider
-                                  value={[currentSettings.yPositionValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionValue: value })}
-                                  min={-400}
-                                  max={400}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                            )}
-                            
-                            {currentSettings.yPositionMode === 'directional' && (
-                              <div className="space-y-3">
+                              
+                              {currentSettings.heightMode === 'range' && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Directional Mode</Label>
-                                  <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
-                                    <SelectTrigger className="h-6 w-full text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">Outward from Center</SelectItem>
-                                      <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">Outward from Edge</SelectItem>
-                                      <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle-based</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Distance: {currentSettings.positionDirectionalDistance}px</Label>
-                                  <Slider
-                                    value={[currentSettings.positionDirectionalDistance]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                    min={10}
-                                    max={200}
-                                    step={5}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                                {currentSettings.positionDirectionalMode === 'angle-based' && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Angle: {currentSettings.positionDirectionalAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.positionDirectionalAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                      min={0}
-                                      max={360}
-                                      step={1}
-                                      className="[&_[role=slider]]:bg-blue-600"
-                                    />
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Min / Max (px)</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.heightRange?.[0] || 50}
+                                        onChange={(value) => handleSettingsUpdate({ heightRange: [value, currentSettings.heightRange?.[1] || 200] as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-height-min"
+                                      />
+                                      <Slider
+                                        value={currentSettings.heightRange || [50, 200]}
+                                        onValueChange={(value) => handleSettingsUpdate({ heightRange: value as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                      <NumericInput
+                                        value={currentSettings.heightRange?.[1] || 200}
+                                        onChange={(value) => handleSettingsUpdate({ heightRange: [currentSettings.heightRange?.[0] || 50, value] as [number, number] })}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-height-max"
+                                      />
+                                    </div>
                                   </div>
-                                )}
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.directionalEvenDistribution}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Even 360° Distribution</Label>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Randomization (%)</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.heightRandomizationScale}
+                                        onChange={(value) => handleSettingsUpdate({ heightRandomizationScale: value })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        data-testid="input-height-random"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.heightRandomizationScale]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ heightRandomizationScale: value })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                                {!currentSettings.directionalEvenDistribution && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-slate-300">Cluster Angle: {currentSettings.directionalClusterAngle}°</Label>
-                                    <Slider
-                                      value={[currentSettings.directionalClusterAngle]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                              )}
+                              
+                              {currentSettings.heightMode === 'value' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.heightValue}
+                                      onChange={(value) => handleSettingsUpdate({ heightValue: value })}
                                       min={10}
-                                      max={180}
+                                      max={500}
                                       step={5}
-                                      className="[&_[role=slider]]:bg-blue-600"
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-height-fixed"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.heightValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ heightValue: value })}
+                                      min={10}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
                                     />
                                   </div>
-                                )}
-                              </div>
-                            )}
-                            
-                            {currentSettings.yPositionMode === 'incremental' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.yPositionStartValue}px</Label>
-                                <Slider
-                                  value={[currentSettings.yPositionStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionStartValue: value })}
-                                  min={0}
-                                  max={200}
-                                  step={5}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Increment: {currentSettings.yPositionIncrement}px</Label>
-                                <Slider
-                                  value={[currentSettings.yPositionIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yPositionIncrement: value })}
-                                  min={1}
-                                  max={100}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={currentSettings.incrementalResetPerBatch}
-                                    onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
-                                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                  />
-                                  <Label className="text-xs text-slate-300">Reset per batch</Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <Label className="text-xs text-slate-300">Modulation Mode</Label>
-                                  <Select value={currentSettings.yPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ yPositionModulationMode: value as any })}>
-                                    <SelectTrigger className="h-7 w-32 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">Off</SelectItem>
-                                      <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
-                                      <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
-                                      <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                {(currentSettings.yPositionModulationMode === 'pixel-value' || currentSettings.yPositionModulationMode === 'shape-count') && (
-                                  <>
-                                    <Label className="text-xs text-slate-300">
-                                      {currentSettings.yPositionModulationMode === 'pixel-value' ? 'Modulation Value: ' : 'Shape Count: '}
-                                      {currentSettings.yPositionModulationValue}
-                                      {currentSettings.yPositionModulationMode === 'pixel-value' ? 'px' : ' shapes'}
-                                    </Label>
-                                    <Slider
-                                      value={[currentSettings.yPositionModulationValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yPositionModulationValue: value })}
-                                      min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                      max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                      step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                      className="[&_[role=slider]]:bg-blue-600"
+                              )}
+                              
+                              {currentSettings.heightMode === 'incremental' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.heightStartValue}
+                                          onChange={(value) => handleSettingsUpdate({ heightStartValue: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-height-start"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.heightStartValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ heightStartValue: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Increment (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.heightIncrement}
+                                          onChange={(value) => handleSettingsUpdate({ heightIncrement: value })}
+                                          min={1}
+                                          max={50}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-height-increment"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.heightIncrement]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ heightIncrement: value })}
+                                          min={1}
+                                          max={50}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.sizeIncrementalResetPerBatch}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ sizeIncrementalResetPerBatch: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
                                     />
-                                  </>
-                                )}
-                                <p className="text-xs text-slate-400">Stepped positioning (start + index × increment, with optional modulation)</p>
-                              </div>
-                            )}
+                                    <Label className="text-xs text-slate-400">Reset per batch</Label>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Size Constraints */}
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                              <Label className="text-xs font-medium text-slate-300">Size Constraints</Label>
+                              <RadioGroup 
+                                value={currentSettings.sizeConstraintMode} 
+                                onValueChange={(value: 'none' | 'min' | 'max' | 'avg') => handleSettingsUpdate({ sizeConstraintMode: value })}
+                                className="grid grid-cols-2 gap-2"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="none" id="size-none" className="border-slate-500 text-blue-600" />
+                                  <Label htmlFor="size-none" className="text-xs text-slate-400 cursor-pointer">None</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="min" id="size-min" className="border-slate-500 text-blue-600" />
+                                  <Label htmlFor="size-min" className="text-xs text-slate-400 cursor-pointer">Min</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="max" id="size-max" className="border-slate-500 text-blue-600" />
+                                  <Label htmlFor="size-max" className="text-xs text-slate-400 cursor-pointer">Max</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="avg" id="size-avg" className="border-slate-500 text-blue-600" />
+                                  <Label htmlFor="size-avg" className="text-xs text-slate-400 cursor-pointer">Average</Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
                           </div>
-                          
 
+                          {/* Position Container - X & Y Position */}
+                          <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                            <Label className="text-sm font-medium text-slate-200">Position</Label>
+                            
+                            {/* X Position Controls */}
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium text-slate-300">X Position</Label>
+                                <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {currentSettings.xPositionMode === 'range' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Min / Max (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.xPositionRange?.[0] || -100}
+                                      onChange={(value) => handleSettingsUpdate({ xPositionRange: [value, currentSettings.xPositionRange?.[1] || 100] as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-x-pos-min"
+                                    />
+                                    <Slider
+                                      value={currentSettings.xPositionRange || [-100, 100]}
+                                      onValueChange={(value) => handleSettingsUpdate({ xPositionRange: value as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                    <NumericInput
+                                      value={currentSettings.xPositionRange?.[1] || 100}
+                                      onChange={(value) => handleSettingsUpdate({ xPositionRange: [currentSettings.xPositionRange?.[0] || -100, value] as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-x-pos-max"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {currentSettings.xPositionMode === 'value' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.xPositionValue}
+                                      onChange={(value) => handleSettingsUpdate({ xPositionValue: value })}
+                                      min={-400}
+                                      max={400}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-x-pos-fixed"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.xPositionValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ xPositionValue: value })}
+                                      min={-400}
+                                      max={400}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {currentSettings.xPositionMode === 'directional' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Mode</Label>
+                                      <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
+                                        <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">From Center</SelectItem>
+                                          <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">From Edge</SelectItem>
+                                          <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Distance (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.positionDirectionalDistance}
+                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-dir-distance"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.positionDirectionalDistance]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {currentSettings.positionDirectionalMode === 'angle-based' && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Angle (°)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.positionDirectionalAngle}
+                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                          min={0}
+                                          max={360}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-dir-angle"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.positionDirectionalAngle]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                          min={0}
+                                          max={360}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.directionalEvenDistribution}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-400">Even 360° Distribution</Label>
+                                  </div>
+                                  {!currentSettings.directionalEvenDistribution && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Cluster Angle (°)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.directionalClusterAngle}
+                                          onChange={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                          min={10}
+                                          max={180}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-cluster-angle"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.directionalClusterAngle]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                          min={10}
+                                          max={180}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {currentSettings.xPositionMode === 'incremental' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.xPositionStartValue}
+                                          onChange={(value) => handleSettingsUpdate({ xPositionStartValue: value })}
+                                          min={0}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-inc-start"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.xPositionStartValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionStartValue: value })}
+                                          min={0}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Increment (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.xPositionIncrement}
+                                          onChange={(value) => handleSettingsUpdate({ xPositionIncrement: value })}
+                                          min={1}
+                                          max={100}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-inc-step"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.xPositionIncrement]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionIncrement: value })}
+                                          min={1}
+                                          max={100}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox
+                                        checked={currentSettings.incrementalResetPerBatch}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      />
+                                      <Label className="text-xs text-slate-400">Reset per batch</Label>
+                                    </div>
+                                    <Select value={currentSettings.xPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ xPositionModulationMode: value as any })}>
+                                      <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                        <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">No Modulation</SelectItem>
+                                        <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                        <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
+                                        <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  {(currentSettings.xPositionModulationMode === 'pixel-value' || currentSettings.xPositionModulationMode === 'shape-count') && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">
+                                        {currentSettings.xPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
+                                      </Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.xPositionModulationValue}
+                                          onChange={(value) => handleSettingsUpdate({ xPositionModulationValue: value })}
+                                          min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                          step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-x-mod-value"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.xPositionModulationValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionModulationValue: value })}
+                                          min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                          step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Y Position Controls */}
+                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium text-slate-300">Y Position</Label>
+                                <Select value={currentSettings.yPositionMode} onValueChange={(value) => handleSettingsUpdate({ yPositionMode: value as any })}>
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                    <SelectItem value="directional" className="text-slate-200 hover:bg-slate-700">Directional</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {currentSettings.yPositionMode === 'range' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Min / Max (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.yPositionRange?.[0] || -100}
+                                      onChange={(value) => handleSettingsUpdate({ yPositionRange: [value, currentSettings.yPositionRange?.[1] || 100] as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-y-pos-min"
+                                    />
+                                    <Slider
+                                      value={currentSettings.yPositionRange || [-100, 100]}
+                                      onValueChange={(value) => handleSettingsUpdate({ yPositionRange: value as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                    <NumericInput
+                                      value={currentSettings.yPositionRange?.[1] || 100}
+                                      onChange={(value) => handleSettingsUpdate({ yPositionRange: [currentSettings.yPositionRange?.[0] || -100, value] as [number, number] })}
+                                      min={-500}
+                                      max={500}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-y-pos-max"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {currentSettings.yPositionMode === 'value' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.yPositionValue}
+                                      onChange={(value) => handleSettingsUpdate({ yPositionValue: value })}
+                                      min={-400}
+                                      max={400}
+                                      step={5}
+                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      data-testid="input-y-pos-fixed"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.yPositionValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ yPositionValue: value })}
+                                      min={-400}
+                                      max={400}
+                                      step={5}
+                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {currentSettings.yPositionMode === 'directional' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Mode</Label>
+                                      <Select value={currentSettings.positionDirectionalMode} onValueChange={(value) => handleSettingsUpdate({ positionDirectionalMode: value as any })}>
+                                        <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="outward-center" className="text-slate-200 hover:bg-slate-700">From Center</SelectItem>
+                                          <SelectItem value="outward-edge" className="text-slate-200 hover:bg-slate-700">From Edge</SelectItem>
+                                          <SelectItem value="angle-based" className="text-slate-200 hover:bg-slate-700">Angle</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Distance (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.positionDirectionalDistance}
+                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-dir-distance"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.positionDirectionalDistance]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                          min={10}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {currentSettings.positionDirectionalMode === 'angle-based' && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Angle (°)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.positionDirectionalAngle}
+                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                          min={0}
+                                          max={360}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-dir-angle"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.positionDirectionalAngle]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                          min={0}
+                                          max={360}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.directionalEvenDistribution}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ directionalEvenDistribution: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-400">Even 360° Distribution</Label>
+                                  </div>
+                                  {!currentSettings.directionalEvenDistribution && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Cluster Angle (°)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.directionalClusterAngle}
+                                          onChange={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                          min={10}
+                                          max={180}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-cluster-angle"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.directionalClusterAngle]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                          min={10}
+                                          max={180}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {currentSettings.yPositionMode === 'incremental' && (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Start (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.yPositionStartValue}
+                                          onChange={(value) => handleSettingsUpdate({ yPositionStartValue: value })}
+                                          min={0}
+                                          max={200}
+                                          step={5}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-inc-start"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.yPositionStartValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionStartValue: value })}
+                                          min={0}
+                                          max={200}
+                                          step={5}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Increment (px)</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.yPositionIncrement}
+                                          onChange={(value) => handleSettingsUpdate({ yPositionIncrement: value })}
+                                          min={1}
+                                          max={100}
+                                          step={1}
+                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-inc-step"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.yPositionIncrement]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionIncrement: value })}
+                                          min={1}
+                                          max={100}
+                                          step={1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox
+                                        checked={currentSettings.incrementalResetPerBatch}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      />
+                                      <Label className="text-xs text-slate-400">Reset per batch</Label>
+                                    </div>
+                                    <Select value={currentSettings.yPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ yPositionModulationMode: value as any })}>
+                                      <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                        <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">No Modulation</SelectItem>
+                                        <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                        <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
+                                        <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  {(currentSettings.yPositionModulationMode === 'pixel-value' || currentSettings.yPositionModulationMode === 'shape-count') && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">
+                                        {currentSettings.yPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
+                                      </Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.yPositionModulationValue}
+                                          onChange={(value) => handleSettingsUpdate({ yPositionModulationValue: value })}
+                                          min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                          step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                          data-testid="input-y-mod-value"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.yPositionModulationValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionModulationValue: value })}
+                                          min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                          step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                         </div>
                       )}
