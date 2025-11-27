@@ -4445,10 +4445,11 @@ export default function BatchConfigDialog({
 
                                     {/* Radial Gradient Controls */}
                                     <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                      <div className="flex items-center justify-between">
-                                        <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
+                                      <Label className="text-sm font-medium text-slate-200">Radial Settings</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Label className="text-xs text-slate-300">Position</Label>
                                         <Select value={currentSettings.fillGradientRadialCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientRadialCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-radial-position">
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
@@ -4872,10 +4873,11 @@ export default function BatchConfigDialog({
 
                                     {/* Conic Gradient Controls */}
                                     <div className="space-y-2 p-3 bg-slate-900/40 border border-slate-700/60 rounded-md">
-                                      <div className="flex items-center justify-between">
-                                        <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
+                                      <Label className="text-sm font-medium text-slate-200">Conic Settings</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Label className="text-xs text-slate-300">Position</Label>
                                         <Select value={currentSettings.fillGradientConicCenter} onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenter: value as any })}>
-                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-conic-position">
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
