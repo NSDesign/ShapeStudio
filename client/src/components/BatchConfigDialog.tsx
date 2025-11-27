@@ -1003,134 +1003,177 @@ export default function BatchConfigDialog({
                                     {(currentSettings.gridOffsets?.row?.amountMode ?? 'fixed') === 'fixed' && (
                                       <div className="space-y-1">
                                         <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                        <Input
-                                          type="text"
-                                          inputMode="numeric"
-                                          value={currentSettings.gridOffsets?.row?.amount ?? 0}
-                                          onChange={(e) => {
-                                            const rawValue = e.target.value;
-                                            const parsed = rawValue === '' ? 0 : parseInt(rawValue, 10);
-                                            if (!isNaN(parsed)) {
-                                              handleSettingsUpdate((prev) => ({ 
-                                                gridOffsets: { 
-                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                  row: {
-                                                    ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                    amount: parsed
-                                                  }
-                                                } 
-                                              }));
-                                            }
-                                          }}
-                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-grid-row-offset-amount"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                          <NumericInput
+                                            value={currentSettings.gridOffsets?.row?.amount ?? 0}
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amount: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            data-testid="input-grid-row-offset-amount"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.row?.amount ?? 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amount: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-green-600"
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                     
                                     {/* Range Mode: Min/Max Inputs */}
                                     {(currentSettings.gridOffsets?.row?.amountMode ?? 'fixed') === 'range' && (
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Min (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-400">Amount Range (px)</Label>
+                                        <div className="flex flex-col md:flex-row gap-2 md:gap-1">
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountMin ?? 0}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    row: {
-                                                      ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                      amountMin: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountMin: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-row-offset-amount-min"
                                           />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Max (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountMax ?? 50}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    row: {
-                                                      ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                      amountMax: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountMax: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-row-offset-amount-max"
                                           />
                                         </div>
+                                        <Slider
+                                          value={[currentSettings.gridOffsets?.row?.amountMin ?? 0, currentSettings.gridOffsets?.row?.amountMax ?? 50]}
+                                          onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              row: {
+                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                amountMin: min,
+                                                amountMax: max
+                                              }
+                                            } 
+                                          }))}
+                                          min={-500}
+                                          max={500}
+                                          step={5}
+                                          className="[&_[role=slider]]:bg-green-600"
+                                        />
                                       </div>
                                     )}
                                     
                                     {/* Incremental Mode: Base/Increment Inputs */}
                                     {(currentSettings.gridOffsets?.row?.amountMode ?? 'fixed') === 'incremental' && (
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-1">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Base (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountBase ?? 0}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    row: {
-                                                      ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                      amountBase: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountBase: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-row-offset-amount-base"
                                           />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.row?.amountBase ?? 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountBase: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-green-600"
+                                          />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountIncrement ?? 10}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    row: {
-                                                      ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                      amountIncrement: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountIncrement: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-100}
+                                            max={100}
+                                            step={5}
+                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-row-offset-amount-increment"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.row?.amountIncrement ?? 10]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountIncrement: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-100}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-green-600"
                                           />
                                         </div>
                                       </div>
@@ -1279,134 +1322,177 @@ export default function BatchConfigDialog({
                                     {(currentSettings.gridOffsets?.column?.amountMode ?? 'fixed') === 'fixed' && (
                                       <div className="space-y-1">
                                         <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                        <Input
-                                          type="text"
-                                          inputMode="numeric"
-                                          value={currentSettings.gridOffsets?.column?.amount ?? 0}
-                                          onChange={(e) => {
-                                            const rawValue = e.target.value;
-                                            const parsed = rawValue === '' ? 0 : parseInt(rawValue, 10);
-                                            if (!isNaN(parsed)) {
-                                              handleSettingsUpdate((prev) => ({ 
-                                                gridOffsets: { 
-                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                  column: {
-                                                    ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                    amount: parsed
-                                                  }
-                                                } 
-                                              }));
-                                            }
-                                          }}
-                                          className="h-8 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-grid-column-offset-amount"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                          <NumericInput
+                                            value={currentSettings.gridOffsets?.column?.amount ?? 0}
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amount: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            data-testid="input-grid-column-offset-amount"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.column?.amount ?? 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amount: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-blue-600"
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                     
                                     {/* Range Mode: Min/Max Inputs */}
                                     {(currentSettings.gridOffsets?.column?.amountMode ?? 'fixed') === 'range' && (
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Min (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                      <div className="space-y-2">
+                                        <Label className="text-xs text-slate-400">Amount Range (px)</Label>
+                                        <div className="flex flex-col md:flex-row gap-2 md:gap-1">
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountMin ?? 0}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    column: {
-                                                      ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                      amountMin: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountMin: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-column-offset-amount-min"
                                           />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <Label className="text-xs text-slate-400">Max (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountMax ?? 50}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    column: {
-                                                      ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                      amountMax: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountMax: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-column-offset-amount-max"
                                           />
                                         </div>
+                                        <Slider
+                                          value={[currentSettings.gridOffsets?.column?.amountMin ?? 0, currentSettings.gridOffsets?.column?.amountMax ?? 50]}
+                                          onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              column: {
+                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                amountMin: min,
+                                                amountMax: max
+                                              }
+                                            } 
+                                          }))}
+                                          min={-500}
+                                          max={500}
+                                          step={5}
+                                          className="[&_[role=slider]]:bg-blue-600"
+                                        />
                                       </div>
                                     )}
                                     
                                     {/* Incremental Mode: Base/Increment Inputs */}
                                     {(currentSettings.gridOffsets?.column?.amountMode ?? 'fixed') === 'incremental' && (
-                                      <div className="grid grid-cols-2 gap-2">
-                                        <div className="space-y-1">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Base (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountBase ?? 0}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    column: {
-                                                      ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                      amountBase: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountBase: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-column-offset-amount-base"
                                           />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.column?.amountBase ?? 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountBase: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-blue-600"
+                                          />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                          <Input
-                                            type="text"
-                                            inputMode="numeric"
+                                          <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountIncrement ?? 10}
-                                            onChange={(e) => {
-                                              const parsed = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                                              if (!isNaN(parsed)) {
-                                                handleSettingsUpdate((prev) => ({ 
-                                                  gridOffsets: { 
-                                                    ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                    column: {
-                                                      ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                      amountIncrement: parsed
-                                                    }
-                                                  } 
-                                                }));
-                                              }
-                                            }}
-                                            className="h-8 bg-slate-800 border-slate-600 text-slate-200"
+                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountIncrement: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-100}
+                                            max={100}
+                                            step={5}
+                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-column-offset-amount-increment"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.column?.amountIncrement ?? 10]}
+                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountIncrement: value
+                                                }
+                                              } 
+                                            }))}
+                                            min={-100}
+                                            max={100}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-blue-600"
                                           />
                                         </div>
                                       </div>
