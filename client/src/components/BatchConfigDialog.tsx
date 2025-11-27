@@ -7227,14 +7227,14 @@ export default function BatchConfigDialog({
                                               </Select>
                                             </div>
                                             {currentSettings.fillGradientConicCenterXMode === 'fixed' && (
-                                              <div className="flex items-center gap-1">
+                                              <div className="space-y-1">
                                                 <NumericInput
                                                   value={currentSettings.fillGradientConicCenterX ?? 50}
                                                   onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterX: value })}
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                 />
                                                 <Slider
                                                   value={[currentSettings.fillGradientConicCenterX ?? 50]}
@@ -7242,39 +7242,41 @@ export default function BatchConfigDialog({
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                  className="[&_[role=slider]]:bg-amber-600"
                                                 />
                                               </div>
                                             )}
                                             {currentSettings.fillGradientConicCenterXMode === 'range' && (
-                                              <div className="flex items-center gap-1">
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterXRange?.[0] ?? 25}
-                                                  onChange={(value) => handleSettingsUpdate({ 
-                                                    fillGradientConicCenterXRange: [value, currentSettings.fillGradientConicCenterXRange?.[1] ?? 75] 
-                                                  })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                />
+                                              <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXRange?.[0] ?? 25}
+                                                    onChange={(value) => handleSettingsUpdate({ 
+                                                      fillGradientConicCenterXRange: [value, currentSettings.fillGradientConicCenterXRange?.[1] ?? 75] 
+                                                    })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterXRange?.[1] ?? 75}
+                                                    onChange={(value) => handleSettingsUpdate({ 
+                                                      fillGradientConicCenterXRange: [currentSettings.fillGradientConicCenterXRange?.[0] ?? 25, value] 
+                                                    })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                </div>
                                                 <Slider
                                                   value={currentSettings.fillGradientConicCenterXRange || [25, 75]}
                                                   onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXRange: value as [number, number] })}
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                />
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterXRange?.[1] ?? 75}
-                                                  onChange={(value) => handleSettingsUpdate({ 
-                                                    fillGradientConicCenterXRange: [currentSettings.fillGradientConicCenterXRange?.[0] ?? 25, value] 
-                                                  })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  className="[&_[role=slider]]:bg-amber-600"
                                                 />
                                               </div>
                                             )}
@@ -7288,16 +7290,18 @@ export default function BatchConfigDialog({
                                                     min={0}
                                                     max={100}
                                                     step={5}
-                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                   />
-                                                  <Label className="text-xs text-slate-500 w-6">Inc</Label>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  <Label className="text-xs text-slate-500 w-8">Inc</Label>
                                                   <NumericInput
                                                     value={currentSettings.fillGradientConicCenterXIncrement ?? 10}
                                                     onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterXIncrement: value })}
                                                     min={-50}
                                                     max={50}
                                                     step={5}
-                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                   />
                                                 </div>
                                                 <div className="flex items-center gap-1">
@@ -7314,7 +7318,7 @@ export default function BatchConfigDialog({
                                                       min={10}
                                                       max={100}
                                                       step={5}
-                                                      className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                      className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                     />
                                                   )}
                                                 </div>
@@ -7341,14 +7345,14 @@ export default function BatchConfigDialog({
                                               </Select>
                                             </div>
                                             {currentSettings.fillGradientConicCenterYMode === 'fixed' && (
-                                              <div className="flex items-center gap-1">
+                                              <div className="space-y-1">
                                                 <NumericInput
                                                   value={currentSettings.fillGradientConicCenterY ?? 50}
                                                   onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterY: value })}
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                 />
                                                 <Slider
                                                   value={[currentSettings.fillGradientConicCenterY ?? 50]}
@@ -7356,39 +7360,41 @@ export default function BatchConfigDialog({
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                                  className="[&_[role=slider]]:bg-amber-600"
                                                 />
                                               </div>
                                             )}
                                             {currentSettings.fillGradientConicCenterYMode === 'range' && (
-                                              <div className="flex items-center gap-1">
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterYRange?.[0] ?? 25}
-                                                  onChange={(value) => handleSettingsUpdate({ 
-                                                    fillGradientConicCenterYRange: [value, currentSettings.fillGradientConicCenterYRange?.[1] ?? 75] 
-                                                  })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                />
+                                              <div className="space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYRange?.[0] ?? 25}
+                                                    onChange={(value) => handleSettingsUpdate({ 
+                                                      fillGradientConicCenterYRange: [value, currentSettings.fillGradientConicCenterYRange?.[1] ?? 75] 
+                                                    })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                  <NumericInput
+                                                    value={currentSettings.fillGradientConicCenterYRange?.[1] ?? 75}
+                                                    onChange={(value) => handleSettingsUpdate({ 
+                                                      fillGradientConicCenterYRange: [currentSettings.fillGradientConicCenterYRange?.[0] ?? 25, value] 
+                                                    })}
+                                                    min={0}
+                                                    max={100}
+                                                    step={5}
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  />
+                                                </div>
                                                 <Slider
                                                   value={currentSettings.fillGradientConicCenterYRange || [25, 75]}
                                                   onValueChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYRange: value as [number, number] })}
                                                   min={0}
                                                   max={100}
                                                   step={5}
-                                                  className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                                />
-                                                <NumericInput
-                                                  value={currentSettings.fillGradientConicCenterYRange?.[1] ?? 75}
-                                                  onChange={(value) => handleSettingsUpdate({ 
-                                                    fillGradientConicCenterYRange: [currentSettings.fillGradientConicCenterYRange?.[0] ?? 25, value] 
-                                                  })}
-                                                  min={0}
-                                                  max={100}
-                                                  step={5}
-                                                  className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                  className="[&_[role=slider]]:bg-amber-600"
                                                 />
                                               </div>
                                             )}
@@ -7402,16 +7408,18 @@ export default function BatchConfigDialog({
                                                     min={0}
                                                     max={100}
                                                     step={5}
-                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                   />
-                                                  <Label className="text-xs text-slate-500 w-6">Inc</Label>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  <Label className="text-xs text-slate-500 w-8">Inc</Label>
                                                   <NumericInput
                                                     value={currentSettings.fillGradientConicCenterYIncrement ?? 10}
                                                     onChange={(value) => handleSettingsUpdate({ fillGradientConicCenterYIncrement: value })}
                                                     min={-50}
                                                     max={50}
                                                     step={5}
-                                                    className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                    className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                   />
                                                 </div>
                                                 <div className="flex items-center gap-1">
@@ -7428,7 +7436,7 @@ export default function BatchConfigDialog({
                                                       min={10}
                                                       max={100}
                                                       step={5}
-                                                      className="h-6 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                      className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                     />
                                                   )}
                                                 </div>
@@ -7462,25 +7470,23 @@ export default function BatchConfigDialog({
                                       {currentSettings.fillGradientConicAngleMode === 'fixed' && (
                                         <div className="space-y-1">
                                           <Label className="text-xs text-slate-400">Start Angle (°)</Label>
-                                          <div className="flex items-center gap-1">
-                                            <NumericInput
-                                              value={currentSettings.fillGradientConicAngle ?? 0}
-                                              onChange={(value) => handleSettingsUpdate({ fillGradientConicAngle: value })}
-                                              min={0}
-                                              max={360}
-                                              step={15}
-                                              className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                              data-testid="input-new-conic-angle"
-                                            />
-                                            <Slider
-                                              value={[currentSettings.fillGradientConicAngle ?? 0]}
-                                              onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
-                                              min={0}
-                                              max={360}
-                                              step={15}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                            />
-                                          </div>
+                                          <NumericInput
+                                            value={currentSettings.fillGradientConicAngle ?? 0}
+                                            onChange={(value) => handleSettingsUpdate({ fillGradientConicAngle: value })}
+                                            min={0}
+                                            max={360}
+                                            step={15}
+                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            data-testid="input-new-conic-angle"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.fillGradientConicAngle ?? 0]}
+                                            onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicAngle: value })}
+                                            min={0}
+                                            max={360}
+                                            step={15}
+                                            className="[&_[role=slider]]:bg-amber-600"
+                                          />
                                         </div>
                                       )}
                                       
@@ -7497,16 +7503,8 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                               data-testid="input-new-conic-angle-min"
-                                            />
-                                            <Slider
-                                              value={currentSettings.fillGradientConicAngleRange || [0, 360]}
-                                              onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
-                                              min={0}
-                                              max={360}
-                                              step={15}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
                                             />
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleRange?.[1] ?? 360}
@@ -7516,25 +7514,33 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-7 w-10 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                               data-testid="input-new-conic-angle-max"
                                             />
                                           </div>
+                                          <Slider
+                                            value={currentSettings.fillGradientConicAngleRange || [0, 360]}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientConicAngleRange: value as [number, number] })}
+                                            min={0}
+                                            max={360}
+                                            step={15}
+                                            className="[&_[role=slider]]:bg-amber-600"
+                                          />
                                         </div>
                                       )}
                                       
                                       {/* Incremental Angle */}
                                       {currentSettings.fillGradientConicAngleMode === 'incremental' && (
                                         <div className="space-y-1">
-                                          <div className="flex items-center gap-1">
-                                            <Label className="text-xs text-slate-500 w-8">Start</Label>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs text-slate-400">Start (°)</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleStartValue ?? 0}
                                               onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleStartValue: value })}
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             />
                                             <Slider
                                               value={[currentSettings.fillGradientConicAngleStartValue ?? 0]}
@@ -7542,18 +7548,18 @@ export default function BatchConfigDialog({
                                               min={0}
                                               max={360}
                                               step={15}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                              className="[&_[role=slider]]:bg-amber-600"
                                             />
                                           </div>
-                                          <div className="flex items-center gap-1">
-                                            <Label className="text-xs text-slate-500 w-8">Inc</Label>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs text-slate-400">Increment (°)</Label>
                                             <NumericInput
                                               value={currentSettings.fillGradientConicAngleIncrement ?? 30}
                                               onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleIncrement: value })}
                                               min={-180}
                                               max={180}
                                               step={15}
-                                              className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             />
                                             <Slider
                                               value={[currentSettings.fillGradientConicAngleIncrement ?? 30]}
@@ -7561,10 +7567,10 @@ export default function BatchConfigDialog({
                                               min={-180}
                                               max={180}
                                               step={15}
-                                              className="flex-1 [&_[role=slider]]:bg-amber-600"
+                                              className="[&_[role=slider]]:bg-amber-600"
                                             />
                                           </div>
-                                          <div className="flex items-center gap-1">
+                                          <div className="flex items-center gap-1 pt-1">
                                             <Checkbox
                                               checked={currentSettings.fillGradientConicAngleModulationEnabled ?? false}
                                               onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
@@ -7578,7 +7584,7 @@ export default function BatchConfigDialog({
                                                 min={30}
                                                 max={360}
                                                 step={15}
-                                                className="h-6 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                               />
                                             )}
                                           </div>
