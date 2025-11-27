@@ -291,7 +291,7 @@ export class Shape {
   private generateShapeData(batchConfig?: any): void {
     // Helper function to get values from batch config or use defaults
     const getRange = (configRange: [number, number] | undefined, defaultMin: number, defaultMax: number): number => {
-      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && configRange) {
+      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && configRange) {
         // Batch config handles its own randomization in the width/height calculation functions
         // Don't add additional randomization here
         const [min, max] = configRange;
@@ -302,7 +302,7 @@ export class Shape {
     
     const getWidthHeight = (): { width: number; height: number } => {
       // For batch configuration, width and height are calculated based on mode
-      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled) {
+      if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled) {
         let width = 100;
         let height = 100;
         
@@ -417,7 +417,7 @@ export class Shape {
         this.height = roundedRectDims.height;
         // Apply corner radius from batch config or scatter settings if available
         let cornerRadius = 0;
-        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           cornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-rectangle']) {
@@ -444,7 +444,7 @@ export class Shape {
         this.height = roundedSquareSize;
         // Apply corner radius from batch config or scatter settings if available
         let squareCornerRadius = 0;
-        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.rectangleCornerRadiusRange) {
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && batchConfig?.rectangleCornerRadiusRange) {
           const [minRadius, maxRadius] = batchConfig.rectangleCornerRadiusRange;
           squareCornerRadius = minRadius + Math.random() * (maxRadius - minRadius);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.['rounded-square']) {
@@ -562,7 +562,7 @@ export class Shape {
         this.radius = getRadius(30, 70);
         // Apply inner radius ratio from batch config or scatter settings if available
         let innerRadiusRatio = 0.3 + Math.random() * 0.4;
-        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.starInnerRadiusRange) {
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && batchConfig?.starInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.starInnerRadiusRange;
           innerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.star) {
@@ -602,7 +602,7 @@ export class Shape {
         this.radius = getRadius();
         // Apply inner radius ratio from batch config or shape-specific settings
         let ringInnerRadiusRatio = 0.4 + Math.random() * 0.4;
-        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && batchConfig?.ringInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
           ringInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.ring) {
@@ -631,7 +631,7 @@ export class Shape {
         this.radius = getRadius();
         // Apply inner radius ratio from batch config or shape-specific settings
         let splineRingInnerRadiusRatio = 0.4 + Math.random() * 0.4;
-        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.ringInnerRadiusRange) {
+        if (batchConfig?.propertiesEnabled && batchConfig?.shapePropertiesEnabled && batchConfig?.shapePropertiesDimensionsEnabled && batchConfig?.ringInnerRadiusRange) {
           const [minRatio, maxRatio] = batchConfig.ringInnerRadiusRange;
           splineRingInnerRadiusRatio = minRatio + Math.random() * (maxRatio - minRatio);
         } else if (batchConfig?.scatterSettings?.shapeSpecific?.['spline-ring']) {

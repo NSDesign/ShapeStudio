@@ -2799,22 +2799,45 @@ export default function BatchConfigDialog({
                   <div className="ml-6 space-y-4">
 
 
-                    {/* Shape Properties */}
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={currentSettings.shapePropertiesEnabled}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ shapePropertiesEnabled: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-sm font-medium text-slate-200">Shape Properties</Label>
+                    {/* Shape Properties Section */}
+                    <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={currentSettings.shapePropertiesEnabled}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ shapePropertiesEnabled: checked as boolean })}
+                            className="border-slate-500 data-[state=checked]:bg-blue-600"
+                            data-testid="checkbox-shape-properties-enabled"
+                          />
+                          <Label className="text-sm font-medium text-slate-200">Shape Properties</Label>
+                        </div>
+                        <span className="text-xs text-slate-400">
+                          {currentSettings.shapePropertiesDimensionsEnabled && currentSettings.shapePropertiesPositionEnabled 
+                            ? 'Dimensions & Position' 
+                            : currentSettings.shapePropertiesDimensionsEnabled 
+                              ? 'Dimensions only'
+                              : currentSettings.shapePropertiesPositionEnabled
+                                ? 'Position only'
+                                : 'All disabled'}
+                        </span>
                       </div>
                       
                       {currentSettings.shapePropertiesEnabled && (
-                        <div className="ml-6 space-y-4">
-                          {/* Dimensions Container - Width & Height */}
-                          <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                            <Label className="text-sm font-medium text-slate-200">Dimensions</Label>
+                        <div className="space-y-4 mt-3">
+                          {/* Dimensions Sub-section */}
+                          <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.shapePropertiesDimensionsEnabled}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ shapePropertiesDimensionsEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-green-600"
+                                data-testid="checkbox-shape-dimensions-enabled"
+                              />
+                              <Label className="text-xs font-medium text-slate-300">Dimensions</Label>
+                            </div>
+                            
+                            {currentSettings.shapePropertiesDimensionsEnabled && (
+                              <div className="space-y-3 mt-2">
                             
                             {/* Width Controls */}
                             <div className="space-y-2 p-2 bg-slate-700/50 rounded">
@@ -3160,14 +3183,27 @@ export default function BatchConfigDialog({
                                 </div>
                               </RadioGroup>
                             </div>
+                              </div>
+                            )}
                           </div>
 
-                          {/* Position Container - X & Y Position */}
-                          <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
-                            <Label className="text-sm font-medium text-slate-200">Position</Label>
+                          {/* Position Sub-section */}
+                          <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                checked={currentSettings.shapePropertiesPositionEnabled}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ shapePropertiesPositionEnabled: checked as boolean })}
+                                className="border-slate-500 data-[state=checked]:bg-green-600"
+                                data-testid="checkbox-shape-position-enabled"
+                              />
+                              <Label className="text-xs font-medium text-slate-300">Position</Label>
+                            </div>
+                            
+                            {currentSettings.shapePropertiesPositionEnabled && (
+                              <div className="space-y-3 mt-2">
                             
                             {/* X Position Controls */}
-                            <div className="space-y-2 p-2 bg-slate-700/50 rounded">
+                            <div className="space-y-2 p-2 bg-slate-600/50 rounded">
                               <div className="flex items-center justify-between">
                                 <Label className="text-xs font-medium text-slate-300">X Position</Label>
                                 <Select value={currentSettings.xPositionMode} onValueChange={(value) => handleSettingsUpdate({ xPositionMode: value as any })}>
@@ -3711,6 +3747,8 @@ export default function BatchConfigDialog({
                                 </div>
                               )}
                             </div>
+                              </div>
+                            )}
                           </div>
 
                         </div>

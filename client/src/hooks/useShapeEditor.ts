@@ -1446,8 +1446,8 @@ export const useShapeEditor = () => {
 
   // Helper functions for enhanced position calculation
   const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, return 0 (no position offset from shape properties)
-    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+    // If properties are disabled or Position sub-section is disabled, return 0 (no position offset from shape properties)
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesPositionEnabled) {
       return 0;
     }
 
@@ -1487,8 +1487,8 @@ export const useShapeEditor = () => {
 
   // Helper functions for enhanced width/height calculation
   const calculateWidth = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to deterministic default size
-    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+    // If properties are disabled or Dimensions sub-section is disabled, use fallback to deterministic default size
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesDimensionsEnabled) {
       return 100; // Deterministic fallback size
     }
 
@@ -1528,8 +1528,8 @@ export const useShapeEditor = () => {
   };
 
   const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, use fallback to deterministic default size
-    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+    // If properties are disabled or Dimensions sub-section is disabled, use fallback to deterministic default size
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesDimensionsEnabled) {
       return 100; // Deterministic fallback size
     }
 
@@ -1588,8 +1588,8 @@ export const useShapeEditor = () => {
 
 
   const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
-    // If properties are disabled, return 0 (no position offset from shape properties)
-    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled) {
+    // If properties are disabled or Position sub-section is disabled, return 0 (no position offset from shape properties)
+    if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesPositionEnabled) {
       return 0;
     }
 
@@ -1925,7 +1925,9 @@ export const useShapeEditor = () => {
 
     // Check if any positioning system is active
     const hasDistributionLayout = effectiveBatchConfig.distributionLayoutEnabled;
-    const hasShapeProperties = effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled;
+    // Shape Properties is active if master enabled AND at least one sub-section (Dimensions or Position) is enabled
+    const hasShapeProperties = effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled && 
+                               (effectiveBatchConfig.shapePropertiesDimensionsEnabled || effectiveBatchConfig.shapePropertiesPositionEnabled);
     const hasTransforms = effectiveBatchConfig.transformsEnabled;
     const anyPositioningSystemActive = hasDistributionLayout || hasShapeProperties || hasTransforms;
 
@@ -1947,7 +1949,7 @@ export const useShapeEditor = () => {
       let shapeX = position.x;
       let shapeY = position.y;
 
-      if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
+      if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled && effectiveBatchConfig.shapePropertiesPositionEnabled) {
         // Check if we're using grid distribution with incremental positions
         const isGridDistribution = effectiveBatchConfig.distributionLayoutEnabled && 
                                    effectiveBatchConfig.distributionPattern === 'grid';
@@ -1998,8 +2000,8 @@ export const useShapeEditor = () => {
       };
       const shape = new Shape(randomType, shapeX, shapeY, combinedConfig);
 
-      // Apply width/height from batch config if properties are enabled
-      if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled) {
+      // Apply width/height from batch config if properties and Dimensions sub-section are enabled
+      if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled && effectiveBatchConfig.shapePropertiesDimensionsEnabled) {
         let width = calculateWidth(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
         let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
 
