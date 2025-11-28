@@ -9072,6 +9072,284 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                           )}
+                          
+                          {currentSettings.transformOriginDefineMode === 'range' && (
+                            <div className="space-y-4">
+                              {/* X Range */}
+                              <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                                <Label className="text-xs font-medium text-slate-300">X Range</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Min</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginXMin}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginXMin: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-x-min"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginXMin]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMin: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Max</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginXMax}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginXMax: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-x-max"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginXMax]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMax: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Y Range */}
+                              <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                                <Label className="text-xs font-medium text-slate-300">Y Range</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Min</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginYMin}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginYMin: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-y-min"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginYMin]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMin: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Max</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginYMax}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginYMax: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-y-max"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginYMax]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMax: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {currentSettings.transformOriginDefineMode === 'incremental' && (
+                            <div className="space-y-4">
+                              {/* X Incremental */}
+                              <div className="space-y-3 p-2 bg-slate-800/50 rounded">
+                                <Label className="text-xs font-medium text-slate-300">X Incremental</Label>
+                                <div className="space-y-3">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Start</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginXStartValue}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginXStartValue: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-x-start"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginXStartValue]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXStartValue: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Increment</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginXIncrement}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginXIncrement: value })}
+                                        min={-100}
+                                        max={100}
+                                        step={1}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-x-increment"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginXIncrement]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXIncrement: value })}
+                                        min={-100}
+                                        max={100}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
+                                    <Checkbox
+                                      checked={currentSettings.transformOriginXModulationEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginXModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                      data-testid="checkbox-new-origin-x-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.transformOriginXModulationEnabled && (
+                                    <div className="space-y-2">
+                                      <Label className="text-xs text-slate-400">Modulation</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.transformOriginXModulationValue}
+                                          onChange={(value) => handleSettingsUpdate({ transformOriginXModulationValue: value })}
+                                          min={1}
+                                          max={500}
+                                          step={10}
+                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                          data-testid="input-new-origin-x-modulation"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.transformOriginXModulationValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginXModulationValue: value })}
+                                          min={1}
+                                          max={500}
+                                          step={10}
+                                          className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Y Incremental */}
+                              <div className="space-y-3 p-2 bg-slate-800/50 rounded">
+                                <Label className="text-xs font-medium text-slate-300">Y Incremental</Label>
+                                <div className="space-y-3">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Start</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginYStartValue}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginYStartValue: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-y-start"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginYStartValue]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYStartValue: value })}
+                                        min={-500}
+                                        max={500}
+                                        step={10}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-400">Increment</Label>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.transformOriginYIncrement}
+                                        onChange={(value) => handleSettingsUpdate({ transformOriginYIncrement: value })}
+                                        min={-100}
+                                        max={100}
+                                        step={1}
+                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-new-origin-y-increment"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.transformOriginYIncrement]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYIncrement: value })}
+                                        min={-100}
+                                        max={100}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
+                                    <Checkbox
+                                      checked={currentSettings.transformOriginYModulationEnabled}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginYModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                      data-testid="checkbox-new-origin-y-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-300">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.transformOriginYModulationEnabled && (
+                                    <div className="space-y-2">
+                                      <Label className="text-xs text-slate-400">Modulation</Label>
+                                      <div className="flex items-center gap-2">
+                                        <NumericInput
+                                          value={currentSettings.transformOriginYModulationValue}
+                                          onChange={(value) => handleSettingsUpdate({ transformOriginYModulationValue: value })}
+                                          min={1}
+                                          max={500}
+                                          step={10}
+                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                          data-testid="input-new-origin-y-modulation"
+                                        />
+                                        <Slider
+                                          value={[currentSettings.transformOriginYModulationValue]}
+                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginYModulationValue: value })}
+                                          min={1}
+                                          max={500}
+                                          step={10}
+                                          className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                       
@@ -9099,8 +9377,8 @@ export default function BatchConfigDialog({
                       
                       {currentSettings.transformOriginMode === 'current-shape' && (
                         <Select 
-                          value={currentSettings.transformOriginShapeAnchor} 
-                          onValueChange={(value) => handleSettingsUpdate({ transformOriginShapeAnchor: value as any })}
+                          value={currentSettings.transformOriginPredefined} 
+                          onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
                         >
                           <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200" data-testid="select-new-origin-shape-anchor">
                             <SelectValue />
