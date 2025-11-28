@@ -8999,7 +8999,6 @@ export default function BatchConfigDialog({
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
                             <SelectItem value="predefined-artboard" className="text-slate-200 hover:bg-slate-700">Artboard</SelectItem>
-                            <SelectItem value="current-shape" className="text-slate-200 hover:bg-slate-700">Current Shape</SelectItem>
                             <SelectItem value="shape-reference" className="text-slate-200 hover:bg-slate-700">Shape Reference</SelectItem>
                           </SelectContent>
                         </Select>
@@ -9393,28 +9392,6 @@ export default function BatchConfigDialog({
                           onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
                         >
                           <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200" data-testid="select-new-origin-artboard-anchor">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                            <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                            <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left</SelectItem>
-                            <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center</SelectItem>
-                            <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right</SelectItem>
-                            <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Center Left</SelectItem>
-                            <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Center Right</SelectItem>
-                            <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left</SelectItem>
-                            <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center</SelectItem>
-                            <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                      
-                      {currentSettings.transformOriginMode === 'current-shape' && (
-                        <Select 
-                          value={currentSettings.transformOriginPredefined} 
-                          onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
-                        >
-                          <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200" data-testid="select-new-origin-shape-anchor">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
