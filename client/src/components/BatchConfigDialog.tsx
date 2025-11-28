@@ -6551,1115 +6551,6 @@ export default function BatchConfigDialog({
               </div>
 
               <Separator className="bg-slate-600" />
-              {/* Transforms Section */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={currentSettings.transformsEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ transformsEnabled: checked as boolean })}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="font-medium text-slate-200">Transforms</Label>
-                </div>
-                
-                {currentSettings.transformsEnabled && (
-                  <div className="ml-6 space-y-4">
-                    {/* Artboard-Aware Toggle */}
-                    <div className="flex items-center space-x-2 p-2 bg-slate-700 rounded">
-                      <Checkbox
-                        checked={currentSettings.transformsArtboardAware}
-                        onCheckedChange={(checked) => handleSettingsUpdate({ transformsArtboardAware: checked as boolean })}
-                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        data-testid="checkbox-transforms-artboard-aware"
-                      />
-                      <Label className="text-xs text-slate-300">Use Artboard Bounds for Translate X/Y Ranges</Label>
-                    </div>
-                    
-                    {/* X and Y Translate Enhanced Controls */}
-                    <div className="space-y-3 p-3 bg-slate-800 rounded">
-                      <Label className="text-sm font-medium text-slate-200">Position (X/Y Translate)</Label>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* X Position Controls */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-xs text-slate-300">X</Label>
-                            <Select value={currentSettings.xTransformMode} onValueChange={(value) => handleSettingsUpdate({ xTransformMode: value as any })}>
-                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                <SelectItem value="align" className="text-slate-200 hover:bg-slate-700">Align</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {currentSettings.xTransformMode === 'range' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Range: {currentSettings.translateXRange?.[0] || -50} - {currentSettings.translateXRange?.[1] || 50}</Label>
-                              <Slider
-                                value={currentSettings.translateXRange || [-50, 50]}
-                                onValueChange={(value) => handleSettingsUpdate({ translateXRange: value as [number, number] })}
-                                min={-200}
-                                max={200}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.xTransformMode === 'value' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Value: {currentSettings.xTransformValue}</Label>
-                              <Slider
-                                value={[currentSettings.xTransformValue]}
-                                onValueChange={([value]) => handleSettingsUpdate({ xTransformValue: value })}
-                                min={-200}
-                                max={200}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.xTransformMode === 'incremental' && (
-                            <>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Start: {currentSettings.xTransformStartValue ?? 0}</Label>
-                                <Slider
-                                  value={[currentSettings.xTransformStartValue ?? 0]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xTransformStartValue: value })}
-                                  min={-200}
-                                  max={200}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Increment: {currentSettings.xTransformIncrement}</Label>
-                                <Slider
-                                  value={[currentSettings.xTransformIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
-                                  min={-50}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  checked={currentSettings.xTransformModulationEnabled}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ xTransformModulationEnabled: checked })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                              </div>
-                              {currentSettings.xTransformModulationEnabled && (
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-400">Modulation: {currentSettings.xTransformModulationValue}</Label>
-                                  <Slider
-                                    value={[currentSettings.xTransformModulationValue]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ xTransformModulationValue: value })}
-                                    min={10}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                              )}
-                            </>
-                          )}
-                          
-                          {currentSettings.xTransformMode === 'align' && (
-                            <div className="space-y-3">
-                              {/* Shape X Anchor */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Shape Anchor</Label>
-                                <Select value={currentSettings.xShapeAnchorMode} onValueChange={(value) => handleSettingsUpdate({ xShapeAnchorMode: value as any })}>
-                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
-                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                
-                                {currentSettings.xShapeAnchorMode === 'predefined' && (
-                                  <Select value={currentSettings.xShapeAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ xShapeAnchorPredefined: value as any })}>
-                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
-                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                      <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                
-                                {currentSettings.xShapeAnchorMode === 'define' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">X: {currentSettings.xShapeAnchorDefine}</Label>
-                                    <Slider
-                                      value={[currentSettings.xShapeAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Artboard X Anchor */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Artboard Anchor</Label>
-                                <Select value={currentSettings.xArtboardAnchorMode} onValueChange={(value) => handleSettingsUpdate({ xArtboardAnchorMode: value as any })}>
-                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
-                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                
-                                {currentSettings.xArtboardAnchorMode === 'predefined' && (
-                                  <Select value={currentSettings.xArtboardAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ xArtboardAnchorPredefined: value as any })}>
-                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="left" className="text-slate-200 hover:bg-slate-700">Left</SelectItem>
-                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                      <SelectItem value="right" className="text-slate-200 hover:bg-slate-700">Right</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                
-                                {currentSettings.xArtboardAnchorMode === 'define' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">X: {currentSettings.xArtboardAnchorDefine}</Label>
-                                    <Slider
-                                      value={[currentSettings.xArtboardAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Y Position Controls */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-xs text-slate-300">Y</Label>
-                            <Select value={currentSettings.yTransformMode} onValueChange={(value) => handleSettingsUpdate({ yTransformMode: value as any })}>
-                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                <SelectItem value="align" className="text-slate-200 hover:bg-slate-700">Align</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {currentSettings.yTransformMode === 'range' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Range: {currentSettings.translateYRange?.[0] || -50} - {currentSettings.translateYRange?.[1] || 50}</Label>
-                              <Slider
-                                value={currentSettings.translateYRange || [-50, 50]}
-                                onValueChange={(value) => handleSettingsUpdate({ translateYRange: value as [number, number] })}
-                                min={-200}
-                                max={200}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.yTransformMode === 'value' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Value: {currentSettings.yTransformValue}</Label>
-                              <Slider
-                                value={[currentSettings.yTransformValue]}
-                                onValueChange={([value]) => handleSettingsUpdate({ yTransformValue: value })}
-                                min={-200}
-                                max={200}
-                                step={5}
-                                className="[&_[role=slider]]:bg-blue-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.yTransformMode === 'incremental' && (
-                            <>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Start: {currentSettings.yTransformStartValue ?? 0}</Label>
-                                <Slider
-                                  value={[currentSettings.yTransformStartValue ?? 0]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yTransformStartValue: value })}
-                                  min={-200}
-                                  max={200}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Increment: {currentSettings.yTransformIncrement}</Label>
-                                <Slider
-                                  value={[currentSettings.yTransformIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
-                                  min={-50}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  checked={currentSettings.yTransformModulationEnabled}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ yTransformModulationEnabled: checked })}
-                                  className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                />
-                                <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                              </div>
-                              {currentSettings.yTransformModulationEnabled && (
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-400">Modulation: {currentSettings.yTransformModulationValue}</Label>
-                                  <Slider
-                                    value={[currentSettings.yTransformModulationValue]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ yTransformModulationValue: value })}
-                                    min={10}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
-                              )}
-                            </>
-                          )}
-                          
-                          {currentSettings.yTransformMode === 'align' && (
-                            <div className="space-y-3">
-                              {/* Shape Y Anchor */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Shape Anchor</Label>
-                                <Select value={currentSettings.yShapeAnchorMode} onValueChange={(value) => handleSettingsUpdate({ yShapeAnchorMode: value as any })}>
-                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
-                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                
-                                {currentSettings.yShapeAnchorMode === 'predefined' && (
-                                  <Select value={currentSettings.yShapeAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ yShapeAnchorPredefined: value as any })}>
-                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="top" className="text-slate-200 hover:bg-slate-700">Top</SelectItem>
-                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                      <SelectItem value="bottom" className="text-slate-200 hover:bg-slate-700">Bottom</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                
-                                {currentSettings.yShapeAnchorMode === 'define' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Y: {currentSettings.yShapeAnchorDefine}</Label>
-                                    <Slider
-                                      value={[currentSettings.yShapeAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Artboard Y Anchor */}
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-400">Artboard Anchor</Label>
-                                <Select value={currentSettings.yArtboardAnchorMode} onValueChange={(value) => handleSettingsUpdate({ yArtboardAnchorMode: value as any })}>
-                                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                    <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
-                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                
-                                {currentSettings.yArtboardAnchorMode === 'predefined' && (
-                                  <Select value={currentSettings.yArtboardAnchorPredefined} onValueChange={(value) => handleSettingsUpdate({ yArtboardAnchorPredefined: value as any })}>
-                                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                      <SelectItem value="top" className="text-slate-200 hover:bg-slate-700">Top</SelectItem>
-                                      <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                      <SelectItem value="bottom" className="text-slate-200 hover:bg-slate-700">Bottom</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                
-                                {currentSettings.yArtboardAnchorMode === 'define' && (
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-slate-400">Y: {currentSettings.yArtboardAnchorDefine}</Label>
-                                    <Slider
-                                      value={[currentSettings.yArtboardAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="[&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Scale Enhanced Controls */}
-                    <div className="space-y-3 p-3 bg-slate-800 rounded">
-                      <div className="flex items-center space-x-2">
-                        <Label className="text-sm font-medium text-slate-200">Scale</Label>
-                        <Checkbox 
-                          checked={currentSettings.maintainScaleAspectRatio}
-                          onCheckedChange={(checked) => {
-                            handleSettingsUpdate({ maintainScaleAspectRatio: checked as boolean });
-                            // When linking, sync Y mode to match X mode
-                            if (checked) {
-                              handleSettingsUpdate({ 
-                                scaleYMode: currentSettings.scaleXMode,
-                                scaleYValue: currentSettings.scaleXValue,
-                                scaleYIncrement: currentSettings.scaleXIncrement
-                              });
-                            }
-                          }}
-                          className="border-slate-500 data-[state=checked]:bg-green-600"
-                        />
-                        <Label className="text-xs text-slate-300">Link X/Y</Label>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Scale X Controls */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-xs text-slate-300">X</Label>
-                            <Select 
-                              value={currentSettings.scaleXMode} 
-                              onValueChange={(value) => {
-                                handleSettingsUpdate({ scaleXMode: value as any });
-                                // Sync Y when aspect ratio is linked
-                                if (currentSettings.maintainScaleAspectRatio) {
-                                  handleSettingsUpdate({ scaleYMode: value as any });
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {currentSettings.scaleXMode === 'range' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Range: {currentSettings.scaleXRange?.[0] || 50}% - {currentSettings.scaleXRange?.[1] || 200}%</Label>
-                              <Slider
-                                value={currentSettings.scaleXRange || [50, 200]}
-                                onValueChange={(value) => {
-                                  handleSettingsUpdate({ scaleXRange: value as [number, number] });
-                                  if (currentSettings.maintainScaleAspectRatio) {
-                                    handleSettingsUpdate({ scaleYRange: value as [number, number] });
-                                  }
-                                }}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-green-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.scaleXMode === 'value' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Value: {currentSettings.scaleXValue}%</Label>
-                              <Slider
-                                value={[currentSettings.scaleXValue]}
-                                onValueChange={([value]) => {
-                                  handleSettingsUpdate({ scaleXValue: value });
-                                  if (currentSettings.maintainScaleAspectRatio) {
-                                    handleSettingsUpdate({ scaleYValue: value });
-                                  }
-                                }}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-green-600"
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.scaleXMode === 'incremental' && (
-                            <>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Start: {currentSettings.scaleXStartValue ?? 100}%</Label>
-                                <Slider
-                                  value={[currentSettings.scaleXStartValue ?? 100]}
-                                  onValueChange={([value]) => {
-                                    handleSettingsUpdate({ scaleXStartValue: value });
-                                    if (currentSettings.maintainScaleAspectRatio) {
-                                      handleSettingsUpdate({ scaleYStartValue: value });
-                                    }
-                                  }}
-                                  min={0}
-                                  max={200}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-green-600"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleXIncrement}%</Label>
-                                <Slider
-                                  value={[currentSettings.scaleXIncrement]}
-                                  onValueChange={([value]) => {
-                                    handleSettingsUpdate({ scaleXIncrement: value });
-                                    if (currentSettings.maintainScaleAspectRatio) {
-                                      handleSettingsUpdate({ scaleYIncrement: value });
-                                    }
-                                  }}
-                                  min={-50}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-green-600"
-                                />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Scale Y Controls */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-xs text-slate-300">Y</Label>
-                            <Select 
-                              value={currentSettings.scaleYMode} 
-                              onValueChange={(value) => handleSettingsUpdate({ scaleYMode: value as any })}
-                              disabled={currentSettings.maintainScaleAspectRatio}
-                            >
-                              <SelectTrigger className={`h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200 ${currentSettings.maintainScaleAspectRatio ? 'opacity-50' : ''}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          {currentSettings.scaleYMode === 'range' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Range: {currentSettings.scaleYRange?.[0] || 50}% - {currentSettings.scaleYRange?.[1] || 200}%</Label>
-                              <Slider
-                                value={currentSettings.scaleYRange || [50, 200]}
-                                onValueChange={(value) => handleSettingsUpdate({ scaleYRange: value as [number, number] })}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-green-600"
-                                disabled={currentSettings.maintainScaleAspectRatio}
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.scaleYMode === 'value' && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Value: {currentSettings.scaleYValue}%</Label>
-                              <Slider
-                                value={[currentSettings.scaleYValue]}
-                                onValueChange={([value]) => handleSettingsUpdate({ scaleYValue: value })}
-                                min={10}
-                                max={300}
-                                step={5}
-                                className="[&_[role=slider]]:bg-green-600"
-                                disabled={currentSettings.maintainScaleAspectRatio}
-                              />
-                            </div>
-                          )}
-                          
-                          {currentSettings.scaleYMode === 'incremental' && (
-                            <>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Start: {currentSettings.scaleYStartValue ?? 100}%</Label>
-                                <Slider
-                                  value={[currentSettings.scaleYStartValue ?? 100]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ scaleYStartValue: value })}
-                                  min={0}
-                                  max={200}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-green-600"
-                                  disabled={currentSettings.maintainScaleAspectRatio}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Increment: {currentSettings.scaleYIncrement}%</Label>
-                                <Slider
-                                  value={[currentSettings.scaleYIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
-                                  min={-50}
-                                  max={50}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-green-600"
-                                  disabled={currentSettings.maintainScaleAspectRatio}
-                                />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Rotation Enhanced Controls */}
-                    <div className="space-y-3 p-3 bg-slate-800 rounded">
-                      <Label className="text-sm font-medium text-slate-200">Rotation</Label>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Label className="text-xs text-slate-300">Mode</Label>
-                          <Select value={currentSettings.rotationMode} onValueChange={(value) => handleSettingsUpdate({ rotationMode: value as any })}>
-                            <SelectTrigger className="h-6 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                              <SelectItem value="value" className="text-slate-200 hover:bg-slate-700">Value</SelectItem>
-                              <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        {currentSettings.rotationMode === 'range' && (
-                          <div className="space-y-1">
-                            <Label className="text-xs text-slate-400">Range: {currentSettings.rotationRange?.[0] || 0}° - {currentSettings.rotationRange?.[1] || 360}°</Label>
-                            <Slider
-                              value={currentSettings.rotationRange || [0, 360]}
-                              onValueChange={(value) => handleSettingsUpdate({ rotationRange: value as [number, number] })}
-                              min={0}
-                              max={360}
-                              step={5}
-                              className="[&_[role=slider]]:bg-orange-600"
-                            />
-                          </div>
-                        )}
-                        
-                        {currentSettings.rotationMode === 'value' && (
-                          <div className="space-y-1">
-                            <Label className="text-xs text-slate-400">Value: {currentSettings.rotationValue}°</Label>
-                            <Slider
-                              value={[currentSettings.rotationValue]}
-                              onValueChange={([value]) => handleSettingsUpdate({ rotationValue: value })}
-                              min={0}
-                              max={360}
-                              step={5}
-                              className="[&_[role=slider]]:bg-orange-600"
-                            />
-                          </div>
-                        )}
-                        
-                        {currentSettings.rotationMode === 'incremental' && (
-                          <div className="space-y-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Start: {currentSettings.rotationStartValue ?? 0}°</Label>
-                              <Slider
-                                value={[currentSettings.rotationStartValue ?? 0]}
-                                onValueChange={([value]) => handleSettingsUpdate({ rotationStartValue: value })}
-                                min={0}
-                                max={360}
-                                step={1}
-                                className="[&_[role=slider]]:bg-orange-600"
-                              />
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Step Amount: {currentSettings.rotationIncrementStep}°</Label>
-                              <Slider
-                                value={[currentSettings.rotationIncrementStep]}
-                                onValueChange={([value]) => handleSettingsUpdate({ rotationIncrementStep: value })}
-                                min={1}
-                                max={90}
-                                step={1}
-                                className="[&_[role=slider]]:bg-orange-600"
-                              />
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-400">Increment: {currentSettings.rotationIncrement}°</Label>
-                              <Slider
-                                value={[currentSettings.rotationIncrement]}
-                                onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
-                                min={-180}
-                                max={180}
-                                step={currentSettings.rotationIncrementStep}
-                                className="[&_[role=slider]]:bg-orange-600"
-                              />
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Checkbox 
-                                checked={currentSettings.rotationModulationEnabled}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ rotationModulationEnabled: checked as boolean })}
-                                className="border-slate-500 data-[state=checked]:bg-orange-600"
-                              />
-                              <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                            </div>
-                            
-                            {currentSettings.rotationModulationEnabled && (
-                              <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Modulation: {currentSettings.rotationModulation}° (reset cycle)</Label>
-                                <Slider
-                                  value={[currentSettings.rotationModulation]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
-                                  min={90}
-                                  max={720}
-                                  step={30}
-                                  className="[&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Transform Randomization Scaling */}
-                    <div className="space-y-3 p-3 bg-slate-900 rounded border border-slate-600">
-                      <Label className="text-sm font-medium text-slate-200">Transform Randomization Scaling</Label>
-                      <p className="text-xs text-slate-400">Control how much additional randomization is applied to transform modes</p>
-                      
-                      <div className="space-y-3">
-                        
-                        {/* Scale Randomization Scale */}
-                        <div className="space-y-2">
-                          <Label className="text-xs text-slate-300">Scale Randomization: {currentSettings.scaleRandomizationScale}%</Label>
-                          <Slider
-                            value={[currentSettings.scaleRandomizationScale]}
-                            onValueChange={([value]) => handleSettingsUpdate({ scaleRandomizationScale: value })}
-                            min={0}
-                            max={100}
-                            step={5}
-                            className="[&_[role=slider]]:bg-purple-600"
-                          />
-                          <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to scale transforms (range: 0 to 1)</p>
-                        </div>
-                        
-                        {/* Rotation Randomization Scale */}
-                        <div className="space-y-2">
-                          <Label className="text-xs text-slate-300">Rotation Randomization: {currentSettings.rotationRandomizationScale}%</Label>
-                          <Slider
-                            value={[currentSettings.rotationRandomizationScale]}
-                            onValueChange={([value]) => handleSettingsUpdate({ rotationRandomizationScale: value })}
-                            min={0}
-                            max={100}
-                            step={5}
-                            className="[&_[role=slider]]:bg-purple-600"
-                          />
-                          <p className="text-xs text-slate-400">0% = no randomization, 100% = full randomization applied to rotation transforms (range: 0 to 1)</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Transform Origin */}
-                    <div className="space-y-3 p-3 bg-slate-800 rounded">
-                      <Label className="text-sm font-medium text-slate-200">Transform Origin</Label>
-                      <p className="text-xs text-slate-400">Set the point from which transforms (rotation, scale, position) are applied</p>
-                      
-                      <div className="space-y-3">
-                        {/* Mode Selector */}
-                        <div className="space-y-2">
-                          <Label className="text-xs text-slate-300">Mode</Label>
-                          <Select 
-                            value={currentSettings.transformOriginMode} 
-                            onValueChange={(value) => handleSettingsUpdate({ transformOriginMode: value as 'define' | 'predefined-artboard' | 'current-shape' | 'shape-reference' })}
-                          >
-                            <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                              <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (X, Y)</SelectItem>
-                              <SelectItem value="predefined-artboard" className="text-slate-200 hover:bg-slate-700">Predefined Artboard</SelectItem>
-                              <SelectItem value="current-shape" className="text-slate-200 hover:bg-slate-700">Current Shape</SelectItem>
-                              <SelectItem value="shape-reference" className="text-slate-200 hover:bg-slate-700">Shape Reference</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        {/* Define Mode - X and Y Coordinates with Sub-modes */}
-                        {currentSettings.transformOriginMode === 'define' && (
-                          <div className="space-y-3">
-                            {/* Sub-mode Selector */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Define Mode</Label>
-                              <Select 
-                                value={currentSettings.transformOriginDefineMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ transformOriginDefineMode: value as 'fixed' | 'range' | 'incremental' })}
-                              >
-                                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {/* Fixed Mode - Single X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'fixed' && (
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">X: {currentSettings.transformOriginX}</Label>
-                                  <Slider
-                                    value={[currentSettings.transformOriginX]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ transformOriginX: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-xs text-slate-300">Y: {currentSettings.transformOriginY}</Label>
-                                  <Slider
-                                    value={[currentSettings.transformOriginY]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ transformOriginY: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={10}
-                                    className="[&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Range Mode - Min/Max for X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'range' && (
-                              <div className="space-y-3">
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">X Range: [{currentSettings.transformOriginXMin}, {currentSettings.transformOriginXMax}]</Label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginXMin}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXMin]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMin: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginXMax}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXMax]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXMax: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Y Range: [{currentSettings.transformOriginYMin}, {currentSettings.transformOriginYMax}]</Label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Min: {currentSettings.transformOriginYMin}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYMin]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMin: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Max: {currentSettings.transformOriginYMax}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYMax]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYMax: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Incremental Mode - Start, Increment, Modulation for X and Y */}
-                            {currentSettings.transformOriginDefineMode === 'incremental' && (
-                              <div className="space-y-3">
-                                {/* X Incremental */}
-                                <div className="space-y-2 p-2 bg-slate-900 rounded">
-                                  <Label className="text-xs font-medium text-slate-300">X Incremental</Label>
-                                  <div className="space-y-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginXStartValue}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXStartValue]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXStartValue: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginXIncrement}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginXIncrement]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginXIncrement: value })}
-                                        min={-100}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.transformOriginXModulationEnabled}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginXModulationEnabled: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                    </div>
-                                    {currentSettings.transformOriginXModulationEnabled && (
-                                      <div className="space-y-1">
-                                        <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginXModulationValue}</Label>
-                                        <Slider
-                                          value={[currentSettings.transformOriginXModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginXModulationValue: value })}
-                                          min={1}
-                                          max={500}
-                                          step={10}
-                                          className="[&_[role=slider]]:bg-purple-600"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Y Incremental */}
-                                <div className="space-y-2 p-2 bg-slate-900 rounded">
-                                  <Label className="text-xs font-medium text-slate-300">Y Incremental</Label>
-                                  <div className="space-y-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Start: {currentSettings.transformOriginYStartValue}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYStartValue]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYStartValue: value })}
-                                        min={-500}
-                                        max={500}
-                                        step={10}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">Increment: {currentSettings.transformOriginYIncrement}</Label>
-                                      <Slider
-                                        value={[currentSettings.transformOriginYIncrement]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ transformOriginYIncrement: value })}
-                                        min={-100}
-                                        max={100}
-                                        step={1}
-                                        className="[&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.transformOriginYModulationEnabled}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ transformOriginYModulationEnabled: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-300">Enable Modulation</Label>
-                                    </div>
-                                    {currentSettings.transformOriginYModulationEnabled && (
-                                      <div className="space-y-1">
-                                        <Label className="text-xs text-slate-400">Modulation: {currentSettings.transformOriginYModulationValue}</Label>
-                                        <Slider
-                                          value={[currentSettings.transformOriginYModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ transformOriginYModulationValue: value })}
-                                          min={1}
-                                          max={500}
-                                          step={10}
-                                          className="[&_[role=slider]]:bg-purple-600"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Predefined Artboard Mode - Alignment Options */}
-                        {currentSettings.transformOriginMode === 'predefined-artboard' && (
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Artboard Alignment Point</Label>
-                            <Select 
-                              value={currentSettings.transformOriginPredefined} 
-                              onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
-                            >
-                              <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
-                                <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
-                                <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
-                                <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
-                                <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
-                                <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
-                                <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
-                                <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        
-                        {/* Current Shape Mode - Alignment Options */}
-                        {currentSettings.transformOriginMode === 'current-shape' && (
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Shape Alignment Point</Label>
-                            <Select 
-                              value={currentSettings.transformOriginPredefined} 
-                              onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
-                            >
-                              <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
-                                <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
-                                <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
-                                <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
-                                <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
-                                <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
-                                <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
-                                <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        
-                        {/* Shape Reference Mode - Reference another shape */}
-                        {currentSettings.transformOriginMode === 'shape-reference' && (
-                          <div className="space-y-3">
-                            {/* Reference Type Selector */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Reference Type</Label>
-                              <Select 
-                                value={currentSettings.transformOriginShapeReference} 
-                                onValueChange={(value) => handleSettingsUpdate({ transformOriginShapeReference: value as 'current' | 'previous' | 'next' | 'specific' })}
-                              >
-                                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="current" className="text-slate-200 hover:bg-slate-700">Current Shape</SelectItem>
-                                  <SelectItem value="previous" className="text-slate-200 hover:bg-slate-700">Previous Shape</SelectItem>
-                                  <SelectItem value="next" className="text-slate-200 hover:bg-slate-700">Next Shape</SelectItem>
-                                  <SelectItem value="specific" className="text-slate-200 hover:bg-slate-700">Specific Index</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            {/* Specific Index Input (conditional on reference type) */}
-                            {currentSettings.transformOriginShapeReference === 'specific' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Shape Index: {currentSettings.transformOriginShapeIndex}</Label>
-                                <Slider
-                                  value={[currentSettings.transformOriginShapeIndex]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ transformOriginShapeIndex: value })}
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  className="[&_[role=slider]]:bg-orange-600"
-                                />
-                                <p className="text-xs text-slate-400">0 = first shape in batch, 1 = second shape, etc.</p>
-                              </div>
-                            )}
-                            
-                            {/* Shape Anchor Point Selector */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Anchor Point on Referenced Shape</Label>
-                              <Select 
-                                value={currentSettings.transformOriginShapeAnchor} 
-                                onValueChange={(value) => handleSettingsUpdate({ transformOriginShapeAnchor: value as any })}
-                              >
-                                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
-                                  <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left (Corner)</SelectItem>
-                                  <SelectItem value="top-center" className="text-slate-200 hover:bg-slate-700">Top Center (Midpoint)</SelectItem>
-                                  <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right (Corner)</SelectItem>
-                                  <SelectItem value="center-left" className="text-slate-200 hover:bg-slate-700">Left Center (Midpoint)</SelectItem>
-                                  <SelectItem value="center-right" className="text-slate-200 hover:bg-slate-700">Right Center (Midpoint)</SelectItem>
-                                  <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left (Corner)</SelectItem>
-                                  <SelectItem value="bottom-center" className="text-slate-200 hover:bg-slate-700">Bottom Center (Midpoint)</SelectItem>
-                                  <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right (Corner)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Separator className="bg-slate-600" />
 
               {/* NEW Shape Transforms Section - Modern Styling */}
               <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
@@ -9487,30 +8378,41 @@ export default function BatchConfigDialog({
 
               <Separator className="bg-slate-600" />
 
-              {/* Shape Effects */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={currentSettings.shapeEffectsEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ shapeEffectsEnabled: checked as boolean })}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="font-medium text-slate-200">Shape Effects</Label>
+              {/* Shape Effects Section - Modern Styling */}
+              <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={currentSettings.shapeEffectsEnabled}
+                      onCheckedChange={(checked) => handleSettingsUpdate({ shapeEffectsEnabled: checked as boolean })}
+                      className="border-slate-500 data-[state=checked]:bg-purple-600"
+                      data-testid="checkbox-shape-effects-enabled"
+                    />
+                    <Label className="text-sm font-medium text-slate-200">Shape Effects</Label>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {currentSettings.shapeEffectsEnabled 
+                      ? `${currentSettings.blurEnabled ? 'Blur' : ''}${currentSettings.blurEnabled ? '' : 'No effects active'}` 
+                      : 'Disabled'}
+                  </span>
                 </div>
                 
                 {currentSettings.shapeEffectsEnabled && (
-                  <div className="ml-6 space-y-4">
-                    {/* Blur Effects Section */}
-                    <div className="space-y-3 p-3 bg-slate-800 rounded">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          checked={currentSettings.blurEnabled}
-                          onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
-                          className="border-slate-500 data-[state=checked]:bg-blue-600"
-                        />
-                        <Label className="text-sm font-medium text-slate-200">Blur</Label>
+                  <div className="space-y-4 mt-3">
+                    {/* Blur Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            checked={currentSettings.blurEnabled}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
+                            className="border-slate-500 data-[state=checked]:bg-purple-600"
+                            data-testid="checkbox-blur-enabled"
+                          />
+                          <Label className="text-sm font-medium text-slate-200">Blur</Label>
+                        </div>
                         <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
-                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-blur-mode">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
@@ -9522,103 +8424,213 @@ export default function BatchConfigDialog({
                       </div>
 
                       {currentSettings.blurEnabled && (
-                        <div className="space-y-3">
-                          <div className="space-y-2">
-                            <Label className="text-xs text-slate-300">Blur Probability: {currentSettings.blurProbability}%</Label>
-                            <Slider
-                              value={[currentSettings.blurProbability]}
-                              onValueChange={([value]) => handleSettingsUpdate({ blurProbability: value })}
-                              max={100}
-                              step={5}
-                              className="[&_[role=slider]]:bg-purple-600"
-                            />
+                        <div className="space-y-3 mt-2">
+                          {/* Blur Probability */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Probability</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.blurProbability}
+                                onChange={(value) => handleSettingsUpdate({ blurProbability: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-blur-probability"
+                              />
+                              <Slider
+                                value={[currentSettings.blurProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ blurProbability: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-purple-600"
+                              />
+                            </div>
+                            <p className="text-xs text-slate-500">{currentSettings.blurProbability}% of shapes will have blur applied</p>
                           </div>
 
-                          {currentSettings.blurMode === 'range' && (
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Blur Range: {currentSettings.blurRange?.[0] || 2}px - {currentSettings.blurRange?.[1] || 15}px</Label>
-                              <Slider
-                                value={currentSettings.blurRange || [2, 15]}
-                                onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
-                                min={0}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-purple-600"
-                              />
+                          {currentSettings.blurMode === 'define' && (
+                            <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                              <Label className="text-xs font-medium text-slate-300">Blur Radius</Label>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.blurDefine}
+                                  onChange={(value) => handleSettingsUpdate({ blurDefine: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-blur-define"
+                                />
+                                <Slider
+                                  value={[currentSettings.blurDefine]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ blurDefine: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-500">Fixed blur: {currentSettings.blurDefine}px</p>
                             </div>
                           )}
 
-                          {currentSettings.blurMode === 'define' && (
-                            <div className="space-y-2">
-                              <Label className="text-xs text-slate-300">Blur Radius: {currentSettings.blurDefine || 8}px</Label>
-                              <Slider
-                                value={[currentSettings.blurDefine || 8]}
-                                onValueChange={([value]) => handleSettingsUpdate({ blurDefine: value })}
-                                min={0}
-                                max={50}
-                                step={1}
-                                className="[&_[role=slider]]:bg-purple-600"
-                              />
+                          {currentSettings.blurMode === 'range' && (
+                            <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                              <Label className="text-xs font-medium text-slate-300">Blur Range</Label>
+                              <div className="hidden md:flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.blurRange?.[0] ?? 2}
+                                  onChange={(value) => handleSettingsUpdate({ blurRange: [value, currentSettings.blurRange?.[1] ?? 15] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-blur-range-min"
+                                />
+                                <Slider
+                                  value={currentSettings.blurRange || [2, 15]}
+                                  onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                />
+                                <NumericInput
+                                  value={currentSettings.blurRange?.[1] ?? 15}
+                                  onChange={(value) => handleSettingsUpdate({ blurRange: [currentSettings.blurRange?.[0] ?? 2, value] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-blur-range-max"
+                                />
+                              </div>
+                              <div className="md:hidden space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Min</Label>
+                                    <NumericInput
+                                      value={currentSettings.blurRange?.[0] ?? 2}
+                                      onChange={(value) => handleSettingsUpdate({ blurRange: [value, currentSettings.blurRange?.[1] ?? 15] })}
+                                      min={0}
+                                      max={50}
+                                      step={1}
+                                      className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Max</Label>
+                                    <NumericInput
+                                      value={currentSettings.blurRange?.[1] ?? 15}
+                                      onChange={(value) => handleSettingsUpdate({ blurRange: [currentSettings.blurRange?.[0] ?? 2, value] })}
+                                      min={0}
+                                      max={50}
+                                      step={1}
+                                      className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    />
+                                  </div>
+                                </div>
+                                <Slider
+                                  value={currentSettings.blurRange || [2, 15]}
+                                  onValueChange={(value) => handleSettingsUpdate({ blurRange: value as [number, number] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="[&_[role=slider]]:bg-purple-600"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-500">Range: {currentSettings.blurRange?.[0] ?? 2}px to {currentSettings.blurRange?.[1] ?? 15}px</p>
                             </div>
                           )}
 
                           {currentSettings.blurMode === 'incremental' && (
-                            <div className="space-y-3">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Start Value: {currentSettings.blurStartValue}px</Label>
-                                <Slider
-                                  value={[currentSettings.blurStartValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ blurStartValue: value })}
-                                  min={0}
-                                  max={50}
-                                  step={0.5}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
+                            <div className="space-y-3 p-2 bg-slate-800/50 rounded">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Start Value</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.blurStartValue}
+                                      onChange={(value) => handleSettingsUpdate({ blurStartValue: value })}
+                                      min={0}
+                                      max={50}
+                                      step={0.5}
+                                      className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      data-testid="input-blur-start-value"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.blurStartValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ blurStartValue: value })}
+                                      min={0}
+                                      max={50}
+                                      step={0.5}
+                                      className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-slate-400">Increment</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.blurIncrement}
+                                      onChange={(value) => handleSettingsUpdate({ blurIncrement: value })}
+                                      min={0}
+                                      max={5}
+                                      step={0.1}
+                                      className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      data-testid="input-blur-increment"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.blurIncrement]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ blurIncrement: value })}
+                                      min={0}
+                                      max={5}
+                                      step={0.1}
+                                      className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-slate-300">Increment: {currentSettings.blurIncrement}px per shape</Label>
-                                <Slider
-                                  value={[currentSettings.blurIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ blurIncrement: value })}
-                                  min={0}
-                                  max={5}
-                                  step={0.1}
-                                  className="[&_[role=slider]]:bg-purple-600"
-                                />
-                              </div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
                                 <Checkbox
                                   checked={currentSettings.blurModulationEnabled}
                                   onCheckedChange={(checked) => handleSettingsUpdate({ blurModulationEnabled: checked as boolean })}
                                   className="border-slate-500 data-[state=checked]:bg-purple-600"
+                                  data-testid="checkbox-blur-modulation"
                                 />
                                 <Label className="text-xs text-slate-300">Enable Modulation</Label>
                               </div>
                               {currentSettings.blurModulationEnabled && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-slate-300">Modulation: Wrap at {currentSettings.blurModulationValue}px</Label>
-                                  <Slider
-                                    value={[currentSettings.blurModulationValue]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ blurModulationValue: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="[&_[role=slider]]:bg-purple-600"
-                                  />
+                                  <Label className="text-xs text-slate-400">Modulation Wrap</Label>
+                                  <div className="flex items-center gap-2">
+                                    <NumericInput
+                                      value={currentSettings.blurModulationValue}
+                                      onChange={(value) => handleSettingsUpdate({ blurModulationValue: value })}
+                                      min={1}
+                                      max={50}
+                                      step={1}
+                                      className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      data-testid="input-blur-modulation"
+                                    />
+                                    <Slider
+                                      value={[currentSettings.blurModulationValue]}
+                                      onValueChange={([value]) => handleSettingsUpdate({ blurModulationValue: value })}
+                                      min={1}
+                                      max={50}
+                                      step={1}
+                                      className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                    />
+                                  </div>
                                 </div>
                               )}
-                              <p className="text-xs text-slate-400">Progressive blur (start + index × increment, with optional modulation)</p>
+                              <p className="text-xs text-slate-500">Progressive blur: start + (index × increment), wraps at modulation value</p>
                             </div>
                           )}
                         </div>
                       )}
-                    </div>
-                    
-                    {/* Future effects can be added here */}
-                    <div className="p-3 bg-slate-700/50 rounded border border-slate-600">
-                      <p className="text-xs text-slate-400">
-                        Future effects like drop shadow and glow will be added here.
-                      </p>
                     </div>
                   </div>
                 )}
