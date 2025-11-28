@@ -9077,8 +9077,8 @@ export default function BatchConfigDialog({
                       
                       {currentSettings.transformOriginMode === 'predefined-artboard' && (
                         <Select 
-                          value={currentSettings.transformOriginArtboardAnchor} 
-                          onValueChange={(value) => handleSettingsUpdate({ transformOriginArtboardAnchor: value as any })}
+                          value={currentSettings.transformOriginPredefined} 
+                          onValueChange={(value) => handleSettingsUpdate({ transformOriginPredefined: value as any })}
                         >
                           <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200" data-testid="select-new-origin-artboard-anchor">
                             <SelectValue />
