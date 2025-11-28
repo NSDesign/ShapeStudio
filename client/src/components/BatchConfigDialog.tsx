@@ -1043,9 +1043,10 @@ export default function BatchConfigDialog({
                                     
                                     {/* Range Mode: Min/Max Inputs */}
                                     {(currentSettings.gridOffsets?.row?.amountMode ?? 'fixed') === 'range' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-3">
                                         <Label className="text-xs text-slate-400">Amount Range (px)</Label>
-                                        <div className="flex flex-col md:flex-row gap-2 md:gap-1">
+                                        {/* Desktop: inputs flanking slider | Mobile: 2-col grid above slider */}
+                                        <div className="hidden md:flex items-center gap-2">
                                           <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountMin ?? 0}
                                             onChange={(value) => handleSettingsUpdate((prev) => ({ 
@@ -1060,8 +1061,25 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-row-offset-amount-min"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.row?.amountMin ?? 0, currentSettings.gridOffsets?.row?.amountMax ?? 50]}
+                                            onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountMin: min,
+                                                  amountMax: max
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-green-600"
                                           />
                                           <NumericInput
                                             value={currentSettings.gridOffsets?.row?.amountMax ?? 50}
@@ -1077,27 +1095,66 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-row-offset-amount-max"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            data-testid="input-grid-row-offset-amount-max-desktop"
                                           />
                                         </div>
-                                        <Slider
-                                          value={[currentSettings.gridOffsets?.row?.amountMin ?? 0, currentSettings.gridOffsets?.row?.amountMax ?? 50]}
-                                          onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
-                                            gridOffsets: { 
-                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                              row: {
-                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                amountMin: min,
-                                                amountMax: max
-                                              }
-                                            } 
-                                          }))}
-                                          min={-500}
-                                          max={500}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-green-600"
-                                        />
+                                        {/* Mobile layout: 2-column grid for inputs, slider below */}
+                                        <div className="md:hidden space-y-3">
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <NumericInput
+                                              value={currentSettings.gridOffsets?.row?.amountMin ?? 0}
+                                              onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  row: {
+                                                    ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                    amountMin: value
+                                                  }
+                                                } 
+                                              }))}
+                                              min={-500}
+                                              max={500}
+                                              step={5}
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-grid-row-offset-amount-min"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.gridOffsets?.row?.amountMax ?? 50}
+                                              onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  row: {
+                                                    ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                    amountMax: value
+                                                  }
+                                                } 
+                                              }))}
+                                              min={-500}
+                                              max={500}
+                                              step={5}
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-grid-row-offset-amount-max"
+                                            />
+                                          </div>
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.row?.amountMin ?? 0, currentSettings.gridOffsets?.row?.amountMax ?? 50]}
+                                            onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                row: {
+                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                  amountMin: min,
+                                                  amountMax: max
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-green-600"
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                     
@@ -1362,9 +1419,10 @@ export default function BatchConfigDialog({
                                     
                                     {/* Range Mode: Min/Max Inputs */}
                                     {(currentSettings.gridOffsets?.column?.amountMode ?? 'fixed') === 'range' && (
-                                      <div className="space-y-2">
+                                      <div className="space-y-3">
                                         <Label className="text-xs text-slate-400">Amount Range (px)</Label>
-                                        <div className="flex flex-col md:flex-row gap-2 md:gap-1">
+                                        {/* Desktop: inputs flanking slider | Mobile: 2-col grid above slider */}
+                                        <div className="hidden md:flex items-center gap-2">
                                           <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountMin ?? 0}
                                             onChange={(value) => handleSettingsUpdate((prev) => ({ 
@@ -1379,8 +1437,25 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                             data-testid="input-grid-column-offset-amount-min"
+                                          />
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.column?.amountMin ?? 0, currentSettings.gridOffsets?.column?.amountMax ?? 50]}
+                                            onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountMin: min,
+                                                  amountMax: max
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="flex-1 [&_[role=slider]]:bg-blue-600"
                                           />
                                           <NumericInput
                                             value={currentSettings.gridOffsets?.column?.amountMax ?? 50}
@@ -1396,27 +1471,66 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-column-offset-amount-max"
+                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            data-testid="input-grid-column-offset-amount-max-desktop"
                                           />
                                         </div>
-                                        <Slider
-                                          value={[currentSettings.gridOffsets?.column?.amountMin ?? 0, currentSettings.gridOffsets?.column?.amountMax ?? 50]}
-                                          onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
-                                            gridOffsets: { 
-                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                              column: {
-                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                amountMin: min,
-                                                amountMax: max
-                                              }
-                                            } 
-                                          }))}
-                                          min={-500}
-                                          max={500}
-                                          step={5}
-                                          className="[&_[role=slider]]:bg-blue-600"
-                                        />
+                                        {/* Mobile layout: 2-column grid for inputs, slider below */}
+                                        <div className="md:hidden space-y-3">
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <NumericInput
+                                              value={currentSettings.gridOffsets?.column?.amountMin ?? 0}
+                                              onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  column: {
+                                                    ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                    amountMin: value
+                                                  }
+                                                } 
+                                              }))}
+                                              min={-500}
+                                              max={500}
+                                              step={5}
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-grid-column-offset-amount-min"
+                                            />
+                                            <NumericInput
+                                              value={currentSettings.gridOffsets?.column?.amountMax ?? 50}
+                                              onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                                gridOffsets: { 
+                                                  ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                  column: {
+                                                    ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                    amountMax: value
+                                                  }
+                                                } 
+                                              }))}
+                                              min={-500}
+                                              max={500}
+                                              step={5}
+                                              className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                              data-testid="input-grid-column-offset-amount-max"
+                                            />
+                                          </div>
+                                          <Slider
+                                            value={[currentSettings.gridOffsets?.column?.amountMin ?? 0, currentSettings.gridOffsets?.column?.amountMax ?? 50]}
+                                            onValueChange={([min, max]) => handleSettingsUpdate((prev) => ({ 
+                                              gridOffsets: { 
+                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                                column: {
+                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                  amountMin: min,
+                                                  amountMax: max
+                                                }
+                                              } 
+                                            }))}
+                                            min={-500}
+                                            max={500}
+                                            step={5}
+                                            className="[&_[role=slider]]:bg-blue-600"
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                     
