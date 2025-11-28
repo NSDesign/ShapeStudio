@@ -6550,7 +6550,20 @@ export default function BatchConfigDialog({
                 )}
               </div>
 
-              {/* NEW Shape Transforms Section - Modern Styling */}
+              <Separator className="bg-slate-600" />
+              {/* Transforms Section */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={currentSettings.transformsEnabled}
+                    onCheckedChange={(checked) => handleSettingsUpdate({ transformsEnabled: checked as boolean })}
+                    className="border-slate-500 data-[state=checked]:bg-blue-600"
+                  />
+                  <Label className="font-medium text-slate-200">Transforms</Label>
+                </div>
+                
+                {currentSettings.transformsEnabled && (
+                  <div className="ml-6 space-y-4">
                     {/* Artboard-Aware Toggle */}
                     <div className="flex items-center space-x-2 p-2 bg-slate-700 rounded">
                       <Checkbox
