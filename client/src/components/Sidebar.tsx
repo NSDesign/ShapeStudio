@@ -2651,27 +2651,34 @@ export default function Sidebar({
               console.log(`📐 Using dynamic bounds: ${canvasWidth/effectiveExportScale}x${canvasHeight/effectiveExportScale}`);
             }
 
-            // PREFLIGHT MEMORY CHECK: Prevent browser crashes from large canvas allocations
-            // TIFF exports are especially memory-intensive (RGBA buffer + UTIF encoding)
-            // Batch exports use stricter limits due to multiple concurrent allocations
+            // MEMORY ESTIMATION: Log canvas size for diagnostics
+            // Browser practical limit is ~268 MP for single canvas, but batch mode needs headroom
             const pixelCount = canvasWidth * canvasHeight;
             const megapixels = pixelCount / 1_000_000;
-            const maxMegapixelsForBatch = 100; // ~400MB per canvas, safer for batch mode
-            const maxMegapixelsForTiff = 80; // Even stricter for TIFF due to encoding buffer
+            const estimatedMB = (pixelCount * 4) / (1024 * 1024); // RGBA = 4 bytes per pixel
             
-            const effectiveLimit = exportFormat === 'tiff' ? maxMegapixelsForTiff : maxMegapixelsForBatch;
+            // Adaptive limits: single exports can use more memory than batch exports
+            // Browser can handle ~268 MP for single canvas, but batch mode needs headroom for multiple allocations
+            // A4 at 300 DPI scaled = 2480*4.17 x 3508*4.17 = ~151 MP, so we need 160+ for print workflows
+            const isSingleExport = exportBatchCount === 1;
+            const maxMegapixelsSingle = 220; // ~880MB - safe for single large exports, allows poster sizes
+            const maxMegapixelsBatch = 160;  // ~640MB per image - allows A4 300DPI in small batches
+            
+            const effectiveLimit = isSingleExport ? maxMegapixelsSingle : maxMegapixelsBatch;
+            
+            console.log(`📊 Memory estimate: ${megapixels.toFixed(1)}MP (${estimatedMB.toFixed(0)}MB RGBA), limit: ${effectiveLimit}MP, mode: ${isSingleExport ? 'single' : 'batch'}`);
             
             if (megapixels > effectiveLimit) {
               const suggestedScale = Math.sqrt(effectiveLimit * 1_000_000 / (targetArtboard?.width ?? 2480) / (targetArtboard?.height ?? 3508));
-              console.error(`❌ MEMORY GUARD: Canvas size ${Math.round(canvasWidth)}x${Math.round(canvasHeight)} (${megapixels.toFixed(1)}MP) exceeds safe limit (${effectiveLimit}MP) for batch ${exportFormat.toUpperCase()} export.`);
+              console.error(`❌ MEMORY GUARD: Canvas size ${Math.round(canvasWidth)}x${Math.round(canvasHeight)} (${megapixels.toFixed(1)}MP) exceeds safe limit (${effectiveLimit}MP) for ${isSingleExport ? 'single' : 'batch'} ${exportFormat.toUpperCase()} export.`);
               
               // Graceful degradation: skip this image but continue batch
-              setBatchStatus(`⚠️ Skipping image ${i + 1}: Too large for ${exportFormat.toUpperCase()} (${megapixels.toFixed(0)}MP > ${effectiveLimit}MP limit)`);
+              setBatchStatus(`⚠️ Skipping image ${i + 1}: Too large (${megapixels.toFixed(0)}MP > ${effectiveLimit}MP limit)`);
               
-              // Show user-friendly message
+              // Show user-friendly message only on first failure
               if (i === 0) {
-                alert(`Export size too large for batch ${exportFormat.toUpperCase()} export.\n\nCurrent: ${megapixels.toFixed(0)} megapixels\nLimit: ${effectiveLimit} megapixels\n\nTry:\n• Reduce export scale to ${suggestedScale.toFixed(1)}x or lower\n• Use PNG format instead of TIFF\n• Export fewer images at once`);
-                throw new Error(`Memory limit exceeded for batch ${exportFormat} export`);
+                alert(`Export size exceeds browser memory limits.\n\nCurrent: ${megapixels.toFixed(0)} megapixels (~${estimatedMB.toFixed(0)}MB)\nLimit: ${effectiveLimit} megapixels\n\nTry:\n• Reduce export scale to ${suggestedScale.toFixed(1)}x or lower\n• Reduce batch count to export fewer images at once\n• For very large exports, consider using a desktop app`);
+                throw new Error(`Memory limit exceeded for ${exportFormat} export`);
               }
               continue; // Skip this image in batch
             }
