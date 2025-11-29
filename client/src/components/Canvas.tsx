@@ -6,9 +6,24 @@ import { MousePointer, ZoomIn, ZoomOut, RotateCcw, Maximize2, Trash2 } from 'luc
 import { cn } from '@/lib/utils';
 import { Shape, ShapeGroupClass } from '@/lib/shapes';
 import { CanvasSettings, Artboard } from '@/lib/shapeTypes';
-import { GenerationSet } from '@shared/schema';
+import { GenerationSet, DEFAULT_PRINT_CONFIG, PrintUnitType } from '@shared/schema';
 import { renderSetToOffscreenCanvas, compositeSetCanvases } from '@/lib/offscreenRenderer';
 import { getArtboardDisplayDimensions } from '@/lib/artboardUtils';
+
+function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
+  switch (unit) {
+    case 'pixels':
+      return value;
+    case 'mm':
+      return (value / 25.4) * dpi;
+    case 'cm':
+      return (value / 2.54) * dpi;
+    case 'inches':
+      return value * dpi;
+    default:
+      return value;
+  }
+}
 
 
 interface CanvasProps {
@@ -334,6 +349,141 @@ export default function Canvas({
           const dpi = currentArtboard.dpi ?? 72;
           const resolutionText = `${dpi} DPI`;
           ctx.fillText(resolutionText, textXOffset, currentArtboard.y + textYOffset);
+        }
+        
+        // Print Configuration Overlays
+        const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
+        const artboardDpi = currentArtboard.dpi ?? 72;
+        
+        // Bleed Overlay (rectangle outside the artboard)
+        if (printConfig.overlays.bleed.display && printConfig.overlays.bleed.amount > 0) {
+          const bleedPx = convertPrintUnitToPixels(
+            printConfig.overlays.bleed.amount,
+            printConfig.overlays.bleed.unit,
+            artboardDpi
+          );
+          
+          ctx.strokeStyle = '#ff4444';
+          ctx.lineWidth = 1.5 / effectiveZoom;
+          ctx.setLineDash([6 / effectiveZoom, 4 / effectiveZoom]);
+          ctx.strokeRect(
+            currentArtboard.x - bleedPx,
+            currentArtboard.y - bleedPx,
+            currentArtboard.width + (bleedPx * 2),
+            currentArtboard.height + (bleedPx * 2)
+          );
+          ctx.setLineDash([]);
+          
+          // Draw bleed label
+          const labelFontSize = 10 / effectiveZoom;
+          ctx.fillStyle = '#ff4444';
+          ctx.font = `${labelFontSize}px Arial`;
+          ctx.fillText(
+            `Bleed: ${printConfig.overlays.bleed.amount}${printConfig.overlays.bleed.unit === 'pixels' ? 'px' : printConfig.overlays.bleed.unit}`,
+            currentArtboard.x - bleedPx,
+            currentArtboard.y - bleedPx - 4 / effectiveZoom
+          );
+        }
+        
+        // Safe Zone Overlay (rectangle inside the artboard)
+        if (printConfig.overlays.safeZone.display && printConfig.overlays.safeZone.amount > 0) {
+          const safeZonePx = convertPrintUnitToPixels(
+            printConfig.overlays.safeZone.amount,
+            printConfig.overlays.safeZone.unit,
+            artboardDpi
+          );
+          
+          ctx.strokeStyle = '#44cc44';
+          ctx.lineWidth = 1.5 / effectiveZoom;
+          ctx.setLineDash([6 / effectiveZoom, 4 / effectiveZoom]);
+          ctx.strokeRect(
+            currentArtboard.x + safeZonePx,
+            currentArtboard.y + safeZonePx,
+            currentArtboard.width - (safeZonePx * 2),
+            currentArtboard.height - (safeZonePx * 2)
+          );
+          ctx.setLineDash([]);
+          
+          // Draw safe zone label
+          const labelFontSize = 10 / effectiveZoom;
+          ctx.fillStyle = '#44cc44';
+          ctx.font = `${labelFontSize}px Arial`;
+          ctx.fillText(
+            `Safe Zone: ${printConfig.overlays.safeZone.amount}${printConfig.overlays.safeZone.unit === 'pixels' ? 'px' : printConfig.overlays.safeZone.unit}`,
+            currentArtboard.x + safeZonePx,
+            currentArtboard.y + safeZonePx + labelFontSize + 2 / effectiveZoom
+          );
+        }
+        
+        // Print Marks Overlay
+        if (printConfig.overlays.printMarks.display) {
+          const bleedPx = printConfig.overlays.bleed.amount > 0 
+            ? convertPrintUnitToPixels(printConfig.overlays.bleed.amount, printConfig.overlays.bleed.unit, artboardDpi)
+            : 0;
+          const markLength = printConfig.overlays.printMarks.markLength / effectiveZoom;
+          const markOffset = printConfig.overlays.printMarks.markOffset / effectiveZoom;
+          const markStroke = 1 / effectiveZoom;
+          
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = markStroke;
+          ctx.setLineDash([]);
+          
+          // Crop Marks (corner marks at artboard edges, positioned outside the bleed area)
+          if (printConfig.overlays.printMarks.cropMarks) {
+            const corners = [
+              { x: currentArtboard.x, y: currentArtboard.y, dx: -1, dy: -1 },
+              { x: currentArtboard.x + currentArtboard.width, y: currentArtboard.y, dx: 1, dy: -1 },
+              { x: currentArtboard.x, y: currentArtboard.y + currentArtboard.height, dx: -1, dy: 1 },
+              { x: currentArtboard.x + currentArtboard.width, y: currentArtboard.y + currentArtboard.height, dx: 1, dy: 1 }
+            ];
+            
+            corners.forEach(corner => {
+              const offsetX = (bleedPx + markOffset) * corner.dx;
+              const offsetY = (bleedPx + markOffset) * corner.dy;
+              
+              // Horizontal line
+              ctx.beginPath();
+              ctx.moveTo(corner.x + offsetX, corner.y + offsetY * 0);
+              ctx.lineTo(corner.x + offsetX + (markLength * corner.dx), corner.y);
+              ctx.stroke();
+              
+              // Vertical line
+              ctx.beginPath();
+              ctx.moveTo(corner.x + offsetX * 0, corner.y + offsetY);
+              ctx.lineTo(corner.x, corner.y + offsetY + (markLength * corner.dy));
+              ctx.stroke();
+            });
+          }
+          
+          // Registration Marks (crosshair marks at center of each edge)
+          if (printConfig.overlays.printMarks.registrationMarks) {
+            const regMarkSize = 8 / effectiveZoom;
+            const regCircleRadius = 4 / effectiveZoom;
+            const edgeCenters = [
+              { x: currentArtboard.x + currentArtboard.width / 2, y: currentArtboard.y - bleedPx - markOffset - regMarkSize },
+              { x: currentArtboard.x + currentArtboard.width / 2, y: currentArtboard.y + currentArtboard.height + bleedPx + markOffset + regMarkSize },
+              { x: currentArtboard.x - bleedPx - markOffset - regMarkSize, y: currentArtboard.y + currentArtboard.height / 2 },
+              { x: currentArtboard.x + currentArtboard.width + bleedPx + markOffset + regMarkSize, y: currentArtboard.y + currentArtboard.height / 2 }
+            ];
+            
+            edgeCenters.forEach(center => {
+              // Draw crosshair
+              ctx.beginPath();
+              ctx.moveTo(center.x - regMarkSize, center.y);
+              ctx.lineTo(center.x + regMarkSize, center.y);
+              ctx.stroke();
+              
+              ctx.beginPath();
+              ctx.moveTo(center.x, center.y - regMarkSize);
+              ctx.lineTo(center.x, center.y + regMarkSize);
+              ctx.stroke();
+              
+              // Draw circle
+              ctx.beginPath();
+              ctx.arc(center.x, center.y, regCircleRadius, 0, Math.PI * 2);
+              ctx.stroke();
+            });
+          }
         }
       }
 
