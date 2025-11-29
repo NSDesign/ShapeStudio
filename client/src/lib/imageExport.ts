@@ -508,24 +508,20 @@ export class ImageExporter {
     const imageData = this.ctx.getImageData(0, 0, width, height);
     const rgba = new Uint8Array(imageData.data.buffer);
     
-    // Build TIFF IFD (Image File Directory) with metadata
-    const ifd: UTIF.IFD = {
-      width,
-      height,
-      data: rgba,
-    };
+    // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+    const tiffMetadata: Record<string, number[]> = {};
     
     // Embed DPI metadata if requested (default: true)
     if (tiffOptions?.embedDpi !== false) {
       // TIFF uses resolution in pixels per resolution unit
       // ResolutionUnit: 2 = inches
-      ifd.t282 = [dpi]; // XResolution
-      ifd.t283 = [dpi]; // YResolution  
-      ifd.t296 = [2];   // ResolutionUnit (2 = inch)
+      tiffMetadata.t282 = [dpi]; // XResolution
+      tiffMetadata.t283 = [dpi]; // YResolution  
+      tiffMetadata.t296 = [2];   // ResolutionUnit (2 = inch)
     }
     
     // Encode to TIFF buffer
-    const tiffBuffer = UTIF.encodeImage(rgba, width, height, ifd);
+    const tiffBuffer = UTIF.encodeImage(rgba, width, height, tiffMetadata);
     
     // Create blob from buffer
     return new Blob([tiffBuffer], { type: 'image/tiff' });

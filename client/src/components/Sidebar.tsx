@@ -1939,17 +1939,14 @@ export default function Sidebar({
             const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
             const rgba = new Uint8Array(imageData.data.buffer);
             
-            // Build TIFF IFD with DPI metadata
-            const ifd: UTIF.IFD = {
-              width: canvas.width,
-              height: canvas.height,
-              data: rgba,
+            // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+            const tiffMetadata = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
             
-            const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, ifd);
+            const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
             const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
             const url = URL.createObjectURL(blob);
             const tiffLink = document.createElement('a');
@@ -2822,17 +2819,14 @@ export default function Sidebar({
                   // Get DPI from artboard or use default
                   const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
                   
-                  // Build TIFF IFD with DPI metadata
-                  const ifd: UTIF.IFD = {
-                    width: canvas.width,
-                    height: canvas.height,
-                    data: rgba,
+                  // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+                  const tiffMetadata = {
                     t282: [exportDPI],  // XResolution
                     t283: [exportDPI],  // YResolution
                     t296: [2],          // ResolutionUnit (2 = inch)
                   };
                   
-                  const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, ifd);
+                  const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
                   const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
                   
                   if (packageAsZip && zip) {
