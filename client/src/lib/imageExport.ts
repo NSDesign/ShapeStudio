@@ -194,18 +194,10 @@ export class ImageExporter {
     this.ctx.clearRect(0, 0, exportWidth, exportHeight);
     
     // Determine effective background color based on export background mode
-    let effectiveBackgroundColor = backgroundColor;
-    switch (exportBackgroundMode) {
-      case 'transparent':
-        effectiveBackgroundColor = 'transparent';
-        break;
-      case 'artboard':
-        effectiveBackgroundColor = artboardBackgroundColor || backgroundColor;
-        break;
-      case 'custom':
-        effectiveBackgroundColor = exportBackgroundColor;
-        break;
-    }
+    // 'transparent' = no background, 'artboard' = use artboard's configured color
+    const effectiveBackgroundColor = exportBackgroundMode === 'artboard' 
+      ? (artboardBackgroundColor || backgroundColor) 
+      : 'transparent';
     
     // Add background if requested
     if (includeBackground && effectiveBackgroundColor !== 'transparent') {

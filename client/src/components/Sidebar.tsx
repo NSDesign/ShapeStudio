@@ -1852,6 +1852,104 @@ export default function Sidebar({
     const [showBatchResult, setShowBatchResult] = useState(false);
     const [batchResultMessage, setBatchResultMessage] = useState('');
 
+    // Helper function to convert print units to pixels
+    const convertPrintUnitToPixels = (value: number, unit: PrintUnitType, dpi: number): number => {
+      switch (unit) {
+        case 'pixels':
+          return value;
+        case 'mm':
+          return (value / 25.4) * dpi;
+        case 'cm':
+          return (value / 2.54) * dpi;
+        case 'inches':
+          return value * dpi;
+        default:
+          return value;
+      }
+    };
+
+    // Helper function to render print marks on export canvas
+    const renderPrintMarks = (
+      ctx: CanvasRenderingContext2D,
+      artboardX: number,
+      artboardY: number,
+      artboardWidth: number,
+      artboardHeight: number,
+      bleedPx: number,
+      printMarksConfig: {
+        cropMarks: boolean;
+        registrationMarks: boolean;
+        markLength: number;
+        markOffset: number;
+      }
+    ) => {
+      const { cropMarks, registrationMarks, markLength, markOffset } = printMarksConfig;
+      
+      ctx.save();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      
+      // Crop Marks (corner marks at artboard edges, positioned outside the bleed area)
+      if (cropMarks) {
+        const corners = [
+          { x: artboardX, y: artboardY, dx: -1, dy: -1 },
+          { x: artboardX + artboardWidth, y: artboardY, dx: 1, dy: -1 },
+          { x: artboardX, y: artboardY + artboardHeight, dx: -1, dy: 1 },
+          { x: artboardX + artboardWidth, y: artboardY + artboardHeight, dx: 1, dy: 1 }
+        ];
+        
+        corners.forEach(corner => {
+          const offsetX = (bleedPx + markOffset) * corner.dx;
+          const offsetY = (bleedPx + markOffset) * corner.dy;
+          
+          // Horizontal line
+          ctx.beginPath();
+          ctx.moveTo(corner.x + offsetX, corner.y);
+          ctx.lineTo(corner.x + offsetX + (markLength * corner.dx), corner.y);
+          ctx.stroke();
+          
+          // Vertical line
+          ctx.beginPath();
+          ctx.moveTo(corner.x, corner.y + offsetY);
+          ctx.lineTo(corner.x, corner.y + offsetY + (markLength * corner.dy));
+          ctx.stroke();
+        });
+      }
+      
+      // Registration Marks (crosshair marks at center of each edge)
+      if (registrationMarks) {
+        const regMarkSize = 8;
+        const regCircleRadius = 4;
+        const edgeCenters = [
+          { x: artboardX + artboardWidth / 2, y: artboardY - bleedPx - markOffset - regMarkSize },
+          { x: artboardX + artboardWidth / 2, y: artboardY + artboardHeight + bleedPx + markOffset + regMarkSize },
+          { x: artboardX - bleedPx - markOffset - regMarkSize, y: artboardY + artboardHeight / 2 },
+          { x: artboardX + artboardWidth + bleedPx + markOffset + regMarkSize, y: artboardY + artboardHeight / 2 }
+        ];
+        
+        edgeCenters.forEach(center => {
+          // Draw crosshair
+          ctx.beginPath();
+          ctx.moveTo(center.x - regMarkSize, center.y);
+          ctx.lineTo(center.x + regMarkSize, center.y);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(center.x, center.y - regMarkSize);
+          ctx.lineTo(center.x, center.y + regMarkSize);
+          ctx.stroke();
+          
+          // Draw circle
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, regCircleRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+      
+      ctx.restore();
+    };
+
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
       const originalSelected = shape.selected;
@@ -1984,6 +2082,13 @@ export default function Sidebar({
       let translateY = 0;
       let filename = '';
       let exportDPI = 72; // Default DPI
+      
+      // Print configuration variables (only used for artboard exports)
+      let bleedPx = 0;
+      let printMarksGutterPx = 0;
+      let printExpansion = 0;
+      let artboardForPrintMarks: { x: number; y: number; width: number; height: number } | null = null;
+      let printMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number } | null = null;
 
       if (exportMode === 'artboard' && selectedArtboardForExport) {
         // Export specific artboard
@@ -1992,8 +2097,62 @@ export default function Sidebar({
         
         // Get artboard DPI
         exportDPI = artboard.dpi ?? 72;
+        
+        // Get print configuration
+        const printConfig = artboard.printConfig || DEFAULT_PRINT_CONFIG;
+        
+        // Calculate bleed expansion (if render is enabled)
+        if (printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0) {
+          bleedPx = convertPrintUnitToPixels(
+            printConfig.overlays.bleed.amount,
+            printConfig.overlays.bleed.unit,
+            exportDPI
+          );
+        }
+        
+        // Calculate print marks gutter (if render is enabled)
+        if (printConfig.overlays.printMarks.render && (printConfig.overlays.printMarks.cropMarks || printConfig.overlays.printMarks.registrationMarks)) {
+          const markLengthPx = convertPrintUnitToPixels(
+            printConfig.overlays.printMarks.markLength,
+            printConfig.overlays.bleed.unit,
+            exportDPI
+          );
+          const markOffsetPx = convertPrintUnitToPixels(
+            printConfig.overlays.printMarks.markOffset,
+            printConfig.overlays.bleed.unit,
+            exportDPI
+          );
+          // Gutter needs space for marks outside the bleed area
+          printMarksGutterPx = markLengthPx + markOffsetPx + 10; // Extra 10px padding
+          
+          // Store print marks config for later rendering
+          printMarksConfig = {
+            cropMarks: printConfig.overlays.printMarks.cropMarks,
+            registrationMarks: printConfig.overlays.printMarks.registrationMarks,
+            markLength: markLengthPx,
+            markOffset: markOffsetPx
+          };
+        }
+        
+        // Total print expansion (bleed + marks gutter on each side)
+        printExpansion = bleedPx + printMarksGutterPx;
+        
+        // Store artboard bounds for print marks rendering (relative to export canvas origin)
+        artboardForPrintMarks = {
+          x: printExpansion,
+          y: printExpansion,
+          width: artboard.width,
+          height: artboard.height
+        };
 
-        // Filter shapes that overlap with the artboard bounds
+        // Filter shapes that overlap with the artboard bounds (including bleed area)
+        const bleedExpandedBounds = {
+          x: artboard.x - bleedPx,
+          y: artboard.y - bleedPx,
+          width: artboard.width + (bleedPx * 2),
+          height: artboard.height + (bleedPx * 2)
+        };
+        
         shapesToExport = shapes.filter(shape => {
           const bounds = shape.getBounds();
           const shapeLeft = shape.transform.x + bounds.x;
@@ -2001,17 +2160,20 @@ export default function Sidebar({
           const shapeRight = shapeLeft + bounds.width;
           const shapeBottom = shapeTop + bounds.height;
 
-          // Check if shape overlaps with artboard (not just if top-left corner is inside)
-          return !(shapeRight < artboard.x || 
-                   shapeLeft > artboard.x + artboard.width ||
-                   shapeBottom < artboard.y || 
-                   shapeTop > artboard.y + artboard.height);
+          // Check if shape overlaps with expanded artboard (including bleed)
+          return !(shapeRight < bleedExpandedBounds.x || 
+                   shapeLeft > bleedExpandedBounds.x + bleedExpandedBounds.width ||
+                   shapeBottom < bleedExpandedBounds.y || 
+                   shapeTop > bleedExpandedBounds.y + bleedExpandedBounds.height);
         });
 
-        canvasWidth = artboard.width * effectiveExportScale;
-        canvasHeight = artboard.height * effectiveExportScale;
-        translateX = -artboard.x;
-        translateY = -artboard.y;
+        // Canvas dimensions include bleed and print marks gutter
+        canvasWidth = (artboard.width + (printExpansion * 2)) * effectiveExportScale;
+        canvasHeight = (artboard.height + (printExpansion * 2)) * effectiveExportScale;
+        
+        // Translate shapes relative to expanded canvas (accounting for print expansion)
+        translateX = -artboard.x + printExpansion;
+        translateY = -artboard.y + printExpansion;
         filename = `${artboard.name}-export-${Date.now()}.${exportFormat}`;
       } else if (exportMode === 'selection' && selectedShapes.length > 0) {
         // Export selected shapes with bounds fitting
@@ -2167,7 +2329,10 @@ export default function Sidebar({
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
 
-      // Apply scaling and translation
+      // Save context state before transformations
+      ctx.save();
+      
+      // Apply scaling and translation for shape rendering
       ctx.scale(effectiveExportScale, effectiveExportScale);
       ctx.translate(translateX, translateY);
 
@@ -2175,6 +2340,26 @@ export default function Sidebar({
       const sortedShapes = [...shapesToExport].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
 
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+      
+      // Restore context to untransformed state for print marks
+      ctx.restore();
+      
+      // Render print marks if configured (artboard exports only)
+      // Print marks are rendered in canvas coordinate space (with scale but no translation)
+      if (artboardForPrintMarks && printMarksConfig) {
+        ctx.save();
+        ctx.scale(effectiveExportScale, effectiveExportScale);
+        renderPrintMarks(
+          ctx,
+          artboardForPrintMarks.x,
+          artboardForPrintMarks.y,
+          artboardForPrintMarks.width,
+          artboardForPrintMarks.height,
+          bleedPx,
+          printMarksConfig
+        );
+        ctx.restore();
+      }
 
       // Export using helper function that handles all formats including PDF
       exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
