@@ -1,8 +1,16 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, Artboard } from './shapeTypes';
 import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, BackgroundMode } from '@shared/schema';
+import * as UTIF from 'utif';
 
-export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff';
+
+export type TiffCompression = 'none' | 'lzw';
+
+export interface TiffOptions {
+  compression?: TiffCompression;
+  embedDpi?: boolean;
+}
 
 function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
   switch (unit) {
@@ -45,6 +53,7 @@ export interface ExportOptions {
   printConfig?: PrintConfig;
   artboardDpi?: number;
   artboardBackgroundColor?: string;
+  tiffOptions?: TiffOptions;
 }
 
 export class ImageExporter {
@@ -75,7 +84,8 @@ export class ImageExporter {
       artboardBounds,
       printConfig,
       artboardDpi = 72,
-      artboardBackgroundColor
+      artboardBackgroundColor,
+      tiffOptions
     } = options;
 
     // Calculate bounds of all content to export
@@ -332,6 +342,8 @@ export class ImageExporter {
         return this.exportAsRaster('image/avif', quality);
       case 'bmp':
         return this.exportAsRaster('image/bmp');
+      case 'tiff':
+        return this.exportAsTiff(effectiveDpi, tiffOptions);
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
@@ -482,6 +494,43 @@ export class ImageExporter {
     });
   }
 
+  private async exportAsTiff(dpi: number, tiffOptions?: TiffOptions): Promise<Blob> {
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    // Memory guardrail: warn for very large exports (over 100 megapixels)
+    const megapixels = (width * height) / 1_000_000;
+    if (megapixels > 100) {
+      console.warn(`Large TIFF export: ${megapixels.toFixed(1)} megapixels. May cause memory issues.`);
+    }
+    
+    // Get RGBA pixel data from canvas
+    const imageData = this.ctx.getImageData(0, 0, width, height);
+    const rgba = new Uint8Array(imageData.data.buffer);
+    
+    // Build TIFF IFD (Image File Directory) with metadata
+    const ifd: UTIF.IFD = {
+      width,
+      height,
+      data: rgba,
+    };
+    
+    // Embed DPI metadata if requested (default: true)
+    if (tiffOptions?.embedDpi !== false) {
+      // TIFF uses resolution in pixels per resolution unit
+      // ResolutionUnit: 2 = inches
+      ifd.t282 = [dpi]; // XResolution
+      ifd.t283 = [dpi]; // YResolution  
+      ifd.t296 = [2];   // ResolutionUnit (2 = inch)
+    }
+    
+    // Encode to TIFF buffer
+    const tiffBuffer = UTIF.encodeImage(rgba, width, height, ifd);
+    
+    // Create blob from buffer
+    return new Blob([tiffBuffer], { type: 'image/tiff' });
+  }
+
   static async downloadImage(blob: Blob, filename: string): Promise<void> {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -499,7 +548,8 @@ export class ImageExporter {
       jpeg: 'jpg',
       webp: 'webp',
       avif: 'avif',
-      bmp: 'bmp'
+      bmp: 'bmp',
+      tiff: 'tiff'
     };
     return extensions[format];
   }
@@ -515,6 +565,7 @@ export class ImageExporter {
         case 'png':
         case 'jpeg':
         case 'bmp':
+        case 'tiff': // TIFF is always supported via UTIF library
           return true;
         case 'webp':
           return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
