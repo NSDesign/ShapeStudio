@@ -124,20 +124,32 @@ export class ImageExporter {
     let printMarksGutterPx = 0;
     const config = printConfig || DEFAULT_PRINT_CONFIG;
     
+    // Use printConfig's DPI as authoritative, fallback to artboardDpi option
+    const effectiveDpi = config.outputSpecs.dpi || artboardDpi;
+    
     // Calculate bleed expansion (if render is enabled)
     if (config.overlays.bleed.render && config.overlays.bleed.amount > 0) {
       bleedPx = convertPrintUnitToPixels(
         config.overlays.bleed.amount,
         config.overlays.bleed.unit,
-        artboardDpi
+        effectiveDpi
       );
     }
     
     // Calculate print marks gutter (if render is enabled)
+    // Mark length and offset need to be converted to pixels using bleed unit (assuming same unit)
     if (config.overlays.printMarks.render) {
-      const markLength = config.overlays.printMarks.markLength;
-      const markOffset = config.overlays.printMarks.markOffset;
-      printMarksGutterPx = markLength + markOffset + 5;
+      const markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        config.overlays.bleed.unit,
+        effectiveDpi
+      );
+      const markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        config.overlays.bleed.unit,
+        effectiveDpi
+      );
+      printMarksGutterPx = markLengthPx + markOffsetPx + 5;
     }
     
     // Total expansion from print features
@@ -278,13 +290,30 @@ export class ImageExporter {
     
     // Render print marks if enabled
     if (config.overlays.printMarks.render && artboardBounds) {
+      // Convert mark dimensions to pixels
+      const markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        config.overlays.bleed.unit,
+        effectiveDpi
+      );
+      const markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        config.overlays.bleed.unit,
+        effectiveDpi
+      );
+      
       this.renderPrintMarks(
         artboardBounds.x,
         artboardBounds.y,
         artboardBounds.width,
         artboardBounds.height,
         bleedPx,
-        config.overlays.printMarks
+        {
+          cropMarks: config.overlays.printMarks.cropMarks,
+          registrationMarks: config.overlays.printMarks.registrationMarks,
+          markLength: markLengthPx,
+          markOffset: markOffsetPx
+        }
       );
     }
 

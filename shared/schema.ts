@@ -328,8 +328,8 @@ export interface PrintMarksSettings {
   render: boolean;   // Include in export
   cropMarks: boolean;
   registrationMarks: boolean;
-  markLength: number;  // Length of crop marks in pixels
-  markOffset: number;  // Offset from bleed edge in pixels
+  markLength: number;  // Length of crop marks (uses same unit as bleed)
+  markOffset: number;  // Offset from bleed edge (uses same unit as bleed)
 }
 
 // Background settings for export
