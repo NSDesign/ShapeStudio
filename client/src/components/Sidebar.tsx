@@ -2157,19 +2157,9 @@ export default function Sidebar({
       const artboardBgColor = currentArtboardData?.backgroundColor || '#ffffff';
 
       // Determine effective background color based on export settings
+      // 'transparent' = no background, 'artboard' = use artboard's configured color
       const bgMode = exportSettings.exportBackgroundMode || 'transparent';
-      let effectiveBgColor = 'transparent';
-      switch (bgMode) {
-        case 'transparent':
-          effectiveBgColor = 'transparent';
-          break;
-        case 'artboard':
-          effectiveBgColor = artboardBgColor;
-          break;
-        case 'custom':
-          effectiveBgColor = exportSettings.exportBackgroundColor || '#ffffff';
-          break;
-      }
+      const effectiveBgColor = bgMode === 'artboard' ? artboardBgColor : 'transparent';
 
       // Set background if not transparent
       if (effectiveBgColor !== 'transparent') {
@@ -2271,19 +2261,9 @@ export default function Sidebar({
       const artboardBgColor = currentArtboardData?.backgroundColor || '#ffffff';
 
       // Determine effective background color based on export settings
+      // 'transparent' = no background, 'artboard' = use artboard's configured color
       const bgMode = exportSettings.exportBackgroundMode || 'transparent';
-      let effectiveBgColor = 'transparent';
-      switch (bgMode) {
-        case 'transparent':
-          effectiveBgColor = 'transparent';
-          break;
-        case 'artboard':
-          effectiveBgColor = artboardBgColor;
-          break;
-        case 'custom':
-          effectiveBgColor = exportSettings.exportBackgroundColor || '#ffffff';
-          break;
-      }
+      const effectiveBgColor = bgMode === 'artboard' ? artboardBgColor : 'transparent';
 
       // Set background if not transparent
       if (effectiveBgColor !== 'transparent') {
@@ -2774,20 +2754,10 @@ export default function Sidebar({
               canvas.height = canvasHeight;
 
               // Determine effective background color based on export settings
+              // 'transparent' = no background, 'artboard' = use artboard's configured color
               const artboardBgColor = backgroundArtboard?.backgroundColor || '#ffffff';
               const bgMode = exportSettings.exportBackgroundMode || 'transparent';
-              let exportBackgroundColor = 'transparent';
-              switch (bgMode) {
-                case 'transparent':
-                  exportBackgroundColor = 'transparent';
-                  break;
-                case 'artboard':
-                  exportBackgroundColor = artboardBgColor;
-                  break;
-                case 'custom':
-                  exportBackgroundColor = exportSettings.exportBackgroundColor || '#ffffff';
-                  break;
-              }
+              const exportBackgroundColor = bgMode === 'artboard' ? artboardBgColor : 'transparent';
 
               // Check if we need set-based rendering (for compositing operations)
               const hasCompositingOperations = exportSettings.generationSetsEnabled && 
@@ -3376,7 +3346,7 @@ export default function Sidebar({
             <Label className="text-xs text-slate-400">Export Background</Label>
             <Select 
               value={exportSettings.exportBackgroundMode || 'transparent'} 
-              onValueChange={(value: 'transparent' | 'artboard' | 'custom') => 
+              onValueChange={(value: 'transparent' | 'artboard') => 
                 updateExportSettings.mutate({ exportBackgroundMode: value })
               }
             >
@@ -3386,33 +3356,12 @@ export default function Sidebar({
               <SelectContent className="bg-slate-800 border-slate-600">
                 <SelectItem value="transparent" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Transparent</SelectItem>
                 <SelectItem value="artboard" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Artboard Color</SelectItem>
-                <SelectItem value="custom" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Custom Color</SelectItem>
               </SelectContent>
             </Select>
+            {exportSettings.exportBackgroundMode === 'artboard' && (
+              <p className="text-xs text-slate-500">Background color is configured in the Artboard section</p>
+            )}
           </div>
-
-          {exportSettings.exportBackgroundMode === 'custom' && (
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Background Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="color"
-                  value={exportSettings.exportBackgroundColor || '#ffffff'}
-                  onChange={(e) => updateExportSettings.mutate({ exportBackgroundColor: e.target.value })}
-                  className="h-8 w-12 p-1 bg-slate-700 border-slate-600"
-                  data-testid="input-export-background-color"
-                />
-                <Input
-                  type="text"
-                  value={exportSettings.exportBackgroundColor || '#ffffff'}
-                  onChange={(e) => updateExportSettings.mutate({ exportBackgroundColor: e.target.value })}
-                  placeholder="#ffffff"
-                  className="h-8 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                  data-testid="input-export-background-hex"
-                />
-              </div>
-            </div>
-          )}
 
           {/* TIFF Print-Ready Warnings */}
           {exportFormat === 'tiff' && (() => {
