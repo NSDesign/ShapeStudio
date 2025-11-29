@@ -1043,12 +1043,15 @@ export default function Sidebar({
 
   function PrintConfigurationSection({ 
     currentArtboard, 
-    onUpdateArtboard 
+    onUpdateArtboard,
+    isExpanded,
+    setIsExpanded
   }: { 
     currentArtboard: Artboard; 
     onUpdateArtboard: (id: string, updates: Partial<Artboard>) => void;
+    isExpanded: boolean;
+    setIsExpanded: (expanded: boolean) => void;
   }) {
-    const [isExpanded, setIsExpanded] = useState(false);
     
     const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
     
@@ -1352,6 +1355,7 @@ export default function Sidebar({
     const [customHeight, setCustomHeight] = useState(1080);
     const [customName, setCustomName] = useState('Custom Artboard');
     const [customBackgroundColor, setCustomBackgroundColor] = useState('#ffffff');
+    const [printConfigExpanded, setPrintConfigExpanded] = useState(false);
     
     const artboardPresets = [
       { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
@@ -1771,6 +1775,8 @@ export default function Sidebar({
                 <PrintConfigurationSection 
                   currentArtboard={currentArtboard}
                   onUpdateArtboard={onUpdateArtboard}
+                  isExpanded={printConfigExpanded}
+                  setIsExpanded={setPrintConfigExpanded}
                 />
               </div>
             </div>
