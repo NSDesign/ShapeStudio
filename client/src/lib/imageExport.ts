@@ -498,9 +498,9 @@ export class ImageExporter {
     const width = this.canvas.width;
     const height = this.canvas.height;
     
-    // Memory guardrail: warn for very large exports (over 100 megapixels)
+    // Memory guardrail: warn for very large exports (over 200 megapixels)
     const megapixels = (width * height) / 1_000_000;
-    if (megapixels > 100) {
+    if (megapixels > 200) {
       console.warn(`Large TIFF export: ${megapixels.toFixed(1)} megapixels. May cause memory issues.`);
     }
     
@@ -509,7 +509,8 @@ export class ImageExporter {
     const rgba = new Uint8Array(imageData.data.buffer);
     
     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-    const tiffMetadata: Record<string, number[]> = {};
+    // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
+    const tiffMetadata: Partial<UTIF.IFD> = {};
     
     // Embed DPI metadata if requested (default: true)
     if (tiffOptions?.embedDpi !== false) {
@@ -521,7 +522,7 @@ export class ImageExporter {
     }
     
     // Encode to TIFF buffer
-    const tiffBuffer = UTIF.encodeImage(rgba, width, height, tiffMetadata);
+    const tiffBuffer = UTIF.encodeImage(rgba, width, height, tiffMetadata as UTIF.IFD);
     
     // Create blob from buffer
     return new Blob([tiffBuffer], { type: 'image/tiff' });

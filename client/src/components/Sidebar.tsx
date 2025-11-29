@@ -1927,8 +1927,8 @@ export default function Sidebar({
           // Handle TIFF format using UTIF library
           const tiffCtx = canvas.getContext('2d');
           if (tiffCtx) {
-            // Memory guardrail: limit to 100 megapixels (400MB RGBA data)
-            const maxPixels = 100_000_000;
+            // Memory guardrail: limit to 200 megapixels (800MB RGBA data) to support A4 300DPI scaled exports
+            const maxPixels = 200_000_000;
             const pixelCount = canvas.width * canvas.height;
             if (pixelCount > maxPixels) {
               console.error(`❌ TIFF export aborted: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels). Consider reducing resolution or using a different format.`);
@@ -1940,11 +1940,12 @@ export default function Sidebar({
             const rgba = new Uint8Array(imageData.data.buffer);
             
             // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+            // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
             const tiffMetadata = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
-            };
+            } as unknown as UTIF.IFD;
             
             const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
             const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
@@ -2805,8 +2806,8 @@ export default function Sidebar({
                 // Handle TIFF format using UTIF library
                 const tiffCtx = canvas.getContext('2d');
                 if (tiffCtx) {
-                  // Memory guardrail: limit to 100 megapixels (400MB RGBA data)
-                  const maxPixels = 100_000_000;
+                  // Memory guardrail: limit to 200 megapixels (800MB RGBA data) to support A4 300DPI scaled exports
+                  const maxPixels = 200_000_000;
                   const pixelCount = canvas.width * canvas.height;
                   if (pixelCount > maxPixels) {
                     console.error(`❌ TIFF batch export skipped for image ${i + 1}: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels).`);
@@ -2820,11 +2821,12 @@ export default function Sidebar({
                   const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
                   
                   // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+                  // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
                   const tiffMetadata = {
                     t282: [exportDPI],  // XResolution
                     t283: [exportDPI],  // YResolution
                     t296: [2],          // ResolutionUnit (2 = inch)
-                  };
+                  } as unknown as UTIF.IFD;
                   
                   const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
                   const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
