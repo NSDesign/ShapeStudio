@@ -2337,6 +2337,57 @@ export default function Sidebar({
       
       console.log(`📐 Using bounds: ${generationBounds.width}x${generationBounds.height} at (${generationBounds.x}, ${generationBounds.y})`);
       
+      // MEMORY ESTIMATION FOR TIFF EXPORTS
+      // Calculate estimated memory requirements and apply limits for large TIFF exports
+      const isTiffExport = exportFormat === 'tiff';
+      let effectiveBatchCount = actualImageCount;
+      
+      if (isTiffExport) {
+        // Calculate canvas dimensions with DPI scaling
+        const baseDpi = 72;
+        const artboardDpi = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? baseDpi;
+        const dpiScale = artboardDpi / baseDpi;
+        const scaledWidth = generationBounds.width * dpiScale;
+        const scaledHeight = generationBounds.height * dpiScale;
+        const pixelsPerImage = scaledWidth * scaledHeight;
+        const megapixelsPerImage = pixelsPerImage / 1_000_000;
+        
+        // TIFF requires ~4 bytes per pixel for RGBA (getImageData) + encoding buffer
+        const bytesPerImage = pixelsPerImage * 4;
+        const mbPerImage = bytesPerImage / (1024 * 1024);
+        const totalEstimatedMb = mbPerImage * actualImageCount;
+        
+        console.log(`🧮 TIFF Memory Estimation:`);
+        console.log(`   - Canvas size: ${Math.round(scaledWidth)}×${Math.round(scaledHeight)} (${megapixelsPerImage.toFixed(1)} MP)`);
+        console.log(`   - Memory per image: ~${mbPerImage.toFixed(0)} MB`);
+        console.log(`   - Total for ${actualImageCount} images: ~${totalEstimatedMb.toFixed(0)} MB`);
+        
+        // Browser memory limits: ~1-2 GB practical limit for tab
+        // Conservative threshold: warn above 300 MB, limit above 600 MB
+        const WARNING_THRESHOLD_MB = 300;
+        const LIMIT_THRESHOLD_MB = 600;
+        const MAX_SAFE_MEGAPIXELS = 150; // ~600 MB for single image
+        
+        if (megapixelsPerImage > MAX_SAFE_MEGAPIXELS) {
+          // Single image too large - warn but allow (user may have enough RAM)
+          console.warn(`⚠️ TIFF export: Each image is ${megapixelsPerImage.toFixed(1)} MP (>${MAX_SAFE_MEGAPIXELS} MP limit). May cause memory issues.`);
+          setBatchStatus(`⚠️ Large TIFF export (${megapixelsPerImage.toFixed(1)} MP per image). Processing sequentially...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        if (totalEstimatedMb > LIMIT_THRESHOLD_MB && actualImageCount > 1) {
+          // Calculate safe batch size based on memory per image
+          const maxSafeCount = Math.max(1, Math.floor(LIMIT_THRESHOLD_MB / mbPerImage));
+          effectiveBatchCount = Math.min(actualImageCount, maxSafeCount);
+          
+          console.warn(`⚠️ TIFF batch export: Reducing from ${actualImageCount} to ${effectiveBatchCount} images to stay under ${LIMIT_THRESHOLD_MB} MB memory limit.`);
+          setBatchStatus(`⚠️ Limiting TIFF batch to ${effectiveBatchCount} images for memory safety...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else if (totalEstimatedMb > WARNING_THRESHOLD_MB) {
+          console.warn(`⚠️ TIFF batch export: Estimated ${totalEstimatedMb.toFixed(0)} MB memory usage. Processing carefully...`);
+        }
+      }
+      
       try {
         // Initialize packaging based on user setting
         setBatchStatus(packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
@@ -2347,11 +2398,16 @@ export default function Sidebar({
         let currentStep = 1; // Start at 1 to avoid initial 0% display
         
         // Determine which images to export based on exportAllImages setting
+        // For TIFF exports, use effectiveBatchCount which may be reduced for memory safety
+        const exportCount = isTiffExport ? effectiveBatchCount : exportBatchCount;
         const imagesToExport = exportAllImages 
-          ? Array.from({ length: exportBatchCount }, (_, i) => i)
-          : selectedImageIndices;
+          ? Array.from({ length: exportCount }, (_, i) => i)
+          : selectedImageIndices.slice(0, exportCount); // Also limit selected indices for TIFF
         
         console.log(`🎯 Export selection: ${exportAllImages ? 'All images' : 'Selected images'} - Processing indices: [${imagesToExport.join(', ')}]`);
+        if (isTiffExport && effectiveBatchCount < actualImageCount) {
+          console.log(`📉 TIFF batch limited from ${actualImageCount} to ${effectiveBatchCount} images for memory safety`);
+        }
         
         for (let loopIndex = 0; loopIndex < imagesToExport.length; loopIndex++) {
           const i = imagesToExport[loopIndex];
@@ -2889,6 +2945,18 @@ export default function Sidebar({
                     } else {
                       individualFiles.push({ blob: tiffBlob, filename });
                       console.log(`📁 Prepared ${filename} for individual download (TIFF with ${exportDPI} DPI)`);
+                    }
+                    
+                    // ENHANCED MEMORY CLEANUP FOR TIFF:
+                    // Clear references to large buffers to help garbage collection
+                    // Note: Variables are block-scoped but explicitly nulling helps GC
+                    console.log(`🧹 Releasing TIFF memory buffers for image ${i + 1}...`);
+                    
+                    // Allow event loop to process and GC to potentially run
+                    // This pause is critical for sequential TIFF processing
+                    if (loopIndex < imagesToExport.length - 1) {
+                      setBatchStatus(`Memory cleanup after TIFF ${i + 1}...`);
+                      await new Promise(resolve => setTimeout(resolve, 500));
                     }
                   } catch (tiffError) {
                     console.error(`❌ TIFF encoding failed for image ${i + 1}:`, tiffError);

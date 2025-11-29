@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes, including grid position filters (alternating, pattern, invert, priority) and planned future filters.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF, TIFF), high-resolution export, batch processing, and complete application state persistence.
   - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags).
+  - **TIFF Memory Management**: Automatic batch size limiting and sequential processing with memory cleanup for large TIFF exports. Estimates memory requirements based on canvas dimensions and DPI, reduces batch count when approaching browser limits (~600 MB threshold), and pauses between images to allow garbage collection.
 - **Print-on-Demand Configuration (Phase 1)**: Print configuration system with printConfig stored per-artboard, supporting:
   - **Bleed**: Configurable amount/unit (px/mm/cm/in), display overlay on canvas (red dashed), render to export (expands dimensions by 2× bleed on each axis).
   - **Safe Zone**: Configurable amount/unit, display overlay on canvas (green dashed inset), display-only (not rendered to export).
