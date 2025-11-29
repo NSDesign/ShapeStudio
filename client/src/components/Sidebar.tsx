@@ -2651,6 +2651,33 @@ export default function Sidebar({
               console.log(`📐 Using dynamic bounds: ${canvasWidth/effectiveExportScale}x${canvasHeight/effectiveExportScale}`);
             }
 
+            // PREFLIGHT MEMORY CHECK: Prevent browser crashes from large canvas allocations
+            // TIFF exports are especially memory-intensive (RGBA buffer + UTIF encoding)
+            // Batch exports use stricter limits due to multiple concurrent allocations
+            const pixelCount = canvasWidth * canvasHeight;
+            const megapixels = pixelCount / 1_000_000;
+            const maxMegapixelsForBatch = 100; // ~400MB per canvas, safer for batch mode
+            const maxMegapixelsForTiff = 80; // Even stricter for TIFF due to encoding buffer
+            
+            const effectiveLimit = exportFormat === 'tiff' ? maxMegapixelsForTiff : maxMegapixelsForBatch;
+            
+            if (megapixels > effectiveLimit) {
+              const suggestedScale = Math.sqrt(effectiveLimit * 1_000_000 / (targetArtboard?.width ?? 2480) / (targetArtboard?.height ?? 3508));
+              console.error(`❌ MEMORY GUARD: Canvas size ${Math.round(canvasWidth)}x${Math.round(canvasHeight)} (${megapixels.toFixed(1)}MP) exceeds safe limit (${effectiveLimit}MP) for batch ${exportFormat.toUpperCase()} export.`);
+              
+              // Graceful degradation: skip this image but continue batch
+              setBatchStatus(`⚠️ Skipping image ${i + 1}: Too large for ${exportFormat.toUpperCase()} (${megapixels.toFixed(0)}MP > ${effectiveLimit}MP limit)`);
+              
+              // Show user-friendly message
+              if (i === 0) {
+                alert(`Export size too large for batch ${exportFormat.toUpperCase()} export.\n\nCurrent: ${megapixels.toFixed(0)} megapixels\nLimit: ${effectiveLimit} megapixels\n\nTry:\n• Reduce export scale to ${suggestedScale.toFixed(1)}x or lower\n• Use PNG format instead of TIFF\n• Export fewer images at once`);
+                throw new Error(`Memory limit exceeded for batch ${exportFormat} export`);
+              }
+              continue; // Skip this image in batch
+            }
+            
+            console.log(`✅ Memory check passed: ${megapixels.toFixed(1)}MP (limit: ${effectiveLimit}MP)`);
+
             // Create canvas and render
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -2830,29 +2857,37 @@ export default function Sidebar({
                     continue; // Skip this image in batch mode
                   }
                   
-                  const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
-                  const rgba = new Uint8Array(imageData.data.buffer);
-                  
-                  // Get DPI from artboard or use default
-                  const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
-                  
-                  // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-                  // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
-                  const tiffMetadata = {
-                    t282: [exportDPI],  // XResolution
-                    t283: [exportDPI],  // YResolution
-                    t296: [2],          // ResolutionUnit (2 = inch)
-                  } as unknown as UTIF.IFD;
-                  
-                  const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
-                  const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
-                  
-                  if (packageAsZip && zip) {
-                    zip.file(filename, tiffBlob);
-                    console.log(`📦 Added ${filename} to ZIP (TIFF with ${exportDPI} DPI)`);
-                  } else {
-                    individualFiles.push({ blob: tiffBlob, filename });
-                    console.log(`📁 Prepared ${filename} for individual download (TIFF with ${exportDPI} DPI)`);
+                  try {
+                    const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
+                    const rgba = new Uint8Array(imageData.data.buffer);
+                    
+                    // Get DPI from artboard or use default
+                    const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
+                    
+                    // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+                    // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
+                    const tiffMetadata = {
+                      t282: [exportDPI],  // XResolution
+                      t283: [exportDPI],  // YResolution
+                      t296: [2],          // ResolutionUnit (2 = inch)
+                    } as unknown as UTIF.IFD;
+                    
+                    console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
+                    const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
+                    const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
+                    
+                    if (packageAsZip && zip) {
+                      zip.file(filename, tiffBlob);
+                      console.log(`📦 Added ${filename} to ZIP (TIFF with ${exportDPI} DPI)`);
+                    } else {
+                      individualFiles.push({ blob: tiffBlob, filename });
+                      console.log(`📁 Prepared ${filename} for individual download (TIFF with ${exportDPI} DPI)`);
+                    }
+                  } catch (tiffError) {
+                    console.error(`❌ TIFF encoding failed for image ${i + 1}:`, tiffError);
+                    setBatchStatus(`⚠️ TIFF encoding failed for image ${i + 1}`);
+                    // Continue with next image instead of crashing
+                    continue;
                   }
                 }
               } else {
