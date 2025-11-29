@@ -1,0 +1,3084 @@
+{
+  "shapes": [
+    {
+      "id": "shape_1764379590256_4j6y10pet",
+      "type": "spline-circle",
+      "transform": {
+        "x": 154.28571428571428,
+        "y": 384.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9024533161832126,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20001,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#443dff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#759aff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#8c7aff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#1424ff"
+            },
+            {
+              "offset": 1,
+              "color": "#ad94ff"
+            }
+          ],
+          "conicAngle": 4.052656897278844,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590256_p1tft40nn",
+      "type": "spline-circle",
+      "transform": {
+        "x": 508.57142857142856,
+        "y": 444.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8011824406829227,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20002,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#4d7fff"
+            },
+            {
+              "offset": 1,
+              "color": "#1e05ff"
+            }
+          ],
+          "conicAngle": 5.813914629802004,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590256_y4xrkcvw6",
+      "type": "spline-circle",
+      "transform": {
+        "x": 862.8571428571429,
+        "y": 384.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.86795224039477,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20003,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#1a62ff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#6b6eff"
+            },
+            {
+              "offset": 1,
+              "color": "#757cff"
+            }
+          ],
+          "conicAngle": 3.7001646511563013,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_upajwqjdi",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1217.142857142857,
+        "y": 444.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9647387197763493,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20004,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#333aff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#725cff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#a299ff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#3700ff"
+            },
+            {
+              "offset": 1,
+              "color": "#8f9cff"
+            }
+          ],
+          "conicAngle": 1.5929773205511475,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_4kf53qvvw",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1571.4285714285713,
+        "y": 384.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.940404048703186,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20005,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#7a8cff"
+            },
+            {
+              "offset": 1,
+              "color": "#295bff"
+            }
+          ],
+          "conicAngle": 3.301668587126181,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_iwsicx430",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1925.7142857142856,
+        "y": 444.66666666666663,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8859798087237128,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20006,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#8a8cff"
+            },
+            {
+              "offset": 1,
+              "color": "#808aff"
+            }
+          ],
+          "conicAngle": 4.578329473275323,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_e3fbg2k35",
+      "type": "spline-circle",
+      "transform": {
+        "x": 154.28571428571428,
+        "y": 969.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8689150182522103,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20007,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#6661ff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#5291ff"
+            },
+            {
+              "offset": 1,
+              "color": "#054cff"
+            }
+          ],
+          "conicAngle": 3.0111922047391873,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_q5my2lgny",
+      "type": "spline-circle",
+      "transform": {
+        "x": 508.57142857142856,
+        "y": 1029.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8140240437260643,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20008,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#3d5aff"
+            },
+            {
+              "offset": 1,
+              "color": "#7a52ff"
+            }
+          ],
+          "conicAngle": 2.0016318160557183,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_6553mnael",
+      "type": "spline-circle",
+      "transform": {
+        "x": 862.8571428571429,
+        "y": 969.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9861818958667228,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20009,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#1a25ff"
+            },
+            {
+              "offset": 1,
+              "color": "#7152ff"
+            }
+          ],
+          "conicAngle": 0.183310815523242,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_h23mejhhu",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1217.142857142857,
+        "y": 1029.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8961292408989311,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20010,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#7099ff"
+            },
+            {
+              "offset": 0.3333333333333333,
+              "color": "#af94ff"
+            },
+            {
+              "offset": 0.6666666666666666,
+              "color": "#1f26ff"
+            },
+            {
+              "offset": 1,
+              "color": "#4763ff"
+            }
+          ],
+          "conicAngle": 1.0585341164634865,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_ar378d1bp",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1571.4285714285713,
+        "y": 969.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8130305368955968,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20011,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#6685ff"
+            },
+            {
+              "offset": 1,
+              "color": "#4d5bff"
+            }
+          ],
+          "conicAngle": 2.6889080421699063,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_zgkod7vdk",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1925.7142857142856,
+        "y": 1029.3333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8907383852271521,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20012,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#002fff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#a98aff"
+            },
+            {
+              "offset": 1,
+              "color": "#4800ff"
+            }
+          ],
+          "conicAngle": 0.4540903621713407,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_an79etyhd",
+      "type": "spline-circle",
+      "transform": {
+        "x": 154.28571428571428,
+        "y": 1554,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9356777354818678,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20013,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#4271ff"
+            },
+            {
+              "offset": 1,
+              "color": "#0550ff"
+            }
+          ],
+          "conicAngle": 1.9007734738419353,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590257_licy1cick",
+      "type": "spline-circle",
+      "transform": {
+        "x": 508.57142857142856,
+        "y": 1614,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9880316590492575,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20014,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#6047ff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#4772ff"
+            },
+            {
+              "offset": 1,
+              "color": "#2e3fff"
+            }
+          ],
+          "conicAngle": 0.892489810568502,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_xl6i073p3",
+      "type": "spline-circle",
+      "transform": {
+        "x": 862.8571428571429,
+        "y": 1554,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9809220236004543,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20015,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#6b6eff"
+            },
+            {
+              "offset": 1,
+              "color": "#4d85ff"
+            }
+          ],
+          "conicAngle": 2.411499857275605,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_ol4ui75ei",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1217.142857142857,
+        "y": 1614,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8148508535521388,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20016,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#2e2eff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#667aff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#7038ff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#3d7bff"
+            },
+            {
+              "offset": 1,
+              "color": "#6685ff"
+            }
+          ],
+          "conicAngle": 3.617995669580777,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_4qcpcjjn8",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1571.4285714285713,
+        "y": 1554,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9138612348894941,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20017,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#7591ff"
+            },
+            {
+              "offset": 0.3333333333333333,
+              "color": "#745cff"
+            },
+            {
+              "offset": 0.6666666666666666,
+              "color": "#759fff"
+            },
+            {
+              "offset": 1,
+              "color": "#5269ff"
+            }
+          ],
+          "conicAngle": 1.4583295648762036,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_5ah8ivdx0",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1925.7142857142856,
+        "y": 1614,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9281401987904104,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20018,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#b499ff"
+            },
+            {
+              "offset": 1,
+              "color": "#5c7aff"
+            }
+          ],
+          "conicAngle": 3.4660385427437563,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_nbhc2207i",
+      "type": "spline-circle",
+      "transform": {
+        "x": 154.28571428571428,
+        "y": 2138.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8164472534145801,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20019,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#8aafff"
+            },
+            {
+              "offset": 1,
+              "color": "#8f66ff"
+            }
+          ],
+          "conicAngle": 2.3160975397204875,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_z4q299jva",
+      "type": "spline-circle",
+      "transform": {
+        "x": 508.57142857142856,
+        "y": 2198.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9303008295135239,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20020,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#6673ff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#5b24ff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#9496ff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#4245ff"
+            },
+            {
+              "offset": 1,
+              "color": "#9b80ff"
+            }
+          ],
+          "conicAngle": 3.109251259733301,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_nhdx23q9q",
+      "type": "spline-circle",
+      "transform": {
+        "x": 862.8571428571429,
+        "y": 2138.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8392027335486596,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20021,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#666bff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#6242ff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#af99ff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#584dff"
+            },
+            {
+              "offset": 1,
+              "color": "#8589ff"
+            }
+          ],
+          "conicAngle": 5.224763978964355,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_2c4tl9bub",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1217.142857142857,
+        "y": 2198.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8845627604729274,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20022,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#2e3cff"
+            },
+            {
+              "offset": 0.3333333333333333,
+              "color": "#500aff"
+            },
+            {
+              "offset": 0.6666666666666666,
+              "color": "#8ab1ff"
+            },
+            {
+              "offset": 1,
+              "color": "#476cff"
+            }
+          ],
+          "conicAngle": 0.9184888251684457,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_2u2z9pimn",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1571.4285714285713,
+        "y": 2138.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9710195170508297,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20023,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#2014ff"
+            },
+            {
+              "offset": 1,
+              "color": "#666bff"
+            }
+          ],
+          "conicAngle": 5.800972409420138,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_nn8kuy5uf",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1925.7142857142856,
+        "y": 2198.6666666666665,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8039050464325609,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20024,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#9e7aff"
+            },
+            {
+              "offset": 1,
+              "color": "#4782ff"
+            }
+          ],
+          "conicAngle": 3.7583541891496024,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_sxlwut18f",
+      "type": "spline-circle",
+      "transform": {
+        "x": 154.28571428571428,
+        "y": 2723.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8729941561523201,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20025,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#1430ff"
+            },
+            {
+              "offset": 1,
+              "color": "#4d88ff"
+            }
+          ],
+          "conicAngle": 3.926127510891212,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590258_oun547uto",
+      "type": "spline-circle",
+      "transform": {
+        "x": 508.57142857142856,
+        "y": 2783.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.9423978970766204,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20026,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#2970ff"
+            },
+            {
+              "offset": 0.25,
+              "color": "#80acff"
+            },
+            {
+              "offset": 0.5,
+              "color": "#6b93ff"
+            },
+            {
+              "offset": 0.75,
+              "color": "#2427ff"
+            },
+            {
+              "offset": 1,
+              "color": "#0d05ff"
+            }
+          ],
+          "conicAngle": 6.248785506951291,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590259_y85y4skc2",
+      "type": "spline-circle",
+      "transform": {
+        "x": 862.8571428571429,
+        "y": 2723.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8115620899704684,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20027,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#a694ff"
+            },
+            {
+              "offset": 0.3333333333333333,
+              "color": "#94a6ff"
+            },
+            {
+              "offset": 0.6666666666666666,
+              "color": "#0a0aff"
+            },
+            {
+              "offset": 1,
+              "color": "#7f66ff"
+            }
+          ],
+          "conicAngle": 5.640060701425986,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590259_jyhxkn9a9",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1217.142857142857,
+        "y": 2783.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8785183566761863,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20028,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#5747ff"
+            },
+            {
+              "offset": 1,
+              "color": "#85a7ff"
+            }
+          ],
+          "conicAngle": 4.333112514886559,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590259_04g2fp2ng",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1571.4285714285713,
+        "y": 2723.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.8587604802510214,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20029,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#94a0ff"
+            },
+            {
+              "offset": 0.3333333333333333,
+              "color": "#3344ff"
+            },
+            {
+              "offset": 0.6666666666666666,
+              "color": "#053fff"
+            },
+            {
+              "offset": 1,
+              "color": "#949dff"
+            }
+          ],
+          "conicAngle": 2.0275087726972747,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    },
+    {
+      "id": "shape_1764379590259_aj6rufgor",
+      "type": "spline-circle",
+      "transform": {
+        "x": 1925.7142857142856,
+        "y": 2783.333333333333,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "skewX": 0,
+        "skewY": 0
+      },
+      "properties": {
+        "fillColor": "transparent",
+        "fillOpacity": 0.810466406752831,
+        "strokeColor": "transparent",
+        "strokeWidth": 0,
+        "strokeOpacity": 0,
+        "blendMode": "source-over",
+        "zIndex": 20030,
+        "blurRadius": 0,
+        "gradient": {
+          "type": "conic",
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#7d52ff"
+            },
+            {
+              "offset": 1,
+              "color": "#8593ff"
+            }
+          ],
+          "conicAngle": 0.3356578097522258,
+          "conicCenterX": 50,
+          "conicCenterY": 50
+        }
+      },
+      "selected": false,
+      "points": [
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 100
+        }
+      ],
+      "segments": 4,
+      "renderType": "bezier",
+      "radius": 100,
+      "controlPoints": [
+        {
+          "x": 100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": 55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -55.228480000000005,
+          "y": -100
+        },
+        {
+          "x": -100,
+          "y": -55.228480000000005
+        },
+        {
+          "x": -100,
+          "y": 55.228480000000005
+        },
+        {
+          "x": -55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 55.228480000000005,
+          "y": 100
+        },
+        {
+          "x": 100,
+          "y": 55.228480000000005
+        }
+      ],
+      "closed": true
+    }
+  ],
+  "groups": [],
+  "enabledShapeTypes": [
+    "spline-circle"
+  ],
+  "artboards": [
+    {
+      "id": "artboard_1",
+      "name": "A4 Paper",
+      "x": -200,
+      "y": -200,
+      "width": 2480,
+      "height": 3508,
+      "dpi": 300,
+      "unitType": "pixels",
+      "backgroundColor": "#76bb40",
+      "displayGrid": true,
+      "displayBorder": false,
+      "displayName": true,
+      "displayDimensions": false,
+      "displayResolution": false,
+      "preset": "Basic",
+      "printConfig": {
+        "outputSpecs": {
+          "dpi": 72,
+          "unitType": "pixels"
+        },
+        "overlays": {
+          "bleed": {
+            "amount": 0,
+            "unit": "pixels",
+            "display": false,
+            "render": false
+          },
+          "safeZone": {
+            "amount": 0,
+            "unit": "pixels",
+            "display": false
+          },
+          "printMarks": {
+            "display": false,
+            "render": false,
+            "cropMarks": true,
+            "registrationMarks": true,
+            "markLength": 12,
+            "markOffset": 3
+          },
+          "background": {
+            "mode": "artboard",
+            "customColor": "#ffffff",
+            "display": true,
+            "render": true
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "exportIndex": 5,
+    "totalExports": 5,
+    "timestamp": "2025-11-29T01:26:30.462Z",
+    "version": "1.0.0",
+    "exportMode": "artboard",
+    "generationBounds": {
+      "x": -200,
+      "y": -200,
+      "width": 2480,
+      "height": 3508
+    },
+    "imageFilename": "batch-005-1764379590263.png",
+    "shapeCount": 30,
+    "description": "Batch export 5 of 5 - Generated 30 shapes"
+  }
+}

@@ -1892,6 +1892,22 @@ export default function Sidebar({
       const originalSelected = shape.selected;
       shape.selected = false;
 
+      // DIAGNOSTIC: Log shape properties for debugging batch export
+      console.log(`🔍 [EXPORT RENDER] Shape ${shape.id}:`, {
+        type: shape.type,
+        transform: { x: shape.transform.x, y: shape.transform.y },
+        hasPoints: !!(shape.points && shape.points.length > 0),
+        pointsCount: shape.points?.length ?? 0,
+        hasControlPoints: !!(shape.controlPoints && shape.controlPoints.length > 0),
+        controlPointsCount: shape.controlPoints?.length ?? 0,
+        fillColor: shape.properties.fillColor,
+        fillOpacity: shape.properties.fillOpacity,
+        hasGradient: !!shape.properties.gradient,
+        gradientType: shape.properties.gradient?.type,
+        gradientStops: shape.properties.gradient?.stops?.length ?? 0,
+        radius: shape.radius
+      });
+
       // Save current context state
       ctx.save();
       

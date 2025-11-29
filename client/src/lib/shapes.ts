@@ -1945,6 +1945,15 @@ export class Shape {
       // Apply fill with gradient if available
       if (this.properties.gradient) {
         const bounds = this.getBounds();
+        // DIAGNOSTIC: Log bounds and gradient info
+        console.log(`🎨 [SHAPE FILL] ${this.id}:`, {
+          type: this.type,
+          bounds,
+          gradientType: this.properties.gradient.type,
+          stopsCount: this.properties.gradient.stops?.length ?? 0,
+          hasEmptyBounds: bounds.width === 0 || bounds.height === 0,
+          pointsCount: this.points?.length ?? 0
+        });
         let gradient: CanvasGradient;
         
         if (this.properties.gradient.type === 'linear') {

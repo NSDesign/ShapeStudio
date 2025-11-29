@@ -2252,8 +2252,9 @@ export const useShapeEditor = () => {
             
             shape.properties.gradient = gradientObj;
 
-            // When gradient is used, set transparent fill so gradient shows through
-            shape.properties.fillColor = 'transparent';
+            // When gradient is used, set fillColor to gradient's first stop color as fallback
+            // This ensures compatibility with export rendering that may check fillColor before gradient
+            shape.properties.fillColor = gradientStops[0]?.color ?? '#3b82f6';
 
             // Apply fill opacity based on mode
             if (effectiveBatchConfig.fillOpacityMode === 'range') {
