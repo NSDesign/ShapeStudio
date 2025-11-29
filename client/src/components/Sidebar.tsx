@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
+import * as UTIF from 'utif';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
@@ -553,7 +554,7 @@ export default function Sidebar({
   const [presetToDelete, setPresetToDelete] = useState<string>('');
   
   // Export settings state (lifted from ExportSaveContent for persistence)
-  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf'>('png');
+  const [exportFormat, setExportFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf' | 'tiff'>('png');
   const [exportQuality, setExportQuality] = useState(90);
   const [exportScale, setExportScale] = useState(1);
   const [exportAutoScaleFromDpi, setExportAutoScaleFromDpi] = useState(false);
@@ -1922,6 +1923,34 @@ export default function Sidebar({
           pdf.save(filename);
           console.log(`📁 File saved: ${filename} (check your Downloads folder)`);
           break;
+        case 'tiff':
+          // Handle TIFF format using UTIF library
+          const tiffCtx = canvas.getContext('2d');
+          if (tiffCtx) {
+            const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const rgba = new Uint8Array(imageData.data.buffer);
+            
+            // Build TIFF IFD with DPI metadata
+            const ifd: UTIF.IFD = {
+              width: canvas.width,
+              height: canvas.height,
+              data: rgba,
+              t282: [dpi],  // XResolution
+              t283: [dpi],  // YResolution
+              t296: [2],    // ResolutionUnit (2 = inch)
+            };
+            
+            const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, ifd);
+            const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
+            const url = URL.createObjectURL(blob);
+            const tiffLink = document.createElement('a');
+            tiffLink.href = url;
+            tiffLink.download = filename;
+            tiffLink.click();
+            URL.revokeObjectURL(url);
+            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata`);
+          }
+          break;
         default:
           // Handle raster formats
           const link = document.createElement('a');
@@ -3131,6 +3160,7 @@ export default function Sidebar({
                 <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP (Modern)</SelectItem>
                 <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF (Next-gen)</SelectItem>
                 <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP (Uncompressed)</SelectItem>
+                <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF (Print-ready)</SelectItem>
                 <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
