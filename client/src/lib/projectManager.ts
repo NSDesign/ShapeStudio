@@ -1,5 +1,5 @@
 import { Shape, ShapeGroupClass } from './shapes';
-import { CanvasSettings, ScatterSettings, ShapeType, Artboard } from './shapeTypes';
+import { CanvasSettings, ScatterSettings, ShapeType, Artboard, PrintConfig, DEFAULT_PRINT_CONFIG, getEffectivePrintConfig } from './shapeTypes';
 import type { GenerationSet, SidebarSectionConfig } from '@shared/schema';
 import { migrateSizeConstraintMode } from '@shared/schema';
 
@@ -34,6 +34,7 @@ export interface ArtboardConfig {
   displayDimensions?: boolean;
   displayResolution?: boolean;
   name?: string;
+  printConfig?: PrintConfig;
 }
 
 export interface ProjectData {
@@ -72,7 +73,8 @@ export class ProjectManager {
         displayName: artboard.displayName ?? true,
         displayDimensions: artboard.displayDimensions ?? false,
         displayResolution: artboard.displayResolution ?? false,
-        name: artboard.name
+        name: artboard.name,
+        printConfig: artboard.printConfig || getEffectivePrintConfig(artboard)
       }
     };
 
@@ -113,32 +115,47 @@ export class ProjectManager {
           // Extract artboard config (with backwards compatibility for legacy files)
           let artboard: ArtboardConfig;
           if (projectData.artboard) {
+            const dpi = projectData.artboard.dpi ?? 72;
+            const unitType = projectData.artboard.unitType ?? 'pixels';
+            const backgroundColor = projectData.artboard.backgroundColor || '#ffffff';
+            
             artboard = {
               width: projectData.artboard.width || 1200,
               height: projectData.artboard.height || 800,
-              backgroundColor: projectData.artboard.backgroundColor || '#ffffff',
-              dpi: projectData.artboard.dpi ?? 72,
-              unitType: projectData.artboard.unitType ?? 'pixels',
+              backgroundColor,
+              dpi,
+              unitType,
               displayGrid: projectData.artboard.displayGrid ?? false,
               displayBorder: projectData.artboard.displayBorder ?? true,
               displayName: projectData.artboard.displayName ?? true,
               displayDimensions: projectData.artboard.displayDimensions ?? false,
               displayResolution: projectData.artboard.displayResolution ?? false,
-              name: projectData.artboard.name
+              name: projectData.artboard.name,
+              printConfig: projectData.artboard.printConfig || getEffectivePrintConfig({
+                dpi,
+                unitType,
+                backgroundColor
+              })
             };
           } else if (projectData.canvasSettings) {
             // Legacy compatibility: extract from canvasSettings
+            const backgroundColor = projectData.canvasSettings.backgroundColor || '#ffffff';
             artboard = {
               width: projectData.canvasSettings.width || 1200,
               height: projectData.canvasSettings.height || 800,
-              backgroundColor: projectData.canvasSettings.backgroundColor || '#ffffff',
+              backgroundColor,
               dpi: 72,
               unitType: 'pixels',
               displayGrid: false,
               displayBorder: true,
               displayName: true,
               displayDimensions: false,
-              displayResolution: false
+              displayResolution: false,
+              printConfig: getEffectivePrintConfig({
+                dpi: 72,
+                unitType: 'pixels',
+                backgroundColor
+              })
             };
           } else {
             // Default fallback
@@ -152,7 +169,8 @@ export class ProjectManager {
               displayBorder: true,
               displayName: true,
               displayDimensions: false,
-              displayResolution: false
+              displayResolution: false,
+              printConfig: DEFAULT_PRINT_CONFIG
             };
           }
           

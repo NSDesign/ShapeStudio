@@ -4,7 +4,7 @@ import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
 import { useUserPreferences } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution, DEFAULT_PRINT_CONFIG } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
@@ -148,7 +148,8 @@ export const useShapeEditor = () => {
       displayName: true,
       displayDimensions: false,
       displayResolution: false,
-      preset: 'Basic'
+      preset: 'Basic',
+      printConfig: DEFAULT_PRINT_CONFIG
     }
   ]);
   const [activeArtboard, setActiveArtboard] = useState<string>('artboard_1');
@@ -4251,11 +4252,14 @@ export const useShapeEditor = () => {
       y: centerY,
       width: preset.width,
       height: preset.height,
+      dpi: 72,
+      unitType: 'pixels',
       backgroundColor: '#ffffff',
       displayGrid: true,
       displayBorder: false,
       preset: preset.name,
-      category: preset.category
+      category: preset.category,
+      printConfig: DEFAULT_PRINT_CONFIG
     };
     setArtboards(prev => [...prev, newArtboard]);
   }, []);
