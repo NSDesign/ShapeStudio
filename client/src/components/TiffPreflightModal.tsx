@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertTriangle, Info } from 'lucide-react';
 
 interface TiffPreflightInfo {
@@ -65,73 +66,75 @@ export default function TiffPreflightModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="p-3 bg-slate-800 rounded-lg space-y-2">
-            <div className="text-sm font-medium text-slate-300">Export Details</div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <span className="text-slate-400">Canvas Size:</span>
-              <span className="text-slate-200">{preflightInfo.canvasWidth} × {preflightInfo.canvasHeight} px</span>
-              
-              <span className="text-slate-400">Resolution:</span>
-              <span className="text-slate-200">{preflightInfo.artboardDpi} DPI</span>
-              
-              <span className="text-slate-400">Image Size:</span>
-              <span className="text-slate-200">{preflightInfo.megapixelsPerImage.toFixed(1)} megapixels</span>
-              
-              <span className="text-slate-400">Memory per Image:</span>
-              <span className="text-slate-200">~{preflightInfo.memoryPerImageMb.toFixed(0)} MB</span>
+        <ScrollArea className="max-h-[60vh]">
+          <div className="space-y-4 py-2 pr-4">
+            <div className="p-3 bg-slate-800 rounded-lg space-y-2">
+              <div className="text-sm font-medium text-slate-300">Export Details</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <span className="text-slate-400">Canvas Size:</span>
+                <span className="text-slate-200">{preflightInfo.canvasWidth} × {preflightInfo.canvasHeight} px</span>
+                
+                <span className="text-slate-400">Resolution:</span>
+                <span className="text-slate-200">{preflightInfo.artboardDpi} DPI</span>
+                
+                <span className="text-slate-400">Image Size:</span>
+                <span className="text-slate-200">{preflightInfo.megapixelsPerImage.toFixed(1)} megapixels</span>
+                
+                <span className="text-slate-400">Memory per Image:</span>
+                <span className="text-slate-200">~{preflightInfo.memoryPerImageMb.toFixed(0)} MB</span>
+              </div>
             </div>
+
+            {hasMemoryLimitation && (
+              <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-medium text-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Batch Size Limited
+                </div>
+                <p className="text-xs text-amber-200/80">
+                  Due to browser memory limits (~600 MB), only <strong>{preflightInfo.effectiveCount}</strong> of your 
+                  requested <strong>{preflightInfo.requestedCount}</strong> images will be exported.
+                </p>
+                <p className="text-xs text-amber-200/60">
+                  Estimated total: ~{preflightInfo.totalMemoryMb.toFixed(0)} MB
+                </p>
+              </div>
+            )}
+
+            {!hasMemoryLimitation && preflightInfo.requestedCount > 1 && (
+              <div className="p-3 bg-slate-800 rounded-lg">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Images to Export:</span>
+                  <span className="text-slate-200 font-medium">{preflightInfo.effectiveCount}</span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-slate-500">Est. Total Memory:</span>
+                  <span className="text-slate-400">~{preflightInfo.totalMemoryMb.toFixed(0)} MB</span>
+                </div>
+              </div>
+            )}
+
+            {hasWarnings && (
+              <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-blue-300 font-medium text-sm">
+                  <Info className="w-4 h-4" />
+                  Print-Ready Considerations
+                </div>
+                <ul className="text-xs text-blue-200/80 space-y-1 list-disc list-inside">
+                  {preflightInfo.hasLowDpi && (
+                    <li>DPI ({preflightInfo.artboardDpi}) is below 300 - not ideal for professional printing</li>
+                  )}
+                  {preflightInfo.hasNoBleed && (
+                    <li>Bleed is not enabled - may cause issues at print edges</li>
+                  )}
+                  {preflightInfo.hasTransparentBackground && (
+                    <li>Background is transparent - some print services require solid background</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
-
-          {hasMemoryLimitation && (
-            <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg space-y-2">
-              <div className="flex items-center gap-2 text-amber-300 font-medium text-sm">
-                <AlertTriangle className="w-4 h-4" />
-                Batch Size Limited
-              </div>
-              <p className="text-xs text-amber-200/80">
-                Due to browser memory limits (~600 MB), only <strong>{preflightInfo.effectiveCount}</strong> of your 
-                requested <strong>{preflightInfo.requestedCount}</strong> images will be exported.
-              </p>
-              <p className="text-xs text-amber-200/60">
-                Estimated total: ~{preflightInfo.totalMemoryMb.toFixed(0)} MB
-              </p>
-            </div>
-          )}
-
-          {!hasMemoryLimitation && preflightInfo.requestedCount > 1 && (
-            <div className="p-3 bg-slate-800 rounded-lg">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Images to Export:</span>
-                <span className="text-slate-200 font-medium">{preflightInfo.effectiveCount}</span>
-              </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span className="text-slate-500">Est. Total Memory:</span>
-                <span className="text-slate-400">~{preflightInfo.totalMemoryMb.toFixed(0)} MB</span>
-              </div>
-            </div>
-          )}
-
-          {hasWarnings && (
-            <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg space-y-2">
-              <div className="flex items-center gap-2 text-blue-300 font-medium text-sm">
-                <Info className="w-4 h-4" />
-                Print-Ready Considerations
-              </div>
-              <ul className="text-xs text-blue-200/80 space-y-1 list-disc list-inside">
-                {preflightInfo.hasLowDpi && (
-                  <li>DPI ({preflightInfo.artboardDpi}) is below 300 - not ideal for professional printing</li>
-                )}
-                {preflightInfo.hasNoBleed && (
-                  <li>Bleed is not enabled - may cause issues at print edges</li>
-                )}
-                {preflightInfo.hasTransparentBackground && (
-                  <li>Background is transparent - some print services require solid background</li>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
+        </ScrollArea>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
           <div className="flex items-center space-x-2 flex-1">

@@ -100,6 +100,9 @@ export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
   colors: { enabled: false, displayOrder: 10 },            // Color Manipulation - disabled by default
 };
 
+// Export background mode type
+export type ExportBackgroundMode = 'transparent' | 'artboard' | 'custom';
+
 // Export settings configuration type
 export interface ExportSettingsConfig {
   exportBatchModeEnabled: boolean;    // Whether batch export mode is enabled
@@ -110,6 +113,8 @@ export interface ExportSettingsConfig {
   exportSaveProjectFiles: boolean;    // Whether to export project files (.json) alongside images
   packageAsZip: boolean;              // Whether to package exports as ZIP file
   skipTiffPreflightModal: boolean;    // Skip pre-flight confirmation modal for TIFF batch exports
+  exportBackgroundMode: ExportBackgroundMode;  // Export background: transparent, artboard color, or custom
+  exportBackgroundColor: string;      // Custom background color when mode is 'custom'
 }
 
 // Default export settings configuration
@@ -122,6 +127,8 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   exportSaveProjectFiles: false,      // Project files disabled by default
   packageAsZip: false,                // ZIP packaging disabled by default
   skipTiffPreflightModal: false,      // Show TIFF pre-flight modal by default
+  exportBackgroundMode: 'transparent', // Transparent background by default
+  exportBackgroundColor: '#ffffff',   // White as default custom color
 };
 
 // App settings defaults configuration type

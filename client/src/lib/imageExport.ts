@@ -1,6 +1,6 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, Artboard } from './shapeTypes';
-import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, BackgroundMode } from '@shared/schema';
+import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, ExportBackgroundMode } from '@shared/schema';
 import * as UTIF from 'utif';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff';
@@ -54,6 +54,8 @@ export interface ExportOptions {
   artboardDpi?: number;
   artboardBackgroundColor?: string;
   tiffOptions?: TiffOptions;
+  exportBackgroundMode?: ExportBackgroundMode;  // Export background mode: transparent, artboard, or custom
+  exportBackgroundColor?: string;               // Custom background color when mode is 'custom'
 }
 
 export class ImageExporter {
@@ -85,7 +87,9 @@ export class ImageExporter {
       printConfig,
       artboardDpi = 72,
       artboardBackgroundColor,
-      tiffOptions
+      tiffOptions,
+      exportBackgroundMode = 'transparent',
+      exportBackgroundColor = '#ffffff'
     } = options;
 
     // Calculate bounds of all content to export
@@ -189,20 +193,18 @@ export class ImageExporter {
     // Clear and setup canvas
     this.ctx.clearRect(0, 0, exportWidth, exportHeight);
     
-    // Determine effective background color based on print config background mode
+    // Determine effective background color based on export background mode
     let effectiveBackgroundColor = backgroundColor;
-    if (config.overlays.background.render) {
-      switch (config.overlays.background.mode) {
-        case 'transparent':
-          effectiveBackgroundColor = 'transparent';
-          break;
-        case 'artboard':
-          effectiveBackgroundColor = artboardBackgroundColor || backgroundColor;
-          break;
-        case 'custom':
-          effectiveBackgroundColor = config.overlays.background.customColor;
-          break;
-      }
+    switch (exportBackgroundMode) {
+      case 'transparent':
+        effectiveBackgroundColor = 'transparent';
+        break;
+      case 'artboard':
+        effectiveBackgroundColor = artboardBackgroundColor || backgroundColor;
+        break;
+      case 'custom':
+        effectiveBackgroundColor = exportBackgroundColor;
+        break;
     }
     
     // Add background if requested

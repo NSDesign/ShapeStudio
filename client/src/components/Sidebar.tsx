@@ -1050,14 +1050,10 @@ export default function Sidebar({
 
   function PrintConfigurationSection({ 
     currentArtboard, 
-    onUpdateArtboard,
-    isExpanded,
-    setIsExpanded
+    onUpdateArtboard
   }: { 
     currentArtboard: Artboard; 
     onUpdateArtboard: (id: string, updates: Partial<Artboard>) => void;
-    isExpanded: boolean;
-    setIsExpanded: (expanded: boolean) => void;
   }) {
     
     const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
@@ -1095,264 +1091,183 @@ export default function Sidebar({
       });
     };
     
-    const updateBackground = (updates: Partial<typeof printConfig.overlays.background>) => {
-      updatePrintConfig({
-        overlays: {
-          ...printConfig.overlays,
-          background: { ...printConfig.overlays.background, ...updates }
-        }
-      });
-    };
-    
     return (
-      <div className="space-y-2">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center justify-between w-full text-xs text-purple-300 hover:text-purple-200"
-          data-testid="btn-toggle-print-config"
-        >
-          <span className="font-medium">Print Configuration</span>
-          <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-        </button>
+      <div className="space-y-3">
+        <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
         
-        {isExpanded && (
-          <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
-            
-            {/* Bleed Settings */}
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400 font-medium">Bleed</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Amount</Label>
-                  <Input
-                    type="number"
-                    step={0.1}
-                    min={0}
-                    value={printConfig.overlays.bleed.amount}
-                    onChange={(e) => updateBleed({ amount: parseFloat(e.target.value) || 0 })}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                    data-testid="input-bleed-amount"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Unit</Label>
-                  <Select
-                    value={printConfig.overlays.bleed.unit}
-                    onValueChange={(value: PrintUnitType) => updateBleed({ unit: value })}
-                  >
-                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-bleed-unit">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pixels">px</SelectItem>
-                      <SelectItem value="mm">mm</SelectItem>
-                      <SelectItem value="cm">cm</SelectItem>
-                      <SelectItem value="inches">in</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.bleed.display}
-                    onCheckedChange={(checked) => updateBleed({ display: !!checked })}
-                    data-testid="checkbox-bleed-display"
-                  />
-                  <Label className="text-[10px] text-slate-500">Display</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.bleed.render}
-                    onCheckedChange={(checked) => updateBleed({ render: !!checked })}
-                    data-testid="checkbox-bleed-render"
-                  />
-                  <Label className="text-[10px] text-slate-500">Render</Label>
-                </div>
-              </div>
-            </div>
-            
-            <Separator className="bg-slate-600/30" />
-            
-            {/* Safe Zone Settings */}
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400 font-medium">Safe Zone</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Amount</Label>
-                  <Input
-                    type="number"
-                    step={0.1}
-                    min={0}
-                    value={printConfig.overlays.safeZone.amount}
-                    onChange={(e) => updateSafeZone({ amount: parseFloat(e.target.value) || 0 })}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                    data-testid="input-safe-zone-amount"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Unit</Label>
-                  <Select
-                    value={printConfig.overlays.safeZone.unit}
-                    onValueChange={(value: PrintUnitType) => updateSafeZone({ unit: value })}
-                  >
-                    <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-safe-zone-unit">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pixels">px</SelectItem>
-                      <SelectItem value="mm">mm</SelectItem>
-                      <SelectItem value="cm">cm</SelectItem>
-                      <SelectItem value="inches">in</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={printConfig.overlays.safeZone.display}
-                  onCheckedChange={(checked) => updateSafeZone({ display: !!checked })}
-                  data-testid="checkbox-safe-zone-display"
-                />
-                <Label className="text-[10px] text-slate-500">Display</Label>
-              </div>
-            </div>
-            
-            <Separator className="bg-slate-600/30" />
-            
-            {/* Print Marks Settings */}
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.printMarks.display}
-                    onCheckedChange={(checked) => updatePrintMarks({ display: !!checked })}
-                    data-testid="checkbox-print-marks-display"
-                  />
-                  <Label className="text-[10px] text-slate-500">Display</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.printMarks.render}
-                    onCheckedChange={(checked) => updatePrintMarks({ render: !!checked })}
-                    data-testid="checkbox-print-marks-render"
-                  />
-                  <Label className="text-[10px] text-slate-500">Render</Label>
-                </div>
-              </div>
-              {(printConfig.overlays.printMarks.display || printConfig.overlays.printMarks.render) && (
-                <div className="space-y-2 ml-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={printConfig.overlays.printMarks.cropMarks}
-                      onCheckedChange={(checked) => updatePrintMarks({ cropMarks: !!checked })}
-                      data-testid="checkbox-crop-marks"
-                    />
-                    <Label className="text-[10px] text-slate-500">Crop Marks</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={printConfig.overlays.printMarks.registrationMarks}
-                      onCheckedChange={(checked) => updatePrintMarks({ registrationMarks: !!checked })}
-                      data-testid="checkbox-registration-marks"
-                    />
-                    <Label className="text-[10px] text-slate-500">Registration Marks</Label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-[10px] text-slate-500">Mark Length (px)</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={printConfig.overlays.printMarks.markLength}
-                        onChange={(e) => updatePrintMarks({ markLength: parseInt(e.target.value) || 12 })}
-                        className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        data-testid="input-mark-length"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] text-slate-500">Mark Offset (px)</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={50}
-                        value={printConfig.overlays.printMarks.markOffset}
-                        onChange={(e) => updatePrintMarks({ markOffset: parseInt(e.target.value) || 3 })}
-                        className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        data-testid="input-mark-offset"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <Separator className="bg-slate-600/30" />
-            
-            {/* Background Export Settings */}
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400 font-medium">Export Background</Label>
+        <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
+          
+          {/* Bleed Settings */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400 font-medium">Bleed</Label>
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Mode</Label>
+                <Label className="text-[10px] text-slate-500">Amount</Label>
+                <Input
+                  type="number"
+                  step={0.1}
+                  min={0}
+                  value={printConfig.overlays.bleed.amount}
+                  onChange={(e) => updateBleed({ amount: parseFloat(e.target.value) || 0 })}
+                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                  data-testid="input-bleed-amount"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-slate-500">Unit</Label>
                 <Select
-                  value={printConfig.overlays.background.mode}
-                  onValueChange={(value: BackgroundMode) => updateBackground({ mode: value })}
+                  value={printConfig.overlays.bleed.unit}
+                  onValueChange={(value: PrintUnitType) => updateBleed({ unit: value })}
                 >
-                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-background-mode">
+                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-bleed-unit">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="transparent">Transparent</SelectItem>
-                    <SelectItem value="artboard">Artboard Color</SelectItem>
-                    <SelectItem value="custom">Custom Color</SelectItem>
+                    <SelectItem value="pixels">px</SelectItem>
+                    <SelectItem value="mm">mm</SelectItem>
+                    <SelectItem value="cm">cm</SelectItem>
+                    <SelectItem value="inches">in</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {printConfig.overlays.background.mode === 'custom' && (
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Custom Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={printConfig.overlays.background.customColor}
-                      onChange={(e) => updateBackground({ customColor: e.target.value })}
-                      className="h-6 w-10 p-1 bg-slate-700 border-slate-600"
-                      data-testid="input-background-color"
-                    />
-                    <Input
-                      type="text"
-                      value={printConfig.overlays.background.customColor}
-                      onChange={(e) => updateBackground({ customColor: e.target.value })}
-                      placeholder="#ffffff"
-                      className="h-6 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                      data-testid="input-background-hex"
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.background.display}
-                    onCheckedChange={(checked) => updateBackground({ display: !!checked })}
-                    data-testid="checkbox-background-display"
-                  />
-                  <Label className="text-[10px] text-slate-500">Display</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.background.render}
-                    onCheckedChange={(checked) => updateBackground({ render: !!checked })}
-                    data-testid="checkbox-background-render"
-                  />
-                  <Label className="text-[10px] text-slate-500">Render</Label>
-                </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.bleed.display}
+                  onCheckedChange={(checked) => updateBleed({ display: !!checked })}
+                  data-testid="checkbox-bleed-display"
+                />
+                <Label className="text-[10px] text-slate-500">Display</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.bleed.render}
+                  onCheckedChange={(checked) => updateBleed({ render: !!checked })}
+                  data-testid="checkbox-bleed-render"
+                />
+                <Label className="text-[10px] text-slate-500">Render</Label>
               </div>
             </div>
           </div>
-        )}
+          
+          <Separator className="bg-slate-600/30" />
+          
+          {/* Safe Zone Settings */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400 font-medium">Safe Zone</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-slate-500">Amount</Label>
+                <Input
+                  type="number"
+                  step={0.1}
+                  min={0}
+                  value={printConfig.overlays.safeZone.amount}
+                  onChange={(e) => updateSafeZone({ amount: parseFloat(e.target.value) || 0 })}
+                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                  data-testid="input-safe-zone-amount"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-slate-500">Unit</Label>
+                <Select
+                  value={printConfig.overlays.safeZone.unit}
+                  onValueChange={(value: PrintUnitType) => updateSafeZone({ unit: value })}
+                >
+                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-safe-zone-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pixels">px</SelectItem>
+                    <SelectItem value="mm">mm</SelectItem>
+                    <SelectItem value="cm">cm</SelectItem>
+                    <SelectItem value="inches">in</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={printConfig.overlays.safeZone.display}
+                onCheckedChange={(checked) => updateSafeZone({ display: !!checked })}
+                data-testid="checkbox-safe-zone-display"
+              />
+              <Label className="text-[10px] text-slate-500">Display</Label>
+            </div>
+          </div>
+          
+          <Separator className="bg-slate-600/30" />
+          
+          {/* Print Marks Settings */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.printMarks.display}
+                  onCheckedChange={(checked) => updatePrintMarks({ display: !!checked })}
+                  data-testid="checkbox-print-marks-display"
+                />
+                <Label className="text-[10px] text-slate-500">Display</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.printMarks.render}
+                  onCheckedChange={(checked) => updatePrintMarks({ render: !!checked })}
+                  data-testid="checkbox-print-marks-render"
+                />
+                <Label className="text-[10px] text-slate-500">Render</Label>
+              </div>
+            </div>
+            {(printConfig.overlays.printMarks.display || printConfig.overlays.printMarks.render) && (
+              <div className="space-y-2 ml-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={printConfig.overlays.printMarks.cropMarks}
+                    onCheckedChange={(checked) => updatePrintMarks({ cropMarks: !!checked })}
+                    data-testid="checkbox-crop-marks"
+                  />
+                  <Label className="text-[10px] text-slate-500">Crop Marks</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={printConfig.overlays.printMarks.registrationMarks}
+                    onCheckedChange={(checked) => updatePrintMarks({ registrationMarks: !!checked })}
+                    data-testid="checkbox-registration-marks"
+                  />
+                  <Label className="text-[10px] text-slate-500">Registration Marks</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-slate-500">Mark Length (px)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={printConfig.overlays.printMarks.markLength}
+                      onChange={(e) => updatePrintMarks({ markLength: parseInt(e.target.value) || 12 })}
+                      className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                      data-testid="input-mark-length"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-slate-500">Mark Offset (px)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={50}
+                      value={printConfig.overlays.printMarks.markOffset}
+                      onChange={(e) => updatePrintMarks({ markOffset: parseInt(e.target.value) || 3 })}
+                      className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                      data-testid="input-mark-offset"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -1362,7 +1277,6 @@ export default function Sidebar({
     const [customHeight, setCustomHeight] = useState(1080);
     const [customName, setCustomName] = useState('Custom Artboard');
     const [customBackgroundColor, setCustomBackgroundColor] = useState('#ffffff');
-    const [printConfigExpanded, setPrintConfigExpanded] = useState(false);
     
     const artboardPresets = [
       { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
@@ -1782,8 +1696,6 @@ export default function Sidebar({
                 <PrintConfigurationSection 
                   currentArtboard={currentArtboard}
                   onUpdateArtboard={onUpdateArtboard}
-                  isExpanded={printConfigExpanded}
-                  setIsExpanded={setPrintConfigExpanded}
                 />
               </div>
             </div>
@@ -1832,7 +1744,7 @@ export default function Sidebar({
     
     const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig ?? DEFAULT_PRINT_CONFIG;
     const bleedEnabled = printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0;
-    const backgroundMode = printConfig.overlays.background.mode;
+    const backgroundMode = exportSettings.exportBackgroundMode || 'transparent';
     
     return calculateTiffPreflightInfo(
       artboardWidth,
@@ -1842,7 +1754,7 @@ export default function Sidebar({
       bleedEnabled,
       backgroundMode
     );
-  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices]);
+  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode]);
   
   // Handle TIFF pre-flight modal confirmation
   const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
@@ -2238,9 +2150,30 @@ export default function Sidebar({
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
 
-      // Set background for non-transparent formats
-      if (!['png', 'webp', 'avif'].includes(exportFormat)) {
-        ctx.fillStyle = 'white';
+      // Get the current artboard for background color reference
+      const currentArtboardData = exportMode === 'artboard' && selectedArtboardForExport
+        ? artboards.find(ab => ab.id === selectedArtboardForExport)
+        : artboards.find(ab => ab.id === activeArtboard);
+      const artboardBgColor = currentArtboardData?.backgroundColor || '#ffffff';
+
+      // Determine effective background color based on export settings
+      const bgMode = exportSettings.exportBackgroundMode || 'transparent';
+      let effectiveBgColor = 'transparent';
+      switch (bgMode) {
+        case 'transparent':
+          effectiveBgColor = 'transparent';
+          break;
+        case 'artboard':
+          effectiveBgColor = artboardBgColor;
+          break;
+        case 'custom':
+          effectiveBgColor = exportSettings.exportBackgroundColor || '#ffffff';
+          break;
+      }
+
+      // Set background if not transparent
+      if (effectiveBgColor !== 'transparent') {
+        ctx.fillStyle = effectiveBgColor;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
 
@@ -2333,9 +2266,30 @@ export default function Sidebar({
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
 
-      // Set background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      // Get the current artboard for background color reference
+      const currentArtboardData = artboards.find(ab => ab.id === activeArtboard);
+      const artboardBgColor = currentArtboardData?.backgroundColor || '#ffffff';
+
+      // Determine effective background color based on export settings
+      const bgMode = exportSettings.exportBackgroundMode || 'transparent';
+      let effectiveBgColor = 'transparent';
+      switch (bgMode) {
+        case 'transparent':
+          effectiveBgColor = 'transparent';
+          break;
+        case 'artboard':
+          effectiveBgColor = artboardBgColor;
+          break;
+        case 'custom':
+          effectiveBgColor = exportSettings.exportBackgroundColor || '#ffffff';
+          break;
+      }
+
+      // Set background if not transparent
+      if (effectiveBgColor !== 'transparent') {
+        ctx.fillStyle = effectiveBgColor;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
 
       // Apply scaling and translation
       ctx.scale(effectiveExportScale, effectiveExportScale);
@@ -2819,10 +2773,21 @@ export default function Sidebar({
               canvas.width = canvasWidth;
               canvas.height = canvasHeight;
 
-              // Store background color for later (applied AFTER compositing)
-              const exportBackgroundColor = backgroundArtboard 
-                ? (backgroundArtboard.backgroundColor || '#ffffff')
-                : '#ffffff';
+              // Determine effective background color based on export settings
+              const artboardBgColor = backgroundArtboard?.backgroundColor || '#ffffff';
+              const bgMode = exportSettings.exportBackgroundMode || 'transparent';
+              let exportBackgroundColor = 'transparent';
+              switch (bgMode) {
+                case 'transparent':
+                  exportBackgroundColor = 'transparent';
+                  break;
+                case 'artboard':
+                  exportBackgroundColor = artboardBgColor;
+                  break;
+                case 'custom':
+                  exportBackgroundColor = exportSettings.exportBackgroundColor || '#ffffff';
+                  break;
+              }
 
               // Check if we need set-based rendering (for compositing operations)
               const hasCompositingOperations = exportSettings.generationSetsEnabled && 
@@ -2936,19 +2901,23 @@ export default function Sidebar({
                   setCanvas.height = 0;
                 });
                 
-                // NOW draw background to final canvas FIRST
-                ctx.fillStyle = exportBackgroundColor;
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                // NOW draw background to final canvas FIRST (if not transparent)
+                if (exportBackgroundColor !== 'transparent') {
+                  ctx.fillStyle = exportBackgroundColor;
+                  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                }
                 
                 // Then draw composited shapes OVER background (using destination-over would put shapes behind)
                 ctx.drawImage(compositingCanvas, 0, 0);
                 
                 console.log('✅ Background applied after compositing, preventing interference');
               } else {
-                // STANDARD RENDERING: Draw background first, then shapes (no compositing issues)
+                // STANDARD RENDERING: Draw background first (if not transparent), then shapes
                 console.log('🎨 Using standard per-shape rendering (background first)');
-                ctx.fillStyle = exportBackgroundColor;
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                if (exportBackgroundColor !== 'transparent') {
+                  ctx.fillStyle = exportBackgroundColor;
+                  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                }
                 
                 ctx.scale(effectiveExportScale, effectiveExportScale);
                 ctx.translate(translateX, translateY);
@@ -3391,16 +3360,59 @@ export default function Sidebar({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="png" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG (Transparent)</SelectItem>
-                <SelectItem value="jpg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG (Compressed)</SelectItem>
-                <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP (Modern)</SelectItem>
-                <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF (Next-gen)</SelectItem>
-                <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP (Uncompressed)</SelectItem>
+                <SelectItem value="png" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PNG</SelectItem>
+                <SelectItem value="jpg" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">JPG</SelectItem>
+                <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP</SelectItem>
+                <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF</SelectItem>
+                <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP</SelectItem>
                 <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF</SelectItem>
-                <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
+                <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {/* Export Background Setting */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Export Background</Label>
+            <Select 
+              value={exportSettings.exportBackgroundMode || 'transparent'} 
+              onValueChange={(value: 'transparent' | 'artboard' | 'custom') => 
+                updateExportSettings.mutate({ exportBackgroundMode: value })
+              }
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600" data-testid="select-export-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="transparent" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Transparent</SelectItem>
+                <SelectItem value="artboard" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Artboard Color</SelectItem>
+                <SelectItem value="custom" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Custom Color</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {exportSettings.exportBackgroundMode === 'custom' && (
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Background Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="color"
+                  value={exportSettings.exportBackgroundColor || '#ffffff'}
+                  onChange={(e) => updateExportSettings.mutate({ exportBackgroundColor: e.target.value })}
+                  className="h-8 w-12 p-1 bg-slate-700 border-slate-600"
+                  data-testid="input-export-background-color"
+                />
+                <Input
+                  type="text"
+                  value={exportSettings.exportBackgroundColor || '#ffffff'}
+                  onChange={(e) => updateExportSettings.mutate({ exportBackgroundColor: e.target.value })}
+                  placeholder="#ffffff"
+                  className="h-8 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                  data-testid="input-export-background-hex"
+                />
+              </div>
+            </div>
+          )}
 
           {/* TIFF Print-Ready Warnings */}
           {exportFormat === 'tiff' && (() => {
