@@ -5,6 +5,7 @@ import * as UTIF from 'utif';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
+import TiffPreflightModal, { calculateTiffPreflightInfo } from './TiffPreflightModal';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
@@ -560,6 +561,11 @@ export default function Sidebar({
   const [exportAutoScaleFromDpi, setExportAutoScaleFromDpi] = useState(false);
   const [exportMode, setExportMode] = useState<'selection' | 'artboard' | 'all'>('all');
   const [selectedArtboardForExport, setSelectedArtboardForExport] = useState<string>('');
+  
+  // TIFF pre-flight modal state
+  const [isTiffPreflightOpen, setIsTiffPreflightOpen] = useState(false);
+  const [pendingTiffExport, setPendingTiffExport] = useState<boolean>(false);
+  const pendingTiffExportRef = useRef<(() => void) | null>(null);
   
   // Global repetition settings for generation sets
   const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
@@ -1810,6 +1816,53 @@ export default function Sidebar({
   const [exportAllImages, setExportAllImages] = useState(true);
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]);
 
+  // TIFF Pre-flight helper functions (at component level for access across components)
+  const getTiffPreflightInfo = useCallback(() => {
+    const backgroundArtboard = artboards.find(ab => ab.id === activeArtboard);
+    const targetArtboard = exportMode === 'artboard' 
+      ? (selectedArtboardForExport 
+          ? artboards.find(ab => ab.id === selectedArtboardForExport)
+          : backgroundArtboard)
+      : backgroundArtboard;
+    
+    const artboardWidth = targetArtboard?.width ?? backgroundArtboard?.width ?? 400;
+    const artboardHeight = targetArtboard?.height ?? backgroundArtboard?.height ?? 400;
+    const artboardDpi = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
+    const requestedCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
+    
+    const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig ?? DEFAULT_PRINT_CONFIG;
+    const bleedEnabled = printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0;
+    const backgroundMode = printConfig.overlays.background.mode;
+    
+    return calculateTiffPreflightInfo(
+      artboardWidth,
+      artboardHeight,
+      artboardDpi,
+      requestedCount,
+      bleedEnabled,
+      backgroundMode
+    );
+  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices]);
+  
+  // Handle TIFF pre-flight modal confirmation
+  const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      updateExportSettings.mutate({ skipTiffPreflightModal: true });
+    }
+    setIsTiffPreflightOpen(false);
+    // Trigger the pending export
+    if (pendingTiffExportRef.current) {
+      pendingTiffExportRef.current();
+      pendingTiffExportRef.current = null;
+    }
+  }, [updateExportSettings]);
+  
+  // Handle TIFF pre-flight modal cancel
+  const handleTiffPreflightCancel = useCallback(() => {
+    setIsTiffPreflightOpen(false);
+    pendingTiffExportRef.current = null;
+  }, []);
+
   // Generation sets handlers (placed after state declarations)
   const handleCreateSet = useCallback((name: string) => {
     // Auto-enable batch export when creating sets
@@ -2296,8 +2349,21 @@ export default function Sidebar({
       exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
     };
 
-    // NEW BATCH EXPORT WITH ZIP PACKAGING
-    const handleBatchExportNew = async () => {
+    // Wrapper function that shows TIFF pre-flight modal if needed
+    const handleBatchExportWithPreflight = useCallback(() => {
+      if (!exportSettings.exportBatchModeEnabled) return;
+      
+      if (exportFormat === 'tiff' && !exportSettings.skipTiffPreflightModal) {
+        // Store the export function to call after confirmation
+        pendingTiffExportRef.current = handleBatchExportNewInternal;
+        setIsTiffPreflightOpen(true);
+      } else {
+        handleBatchExportNewInternal();
+      }
+    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat]);
+    
+    // NEW BATCH EXPORT WITH ZIP PACKAGING (internal implementation)
+    const handleBatchExportNewInternal = async () => {
       if (!exportSettings.exportBatchModeEnabled) return;
 
       setIsBatchExporting(true);
@@ -3330,11 +3396,42 @@ export default function Sidebar({
                 <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP (Modern)</SelectItem>
                 <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF (Next-gen)</SelectItem>
                 <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP (Uncompressed)</SelectItem>
-                <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF (Print-ready)</SelectItem>
+                <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF</SelectItem>
                 <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {/* TIFF Print-Ready Warnings */}
+          {exportFormat === 'tiff' && (() => {
+            const preflightInfo = getTiffPreflightInfo();
+            const warnings: string[] = [];
+            if (preflightInfo.hasLowDpi) {
+              warnings.push(`DPI (${preflightInfo.artboardDpi}) is below 300 - not ideal for professional printing`);
+            }
+            if (preflightInfo.hasNoBleed) {
+              warnings.push('Bleed is not enabled - may cause issues at print edges');
+            }
+            if (preflightInfo.hasTransparentBackground) {
+              warnings.push('Background is transparent - some print services require solid background');
+            }
+            
+            if (warnings.length === 0) return null;
+            
+            return (
+              <div className="p-2 bg-amber-900/20 border border-amber-500/30 rounded space-y-1">
+                <div className="flex items-center gap-1 text-amber-300 text-xs font-medium">
+                  <AlertTriangle className="w-3 h-3" />
+                  Print Considerations
+                </div>
+                <ul className="text-xs text-amber-200/80 space-y-0.5 list-disc list-inside pl-1">
+                  {warnings.map((warning, i) => (
+                    <li key={i}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
 
           {['jpg', 'webp', 'avif'].includes(exportFormat) && (
             <div className="space-y-2">
@@ -3807,7 +3904,7 @@ export default function Sidebar({
               )}
 
               <Button
-                onClick={handleBatchExportNew}
+                onClick={handleBatchExportWithPreflight}
                 disabled={isBatchExporting || enabledShapeTypes.size === 0}
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white"
                 title={enabledShapeTypes.size === 0 ? `No shape types enabled (${enabledShapeTypes.size})` : undefined}
@@ -6898,6 +6995,15 @@ export default function Sidebar({
           console.log('Edge case strategy changed:', strategy);
           updateExportSettings.mutate({ edgeCaseStrategy: strategy });
         }}
+      />
+      
+      {/* TIFF Pre-flight Modal */}
+      <TiffPreflightModal
+        open={isTiffPreflightOpen}
+        onOpenChange={setIsTiffPreflightOpen}
+        preflightInfo={getTiffPreflightInfo()}
+        onConfirm={handleTiffPreflightConfirm}
+        onCancel={handleTiffPreflightCancel}
       />
     </div>
   );

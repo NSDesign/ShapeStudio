@@ -109,6 +109,7 @@ export interface ExportSettingsConfig {
   edgeCaseStrategy?: 'hold' | 'cycle' | 'random' | 'stop';  // Strategy when set count < batch export count
   exportSaveProjectFiles: boolean;    // Whether to export project files (.json) alongside images
   packageAsZip: boolean;              // Whether to package exports as ZIP file
+  skipTiffPreflightModal: boolean;    // Skip pre-flight confirmation modal for TIFF batch exports
 }
 
 // Default export settings configuration
@@ -120,6 +121,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   edgeCaseStrategy: 'cycle',          // Default edge case strategy
   exportSaveProjectFiles: false,      // Project files disabled by default
   packageAsZip: false,                // ZIP packaging disabled by default
+  skipTiffPreflightModal: false,      // Show TIFF pre-flight modal by default
 };
 
 // App settings defaults configuration type

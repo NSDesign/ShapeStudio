@@ -111,11 +111,11 @@ export default function AuthHeader({ isCollapsed }: AuthHeaderProps) {
           <SidebarSettingsDialog>
             <DropdownMenuItem 
               className="text-slate-100 hover:bg-slate-700"
-              data-testid="menu-sidebar-settings"
+              data-testid="menu-settings"
               onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
             >
               <Settings className="mr-2 h-4 w-4" />
-              Sidebar Settings
+              Settings
             </DropdownMenuItem>
           </SidebarSettingsDialog>
           <DropdownMenuSeparator className="bg-slate-700" />

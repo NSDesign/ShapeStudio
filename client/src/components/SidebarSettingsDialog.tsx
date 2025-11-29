@@ -15,6 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
   Shapes,
   MousePointer,
   Layers,
@@ -31,8 +37,11 @@ import {
   ChevronUp,
   ChevronDown,
   GripVertical,
+  PanelLeft,
+  FileOutput,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useExportSettings } from '@/hooks/useUserPreferences';
 import type { SidebarSectionConfig, UserPreferences } from '@shared/schema';
 import { DEFAULT_SIDEBAR_SECTIONS } from '@shared/schema';
 
@@ -332,6 +341,18 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
   const hasChanges = localSettings && preferences && preferences.sidebarSections && 
     JSON.stringify(localSettings) !== JSON.stringify(preferences.sidebarSections);
 
+  // Export settings management
+  const { exportSettings, updateExportSettings } = useExportSettings();
+  
+  // Reset export warnings handler
+  const handleResetExportWarnings = () => {
+    updateExportSettings.mutate({ skipTiffPreflightModal: false });
+    toast({
+      title: 'Export Warnings Reset',
+      description: 'TIFF pre-flight confirmation will be shown again.',
+    });
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setLocalSettings(null); }}>
       <DialogTrigger asChild>
@@ -339,151 +360,213 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-100">
-            Sidebar Settings
+          <DialogTitle className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Settings
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {isLoadingPreferences || !localSettings ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-              <span className="ml-2 text-slate-400">Loading preferences...</span>
-            </div>
-          ) : (
-            <>
-              <ScrollArea className="h-[40vh] w-full">
-                <div className="space-y-2 pr-4">
-                  {SIDEBAR_SECTIONS
-                    .slice()
-                    .sort((a, b) => {
-                      const orderA = localSettings[a.key]?.displayOrder ?? 0;
-                      const orderB = localSettings[b.key]?.displayOrder ?? 0;
-                      return orderA - orderB;
-                    })
-                    .map((section, index, sortedArray) => {
-                    const IconComponent = section.icon;
-                    const isEnabled = localSettings[section.key]?.enabled ?? false;
-                    const currentOrder = localSettings[section.key]?.displayOrder ?? 0;
-                    const minOrder = Math.min(...Object.values(localSettings).map(v => v.displayOrder));
-                    const maxOrder = Math.max(...Object.values(localSettings).map(v => v.displayOrder));
-                    
-                    return (
-                      <div
-                        key={section.key}
-                        className={`flex items-start gap-2 p-3 rounded-lg bg-slate-800/50 border transition-colors ${
-                          dragOverSectionKey === section.key 
-                            ? 'border-blue-400' 
-                            : 'border-slate-700/50'
-                        }`}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, section.key)}
-                        onDragOver={(e) => handleDragOver(e, section.key)}
-                        onDragEnd={handleDragEnd}
-                        onDrop={(e) => handleDrop(e, section.key)}
-                        data-testid={`sidebar-setting-${section.key}`}
-                      >
-                        {/* Drag Handle */}
-                        <GripVertical className="w-4 h-4 mt-0.5 text-slate-500 cursor-move" data-testid={`handle-drag-${section.key}`} />
-                        
-                        {/* Icon and Content */}
-                        <div className="flex items-start gap-3 flex-1">
-                          <IconComponent className={`w-5 h-5 mt-0.5 transition-colors ${
-                            isEnabled ? 'text-blue-400' : 'text-slate-500'
-                          }`} />
-                          <div className="space-y-1 flex-1">
-                            <Label className={`text-sm font-medium transition-colors ${
-                              isEnabled ? 'text-slate-200' : 'text-slate-400'
-                            }`}>
-                              {section.name}
-                            </Label>
-                            <p className="text-xs text-slate-500 leading-relaxed">
-                              {section.description}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Controls: Chevrons and Switch */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoveSection(section.key, 'up');
-                            }}
-                            disabled={currentOrder === minOrder}
-                            data-testid={`button-move-up-${section.key}`}
-                            aria-label={`Move ${section.name} up`}
-                          >
-                            <ChevronUp className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoveSection(section.key, 'down');
-                            }}
-                            disabled={currentOrder === maxOrder}
-                            data-testid={`button-move-down-${section.key}`}
-                            aria-label={`Move ${section.name} down`}
-                          >
-                            <ChevronDown className="w-3 h-3" />
-                          </Button>
-                          <Switch
-                            checked={isEnabled}
-                            onCheckedChange={(checked) => handleSectionToggle(section.key, checked)}
-                            data-testid={`switch-${section.key}`}
-                            className="data-[state=checked]:bg-blue-600 ml-2"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+        <Tabs defaultValue="sidebar" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800">
+            <TabsTrigger value="sidebar" className="data-[state=active]:bg-slate-700 flex items-center gap-2">
+              <PanelLeft className="w-4 h-4" />
+              Sidebar
+            </TabsTrigger>
+            <TabsTrigger value="export" className="data-[state=active]:bg-slate-700 flex items-center gap-2">
+              <FileOutput className="w-4 h-4" />
+              Export
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="sidebar" className="mt-4">
+            <div className="space-y-4">
+              {isLoadingPreferences || !localSettings ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                  <span className="ml-2 text-slate-400">Loading preferences...</span>
                 </div>
-              </ScrollArea>
+              ) : (
+                <>
+                  <ScrollArea className="h-[35vh] w-full">
+                    <div className="space-y-2 pr-4">
+                      {SIDEBAR_SECTIONS
+                        .slice()
+                        .sort((a, b) => {
+                          const orderA = localSettings[a.key]?.displayOrder ?? 0;
+                          const orderB = localSettings[b.key]?.displayOrder ?? 0;
+                          return orderA - orderB;
+                        })
+                        .map((section, index, sortedArray) => {
+                        const IconComponent = section.icon;
+                        const isEnabled = localSettings[section.key]?.enabled ?? false;
+                        const currentOrder = localSettings[section.key]?.displayOrder ?? 0;
+                        const minOrder = Math.min(...Object.values(localSettings).map(v => v.displayOrder));
+                        const maxOrder = Math.max(...Object.values(localSettings).map(v => v.displayOrder));
+                        
+                        return (
+                          <div
+                            key={section.key}
+                            className={`flex items-start gap-2 p-3 rounded-lg bg-slate-800/50 border transition-colors ${
+                              dragOverSectionKey === section.key 
+                                ? 'border-blue-400' 
+                                : 'border-slate-700/50'
+                            }`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, section.key)}
+                            onDragOver={(e) => handleDragOver(e, section.key)}
+                            onDragEnd={handleDragEnd}
+                            onDrop={(e) => handleDrop(e, section.key)}
+                            data-testid={`sidebar-setting-${section.key}`}
+                          >
+                            {/* Drag Handle */}
+                            <GripVertical className="w-4 h-4 mt-0.5 text-slate-500 cursor-move" data-testid={`handle-drag-${section.key}`} />
+                            
+                            {/* Icon and Content */}
+                            <div className="flex items-start gap-3 flex-1">
+                              <IconComponent className={`w-5 h-5 mt-0.5 transition-colors ${
+                                isEnabled ? 'text-blue-400' : 'text-slate-500'
+                              }`} />
+                              <div className="space-y-1 flex-1">
+                                <Label className={`text-sm font-medium transition-colors ${
+                                  isEnabled ? 'text-slate-200' : 'text-slate-400'
+                                }`}>
+                                  {section.name}
+                                </Label>
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                  {section.description}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Controls: Chevrons and Switch */}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveSection(section.key, 'up');
+                                }}
+                                disabled={currentOrder === minOrder}
+                                data-testid={`button-move-up-${section.key}`}
+                                aria-label={`Move ${section.name} up`}
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveSection(section.key, 'down');
+                                }}
+                                disabled={currentOrder === maxOrder}
+                                data-testid={`button-move-down-${section.key}`}
+                                aria-label={`Move ${section.name} down`}
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                              <Switch
+                                checked={isEnabled}
+                                onCheckedChange={(checked) => handleSectionToggle(section.key, checked)}
+                                data-testid={`switch-${section.key}`}
+                                className="data-[state=checked]:bg-blue-600 ml-2"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
 
-              <Separator className="bg-slate-700" />
+                  <Separator className="bg-slate-700" />
 
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetToDefaults}
-                  className="text-slate-300 border-slate-600 hover:bg-slate-800 hover:text-slate-100"
-                  data-testid="button-reset-defaults"
-                >
-                  <RotateCcw className="w-4 h-4 mr-1" />
-                  Defaults
-                </Button>
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetToDefaults}
+                      className="text-slate-300 border-slate-600 hover:bg-slate-800 hover:text-slate-100"
+                      data-testid="button-reset-defaults"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Defaults
+                    </Button>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={!hasChanges || updatePreferencesMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    data-testid="button-save-settings"
-                  >
-                    {updatePreferencesMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-1" />
-                        Save
-                      </>
-                    )}
-                  </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleSave}
+                        disabled={!hasChanges || updatePreferencesMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        data-testid="button-save-settings"
+                      >
+                        {updatePreferencesMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-1" />
+                            Save
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="export" className="mt-4">
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-slate-200">Export Warnings</Label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage confirmation dialogs that appear before export operations.
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/30">
+                    <div className="flex-1">
+                      <Label className="text-sm text-slate-300">TIFF Pre-flight Confirmation</Label>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Shows memory estimate and print-ready warnings before TIFF batch exports
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {exportSettings.skipTiffPreflightModal ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResetExportWarnings}
+                          className="text-slate-300 border-slate-600 hover:bg-slate-700 text-xs"
+                          data-testid="button-reset-tiff-warning"
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Re-enable
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-green-400 px-2 py-1 bg-green-900/20 rounded">
+                          Enabled
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+              
+              <div className="text-xs text-slate-500 text-center">
+                More export settings coming soon
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
