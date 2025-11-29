@@ -1,7 +1,23 @@
 import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, Artboard } from './shapeTypes';
+import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, BackgroundMode } from '@shared/schema';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp';
+
+function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
+  switch (unit) {
+    case 'pixels':
+      return value;
+    case 'mm':
+      return (value / 25.4) * dpi;
+    case 'cm':
+      return (value / 2.54) * dpi;
+    case 'inches':
+      return value * dpi;
+    default:
+      return value;
+  }
+}
 
 export interface ExportOptions {
   format: ImageFormat;
@@ -26,6 +42,9 @@ export interface ExportOptions {
     width: number;
     height: number;
   };
+  printConfig?: PrintConfig;
+  artboardDpi?: number;
+  artboardBackgroundColor?: string;
 }
 
 export class ImageExporter {
@@ -53,7 +72,10 @@ export class ImageExporter {
       backgroundColor = 'transparent',
       includeBackground = true,
       margins,
-      artboardBounds
+      artboardBounds,
+      printConfig,
+      artboardDpi = 72,
+      artboardBackgroundColor
     } = options;
 
     // Calculate bounds of all content to export
@@ -97,15 +119,39 @@ export class ImageExporter {
       }
     }
 
+    // Calculate print configuration expansions
+    let bleedPx = 0;
+    let printMarksGutterPx = 0;
+    const config = printConfig || DEFAULT_PRINT_CONFIG;
+    
+    // Calculate bleed expansion (if render is enabled)
+    if (config.overlays.bleed.render && config.overlays.bleed.amount > 0) {
+      bleedPx = convertPrintUnitToPixels(
+        config.overlays.bleed.amount,
+        config.overlays.bleed.unit,
+        artboardDpi
+      );
+    }
+    
+    // Calculate print marks gutter (if render is enabled)
+    if (config.overlays.printMarks.render) {
+      const markLength = config.overlays.printMarks.markLength;
+      const markOffset = config.overlays.printMarks.markOffset;
+      printMarksGutterPx = markLength + markOffset + 5;
+    }
+    
+    // Total expansion from print features
+    const printExpansion = bleedPx + printMarksGutterPx;
+
     // Apply margins
     const marginTop = margins?.top || 0;
     const marginRight = margins?.right || 0;
     const marginBottom = margins?.bottom || 0;
     const marginLeft = margins?.left || 0;
 
-    // Calculate content dimensions with margins
-    const contentWidth = maxX - minX + marginLeft + marginRight;
-    const contentHeight = maxY - minY + marginTop + marginBottom;
+    // Calculate content dimensions with margins and print expansions
+    const contentWidth = maxX - minX + marginLeft + marginRight + (printExpansion * 2);
+    const contentHeight = maxY - minY + marginTop + marginBottom + (printExpansion * 2);
 
     // Use provided dimensions or calculated content dimensions
     // If no custom dimensions provided, always use the calculated content dimensions
@@ -121,9 +167,25 @@ export class ImageExporter {
     // Clear and setup canvas
     this.ctx.clearRect(0, 0, exportWidth, exportHeight);
     
+    // Determine effective background color based on print config background mode
+    let effectiveBackgroundColor = backgroundColor;
+    if (config.overlays.background.render) {
+      switch (config.overlays.background.mode) {
+        case 'transparent':
+          effectiveBackgroundColor = 'transparent';
+          break;
+        case 'artboard':
+          effectiveBackgroundColor = artboardBackgroundColor || backgroundColor;
+          break;
+        case 'custom':
+          effectiveBackgroundColor = config.overlays.background.customColor;
+          break;
+      }
+    }
+    
     // Add background if requested
-    if (includeBackground && backgroundColor !== 'transparent') {
-      this.ctx.fillStyle = backgroundColor;
+    if (includeBackground && effectiveBackgroundColor !== 'transparent') {
+      this.ctx.fillStyle = effectiveBackgroundColor;
       this.ctx.fillRect(0, 0, exportWidth, exportHeight);
     }
 
@@ -133,9 +195,9 @@ export class ImageExporter {
     // Apply scaling for high-res exports
     this.ctx.scale(scale, scale);
 
-    // Translate to center content in the export area
-    const offsetX = -minX + marginLeft;
-    const offsetY = -minY + marginTop;
+    // Translate to center content in the export area (accounting for print expansions)
+    const offsetX = -minX + marginLeft + printExpansion;
+    const offsetY = -minY + marginTop + printExpansion;
     this.ctx.translate(offsetX, offsetY);
 
     // Sort shapes by zIndex to maintain proper rendering order
@@ -213,6 +275,18 @@ export class ImageExporter {
         }
       });
     }
+    
+    // Render print marks if enabled
+    if (config.overlays.printMarks.render && artboardBounds) {
+      this.renderPrintMarks(
+        artboardBounds.x,
+        artboardBounds.y,
+        artboardBounds.width,
+        artboardBounds.height,
+        bleedPx,
+        config.overlays.printMarks
+      );
+    }
 
     // Restore context state
     this.ctx.restore();
@@ -280,6 +354,86 @@ export class ImageExporter {
       this.ctx.restore();
     });
 
+    this.ctx.restore();
+  }
+
+  private renderPrintMarks(
+    artboardX: number,
+    artboardY: number,
+    artboardWidth: number,
+    artboardHeight: number,
+    bleedPx: number,
+    printMarksConfig: {
+      cropMarks: boolean;
+      registrationMarks: boolean;
+      markLength: number;
+      markOffset: number;
+    }
+  ) {
+    const { cropMarks, registrationMarks, markLength, markOffset } = printMarksConfig;
+    
+    this.ctx.save();
+    this.ctx.strokeStyle = '#000000';
+    this.ctx.lineWidth = 1;
+    this.ctx.setLineDash([]);
+    
+    // Crop Marks (corner marks at artboard edges, positioned outside the bleed area)
+    if (cropMarks) {
+      const corners = [
+        { x: artboardX, y: artboardY, dx: -1, dy: -1 },
+        { x: artboardX + artboardWidth, y: artboardY, dx: 1, dy: -1 },
+        { x: artboardX, y: artboardY + artboardHeight, dx: -1, dy: 1 },
+        { x: artboardX + artboardWidth, y: artboardY + artboardHeight, dx: 1, dy: 1 }
+      ];
+      
+      corners.forEach(corner => {
+        const offsetX = (bleedPx + markOffset) * corner.dx;
+        const offsetY = (bleedPx + markOffset) * corner.dy;
+        
+        // Horizontal line
+        this.ctx.beginPath();
+        this.ctx.moveTo(corner.x + offsetX, corner.y);
+        this.ctx.lineTo(corner.x + offsetX + (markLength * corner.dx), corner.y);
+        this.ctx.stroke();
+        
+        // Vertical line
+        this.ctx.beginPath();
+        this.ctx.moveTo(corner.x, corner.y + offsetY);
+        this.ctx.lineTo(corner.x, corner.y + offsetY + (markLength * corner.dy));
+        this.ctx.stroke();
+      });
+    }
+    
+    // Registration Marks (crosshair marks at center of each edge)
+    if (registrationMarks) {
+      const regMarkSize = 8;
+      const regCircleRadius = 4;
+      const edgeCenters = [
+        { x: artboardX + artboardWidth / 2, y: artboardY - bleedPx - markOffset - regMarkSize },
+        { x: artboardX + artboardWidth / 2, y: artboardY + artboardHeight + bleedPx + markOffset + regMarkSize },
+        { x: artboardX - bleedPx - markOffset - regMarkSize, y: artboardY + artboardHeight / 2 },
+        { x: artboardX + artboardWidth + bleedPx + markOffset + regMarkSize, y: artboardY + artboardHeight / 2 }
+      ];
+      
+      edgeCenters.forEach(center => {
+        // Draw crosshair
+        this.ctx.beginPath();
+        this.ctx.moveTo(center.x - regMarkSize, center.y);
+        this.ctx.lineTo(center.x + regMarkSize, center.y);
+        this.ctx.stroke();
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(center.x, center.y - regMarkSize);
+        this.ctx.lineTo(center.x, center.y + regMarkSize);
+        this.ctx.stroke();
+        
+        // Draw circle
+        this.ctx.beginPath();
+        this.ctx.arc(center.x, center.y, regCircleRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      });
+    }
+    
     this.ctx.restore();
   }
 

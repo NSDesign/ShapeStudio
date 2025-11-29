@@ -27,6 +27,13 @@ Preferred communication style: Simple, everyday language.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation, with client/server parity.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes, including grid position filters (alternating, pattern, invert, priority) and planned future filters.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and complete application state persistence.
+- **Print-on-Demand Configuration (Phase 1)**: Print configuration system with printConfig stored per-artboard, supporting:
+  - **Bleed**: Configurable amount/unit (px/mm/cm/in), display overlay on canvas (red dashed), render to export (expands dimensions by 2× bleed on each axis).
+  - **Safe Zone**: Configurable amount/unit, display overlay on canvas (green dashed inset), display-only (not rendered to export).
+  - **Print Marks**: Crop marks and registration marks with configurable mark length and offset, display overlay and render to export (adds gutter beyond bleed for marks).
+  - **Background Mode**: Transparent, Artboard color, or Custom color for export background, with display and render toggles.
+  - **Unit Conversion**: Automatic px/mm/cm/in conversion based on artboard DPI.
+  - **Backward Compatibility**: Legacy projects without printConfig use DEFAULT_PRINT_CONFIG.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
