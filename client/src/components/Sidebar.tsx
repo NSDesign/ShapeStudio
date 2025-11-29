@@ -1927,6 +1927,15 @@ export default function Sidebar({
           // Handle TIFF format using UTIF library
           const tiffCtx = canvas.getContext('2d');
           if (tiffCtx) {
+            // Memory guardrail: limit to 100 megapixels (400MB RGBA data)
+            const maxPixels = 100_000_000;
+            const pixelCount = canvas.width * canvas.height;
+            if (pixelCount > maxPixels) {
+              console.error(`❌ TIFF export aborted: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels). Consider reducing resolution or using a different format.`);
+              alert(`TIFF export failed: Image too large (${canvas.width}x${canvas.height}). Please reduce the resolution or use PNG/JPEG instead.`);
+              break;
+            }
+            
             const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
             const rgba = new Uint8Array(imageData.data.buffer);
             
@@ -2795,6 +2804,45 @@ export default function Sidebar({
                   individualFiles.push({ blob: pdfBlob, filename });
                   console.log(`📁 Prepared ${filename} for individual download`);
                 }
+              } else if (exportFormat === 'tiff') {
+                // Handle TIFF format using UTIF library
+                const tiffCtx = canvas.getContext('2d');
+                if (tiffCtx) {
+                  // Memory guardrail: limit to 100 megapixels (400MB RGBA data)
+                  const maxPixels = 100_000_000;
+                  const pixelCount = canvas.width * canvas.height;
+                  if (pixelCount > maxPixels) {
+                    console.error(`❌ TIFF batch export skipped for image ${i + 1}: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels).`);
+                    continue; // Skip this image in batch mode
+                  }
+                  
+                  const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
+                  const rgba = new Uint8Array(imageData.data.buffer);
+                  
+                  // Get DPI from artboard or use default
+                  const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
+                  
+                  // Build TIFF IFD with DPI metadata
+                  const ifd: UTIF.IFD = {
+                    width: canvas.width,
+                    height: canvas.height,
+                    data: rgba,
+                    t282: [exportDPI],  // XResolution
+                    t283: [exportDPI],  // YResolution
+                    t296: [2],          // ResolutionUnit (2 = inch)
+                  };
+                  
+                  const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, ifd);
+                  const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
+                  
+                  if (packageAsZip && zip) {
+                    zip.file(filename, tiffBlob);
+                    console.log(`📦 Added ${filename} to ZIP (TIFF with ${exportDPI} DPI)`);
+                  } else {
+                    individualFiles.push({ blob: tiffBlob, filename });
+                    console.log(`📁 Prepared ${filename} for individual download (TIFF with ${exportDPI} DPI)`);
+                  }
+                }
               } else {
                 // Handle raster formats
                 let dataURL: string;
@@ -2833,7 +2881,7 @@ export default function Sidebar({
 
               // Save project file if enabled
               if (exportSaveProjectFiles) {
-                const projectFilename = filename.replace(/\.(png|jpg|webp|avif|bmp|pdf)$/, '.json');
+                const projectFilename = filename.replace(/\.(png|jpg|webp|avif|bmp|pdf|tiff)$/, '.json');
                 const projectData = {
                   shapes: currentExportShapes,
                   groups: [], // Empty for batch exports

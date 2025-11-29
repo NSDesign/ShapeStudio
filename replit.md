@@ -26,7 +26,8 @@ Preferred communication style: Simple, everyday language.
 - **Canvas Engine**: Three-layer infinite canvas with pan/zoom, multi-touch, multi-selection, and optimized real-time rendering.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation, with client/server parity.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes, including grid position filters (alternating, pattern, invert, priority) and planned future filters.
-- **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF), high-resolution export, batch processing, and complete application state persistence.
+- **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF, TIFF), high-resolution export, batch processing, and complete application state persistence.
+  - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags).
 - **Print-on-Demand Configuration (Phase 1)**: Print configuration system with printConfig stored per-artboard, supporting:
   - **Bleed**: Configurable amount/unit (px/mm/cm/in), display overlay on canvas (red dashed), render to export (expands dimensions by 2× bleed on each axis).
   - **Safe Zone**: Configurable amount/unit, display overlay on canvas (green dashed inset), display-only (not rendered to export).
@@ -71,6 +72,6 @@ Preferred communication style: Simple, everyday language.
 
 - **React Ecosystem**: React 18, React DOM, React Query.
 - **UI Framework**: Radix UI primitives, Shadcn/ui.
-- **Utility Libraries**: clsx, date-fns, jsPDF.
+- **Utility Libraries**: clsx, date-fns, jsPDF, UTIF (TIFF encoding/decoding).
 - **Database**: Drizzle ORM, Neon Database (Serverless PostgreSQL), PostgreSQL.
 - **Build Tools**: TypeScript, ESBuild, PostCSS, Vite plugins.
