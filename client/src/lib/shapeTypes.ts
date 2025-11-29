@@ -1,4 +1,116 @@
-import { GridOffsetsConfig, GridOffsetAxisConfig, DEFAULT_GRID_OFFSETS, ShapeMaskingConfig, DEFAULT_SHAPE_MASKING, CellConstraintsConfig, DEFAULT_CELL_CONSTRAINTS } from '@shared/schema';
+import { 
+  GridOffsetsConfig, 
+  GridOffsetAxisConfig, 
+  DEFAULT_GRID_OFFSETS, 
+  ShapeMaskingConfig, 
+  DEFAULT_SHAPE_MASKING, 
+  CellConstraintsConfig, 
+  DEFAULT_CELL_CONSTRAINTS,
+  // Print configuration types
+  PrintUnitType,
+  BackgroundMode,
+  OutputSpecs,
+  BleedSettings,
+  SafeZoneSettings,
+  PrintMarksSettings,
+  BackgroundExportSettings,
+  PrintableOverlays,
+  PrintConfig,
+  DEFAULT_PRINT_CONFIG,
+} from '@shared/schema';
+
+// Re-export print types for convenience
+export type { 
+  PrintUnitType, 
+  BackgroundMode, 
+  OutputSpecs, 
+  BleedSettings, 
+  SafeZoneSettings, 
+  PrintMarksSettings, 
+  BackgroundExportSettings, 
+  PrintableOverlays, 
+  PrintConfig 
+};
+export { DEFAULT_PRINT_CONFIG };
+
+// Helper function to convert print units to pixels
+export function printUnitsToPixels(value: number, unit: PrintUnitType, dpi: number): number {
+  switch (unit) {
+    case 'pixels':
+      return value;
+    case 'inches':
+      return value * dpi;
+    case 'mm':
+      return (value / 25.4) * dpi;
+    case 'cm':
+      return (value / 2.54) * dpi;
+    default:
+      return value;
+  }
+}
+
+// Helper function to convert pixels to print units
+export function pixelsToPrintUnits(pixels: number, unit: PrintUnitType, dpi: number): number {
+  switch (unit) {
+    case 'pixels':
+      return pixels;
+    case 'inches':
+      return pixels / dpi;
+    case 'mm':
+      return (pixels / dpi) * 25.4;
+    case 'cm':
+      return (pixels / dpi) * 2.54;
+    default:
+      return pixels;
+  }
+}
+
+// Helper function to get effective print config from artboard (merges legacy fields)
+export function getEffectivePrintConfig(artboard: {
+  dpi?: number;
+  unitType?: PrintUnitType;
+  backgroundColor?: string;
+  printConfig?: PrintConfig;
+}): PrintConfig {
+  const base = artboard.printConfig || DEFAULT_PRINT_CONFIG;
+  
+  // Merge legacy fields if printConfig is not set
+  if (!artboard.printConfig) {
+    return {
+      outputSpecs: {
+        dpi: artboard.dpi ?? DEFAULT_PRINT_CONFIG.outputSpecs.dpi,
+        unitType: artboard.unitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
+      },
+      overlays: {
+        ...DEFAULT_PRINT_CONFIG.overlays,
+        background: {
+          ...DEFAULT_PRINT_CONFIG.overlays.background,
+          customColor: artboard.backgroundColor ?? DEFAULT_PRINT_CONFIG.overlays.background.customColor,
+        },
+      },
+    };
+  }
+  
+  return base;
+}
+
+// Helper function to calculate bleed in pixels for an artboard
+export function getBleedPixels(artboard: { printConfig?: PrintConfig; dpi?: number }): number {
+  const config = getEffectivePrintConfig(artboard);
+  const bleed = config.overlays.bleed;
+  return printUnitsToPixels(bleed.amount, bleed.unit, config.outputSpecs.dpi);
+}
+
+// Helper function to calculate safe zone in pixels for an artboard
+export function getSafeZonePixels(artboard: { printConfig?: PrintConfig; dpi?: number }): number {
+  const config = getEffectivePrintConfig(artboard);
+  const safeZone = config.overlays.safeZone;
+  return printUnitsToPixels(safeZone.amount, safeZone.unit, config.outputSpecs.dpi);
+}
+
+// ============================================================================
+// Core Shape Types
+// ============================================================================
 
 export interface Point {
   x: number;
@@ -374,6 +486,7 @@ export interface Artboard {
   y: number;
   width: number;  // Always stored in pixels internally
   height: number; // Always stored in pixels internally
+  // Legacy fields (maintained for backward compatibility, prefer printConfig)
   dpi?: number;   // Resolution in dots per inch (default 72)
   unitType?: 'pixels' | 'mm' | 'cm' | 'inches'; // Display unit (default 'pixels')
   backgroundColor?: string;
@@ -385,6 +498,8 @@ export interface Artboard {
   displayResolution?: boolean;
   preset?: string;
   category?: string;
+  // Print configuration (new unified structure)
+  printConfig?: PrintConfig;
 }
 
 export interface ArtboardPreset {

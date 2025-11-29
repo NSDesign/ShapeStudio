@@ -1,0 +1,85 @@
+# Digital Artwork Specifications for Print-on-Demand
+
+## Core Requirements
+
+**File Type:**
+- Primary: PNG (lossless, supports transparency)
+- Alternative: TIFF (.tif) - Uncompressed, highest quality
+- Acceptable: JPEG/JPG at maximum quality (95-100%)
+- Avoid: GIF, BMP, WebP
+
+**Color Space:**
+- Required: sRGB
+- Do not use: CMYK, Adobe RGB, or ProPhoto RGB
+
+**Resolution:**
+- Standard: 300 DPI at final print size
+- Minimum: 150 DPI (only for canvas or large format)
+- Optimal: 300-600 DPI
+
+**Size Calculation:**
+- Pixel dimensions ÷ 300 DPI = Maximum print size (inches)
+- Example: 3600 × 2400 pixels = 12" × 8" print at 300 DPI
+
+## Additional Specifications
+
+**Bit Depth:**
+- Preferred: 16-bit per channel (48-bit RGB)
+- Acceptable: 8-bit per channel (24-bit RGB)
+
+**Bleed & Safe Zone:**
+- Bleed: 0.125" (3mm) extra on all sides
+- Safe zone: Keep text/critical elements 0.25" from edges
+
+**File Size:**
+- Target: Under 100MB for most platforms
+- Maximum varies by platform (100-500MB)
+
+**Embedded Data:**
+- Embed sRGB color profile
+- Include copyright in EXIF metadata
+
+## Platform-Specific Requirements
+
+**Printful:**
+- PNG or JPEG | sRGB | 300 DPI | Max 100MB
+
+**Fine Art America:**
+- JPEG preferred | sRGB | Min 400px shortest side | Larger recommended
+
+**Gelato:**
+- PDF, TIFF, JPEG, PNG | sRGB | 300 DPI | Max 500MB
+
+## Quality Control Checklist
+
+- [ ] 300 DPI at intended print size
+- [ ] sRGB color space embedded
+- [ ] No compression artifacts
+- [ ] Sharp at 100% zoom
+- [ ] Correct aspect ratio for standard frames (2:3, 3:4, 4:5, 1:1)
+- [ ] File properly named (descriptive-title-300dpi.png)
+
+## Recommended Workflow
+
+**Master File:**
+- Create at 300-600 DPI from start
+- Work in 16-bit color depth
+- Save as layered PSD/TIFF for editing
+- Export final as PNG or TIFF
+
+**Upload File:**
+- Export as 8-bit PNG or max quality JPEG
+- sRGB embedded
+- 300 DPI at largest intended print size
+- Under platform file size limit
+
+## Common Print Sizes (at 300 DPI)
+
+| Print Size | Required Pixels |
+|-----------|----------------|
+| A4 (8.3" × 11.7") | 2480 × 3508 |
+| A3 (11.7" × 16.5") | 3508 × 4961 |
+| A2 (16.5" × 23.4") | 4961 × 7016 |
+| 12" × 16" | 3600 × 4800 |
+| 16" × 20" | 4800 × 6000 |
+| 24" × 36" | 7200 × 10800 |

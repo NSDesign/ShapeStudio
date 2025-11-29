@@ -291,6 +291,156 @@ export interface SetLocks {
   composite: boolean;          // Prevents compositing operations from affecting this set (protects backgrounds)
 }
 
+// ============================================================================
+// Print Configuration Types (for Print-on-Demand export)
+// ============================================================================
+
+// Unit type for print measurements
+export type PrintUnitType = 'pixels' | 'mm' | 'cm' | 'inches';
+
+// Background mode for export
+export type BackgroundMode = 'transparent' | 'artboard' | 'custom';
+
+// Output specifications (non-visual print parameters)
+export interface OutputSpecs {
+  dpi: number;
+  unitType: PrintUnitType;
+}
+
+// Bleed settings
+export interface BleedSettings {
+  amount: number;
+  unit: PrintUnitType;
+  display: boolean;  // Show on canvas
+  render: boolean;   // Include in export
+}
+
+// Safe zone settings
+export interface SafeZoneSettings {
+  amount: number;
+  unit: PrintUnitType;
+  display: boolean;  // Show on canvas (no render - purely visual)
+}
+
+// Print marks settings
+export interface PrintMarksSettings {
+  display: boolean;  // Show on canvas
+  render: boolean;   // Include in export
+  cropMarks: boolean;
+  registrationMarks: boolean;
+  markLength: number;  // Length of crop marks in pixels
+  markOffset: number;  // Offset from bleed edge in pixels
+}
+
+// Background settings for export
+export interface BackgroundExportSettings {
+  mode: BackgroundMode;
+  customColor: string;
+  display: boolean;  // Show on canvas
+  render: boolean;   // Include in export
+}
+
+// Printable elements (overlays that can be rendered)
+export interface PrintableOverlays {
+  bleed: BleedSettings;
+  safeZone: SafeZoneSettings;
+  printMarks: PrintMarksSettings;
+  background: BackgroundExportSettings;
+}
+
+// Complete print configuration
+export interface PrintConfig {
+  outputSpecs: OutputSpecs;
+  overlays: PrintableOverlays;
+}
+
+// Default print configuration values
+export const DEFAULT_PRINT_CONFIG: PrintConfig = {
+  outputSpecs: {
+    dpi: 72,
+    unitType: 'pixels',
+  },
+  overlays: {
+    bleed: {
+      amount: 0,
+      unit: 'pixels',
+      display: false,
+      render: false,
+    },
+    safeZone: {
+      amount: 0,
+      unit: 'pixels',
+      display: false,
+    },
+    printMarks: {
+      display: false,
+      render: false,
+      cropMarks: true,
+      registrationMarks: true,
+      markLength: 12,
+      markOffset: 3,
+    },
+    background: {
+      mode: 'artboard',
+      customColor: '#ffffff',
+      display: true,
+      render: true,
+    },
+  },
+};
+
+// Zod schemas for print configuration validation
+export const PrintUnitTypeSchema = z.enum(['pixels', 'mm', 'cm', 'inches']);
+export const BackgroundModeSchema = z.enum(['transparent', 'artboard', 'custom']);
+
+export const OutputSpecsSchema = z.object({
+  dpi: z.number().min(1).max(1200),
+  unitType: PrintUnitTypeSchema,
+});
+
+export const BleedSettingsSchema = z.object({
+  amount: z.number().min(0),
+  unit: PrintUnitTypeSchema,
+  display: z.boolean(),
+  render: z.boolean(),
+});
+
+export const SafeZoneSettingsSchema = z.object({
+  amount: z.number().min(0),
+  unit: PrintUnitTypeSchema,
+  display: z.boolean(),
+});
+
+export const PrintMarksSettingsSchema = z.object({
+  display: z.boolean(),
+  render: z.boolean(),
+  cropMarks: z.boolean(),
+  registrationMarks: z.boolean(),
+  markLength: z.number().min(1).max(100),
+  markOffset: z.number().min(0).max(50),
+});
+
+export const BackgroundExportSettingsSchema = z.object({
+  mode: BackgroundModeSchema,
+  customColor: z.string(),
+  display: z.boolean(),
+  render: z.boolean(),
+});
+
+export const PrintableOverlaysSchema = z.object({
+  bleed: BleedSettingsSchema,
+  safeZone: SafeZoneSettingsSchema,
+  printMarks: PrintMarksSettingsSchema,
+  background: BackgroundExportSettingsSchema,
+});
+
+export const PrintConfigSchema = z.object({
+  outputSpecs: OutputSpecsSchema,
+  overlays: PrintableOverlaysSchema,
+});
+
+// ============================================================================
+
 // Grid offset axis configuration (for row or column)
 export interface GridOffsetAxisConfig {
   enabled: boolean;
