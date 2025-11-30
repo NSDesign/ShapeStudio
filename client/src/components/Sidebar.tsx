@@ -2150,6 +2150,25 @@ export default function Sidebar({
         // Get print configuration
         const printConfig = artboard.printConfig || DEFAULT_PRINT_CONFIG;
         
+        // DEBUG: Log print configuration values
+        console.log('🖨️ [EXPORT DEBUG] Print Configuration:', {
+          artboardId: artboard.id,
+          artboardName: artboard.name,
+          hasPrintConfig: !!artboard.printConfig,
+          bleed: {
+            amount: printConfig.overlays.bleed.amount,
+            unit: printConfig.overlays.bleed.unit,
+            render: printConfig.overlays.bleed.render,
+          },
+          printMarks: {
+            cropMarks: printConfig.overlays.printMarks.cropMarks,
+            registrationMarks: printConfig.overlays.printMarks.registrationMarks,
+            render: printConfig.overlays.printMarks.render,
+            markLength: printConfig.overlays.printMarks.markLength,
+            markOffset: printConfig.overlays.printMarks.markOffset,
+          },
+        });
+        
         // Calculate bleed expansion (if render is enabled)
         if (printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0) {
           bleedPx = convertPrintUnitToPixels(
@@ -2185,6 +2204,19 @@ export default function Sidebar({
         
         // Total print expansion (bleed + marks gutter on each side)
         printExpansion = bleedPx + printMarksGutterPx;
+        
+        // DEBUG: Log calculated expansion values
+        console.log('🖨️ [EXPORT DEBUG] Print Expansion Calculations:', {
+          bleedPx,
+          printMarksGutterPx,
+          totalPrintExpansion: printExpansion,
+          willRenderPrintMarks: !!printMarksConfig,
+          artboardDimensions: { width: artboard.width, height: artboard.height },
+          expandedDimensions: { 
+            width: artboard.width + (printExpansion * 2), 
+            height: artboard.height + (printExpansion * 2) 
+          },
+        });
         
         // Store artboard bounds for print marks rendering (relative to export canvas origin)
         artboardForPrintMarks = {
@@ -2889,13 +2921,91 @@ export default function Sidebar({
             // Use artboard bounds for export dimensions when in artboard mode
             let canvasWidth, canvasHeight, translateX, translateY;
             
+            // Print configuration variables for batch export
+            let batchBleedPx = 0;
+            let batchPrintMarksGutterPx = 0;
+            let batchPrintExpansion = 0;
+            let batchArtboardForPrintMarks: { x: number; y: number; width: number; height: number } | null = null;
+            let batchPrintMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number } | null = null;
+            
             if (targetArtboard) {
-              // Use exact artboard dimensions (batch export always uses artboard)
-              canvasWidth = targetArtboard.width * effectiveExportScale;
-              canvasHeight = targetArtboard.height * effectiveExportScale;
-              translateX = -targetArtboard.x;
-              translateY = -targetArtboard.y;
-              console.log(`📐 Using artboard bounds: ${targetArtboard.width}x${targetArtboard.height}`);
+              // Get print configuration from artboard
+              const batchPrintConfig = targetArtboard.printConfig || DEFAULT_PRINT_CONFIG;
+              const batchExportDPI = targetArtboard.dpi ?? 72;
+              
+              // DEBUG: Log print configuration for batch export
+              console.log('🖨️ [BATCH EXPORT DEBUG] Print Configuration:', {
+                artboardName: targetArtboard.name,
+                hasPrintConfig: !!targetArtboard.printConfig,
+                bleed: {
+                  amount: batchPrintConfig.overlays.bleed.amount,
+                  unit: batchPrintConfig.overlays.bleed.unit,
+                  render: batchPrintConfig.overlays.bleed.render,
+                },
+                printMarks: {
+                  cropMarks: batchPrintConfig.overlays.printMarks.cropMarks,
+                  registrationMarks: batchPrintConfig.overlays.printMarks.registrationMarks,
+                  render: batchPrintConfig.overlays.printMarks.render,
+                },
+              });
+              
+              // Calculate bleed expansion (if render is enabled)
+              if (batchPrintConfig.overlays.bleed.render && batchPrintConfig.overlays.bleed.amount > 0) {
+                batchBleedPx = convertPrintUnitToPixels(
+                  batchPrintConfig.overlays.bleed.amount,
+                  batchPrintConfig.overlays.bleed.unit,
+                  batchExportDPI
+                );
+              }
+              
+              // Calculate print marks gutter (if render is enabled)
+              if (batchPrintConfig.overlays.printMarks.render && (batchPrintConfig.overlays.printMarks.cropMarks || batchPrintConfig.overlays.printMarks.registrationMarks)) {
+                const markLengthPx = convertPrintUnitToPixels(
+                  batchPrintConfig.overlays.printMarks.markLength,
+                  batchPrintConfig.overlays.bleed.unit,
+                  batchExportDPI
+                );
+                const markOffsetPx = convertPrintUnitToPixels(
+                  batchPrintConfig.overlays.printMarks.markOffset,
+                  batchPrintConfig.overlays.bleed.unit,
+                  batchExportDPI
+                );
+                batchPrintMarksGutterPx = markLengthPx + markOffsetPx + 10;
+                
+                batchPrintMarksConfig = {
+                  cropMarks: batchPrintConfig.overlays.printMarks.cropMarks,
+                  registrationMarks: batchPrintConfig.overlays.printMarks.registrationMarks,
+                  markLength: markLengthPx,
+                  markOffset: markOffsetPx
+                };
+              }
+              
+              // Total print expansion
+              batchPrintExpansion = batchBleedPx + batchPrintMarksGutterPx;
+              
+              // Store artboard bounds for print marks rendering
+              if (batchPrintExpansion > 0) {
+                batchArtboardForPrintMarks = {
+                  x: batchPrintExpansion,
+                  y: batchPrintExpansion,
+                  width: targetArtboard.width,
+                  height: targetArtboard.height
+                };
+              }
+              
+              console.log('🖨️ [BATCH EXPORT DEBUG] Print Expansion:', {
+                bleedPx: batchBleedPx,
+                printMarksGutterPx: batchPrintMarksGutterPx,
+                totalExpansion: batchPrintExpansion,
+                willRenderMarks: !!batchPrintMarksConfig,
+              });
+              
+              // Use artboard dimensions with print expansion
+              canvasWidth = (targetArtboard.width + (batchPrintExpansion * 2)) * effectiveExportScale;
+              canvasHeight = (targetArtboard.height + (batchPrintExpansion * 2)) * effectiveExportScale;
+              translateX = -targetArtboard.x + batchPrintExpansion;
+              translateY = -targetArtboard.y + batchPrintExpansion;
+              console.log(`📐 Using artboard bounds: ${targetArtboard.width}x${targetArtboard.height} (expanded to ${canvasWidth/effectiveExportScale}x${canvasHeight/effectiveExportScale} with print config)`);
             } else {
               // Calculate dynamic bounds based on shapes
               let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -3114,6 +3224,24 @@ export default function Sidebar({
                 // Then draw composited shapes OVER background (using destination-over would put shapes behind)
                 ctx.drawImage(compositingCanvas, 0, 0);
                 
+                // Render print marks for SET-BASED rendering path
+                if (batchArtboardForPrintMarks && batchPrintMarksConfig) {
+                  ctx.save();
+                  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+                  ctx.scale(effectiveExportScale, effectiveExportScale);
+                  renderPrintMarks(
+                    ctx,
+                    batchArtboardForPrintMarks.x,
+                    batchArtboardForPrintMarks.y,
+                    batchArtboardForPrintMarks.width,
+                    batchArtboardForPrintMarks.height,
+                    batchBleedPx,
+                    batchPrintMarksConfig
+                  );
+                  ctx.restore();
+                  console.log('🖨️ Print marks rendered (SET-BASED path)');
+                }
+                
                 console.log('✅ Background applied after compositing, preventing interference');
               } else {
                 // STANDARD RENDERING: Draw background first (if not transparent), then shapes
@@ -3123,11 +3251,31 @@ export default function Sidebar({
                   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
                 }
                 
+                ctx.save();
                 ctx.scale(effectiveExportScale, effectiveExportScale);
                 ctx.translate(translateX, translateY);
                 
                 const sortedShapes = [...currentExportShapes].sort((a, b) => a.properties.zIndex - b.properties.zIndex);
                 sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
+                
+                ctx.restore();
+                
+                // Render print marks for STANDARD rendering path
+                if (batchArtboardForPrintMarks && batchPrintMarksConfig) {
+                  ctx.save();
+                  ctx.scale(effectiveExportScale, effectiveExportScale);
+                  renderPrintMarks(
+                    ctx,
+                    batchArtboardForPrintMarks.x,
+                    batchArtboardForPrintMarks.y,
+                    batchArtboardForPrintMarks.width,
+                    batchArtboardForPrintMarks.height,
+                    batchBleedPx,
+                    batchPrintMarksConfig
+                  );
+                  ctx.restore();
+                  console.log('🖨️ Print marks rendered (STANDARD path)');
+                }
               }
 
               // Convert canvas to blob and add to ZIP
