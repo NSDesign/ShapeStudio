@@ -833,13 +833,14 @@ export default function Sidebar({
       sidebarCollapsed: isCollapsed,
       showMultiSelectButton: appSettingsDefaults?.showMultiSelectButton ?? true,
       showSelectedCount: appSettingsDefaults?.showSelectedCount ?? true,
+      printOverlayUnit: printConfig.overlays.overlayUnit || 'pixels',
       printBleedAmount: printConfig.overlays.bleed.amount,
-      printBleedUnit: printConfig.overlays.bleed.unit,
       printBleedDisplay: printConfig.overlays.bleed.display,
       printBleedRender: printConfig.overlays.bleed.render,
+      printBleedColor: printConfig.overlays.bleed.color || '#00FFFF',
       printSafeZoneAmount: printConfig.overlays.safeZone.amount,
-      printSafeZoneUnit: printConfig.overlays.safeZone.unit,
       printSafeZoneDisplay: printConfig.overlays.safeZone.display,
+      printSafeZoneColor: printConfig.overlays.safeZone.color || '#FF00FF',
       printMarksCropMarks: printConfig.overlays.printMarks.cropMarks,
       printMarksRegistrationMarks: printConfig.overlays.printMarks.registrationMarks,
       printMarksMarkLength: printConfig.overlays.printMarks.markLength,
@@ -869,16 +870,17 @@ export default function Sidebar({
           unitType: appSettingsDefaults.artboardUnitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
         },
         overlays: {
+          overlayUnit: appSettingsDefaults.printOverlayUnit ?? DEFAULT_PRINT_CONFIG.overlays.overlayUnit,
           bleed: {
             amount: appSettingsDefaults.printBleedAmount ?? DEFAULT_PRINT_CONFIG.overlays.bleed.amount,
-            unit: appSettingsDefaults.printBleedUnit ?? DEFAULT_PRINT_CONFIG.overlays.bleed.unit,
             display: appSettingsDefaults.printBleedDisplay ?? DEFAULT_PRINT_CONFIG.overlays.bleed.display,
             render: appSettingsDefaults.printBleedRender ?? DEFAULT_PRINT_CONFIG.overlays.bleed.render,
+            color: appSettingsDefaults.printBleedColor ?? DEFAULT_PRINT_CONFIG.overlays.bleed.color,
           },
           safeZone: {
             amount: appSettingsDefaults.printSafeZoneAmount ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.amount,
-            unit: appSettingsDefaults.printSafeZoneUnit ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.unit,
             display: appSettingsDefaults.printSafeZoneDisplay ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.display,
+            color: appSettingsDefaults.printSafeZoneColor ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.color,
           },
           printMarks: {
             cropMarks: appSettingsDefaults.printMarksCropMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.cropMarks,
@@ -1140,11 +1142,42 @@ export default function Sidebar({
       });
     };
     
+    const updateOverlayUnit = (unit: PrintUnitType) => {
+      updatePrintConfig({
+        overlays: {
+          ...printConfig.overlays,
+          overlayUnit: unit
+        }
+      });
+    };
+    
     return (
       <div className="space-y-3">
         <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
         
         <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
+          
+          {/* Unified Overlay Unit Selector */}
+          <div className="space-y-1">
+            <Label className="text-xs text-slate-400 font-medium">Overlay Unit</Label>
+            <Select
+              value={printConfig.overlays.overlayUnit || 'pixels'}
+              onValueChange={(value: PrintUnitType) => updateOverlayUnit(value)}
+            >
+              <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-overlay-unit">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pixels">Pixels (px)</SelectItem>
+                <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                <SelectItem value="cm">Centimeters (cm)</SelectItem>
+                <SelectItem value="inches">Inches (in)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[9px] text-slate-500">Applies to bleed, safe zone, and print marks</p>
+          </div>
+          
+          <Separator className="bg-slate-600/30" />
           
           {/* Bleed Settings */}
           <div className="space-y-2">
@@ -1163,21 +1196,23 @@ export default function Sidebar({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Unit</Label>
-                <Select
-                  value={printConfig.overlays.bleed.unit}
-                  onValueChange={(value: PrintUnitType) => updateBleed({ unit: value })}
-                >
-                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-bleed-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pixels">px</SelectItem>
-                    <SelectItem value="mm">mm</SelectItem>
-                    <SelectItem value="cm">cm</SelectItem>
-                    <SelectItem value="inches">in</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-[10px] text-slate-500">Color</Label>
+                <div className="flex gap-1">
+                  <input
+                    type="color"
+                    value={printConfig.overlays.bleed.color || '#00FFFF'}
+                    onChange={(e) => updateBleed({ color: e.target.value })}
+                    className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
+                    data-testid="input-bleed-color"
+                  />
+                  <Input
+                    type="text"
+                    value={printConfig.overlays.bleed.color || '#00FFFF'}
+                    onChange={(e) => updateBleed({ color: e.target.value })}
+                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
+                    data-testid="input-bleed-color-text"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex gap-4">
@@ -1219,21 +1254,23 @@ export default function Sidebar({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Unit</Label>
-                <Select
-                  value={printConfig.overlays.safeZone.unit}
-                  onValueChange={(value: PrintUnitType) => updateSafeZone({ unit: value })}
-                >
-                  <SelectTrigger className="h-6 text-xs bg-slate-700 border-slate-600" data-testid="select-safe-zone-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pixels">px</SelectItem>
-                    <SelectItem value="mm">mm</SelectItem>
-                    <SelectItem value="cm">cm</SelectItem>
-                    <SelectItem value="inches">in</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-[10px] text-slate-500">Color</Label>
+                <div className="flex gap-1">
+                  <input
+                    type="color"
+                    value={printConfig.overlays.safeZone.color || '#FF00FF'}
+                    onChange={(e) => updateSafeZone({ color: e.target.value })}
+                    className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
+                    data-testid="input-safe-zone-color"
+                  />
+                  <Input
+                    type="text"
+                    value={printConfig.overlays.safeZone.color || '#FF00FF'}
+                    onChange={(e) => updateSafeZone({ color: e.target.value })}
+                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
+                    data-testid="input-safe-zone-color-text"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -2149,15 +2186,16 @@ export default function Sidebar({
         
         // Get print configuration
         const printConfig = artboard.printConfig || DEFAULT_PRINT_CONFIG;
+        const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
         
         // DEBUG: Log print configuration values
         console.log('🖨️ [EXPORT DEBUG] Print Configuration:', {
           artboardId: artboard.id,
           artboardName: artboard.name,
           hasPrintConfig: !!artboard.printConfig,
+          overlayUnit,
           bleed: {
             amount: printConfig.overlays.bleed.amount,
-            unit: printConfig.overlays.bleed.unit,
             render: printConfig.overlays.bleed.render,
           },
           printMarks: {
@@ -2173,7 +2211,7 @@ export default function Sidebar({
         if (printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0) {
           bleedPx = convertPrintUnitToPixels(
             printConfig.overlays.bleed.amount,
-            printConfig.overlays.bleed.unit,
+            overlayUnit,
             exportDPI
           );
         }
@@ -2182,12 +2220,12 @@ export default function Sidebar({
         if (printConfig.overlays.printMarks.render && (printConfig.overlays.printMarks.cropMarks || printConfig.overlays.printMarks.registrationMarks)) {
           const markLengthPx = convertPrintUnitToPixels(
             printConfig.overlays.printMarks.markLength,
-            printConfig.overlays.bleed.unit,
+            overlayUnit,
             exportDPI
           );
           const markOffsetPx = convertPrintUnitToPixels(
             printConfig.overlays.printMarks.markOffset,
-            printConfig.overlays.bleed.unit,
+            overlayUnit,
             exportDPI
           );
           // Gutter needs space for marks outside the bleed area
@@ -2932,14 +2970,15 @@ export default function Sidebar({
               // Get print configuration from artboard
               const batchPrintConfig = targetArtboard.printConfig || DEFAULT_PRINT_CONFIG;
               const batchExportDPI = targetArtboard.dpi ?? 72;
+              const batchOverlayUnit = batchPrintConfig.overlays.overlayUnit || 'pixels';
               
               // DEBUG: Log print configuration for batch export
               console.log('🖨️ [BATCH EXPORT DEBUG] Print Configuration:', {
                 artboardName: targetArtboard.name,
                 hasPrintConfig: !!targetArtboard.printConfig,
+                overlayUnit: batchOverlayUnit,
                 bleed: {
                   amount: batchPrintConfig.overlays.bleed.amount,
-                  unit: batchPrintConfig.overlays.bleed.unit,
                   render: batchPrintConfig.overlays.bleed.render,
                 },
                 printMarks: {
@@ -2953,7 +2992,7 @@ export default function Sidebar({
               if (batchPrintConfig.overlays.bleed.render && batchPrintConfig.overlays.bleed.amount > 0) {
                 batchBleedPx = convertPrintUnitToPixels(
                   batchPrintConfig.overlays.bleed.amount,
-                  batchPrintConfig.overlays.bleed.unit,
+                  batchOverlayUnit,
                   batchExportDPI
                 );
               }
@@ -2962,12 +3001,12 @@ export default function Sidebar({
               if (batchPrintConfig.overlays.printMarks.render && (batchPrintConfig.overlays.printMarks.cropMarks || batchPrintConfig.overlays.printMarks.registrationMarks)) {
                 const markLengthPx = convertPrintUnitToPixels(
                   batchPrintConfig.overlays.printMarks.markLength,
-                  batchPrintConfig.overlays.bleed.unit,
+                  batchOverlayUnit,
                   batchExportDPI
                 );
                 const markOffsetPx = convertPrintUnitToPixels(
                   batchPrintConfig.overlays.printMarks.markOffset,
-                  batchPrintConfig.overlays.bleed.unit,
+                  batchOverlayUnit,
                   batchExportDPI
                 );
                 batchPrintMarksGutterPx = markLengthPx + markOffsetPx + 10;

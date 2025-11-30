@@ -7,12 +7,40 @@ export interface AppSettingsDefaults {
   exportFormat?: string;
   exportQuality?: number;
   exportScale?: number;
+  exportAutoScaleFromDpi?: boolean;
   exportMode?: string;
+  artboardName?: string;
   artboardWidth?: number;
   artboardHeight?: number;
   artboardBackgroundColor?: string;
+  artboardGridColor?: string;
   artboardDisplayGrid?: boolean;
   artboardDisplayBorder?: boolean;
+  artboardDpi?: number;
+  artboardUnitType?: 'pixels' | 'mm' | 'cm' | 'inches';
+  artboardDisplayName?: boolean;
+  artboardDisplayDimensions?: boolean;
+  artboardDisplayResolution?: boolean;
+  canvasPanX?: number;
+  canvasPanY?: number;
+  canvasZoom?: number;
+  sidebarCollapsed?: boolean;
+  showMultiSelectButton?: boolean;
+  showSelectedCount?: boolean;
+  printOverlayUnit?: 'pixels' | 'mm' | 'cm' | 'inches';
+  printBleedAmount?: number;
+  printBleedDisplay?: boolean;
+  printBleedRender?: boolean;
+  printBleedColor?: string;
+  printSafeZoneAmount?: number;
+  printSafeZoneDisplay?: boolean;
+  printSafeZoneColor?: string;
+  printMarksCropMarks?: boolean;
+  printMarksRegistrationMarks?: boolean;
+  printMarksMarkLength?: number;
+  printMarksMarkOffset?: number;
+  printMarksDisplay?: boolean;
+  printMarksRender?: boolean;
 }
 
 export interface ExportSettingsData {

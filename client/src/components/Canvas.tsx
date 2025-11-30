@@ -355,61 +355,65 @@ export default function Canvas({
         const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
         const artboardDpi = currentArtboard.dpi ?? 72;
         
-        // Bleed Overlay (rectangle outside the artboard)
+        // Get unified overlay unit (with fallback for legacy projects)
+        const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
+        const unitLabel = overlayUnit === 'pixels' ? 'px' : overlayUnit;
+        
+        // Bleed Overlay (rectangle outside the artboard) - solid line
         if (printConfig.overlays.bleed.display && printConfig.overlays.bleed.amount > 0) {
           const bleedPx = convertPrintUnitToPixels(
             printConfig.overlays.bleed.amount,
-            printConfig.overlays.bleed.unit,
+            overlayUnit,
             artboardDpi
           );
           
-          ctx.strokeStyle = '#ff4444';
+          const bleedColor = printConfig.overlays.bleed.color || '#00FFFF';
+          ctx.strokeStyle = bleedColor;
           ctx.lineWidth = 1.5 / effectiveZoom;
-          ctx.setLineDash([6 / effectiveZoom, 4 / effectiveZoom]);
+          ctx.setLineDash([]);  // Solid line
           ctx.strokeRect(
             currentArtboard.x - bleedPx,
             currentArtboard.y - bleedPx,
             currentArtboard.width + (bleedPx * 2),
             currentArtboard.height + (bleedPx * 2)
           );
-          ctx.setLineDash([]);
           
           // Draw bleed label
           const labelFontSize = 10 / effectiveZoom;
-          ctx.fillStyle = '#ff4444';
+          ctx.fillStyle = bleedColor;
           ctx.font = `${labelFontSize}px Arial`;
           ctx.fillText(
-            `Bleed: ${printConfig.overlays.bleed.amount}${printConfig.overlays.bleed.unit === 'pixels' ? 'px' : printConfig.overlays.bleed.unit}`,
+            `Bleed: ${printConfig.overlays.bleed.amount}${unitLabel}`,
             currentArtboard.x - bleedPx,
             currentArtboard.y - bleedPx - 4 / effectiveZoom
           );
         }
         
-        // Safe Zone Overlay (rectangle inside the artboard)
+        // Safe Zone Overlay (rectangle inside the artboard) - solid line
         if (printConfig.overlays.safeZone.display && printConfig.overlays.safeZone.amount > 0) {
           const safeZonePx = convertPrintUnitToPixels(
             printConfig.overlays.safeZone.amount,
-            printConfig.overlays.safeZone.unit,
+            overlayUnit,
             artboardDpi
           );
           
-          ctx.strokeStyle = '#44cc44';
+          const safeZoneColor = printConfig.overlays.safeZone.color || '#FF00FF';
+          ctx.strokeStyle = safeZoneColor;
           ctx.lineWidth = 1.5 / effectiveZoom;
-          ctx.setLineDash([6 / effectiveZoom, 4 / effectiveZoom]);
+          ctx.setLineDash([]);  // Solid line
           ctx.strokeRect(
             currentArtboard.x + safeZonePx,
             currentArtboard.y + safeZonePx,
             currentArtboard.width - (safeZonePx * 2),
             currentArtboard.height - (safeZonePx * 2)
           );
-          ctx.setLineDash([]);
           
           // Draw safe zone label
           const labelFontSize = 10 / effectiveZoom;
-          ctx.fillStyle = '#44cc44';
+          ctx.fillStyle = safeZoneColor;
           ctx.font = `${labelFontSize}px Arial`;
           ctx.fillText(
-            `Safe Zone: ${printConfig.overlays.safeZone.amount}${printConfig.overlays.safeZone.unit === 'pixels' ? 'px' : printConfig.overlays.safeZone.unit}`,
+            `Safe Zone: ${printConfig.overlays.safeZone.amount}${unitLabel}`,
             currentArtboard.x + safeZonePx,
             currentArtboard.y + safeZonePx + labelFontSize + 2 / effectiveZoom
           );
@@ -418,10 +422,13 @@ export default function Canvas({
         // Print Marks Overlay
         if (printConfig.overlays.printMarks.display) {
           const bleedPx = printConfig.overlays.bleed.amount > 0 
-            ? convertPrintUnitToPixels(printConfig.overlays.bleed.amount, printConfig.overlays.bleed.unit, artboardDpi)
+            ? convertPrintUnitToPixels(printConfig.overlays.bleed.amount, overlayUnit, artboardDpi)
             : 0;
-          const markLength = printConfig.overlays.printMarks.markLength / effectiveZoom;
-          const markOffset = printConfig.overlays.printMarks.markOffset / effectiveZoom;
+          // Convert mark length and offset from unified unit to pixels
+          const markLengthPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
+          const markOffsetPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+          const markLength = markLengthPx / effectiveZoom;
+          const markOffset = markOffsetPx / effectiveZoom;
           const markStroke = 1 / effectiveZoom;
           
           ctx.strokeStyle = '#000000';
