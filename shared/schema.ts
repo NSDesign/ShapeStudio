@@ -346,16 +346,16 @@ export interface OutputSpecs {
 // Bleed settings
 export interface BleedSettings {
   amount: number;
-  unit: PrintUnitType;
   display: boolean;  // Show on canvas
   render: boolean;   // Include in export
+  color: string;     // Display/render color (default: cyan #00FFFF)
 }
 
 // Safe zone settings
 export interface SafeZoneSettings {
   amount: number;
-  unit: PrintUnitType;
   display: boolean;  // Show on canvas (no render - purely visual)
+  color: string;     // Display color (default: magenta #FF00FF)
 }
 
 // Print marks settings
@@ -364,8 +364,8 @@ export interface PrintMarksSettings {
   render: boolean;   // Include in export
   cropMarks: boolean;
   registrationMarks: boolean;
-  markLength: number;  // Length of crop marks (uses same unit as bleed)
-  markOffset: number;  // Offset from bleed edge (uses same unit as bleed)
+  markLength: number;  // Length of crop marks (uses unified overlayUnit)
+  markOffset: number;  // Offset from bleed edge (uses unified overlayUnit)
 }
 
 // Background settings for export
@@ -378,6 +378,7 @@ export interface BackgroundExportSettings {
 
 // Printable elements (overlays that can be rendered)
 export interface PrintableOverlays {
+  overlayUnit: PrintUnitType;  // Unified unit for all overlay measurements (bleed, safe zone, print marks)
   bleed: BleedSettings;
   safeZone: SafeZoneSettings;
   printMarks: PrintMarksSettings;
@@ -397,16 +398,17 @@ export const DEFAULT_PRINT_CONFIG: PrintConfig = {
     unitType: 'pixels',
   },
   overlays: {
+    overlayUnit: 'pixels',  // Unified unit for all overlay measurements
     bleed: {
       amount: 0,
-      unit: 'pixels',
       display: false,
       render: false,
+      color: '#00FFFF',  // Cyan
     },
     safeZone: {
       amount: 0,
-      unit: 'pixels',
       display: false,
+      color: '#FF00FF',  // Magenta
     },
     printMarks: {
       display: false,
@@ -436,15 +438,15 @@ export const OutputSpecsSchema = z.object({
 
 export const BleedSettingsSchema = z.object({
   amount: z.number().min(0),
-  unit: PrintUnitTypeSchema,
   display: z.boolean(),
   render: z.boolean(),
+  color: z.string(),
 });
 
 export const SafeZoneSettingsSchema = z.object({
   amount: z.number().min(0),
-  unit: PrintUnitTypeSchema,
   display: z.boolean(),
+  color: z.string(),
 });
 
 export const PrintMarksSettingsSchema = z.object({
@@ -464,6 +466,7 @@ export const BackgroundExportSettingsSchema = z.object({
 });
 
 export const PrintableOverlaysSchema = z.object({
+  overlayUnit: PrintUnitTypeSchema,  // Unified unit for all overlay measurements
   bleed: BleedSettingsSchema,
   safeZone: SafeZoneSettingsSchema,
   printMarks: PrintMarksSettingsSchema,
