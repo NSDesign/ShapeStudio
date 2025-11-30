@@ -4,7 +4,7 @@ import { useGenerationSetsPersistence } from './useGenerationSetsPersistence';
 import { useUserPreferences } from './useUserPreferences';
 import { generateUniqueSetName as generateUniqueName } from '@/utils/nameGeneration';
 import { Shape, ShapeGroupClass } from '../lib/shapes';
-import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution, DEFAULT_PRINT_CONFIG } from '../lib/shapeTypes';
+import { ShapeType, ScatterSettings, CanvasSettings, BlendMode, Point, Artboard, ColorManipulation, DistributionConfig, applyGridDistribution, applyWaveDistribution, applyEllipseDistribution, applySpiralDistribution, DEFAULT_PRINT_CONFIG, PrintConfig } from '../lib/shapeTypes';
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
@@ -408,7 +408,38 @@ export const useShapeEditor = () => {
         zoom: appSettingsDefaults.canvasZoom ?? prev.zoom,
       }));
       
-      // Restore active artboard settings
+      // Build print configuration from saved settings
+      const restoredPrintConfig: PrintConfig = {
+        outputSpecs: {
+          dpi: appSettingsDefaults.artboardDpi ?? DEFAULT_PRINT_CONFIG.outputSpecs.dpi,
+          unitType: appSettingsDefaults.artboardUnitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
+        },
+        overlays: {
+          overlayUnit: appSettingsDefaults.printOverlayUnit ?? DEFAULT_PRINT_CONFIG.overlays.overlayUnit,
+          bleed: {
+            amount: appSettingsDefaults.printBleedAmount ?? DEFAULT_PRINT_CONFIG.overlays.bleed.amount,
+            display: appSettingsDefaults.printBleedDisplay ?? DEFAULT_PRINT_CONFIG.overlays.bleed.display,
+            render: appSettingsDefaults.printBleedRender ?? DEFAULT_PRINT_CONFIG.overlays.bleed.render,
+            color: appSettingsDefaults.printBleedColor ?? DEFAULT_PRINT_CONFIG.overlays.bleed.color,
+          },
+          safeZone: {
+            amount: appSettingsDefaults.printSafeZoneAmount ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.amount,
+            display: appSettingsDefaults.printSafeZoneDisplay ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.display,
+            color: appSettingsDefaults.printSafeZoneColor ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.color,
+          },
+          printMarks: {
+            cropMarks: appSettingsDefaults.printMarksCropMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.cropMarks,
+            registrationMarks: appSettingsDefaults.printMarksRegistrationMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.registrationMarks,
+            markLength: appSettingsDefaults.printMarksMarkLength ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markLength,
+            markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
+            display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
+            render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
+          },
+          background: DEFAULT_PRINT_CONFIG.overlays.background,
+        },
+      };
+      
+      // Restore active artboard settings including print configuration
       setArtboards(prev => prev.map(ab => 
         ab.id === activeArtboard ? {
           ...ab,
@@ -423,6 +454,7 @@ export const useShapeEditor = () => {
           displayName: appSettingsDefaults.artboardDisplayName ?? ab.displayName ?? true,
           displayDimensions: appSettingsDefaults.artboardDisplayDimensions ?? ab.displayDimensions ?? false,
           displayResolution: appSettingsDefaults.artboardDisplayResolution ?? ab.displayResolution ?? false,
+          printConfig: restoredPrintConfig,
         } : ab
       ));
       
@@ -456,11 +488,14 @@ export const useShapeEditor = () => {
   }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom]);
 
   // Save artboard settings when active artboard changes (debounced)
+  // This includes print configuration as it's part of artboard settings
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSettings.current) return;
     
     const activeAb = artboards.find(ab => ab.id === activeArtboard);
     if (!activeAb) return;
+    
+    const printConfig = activeAb.printConfig || DEFAULT_PRINT_CONFIG;
     
     const timeoutId = setTimeout(() => {
       saveAppSettings.mutate({
@@ -471,11 +506,26 @@ export const useShapeEditor = () => {
         artboardDpi: activeAb.dpi ?? 72,
         artboardUnitType: activeAb.unitType ?? 'pixels',
         artboardBackgroundColor: activeAb.backgroundColor ?? '#ffffff',
+        artboardGridColor: activeAb.gridColor ?? '#cccccc',
         artboardDisplayGrid: activeAb.displayGrid ?? false,
         artboardDisplayBorder: activeAb.displayBorder ?? true,
         artboardDisplayName: activeAb.displayName ?? true,
         artboardDisplayDimensions: activeAb.displayDimensions ?? false,
         artboardDisplayResolution: activeAb.displayResolution ?? false,
+        printOverlayUnit: printConfig.overlays.overlayUnit || 'pixels',
+        printBleedAmount: printConfig.overlays.bleed.amount,
+        printBleedDisplay: printConfig.overlays.bleed.display,
+        printBleedRender: printConfig.overlays.bleed.render,
+        printBleedColor: printConfig.overlays.bleed.color || '#00FFFF',
+        printSafeZoneAmount: printConfig.overlays.safeZone.amount,
+        printSafeZoneDisplay: printConfig.overlays.safeZone.display,
+        printSafeZoneColor: printConfig.overlays.safeZone.color || '#FF00FF',
+        printMarksCropMarks: printConfig.overlays.printMarks.cropMarks,
+        printMarksRegistrationMarks: printConfig.overlays.printMarks.registrationMarks,
+        printMarksMarkLength: printConfig.overlays.printMarks.markLength,
+        printMarksMarkOffset: printConfig.overlays.printMarks.markOffset,
+        printMarksDisplay: printConfig.overlays.printMarks.display,
+        printMarksRender: printConfig.overlays.printMarks.render,
       });
     }, 1000);
     
