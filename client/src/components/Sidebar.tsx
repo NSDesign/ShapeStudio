@@ -1151,6 +1151,10 @@ export default function Sidebar({
       });
     };
     
+    // Get unit label for display
+    const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
+    const unitLabel = overlayUnit === 'pixels' ? 'px' : overlayUnit === 'inches' ? 'in' : overlayUnit;
+    
     return (
       <div className="space-y-3">
         <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
@@ -1326,7 +1330,7 @@ export default function Sidebar({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500">Mark Length (px)</Label>
+                    <Label className="text-[10px] text-slate-500">Mark Length ({unitLabel})</Label>
                     <Input
                       type="number"
                       min={1}
@@ -1338,7 +1342,7 @@ export default function Sidebar({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500">Mark Offset (px)</Label>
+                    <Label className="text-[10px] text-slate-500">Mark Offset ({unitLabel})</Label>
                     <Input
                       type="number"
                       min={0}

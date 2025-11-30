@@ -166,13 +166,14 @@ export interface AppSettingsDefaults {
   showSelectedCount: boolean;
   
   // Print configuration settings (applied to new artboards)
+  printOverlayUnit: PrintUnitType;   // Unified unit for all overlays (bleed, safe zone, print marks)
   printBleedAmount: number;
-  printBleedUnit: PrintUnitType;
   printBleedDisplay: boolean;
   printBleedRender: boolean;
+  printBleedColor: string;           // Bleed overlay color (default: cyan #00FFFF)
   printSafeZoneAmount: number;
-  printSafeZoneUnit: PrintUnitType;
   printSafeZoneDisplay: boolean;
+  printSafeZoneColor: string;        // Safe zone overlay color (default: magenta #FF00FF)
   printMarksCropMarks: boolean;
   printMarksRegistrationMarks: boolean;
   printMarksMarkLength: number;
@@ -206,13 +207,14 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   sidebarCollapsed: false,
   showMultiSelectButton: true,
   showSelectedCount: true,
+  printOverlayUnit: 'mm',
   printBleedAmount: 3,
-  printBleedUnit: 'mm',
   printBleedDisplay: false,
   printBleedRender: false,
+  printBleedColor: '#00FFFF',
   printSafeZoneAmount: 5,
-  printSafeZoneUnit: 'mm',
   printSafeZoneDisplay: false,
+  printSafeZoneColor: '#FF00FF',
   printMarksCropMarks: true,
   printMarksRegistrationMarks: true,
   printMarksMarkLength: 5,
