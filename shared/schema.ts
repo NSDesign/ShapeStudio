@@ -133,7 +133,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
 // App settings defaults configuration type
 export interface AppSettingsDefaults {
   // Export settings
-  exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf';
+  exportFormat: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'pdf' | 'tiff';
   exportQuality: number;              // 10-100 for lossy formats
   exportScale: number;                // 0.1-20x scaling (up to 1200dpi)
   exportAutoScaleFromDpi: boolean;    // Auto-calculate scale from artboard DPI
@@ -164,6 +164,21 @@ export interface AppSettingsDefaults {
   // Selection UI visibility settings
   showMultiSelectButton: boolean;
   showSelectedCount: boolean;
+  
+  // Print configuration settings (applied to new artboards)
+  printBleedAmount: number;
+  printBleedUnit: PrintUnitType;
+  printBleedDisplay: boolean;
+  printBleedRender: boolean;
+  printSafeZoneAmount: number;
+  printSafeZoneUnit: PrintUnitType;
+  printSafeZoneDisplay: boolean;
+  printMarksCropMarks: boolean;
+  printMarksRegistrationMarks: boolean;
+  printMarksMarkLength: number;
+  printMarksMarkOffset: number;
+  printMarksDisplay: boolean;
+  printMarksRender: boolean;
 }
 
 // Default app settings
@@ -191,6 +206,19 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   sidebarCollapsed: false,
   showMultiSelectButton: true,
   showSelectedCount: true,
+  printBleedAmount: 3,
+  printBleedUnit: 'mm',
+  printBleedDisplay: false,
+  printBleedRender: false,
+  printSafeZoneAmount: 5,
+  printSafeZoneUnit: 'mm',
+  printSafeZoneDisplay: false,
+  printMarksCropMarks: true,
+  printMarksRegistrationMarks: true,
+  printMarksMarkLength: 5,
+  printMarksMarkOffset: 3,
+  printMarksDisplay: false,
+  printMarksRender: false,
 };
 
 // User preferences schemas

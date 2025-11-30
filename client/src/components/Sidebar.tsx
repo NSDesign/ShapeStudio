@@ -806,6 +806,9 @@ export default function Sidebar({
       return;
     }
     
+    // Get print configuration from active artboard (or use defaults)
+    const printConfig = activeBoard.printConfig || DEFAULT_PRINT_CONFIG;
+    
     const settings = {
       exportFormat,
       exportQuality,
@@ -827,7 +830,22 @@ export default function Sidebar({
       canvasPanX: appSettingsDefaults?.canvasPanX ?? 0,
       canvasPanY: appSettingsDefaults?.canvasPanY ?? 0,
       canvasZoom: appSettingsDefaults?.canvasZoom ?? 1,
-      sidebarCollapsed: isCollapsed
+      sidebarCollapsed: isCollapsed,
+      showMultiSelectButton: appSettingsDefaults?.showMultiSelectButton ?? true,
+      showSelectedCount: appSettingsDefaults?.showSelectedCount ?? true,
+      printBleedAmount: printConfig.overlays.bleed.amount,
+      printBleedUnit: printConfig.overlays.bleed.unit,
+      printBleedDisplay: printConfig.overlays.bleed.display,
+      printBleedRender: printConfig.overlays.bleed.render,
+      printSafeZoneAmount: printConfig.overlays.safeZone.amount,
+      printSafeZoneUnit: printConfig.overlays.safeZone.unit,
+      printSafeZoneDisplay: printConfig.overlays.safeZone.display,
+      printMarksCropMarks: printConfig.overlays.printMarks.cropMarks,
+      printMarksRegistrationMarks: printConfig.overlays.printMarks.registrationMarks,
+      printMarksMarkLength: printConfig.overlays.printMarks.markLength,
+      printMarksMarkOffset: printConfig.overlays.printMarks.markOffset,
+      printMarksDisplay: printConfig.overlays.printMarks.display,
+      printMarksRender: printConfig.overlays.printMarks.render,
     };
     
     console.log('Saving app settings:', settings);
@@ -844,6 +862,36 @@ export default function Sidebar({
       setExportAutoScaleFromDpi(appSettingsDefaults.exportAutoScaleFromDpi ?? false);
       setExportMode(appSettingsDefaults.exportMode);
       
+      // Build print configuration from app settings (if available)
+      const printConfig: PrintConfig = {
+        outputSpecs: {
+          dpi: appSettingsDefaults.artboardDpi ?? DEFAULT_PRINT_CONFIG.outputSpecs.dpi,
+          unitType: appSettingsDefaults.artboardUnitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
+        },
+        overlays: {
+          bleed: {
+            amount: appSettingsDefaults.printBleedAmount ?? DEFAULT_PRINT_CONFIG.overlays.bleed.amount,
+            unit: appSettingsDefaults.printBleedUnit ?? DEFAULT_PRINT_CONFIG.overlays.bleed.unit,
+            display: appSettingsDefaults.printBleedDisplay ?? DEFAULT_PRINT_CONFIG.overlays.bleed.display,
+            render: appSettingsDefaults.printBleedRender ?? DEFAULT_PRINT_CONFIG.overlays.bleed.render,
+          },
+          safeZone: {
+            amount: appSettingsDefaults.printSafeZoneAmount ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.amount,
+            unit: appSettingsDefaults.printSafeZoneUnit ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.unit,
+            display: appSettingsDefaults.printSafeZoneDisplay ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.display,
+          },
+          printMarks: {
+            cropMarks: appSettingsDefaults.printMarksCropMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.cropMarks,
+            registrationMarks: appSettingsDefaults.printMarksRegistrationMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.registrationMarks,
+            markLength: appSettingsDefaults.printMarksMarkLength ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markLength,
+            markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
+            display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
+            render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
+          },
+          background: DEFAULT_PRINT_CONFIG.overlays.background,
+        },
+      };
+      
       // Apply artboard settings to the active artboard
       const activeBoard = artboards.find(a => a.id === activeArtboard);
       if (activeBoard && onUpdateArtboard) {
@@ -858,7 +906,8 @@ export default function Sidebar({
           unitType: appSettingsDefaults.artboardUnitType,
           displayName: appSettingsDefaults.artboardDisplayName,
           displayDimensions: appSettingsDefaults.artboardDisplayDimensions,
-          displayResolution: appSettingsDefaults.artboardDisplayResolution
+          displayResolution: appSettingsDefaults.artboardDisplayResolution,
+          printConfig: printConfig,
         });
       }
     }
