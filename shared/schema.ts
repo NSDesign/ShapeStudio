@@ -116,6 +116,7 @@ export interface ExportSettingsConfig {
   exportBackgroundMode: ExportBackgroundMode;  // Export background: transparent or artboard color
   exportBackgroundColor?: string;     // @deprecated - legacy field, ignored (artboard background is configured in Artboard section)
   tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
+  tiffCompression: 'none' | 'deflate'; // TIFF compression: 'none' for uncompressed, 'deflate' for ZIP/Deflate (requires Pako.js)
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
   copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
   // Image metadata fields for export
@@ -136,6 +137,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   skipTiffPreflightModal: false,      // Show TIFF pre-flight modal by default
   exportBackgroundMode: 'transparent', // Transparent background by default
   tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
+  tiffCompression: 'none',            // No compression by default (Deflate requires Pako.js)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
   copyrightText: '',                  // Empty by default - user can add their copyright notice
   // Image metadata defaults

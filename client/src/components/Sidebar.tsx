@@ -2,6 +2,12 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import * as UTIF from 'utif';
+import pako from 'pako';
+
+// Expose pako globally for UTIF.js Deflate compression support
+if (typeof window !== 'undefined') {
+  (window as unknown as { pako: typeof pako }).pako = pako;
+}
 import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
@@ -2266,6 +2272,7 @@ export default function Sidebar({
     const exportCanvasAsFormat = async (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
       // Get export settings for TIFF and ICC profile
       const tiffBitDepth = exportSettings.tiffBitDepth ?? 8;
+      const tiffCompression = exportSettings.tiffCompression ?? 'none';
       const embedIccProfile = exportSettings.embedIccProfile ?? true;
       
       switch (format) {
@@ -2310,14 +2317,23 @@ export default function Sidebar({
             }
             
             // Build TIFF metadata
-            // Note: UTIF.js encodeImage only supports uncompressed (1) or Deflate (8) with Pako.js
+            // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
             // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
-            // We let UTIF decide compression based on whether Pako is available
+            // UTIF handles compression internally when t259 is set and pako is available globally
             const tiffMetadata: Record<string, unknown> = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
+            
+            // Set compression type (UTIF handles compression internally)
+            if (tiffCompression === 'deflate') {
+              tiffMetadata.t259 = [8];  // Deflate compression (requires pako globally available)
+              console.log(`📄 TIFF: Using Deflate compression`);
+            } else {
+              tiffMetadata.t259 = [1];  // No compression
+              console.log(`📄 TIFF: No compression (uncompressed)`);
+            }
             
             // Set bit depth tag for 16-bit exports
             if (tiffBitDepth === 16) {
@@ -3664,14 +3680,17 @@ export default function Sidebar({
                     const batchTiffDPI = Math.round(72 * effectiveExportScale);
                     
                     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-                    // Note: UTIF.js encodeImage only supports uncompressed (1) or Deflate (8) with Pako.js
+                    // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
                     // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
-                    // We let UTIF decide compression based on whether Pako is available
+                    const batchTiffCompression = exportSettings.tiffCompression ?? 'none';
                     const tiffMetadata = {
                       t282: [batchTiffDPI],  // XResolution
                       t283: [batchTiffDPI],  // YResolution
                       t296: [2],          // ResolutionUnit (2 = inch)
+                      t259: [batchTiffCompression === 'deflate' ? 8 : 1], // Compression: 8=Deflate, 1=None
                     } as unknown as UTIF.IFD;
+                    
+                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate' : 'no'} compression`);
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
                     const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
@@ -4073,6 +4092,30 @@ export default function Sidebar({
               </SelectContent>
             </Select>
           </div>
+
+          {/* TIFF Compression (only shown when TIFF format is selected) */}
+          {exportFormat === 'tiff' && (
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">TIFF Compression</Label>
+              <Select 
+                value={exportSettings.tiffCompression ?? 'none'} 
+                onValueChange={(value: 'none' | 'deflate') => updateExportSettings.mutate({ tiffCompression: value })}
+              >
+                <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600" data-testid="select-tiff-compression">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="none" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Uncompressed</SelectItem>
+                  <SelectItem value="deflate" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Deflate (Smaller files)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500">
+                {exportSettings.tiffCompression === 'deflate' 
+                  ? 'Deflate compression reduces file size without quality loss' 
+                  : 'Uncompressed for maximum compatibility'}
+              </p>
+            </div>
+          )}
 
           {/* Export Background Setting */}
           <div className="space-y-2">

@@ -529,7 +529,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
             </div>
           </TabsContent>
           
-          <TabsContent value="export" className="mt-4">
+          <TabsContent value="export" className="mt-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-4">
               {/* TIFF & Print Settings */}
               <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-4">
