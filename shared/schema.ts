@@ -118,6 +118,10 @@ export interface ExportSettingsConfig {
   tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
   copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
+  // Image metadata fields for export
+  artistName: string;                 // Artist/Creator name (pre-filled from logged-in user, editable)
+  imageTitle: string;                 // Image title (editable with default template)
+  imageDescription: string;           // Image description (editable with default template)
 }
 
 // Default export settings configuration
@@ -134,6 +138,10 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
   copyrightText: '',                  // Empty by default - user can add their copyright notice
+  // Image metadata defaults
+  artistName: '',                     // Empty by default - pre-filled from user profile on first load
+  imageTitle: 'Untitled Artwork',     // Default title template
+  imageDescription: 'Created with Shape Editor', // Default description template
 };
 
 // App settings defaults configuration type

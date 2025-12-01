@@ -95,7 +95,7 @@ import { ModeField } from '@/components/ModeField';
 import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
 import { pixelsToUnit, unitToPixels, calculatePixelDimensions, getArtboardDisplayDimensions, getUnitLabel, DPI_PRESETS, type UnitType } from '@/lib/artboardUtils';
-import { embedDPI, embedCopyright } from '@/lib/dpiEmbedder';
+import { embedDPI, embedCopyright, embedPngMetadata, type PngMetadata } from '@/lib/dpiEmbedder';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
@@ -2335,6 +2335,36 @@ export default function Sidebar({
               console.log(`📄 TIFF: Embedding copyright metadata`);
             }
             
+            // Embed artist/creator (TIFF tag 315 = Artist)
+            const artistName = exportSettings.artistName ?? '';
+            if (artistName) {
+              tiffMetadata.t315 = artistName;
+              console.log(`📄 TIFF: Embedding artist metadata`);
+            }
+            
+            // Embed image description (TIFF tag 270 = ImageDescription)
+            const imageDescription = exportSettings.imageDescription ?? '';
+            if (imageDescription) {
+              tiffMetadata.t270 = imageDescription;
+              console.log(`📄 TIFF: Embedding description metadata`);
+            }
+            
+            // Embed document name/title (TIFF tag 269 = DocumentName)
+            const imageTitle = exportSettings.imageTitle ?? '';
+            if (imageTitle) {
+              tiffMetadata.t269 = imageTitle;
+              console.log(`📄 TIFF: Embedding title metadata`);
+            }
+            
+            // Embed software info (TIFF tag 305 = Software)
+            tiffMetadata.t305 = 'Shape Editor';
+            
+            // Embed creation date (TIFF tag 306 = DateTime) - format: YYYY:MM:DD HH:MM:SS
+            const now = new Date();
+            const dateTimeStr = `${now.getFullYear()}:${String(now.getMonth() + 1).padStart(2, '0')}:${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            tiffMetadata.t306 = dateTimeStr;
+            console.log(`📄 TIFF: Embedding creation date and software metadata`);
+            
             // Encode to TIFF buffer
             // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
             const tiffBuffer = UTIF.encodeImage(
@@ -2386,11 +2416,19 @@ export default function Sidebar({
             case 'png':
             default:
               dataURL = canvas.toDataURL('image/png');
-              // First embed copyright if set
-              const copyrightText = exportSettings.copyrightText ?? '';
-              if (copyrightText) {
-                dataURL = embedCopyright(dataURL, 'png', copyrightText);
-                console.log(`📄 PNG: Embedded copyright metadata`);
+              // Embed all image metadata (copyright, author, title, description, creation time, software)
+              const pngMetadata: PngMetadata = {
+                copyright: exportSettings.copyrightText ?? '',
+                author: exportSettings.artistName ?? '',
+                title: exportSettings.imageTitle ?? '',
+                description: exportSettings.imageDescription ?? '',
+                creationTime: new Date().toISOString(),
+                software: 'Shape Editor',
+              };
+              dataURL = embedPngMetadata(dataURL, pngMetadata);
+              const hasMetadata = Object.values(pngMetadata).some(v => v && v.trim() !== '');
+              if (hasMetadata) {
+                console.log(`📄 PNG: Embedded image metadata (copyright, author, title, description, creation time, software)`);
               }
               if (embedIccProfile) {
                 // Convert to blob, embed ICC, then back to URL

@@ -286,6 +286,156 @@ export function embedCopyright(dataURL: string, format: string, copyright: strin
 }
 
 /**
+ * Helper to create a single tEXt chunk for PNG
+ */
+function createTextChunk(keyword: string, value: string): Uint8Array {
+  const keywordBytes = new TextEncoder().encode(keyword);
+  const textBytes = new TextEncoder().encode(value);
+  
+  // tEXt data: keyword + null separator + text
+  const textData = new Uint8Array(keywordBytes.length + 1 + textBytes.length);
+  textData.set(keywordBytes, 0);
+  textData[keywordBytes.length] = 0; // null separator
+  textData.set(textBytes, keywordBytes.length + 1);
+
+  // Create chunk: length(4) + type(4) + data + CRC(4)
+  const chunkLength = textData.length;
+  const chunkType = new Uint8Array([116, 69, 88, 116]); // 'tEXt' in ASCII
+  
+  // Calculate CRC for type + data
+  const crcData = new Uint8Array(4 + textData.length);
+  crcData.set(chunkType, 0);
+  crcData.set(textData, 4);
+  const crc = calculateCRC(crcData);
+  
+  // Build complete tEXt chunk
+  const textChunk = new Uint8Array(4 + 4 + textData.length + 4);
+  let offset = 0;
+  
+  // Length (big-endian)
+  textChunk[offset++] = (chunkLength >> 24) & 0xFF;
+  textChunk[offset++] = (chunkLength >> 16) & 0xFF;
+  textChunk[offset++] = (chunkLength >> 8) & 0xFF;
+  textChunk[offset++] = chunkLength & 0xFF;
+  
+  // Type 'tEXt'
+  textChunk.set(chunkType, offset);
+  offset += 4;
+  
+  // Data
+  textChunk.set(textData, offset);
+  offset += textData.length;
+  
+  // CRC
+  textChunk[offset++] = (crc >> 24) & 0xFF;
+  textChunk[offset++] = (crc >> 16) & 0xFF;
+  textChunk[offset++] = (crc >> 8) & 0xFF;
+  textChunk[offset++] = crc & 0xFF;
+  
+  return textChunk;
+}
+
+/**
+ * Embed all image metadata into PNG using multiple tEXt chunks
+ * Supports: Copyright, Author, Title, Description, Creation Time, Software
+ */
+export interface PngMetadata {
+  copyright?: string;
+  author?: string;
+  title?: string;
+  description?: string;
+  creationTime?: string;
+  software?: string;
+}
+
+export function embedPngMetadata(dataURL: string, metadata: PngMetadata): string {
+  // Filter out empty values
+  const entries = Object.entries(metadata).filter(([_, value]) => value && value.trim() !== '');
+  
+  if (entries.length === 0) {
+    return dataURL;
+  }
+
+  // Convert data URL to Uint8Array
+  const base64 = dataURL.split(',')[1];
+  const binaryString = atob(base64);
+  let bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  // PNG signature verification
+  const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
+  for (let i = 0; i < 8; i++) {
+    if (bytes[i] !== pngSignature[i]) {
+      console.warn('Not a valid PNG file, returning original data URL');
+      return dataURL;
+    }
+  }
+
+  // Find IHDR chunk end
+  let ihdrEnd = 8;
+  const ihdrLength = (bytes[ihdrEnd] << 24) | (bytes[ihdrEnd + 1] << 16) | 
+                     (bytes[ihdrEnd + 2] << 8) | bytes[ihdrEnd + 3];
+  ihdrEnd += 4 + 4 + ihdrLength + 4;
+
+  // Find insert position (before IDAT)
+  let insertPosition = ihdrEnd;
+  while (insertPosition < bytes.length - 8) {
+    const chunkLen = (bytes[insertPosition] << 24) | (bytes[insertPosition + 1] << 16) | 
+                     (bytes[insertPosition + 2] << 8) | bytes[insertPosition + 3];
+    const chunkType = String.fromCharCode(
+      bytes[insertPosition + 4], 
+      bytes[insertPosition + 5], 
+      bytes[insertPosition + 6], 
+      bytes[insertPosition + 7]
+    );
+    
+    if (chunkType === 'IDAT') {
+      break;
+    }
+    
+    insertPosition += 4 + 4 + chunkLen + 4;
+  }
+
+  // Map our metadata keys to PNG tEXt keywords
+  const keywordMap: Record<string, string> = {
+    copyright: 'Copyright',
+    author: 'Author',
+    title: 'Title',
+    description: 'Description',
+    creationTime: 'Creation Time',
+    software: 'Software',
+  };
+
+  // Create all tEXt chunks
+  const chunks: Uint8Array[] = [];
+  for (const [key, value] of entries) {
+    const keyword = keywordMap[key] || key;
+    chunks.push(createTextChunk(keyword, value));
+  }
+
+  // Calculate total size of all chunks
+  const totalChunksSize = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+
+  // Combine: before insert + all chunks + rest of PNG
+  const result = new Uint8Array(bytes.length + totalChunksSize);
+  result.set(bytes.subarray(0, insertPosition), 0);
+  
+  let chunkOffset = insertPosition;
+  for (const chunk of chunks) {
+    result.set(chunk, chunkOffset);
+    chunkOffset += chunk.length;
+  }
+  
+  result.set(bytes.subarray(insertPosition), chunkOffset);
+
+  // Convert back to data URL
+  const resultBase64 = btoa(String.fromCharCode.apply(null, Array.from(result)));
+  return `data:image/png;base64,${resultBase64}`;
+}
+
+/**
  * Embed DPI metadata based on format
  */
 export function embedDPI(dataURL: string, format: string, dpi: number): string {

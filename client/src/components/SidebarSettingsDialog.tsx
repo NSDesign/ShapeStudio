@@ -40,9 +40,15 @@ import {
   GripVertical,
   PanelLeft,
   FileOutput,
+  User,
+  Image,
+  Calendar,
+  Info,
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useExportSettings } from '@/hooks/useUserPreferences';
+import { useAuth } from '@/hooks/useAuth';
 import type { SidebarSectionConfig, UserPreferences } from '@shared/schema';
 import { DEFAULT_SIDEBAR_SECTIONS } from '@shared/schema';
 
@@ -121,6 +127,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
   const [dragOverSectionKey, setDragOverSectionKey] = useState<keyof SidebarSectionConfig | null>(null);
   const { toast} = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch user preferences
   const { data: preferences, isLoading: isLoadingPreferences, error: preferencesError } = useQuery<UserPreferences>({
@@ -589,6 +596,90 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                       className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200"
                       data-testid="input-copyright-text"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Metadata */}
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-slate-200">Image Metadata</Label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Additional metadata embedded in exported images (PNG, TIFF).
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Artist/Creator Name */}
+                  <div className="p-3 bg-slate-900/50 rounded border border-slate-700/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-slate-400" />
+                      <Label className="text-sm text-slate-300">Artist / Creator</Label>
+                    </div>
+                    <Input
+                      type="text"
+                      value={exportSettings.artistName ?? (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '')}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExportSettings.mutate({ artistName: e.target.value })}
+                      placeholder={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Your name' : 'Your name'}
+                      className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200"
+                      data-testid="input-artist-name"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Pre-filled from your account. Edit to customize.
+                    </p>
+                  </div>
+
+                  {/* Image Title */}
+                  <div className="p-3 bg-slate-900/50 rounded border border-slate-700/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4 text-slate-400" />
+                      <Label className="text-sm text-slate-300">Title</Label>
+                    </div>
+                    <Input
+                      type="text"
+                      value={exportSettings.imageTitle ?? 'Untitled Artwork'}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExportSettings.mutate({ imageTitle: e.target.value })}
+                      placeholder="Untitled Artwork"
+                      className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200"
+                      data-testid="input-image-title"
+                    />
+                  </div>
+
+                  {/* Image Description */}
+                  <div className="p-3 bg-slate-900/50 rounded border border-slate-700/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Info className="w-4 h-4 text-slate-400" />
+                      <Label className="text-sm text-slate-300">Description</Label>
+                    </div>
+                    <Textarea
+                      value={exportSettings.imageDescription ?? 'Created with Shape Editor'}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateExportSettings.mutate({ imageDescription: e.target.value })}
+                      placeholder="Created with Shape Editor"
+                      className="min-h-[60px] text-xs bg-slate-800 border-slate-600 text-slate-200 resize-none"
+                      data-testid="input-image-description"
+                    />
+                  </div>
+
+                  {/* Read-only metadata fields */}
+                  <div className="p-3 bg-slate-900/50 rounded border border-slate-700/30 space-y-3">
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <Calendar className="w-4 h-4" />
+                      <Label className="text-sm text-slate-400">Auto-Generated Metadata</Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-500">Creation Date</Label>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5 italic">Set at export time</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Software</Label>
+                        <p className="text-xs text-slate-400 mt-1">Shape Editor</p>
+                        <p className="text-xs text-slate-500 mt-0.5 italic">Read-only</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
