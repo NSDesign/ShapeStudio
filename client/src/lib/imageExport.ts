@@ -2,14 +2,18 @@ import { Shape, ShapeGroupClass } from './shapes';
 import { CanvasSettings, Artboard } from './shapeTypes';
 import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, ExportBackgroundMode } from '@shared/schema';
 import * as UTIF from 'utif';
+import { embedIccInPng, embedIccInJpeg, getSrgbIccProfile, ColorSpaceOptions, DEFAULT_COLOR_SPACE_OPTIONS } from './iccProfile';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff';
 
 export type TiffCompression = 'none' | 'lzw';
 
+export type BitDepth = 8 | 16;
+
 export interface TiffOptions {
   compression?: TiffCompression;
   embedDpi?: boolean;
+  bitDepth?: BitDepth;  // 8-bit (default) or 16-bit per channel
 }
 
 function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
@@ -56,6 +60,7 @@ export interface ExportOptions {
   tiffOptions?: TiffOptions;
   exportBackgroundMode?: ExportBackgroundMode;  // Export background mode: transparent, artboard, or custom
   exportBackgroundColor?: string;               // Custom background color when mode is 'custom'
+  colorSpaceOptions?: ColorSpaceOptions;        // Color space and ICC profile embedding options
 }
 
 export class ImageExporter {
@@ -89,7 +94,8 @@ export class ImageExporter {
       artboardBackgroundColor,
       tiffOptions,
       exportBackgroundMode = 'transparent',
-      exportBackgroundColor = '#ffffff'
+      exportBackgroundColor = '#ffffff',
+      colorSpaceOptions = DEFAULT_COLOR_SPACE_OPTIONS
     } = options;
 
     // Calculate bounds of all content to export
@@ -142,25 +148,28 @@ export class ImageExporter {
     const effectiveDpi = config.outputSpecs.dpi || artboardDpi;
     
     // Calculate bleed expansion (if render is enabled)
+    // Use the unified overlayUnit from the overlays configuration
+    const overlayUnit = config.overlays.overlayUnit;
+    
     if (config.overlays.bleed.render && config.overlays.bleed.amount > 0) {
       bleedPx = convertPrintUnitToPixels(
         config.overlays.bleed.amount,
-        config.overlays.bleed.unit,
+        overlayUnit,
         effectiveDpi
       );
     }
     
     // Calculate print marks gutter (if render is enabled)
-    // Mark length and offset need to be converted to pixels using bleed unit (assuming same unit)
+    // Mark length and offset use the same unified overlayUnit
     if (config.overlays.printMarks.render) {
       const markLengthPx = convertPrintUnitToPixels(
         config.overlays.printMarks.markLength,
-        config.overlays.bleed.unit,
+        overlayUnit,
         effectiveDpi
       );
       const markOffsetPx = convertPrintUnitToPixels(
         config.overlays.printMarks.markOffset,
-        config.overlays.bleed.unit,
+        overlayUnit,
         effectiveDpi
       );
       printMarksGutterPx = markLengthPx + markOffsetPx + 5;
@@ -294,15 +303,15 @@ export class ImageExporter {
     
     // Render print marks if enabled
     if (config.overlays.printMarks.render && artboardBounds) {
-      // Convert mark dimensions to pixels
+      // Convert mark dimensions to pixels using unified overlayUnit
       const markLengthPx = convertPrintUnitToPixels(
         config.overlays.printMarks.markLength,
-        config.overlays.bleed.unit,
+        overlayUnit,
         effectiveDpi
       );
       const markOffsetPx = convertPrintUnitToPixels(
         config.overlays.printMarks.markOffset,
-        config.overlays.bleed.unit,
+        overlayUnit,
         effectiveDpi
       );
       
@@ -324,20 +333,29 @@ export class ImageExporter {
     // Restore context state
     this.ctx.restore();
 
-    // Export based on format
+    // Export based on format, with optional ICC profile embedding
+    const embedIcc = colorSpaceOptions?.embedIccProfile ?? true;
+    
     switch (format) {
-      case 'png':
-        return this.exportAsRaster('image/png');
-      case 'jpeg':
-        return this.exportAsRaster('image/jpeg', quality);
+      case 'png': {
+        const blob = await this.exportAsRaster('image/png');
+        return embedIcc ? embedIccInPng(blob) : blob;
+      }
+      case 'jpeg': {
+        const blob = await this.exportAsRaster('image/jpeg', quality);
+        return embedIcc ? embedIccInJpeg(blob) : blob;
+      }
       case 'webp':
+        // WebP doesn't support ICC profile embedding in the same way
         return this.exportAsRaster('image/webp', quality);
       case 'avif':
+        // AVIF uses its own color management
         return this.exportAsRaster('image/avif', quality);
       case 'bmp':
+        // BMP doesn't support ICC profiles
         return this.exportAsRaster('image/bmp');
       case 'tiff':
-        return this.exportAsTiff(effectiveDpi, tiffOptions);
+        return this.exportAsTiff(effectiveDpi, tiffOptions, embedIcc);
       default:
         throw new Error(`Unsupported format: ${format}`);
     }
@@ -488,21 +506,35 @@ export class ImageExporter {
     });
   }
 
-  private async exportAsTiff(dpi: number, tiffOptions?: TiffOptions): Promise<Blob> {
+  private async exportAsTiff(dpi: number, tiffOptions?: TiffOptions, embedIccProfile: boolean = true): Promise<Blob> {
     const width = this.canvas.width;
     const height = this.canvas.height;
+    const bitDepth = tiffOptions?.bitDepth ?? 8;
     
     // Memory guardrail: warn for very large exports (over 200 megapixels)
+    // 16-bit doubles memory usage
     const megapixels = (width * height) / 1_000_000;
-    if (megapixels > 200) {
-      console.warn(`Large TIFF export: ${megapixels.toFixed(1)} megapixels. May cause memory issues.`);
+    const memoryMultiplier = bitDepth === 16 ? 2 : 1;
+    if (megapixels * memoryMultiplier > 200) {
+      console.warn(`Large TIFF export: ${megapixels.toFixed(1)} megapixels at ${bitDepth}-bit. May cause memory issues.`);
     }
     
-    // Get RGBA pixel data from canvas
+    // Get RGBA pixel data from canvas (always 8-bit from canvas)
     const imageData = this.ctx.getImageData(0, 0, width, height);
-    const rgba = new Uint8Array(imageData.data.buffer);
+    let rgba: Uint8Array | Uint16Array;
     
-    // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
+    if (bitDepth === 16) {
+      // Convert 8-bit to 16-bit by scaling values (0-255 -> 0-65535)
+      const rgba16 = new Uint16Array(imageData.data.length);
+      for (let i = 0; i < imageData.data.length; i++) {
+        rgba16[i] = imageData.data[i] * 257; // Scale 8-bit to 16-bit (255 * 257 = 65535)
+      }
+      rgba = rgba16;
+    } else {
+      rgba = new Uint8Array(imageData.data.buffer);
+    }
+    
+    // Build TIFF metadata with DPI tags
     // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
     const tiffMetadata: Partial<UTIF.IFD> = {};
     
@@ -515,8 +547,27 @@ export class ImageExporter {
       tiffMetadata.t296 = [2];   // ResolutionUnit (2 = inch)
     }
     
+    // Set bit depth tag for 16-bit exports
+    if (bitDepth === 16) {
+      tiffMetadata.t258 = [16, 16, 16, 16]; // BitsPerSample (R, G, B, A)
+    }
+    
+    // Embed sRGB ICC profile if requested (TIFF tag 34675 = InterColorProfile)
+    if (embedIccProfile) {
+      const iccProfile = getSrgbIccProfile();
+      // UTIF expects the ICC profile data as an array of bytes
+      tiffMetadata.t34675 = Array.from(iccProfile);
+    }
+    
     // Encode to TIFF buffer
-    const tiffBuffer = UTIF.encodeImage(rgba, width, height, tiffMetadata as UTIF.IFD);
+    // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
+    // The library handles it based on the BitsPerSample tag we set above
+    const tiffBuffer = UTIF.encodeImage(
+      bitDepth === 16 ? new Uint8Array((rgba as Uint16Array).buffer) : rgba as Uint8Array, 
+      width, 
+      height, 
+      tiffMetadata as UTIF.IFD
+    );
     
     // Create blob from buffer
     return new Blob([tiffBuffer], { type: 'image/tiff' });
