@@ -51,11 +51,22 @@ export function useUserPreferences() {
   // Extract sidebar sections with fallback to defaults and normalization
   const sidebarSections: SidebarSectionConfig = normalizeSidebarSections(preferences?.sidebarSections);
 
-  // Extract export settings with fallback to defaults
-  const exportSettings: ExportSettingsConfig = {
-    ...DEFAULT_EXPORT_SETTINGS,
-    ...(preferences?.exportSettings as ExportSettingsConfig || {}),
+  // Migrate legacy export settings (e.g., 'lzw' -> 'deflate' for TIFF compression)
+  const migrateExportSettings = (settings: Partial<ExportSettingsConfig>): ExportSettingsConfig => {
+    const migrated = { ...DEFAULT_EXPORT_SETTINGS, ...settings };
+    
+    // Migrate legacy 'lzw' compression to 'deflate' (UTIF.js doesn't support LZW encoding)
+    if ((migrated.tiffCompression as string) === 'lzw') {
+      migrated.tiffCompression = 'deflate';
+    }
+    
+    return migrated;
   };
+
+  // Extract export settings with fallback to defaults and migration
+  const exportSettings: ExportSettingsConfig = migrateExportSettings(
+    preferences?.exportSettings as ExportSettingsConfig || {}
+  );
 
   // Extract app settings defaults
   const appSettingsDefaults: AppSettingsDefaults | null = preferences?.appSettingsDefaults as AppSettingsDefaults || null;

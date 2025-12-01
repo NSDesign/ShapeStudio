@@ -101,6 +101,7 @@ import { ModeField } from '@/components/ModeField';
 import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
 import { pixelsToUnit, unitToPixels, calculatePixelDimensions, getArtboardDisplayDimensions, getUnitLabel, DPI_PRESETS, type UnitType } from '@/lib/artboardUtils';
+import { ARTBOARD_PRESETS_PHYSICAL, PRESET_CATEGORIES, getPresetsByCategory, getPresetPixelDimensions, formatPresetDimensions, type ArtboardPresetPhysical, type PresetCategory } from '@/lib/artboardPresets';
 import { embedDPI, embedCopyright, embedPngMetadata, type PngMetadata } from '@/lib/dpiEmbedder';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
@@ -1375,12 +1376,23 @@ export default function Sidebar({
   }
 
   function ArtboardsContent() {
-    const [customWidth, setCustomWidth] = useState(1920);
-    const [customHeight, setCustomHeight] = useState(1080);
+    const [customWidth, setCustomWidth] = useState(8.27); // Width in current unit (A4 default)
+    const [customHeight, setCustomHeight] = useState(11.69); // Height in current unit (A4 default)
     const [customName, setCustomName] = useState('Custom Artboard');
     const [customBackgroundColor, setCustomBackgroundColor] = useState('#ffffff');
-    const [customLinkedDimensions, setCustomLinkedDimensions] = useState(false);
-    const [customAspectRatio, setCustomAspectRatio] = useState('custom');
+    const [customLinkedDimensions, setCustomLinkedDimensions] = useState(true);
+    const [customAspectRatio, setCustomAspectRatio] = useState('1:√2'); // A4 aspect ratio
+    const [customUnit, setCustomUnit] = useState<UnitType>('inches');
+    const [customDpi, setCustomDpi] = useState(300); // Default to print-quality 300 DPI
+    const [selectedPresetCategory, setSelectedPresetCategory] = useState<PresetCategory>('paper');
+    
+    // Calculate live pixel dimensions from physical dimensions and DPI
+    const livePixelWidth = customUnit === 'pixels' 
+      ? Math.round(customWidth) 
+      : Math.round(unitToPixels(customWidth, customDpi, customUnit));
+    const livePixelHeight = customUnit === 'pixels' 
+      ? Math.round(customHeight) 
+      : Math.round(unitToPixels(customHeight, customDpi, customUnit));
     
     const handleWidthChange = (newWidth: number) => {
       if (customLinkedDimensions && customWidth > 0) {
@@ -1419,25 +1431,59 @@ export default function Sidebar({
       }
     };
     
-    const artboardPresets = [
-      { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
-      { name: 'Instagram Post', width: 1080, height: 1080, category: 'social', description: 'Square 1:1' },
-      { name: 'Instagram Story', width: 1080, height: 1920, category: 'social', description: 'Portrait 9:16' },
-      { name: 'Business Card', width: 1050, height: 600, category: 'print', description: '3.5×2" at 300 DPI' },
-      { name: 'A4 Paper', width: 2480, height: 3508, category: 'print', description: '210×297mm at 300 DPI' },
-      { name: 'iPhone 14 Pro', width: 1179, height: 2556, category: 'mobile', description: 'iPhone screen' }
-    ];
-
     const handleCreateCustomArtboard = () => {
       const customPreset = {
         name: customName,
-        width: customWidth,
-        height: customHeight,
+        width: livePixelWidth,
+        height: livePixelHeight,
         backgroundColor: customBackgroundColor,
         category: 'custom' as const,
-        description: `${customWidth}×${customHeight} Custom`
+        description: `${livePixelWidth}×${livePixelHeight}px at ${customDpi} DPI`
       };
       onAddArtboard(customPreset);
+    };
+    
+    // Handle selecting a preset - populate the form with preset values
+    const handlePresetSelect = (preset: ArtboardPresetPhysical) => {
+      setCustomName(preset.name);
+      setCustomWidth(preset.widthInches);
+      setCustomHeight(preset.heightInches);
+      setCustomUnit('inches');
+      setCustomAspectRatio(preset.aspectRatio);
+      setCustomLinkedDimensions(true);
+    };
+    
+    // Handle unit change - convert existing values to new unit via pixels as intermediate
+    const handleUnitChange = (newUnit: UnitType) => {
+      if (newUnit === customUnit) return;
+      
+      // Step 1: Convert current values to pixels (using current unit)
+      const widthPixels = customUnit === 'pixels' 
+        ? customWidth 
+        : unitToPixels(customWidth, customDpi, customUnit);
+      const heightPixels = customUnit === 'pixels' 
+        ? customHeight 
+        : unitToPixels(customHeight, customDpi, customUnit);
+      
+      // Step 2: Convert pixels to new unit
+      if (newUnit === 'pixels') {
+        setCustomWidth(Math.round(widthPixels));
+        setCustomHeight(Math.round(heightPixels));
+      } else {
+        const newWidth = pixelsToUnit(widthPixels, customDpi, newUnit);
+        const newHeight = pixelsToUnit(heightPixels, customDpi, newUnit);
+        
+        // Format based on unit type
+        if (newUnit === 'mm') {
+          setCustomWidth(Math.round(newWidth));
+          setCustomHeight(Math.round(newHeight));
+        } else {
+          setCustomWidth(Number(newWidth.toFixed(2)));
+          setCustomHeight(Number(newHeight.toFixed(2)));
+        }
+      }
+      
+      setCustomUnit(newUnit);
     };
 
     return (
@@ -1447,7 +1493,7 @@ export default function Sidebar({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Custom Dimensions</Label>
+          <Label className="text-xs text-slate-400">Create Artboard</Label>
           <div className="space-y-2 p-3 bg-slate-800/50 rounded-lg border border-slate-600">
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Name</Label>
@@ -1456,34 +1502,52 @@ export default function Sidebar({
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder="Custom Artboard"
                 className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                data-testid="input-artboard-name"
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-400">Aspect Ratio</Label>
-              <Select
-                value={customAspectRatio}
-                onValueChange={handleAspectRatioChange}
-              >
-                <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-custom-aspect-ratio">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">Custom</SelectItem>
-                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                  <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
-                  <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
-                  <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
-                  <SelectItem value="5:4">5:4 (Landscape)</SelectItem>
-                  <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
-                  <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
-                  <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
-                  <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
-                </SelectContent>
-              </Select>
+            
+            {/* Unit and DPI row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400">Unit</Label>
+                <Select
+                  value={customUnit}
+                  onValueChange={(value) => handleUnitChange(value as UnitType)}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pixels">Pixels (px)</SelectItem>
+                    <SelectItem value="inches">Inches (in)</SelectItem>
+                    <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                    <SelectItem value="cm">Centimeters (cm)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400">DPI</Label>
+                <Select
+                  value={String(customDpi)}
+                  onValueChange={(value) => setCustomDpi(Number(value))}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DPI_PRESETS.map((preset) => (
+                      <SelectItem key={preset.value} value={String(preset.value)}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <Label className="text-xs text-slate-400">Dimensions (px)</Label>
+                <Label className="text-xs text-slate-400">Dimensions ({getUnitLabel(customUnit)})</Label>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1510,9 +1574,9 @@ export default function Sidebar({
                   <NumericInput
                     value={customWidth}
                     onChange={handleWidthChange}
-                    min={1}
-                    max={10000}
-                    step={1}
+                    min={customUnit === 'pixels' ? 1 : 0.1}
+                    max={customUnit === 'pixels' ? 20000 : 100}
+                    step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                     className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-custom-width"
                   />
@@ -1522,15 +1586,24 @@ export default function Sidebar({
                   <NumericInput
                     value={customHeight}
                     onChange={handleHeightChange}
-                    min={1}
-                    max={10000}
-                    step={1}
+                    min={customUnit === 'pixels' ? 1 : 0.1}
+                    max={customUnit === 'pixels' ? 20000 : 100}
+                    step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                     className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-custom-height"
                   />
                 </div>
               </div>
             </div>
+            
+            {/* Live pixel preview - only show when not in pixel mode */}
+            {customUnit !== 'pixels' && (
+              <div className="text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-700">
+                <span className="text-slate-500">Output:</span> {livePixelWidth} × {livePixelHeight} px
+                <span className="text-slate-500 ml-2">({(livePixelWidth * livePixelHeight / 1000000).toFixed(1)} MP)</span>
+              </div>
+            )}
+            
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Background Color</Label>
               <div className="flex gap-2">
@@ -1539,6 +1612,7 @@ export default function Sidebar({
                   value={customBackgroundColor}
                   onChange={(e) => setCustomBackgroundColor(e.target.value)}
                   className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                  data-testid="input-artboard-bg-color"
                 />
                 <Input
                   type="text"
@@ -1552,31 +1626,58 @@ export default function Sidebar({
             <Button
               onClick={handleCreateCustomArtboard}
               className="w-full h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white"
+              data-testid="button-create-artboard"
             >
               <Plus className="w-3 h-3 mr-1" />
-              Create Custom Artboard
+              Create Artboard
             </Button>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Quick Presets</Label>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {artboardPresets.map((preset, index) => (
-              <Button
-                key={index}
-                onClick={() => onAddArtboard(preset as ArtboardPreset)}
-                variant="secondary"
-                size="sm"
-                className="w-full justify-start text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
-              >
-                <Monitor className="w-3 h-3 mr-2" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">{preset.name}</div>
-                  <div className="text-xs text-slate-400">{preset.width}×{preset.height}</div>
-                </div>
-              </Button>
-            ))}
+          <Label className="text-xs text-slate-400">Presets</Label>
+          <div className="space-y-2">
+            {/* Category selector */}
+            <Select
+              value={selectedPresetCategory}
+              onValueChange={(value) => setSelectedPresetCategory(value as PresetCategory)}
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-preset-category">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRESET_CATEGORIES.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Presets for selected category */}
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {getPresetsByCategory(selectedPresetCategory).map((preset) => {
+                const pixelDims = getPresetPixelDimensions(preset, customDpi);
+                return (
+                  <Button
+                    key={preset.id}
+                    onClick={() => handlePresetSelect(preset)}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full justify-start text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
+                    data-testid={`button-preset-${preset.id}`}
+                  >
+                    <Monitor className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="font-medium truncate">{preset.name}</div>
+                      <div className="text-[10px] text-slate-400 truncate">
+                        {formatPresetDimensions(preset, customUnit, customDpi)} — {preset.aspectRatio}
+                      </div>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

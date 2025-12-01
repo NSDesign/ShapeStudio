@@ -6,7 +6,7 @@ import { embedIccInPng, embedIccInJpeg, getSrgbIccProfile, ColorSpaceOptions, DE
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff';
 
-export type TiffCompression = 'none' | 'lzw';
+export type TiffCompression = 'none' | 'deflate';
 
 export type BitDepth = 8 | 16;
 
