@@ -1373,6 +1373,45 @@ export default function Sidebar({
     const [customHeight, setCustomHeight] = useState(1080);
     const [customName, setCustomName] = useState('Custom Artboard');
     const [customBackgroundColor, setCustomBackgroundColor] = useState('#ffffff');
+    const [customLinkedDimensions, setCustomLinkedDimensions] = useState(false);
+    const [customAspectRatio, setCustomAspectRatio] = useState('custom');
+    
+    const handleWidthChange = (newWidth: number) => {
+      if (customLinkedDimensions && customWidth > 0) {
+        const aspectRatio = customWidth / customHeight;
+        const newHeight = Math.round(newWidth / aspectRatio);
+        setCustomWidth(newWidth);
+        setCustomHeight(newHeight);
+      } else {
+        setCustomWidth(newWidth);
+        setCustomAspectRatio('custom');
+      }
+    };
+    
+    const handleHeightChange = (newHeight: number) => {
+      if (customLinkedDimensions && customHeight > 0) {
+        const aspectRatio = customWidth / customHeight;
+        const newWidth = Math.round(newHeight * aspectRatio);
+        setCustomWidth(newWidth);
+        setCustomHeight(newHeight);
+      } else {
+        setCustomHeight(newHeight);
+        setCustomAspectRatio('custom');
+      }
+    };
+    
+    const handleAspectRatioChange = (value: string) => {
+      if (value === 'custom') {
+        setCustomAspectRatio('custom');
+      } else {
+        const [w, h] = value.split(':').map(Number);
+        const aspectRatioValue = w / h;
+        const newHeight = Math.round(customWidth / aspectRatioValue);
+        setCustomHeight(newHeight);
+        setCustomAspectRatio(value);
+        setCustomLinkedDimensions(true);
+      }
+    };
     
     const artboardPresets = [
       { name: 'Desktop HD', width: 1920, height: 1080, category: 'web', description: '1920×1080 Full HD' },
@@ -1410,31 +1449,80 @@ export default function Sidebar({
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder="Custom Artboard"
-                className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Width</Label>
-                <NumericInput
-                  value={customWidth}
-                  onChange={setCustomWidth}
-                  min={1}
-                  max={10000}
-                  step={1}
-                  className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                />
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-400">Aspect Ratio</Label>
+              <Select
+                value={customAspectRatio}
+                onValueChange={handleAspectRatioChange}
+              >
+                <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-custom-aspect-ratio">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                  <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
+                  <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
+                  <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
+                  <SelectItem value="5:4">5:4 (Landscape)</SelectItem>
+                  <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
+                  <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
+                  <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+                  <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-slate-400">Dimensions (px)</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-6 px-2 ${customLinkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
+                  onClick={() => {
+                    setCustomLinkedDimensions(!customLinkedDimensions);
+                    if (!customLinkedDimensions) {
+                      setCustomAspectRatio('custom');
+                    }
+                  }}
+                  title={customLinkedDimensions ? 'Unlock dimensions' : 'Lock dimensions (maintain aspect ratio)'}
+                  data-testid="button-link-custom-dimensions"
+                >
+                  {customLinkedDimensions ? (
+                    <Link2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <Unlink2 className="w-3.5 h-3.5" />
+                  )}
+                </Button>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Height</Label>
-                <NumericInput
-                  value={customHeight}
-                  onChange={setCustomHeight}
-                  min={1}
-                  max={10000}
-                  step={1}
-                  className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-slate-500">Width</Label>
+                  <NumericInput
+                    value={customWidth}
+                    onChange={handleWidthChange}
+                    min={1}
+                    max={10000}
+                    step={1}
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-custom-width"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-slate-500">Height</Label>
+                  <NumericInput
+                    value={customHeight}
+                    onChange={handleHeightChange}
+                    min={1}
+                    max={10000}
+                    step={1}
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-custom-height"
+                  />
+                </div>
               </div>
             </div>
             <div className="space-y-1">
@@ -1545,7 +1633,7 @@ export default function Sidebar({
                     value={currentArtboard.name}
                     onChange={(e) => onUpdateArtboard(currentArtboard.id, { name: e.target.value })}
                     placeholder="Artboard 1"
-                    className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-artboard-name"
                   />
                 </div>
@@ -1559,7 +1647,7 @@ export default function Sidebar({
                     value={String(currentArtboard.dpi ?? 72)}
                     onValueChange={(value) => onUpdateArtboard(currentArtboard.id, { dpi: parseInt(value) })}
                   >
-                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1579,7 +1667,7 @@ export default function Sidebar({
                     value={currentArtboard.unitType ?? 'pixels'}
                     onValueChange={(value: UnitType) => onUpdateArtboard(currentArtboard.id, { unitType: value })}
                   >
-                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1612,7 +1700,7 @@ export default function Sidebar({
                       }
                     }}
                   >
-                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-aspect-ratio">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-aspect-ratio">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1657,9 +1745,9 @@ export default function Sidebar({
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Input
-                        type="number"
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-slate-500">Width</Label>
+                      <NumericInput
                         step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
                         value={(() => {
                           const displayDims = getArtboardDisplayDimensions(
@@ -1668,10 +1756,9 @@ export default function Sidebar({
                             currentArtboard.dpi ?? 72,
                             currentArtboard.unitType ?? 'pixels'
                           );
-                          return displayDims.widthFormatted;
+                          return parseFloat(displayDims.widthFormatted);
                         })()}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0;
+                        onChange={(value) => {
                           const dpi = currentArtboard.dpi ?? 72;
                           const unitType = currentArtboard.unitType ?? 'pixels';
                           
@@ -1696,14 +1783,15 @@ export default function Sidebar({
                             });
                           }
                         }}
-                        placeholder="Width"
-                        className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        min={1}
+                        max={20000}
+                        className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                         data-testid="input-artboard-width"
                       />
                     </div>
-                    <div>
-                      <Input
-                        type="number"
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-slate-500">Height</Label>
+                      <NumericInput
                         step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
                         value={(() => {
                           const displayDims = getArtboardDisplayDimensions(
@@ -1712,10 +1800,9 @@ export default function Sidebar({
                             currentArtboard.dpi ?? 72,
                             currentArtboard.unitType ?? 'pixels'
                           );
-                          return displayDims.heightFormatted;
+                          return parseFloat(displayDims.heightFormatted);
                         })()}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0;
+                        onChange={(value) => {
                           const dpi = currentArtboard.dpi ?? 72;
                           const unitType = currentArtboard.unitType ?? 'pixels';
                           
@@ -1740,8 +1827,9 @@ export default function Sidebar({
                             });
                           }
                         }}
-                        placeholder="Height"
-                        className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        min={1}
+                        max={20000}
+                        className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                         data-testid="input-artboard-height"
                       />
                     </div>
