@@ -562,27 +562,6 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                     </div>
                   </div>
 
-                  {/* TIFF Compression */}
-                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/30">
-                    <div className="flex-1">
-                      <Label className="text-sm text-slate-300">TIFF Compression</Label>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        LZW reduces file size without quality loss (recommended)
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={exportSettings.tiffCompression ?? 'lzw'}
-                        onChange={(e) => updateExportSettings.mutate({ tiffCompression: e.target.value as 'none' | 'lzw' })}
-                        className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-slate-300"
-                        data-testid="select-tiff-compression"
-                      >
-                        <option value="lzw">LZW (Recommended)</option>
-                        <option value="none">None (Uncompressed)</option>
-                      </select>
-                    </div>
-                  </div>
-
                   {/* ICC Profile Embedding */}
                   <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/30">
                     <div className="flex-1">

@@ -2266,7 +2266,6 @@ export default function Sidebar({
     const exportCanvasAsFormat = async (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
       // Get export settings for TIFF and ICC profile
       const tiffBitDepth = exportSettings.tiffBitDepth ?? 8;
-      const tiffCompression = exportSettings.tiffCompression ?? 'lzw';
       const embedIccProfile = exportSettings.embedIccProfile ?? true;
       
       switch (format) {
@@ -2311,21 +2310,14 @@ export default function Sidebar({
             }
             
             // Build TIFF metadata
+            // Note: UTIF.js encodeImage only supports uncompressed (1) or Deflate (8) with Pako.js
+            // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
+            // We let UTIF decide compression based on whether Pako is available
             const tiffMetadata: Record<string, unknown> = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
-            
-            // Set compression (TIFF tag 259 = Compression)
-            // 1 = No compression, 5 = LZW
-            if (tiffCompression === 'lzw') {
-              tiffMetadata.t259 = [5];  // LZW compression
-              console.log(`📄 TIFF: Using LZW compression`);
-            } else {
-              tiffMetadata.t259 = [1];  // No compression
-              console.log(`📄 TIFF: No compression (uncompressed)`);
-            }
             
             // Set bit depth tag for 16-bit exports
             if (tiffBitDepth === 16) {
@@ -3671,16 +3663,14 @@ export default function Sidebar({
                     // Calculate effective DPI based on export scale (same as artboard export)
                     const batchTiffDPI = Math.round(72 * effectiveExportScale);
                     
-                    // Get compression setting
-                    const batchTiffCompression = exportSettings.tiffCompression ?? 'lzw';
-                    
                     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-                    // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
+                    // Note: UTIF.js encodeImage only supports uncompressed (1) or Deflate (8) with Pako.js
+                    // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
+                    // We let UTIF decide compression based on whether Pako is available
                     const tiffMetadata = {
                       t282: [batchTiffDPI],  // XResolution
                       t283: [batchTiffDPI],  // YResolution
                       t296: [2],          // ResolutionUnit (2 = inch)
-                      t259: [batchTiffCompression === 'lzw' ? 5 : 1], // Compression: 5=LZW, 1=None
                     } as unknown as UTIF.IFD;
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
