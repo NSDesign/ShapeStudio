@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import * as UTIF from 'utif';
+import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
@@ -85,7 +86,9 @@ import {
   Info,
   X,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Link2,
+  Unlink2
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
 import { ModeField } from '@/components/ModeField';
@@ -1588,13 +1591,71 @@ export default function Sidebar({
                   </Select>
                 </div>
 
-                {/* Dimensions */}
+                {/* Aspect Ratio Presets */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">
-                    Dimensions {currentArtboard.unitType !== 'pixels' && (
-                      <span className="text-slate-500">({getUnitLabel(currentArtboard.unitType ?? 'pixels')})</span>
-                    )}
-                  </Label>
+                  <Label className="text-xs text-slate-400">Aspect Ratio</Label>
+                  <Select
+                    value={currentArtboard.aspectRatio ?? 'custom'}
+                    onValueChange={(value: string) => {
+                      if (value === 'custom') {
+                        onUpdateArtboard(currentArtboard.id, { aspectRatio: 'custom' });
+                      } else {
+                        const [w, h] = value.split(':').map(Number);
+                        const aspectRatioValue = w / h;
+                        const currentWidth = currentArtboard.width;
+                        const newHeight = Math.round(currentWidth / aspectRatioValue);
+                        onUpdateArtboard(currentArtboard.id, { 
+                          height: newHeight, 
+                          aspectRatio: value,
+                          linkedDimensions: true 
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-aspect-ratio">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                      <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
+                      <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
+                      <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
+                      <SelectItem value="5:4">5:4 (Landscape)</SelectItem>
+                      <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
+                      <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
+                      <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+                      <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Dimensions with Linked Toggle */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-400">
+                      Dimensions {currentArtboard.unitType !== 'pixels' && (
+                        <span className="text-slate-500">({getUnitLabel(currentArtboard.unitType ?? 'pixels')})</span>
+                      )}
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`h-6 px-2 ${currentArtboard.linkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
+                      onClick={() => onUpdateArtboard(currentArtboard.id, { 
+                        linkedDimensions: !currentArtboard.linkedDimensions,
+                        aspectRatio: !currentArtboard.linkedDimensions ? 'custom' : currentArtboard.aspectRatio
+                      })}
+                      title={currentArtboard.linkedDimensions ? 'Unlock dimensions (allows independent resize)' : 'Lock dimensions (maintain aspect ratio)'}
+                      data-testid="button-link-dimensions"
+                    >
+                      {currentArtboard.linkedDimensions ? (
+                        <Link2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <Unlink2 className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Input
@@ -1611,13 +1672,29 @@ export default function Sidebar({
                         })()}
                         onChange={(e) => {
                           const value = parseFloat(e.target.value) || 0;
-                          const pixelDims = calculatePixelDimensions(
-                            value,
-                            pixelsToUnit(currentArtboard.height, currentArtboard.dpi ?? 72, currentArtboard.unitType ?? 'pixels'),
-                            currentArtboard.dpi ?? 72,
-                            currentArtboard.unitType ?? 'pixels'
-                          );
-                          onUpdateArtboard(currentArtboard.id, { width: pixelDims.widthPixels });
+                          const dpi = currentArtboard.dpi ?? 72;
+                          const unitType = currentArtboard.unitType ?? 'pixels';
+                          
+                          if (currentArtboard.linkedDimensions && currentArtboard.width > 0) {
+                            const aspectRatio = currentArtboard.width / currentArtboard.height;
+                            const newWidthPixels = unitToPixels(value, dpi, unitType);
+                            const newHeightPixels = Math.round(newWidthPixels / aspectRatio);
+                            onUpdateArtboard(currentArtboard.id, { 
+                              width: Math.round(newWidthPixels), 
+                              height: newHeightPixels 
+                            });
+                          } else {
+                            const pixelDims = calculatePixelDimensions(
+                              value,
+                              pixelsToUnit(currentArtboard.height, dpi, unitType),
+                              dpi,
+                              unitType
+                            );
+                            onUpdateArtboard(currentArtboard.id, { 
+                              width: pixelDims.widthPixels,
+                              aspectRatio: 'custom'
+                            });
+                          }
                         }}
                         placeholder="Width"
                         className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
@@ -1639,13 +1716,29 @@ export default function Sidebar({
                         })()}
                         onChange={(e) => {
                           const value = parseFloat(e.target.value) || 0;
-                          const pixelDims = calculatePixelDimensions(
-                            pixelsToUnit(currentArtboard.width, currentArtboard.dpi ?? 72, currentArtboard.unitType ?? 'pixels'),
-                            value,
-                            currentArtboard.dpi ?? 72,
-                            currentArtboard.unitType ?? 'pixels'
-                          );
-                          onUpdateArtboard(currentArtboard.id, { height: pixelDims.heightPixels });
+                          const dpi = currentArtboard.dpi ?? 72;
+                          const unitType = currentArtboard.unitType ?? 'pixels';
+                          
+                          if (currentArtboard.linkedDimensions && currentArtboard.height > 0) {
+                            const aspectRatio = currentArtboard.width / currentArtboard.height;
+                            const newHeightPixels = unitToPixels(value, dpi, unitType);
+                            const newWidthPixels = Math.round(newHeightPixels * aspectRatio);
+                            onUpdateArtboard(currentArtboard.id, { 
+                              width: newWidthPixels, 
+                              height: Math.round(newHeightPixels) 
+                            });
+                          } else {
+                            const pixelDims = calculatePixelDimensions(
+                              pixelsToUnit(currentArtboard.width, dpi, unitType),
+                              value,
+                              dpi,
+                              unitType
+                            );
+                            onUpdateArtboard(currentArtboard.id, { 
+                              height: pixelDims.heightPixels,
+                              aspectRatio: 'custom'
+                            });
+                          }
                         }}
                         placeholder="Height"
                         className="h-7 text-xs bg-slate-700 border-slate-600 text-slate-200"
@@ -2082,7 +2175,11 @@ export default function Sidebar({
       shape.selected = originalSelected;
     };
 
-    const exportCanvasAsFormat = (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
+    const exportCanvasAsFormat = async (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
+      // Get export settings for TIFF and ICC profile
+      const tiffBitDepth = exportSettings.tiffBitDepth ?? 8;
+      const embedIccProfile = exportSettings.embedIccProfile ?? true;
+      
       switch (format) {
         case 'pdf':
           // Convert canvas to PDF
@@ -2100,26 +2197,57 @@ export default function Sidebar({
           const tiffCtx = canvas.getContext('2d');
           if (tiffCtx) {
             // Memory guardrail: limit to 200 megapixels (800MB RGBA data) to support A4 300DPI scaled exports
-            const maxPixels = 200_000_000;
+            // 16-bit doubles memory usage, so adjust limit accordingly
+            const memoryMultiplier = tiffBitDepth === 16 ? 2 : 1;
+            const maxPixels = 200_000_000 / memoryMultiplier;
             const pixelCount = canvas.width * canvas.height;
             if (pixelCount > maxPixels) {
-              console.error(`❌ TIFF export aborted: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels). Consider reducing resolution or using a different format.`);
-              alert(`TIFF export failed: Image too large (${canvas.width}x${canvas.height}). Please reduce the resolution or use PNG/JPEG instead.`);
+              console.error(`❌ TIFF export aborted: Canvas size (${canvas.width}x${canvas.height} = ${pixelCount.toLocaleString()} pixels) exceeds maximum allowed (${maxPixels.toLocaleString()} pixels at ${tiffBitDepth}-bit). Consider reducing resolution or using a different format.`);
+              alert(`TIFF export failed: Image too large (${canvas.width}x${canvas.height}) at ${tiffBitDepth}-bit. Please reduce the resolution or use PNG/JPEG instead.`);
               break;
             }
             
             const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
-            const rgba = new Uint8Array(imageData.data.buffer);
+            let rgba: Uint8Array | Uint16Array;
             
-            // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-            // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
-            const tiffMetadata = {
+            if (tiffBitDepth === 16) {
+              // Convert 8-bit to 16-bit by scaling values (0-255 -> 0-65535)
+              const rgba16 = new Uint16Array(imageData.data.length);
+              for (let i = 0; i < imageData.data.length; i++) {
+                rgba16[i] = imageData.data[i] * 257; // Scale 8-bit to 16-bit (255 * 257 = 65535)
+              }
+              rgba = rgba16;
+            } else {
+              rgba = new Uint8Array(imageData.data.buffer);
+            }
+            
+            // Build TIFF metadata
+            const tiffMetadata: Record<string, unknown> = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
-            } as unknown as UTIF.IFD;
+            };
             
-            const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
+            // Set bit depth tag for 16-bit exports
+            if (tiffBitDepth === 16) {
+              tiffMetadata.t258 = [16, 16, 16, 16]; // BitsPerSample (R, G, B, A)
+            }
+            
+            // Embed sRGB ICC profile if requested (TIFF tag 34675 = InterColorProfile)
+            if (embedIccProfile) {
+              const iccProfile = getSrgbIccProfile();
+              tiffMetadata.t34675 = Array.from(iccProfile);
+              console.log(`📄 TIFF: Embedding sRGB ICC profile (${iccProfile.length} bytes)`);
+            }
+            
+            // Encode to TIFF buffer
+            // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
+            const tiffBuffer = UTIF.encodeImage(
+              tiffBitDepth === 16 ? new Uint8Array((rgba as Uint16Array).buffer) : rgba as Uint8Array, 
+              canvas.width, 
+              canvas.height, 
+              tiffMetadata as UTIF.IFD
+            );
             const blob = new Blob([tiffBuffer], { type: 'image/tiff' });
             const url = URL.createObjectURL(blob);
             const tiffLink = document.createElement('a');
@@ -2127,7 +2255,7 @@ export default function Sidebar({
             tiffLink.download = filename;
             tiffLink.click();
             URL.revokeObjectURL(url);
-            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata`);
+            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata, ${tiffBitDepth}-bit${embedIccProfile ? ', sRGB ICC profile' : ''}`);
           }
           break;
         default:
@@ -2140,7 +2268,16 @@ export default function Sidebar({
             case 'jpg':
               dataURL = canvas.toDataURL('image/jpeg', quality / 100);
               // Embed DPI metadata for JPEG
-              link.href = embedDPI(dataURL, 'jpg', dpi);
+              if (embedIccProfile) {
+                // Convert to blob, embed ICC, then back to URL
+                const jpegBlob = await (await fetch(dataURL)).blob();
+                const iccBlob = await embedIccInJpeg(jpegBlob);
+                const iccUrl = URL.createObjectURL(iccBlob);
+                link.href = iccUrl;
+                console.log(`📄 JPEG: Embedded sRGB ICC profile`);
+              } else {
+                link.href = embedDPI(dataURL, 'jpg', dpi);
+              }
               break;
             case 'webp':
               link.href = canvas.toDataURL('image/webp', quality / 100);
@@ -2154,8 +2291,17 @@ export default function Sidebar({
             case 'png':
             default:
               dataURL = canvas.toDataURL('image/png');
-              // Embed DPI metadata for PNG
-              link.href = embedDPI(dataURL, 'png', dpi);
+              if (embedIccProfile) {
+                // Convert to blob, embed ICC, then back to URL
+                const pngBlob = await (await fetch(dataURL)).blob();
+                const iccBlob = await embedIccInPng(pngBlob);
+                const iccUrl = URL.createObjectURL(iccBlob);
+                link.href = iccUrl;
+                console.log(`📄 PNG: Embedded sRGB ICC profile`);
+              } else {
+                // Embed DPI metadata for PNG
+                link.href = embedDPI(dataURL, 'png', dpi);
+              }
               break;
           }
 
@@ -2488,7 +2634,7 @@ export default function Sidebar({
       }
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
+      await exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
       
       // Add a small delay to show the loading state
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -2499,7 +2645,7 @@ export default function Sidebar({
       }
     };
 
-    const performBatchExport = (filename: string) => {
+    const performBatchExport = async (filename: string) => {
       // Export all shapes for batch mode
       const shapesToExport = shapes;
       console.log(`Batch export: Found ${shapesToExport.length} shapes to export as ${filename}`);
@@ -2591,7 +2737,7 @@ export default function Sidebar({
       sortedShapes.forEach(shape => renderShapeForExport(ctx, shape));
 
       // Export using helper function that handles all formats including PDF
-      exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
+      await exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
     };
 
     // Wrapper function that shows TIFF pre-flight modal if needed

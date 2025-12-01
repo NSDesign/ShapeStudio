@@ -115,6 +115,8 @@ export interface ExportSettingsConfig {
   skipTiffPreflightModal: boolean;    // Skip pre-flight confirmation modal for TIFF batch exports
   exportBackgroundMode: ExportBackgroundMode;  // Export background: transparent or artboard color
   exportBackgroundColor?: string;     // @deprecated - legacy field, ignored (artboard background is configured in Artboard section)
+  tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
+  embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
 }
 
 // Default export settings configuration
@@ -128,6 +130,8 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   packageAsZip: false,                // ZIP packaging disabled by default
   skipTiffPreflightModal: false,      // Show TIFF pre-flight modal by default
   exportBackgroundMode: 'transparent', // Transparent background by default
+  tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
+  embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
 };
 
 // App settings defaults configuration type

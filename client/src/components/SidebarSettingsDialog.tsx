@@ -523,6 +523,58 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
           
           <TabsContent value="export" className="mt-4">
             <div className="space-y-4">
+              {/* TIFF & Print Settings */}
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-slate-200">Print-on-Demand Settings</Label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Configure settings for professional print exports (TIFF, high-resolution).
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* TIFF Bit Depth */}
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/30">
+                    <div className="flex-1">
+                      <Label className="text-sm text-slate-300">TIFF Bit Depth</Label>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        16-bit for professional printing (larger files), 8-bit for standard use
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={exportSettings.tiffBitDepth ?? 8}
+                        onChange={(e) => updateExportSettings.mutate({ tiffBitDepth: Number(e.target.value) as 8 | 16 })}
+                        className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-slate-300"
+                        data-testid="select-tiff-bit-depth"
+                      >
+                        <option value={8}>8-bit (Standard)</option>
+                        <option value={16}>16-bit (Professional)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* ICC Profile Embedding */}
+                  <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded border border-slate-700/30">
+                    <div className="flex-1">
+                      <Label className="text-sm text-slate-300">Embed sRGB ICC Profile</Label>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Required for print-on-demand services (TIFF, PNG, JPEG)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={exportSettings.embedIccProfile ?? true}
+                        onCheckedChange={(checked) => updateExportSettings.mutate({ embedIccProfile: checked })}
+                        className="data-[state=checked]:bg-blue-600"
+                        data-testid="switch-embed-icc-profile"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Warnings */}
               <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-4">
                 <div>
                   <Label className="text-sm font-medium text-slate-200">Export Warnings</Label>
@@ -559,10 +611,6 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-xs text-slate-500 text-center">
-                More export settings coming soon
               </div>
             </div>
           </TabsContent>

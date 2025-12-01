@@ -498,6 +498,8 @@ export interface Artboard {
   displayResolution?: boolean;
   preset?: string;
   category?: string;
+  linkedDimensions?: boolean;  // Whether width/height changes maintain aspect ratio
+  aspectRatio?: string;        // Current aspect ratio preset (e.g., '2:3', '3:4', '4:5', '1:1', 'custom')
   // Print configuration (new unified structure)
   printConfig?: PrintConfig;
 }
