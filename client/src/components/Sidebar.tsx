@@ -95,7 +95,7 @@ import { ModeField } from '@/components/ModeField';
 import { StyledModeField } from '@/components/StyledModeField';
 import { Shape } from '@/lib/shapes';
 import { pixelsToUnit, unitToPixels, calculatePixelDimensions, getArtboardDisplayDimensions, getUnitLabel, DPI_PRESETS, type UnitType } from '@/lib/artboardUtils';
-import { embedDPI } from '@/lib/dpiEmbedder';
+import { embedDPI, embedCopyright } from '@/lib/dpiEmbedder';
 
 import { SmartDistributionAlgorithm } from '../lib/distributionAlgorithm';
 
@@ -2328,6 +2328,13 @@ export default function Sidebar({
               console.log(`📄 TIFF: Embedding sRGB ICC profile (${iccProfile.length} bytes)`);
             }
             
+            // Embed copyright if set (TIFF tag 33432 = Copyright)
+            const tiffCopyright = exportSettings.copyrightText ?? '';
+            if (tiffCopyright) {
+              tiffMetadata.t33432 = tiffCopyright;
+              console.log(`📄 TIFF: Embedding copyright metadata`);
+            }
+            
             // Encode to TIFF buffer
             // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
             const tiffBuffer = UTIF.encodeImage(
@@ -2379,6 +2386,12 @@ export default function Sidebar({
             case 'png':
             default:
               dataURL = canvas.toDataURL('image/png');
+              // First embed copyright if set
+              const copyrightText = exportSettings.copyrightText ?? '';
+              if (copyrightText) {
+                dataURL = embedCopyright(dataURL, 'png', copyrightText);
+                console.log(`📄 PNG: Embedded copyright metadata`);
+              }
               if (embedIccProfile) {
                 // Convert to blob, embed ICC, then back to URL
                 const pngBlob = await (await fetch(dataURL)).blob();

@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -570,6 +571,24 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
                         data-testid="switch-embed-icc-profile"
                       />
                     </div>
+                  </div>
+
+                  {/* Copyright Text */}
+                  <div className="p-3 bg-slate-900/50 rounded border border-slate-700/30 space-y-2">
+                    <div>
+                      <Label className="text-sm text-slate-300">Copyright Notice</Label>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Embedded in exported images as EXIF/XMP metadata
+                      </p>
+                    </div>
+                    <Input
+                      type="text"
+                      value={exportSettings.copyrightText ?? ''}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateExportSettings.mutate({ copyrightText: e.target.value })}
+                      placeholder="© 2025 Your Name. All rights reserved."
+                      className="h-8 text-xs bg-slate-800 border-slate-600 text-slate-200"
+                      data-testid="input-copyright-text"
+                    />
                   </div>
                 </div>
               </div>

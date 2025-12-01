@@ -152,6 +152,140 @@ export function embedDPIInJPEG(dataURL: string, dpi: number): string {
 }
 
 /**
+ * Add tEXt chunk to PNG data URL to embed copyright metadata
+ * tEXt chunk contains keyword + null byte + text content
+ */
+export function embedCopyrightInPNG(dataURL: string, copyright: string): string {
+  if (!copyright || copyright.trim() === '') {
+    return dataURL;
+  }
+
+  // Convert data URL to Uint8Array
+  const base64 = dataURL.split(',')[1];
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  // PNG signature: 137 80 78 71 13 10 26 10
+  const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
+  
+  // Verify this is a PNG
+  for (let i = 0; i < 8; i++) {
+    if (bytes[i] !== pngSignature[i]) {
+      console.warn('Not a valid PNG file, returning original data URL');
+      return dataURL;
+    }
+  }
+
+  // Find IHDR chunk end
+  let ihdrEnd = 8;
+  const ihdrLength = (bytes[ihdrEnd] << 24) | (bytes[ihdrEnd + 1] << 16) | 
+                     (bytes[ihdrEnd + 2] << 8) | bytes[ihdrEnd + 3];
+  ihdrEnd += 4 + 4 + ihdrLength + 4;
+
+  // Skip any existing pHYs chunk if present
+  let insertPosition = ihdrEnd;
+  while (insertPosition < bytes.length - 8) {
+    const chunkLen = (bytes[insertPosition] << 24) | (bytes[insertPosition + 1] << 16) | 
+                     (bytes[insertPosition + 2] << 8) | bytes[insertPosition + 3];
+    const chunkType = String.fromCharCode(
+      bytes[insertPosition + 4], 
+      bytes[insertPosition + 5], 
+      bytes[insertPosition + 6], 
+      bytes[insertPosition + 7]
+    );
+    
+    // Stop when we hit IDAT (image data)
+    if (chunkType === 'IDAT') {
+      break;
+    }
+    
+    insertPosition += 4 + 4 + chunkLen + 4;
+  }
+
+  // Create tEXt chunk for copyright
+  // Format: keyword + null byte + text
+  const keyword = 'Copyright';
+  const textContent = copyright;
+  const keywordBytes = new TextEncoder().encode(keyword);
+  const textBytes = new TextEncoder().encode(textContent);
+  
+  // tEXt data: keyword + null separator + text
+  const textData = new Uint8Array(keywordBytes.length + 1 + textBytes.length);
+  textData.set(keywordBytes, 0);
+  textData[keywordBytes.length] = 0; // null separator
+  textData.set(textBytes, keywordBytes.length + 1);
+
+  // Create chunk: length(4) + type(4) + data + CRC(4)
+  const chunkLength = textData.length;
+  const chunkType = new Uint8Array([116, 69, 88, 116]); // 'tEXt' in ASCII
+  
+  // Calculate CRC for type + data
+  const crcData = new Uint8Array(4 + textData.length);
+  crcData.set(chunkType, 0);
+  crcData.set(textData, 4);
+  const crc = calculateCRC(crcData);
+  
+  // Build complete tEXt chunk
+  const textChunk = new Uint8Array(4 + 4 + textData.length + 4);
+  let offset = 0;
+  
+  // Length (big-endian)
+  textChunk[offset++] = (chunkLength >> 24) & 0xFF;
+  textChunk[offset++] = (chunkLength >> 16) & 0xFF;
+  textChunk[offset++] = (chunkLength >> 8) & 0xFF;
+  textChunk[offset++] = chunkLength & 0xFF;
+  
+  // Type 'tEXt'
+  textChunk.set(chunkType, offset);
+  offset += 4;
+  
+  // Data
+  textChunk.set(textData, offset);
+  offset += textData.length;
+  
+  // CRC
+  textChunk[offset++] = (crc >> 24) & 0xFF;
+  textChunk[offset++] = (crc >> 16) & 0xFF;
+  textChunk[offset++] = (crc >> 8) & 0xFF;
+  textChunk[offset++] = crc & 0xFF;
+
+  // Combine: before insert + tEXt + rest of PNG
+  const result = new Uint8Array(bytes.length + textChunk.length);
+  result.set(bytes.subarray(0, insertPosition), 0);
+  result.set(textChunk, insertPosition);
+  result.set(bytes.subarray(insertPosition), insertPosition + textChunk.length);
+
+  // Convert back to data URL
+  const resultBase64 = btoa(String.fromCharCode.apply(null, Array.from(result)));
+  return `data:image/png;base64,${resultBase64}`;
+}
+
+/**
+ * Embed copyright in image based on format
+ * Note: Currently only PNG is supported for browser-based copyright embedding
+ */
+export function embedCopyright(dataURL: string, format: string, copyright: string): string {
+  if (!copyright || copyright.trim() === '') {
+    return dataURL;
+  }
+  
+  if (format === 'png') {
+    return embedCopyrightInPNG(dataURL, copyright);
+  }
+  
+  // JPEG/other formats would require EXIF manipulation which is complex in browser
+  // For now, log a note and return original
+  if (format === 'jpg' || format === 'jpeg') {
+    console.log('Note: JPEG copyright metadata embedding not yet supported in browser export.');
+  }
+  
+  return dataURL;
+}
+
+/**
  * Embed DPI metadata based on format
  */
 export function embedDPI(dataURL: string, format: string, dpi: number): string {

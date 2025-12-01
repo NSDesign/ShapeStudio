@@ -117,6 +117,7 @@ export interface ExportSettingsConfig {
   exportBackgroundColor?: string;     // @deprecated - legacy field, ignored (artboard background is configured in Artboard section)
   tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
+  copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
 }
 
 // Default export settings configuration
@@ -132,6 +133,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   exportBackgroundMode: 'transparent', // Transparent background by default
   tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
+  copyrightText: '',                  // Empty by default - user can add their copyright notice
 };
 
 // App settings defaults configuration type
