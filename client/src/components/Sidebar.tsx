@@ -2266,6 +2266,7 @@ export default function Sidebar({
     const exportCanvasAsFormat = async (canvas: HTMLCanvasElement, filename: string, format: string, quality: number, scale: number, dpi: number = 72) => {
       // Get export settings for TIFF and ICC profile
       const tiffBitDepth = exportSettings.tiffBitDepth ?? 8;
+      const tiffCompression = exportSettings.tiffCompression ?? 'lzw';
       const embedIccProfile = exportSettings.embedIccProfile ?? true;
       
       switch (format) {
@@ -2315,6 +2316,16 @@ export default function Sidebar({
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
+            
+            // Set compression (TIFF tag 259 = Compression)
+            // 1 = No compression, 5 = LZW
+            if (tiffCompression === 'lzw') {
+              tiffMetadata.t259 = [5];  // LZW compression
+              console.log(`📄 TIFF: Using LZW compression`);
+            } else {
+              tiffMetadata.t259 = [1];  // No compression
+              console.log(`📄 TIFF: No compression (uncompressed)`);
+            }
             
             // Set bit depth tag for 16-bit exports
             if (tiffBitDepth === 16) {
@@ -2473,8 +2484,10 @@ export default function Sidebar({
         const artboard = artboards.find(ab => ab.id === selectedArtboardForExport);
         if (!artboard) return;
         
-        // Get artboard DPI
-        exportDPI = artboard.dpi ?? 72;
+        // Calculate effective DPI based on export scale
+        // The metadata DPI should reflect the actual resolution of the exported image
+        // Base dimensions are at 72 DPI, so effective DPI = 72 * exportScale
+        exportDPI = Math.round(72 * effectiveExportScale);
         
         // Get print configuration
         const printConfig = artboard.printConfig || DEFAULT_PRINT_CONFIG;
@@ -2582,6 +2595,21 @@ export default function Sidebar({
         canvasWidth = (artboard.width + (printExpansion * 2)) * effectiveExportScale;
         canvasHeight = (artboard.height + (printExpansion * 2)) * effectiveExportScale;
         
+        // DEBUG: Log final canvas dimensions and expected file size
+        const expectedFileSize = Math.round(canvasWidth * canvasHeight * 4 / (1024 * 1024));
+        console.log('🖼️ [EXPORT DEBUG] Canvas Dimensions:', {
+          artboardConfiguredDPI: artboard.dpi ?? 72,
+          effectiveExportScale,
+          effectiveExportDPI: exportDPI,
+          baseWidth: artboard.width,
+          baseHeight: artboard.height,
+          printExpansion,
+          finalCanvasWidth: Math.round(canvasWidth),
+          finalCanvasHeight: Math.round(canvasHeight),
+          totalPixels: Math.round(canvasWidth * canvasHeight),
+          expectedFileSizeMB: `~${expectedFileSize} MB (uncompressed RGBA)`,
+        });
+        
         // Translate shapes relative to expanded canvas (accounting for print expansion)
         translateX = -artboard.x + printExpansion;
         translateY = -artboard.y + printExpansion;
@@ -2590,9 +2618,8 @@ export default function Sidebar({
         // Export selected shapes with bounds fitting
         shapesToExport = selectedShapes;
         
-        // Use active artboard DPI if available
-        const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
-        exportDPI = activeArtboardData?.dpi ?? 72;
+        // Calculate effective DPI based on export scale (same as artboard export)
+        exportDPI = Math.round(72 * effectiveExportScale);
 
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
@@ -2647,9 +2674,8 @@ export default function Sidebar({
         // Export all shapes with bounds fitting
         shapesToExport = shapes;
         
-        // Use active artboard DPI if available
-        const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
-        exportDPI = activeArtboardData?.dpi ?? 72;
+        // Calculate effective DPI based on export scale (same as artboard export)
+        exportDPI = Math.round(72 * effectiveExportScale);
         
         console.log(`Export attempt: Found ${shapesToExport.length} shapes to export`);
         if (shapesToExport.length === 0) {
@@ -2789,9 +2815,8 @@ export default function Sidebar({
       const shapesToExport = shapes;
       console.log(`Batch export: Found ${shapesToExport.length} shapes to export as ${filename}`);
       
-      // Get DPI from active artboard
-      const activeArtboardData = artboards.find(ab => ab.id === activeArtboard);
-      const exportDPI = activeArtboardData?.dpi ?? 72;
+      // Calculate effective DPI based on export scale (same as artboard export)
+      const exportDPI = Math.round(72 * effectiveExportScale);
       
       // Set canvas dimensions based on shapes or default size
       let canvasWidth = 800 * effectiveExportScale;
@@ -3261,7 +3286,8 @@ export default function Sidebar({
             if (targetArtboard) {
               // Get print configuration from artboard
               const batchPrintConfig = targetArtboard.printConfig || DEFAULT_PRINT_CONFIG;
-              const batchExportDPI = targetArtboard.dpi ?? 72;
+              // Calculate effective DPI based on export scale (same as artboard export)
+              const batchExportDPI = Math.round(72 * effectiveExportScale);
               const batchOverlayUnit = batchPrintConfig.overlays.overlayUnit || 'pixels';
               
               // DEBUG: Log print configuration for batch export
@@ -3642,15 +3668,19 @@ export default function Sidebar({
                     const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
                     const rgba = new Uint8Array(imageData.data.buffer);
                     
-                    // Get DPI from artboard or use default
-                    const exportDPI = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
+                    // Calculate effective DPI based on export scale (same as artboard export)
+                    const batchTiffDPI = Math.round(72 * effectiveExportScale);
+                    
+                    // Get compression setting
+                    const batchTiffCompression = exportSettings.tiffCompression ?? 'lzw';
                     
                     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
                     // Note: UTIF.IFD type requires data/width/height but encodeImage only needs metadata tags
                     const tiffMetadata = {
-                      t282: [exportDPI],  // XResolution
-                      t283: [exportDPI],  // YResolution
+                      t282: [batchTiffDPI],  // XResolution
+                      t283: [batchTiffDPI],  // YResolution
                       t296: [2],          // ResolutionUnit (2 = inch)
+                      t259: [batchTiffCompression === 'lzw' ? 5 : 1], // Compression: 5=LZW, 1=None
                     } as unknown as UTIF.IFD;
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
@@ -3659,10 +3689,10 @@ export default function Sidebar({
                     
                     if (packageAsZip && zip) {
                       zip.file(filename, tiffBlob);
-                      console.log(`📦 Added ${filename} to ZIP (TIFF with ${exportDPI} DPI)`);
+                      console.log(`📦 Added ${filename} to ZIP (TIFF with ${batchTiffDPI} DPI)`);
                     } else {
                       individualFiles.push({ blob: tiffBlob, filename });
-                      console.log(`📁 Prepared ${filename} for individual download (TIFF with ${exportDPI} DPI)`);
+                      console.log(`📁 Prepared ${filename} for individual download (TIFF with ${batchTiffDPI} DPI)`);
                     }
                     
                     // ENHANCED MEMORY CLEANUP FOR TIFF:
