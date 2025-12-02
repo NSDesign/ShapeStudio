@@ -35,6 +35,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1385,6 +1386,7 @@ export default function Sidebar({
     const [customUnit, setCustomUnit] = useState<UnitType>('inches');
     const [customDpi, setCustomDpi] = useState(300); // Default to print-quality 300 DPI
     const [selectedPresetCategory, setSelectedPresetCategory] = useState<PresetCategory>('paper');
+    const [activeTab, setActiveTab] = useState<'custom' | 'presets'>('custom');
     
     // Calculate live pixel dimensions from physical dimensions and DPI
     const livePixelWidth = customUnit === 'pixels' 
@@ -1443,7 +1445,7 @@ export default function Sidebar({
       onAddArtboard(customPreset);
     };
     
-    // Handle selecting a preset - populate the form with preset values
+    // Handle selecting a preset - populate the form with preset values then switch to custom tab
     const handlePresetSelect = (preset: ArtboardPresetPhysical) => {
       setCustomName(preset.name);
       setCustomWidth(preset.widthInches);
@@ -1451,6 +1453,21 @@ export default function Sidebar({
       setCustomUnit('inches');
       setCustomAspectRatio(preset.aspectRatio);
       setCustomLinkedDimensions(true);
+      setActiveTab('custom'); // Switch to custom tab to show the form with preset values
+    };
+    
+    // Handle quick create from preset - create artboard immediately
+    const handlePresetQuickCreate = (preset: ArtboardPresetPhysical) => {
+      const pixelDims = getPresetPixelDimensions(preset, customDpi);
+      const newPreset = {
+        name: preset.name,
+        width: pixelDims.width,
+        height: pixelDims.height,
+        backgroundColor: '#ffffff',
+        category: 'print' as const,
+        description: `${pixelDims.width}×${pixelDims.height}px at ${customDpi} DPI`
+      };
+      onAddArtboard(newPreset);
     };
     
     // Handle unit change - convert existing values to new unit via pixels as intermediate
@@ -1488,238 +1505,308 @@ export default function Sidebar({
 
     return (
       <div className="space-y-4">
-        <div className="text-sm text-slate-400">
-          Active: <span className="text-white font-medium">{artboards.find(a => a.id === activeArtboard)?.name || 'None'}</span>
-        </div>
-
+        {/* Section 1: Existing Artboards (at top) */}
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Create Artboard</Label>
-          <div className="space-y-2 p-3 bg-slate-800/50 rounded-lg border border-slate-600">
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-400">Name</Label>
-              <Input
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="Custom Artboard"
-                className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                data-testid="input-artboard-name"
-              />
-            </div>
-            
-            {/* Unit and DPI row */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">Unit</Label>
-                <Select
-                  value={customUnit}
-                  onValueChange={(value) => handleUnitChange(value as UnitType)}
+          <Label className="text-xs text-slate-400">Artboards</Label>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {artboards.map((artboard) => {
+              const isActive = artboard.id === activeArtboard;
+              return (
+                <div 
+                  key={artboard.id} 
+                  className={`flex items-center justify-between p-2 rounded text-xs transition-colors cursor-pointer ${
+                    isActive 
+                      ? 'bg-teal-500/30 border border-teal-500/50' 
+                      : 'bg-slate-800/50 hover:bg-slate-700/50 border border-transparent'
+                  }`}
+                  onClick={() => onSelectArtboard(artboard.id)}
+                  data-testid={`artboard-item-${artboard.id}`}
                 >
-                  <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pixels">Pixels (px)</SelectItem>
-                    <SelectItem value="inches">Inches (in)</SelectItem>
-                    <SelectItem value="mm">Millimeters (mm)</SelectItem>
-                    <SelectItem value="cm">Centimeters (cm)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-400">DPI</Label>
-                <Select
-                  value={String(customDpi)}
-                  onValueChange={(value) => setCustomDpi(Number(value))}
-                >
-                  <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DPI_PRESETS.map((preset) => (
-                      <SelectItem key={preset.value} value={String(preset.value)}>
-                        {preset.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs text-slate-400">Dimensions ({getUnitLabel(customUnit)})</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-6 px-2 ${customLinkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
-                  onClick={() => {
-                    setCustomLinkedDimensions(!customLinkedDimensions);
-                    if (!customLinkedDimensions) {
-                      setCustomAspectRatio('custom');
-                    }
-                  }}
-                  title={customLinkedDimensions ? 'Unlock dimensions' : 'Lock dimensions (maintain aspect ratio)'}
-                  data-testid="button-link-custom-dimensions"
-                >
-                  {customLinkedDimensions ? (
-                    <Link2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <Unlink2 className="w-3.5 h-3.5" />
-                  )}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Width</Label>
-                  <NumericInput
-                    value={customWidth}
-                    onChange={handleWidthChange}
-                    min={customUnit === 'pixels' ? 1 : 0.1}
-                    max={customUnit === 'pixels' ? 20000 : 100}
-                    step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
-                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                    data-testid="input-custom-width"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Height</Label>
-                  <NumericInput
-                    value={customHeight}
-                    onChange={handleHeightChange}
-                    min={customUnit === 'pixels' ? 1 : 0.1}
-                    max={customUnit === 'pixels' ? 20000 : 100}
-                    step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
-                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                    data-testid="input-custom-height"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Live pixel preview - only show when not in pixel mode */}
-            {customUnit !== 'pixels' && (
-              <div className="text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-700">
-                <span className="text-slate-500">Output:</span> {livePixelWidth} × {livePixelHeight} px
-                <span className="text-slate-500 ml-2">({(livePixelWidth * livePixelHeight / 1000000).toFixed(1)} MP)</span>
-              </div>
-            )}
-            
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-400">Background Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="color"
-                  value={customBackgroundColor}
-                  onChange={(e) => setCustomBackgroundColor(e.target.value)}
-                  className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
-                  data-testid="input-artboard-bg-color"
-                />
-                <Input
-                  type="text"
-                  value={customBackgroundColor}
-                  onChange={(e) => setCustomBackgroundColor(e.target.value)}
-                  placeholder="#ffffff"
-                  className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                />
-              </div>
-            </div>
-            <Button
-              onClick={handleCreateCustomArtboard}
-              className="w-full h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white"
-              data-testid="button-create-artboard"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Create Artboard
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Presets</Label>
-          <div className="space-y-2">
-            {/* Category selector */}
-            <Select
-              value={selectedPresetCategory}
-              onValueChange={(value) => setSelectedPresetCategory(value as PresetCategory)}
-            >
-              <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-preset-category">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRESET_CATEGORIES.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Presets for selected category */}
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {getPresetsByCategory(selectedPresetCategory).map((preset) => {
-                const pixelDims = getPresetPixelDimensions(preset, customDpi);
-                return (
-                  <Button
-                    key={preset.id}
-                    onClick={() => handlePresetSelect(preset)}
-                    variant="secondary"
-                    size="sm"
-                    className="w-full justify-start text-xs bg-slate-700 hover:bg-slate-600 text-slate-200"
-                    data-testid={`button-preset-${preset.id}`}
-                  >
-                    <Monitor className="w-3 h-3 mr-2 flex-shrink-0" />
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="font-medium truncate">{preset.name}</div>
-                      <div className="text-[10px] text-slate-400 truncate">
-                        {formatPresetDimensions(preset, customUnit, customDpi)} — {preset.aspectRatio}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {isActive && (
+                      <CheckCircle className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className={`truncate ${isActive ? 'text-teal-200 font-medium' : 'text-slate-300'}`}>
+                        {artboard.name}
                       </div>
+                      <div className="text-slate-500 text-[10px]">{artboard.width}×{artboard.height}px</div>
                     </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs text-slate-400">Existing Artboards</Label>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {artboards.map((artboard) => (
-              <div key={artboard.id} className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
-                artboard.id === activeArtboard ? 'bg-teal-500/30 border border-teal-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-              }`}>
-                <div className="flex-1">
-                  <div className={artboard.id === activeArtboard ? 'text-teal-200' : 'text-slate-300'}>
-                    {artboard.name}
                   </div>
-                  <div className="text-slate-500">{artboard.width}×{artboard.height}</div>
+                  <div className="flex space-x-1 flex-shrink-0">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteArtboard(artboard.id);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
+                      disabled={artboards.length <= 1}
+                      data-testid={`button-delete-artboard-${artboard.id}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex space-x-1">
-                  <Button
-                    onClick={() => onSelectArtboard(artboard.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                  >
-                    <Target className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    onClick={() => onDeleteArtboard(artboard.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {artboards.length === 0 && (
             <div className="text-xs text-slate-500 text-center py-4">
               No artboards created
             </div>
           )}
+        </div>
+
+        <Separator className="bg-slate-700" />
+
+        {/* Section 2: Create New Artboard (Tabs: Custom / Presets) */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Create New</Label>
+          
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'custom' | 'presets')} className="w-full">
+            <TabsList className="w-full grid grid-cols-2 bg-slate-800 h-8">
+              <TabsTrigger 
+                value="custom" 
+                className="text-xs data-[state=active]:bg-slate-700"
+                data-testid="tab-custom"
+              >
+                Custom
+              </TabsTrigger>
+              <TabsTrigger 
+                value="presets" 
+                className="text-xs data-[state=active]:bg-slate-700"
+                data-testid="tab-presets"
+              >
+                Presets
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Custom Tab Content */}
+            <TabsContent value="custom" className="mt-2">
+              <div className="space-y-2 p-3 bg-slate-800/50 rounded-lg border border-slate-600">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Name</Label>
+                  <Input
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Custom Artboard"
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-artboard-name"
+                  />
+                </div>
+                
+                {/* Unit and DPI row */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Unit</Label>
+                    <Select
+                      value={customUnit}
+                      onValueChange={(value) => handleUnitChange(value as UnitType)}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pixels">Pixels (px)</SelectItem>
+                        <SelectItem value="inches">Inches (in)</SelectItem>
+                        <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                        <SelectItem value="cm">Centimeters (cm)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">DPI</Label>
+                    <Select
+                      value={String(customDpi)}
+                      onValueChange={(value) => setCustomDpi(Number(value))}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DPI_PRESETS.map((preset) => (
+                          <SelectItem key={preset.value} value={String(preset.value)}>
+                            {preset.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-400">Dimensions ({getUnitLabel(customUnit)})</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`h-6 px-2 ${customLinkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
+                      onClick={() => {
+                        setCustomLinkedDimensions(!customLinkedDimensions);
+                        if (!customLinkedDimensions) {
+                          setCustomAspectRatio('custom');
+                        }
+                      }}
+                      title={customLinkedDimensions ? 'Unlock dimensions' : 'Lock dimensions (maintain aspect ratio)'}
+                      data-testid="button-link-custom-dimensions"
+                    >
+                      {customLinkedDimensions ? (
+                        <Link2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <Unlink2 className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-slate-500">Width</Label>
+                      <NumericInput
+                        value={customWidth}
+                        onChange={handleWidthChange}
+                        min={customUnit === 'pixels' ? 1 : 0.1}
+                        max={customUnit === 'pixels' ? 20000 : 100}
+                        step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
+                        className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        data-testid="input-custom-width"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-slate-500">Height</Label>
+                      <NumericInput
+                        value={customHeight}
+                        onChange={handleHeightChange}
+                        min={customUnit === 'pixels' ? 1 : 0.1}
+                        max={customUnit === 'pixels' ? 20000 : 100}
+                        step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
+                        className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        data-testid="input-custom-height"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Live pixel preview - only show when not in pixel mode */}
+                {customUnit !== 'pixels' && (
+                  <div className="text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-700">
+                    <span className="text-slate-500">Output:</span> {livePixelWidth} × {livePixelHeight} px
+                    <span className="text-slate-500 ml-2">({(livePixelWidth * livePixelHeight / 1000000).toFixed(1)} MP)</span>
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">Background Color</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={customBackgroundColor}
+                      onChange={(e) => setCustomBackgroundColor(e.target.value)}
+                      className="h-7 w-12 p-1 bg-slate-700 border-slate-600"
+                      data-testid="input-artboard-bg-color"
+                    />
+                    <Input
+                      type="text"
+                      value={customBackgroundColor}
+                      onChange={(e) => setCustomBackgroundColor(e.target.value)}
+                      placeholder="#ffffff"
+                      className="h-7 flex-1 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={handleCreateCustomArtboard}
+                  className="w-full h-7 text-xs bg-purple-600 hover:bg-purple-700 text-white"
+                  data-testid="button-create-artboard"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Create Artboard
+                </Button>
+              </div>
+            </TabsContent>
+            
+            {/* Presets Tab Content */}
+            <TabsContent value="presets" className="mt-2">
+              <div className="space-y-2">
+                {/* DPI selector for presets */}
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-slate-400 whitespace-nowrap">DPI:</Label>
+                  <Select
+                    value={String(customDpi)}
+                    onValueChange={(value) => setCustomDpi(Number(value))}
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600 flex-1" data-testid="select-preset-dpi">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DPI_PRESETS.map((preset) => (
+                        <SelectItem key={preset.value} value={String(preset.value)}>
+                          {preset.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Category selector */}
+                <Select
+                  value={selectedPresetCategory}
+                  onValueChange={(value) => setSelectedPresetCategory(value as PresetCategory)}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-preset-category">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRESET_CATEGORIES.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Presets for selected category */}
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {getPresetsByCategory(selectedPresetCategory).map((preset) => {
+                    const pixelDims = getPresetPixelDimensions(preset, customDpi);
+                    return (
+                      <div
+                        key={preset.id}
+                        className="flex items-center gap-1 p-2 rounded bg-slate-700/50 hover:bg-slate-700 transition-colors"
+                        data-testid={`preset-item-${preset.id}`}
+                      >
+                        <Button
+                          onClick={() => handlePresetSelect(preset)}
+                          variant="ghost"
+                          size="sm"
+                          className="flex-1 justify-start text-xs text-slate-200 h-auto py-1 px-2 hover:bg-slate-600"
+                          title="Edit preset settings before creating"
+                          data-testid={`button-preset-edit-${preset.id}`}
+                        >
+                          <div className="flex-1 text-left min-w-0">
+                            <div className="font-medium truncate">{preset.name}</div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              {formatPresetDimensions(preset, customUnit, customDpi)} — {pixelDims.width}×{pixelDims.height}px
+                            </div>
+                          </div>
+                        </Button>
+                        <Button
+                          onClick={() => handlePresetQuickCreate(preset)}
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 px-2 bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0"
+                          title="Create artboard immediately"
+                          data-testid={`button-preset-create-${preset.id}`}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Active Artboard Settings */}
