@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Canvas Rendering**: HTML5 Canvas with a custom rendering pipeline.
 - **Advanced UI**: Color harmony systems, unified property controls, responsive design, and enhanced status indicators.
 - **Properties Section**: Improved accordion for Canvas Settings and Quick Actions.
+- **Artboard Section**: Reorganized with orange/green accent scheme, parent "Active"/"Create" tabs, and nested "Custom"/"Presets" tabs for artboard creation. Tab selections persist via localStorage.
 
 ### Technical Implementations
 - **Frontend**: React 18, TypeScript, Vite, Shadcn/ui, Radix UI, Tailwind CSS, custom React hooks.
