@@ -1672,7 +1672,7 @@ export default function Sidebar({
                       value={customUnit}
                       onValueChange={(value) => handleUnitChange(value as UnitType)}
                     >
-                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-unit">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1689,7 +1689,7 @@ export default function Sidebar({
                       value={String(customDpi)}
                       onValueChange={(value) => setCustomDpi(Number(value))}
                     >
-                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-dpi">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1736,6 +1736,7 @@ export default function Sidebar({
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        arrowVariant="orange"
                         data-testid="input-custom-width"
                       />
                     </div>
@@ -1748,6 +1749,7 @@ export default function Sidebar({
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        arrowVariant="orange"
                         data-testid="input-custom-height"
                       />
                     </div>
@@ -1913,7 +1915,7 @@ export default function Sidebar({
                     value={String(currentArtboard.dpi ?? 72)}
                     onValueChange={(value) => onUpdateArtboard(currentArtboard.id, { dpi: parseInt(value) })}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-dpi">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-dpi">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1933,7 +1935,7 @@ export default function Sidebar({
                     value={currentArtboard.unitType ?? 'pixels'}
                     onValueChange={(value: UnitType) => onUpdateArtboard(currentArtboard.id, { unitType: value })}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-artboard-unit">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-unit">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1966,7 +1968,7 @@ export default function Sidebar({
                       }
                     }}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-aspect-ratio">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-aspect-ratio">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2052,6 +2054,7 @@ export default function Sidebar({
                         min={1}
                         max={20000}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        arrowVariant="orange"
                         data-testid="input-artboard-width"
                       />
                     </div>
@@ -2096,6 +2099,7 @@ export default function Sidebar({
                         min={1}
                         max={20000}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                        arrowVariant="orange"
                         data-testid="input-artboard-height"
                       />
                     </div>

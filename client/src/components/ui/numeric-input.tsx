@@ -9,11 +9,15 @@ export interface NumericInputProps extends Omit<React.InputHTMLAttributes<HTMLIn
   min?: number;
   max?: number;
   step?: number;
+  arrowVariant?: 'default' | 'orange';
 }
 
 const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
-  ({ className, value, onChange, onBlur, min = -Infinity, max = Infinity, step = 1, ...props }, ref) => {
+  ({ className, value, onChange, onBlur, min = -Infinity, max = Infinity, step = 1, arrowVariant = 'default', ...props }, ref) => {
     const [localValue, setLocalValue] = React.useState(String(value));
+    
+    const arrowColor = arrowVariant === 'orange' ? 'text-orange-500' : 'text-slate-300';
+    const arrowHoverBg = arrowVariant === 'orange' ? 'hover:bg-orange-900/30' : 'hover:bg-slate-600';
 
     React.useEffect(() => {
       setLocalValue(String(value));
@@ -84,18 +88,18 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
           <button
             type="button"
             onClick={handleIncrement}
-            className="h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 hover:bg-slate-600 rounded-sm transition-colors"
+            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
-            <ChevronUp className="h-3 w-3 text-slate-300" />
+            <ChevronUp className={cn("h-3 w-3", arrowColor)} />
           </button>
           <button
             type="button"
             onClick={handleDecrement}
-            className="h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 hover:bg-slate-600 rounded-sm transition-colors"
+            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
-            <ChevronDown className="h-3 w-3 text-slate-300" />
+            <ChevronDown className={cn("h-3 w-3", arrowColor)} />
           </button>
         </div>
       </div>
