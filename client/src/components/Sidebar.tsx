@@ -1385,8 +1385,40 @@ export default function Sidebar({
     const [customAspectRatio, setCustomAspectRatio] = useState('1:√2'); // A4 aspect ratio
     const [customUnit, setCustomUnit] = useState<UnitType>('inches');
     const [customDpi, setCustomDpi] = useState(300); // Default to print-quality 300 DPI
-    const [selectedPresetCategory, setSelectedPresetCategory] = useState<PresetCategory>('paper');
-    const [activeTab, setActiveTab] = useState<'custom' | 'presets'>('custom');
+    
+    // Persist tab and category in localStorage
+    const [selectedPresetCategory, setSelectedPresetCategory] = useState<PresetCategory>(() => {
+      try {
+        const saved = localStorage.getItem('artboard-preset-category');
+        return (saved as PresetCategory) || 'paper';
+      } catch {
+        return 'paper';
+      }
+    });
+    const [activeTab, setActiveTab] = useState<'custom' | 'presets'>(() => {
+      try {
+        const saved = localStorage.getItem('artboard-create-tab');
+        return (saved === 'custom' || saved === 'presets') ? saved : 'custom';
+      } catch {
+        return 'custom';
+      }
+    });
+    
+    // Persist tab selection to localStorage
+    const handleTabChange = (tab: 'custom' | 'presets') => {
+      setActiveTab(tab);
+      try {
+        localStorage.setItem('artboard-create-tab', tab);
+      } catch {}
+    };
+    
+    // Persist category selection to localStorage
+    const handleCategoryChange = (category: PresetCategory) => {
+      setSelectedPresetCategory(category);
+      try {
+        localStorage.setItem('artboard-preset-category', category);
+      } catch {}
+    };
     
     // Calculate live pixel dimensions from physical dimensions and DPI
     const livePixelWidth = customUnit === 'pixels' 
@@ -1565,7 +1597,7 @@ export default function Sidebar({
         <div className="space-y-2">
           <Label className="text-xs text-slate-400">Create New</Label>
           
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'custom' | 'presets')} className="w-full">
+          <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as 'custom' | 'presets')} className="w-full">
             <TabsList className="w-full grid grid-cols-2 bg-slate-800 h-8">
               <TabsTrigger 
                 value="custom" 
@@ -1751,7 +1783,7 @@ export default function Sidebar({
                 {/* Category selector */}
                 <Select
                   value={selectedPresetCategory}
-                  onValueChange={(value) => setSelectedPresetCategory(value as PresetCategory)}
+                  onValueChange={(value) => handleCategoryChange(value as PresetCategory)}
                 >
                   <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600" data-testid="select-preset-category">
                     <SelectValue />

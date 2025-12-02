@@ -98,14 +98,16 @@ export function getEffectivePrintConfig(artboard: {
 export function getBleedPixels(artboard: { printConfig?: PrintConfig; dpi?: number }): number {
   const config = getEffectivePrintConfig(artboard);
   const bleed = config.overlays.bleed;
-  return printUnitsToPixels(bleed.amount, bleed.unit, config.outputSpecs.dpi);
+  const overlayUnit = config.overlays.overlayUnit ?? 'pixels';
+  return printUnitsToPixels(bleed.amount, overlayUnit, config.outputSpecs.dpi);
 }
 
 // Helper function to calculate safe zone in pixels for an artboard
 export function getSafeZonePixels(artboard: { printConfig?: PrintConfig; dpi?: number }): number {
   const config = getEffectivePrintConfig(artboard);
   const safeZone = config.overlays.safeZone;
-  return printUnitsToPixels(safeZone.amount, safeZone.unit, config.outputSpecs.dpi);
+  const overlayUnit = config.overlays.overlayUnit ?? 'pixels';
+  return printUnitsToPixels(safeZone.amount, overlayUnit, config.outputSpecs.dpi);
 }
 
 // ============================================================================
