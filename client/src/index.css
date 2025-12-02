@@ -347,8 +347,8 @@
     }
   }
 
-  /* Orange chevron for artboard section select dropdowns */
+  /* Gray chevron for artboard section select dropdowns */
   .artboard-select svg {
-    color: #f97316 !important;
+    color: #94a3b8 !important;
   }
 }

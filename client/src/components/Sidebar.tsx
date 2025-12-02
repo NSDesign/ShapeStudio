@@ -1617,42 +1617,42 @@ export default function Sidebar({
 
         {/* Parent Tabs: Active / Create */}
         <Tabs value={parentTab} onValueChange={(v) => handleParentTabChange(v as 'active' | 'create')} className="w-full">
-          <TabsList className="w-full grid grid-cols-2 bg-slate-800/50 h-8 p-1">
+          <div className="flex gap-2 w-full">
             <TabsTrigger 
               value="active" 
-              className="text-xs text-slate-300 data-[state=active]:bg-orange-600 data-[state=active]:text-white"
+              className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-orange-600 data-[state=active]:border-orange-600 data-[state=active]:text-white h-8"
               data-testid="tab-active-artboard"
             >
               Active
             </TabsTrigger>
             <TabsTrigger 
               value="create" 
-              className="text-xs text-slate-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"
+              className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-8"
               data-testid="tab-create-artboard"
             >
               Create
             </TabsTrigger>
-          </TabsList>
+          </div>
           
           {/* Create Tab Content */}
           <TabsContent value="create" className="mt-2">
             <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as 'custom' | 'presets')} className="w-full">
-              <TabsList className="w-full grid grid-cols-2 bg-slate-700/50 h-7 p-0.5">
+              <div className="flex gap-2 w-full">
                 <TabsTrigger 
                   value="custom" 
-                  className="text-xs text-slate-300 data-[state=active]:bg-green-700 data-[state=active]:text-white"
+                  className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-7"
                   data-testid="tab-custom"
                 >
                   Custom
                 </TabsTrigger>
                 <TabsTrigger 
                   value="presets" 
-                  className="text-xs text-slate-300 data-[state=active]:bg-green-700 data-[state=active]:text-white"
+                  className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-7"
                   data-testid="tab-presets"
                 >
                   Presets
                 </TabsTrigger>
-              </TabsList>
+              </div>
             
             {/* Custom Tab Content */}
             <TabsContent value="custom" className="mt-2">
@@ -1676,7 +1676,7 @@ export default function Sidebar({
                       value={customUnit}
                       onValueChange={(value) => handleUnitChange(value as UnitType)}
                     >
-                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-unit">
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-artboard-unit">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1693,7 +1693,7 @@ export default function Sidebar({
                       value={String(customDpi)}
                       onValueChange={(value) => setCustomDpi(Number(value))}
                     >
-                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-dpi">
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-artboard-dpi">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1740,7 +1740,6 @@ export default function Sidebar({
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        arrowVariant="orange"
                         data-testid="input-custom-width"
                       />
                     </div>
@@ -1753,7 +1752,6 @@ export default function Sidebar({
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        arrowVariant="orange"
                         data-testid="input-custom-height"
                       />
                     </div>
@@ -1919,7 +1917,7 @@ export default function Sidebar({
                     value={String(currentArtboard.dpi ?? 72)}
                     onValueChange={(value) => onUpdateArtboard(currentArtboard.id, { dpi: parseInt(value) })}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-dpi">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-artboard-dpi">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1939,7 +1937,7 @@ export default function Sidebar({
                     value={currentArtboard.unitType ?? 'pixels'}
                     onValueChange={(value: UnitType) => onUpdateArtboard(currentArtboard.id, { unitType: value })}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-artboard-unit">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-artboard-unit">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1972,7 +1970,7 @@ export default function Sidebar({
                       }
                     }}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-white artboard-select" data-testid="select-aspect-ratio">
+                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-aspect-ratio">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2058,7 +2056,6 @@ export default function Sidebar({
                         min={1}
                         max={20000}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        arrowVariant="orange"
                         data-testid="input-artboard-width"
                       />
                     </div>
@@ -2103,7 +2100,6 @@ export default function Sidebar({
                         min={1}
                         max={20000}
                         className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                        arrowVariant="orange"
                         data-testid="input-artboard-height"
                       />
                     </div>
