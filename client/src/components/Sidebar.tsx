@@ -1488,6 +1488,8 @@ export default function Sidebar({
         name: customName,
         width: livePixelWidth,
         height: livePixelHeight,
+        dpi: customDpi,
+        unitType: customUnit,
         backgroundColor: customBackgroundColor,
         category: 'custom' as const,
         description: `${livePixelWidth}×${livePixelHeight}px at ${customDpi} DPI`
@@ -1513,7 +1515,9 @@ export default function Sidebar({
         name: preset.name,
         width: pixelDims.width,
         height: pixelDims.height,
-        backgroundColor: '#ffffff',
+        dpi: customDpi,
+        unitType: 'inches' as const,
+        backgroundColor: customBackgroundColor,
         category: 'print' as const,
         description: `${pixelDims.width}×${pixelDims.height}px at ${customDpi} DPI`
       };
