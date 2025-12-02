@@ -1617,17 +1617,17 @@ export default function Sidebar({
 
         {/* Parent Tabs: Active / Create */}
         <Tabs value={parentTab} onValueChange={(v) => handleParentTabChange(v as 'active' | 'create')} className="w-full">
-          <TabsList className="w-full grid grid-cols-2 bg-slate-800 h-8">
+          <TabsList className="w-full grid grid-cols-2 bg-slate-800/50 h-8 p-1">
             <TabsTrigger 
               value="active" 
-              className="text-xs data-[state=active]:bg-orange-600 data-[state=active]:text-white"
+              className="text-xs text-slate-300 data-[state=active]:bg-orange-600 data-[state=active]:text-white"
               data-testid="tab-active-artboard"
             >
               Active
             </TabsTrigger>
             <TabsTrigger 
               value="create" 
-              className="text-xs data-[state=active]:bg-green-600 data-[state=active]:text-white"
+              className="text-xs text-slate-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"
               data-testid="tab-create-artboard"
             >
               Create
@@ -1637,17 +1637,17 @@ export default function Sidebar({
           {/* Create Tab Content */}
           <TabsContent value="create" className="mt-2">
             <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as 'custom' | 'presets')} className="w-full">
-              <TabsList className="w-full grid grid-cols-2 bg-slate-700 h-7">
+              <TabsList className="w-full grid grid-cols-2 bg-slate-700/50 h-7 p-0.5">
                 <TabsTrigger 
                   value="custom" 
-                  className="text-xs data-[state=active]:bg-slate-600"
+                  className="text-xs text-slate-300 data-[state=active]:bg-green-700 data-[state=active]:text-white"
                   data-testid="tab-custom"
                 >
                   Custom
                 </TabsTrigger>
                 <TabsTrigger 
                   value="presets" 
-                  className="text-xs data-[state=active]:bg-slate-600"
+                  className="text-xs text-slate-300 data-[state=active]:bg-green-700 data-[state=active]:text-white"
                   data-testid="tab-presets"
                 >
                   Presets
@@ -1789,7 +1789,7 @@ export default function Sidebar({
                 </div>
                 <Button
                   onClick={handleCreateCustomArtboard}
-                  className="w-full h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
                   data-testid="button-create-artboard"
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -1867,7 +1867,7 @@ export default function Sidebar({
                           onClick={() => handlePresetQuickCreate(preset)}
                           variant="secondary"
                           size="sm"
-                          className="h-7 px-2 bg-orange-600 hover:bg-orange-700 text-white flex-shrink-0"
+                          className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0"
                           title="Create artboard immediately"
                           data-testid={`button-preset-create-${preset.id}`}
                         >
