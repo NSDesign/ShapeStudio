@@ -11,6 +11,7 @@ import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 import { getEffectiveTranslateRange } from '../lib/artboardUtils';
+import { validateArtboardDimensions } from '../lib/artboardPresets';
 
 // Interface for overriding UI state during generation (used for generation sets)
 export interface GenerationContextOverrides {
@@ -439,14 +440,26 @@ export const useShapeEditor = () => {
         },
       };
       
+      // Validate and auto-correct artboard dimensions based on preset name
+      const artboardName = appSettingsDefaults.artboardName ?? 'Artboard 1';
+      const storedWidth = appSettingsDefaults.artboardWidth ?? 800;
+      const storedHeight = appSettingsDefaults.artboardHeight ?? 600;
+      const dpi = appSettingsDefaults.artboardDpi ?? 72;
+      
+      const validatedDims = validateArtboardDimensions(artboardName, storedWidth, storedHeight, dpi);
+      
+      if (validatedDims.corrected) {
+        console.log(`🔧 Auto-correcting artboard dimensions for "${artboardName}": ${storedWidth}×${storedHeight} → ${validatedDims.width}×${validatedDims.height} at ${dpi} DPI`);
+      }
+      
       // Restore active artboard settings including print configuration
       setArtboards(prev => prev.map(ab => 
         ab.id === activeArtboard ? {
           ...ab,
-          name: appSettingsDefaults.artboardName ?? ab.name,
-          width: appSettingsDefaults.artboardWidth ?? ab.width,
-          height: appSettingsDefaults.artboardHeight ?? ab.height,
-          dpi: appSettingsDefaults.artboardDpi ?? ab.dpi ?? 72,
+          name: artboardName,
+          width: validatedDims.width,
+          height: validatedDims.height,
+          dpi: dpi,
           unitType: appSettingsDefaults.artboardUnitType ?? ab.unitType ?? 'pixels',
           backgroundColor: appSettingsDefaults.artboardBackgroundColor ?? ab.backgroundColor,
           displayGrid: appSettingsDefaults.artboardDisplayGrid ?? ab.displayGrid,

@@ -1171,11 +1171,36 @@ export default function Sidebar({
     const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
     const unitLabel = overlayUnit === 'pixels' ? 'px' : overlayUnit === 'inches' ? 'in' : overlayUnit;
     
+    const displayDimensions = getArtboardDisplayDimensions(
+      currentArtboard.width,
+      currentArtboard.height,
+      currentArtboard.dpi ?? 72,
+      currentArtboard.unitType ?? 'pixels'
+    );
+    
     return (
       <div className="space-y-3">
         <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
         
         <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
+          
+          {/* Artboard Info Display - Name, Dimensions, DPI */}
+          <div className="flex items-center justify-between text-[10px] bg-slate-900/50 p-2 rounded border border-slate-700">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-slate-400 font-medium truncate max-w-[100px]" title={currentArtboard.name}>
+                {currentArtboard.name}
+              </span>
+              <span className="text-slate-500">|</span>
+              <span className="text-slate-300 whitespace-nowrap">
+                {displayDimensions.widthFormatted} × {displayDimensions.heightFormatted} {getUnitLabel(currentArtboard.unitType ?? 'pixels')}
+              </span>
+            </div>
+            <span className="text-slate-400 whitespace-nowrap ml-2">
+              {currentArtboard.dpi ?? 72} DPI
+            </span>
+          </div>
+          
+          <Separator className="bg-slate-600/30" />
           
           {/* Unified Overlay Unit Selector */}
           <div className="space-y-1">

@@ -309,3 +309,87 @@ export function convertLegacyPreset(
     aspectRatio: calculateAspectRatio(widthInches, heightInches)
   };
 }
+
+/**
+ * Find a preset by matching its name (case-insensitive, partial match)
+ * Used for auto-correcting persisted artboard dimensions
+ */
+export function findPresetByName(artboardName: string): ArtboardPresetPhysical | undefined {
+  const normalizedName = artboardName.toLowerCase().trim();
+  
+  // First try exact match on preset name
+  const exactMatch = ARTBOARD_PRESETS_PHYSICAL.find(p => 
+    p.name.toLowerCase() === normalizedName
+  );
+  if (exactMatch) return exactMatch;
+  
+  // Try matching preset ID in the name
+  const idMatch = ARTBOARD_PRESETS_PHYSICAL.find(p => 
+    normalizedName.includes(p.id.toLowerCase())
+  );
+  if (idMatch) return idMatch;
+  
+  // Try matching just the core name part (e.g., "A4" from "A4 Paper" or "My A4 Document")
+  for (const preset of ARTBOARD_PRESETS_PHYSICAL) {
+    const presetName = preset.name.toLowerCase();
+    if (normalizedName.includes(presetName) || presetName.includes(normalizedName)) {
+      return preset;
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * Validate and auto-correct artboard dimensions based on preset name and DPI
+ * Returns corrected dimensions if they don't match the expected values, or null if no correction needed
+ */
+export function validateArtboardDimensions(
+  artboardName: string,
+  currentWidth: number,
+  currentHeight: number,
+  dpi: number
+): { width: number; height: number; corrected: boolean; presetId?: string } {
+  const matchingPreset = findPresetByName(artboardName);
+  
+  if (!matchingPreset) {
+    // No matching preset found, dimensions are custom - don't correct
+    return { width: currentWidth, height: currentHeight, corrected: false };
+  }
+  
+  const expectedDims = getPresetPixelDimensions(matchingPreset, dpi);
+  
+  // Check if current dimensions match expected (with 2px tolerance for rounding)
+  // Also check for swapped dimensions (portrait vs landscape)
+  const matchesNormal = 
+    Math.abs(currentWidth - expectedDims.width) <= 2 &&
+    Math.abs(currentHeight - expectedDims.height) <= 2;
+  
+  const matchesSwapped = 
+    Math.abs(currentWidth - expectedDims.height) <= 2 &&
+    Math.abs(currentHeight - expectedDims.width) <= 2;
+  
+  if (matchesNormal) {
+    return { width: currentWidth, height: currentHeight, corrected: false, presetId: matchingPreset.id };
+  }
+  
+  if (matchesSwapped) {
+    // Dimensions are correctly swapped (portrait <-> landscape), user intentionally changed orientation
+    // Keep the user's orientation choice but use correct calculated values
+    return { 
+      width: expectedDims.height, 
+      height: expectedDims.width, 
+      corrected: false,  // Not a correction, user chose this orientation
+      presetId: matchingPreset.id 
+    };
+  }
+  
+  // Dimensions are corrupted (neither match normal nor swapped) - restore to preset's default orientation
+  // This handles cases where dimensions were incorrectly calculated/stored
+  return { 
+    width: expectedDims.width, 
+    height: expectedDims.height, 
+    corrected: true, 
+    presetId: matchingPreset.id 
+  };
+}
