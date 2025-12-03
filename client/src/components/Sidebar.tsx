@@ -95,7 +95,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Link2,
-  Unlink2
+  Unlink2,
+  RectangleVertical,
+  RectangleHorizontal
 } from 'lucide-react';
 import { ShapeType, ShapeGroup as ShapeGroupClass, BlendMode, ScatterSettings, CanvasSettings, Artboard, ArtboardPreset, ScalarMode, getDefaultLineVectorConfig } from '@/lib/shapeTypes';
 import { ModeField } from '@/components/ModeField';
@@ -1710,25 +1712,61 @@ export default function Sidebar({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs text-slate-400">Dimensions ({getUnitLabel(customUnit)})</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-6 px-2 ${customLinkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
-                      onClick={() => {
-                        setCustomLinkedDimensions(!customLinkedDimensions);
-                        if (!customLinkedDimensions) {
-                          setCustomAspectRatio('custom');
-                        }
-                      }}
-                      title={customLinkedDimensions ? 'Unlock dimensions' : 'Lock dimensions (maintain aspect ratio)'}
-                      data-testid="button-link-custom-dimensions"
-                    >
-                      {customLinkedDimensions ? (
-                        <Link2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <Unlink2 className="w-3.5 h-3.5" />
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {/* Portrait/Landscape Toggle */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 w-6 p-0 ${customWidth <= customHeight ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+                        onClick={() => {
+                          if (customWidth > customHeight) {
+                            const temp = customWidth;
+                            setCustomWidth(customHeight);
+                            setCustomHeight(temp);
+                          }
+                        }}
+                        title="Portrait orientation"
+                        data-testid="button-custom-orientation-portrait"
+                      >
+                        <RectangleVertical className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 w-6 p-0 ${customWidth > customHeight ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+                        onClick={() => {
+                          if (customWidth <= customHeight) {
+                            const temp = customWidth;
+                            setCustomWidth(customHeight);
+                            setCustomHeight(temp);
+                          }
+                        }}
+                        title="Landscape orientation"
+                        data-testid="button-custom-orientation-landscape"
+                      >
+                        <RectangleHorizontal className="w-3.5 h-3.5" />
+                      </Button>
+                      {/* Link Dimensions Toggle */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 px-2 ${customLinkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
+                        onClick={() => {
+                          setCustomLinkedDimensions(!customLinkedDimensions);
+                          if (!customLinkedDimensions) {
+                            setCustomAspectRatio('custom');
+                          }
+                        }}
+                        title={customLinkedDimensions ? 'Unlock dimensions' : 'Lock dimensions (maintain aspect ratio)'}
+                        data-testid="button-link-custom-dimensions"
+                      >
+                        {customLinkedDimensions ? (
+                          <Link2 className="w-3.5 h-3.5" />
+                        ) : (
+                          <Unlink2 className="w-3.5 h-3.5" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
@@ -1949,46 +1987,92 @@ export default function Sidebar({
                   </Select>
                 </div>
 
-                {/* Aspect Ratio Presets */}
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Aspect Ratio</Label>
-                  <Select
-                    value={currentArtboard.aspectRatio ?? 'custom'}
-                    onValueChange={(value: string) => {
-                      if (value === 'custom') {
-                        onUpdateArtboard(currentArtboard.id, { aspectRatio: 'custom' });
-                      } else {
-                        const [w, h] = value.split(':').map(Number);
-                        const aspectRatioValue = w / h;
-                        const currentWidth = currentArtboard.width;
-                        const newHeight = Math.round(currentWidth / aspectRatioValue);
-                        onUpdateArtboard(currentArtboard.id, { 
-                          height: newHeight, 
-                          aspectRatio: value,
-                          linkedDimensions: true 
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-aspect-ratio">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="custom">Custom</SelectItem>
-                      <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                      <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
-                      <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
-                      <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
-                      <SelectItem value="5:4">5:4 (Landscape)</SelectItem>
-                      <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
-                      <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
-                      <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
-                      <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Document Type & Size Presets */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Document Preset</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      value={(() => {
+                        const matchingPreset = ARTBOARD_PRESETS_PHYSICAL.find(p => 
+                          Math.abs(p.widthInches * (currentArtboard.dpi ?? 72) - currentArtboard.width) < 2 &&
+                          Math.abs(p.heightInches * (currentArtboard.dpi ?? 72) - currentArtboard.height) < 2
+                        );
+                        return matchingPreset?.category ?? 'paper';
+                      })()}
+                      onValueChange={(category: PresetCategory) => {
+                        const presets = getPresetsByCategory(category);
+                        if (presets.length > 0) {
+                          const firstPreset = presets[0];
+                          const dpi = currentArtboard.dpi ?? 72;
+                          const newWidth = Math.round(firstPreset.widthInches * dpi);
+                          const newHeight = Math.round(firstPreset.heightInches * dpi);
+                          onUpdateArtboard(currentArtboard.id, {
+                            name: firstPreset.name,
+                            width: newWidth,
+                            height: newHeight,
+                            aspectRatio: firstPreset.aspectRatio,
+                            linkedDimensions: true
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-preset-category-active">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRESET_CATEGORIES.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={(() => {
+                        const matchingPreset = ARTBOARD_PRESETS_PHYSICAL.find(p => 
+                          Math.abs(p.widthInches * (currentArtboard.dpi ?? 72) - currentArtboard.width) < 2 &&
+                          Math.abs(p.heightInches * (currentArtboard.dpi ?? 72) - currentArtboard.height) < 2
+                        );
+                        return matchingPreset?.id ?? '';
+                      })()}
+                      onValueChange={(presetId: string) => {
+                        const preset = ARTBOARD_PRESETS_PHYSICAL.find(p => p.id === presetId);
+                        if (preset) {
+                          const dpi = currentArtboard.dpi ?? 72;
+                          const newWidth = Math.round(preset.widthInches * dpi);
+                          const newHeight = Math.round(preset.heightInches * dpi);
+                          onUpdateArtboard(currentArtboard.id, {
+                            name: preset.name,
+                            width: newWidth,
+                            height: newHeight,
+                            aspectRatio: preset.aspectRatio,
+                            linkedDimensions: true
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200 artboard-select" data-testid="select-preset-size-active">
+                        <SelectValue placeholder="Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(() => {
+                          const matchingPreset = ARTBOARD_PRESETS_PHYSICAL.find(p => 
+                            Math.abs(p.widthInches * (currentArtboard.dpi ?? 72) - currentArtboard.width) < 2 &&
+                            Math.abs(p.heightInches * (currentArtboard.dpi ?? 72) - currentArtboard.height) < 2
+                          );
+                          const category = matchingPreset?.category ?? 'paper';
+                          return getPresetsByCategory(category).map((preset) => (
+                            <SelectItem key={preset.id} value={preset.id}>
+                              {preset.name}
+                            </SelectItem>
+                          ));
+                        })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                {/* Dimensions with Linked Toggle */}
+                {/* Dimensions with Orientation and Linked Toggle */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs text-slate-400">
@@ -1996,23 +2080,61 @@ export default function Sidebar({
                         <span className="text-slate-500">({getUnitLabel(currentArtboard.unitType ?? 'pixels')})</span>
                       )}
                     </Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-6 px-2 ${currentArtboard.linkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
-                      onClick={() => onUpdateArtboard(currentArtboard.id, { 
-                        linkedDimensions: !currentArtboard.linkedDimensions,
-                        aspectRatio: !currentArtboard.linkedDimensions ? 'custom' : currentArtboard.aspectRatio
-                      })}
-                      title={currentArtboard.linkedDimensions ? 'Unlock dimensions (allows independent resize)' : 'Lock dimensions (maintain aspect ratio)'}
-                      data-testid="button-link-dimensions"
-                    >
-                      {currentArtboard.linkedDimensions ? (
-                        <Link2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <Unlink2 className="w-3.5 h-3.5" />
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {/* Portrait/Landscape Toggle */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 w-6 p-0 ${currentArtboard.width <= currentArtboard.height ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+                        onClick={() => {
+                          if (currentArtboard.width > currentArtboard.height) {
+                            onUpdateArtboard(currentArtboard.id, {
+                              width: currentArtboard.height,
+                              height: currentArtboard.width
+                            });
+                          }
+                        }}
+                        title="Portrait orientation"
+                        data-testid="button-orientation-portrait"
+                      >
+                        <RectangleVertical className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 w-6 p-0 ${currentArtboard.width > currentArtboard.height ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+                        onClick={() => {
+                          if (currentArtboard.width <= currentArtboard.height) {
+                            onUpdateArtboard(currentArtboard.id, {
+                              width: currentArtboard.height,
+                              height: currentArtboard.width
+                            });
+                          }
+                        }}
+                        title="Landscape orientation"
+                        data-testid="button-orientation-landscape"
+                      >
+                        <RectangleHorizontal className="w-3.5 h-3.5" />
+                      </Button>
+                      {/* Link Dimensions Toggle */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-6 px-2 ${currentArtboard.linkedDimensions ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500'}`}
+                        onClick={() => onUpdateArtboard(currentArtboard.id, { 
+                          linkedDimensions: !currentArtboard.linkedDimensions,
+                          aspectRatio: !currentArtboard.linkedDimensions ? 'custom' : currentArtboard.aspectRatio
+                        })}
+                        title={currentArtboard.linkedDimensions ? 'Unlock dimensions (allows independent resize)' : 'Lock dimensions (maintain aspect ratio)'}
+                        data-testid="button-link-dimensions"
+                      >
+                        {currentArtboard.linkedDimensions ? (
+                          <Link2 className="w-3.5 h-3.5" />
+                        ) : (
+                          <Unlink2 className="w-3.5 h-3.5" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
