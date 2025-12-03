@@ -1620,14 +1620,14 @@ export default function Sidebar({
           <TabsList className="flex gap-2 w-full bg-transparent p-0 h-auto">
             <TabsTrigger 
               value="active" 
-              className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-orange-600 data-[state=active]:border-orange-600 data-[state=active]:text-white h-8"
+              className="flex-1 text-xs text-slate-400 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:border-blue-600 data-[state=active]:text-white h-8"
               data-testid="tab-active-artboard"
             >
               Active
             </TabsTrigger>
             <TabsTrigger 
               value="create" 
-              className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-8"
+              className="flex-1 text-xs text-slate-400 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:border-blue-600 data-[state=active]:text-white h-8"
               data-testid="tab-create-artboard"
             >
               Create
@@ -1640,14 +1640,14 @@ export default function Sidebar({
               <TabsList className="flex gap-2 w-full bg-transparent p-0 h-auto">
                 <TabsTrigger 
                   value="custom" 
-                  className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-7"
+                  className="flex-1 text-xs text-slate-400 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-blue-600 data-[state=active]:border-blue-600 data-[state=active]:text-white h-7"
                   data-testid="tab-custom"
                 >
                   Custom
                 </TabsTrigger>
                 <TabsTrigger 
                   value="presets" 
-                  className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-7"
+                  className="flex-1 text-xs text-slate-400 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-blue-600 data-[state=active]:border-blue-600 data-[state=active]:text-white h-7"
                   data-testid="tab-presets"
                 >
                   Presets
@@ -1761,7 +1761,7 @@ export default function Sidebar({
                 {/* Live pixel preview - only show when not in pixel mode */}
                 {customUnit !== 'pixels' && (
                   <div className="text-xs text-slate-400 bg-slate-900/50 p-2 rounded border border-slate-700">
-                    <span className="text-slate-500">Output:</span> {livePixelWidth} × {livePixelHeight} px
+                    <span className="text-slate-500">Output:</span> <span className="text-slate-400">{livePixelWidth} × {livePixelHeight} px</span>
                     <span className="text-slate-500 ml-2">({(livePixelWidth * livePixelHeight / 1000000).toFixed(1)} MP)</span>
                   </div>
                 )}
@@ -1850,12 +1850,12 @@ export default function Sidebar({
                           onClick={() => handlePresetSelect(preset)}
                           variant="ghost"
                           size="sm"
-                          className="flex-1 justify-start text-xs text-slate-200 h-auto py-1 px-2 hover:bg-slate-600"
+                          className="flex-1 justify-start text-xs h-auto py-1 px-2 hover:bg-slate-600"
                           title="Edit preset settings before creating"
                           data-testid={`button-preset-edit-${preset.id}`}
                         >
                           <div className="flex-1 text-left min-w-0">
-                            <div className="font-medium truncate">{preset.name}</div>
+                            <div className="font-medium truncate text-slate-100">{preset.name}</div>
                             <div className="text-[10px] text-slate-400 truncate">
                               {formatPresetDimensions(preset, customUnit, customDpi)} — {pixelDims.width}×{pixelDims.height}px
                             </div>
