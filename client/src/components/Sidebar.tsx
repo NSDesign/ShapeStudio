@@ -1449,7 +1449,7 @@ export default function Sidebar({
     const handleWidthChange = (newWidth: number) => {
       if (customLinkedDimensions && customWidth > 0) {
         const aspectRatio = customWidth / customHeight;
-        const newHeight = Math.round(newWidth / aspectRatio);
+        const newHeight = newWidth / aspectRatio;
         setCustomWidth(newWidth);
         setCustomHeight(newHeight);
       } else {
@@ -1461,7 +1461,7 @@ export default function Sidebar({
     const handleHeightChange = (newHeight: number) => {
       if (customLinkedDimensions && customHeight > 0) {
         const aspectRatio = customWidth / customHeight;
-        const newWidth = Math.round(newHeight * aspectRatio);
+        const newWidth = newHeight * aspectRatio;
         setCustomWidth(newWidth);
         setCustomHeight(newHeight);
       } else {
@@ -1476,7 +1476,7 @@ export default function Sidebar({
       } else {
         const [w, h] = value.split(':').map(Number);
         const aspectRatioValue = w / h;
-        const newHeight = Math.round(customWidth / aspectRatioValue);
+        const newHeight = customWidth / aspectRatioValue;
         setCustomHeight(newHeight);
         setCustomAspectRatio(value);
         setCustomLinkedDimensions(true);
