@@ -18,6 +18,8 @@ Preferred communication style: Simple, everyday language.
 - **Advanced UI**: Color harmony systems, unified property controls, responsive design, and enhanced status indicators.
 - **Properties Section**: Improved accordion for Canvas Settings and Quick Actions.
 - **Artboard Section**: Reorganized with orange/green accent scheme, parent "Active"/"Create" tabs, and nested "Custom"/"Presets" tabs for artboard creation. Tab selections persist via localStorage.
+- **UI Color Standardization**: All dropdown chevrons and NumericInput arrows use gray (#94a3b8), Select trigger text uses slate-200, tabs use isolated button appearance with flex gaps (no container backgrounds), child tabs match parent green-600 shade.
+- **Artboard Sync**: Newly created artboards are automatically selected; deletion uses functional state updates to prevent stale closure issues.
 
 ### Technical Implementations
 - **Frontend**: React 18, TypeScript, Vite, Shadcn/ui, Radix UI, Tailwind CSS, custom React hooks.
