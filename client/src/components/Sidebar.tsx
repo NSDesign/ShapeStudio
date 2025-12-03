@@ -1617,7 +1617,7 @@ export default function Sidebar({
 
         {/* Parent Tabs: Active / Create */}
         <Tabs value={parentTab} onValueChange={(v) => handleParentTabChange(v as 'active' | 'create')} className="w-full">
-          <div className="flex gap-2 w-full">
+          <TabsList className="flex gap-2 w-full bg-transparent p-0 h-auto">
             <TabsTrigger 
               value="active" 
               className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-800 data-[state=active]:bg-orange-600 data-[state=active]:border-orange-600 data-[state=active]:text-white h-8"
@@ -1632,7 +1632,7 @@ export default function Sidebar({
             >
               Create
             </TabsTrigger>
-          </div>
+          </TabsList>
           
           {/* Create Tab Content */}
           <TabsContent value="create" className="mt-2">
