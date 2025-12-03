@@ -1891,8 +1891,8 @@ export default function Sidebar({
               );
               
               return (
-                <div className="space-y-2 p-3 bg-orange-900/20 border border-orange-500/30 rounded-lg">
-                  <Label className="text-xs text-orange-300">Active Artboard Settings</Label>
+                <div className="space-y-2 p-3 bg-slate-800/50 border border-slate-600 rounded-lg">
+                  <Label className="text-xs text-slate-400">Active Artboard Settings</Label>
               
               <div className="space-y-2">
                 {/* Artboard Name */}
