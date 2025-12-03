@@ -1787,7 +1787,7 @@ export default function Sidebar({
                 </div>
                 <Button
                   onClick={handleCreateCustomArtboard}
-                  className="w-full h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                   data-testid="button-create-artboard"
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -1865,7 +1865,7 @@ export default function Sidebar({
                           onClick={() => handlePresetQuickCreate(preset)}
                           variant="secondary"
                           size="sm"
-                          className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white flex-shrink-0"
+                          className="h-7 px-2 bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0"
                           title="Create artboard immediately"
                           data-testid={`button-preset-create-${preset.id}`}
                         >
