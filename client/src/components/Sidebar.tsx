@@ -1637,7 +1637,7 @@ export default function Sidebar({
           {/* Create Tab Content */}
           <TabsContent value="create" className="mt-2">
             <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as 'custom' | 'presets')} className="w-full">
-              <div className="flex gap-2 w-full">
+              <TabsList className="flex gap-2 w-full bg-transparent p-0 h-auto">
                 <TabsTrigger 
                   value="custom" 
                   className="flex-1 text-xs text-slate-300 rounded-md border border-slate-600 bg-slate-700 data-[state=active]:bg-green-600 data-[state=active]:border-green-600 data-[state=active]:text-white h-7"
@@ -1652,7 +1652,7 @@ export default function Sidebar({
                 >
                   Presets
                 </TabsTrigger>
-              </div>
+              </TabsList>
             
             {/* Custom Tab Content */}
             <TabsContent value="custom" className="mt-2">
