@@ -4296,8 +4296,9 @@ export const useShapeEditor = () => {
     const centerX = -preset.width / 2;
     const centerY = -preset.height / 2;
 
+    const newArtboardId = `artboard_${Date.now()}`;
     const newArtboard: Artboard = {
-      id: `artboard_${Date.now()}`,
+      id: newArtboardId,
       name: `${preset.name}`,
       x: centerX,
       y: centerY,
@@ -4313,6 +4314,8 @@ export const useShapeEditor = () => {
       printConfig: DEFAULT_PRINT_CONFIG
     };
     setArtboards(prev => [...prev, newArtboard]);
+    // Automatically select the newly created artboard
+    setActiveArtboard(newArtboardId);
   }, []);
 
   const selectArtboard = useCallback((artboardId: string) => {
@@ -4320,12 +4323,16 @@ export const useShapeEditor = () => {
   }, []);
 
   const deleteArtboard = useCallback((artboardId: string) => {
-    if (artboards.length <= 1) return; // Keep at least one artboard
-    setArtboards(prev => prev.filter(ab => ab.id !== artboardId));
-    if (activeArtboard === artboardId) {
-      setActiveArtboard(artboards[0].id);
-    }
-  }, [artboards, activeArtboard]);
+    setArtboards(prev => {
+      if (prev.length <= 1) return prev; // Keep at least one artboard
+      const remaining = prev.filter(ab => ab.id !== artboardId);
+      // If we're deleting the active artboard, select the first remaining one
+      if (activeArtboard === artboardId && remaining.length > 0) {
+        setActiveArtboard(remaining[0].id);
+      }
+      return remaining;
+    });
+  }, [activeArtboard]);
 
   const updateArtboard = useCallback((artboardId: string, updates: Partial<Artboard>) => {
     setArtboards(prev => prev.map(ab => 
