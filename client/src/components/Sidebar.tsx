@@ -26,7 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { BufferedSlider, BufferedRangeSlider } from '@/components/ui/buffered-slider';
+import { BufferedSlider, BufferedRangeSlider, BufferedSliderWithLabel, BufferedRangeSliderWithLabel } from '@/components/ui/buffered-slider';
 import { NumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -4593,32 +4593,30 @@ export default function Sidebar({
           {['jpg', 'webp', 'avif'].includes(exportFormat) && (
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Quality</Label>
-              <BufferedSlider
-                value={[exportQuality]}
-                onValueCommit={([value]) => setExportQuality(value)}
+              <BufferedSliderWithLabel
+                value={exportQuality}
+                onValueCommit={(value) => setExportQuality(value)}
                 min={10}
                 max={100}
                 step={1}
                 className="w-full"
+                formatLabel={(v) => `${v}%`}
               />
-              <span className="text-xs text-slate-500">{exportQuality}%</span>
             </div>
           )}
 
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Export Scale (up to 20x for 1200dpi)</Label>
-            <BufferedSlider
-              value={[exportScale]}
-              onValueCommit={([value]) => setExportScale(value)}
+            <BufferedSliderWithLabel
+              value={exportScale}
+              onValueCommit={(value) => setExportScale(value)}
               min={0.1}
               max={20}
               step={0.1}
               className="w-full"
               disabled={exportAutoScaleFromDpi}
+              formatLabel={(v) => exportAutoScaleFromDpi ? '(Disabled - using auto-scale)' : `${v}x`}
             />
-            <span className="text-xs text-slate-500">
-              {exportAutoScaleFromDpi ? '(Disabled - using auto-scale)' : `${exportScale}x`}
-            </span>
           </div>
 
           <div className="flex items-center justify-between space-x-3">
@@ -5920,32 +5918,28 @@ export default function Sidebar({
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Shape Count Range</Label>
-              <div className="space-y-2">
-                <BufferedSlider
-                  value={[scatterSettings.count]}
-                  onValueCommit={([value]) => onUpdateScatterSettings({ count: value })}
-                  min={1}
-                  max={50}
-                  step={1}
-                  className="w-full"
-                />
-                <span className="text-xs text-slate-500">{scatterSettings.count} shapes</span>
-              </div>
+              <BufferedSliderWithLabel
+                value={scatterSettings.count}
+                onValueCommit={(value) => onUpdateScatterSettings({ count: value })}
+                min={1}
+                max={50}
+                step={1}
+                className="w-full"
+                formatLabel={(v) => `${v} shapes`}
+              />
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Randomness</Label>
-              <div className="space-y-2">
-                <BufferedSlider
-                  value={[scatterSettings.randomness]}
-                  onValueCommit={([value]) => onUpdateScatterSettings({ randomness: value })}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  className="w-full"
-                />
-                <span className="text-xs text-slate-500">{Math.round(scatterSettings.randomness * 100)}%</span>
-              </div>
+              <BufferedSliderWithLabel
+                value={scatterSettings.randomness}
+                onValueCommit={(value) => onUpdateScatterSettings({ randomness: value })}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+                formatLabel={(v) => `${Math.round(v * 100)}%`}
+              />
             </div>
 
             <Button
@@ -7133,41 +7127,41 @@ export default function Sidebar({
           <div className="space-y-3">
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Hue Shift</Label>
-              <BufferedSlider
-                value={[hueShift]}
-                onValueCommit={([value]) => setHueShift(value)}
+              <BufferedSliderWithLabel
+                value={hueShift}
+                onValueCommit={(value) => setHueShift(value)}
                 min={-180}
                 max={180}
                 step={1}
                 className="w-full"
+                formatLabel={(v) => `${v}°`}
               />
-              <span className="text-xs text-slate-500">{hueShift}°</span>
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Saturation Shift</Label>
-              <BufferedSlider
-                value={[saturationShift]}
-                onValueCommit={([value]) => setSaturationShift(value)}
+              <BufferedSliderWithLabel
+                value={saturationShift}
+                onValueCommit={(value) => setSaturationShift(value)}
                 min={-100}
                 max={100}
                 step={1}
                 className="w-full"
+                formatLabel={(v) => `${v}%`}
               />
-              <span className="text-xs text-slate-500">{saturationShift}%</span>
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Lightness Shift</Label>
-              <BufferedSlider
-                value={[lightnessShift]}
-                onValueCommit={([value]) => setLightnessShift(value)}
+              <BufferedSliderWithLabel
+                value={lightnessShift}
+                onValueCommit={(value) => setLightnessShift(value)}
                 min={-100}
                 max={100}
                 step={1}
                 className="w-full"
+                formatLabel={(v) => `${v}%`}
               />
-              <span className="text-xs text-slate-500">{lightnessShift}%</span>
             </div>
 
             <Button
@@ -7628,9 +7622,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'circle' || selectedShapes[0].type === 'ellipse') && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Segments (Smoothness)</Label>
-                  <BufferedSlider
-                    value={[selectedShapes[0].segments]}
-                    onValueCommit={([value]) => {
+                  <BufferedSliderWithLabel
+                    value={selectedShapes[0].segments}
+                    onValueCommit={(value) => {
                       updateShapeProperty((shape) => {
                         shape.segments = value;
                         shape.regeneratePointsFromSegments();
@@ -7640,8 +7634,8 @@ export default function Sidebar({
                     max={64}
                     step={4}
                     className="w-full"
+                    formatLabel={(v) => `${v} segments`}
                   />
-                  <span className="text-xs text-slate-500">{selectedShapes[0].segments} segments</span>
                 </div>
               )}
 
