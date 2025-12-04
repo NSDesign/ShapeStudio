@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import * as UTIF from 'utif';
@@ -5091,6 +5091,26 @@ export default function Sidebar({
   // Scroll container ref for the sidebar
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
+  // Scroll position preservation to prevent jumps during state updates in nested accordions
+  const scrollPositionRef = useRef<number>(0);
+  const isScrollPreservationActiveRef = useRef<boolean>(false);
+  
+  // Save scroll position before any interaction that might cause a re-render
+  const saveScrollPosition = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollPositionRef.current = scrollContainerRef.current.scrollTop;
+      isScrollPreservationActiveRef.current = true;
+    }
+  }, []);
+  
+  // Restore scroll position after re-render (using useLayoutEffect for synchronous DOM updates)
+  useLayoutEffect(() => {
+    if (isScrollPreservationActiveRef.current && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollPositionRef.current;
+      isScrollPreservationActiveRef.current = false;
+    }
+  });
+  
 
   const toggleShapeExpansion = useCallback((shapeType: string) => {
     setExpandedShapes(prev => {
@@ -7850,6 +7870,7 @@ export default function Sidebar({
           <div 
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
+            onPointerDown={saveScrollPosition}
           >
           <Accordion 
             type="multiple" 
