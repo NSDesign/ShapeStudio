@@ -4593,9 +4593,9 @@ export default function Sidebar({
           {['jpg', 'webp', 'avif'].includes(exportFormat) && (
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Quality</Label>
-              <Slider
+              <BufferedSlider
                 value={[exportQuality]}
-                onValueChange={([value]) => setExportQuality(value)}
+                onValueCommit={([value]) => setExportQuality(value)}
                 min={10}
                 max={100}
                 step={1}
@@ -4607,9 +4607,9 @@ export default function Sidebar({
 
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Export Scale (up to 20x for 1200dpi)</Label>
-            <Slider
+            <BufferedSlider
               value={[exportScale]}
-              onValueChange={([value]) => setExportScale(value)}
+              onValueCommit={([value]) => setExportScale(value)}
               min={0.1}
               max={20}
               step={0.1}
@@ -4720,14 +4720,13 @@ export default function Sidebar({
                       <span className="text-slate-400">Min: {exportShapeCountRange[0]}</span>
                       <span className="text-slate-400">Max: {exportShapeCountRange[1]}</span>
                     </div>
-                    <Slider
+                    <BufferedRangeSlider
                       value={exportShapeCountRange}
-                      onValueChange={(value) => setExportShapeCountRange(value as [number, number])}
+                      onValueCommit={(value) => setExportShapeCountRange(value)}
                       min={1}
                       max={20}
                       step={1}
                       className="w-full"
-                      minStepsBetweenThumbs={1}
                     />
                   </div>
                 )}
@@ -4735,9 +4734,9 @@ export default function Sidebar({
                 {generationConfigSettings?.generationCountMode === 'fixed' && (
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-300">Fixed Value: {generationConfigSettings?.generationCountDefine || 5}</Label>
-                    <Slider
+                    <BufferedSlider
                       value={[generationConfigSettings?.generationCountDefine || 5]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
+                      onValueCommit={([value]) => onUpdateGenerationConfigSettings({ generationCountDefine: value })}
                       min={1}
                       max={20}
                       step={1}
@@ -4749,18 +4748,18 @@ export default function Sidebar({
                 {generationConfigSettings?.generationCountMode === 'incremental' && (
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-300">Start Value: {generationConfigSettings?.generationCountStartValue || 1}</Label>
-                    <Slider
+                    <BufferedSlider
                       value={[generationConfigSettings?.generationCountStartValue || 1]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
+                      onValueCommit={([value]) => onUpdateGenerationConfigSettings({ generationCountStartValue: value })}
                       min={1}
                       max={15}
                       step={1}
                       className="[&_[role=slider]]:bg-blue-600"
                     />
                     <Label className="text-xs text-slate-300">Increment: {generationConfigSettings?.generationCountIncrement || 1}</Label>
-                    <Slider
+                    <BufferedSlider
                       value={[generationConfigSettings?.generationCountIncrement || 1]}
-                      onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
+                      onValueCommit={([value]) => onUpdateGenerationConfigSettings({ generationCountIncrement: value })}
                       min={1}
                       max={5}
                       step={1}
@@ -4785,9 +4784,9 @@ export default function Sidebar({
                     {generationConfigSettings?.generationCountModulationEnabled && (
                       <>
                         <Label className="text-xs text-slate-300">Modulation Value: {generationConfigSettings?.generationCountModulationValue || 0.5}</Label>
-                        <Slider
+                        <BufferedSlider
                           value={[generationConfigSettings?.generationCountModulationValue || 0.5]}
-                          onValueChange={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
+                          onValueCommit={([value]) => onUpdateGenerationConfigSettings({ generationCountModulationValue: value })}
                           min={1}
                           max={10}
                           step={1}
@@ -4849,14 +4848,13 @@ export default function Sidebar({
                   <span className="text-slate-400">Number of Exports</span>
                   <span className="text-slate-300">{exportBatchCount}</span>
                 </div>
-                <Slider
+                <BufferedSlider
                   value={[exportBatchCount]}
-                  onValueChange={([value]) => setExportBatchCount(value)}
+                  onValueCommit={([value]) => setExportBatchCount(value)}
                   min={1}
                   max={100}
                   step={1}
                   className="w-full"
-                  data-testid="slider-export-batch-count"
                 />
               </div>
 
@@ -5242,9 +5240,9 @@ export default function Sidebar({
                         <span className="text-slate-300 capitalize">{cap}</span>
                         <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
                       </div>
-                      <Slider
+                      <BufferedSlider
                         value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
-                        onValueChange={(value) => {
+                        onValueCommit={(value) => {
                           const probability = value[0];
                           onUpdateScatterSettings({
                             shapeSpecific: {
@@ -5306,9 +5304,9 @@ export default function Sidebar({
                     <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
                     <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
                   </div>
-                  <Slider
+                  <BufferedSlider
                     value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
-                    onValueChange={([value]) => {
+                    onValueCommit={([value]) => {
                       console.log(`${shapeType} open probability: ${value}%`);
                       onUpdateScatterSettings({
                         shapeSpecific: {
@@ -5338,9 +5336,9 @@ export default function Sidebar({
                           <Label className="text-slate-300 capitalize">{cap}</Label>
                           <span className="text-slate-400">{currentValue}%</span>
                         </div>
-                        <Slider
+                        <BufferedSlider
                           value={[currentValue]}
-                          onValueChange={([value]) => {
+                          onValueCommit={([value]) => {
                             console.log(`${shapeType} ${cap} cap: ${value}%`);
                             const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
                             onUpdateScatterSettings({
@@ -5445,9 +5443,9 @@ export default function Sidebar({
                         <span className="text-slate-300 capitalize">{cap}</span>
                         <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
                       </div>
-                      <Slider
+                      <BufferedSlider
                         value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
-                        onValueChange={(value) => {
+                        onValueCommit={(value) => {
                           const probability = value[0];
                           onUpdateScatterSettings({
                             shapeSpecific: {
@@ -5567,9 +5565,9 @@ export default function Sidebar({
 
               <div className="space-y-3">
                 <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
-                <Slider
+                <BufferedSlider
                   value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
-                  onValueChange={(value) => {
+                  onValueCommit={(value) => {
                     const probability = value[0];
                     onUpdateScatterSettings({
                       shapeSpecific: {
@@ -5785,14 +5783,13 @@ export default function Sidebar({
                   />
                 </div>
               </div>
-              <Slider
-                value={[scatterSettings.minCount, scatterSettings.maxCount]}
-                onValueChange={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+              <BufferedRangeSlider
+                value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
+                onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
                 min={1}
                 max={50}
                 step={1}
                 className="w-full pt-2"
-                minStepsBetweenThumbs={1}
               />
             </div>
           ) : (
@@ -5805,9 +5802,9 @@ export default function Sidebar({
                 step={1}
                 className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
               />
-              <Slider
+              <BufferedSlider
                 value={[scatterSettings.fixedShapeCount || 10]}
-                onValueChange={([value]) => onUpdateScatterSettings({ fixedShapeCount: value })}
+                onValueCommit={([value]) => onUpdateScatterSettings({ fixedShapeCount: value })}
                 min={1}
                 max={50}
                 step={1}
@@ -5924,9 +5921,9 @@ export default function Sidebar({
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Shape Count Range</Label>
               <div className="space-y-2">
-                <Slider
+                <BufferedSlider
                   value={[scatterSettings.count]}
-                  onValueChange={([value]) => onUpdateScatterSettings({ count: value })}
+                  onValueCommit={([value]) => onUpdateScatterSettings({ count: value })}
                   min={1}
                   max={50}
                   step={1}
@@ -5939,9 +5936,9 @@ export default function Sidebar({
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Randomness</Label>
               <div className="space-y-2">
-                <Slider
+                <BufferedSlider
                   value={[scatterSettings.randomness]}
-                  onValueChange={([value]) => onUpdateScatterSettings({ randomness: value })}
+                  onValueCommit={([value]) => onUpdateScatterSettings({ randomness: value })}
                   min={0}
                   max={1}
                   step={0.1}
@@ -6609,9 +6606,9 @@ export default function Sidebar({
               <span className="text-slate-400">Spacing</span>
               <span className="text-slate-300">{distributionSpacing}px</span>
             </div>
-            <Slider
+            <BufferedSlider
               value={[distributionSpacing]}
-              onValueChange={([value]) => setDistributionSpacing(value)}
+              onValueCommit={([value]) => setDistributionSpacing(value)}
               min={10}
               max={200}
               step={5}
@@ -7136,9 +7133,9 @@ export default function Sidebar({
           <div className="space-y-3">
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Hue Shift</Label>
-              <Slider
+              <BufferedSlider
                 value={[hueShift]}
-                onValueChange={([value]) => setHueShift(value)}
+                onValueCommit={([value]) => setHueShift(value)}
                 min={-180}
                 max={180}
                 step={1}
@@ -7149,9 +7146,9 @@ export default function Sidebar({
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Saturation Shift</Label>
-              <Slider
+              <BufferedSlider
                 value={[saturationShift]}
-                onValueChange={([value]) => setSaturationShift(value)}
+                onValueCommit={([value]) => setSaturationShift(value)}
                 min={-100}
                 max={100}
                 step={1}
@@ -7162,9 +7159,9 @@ export default function Sidebar({
 
             <div className="space-y-2">
               <Label className="text-xs text-slate-400">Lightness Shift</Label>
-              <Slider
+              <BufferedSlider
                 value={[lightnessShift]}
-                onValueChange={([value]) => setLightnessShift(value)}
+                onValueCommit={([value]) => setLightnessShift(value)}
                 min={-100}
                 max={100}
                 step={1}
@@ -7278,9 +7275,9 @@ export default function Sidebar({
                   <span className="text-slate-400">X Scale</span>
                   <span className="text-slate-300">{scaleX}%</span>
                 </div>
-                <Slider
+                <BufferedSlider
                   value={[scaleX]}
-                  onValueChange={([value]) => {
+                  onValueCommit={([value]) => {
                     setScaleX(value);
                     if (lockAspectRatio) {
                       setScaleY(value);
@@ -7297,9 +7294,9 @@ export default function Sidebar({
                   <span className="text-slate-400">Y Scale</span>
                   <span className="text-slate-300">{scaleY}%</span>
                 </div>
-                <Slider
+                <BufferedSlider
                   value={[scaleY]}
-                  onValueChange={([value]) => {
+                  onValueCommit={([value]) => {
                     setScaleY(value);
                     if (lockAspectRatio) {
                       setScaleX(value);
@@ -7631,9 +7628,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'circle' || selectedShapes[0].type === 'ellipse') && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Segments (Smoothness)</Label>
-                  <Slider
+                  <BufferedSlider
                     value={[selectedShapes[0].segments]}
-                    onValueChange={([value]) => {
+                    onValueCommit={([value]) => {
                       updateShapeProperty((shape) => {
                         shape.segments = value;
                         shape.regeneratePointsFromSegments();
