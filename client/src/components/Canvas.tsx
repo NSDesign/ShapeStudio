@@ -317,17 +317,19 @@ export default function Canvas({
         }
         
         // Display artboard information overlay (independent of border)
+        // Position at top-right of artboard, above bleed area
         const fontSize = 12 / effectiveZoom;
         const lineHeight = fontSize * 1.3;
         let textYOffset = -5 / effectiveZoom;
-        const textXOffset = currentArtboard.x;
+        const artboardRightEdge = currentArtboard.x + currentArtboard.width;
         
         ctx.fillStyle = '#0066cc';
         ctx.font = `${fontSize}px Arial`;
+        ctx.textAlign = 'right';  // Right-align text
         
         // Display artboard name if enabled
         if (currentArtboard.displayName !== false) {
-          ctx.fillText(currentArtboard.name, textXOffset, currentArtboard.y + textYOffset);
+          ctx.fillText(currentArtboard.name, artboardRightEdge, currentArtboard.y + textYOffset);
           textYOffset -= lineHeight;
         }
         
@@ -340,7 +342,7 @@ export default function Canvas({
             currentArtboard.unitType ?? 'pixels'
           );
           const dimensionText = `${displayDims.widthFormatted} × ${displayDims.heightFormatted}`;
-          ctx.fillText(dimensionText, textXOffset, currentArtboard.y + textYOffset);
+          ctx.fillText(dimensionText, artboardRightEdge, currentArtboard.y + textYOffset);
           textYOffset -= lineHeight;
         }
         
@@ -348,8 +350,11 @@ export default function Canvas({
         if (currentArtboard.displayResolution === true) {
           const dpi = currentArtboard.dpi ?? 72;
           const resolutionText = `${dpi} DPI`;
-          ctx.fillText(resolutionText, textXOffset, currentArtboard.y + textYOffset);
+          ctx.fillText(resolutionText, artboardRightEdge, currentArtboard.y + textYOffset);
         }
+        
+        // Reset text alignment for other elements
+        ctx.textAlign = 'left';
         
         // Print Configuration Overlays
         const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
