@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
 import TiffPreflightModal, { calculateTiffPreflightInfo } from './TiffPreflightModal';
-import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode } from '@shared/schema';
+import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode, PrintMarksScaleMode } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -601,7 +601,21 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
         
         {/* Print Marks Settings */}
         <div className="space-y-2">
-          <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
+            <Select
+              value={printConfig.overlays.printMarks.scaleMode || 'none'}
+              onValueChange={(value: PrintMarksScaleMode) => updatePrintMarks({ scaleMode: value })}
+            >
+              <SelectTrigger className="h-6 w-24 text-[10px] bg-slate-700 border-slate-600" data-testid="select-print-marks-scale-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None ({unitLabel})</SelectItem>
+                <SelectItem value="percent">Percent (%)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-4">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -640,25 +654,29 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Mark Length ({unitLabel})</Label>
+                  <Label className="text-[10px] text-slate-500">
+                    Mark Length ({(printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? '%' : unitLabel})
+                  </Label>
                   <BufferedNumericInput
                     value={printConfig.overlays.printMarks.markLength}
-                    onCommit={(value) => updatePrintMarks({ markLength: Math.round(value) })}
-                    min={1}
+                    onCommit={(value) => updatePrintMarks({ markLength: (printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? value : Math.round(value) })}
+                    min={(printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? 0.1 : 1}
                     max={100}
-                    step={1}
+                    step={(printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? 0.1 : 1}
                     className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-length"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500">Mark Offset ({unitLabel})</Label>
+                  <Label className="text-[10px] text-slate-500">
+                    Mark Offset ({(printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? '%' : unitLabel})
+                  </Label>
                   <BufferedNumericInput
                     value={printConfig.overlays.printMarks.markOffset}
-                    onCommit={(value) => updatePrintMarks({ markOffset: Math.round(value) })}
+                    onCommit={(value) => updatePrintMarks({ markOffset: (printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? value : Math.round(value) })}
                     min={0}
                     max={50}
-                    step={1}
+                    step={(printConfig.overlays.printMarks.scaleMode || 'none') === 'percent' ? 0.1 : 1}
                     className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-offset"
                   />
