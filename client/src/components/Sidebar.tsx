@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect, memo } from 'react';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 import * as UTIF from 'utif';
@@ -370,6 +370,309 @@ const handleScatterModeConfigChange = (
     }
   });
 };
+
+// Memoized PrintConfigurationSection - extracted to top level to prevent remounting on parent re-renders
+interface PrintConfigurationSectionProps {
+  currentArtboard: Artboard;
+  onUpdateArtboard: (id: string, updates: Partial<Artboard>) => void;
+}
+
+const PrintConfigurationSection = React.memo(function PrintConfigurationSection({ 
+  currentArtboard, 
+  onUpdateArtboard
+}: PrintConfigurationSectionProps) {
+  
+  const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
+  
+  const updatePrintConfig = useCallback((updates: Partial<PrintConfig>) => {
+    onUpdateArtboard(currentArtboard.id, {
+      printConfig: { ...printConfig, ...updates }
+    });
+  }, [currentArtboard.id, printConfig, onUpdateArtboard]);
+  
+  const updateBleed = useCallback((updates: Partial<typeof printConfig.overlays.bleed>) => {
+    onUpdateArtboard(currentArtboard.id, {
+      printConfig: {
+        ...printConfig,
+        overlays: {
+          ...printConfig.overlays,
+          bleed: { ...printConfig.overlays.bleed, ...updates }
+        }
+      }
+    });
+  }, [currentArtboard.id, printConfig, onUpdateArtboard]);
+  
+  const updateSafeZone = useCallback((updates: Partial<typeof printConfig.overlays.safeZone>) => {
+    onUpdateArtboard(currentArtboard.id, {
+      printConfig: {
+        ...printConfig,
+        overlays: {
+          ...printConfig.overlays,
+          safeZone: { ...printConfig.overlays.safeZone, ...updates }
+        }
+      }
+    });
+  }, [currentArtboard.id, printConfig, onUpdateArtboard]);
+  
+  const updatePrintMarks = useCallback((updates: Partial<typeof printConfig.overlays.printMarks>) => {
+    onUpdateArtboard(currentArtboard.id, {
+      printConfig: {
+        ...printConfig,
+        overlays: {
+          ...printConfig.overlays,
+          printMarks: { ...printConfig.overlays.printMarks, ...updates }
+        }
+      }
+    });
+  }, [currentArtboard.id, printConfig, onUpdateArtboard]);
+  
+  const updateOverlayUnit = useCallback((unit: PrintUnitType) => {
+    onUpdateArtboard(currentArtboard.id, {
+      printConfig: {
+        ...printConfig,
+        overlays: {
+          ...printConfig.overlays,
+          overlayUnit: unit
+        }
+      }
+    });
+  }, [currentArtboard.id, printConfig, onUpdateArtboard]);
+  
+  // Get unit label for display
+  const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
+  const unitLabel = overlayUnit === 'pixels' ? 'px' : overlayUnit === 'inches' ? 'in' : overlayUnit;
+  
+  const displayDimensions = getArtboardDisplayDimensions(
+    currentArtboard.width,
+    currentArtboard.height,
+    currentArtboard.dpi ?? 72,
+    currentArtboard.unitType ?? 'pixels'
+  );
+  
+  return (
+    <div className="space-y-3">
+      <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
+      
+      <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
+        
+        {/* Artboard Info Display - Name, Dimensions, DPI */}
+        <div className="flex items-center justify-between text-[10px] bg-slate-900/50 p-2 rounded border border-slate-700">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-slate-400 font-medium truncate max-w-[100px]" title={currentArtboard.name}>
+              {currentArtboard.name}
+            </span>
+            <span className="text-slate-500">|</span>
+            <span className="text-slate-300 whitespace-nowrap">
+              {displayDimensions.widthFormatted} × {displayDimensions.heightFormatted} {getUnitLabel(currentArtboard.unitType ?? 'pixels')}
+            </span>
+          </div>
+          <span className="text-slate-400 whitespace-nowrap ml-2">
+            {currentArtboard.dpi ?? 72} DPI
+          </span>
+        </div>
+        
+        <Separator className="bg-slate-600/30" />
+        
+        {/* Unified Overlay Unit Selector */}
+        <div className="space-y-1">
+          <Label className="text-xs text-slate-400 font-medium">Overlay Unit</Label>
+          <Select
+            value={printConfig.overlays.overlayUnit || 'pixels'}
+            onValueChange={(value: PrintUnitType) => updateOverlayUnit(value)}
+          >
+            <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-overlay-unit">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pixels">Pixels (px)</SelectItem>
+              <SelectItem value="mm">Millimeters (mm)</SelectItem>
+              <SelectItem value="cm">Centimeters (cm)</SelectItem>
+              <SelectItem value="inches">Inches (in)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[9px] text-slate-500">Applies to bleed, safe zone, and print marks</p>
+        </div>
+        
+        <Separator className="bg-slate-600/30" />
+        
+        {/* Bleed Settings */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400 font-medium">Bleed</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] text-slate-500">Amount</Label>
+              <Input
+                type="number"
+                step={0.1}
+                min={0}
+                value={printConfig.overlays.bleed.amount}
+                onChange={(e) => updateBleed({ amount: parseFloat(e.target.value) || 0 })}
+                className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                data-testid="input-bleed-amount"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] text-slate-500">Color</Label>
+              <div className="flex gap-1">
+                <input
+                  type="color"
+                  value={printConfig.overlays.bleed.color || '#00FFFF'}
+                  onChange={(e) => updateBleed({ color: e.target.value })}
+                  className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
+                  data-testid="input-bleed-color"
+                />
+                <Input
+                  type="text"
+                  value={printConfig.overlays.bleed.color || '#00FFFF'}
+                  onChange={(e) => updateBleed({ color: e.target.value })}
+                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
+                  data-testid="input-bleed-color-text"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={printConfig.overlays.bleed.display}
+                onCheckedChange={(checked) => updateBleed({ display: !!checked })}
+                data-testid="checkbox-bleed-display"
+              />
+              <Label className="text-[10px] text-slate-500">Display</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={printConfig.overlays.bleed.render}
+                onCheckedChange={(checked) => updateBleed({ render: !!checked })}
+                data-testid="checkbox-bleed-render"
+              />
+              <Label className="text-[10px] text-slate-500">Render</Label>
+            </div>
+          </div>
+        </div>
+        
+        <Separator className="bg-slate-600/30" />
+        
+        {/* Safe Zone Settings */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400 font-medium">Safe Zone</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] text-slate-500">Amount</Label>
+              <Input
+                type="number"
+                step={0.1}
+                min={0}
+                value={printConfig.overlays.safeZone.amount}
+                onChange={(e) => updateSafeZone({ amount: parseFloat(e.target.value) || 0 })}
+                className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                data-testid="input-safe-zone-amount"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] text-slate-500">Color</Label>
+              <div className="flex gap-1">
+                <input
+                  type="color"
+                  value={printConfig.overlays.safeZone.color || '#FF00FF'}
+                  onChange={(e) => updateSafeZone({ color: e.target.value })}
+                  className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
+                  data-testid="input-safe-zone-color"
+                />
+                <Input
+                  type="text"
+                  value={printConfig.overlays.safeZone.color || '#FF00FF'}
+                  onChange={(e) => updateSafeZone({ color: e.target.value })}
+                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
+                  data-testid="input-safe-zone-color-text"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={printConfig.overlays.safeZone.display}
+              onCheckedChange={(checked) => updateSafeZone({ display: !!checked })}
+              data-testid="checkbox-safe-zone-display"
+            />
+            <Label className="text-[10px] text-slate-500">Display</Label>
+          </div>
+        </div>
+        
+        <Separator className="bg-slate-600/30" />
+        
+        {/* Print Marks Settings */}
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={printConfig.overlays.printMarks.display}
+                onCheckedChange={(checked) => updatePrintMarks({ display: !!checked })}
+                data-testid="checkbox-print-marks-display"
+              />
+              <Label className="text-[10px] text-slate-500">Display</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={printConfig.overlays.printMarks.render}
+                onCheckedChange={(checked) => updatePrintMarks({ render: !!checked })}
+                data-testid="checkbox-print-marks-render"
+              />
+              <Label className="text-[10px] text-slate-500">Render</Label>
+            </div>
+          </div>
+          {(printConfig.overlays.printMarks.display || printConfig.overlays.printMarks.render) && (
+            <div className="space-y-2 ml-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.printMarks.cropMarks}
+                  onCheckedChange={(checked) => updatePrintMarks({ cropMarks: !!checked })}
+                  data-testid="checkbox-crop-marks"
+                />
+                <Label className="text-[10px] text-slate-500">Crop Marks</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={printConfig.overlays.printMarks.registrationMarks}
+                  onCheckedChange={(checked) => updatePrintMarks({ registrationMarks: !!checked })}
+                  data-testid="checkbox-registration-marks"
+                />
+                <Label className="text-[10px] text-slate-500">Registration Marks</Label>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-slate-500">Mark Length ({unitLabel})</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={printConfig.overlays.printMarks.markLength}
+                    onChange={(e) => updatePrintMarks({ markLength: parseInt(e.target.value) || 12 })}
+                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-mark-length"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-slate-500">Mark Offset ({unitLabel})</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={printConfig.overlays.printMarks.markOffset}
+                    onChange={(e) => updatePrintMarks({ markOffset: parseInt(e.target.value) || 3 })}
+                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    data-testid="input-mark-offset"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
@@ -1110,294 +1413,6 @@ export default function Sidebar({
               onCheckedChange={onSetShowSelectedCount}
               data-testid="toggle-selected-count"
             />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function PrintConfigurationSection({ 
-    currentArtboard, 
-    onUpdateArtboard
-  }: { 
-    currentArtboard: Artboard; 
-    onUpdateArtboard: (id: string, updates: Partial<Artboard>) => void;
-  }) {
-    
-    const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
-    
-    const updatePrintConfig = (updates: Partial<PrintConfig>) => {
-      onUpdateArtboard(currentArtboard.id, {
-        printConfig: { ...printConfig, ...updates }
-      });
-    };
-    
-    const updateBleed = (updates: Partial<typeof printConfig.overlays.bleed>) => {
-      updatePrintConfig({
-        overlays: {
-          ...printConfig.overlays,
-          bleed: { ...printConfig.overlays.bleed, ...updates }
-        }
-      });
-    };
-    
-    const updateSafeZone = (updates: Partial<typeof printConfig.overlays.safeZone>) => {
-      updatePrintConfig({
-        overlays: {
-          ...printConfig.overlays,
-          safeZone: { ...printConfig.overlays.safeZone, ...updates }
-        }
-      });
-    };
-    
-    const updatePrintMarks = (updates: Partial<typeof printConfig.overlays.printMarks>) => {
-      updatePrintConfig({
-        overlays: {
-          ...printConfig.overlays,
-          printMarks: { ...printConfig.overlays.printMarks, ...updates }
-        }
-      });
-    };
-    
-    const updateOverlayUnit = (unit: PrintUnitType) => {
-      updatePrintConfig({
-        overlays: {
-          ...printConfig.overlays,
-          overlayUnit: unit
-        }
-      });
-    };
-    
-    // Get unit label for display
-    const overlayUnit = printConfig.overlays.overlayUnit || 'pixels';
-    const unitLabel = overlayUnit === 'pixels' ? 'px' : overlayUnit === 'inches' ? 'in' : overlayUnit;
-    
-    const displayDimensions = getArtboardDisplayDimensions(
-      currentArtboard.width,
-      currentArtboard.height,
-      currentArtboard.dpi ?? 72,
-      currentArtboard.unitType ?? 'pixels'
-    );
-    
-    return (
-      <div className="space-y-3">
-        <div className="text-xs text-purple-300 font-medium">Print Configuration</div>
-        
-        <div className="space-y-3 p-2 bg-slate-800/30 rounded-lg border border-purple-500/20">
-          
-          {/* Artboard Info Display - Name, Dimensions, DPI */}
-          <div className="flex items-center justify-between text-[10px] bg-slate-900/50 p-2 rounded border border-slate-700">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-slate-400 font-medium truncate max-w-[100px]" title={currentArtboard.name}>
-                {currentArtboard.name}
-              </span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-300 whitespace-nowrap">
-                {displayDimensions.widthFormatted} × {displayDimensions.heightFormatted} {getUnitLabel(currentArtboard.unitType ?? 'pixels')}
-              </span>
-            </div>
-            <span className="text-slate-400 whitespace-nowrap ml-2">
-              {currentArtboard.dpi ?? 72} DPI
-            </span>
-          </div>
-          
-          <Separator className="bg-slate-600/30" />
-          
-          {/* Unified Overlay Unit Selector */}
-          <div className="space-y-1">
-            <Label className="text-xs text-slate-400 font-medium">Overlay Unit</Label>
-            <Select
-              value={printConfig.overlays.overlayUnit || 'pixels'}
-              onValueChange={(value: PrintUnitType) => updateOverlayUnit(value)}
-            >
-              <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600" data-testid="select-overlay-unit">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pixels">Pixels (px)</SelectItem>
-                <SelectItem value="mm">Millimeters (mm)</SelectItem>
-                <SelectItem value="cm">Centimeters (cm)</SelectItem>
-                <SelectItem value="inches">Inches (in)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-[9px] text-slate-500">Applies to bleed, safe zone, and print marks</p>
-          </div>
-          
-          <Separator className="bg-slate-600/30" />
-          
-          {/* Bleed Settings */}
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400 font-medium">Bleed</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Amount</Label>
-                <Input
-                  type="number"
-                  step={0.1}
-                  min={0}
-                  value={printConfig.overlays.bleed.amount}
-                  onChange={(e) => updateBleed({ amount: parseFloat(e.target.value) || 0 })}
-                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                  data-testid="input-bleed-amount"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Color</Label>
-                <div className="flex gap-1">
-                  <input
-                    type="color"
-                    value={printConfig.overlays.bleed.color || '#00FFFF'}
-                    onChange={(e) => updateBleed({ color: e.target.value })}
-                    className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
-                    data-testid="input-bleed-color"
-                  />
-                  <Input
-                    type="text"
-                    value={printConfig.overlays.bleed.color || '#00FFFF'}
-                    onChange={(e) => updateBleed({ color: e.target.value })}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
-                    data-testid="input-bleed-color-text"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={printConfig.overlays.bleed.display}
-                  onCheckedChange={(checked) => updateBleed({ display: !!checked })}
-                  data-testid="checkbox-bleed-display"
-                />
-                <Label className="text-[10px] text-slate-500">Display</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={printConfig.overlays.bleed.render}
-                  onCheckedChange={(checked) => updateBleed({ render: !!checked })}
-                  data-testid="checkbox-bleed-render"
-                />
-                <Label className="text-[10px] text-slate-500">Render</Label>
-              </div>
-            </div>
-          </div>
-          
-          <Separator className="bg-slate-600/30" />
-          
-          {/* Safe Zone Settings */}
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400 font-medium">Safe Zone</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Amount</Label>
-                <Input
-                  type="number"
-                  step={0.1}
-                  min={0}
-                  value={printConfig.overlays.safeZone.amount}
-                  onChange={(e) => updateSafeZone({ amount: parseFloat(e.target.value) || 0 })}
-                  className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                  data-testid="input-safe-zone-amount"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] text-slate-500">Color</Label>
-                <div className="flex gap-1">
-                  <input
-                    type="color"
-                    value={printConfig.overlays.safeZone.color || '#FF00FF'}
-                    onChange={(e) => updateSafeZone({ color: e.target.value })}
-                    className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
-                    data-testid="input-safe-zone-color"
-                  />
-                  <Input
-                    type="text"
-                    value={printConfig.overlays.safeZone.color || '#FF00FF'}
-                    onChange={(e) => updateSafeZone({ color: e.target.value })}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
-                    data-testid="input-safe-zone-color-text"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={printConfig.overlays.safeZone.display}
-                onCheckedChange={(checked) => updateSafeZone({ display: !!checked })}
-                data-testid="checkbox-safe-zone-display"
-              />
-              <Label className="text-[10px] text-slate-500">Display</Label>
-            </div>
-          </div>
-          
-          <Separator className="bg-slate-600/30" />
-          
-          {/* Print Marks Settings */}
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400 font-medium">Print Marks</Label>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={printConfig.overlays.printMarks.display}
-                  onCheckedChange={(checked) => updatePrintMarks({ display: !!checked })}
-                  data-testid="checkbox-print-marks-display"
-                />
-                <Label className="text-[10px] text-slate-500">Display</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={printConfig.overlays.printMarks.render}
-                  onCheckedChange={(checked) => updatePrintMarks({ render: !!checked })}
-                  data-testid="checkbox-print-marks-render"
-                />
-                <Label className="text-[10px] text-slate-500">Render</Label>
-              </div>
-            </div>
-            {(printConfig.overlays.printMarks.display || printConfig.overlays.printMarks.render) && (
-              <div className="space-y-2 ml-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.printMarks.cropMarks}
-                    onCheckedChange={(checked) => updatePrintMarks({ cropMarks: !!checked })}
-                    data-testid="checkbox-crop-marks"
-                  />
-                  <Label className="text-[10px] text-slate-500">Crop Marks</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={printConfig.overlays.printMarks.registrationMarks}
-                    onCheckedChange={(checked) => updatePrintMarks({ registrationMarks: !!checked })}
-                    data-testid="checkbox-registration-marks"
-                  />
-                  <Label className="text-[10px] text-slate-500">Registration Marks</Label>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500">Mark Length ({unitLabel})</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={printConfig.overlays.printMarks.markLength}
-                      onChange={(e) => updatePrintMarks({ markLength: parseInt(e.target.value) || 12 })}
-                      className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                      data-testid="input-mark-length"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-slate-500">Mark Offset ({unitLabel})</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={50}
-                      value={printConfig.overlays.printMarks.markOffset}
-                      onChange={(e) => updatePrintMarks({ markOffset: parseInt(e.target.value) || 3 })}
-                      className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
-                      data-testid="input-mark-offset"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
