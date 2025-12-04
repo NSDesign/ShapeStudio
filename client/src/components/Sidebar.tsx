@@ -1527,12 +1527,18 @@ export default function Sidebar({
     // Handle selecting a preset - populate the form with preset values then switch to custom tab
     const handlePresetSelect = (preset: ArtboardPresetPhysical) => {
       setCustomName(preset.name);
-      setCustomWidth(preset.widthInches);
-      setCustomHeight(preset.heightInches);
-      setCustomUnit('inches');
+      if (preset.nativeWidthPx !== undefined && preset.nativeHeightPx !== undefined) {
+        setCustomWidth(preset.nativeWidthPx);
+        setCustomHeight(preset.nativeHeightPx);
+        setCustomUnit('pixels');
+      } else {
+        setCustomWidth(preset.widthInches);
+        setCustomHeight(preset.heightInches);
+        setCustomUnit('inches');
+      }
       setCustomAspectRatio(preset.aspectRatio);
       setCustomLinkedDimensions(true);
-      setActiveTab('custom'); // Switch to custom tab to show the form with preset values
+      setActiveTab('custom');
     };
     
     // Handle quick create from preset - create artboard immediately
@@ -1920,7 +1926,7 @@ export default function Sidebar({
                           <div className="flex-1 text-left min-w-0">
                             <div className="font-medium truncate text-slate-100">{preset.name}</div>
                             <div className="text-[10px] text-slate-400 truncate">
-                              {formatPresetDimensions(preset, customUnit, customDpi)} — {pixelDims.width}×{pixelDims.height}px
+                              {pixelDims.width} × {pixelDims.height} px
                             </div>
                           </div>
                         </Button>

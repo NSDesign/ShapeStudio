@@ -25,6 +25,8 @@ export interface ArtboardPresetPhysical {
   category: PresetCategory;
   description?: string;
   aspectRatio: string;
+  nativeWidthPx?: number;
+  nativeHeightPx?: number;
 }
 
 export interface PresetCategoryInfo {
@@ -135,22 +137,22 @@ export const ARTBOARD_PRESETS_PHYSICAL: ArtboardPresetPhysical[] = [
   { id: 'ratio-9-16', name: 'Vertical (9:16)', widthInches: 5.625, heightInches: 10, category: 'aspect-ratio', description: 'Stories/Reels', aspectRatio: '9:16' },
   { id: 'ratio-16-9', name: 'Widescreen (16:9)', widthInches: 10, heightInches: 5.625, category: 'aspect-ratio', description: 'Video/TV', aspectRatio: '16:9' },
   
-  // Social Media
-  { id: 'instagram-post', name: 'Instagram Post', widthInches: 10, heightInches: 10, category: 'social', description: '1080×1080 at 108 DPI', aspectRatio: '1:1' },
-  { id: 'instagram-story', name: 'Instagram Story', widthInches: 5.625, heightInches: 10, category: 'social', description: '1080×1920 at 108 DPI', aspectRatio: '9:16' },
-  { id: 'facebook-post', name: 'Facebook Post', widthInches: 10, heightInches: 5.25, category: 'social', description: '1200×630 at 120 DPI', aspectRatio: '40:21' },
-  { id: 'twitter-post', name: 'Twitter/X Post', widthInches: 10, heightInches: 5.625, category: 'social', description: '1200×675 at 120 DPI', aspectRatio: '16:9' },
-  { id: 'youtube-thumbnail', name: 'YouTube Thumbnail', widthInches: 10, heightInches: 5.625, category: 'social', description: '1280×720 at 128 DPI', aspectRatio: '16:9' },
-  { id: 'linkedin-post', name: 'LinkedIn Post', widthInches: 10, heightInches: 5.225, category: 'social', description: '1200×627 at 120 DPI', aspectRatio: '40:21' },
+  // Social Media (fixed pixel dimensions, DPI-independent)
+  { id: 'instagram-post', name: 'Instagram Post', widthInches: 10, heightInches: 10, category: 'social', description: '1080×1080', aspectRatio: '1:1', nativeWidthPx: 1080, nativeHeightPx: 1080 },
+  { id: 'instagram-story', name: 'Instagram Story', widthInches: 5.625, heightInches: 10, category: 'social', description: '1080×1920', aspectRatio: '9:16', nativeWidthPx: 1080, nativeHeightPx: 1920 },
+  { id: 'facebook-post', name: 'Facebook Post', widthInches: 10, heightInches: 5.25, category: 'social', description: '1200×630', aspectRatio: '40:21', nativeWidthPx: 1200, nativeHeightPx: 630 },
+  { id: 'twitter-post', name: 'Twitter/X Post', widthInches: 10, heightInches: 5.625, category: 'social', description: '1200×675', aspectRatio: '16:9', nativeWidthPx: 1200, nativeHeightPx: 675 },
+  { id: 'youtube-thumbnail', name: 'YouTube Thumbnail', widthInches: 10, heightInches: 5.625, category: 'social', description: '1280×720', aspectRatio: '16:9', nativeWidthPx: 1280, nativeHeightPx: 720 },
+  { id: 'linkedin-post', name: 'LinkedIn Post', widthInches: 10, heightInches: 5.225, category: 'social', description: '1200×627', aspectRatio: '40:21', nativeWidthPx: 1200, nativeHeightPx: 627 },
   
-  // Web & Screen
-  { id: 'web-hd', name: 'HD (1920×1080)', widthInches: 20, heightInches: 11.25, category: 'web', description: 'Full HD at 96 DPI', aspectRatio: '16:9' },
-  { id: 'web-4k', name: '4K (3840×2160)', widthInches: 40, heightInches: 22.5, category: 'web', description: '4K UHD at 96 DPI', aspectRatio: '16:9' },
-  { id: 'web-banner', name: 'Web Banner (728×90)', widthInches: 7.583, heightInches: 0.938, category: 'web', description: 'Leaderboard at 96 DPI', aspectRatio: '728:90' },
+  // Web & Screen (fixed pixel dimensions, DPI-independent)
+  { id: 'web-hd', name: 'HD (1920×1080)', widthInches: 20, heightInches: 11.25, category: 'web', description: 'Full HD', aspectRatio: '16:9', nativeWidthPx: 1920, nativeHeightPx: 1080 },
+  { id: 'web-4k', name: '4K (3840×2160)', widthInches: 40, heightInches: 22.5, category: 'web', description: '4K UHD', aspectRatio: '16:9', nativeWidthPx: 3840, nativeHeightPx: 2160 },
+  { id: 'web-banner', name: 'Web Banner (728×90)', widthInches: 7.583, heightInches: 0.938, category: 'web', description: 'Leaderboard', aspectRatio: '728:90', nativeWidthPx: 728, nativeHeightPx: 90 },
   
-  // Mobile
-  { id: 'iphone-14-pro', name: 'iPhone 14 Pro', widthInches: 3.93, heightInches: 8.52, category: 'mobile', description: '1179×2556 at 300 DPI', aspectRatio: '9:19.5' },
-  { id: 'android-phone', name: 'Android Phone', widthInches: 3.6, heightInches: 6.4, category: 'mobile', description: '1080×1920 at 300 DPI', aspectRatio: '9:16' },
+  // Mobile (fixed pixel dimensions, DPI-independent)
+  { id: 'iphone-14-pro', name: 'iPhone 14 Pro', widthInches: 3.93, heightInches: 8.52, category: 'mobile', description: '1179×2556', aspectRatio: '9:19.5', nativeWidthPx: 1179, nativeHeightPx: 2556 },
+  { id: 'android-phone', name: 'Android Phone', widthInches: 3.6, heightInches: 6.4, category: 'mobile', description: '1080×1920', aspectRatio: '9:16', nativeWidthPx: 1080, nativeHeightPx: 1920 },
 ];
 
 /**
@@ -180,6 +182,12 @@ export function getPresetsGrouped(): Map<PresetCategory, ArtboardPresetPhysical[
  * Calculate pixel dimensions from a preset at a given DPI
  */
 export function getPresetPixelDimensions(preset: ArtboardPresetPhysical, dpi: number): { width: number; height: number } {
+  if (preset.nativeWidthPx !== undefined && preset.nativeHeightPx !== undefined) {
+    return {
+      width: preset.nativeWidthPx,
+      height: preset.nativeHeightPx
+    };
+  }
   return {
     width: Math.round(preset.widthInches * dpi),
     height: Math.round(preset.heightInches * dpi)
