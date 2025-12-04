@@ -146,6 +146,30 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   imageDescription: 'Created with Shape Editor', // Default description template
 };
 
+// Saved artboard configuration for persistence
+export interface SavedArtboard {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  dpi: number;
+  unitType: 'pixels' | 'mm' | 'cm' | 'inches';
+  backgroundColor: string;
+  gridColor?: string;
+  displayGrid: boolean;
+  displayBorder: boolean;
+  displayName: boolean;
+  displayDimensions: boolean;
+  displayResolution: boolean;
+  preset?: string;
+  category?: string;
+  linkedDimensions?: boolean;
+  aspectRatio?: string;
+  printConfig?: PrintConfig;
+}
+
 // App settings defaults configuration type
 export interface AppSettingsDefaults {
   // Export settings
@@ -155,7 +179,11 @@ export interface AppSettingsDefaults {
   exportAutoScaleFromDpi: boolean;    // Auto-calculate scale from artboard DPI
   exportMode: 'selection' | 'artboard' | 'all';
   
-  // Artboard settings
+  // All artboards (persisted)
+  savedArtboards?: SavedArtboard[];   // All artboards for persistence
+  activeArtboardId?: string;          // Currently active artboard ID
+  
+  // Legacy artboard settings (for backward compatibility)
   artboardName: string;
   artboardWidth: number;
   artboardHeight: number;

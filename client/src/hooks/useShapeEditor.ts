@@ -409,67 +409,116 @@ export const useShapeEditor = () => {
         zoom: appSettingsDefaults.canvasZoom ?? prev.zoom,
       }));
       
-      // Build print configuration from saved settings
-      const restoredPrintConfig: PrintConfig = {
-        outputSpecs: {
-          dpi: appSettingsDefaults.artboardDpi ?? DEFAULT_PRINT_CONFIG.outputSpecs.dpi,
-          unitType: appSettingsDefaults.artboardUnitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
-        },
-        overlays: {
-          overlayUnit: appSettingsDefaults.printOverlayUnit ?? DEFAULT_PRINT_CONFIG.overlays.overlayUnit,
-          bleed: {
-            amount: appSettingsDefaults.printBleedAmount ?? DEFAULT_PRINT_CONFIG.overlays.bleed.amount,
-            display: appSettingsDefaults.printBleedDisplay ?? DEFAULT_PRINT_CONFIG.overlays.bleed.display,
-            render: appSettingsDefaults.printBleedRender ?? DEFAULT_PRINT_CONFIG.overlays.bleed.render,
-            color: appSettingsDefaults.printBleedColor ?? DEFAULT_PRINT_CONFIG.overlays.bleed.color,
+      // Check if we have savedArtboards (new multi-artboard persistence)
+      if (appSettingsDefaults.savedArtboards && appSettingsDefaults.savedArtboards.length > 0) {
+        console.log(`🔄 Restoring ${appSettingsDefaults.savedArtboards.length} saved artboards`);
+        
+        // Restore all artboards with dimension validation
+        const restoredArtboards: Artboard[] = appSettingsDefaults.savedArtboards.map(savedAb => {
+          const validatedDims = validateArtboardDimensions(savedAb.name, savedAb.width, savedAb.height, savedAb.dpi);
+          
+          if (validatedDims.corrected) {
+            console.log(`🔧 Auto-correcting artboard dimensions for "${savedAb.name}": ${savedAb.width}×${savedAb.height} → ${validatedDims.width}×${validatedDims.height} at ${savedAb.dpi} DPI`);
+          }
+          
+          return {
+            id: savedAb.id,
+            name: savedAb.name,
+            x: savedAb.x ?? 0,
+            y: savedAb.y ?? 0,
+            width: validatedDims.width,
+            height: validatedDims.height,
+            dpi: savedAb.dpi,
+            unitType: savedAb.unitType,
+            backgroundColor: savedAb.backgroundColor,
+            gridColor: savedAb.gridColor,
+            displayGrid: savedAb.displayGrid,
+            displayBorder: savedAb.displayBorder,
+            displayName: savedAb.displayName ?? true,
+            displayDimensions: savedAb.displayDimensions ?? false,
+            displayResolution: savedAb.displayResolution ?? false,
+            preset: savedAb.preset,
+            category: savedAb.category,
+            linkedDimensions: savedAb.linkedDimensions,
+            aspectRatio: savedAb.aspectRatio,
+            printConfig: savedAb.printConfig ?? DEFAULT_PRINT_CONFIG,
+          };
+        });
+        
+        setArtboards(restoredArtboards);
+        
+        // Restore active artboard ID
+        if (appSettingsDefaults.activeArtboardId && restoredArtboards.some(ab => ab.id === appSettingsDefaults.activeArtboardId)) {
+          setActiveArtboard(appSettingsDefaults.activeArtboardId);
+        } else if (restoredArtboards.length > 0) {
+          setActiveArtboard(restoredArtboards[0].id);
+        }
+      } else {
+        // Legacy: Single artboard from old settings
+        console.log('🔄 Restoring from legacy single-artboard settings');
+        
+        // Build print configuration from saved settings
+        const restoredPrintConfig: PrintConfig = {
+          outputSpecs: {
+            dpi: appSettingsDefaults.artboardDpi ?? DEFAULT_PRINT_CONFIG.outputSpecs.dpi,
+            unitType: appSettingsDefaults.artboardUnitType ?? DEFAULT_PRINT_CONFIG.outputSpecs.unitType,
           },
-          safeZone: {
-            amount: appSettingsDefaults.printSafeZoneAmount ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.amount,
-            display: appSettingsDefaults.printSafeZoneDisplay ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.display,
-            color: appSettingsDefaults.printSafeZoneColor ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.color,
+          overlays: {
+            overlayUnit: appSettingsDefaults.printOverlayUnit ?? DEFAULT_PRINT_CONFIG.overlays.overlayUnit,
+            bleed: {
+              amount: appSettingsDefaults.printBleedAmount ?? DEFAULT_PRINT_CONFIG.overlays.bleed.amount,
+              display: appSettingsDefaults.printBleedDisplay ?? DEFAULT_PRINT_CONFIG.overlays.bleed.display,
+              render: appSettingsDefaults.printBleedRender ?? DEFAULT_PRINT_CONFIG.overlays.bleed.render,
+              color: appSettingsDefaults.printBleedColor ?? DEFAULT_PRINT_CONFIG.overlays.bleed.color,
+            },
+            safeZone: {
+              amount: appSettingsDefaults.printSafeZoneAmount ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.amount,
+              display: appSettingsDefaults.printSafeZoneDisplay ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.display,
+              color: appSettingsDefaults.printSafeZoneColor ?? DEFAULT_PRINT_CONFIG.overlays.safeZone.color,
+            },
+            printMarks: {
+              cropMarks: appSettingsDefaults.printMarksCropMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.cropMarks,
+              registrationMarks: appSettingsDefaults.printMarksRegistrationMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.registrationMarks,
+              markLength: appSettingsDefaults.printMarksMarkLength ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markLength,
+              markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
+              display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
+              render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
+            },
+            background: DEFAULT_PRINT_CONFIG.overlays.background,
           },
-          printMarks: {
-            cropMarks: appSettingsDefaults.printMarksCropMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.cropMarks,
-            registrationMarks: appSettingsDefaults.printMarksRegistrationMarks ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.registrationMarks,
-            markLength: appSettingsDefaults.printMarksMarkLength ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markLength,
-            markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
-            display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
-            render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
-          },
-          background: DEFAULT_PRINT_CONFIG.overlays.background,
-        },
-      };
-      
-      // Validate and auto-correct artboard dimensions based on preset name
-      const artboardName = appSettingsDefaults.artboardName ?? 'Artboard 1';
-      const storedWidth = appSettingsDefaults.artboardWidth ?? 800;
-      const storedHeight = appSettingsDefaults.artboardHeight ?? 600;
-      const dpi = appSettingsDefaults.artboardDpi ?? 72;
-      
-      const validatedDims = validateArtboardDimensions(artboardName, storedWidth, storedHeight, dpi);
-      
-      if (validatedDims.corrected) {
-        console.log(`🔧 Auto-correcting artboard dimensions for "${artboardName}": ${storedWidth}×${storedHeight} → ${validatedDims.width}×${validatedDims.height} at ${dpi} DPI`);
+        };
+        
+        // Validate and auto-correct artboard dimensions based on preset name
+        const artboardName = appSettingsDefaults.artboardName ?? 'Artboard 1';
+        const storedWidth = appSettingsDefaults.artboardWidth ?? 800;
+        const storedHeight = appSettingsDefaults.artboardHeight ?? 600;
+        const dpi = appSettingsDefaults.artboardDpi ?? 72;
+        
+        const validatedDims = validateArtboardDimensions(artboardName, storedWidth, storedHeight, dpi);
+        
+        if (validatedDims.corrected) {
+          console.log(`🔧 Auto-correcting artboard dimensions for "${artboardName}": ${storedWidth}×${storedHeight} → ${validatedDims.width}×${validatedDims.height} at ${dpi} DPI`);
+        }
+        
+        // Restore active artboard settings including print configuration
+        setArtboards(prev => prev.map(ab => 
+          ab.id === activeArtboard ? {
+            ...ab,
+            name: artboardName,
+            width: validatedDims.width,
+            height: validatedDims.height,
+            dpi: dpi,
+            unitType: appSettingsDefaults.artboardUnitType ?? ab.unitType ?? 'pixels',
+            backgroundColor: appSettingsDefaults.artboardBackgroundColor ?? ab.backgroundColor,
+            displayGrid: appSettingsDefaults.artboardDisplayGrid ?? ab.displayGrid,
+            displayBorder: appSettingsDefaults.artboardDisplayBorder ?? ab.displayBorder,
+            displayName: appSettingsDefaults.artboardDisplayName ?? ab.displayName ?? true,
+            displayDimensions: appSettingsDefaults.artboardDisplayDimensions ?? ab.displayDimensions ?? false,
+            displayResolution: appSettingsDefaults.artboardDisplayResolution ?? ab.displayResolution ?? false,
+            printConfig: restoredPrintConfig,
+          } : ab
+        ));
       }
-      
-      // Restore active artboard settings including print configuration
-      setArtboards(prev => prev.map(ab => 
-        ab.id === activeArtboard ? {
-          ...ab,
-          name: artboardName,
-          width: validatedDims.width,
-          height: validatedDims.height,
-          dpi: dpi,
-          unitType: appSettingsDefaults.artboardUnitType ?? ab.unitType ?? 'pixels',
-          backgroundColor: appSettingsDefaults.artboardBackgroundColor ?? ab.backgroundColor,
-          displayGrid: appSettingsDefaults.artboardDisplayGrid ?? ab.displayGrid,
-          displayBorder: appSettingsDefaults.artboardDisplayBorder ?? ab.displayBorder,
-          displayName: appSettingsDefaults.artboardDisplayName ?? ab.displayName ?? true,
-          displayDimensions: appSettingsDefaults.artboardDisplayDimensions ?? ab.displayDimensions ?? false,
-          displayResolution: appSettingsDefaults.artboardDisplayResolution ?? ab.displayResolution ?? false,
-          printConfig: restoredPrintConfig,
-        } : ab
-      ));
       
       // Restore UI visibility settings
       if (appSettingsDefaults.showMultiSelectButton !== undefined) {
@@ -500,7 +549,7 @@ export const useShapeEditor = () => {
     return () => clearTimeout(timeoutId);
   }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom]);
 
-  // Save artboard settings when active artboard changes (debounced)
+  // Save all artboards when artboards or active artboard changes (debounced)
   // This includes print configuration as it's part of artboard settings
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSettings.current) return;
@@ -510,9 +559,37 @@ export const useShapeEditor = () => {
     
     const printConfig = activeAb.printConfig || DEFAULT_PRINT_CONFIG;
     
+    // Convert artboards to savedArtboards format for persistence
+    const savedArtboards = artboards.map(ab => ({
+      id: ab.id,
+      name: ab.name,
+      x: ab.x ?? 0,
+      y: ab.y ?? 0,
+      width: ab.width,
+      height: ab.height,
+      dpi: ab.dpi ?? 72,
+      unitType: ab.unitType ?? 'pixels' as const,
+      backgroundColor: ab.backgroundColor ?? '#ffffff',
+      gridColor: ab.gridColor,
+      displayGrid: ab.displayGrid ?? false,
+      displayBorder: ab.displayBorder ?? true,
+      displayName: ab.displayName ?? true,
+      displayDimensions: ab.displayDimensions ?? false,
+      displayResolution: ab.displayResolution ?? false,
+      preset: ab.preset,
+      category: ab.category,
+      linkedDimensions: ab.linkedDimensions,
+      aspectRatio: ab.aspectRatio,
+      printConfig: ab.printConfig,
+    }));
+    
     const timeoutId = setTimeout(() => {
       saveAppSettings.mutate({
         ...appSettingsDefaults,
+        // New multi-artboard persistence
+        savedArtboards,
+        activeArtboardId: activeArtboard,
+        // Legacy fields (for backward compatibility)
         artboardName: activeAb.name,
         artboardWidth: activeAb.width,
         artboardHeight: activeAb.height,
