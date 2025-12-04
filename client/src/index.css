@@ -134,6 +134,29 @@
     transform: translateX(20px);
   }
   
+  /* Radix UI Switch styling */
+  .switch-track-unchecked[data-state="unchecked"] {
+    background-color: color-mix(in srgb, var(--primary) 80%, white);
+  }
+  
+  .switch-thumb {
+    background-color: var(--foreground);
+  }
+  
+  .switch-thumb[data-state="unchecked"] {
+    opacity: 0.5;
+  }
+  
+  .switch-thumb[data-state="checked"] {
+    opacity: 1;
+  }
+  
+  /* Radix UI Slider disabled state styling */
+  [data-disabled] .slider-track,
+  [data-disabled] .slider-range {
+    opacity: 0.5;
+  }
+  
   /* Canvas touch behavior prevention */
   canvas {
     touch-action: none;

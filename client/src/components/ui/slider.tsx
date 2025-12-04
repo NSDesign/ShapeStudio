@@ -10,13 +10,13 @@ const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex w-full touch-none select-none items-center",
+      "relative flex w-full touch-none select-none items-center group",
       className
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary slider-track">
+      <SliderPrimitive.Range className="absolute h-full bg-primary slider-range" />
     </SliderPrimitive.Track>
     {Array.isArray(props.value) ? (
       props.value.map((_, index) => (
