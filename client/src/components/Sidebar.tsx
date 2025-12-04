@@ -4841,20 +4841,15 @@ export default function Sidebar({
                 )}
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Number of Exports</span>
-                  <span className="text-slate-300">{exportBatchCount}</span>
-                </div>
-                <BufferedSlider
-                  value={[exportBatchCount]}
-                  onValueCommit={([value]) => setExportBatchCount(value)}
-                  min={1}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
+              <BufferedSliderWithLabel
+                label="Number of Exports"
+                value={exportBatchCount}
+                onValueCommit={(value) => setExportBatchCount(value)}
+                min={1}
+                max={100}
+                step={1}
+                className="w-full"
+              />
 
               {(() => {
                 // Calculate if project files option should be disabled

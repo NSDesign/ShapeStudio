@@ -67,8 +67,10 @@ interface BufferedSliderWithLabelProps {
   step?: number;
   disabled?: boolean;
   className?: string;
+  label?: string;
   formatLabel?: (value: number) => string;
   labelClassName?: string;
+  valueClassName?: string;
 }
 
 export function BufferedSliderWithLabel({
@@ -79,8 +81,10 @@ export function BufferedSliderWithLabel({
   step = 1,
   disabled = false,
   className,
+  label,
   formatLabel = (v) => String(v),
-  labelClassName = "text-xs text-slate-500",
+  labelClassName = "text-xs text-slate-400",
+  valueClassName = "text-xs text-slate-300",
 }: BufferedSliderWithLabelProps) {
   const [localValue, setLocalValue] = useState<number>(value);
   const isDraggingRef = useRef(false);
@@ -103,6 +107,12 @@ export function BufferedSliderWithLabel({
 
   return (
     <div className="space-y-1">
+      {label && (
+        <div className="flex justify-between text-xs">
+          <span className={labelClassName}>{label}</span>
+          <span className={valueClassName}>{formatLabel(localValue)}</span>
+        </div>
+      )}
       <Slider
         value={[localValue]}
         onValueChange={handleValueChange}
@@ -113,7 +123,7 @@ export function BufferedSliderWithLabel({
         disabled={disabled}
         className={className}
       />
-      <span className={labelClassName}>{formatLabel(localValue)}</span>
+      {!label && <span className={labelClassName}>{formatLabel(localValue)}</span>}
     </div>
   );
 }
