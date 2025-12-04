@@ -66,6 +66,8 @@ Preferred communication style: Simple, everyday language.
 - **Set Visibility Controls**: Visibility toggle and opacity controls with variance for Shape Sets.
 - **Z-index Layering Strategy**: GenerationOrder-based z-index offset for proper layering.
 - **Enhanced Project Persistence**: Complete application state save/load with backward compatibility.
+- **Multi-Artboard Persistence**: All artboards are saved to `savedArtboards` array with `activeArtboardId` tracking, with automatic dimension validation per artboard during restore. Maintains backward compatibility with legacy single-artboard fields.
+- **Artboard Info Display**: Name, dimensions, and resolution displayed at top-right of artboard (above bleed area) using right-aligned canvas text.
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
