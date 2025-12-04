@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { BufferedSlider, BufferedRangeSlider } from '@/components/ui/buffered-slider';
 import { NumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7338,9 +7339,9 @@ export default function Sidebar({
                 <span className="text-slate-400">Angle</span>
                 <span className="text-slate-300">{selectedShapes[0]?.transform.rotation || 0}°</span>
               </div>
-              <Slider
+              <BufferedSlider
                 value={[selectedShapes[0]?.transform.rotation || 0]}
-                onValueChange={([value]) => {
+                onValueCommit={([value]) => {
                   selectedShapes.forEach(shape => {
                     shape.transform.rotation = value;
                   });
@@ -7447,9 +7448,9 @@ export default function Sidebar({
           {/* Fill Opacity */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Fill Opacity</Label>
-            <Slider
+            <BufferedSlider
               value={[Math.round((selectedShapes[0]?.properties.fillOpacity || 1) * 100)]}
-              onValueChange={([value]) => {
+              onValueCommit={([value]) => {
                 updateShapeProperty((shape) => {
                   shape.properties.fillOpacity = value / 100;
                 });
