@@ -5093,22 +5093,44 @@ export default function Sidebar({
   
   // Scroll position preservation to prevent jumps during state updates in nested accordions
   const scrollPositionRef = useRef<number>(0);
-  const isScrollPreservationActiveRef = useRef<boolean>(false);
+  const scrollLockEndTimeRef = useRef<number>(0);
+  const scrollLockRafRef = useRef<number | null>(null);
   
   // Save scroll position before any interaction that might cause a re-render
+  // Uses a time-based lock that persists across multiple re-renders
   const saveScrollPosition = useCallback(() => {
     if (scrollContainerRef.current) {
       scrollPositionRef.current = scrollContainerRef.current.scrollTop;
-      isScrollPreservationActiveRef.current = true;
+      // Lock scroll for 100ms to handle multiple re-renders and browser scroll adjustments
+      scrollLockEndTimeRef.current = Date.now() + 100;
     }
   }, []);
   
-  // Restore scroll position after re-render (using useLayoutEffect for synchronous DOM updates)
+  // Continuously restore scroll position while lock is active
   useLayoutEffect(() => {
-    if (isScrollPreservationActiveRef.current && scrollContainerRef.current) {
+    const checkAndRestoreScroll = () => {
+      if (Date.now() < scrollLockEndTimeRef.current && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollPositionRef.current;
+        scrollLockRafRef.current = requestAnimationFrame(checkAndRestoreScroll);
+      } else {
+        scrollLockRafRef.current = null;
+      }
+    };
+    
+    if (Date.now() < scrollLockEndTimeRef.current && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollPositionRef.current;
-      isScrollPreservationActiveRef.current = false;
+      // Schedule additional checks to handle delayed scroll resets
+      if (!scrollLockRafRef.current) {
+        scrollLockRafRef.current = requestAnimationFrame(checkAndRestoreScroll);
+      }
     }
+    
+    return () => {
+      if (scrollLockRafRef.current) {
+        cancelAnimationFrame(scrollLockRafRef.current);
+        scrollLockRafRef.current = null;
+      }
+    };
   });
   
 
@@ -7870,8 +7892,10 @@ export default function Sidebar({
           <div 
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
+            style={{ overflowAnchor: 'none' }}
             onPointerDown={saveScrollPosition}
             onFocusCapture={saveScrollPosition}
+            onKeyDown={saveScrollPosition}
           >
           <Accordion 
             type="multiple" 
