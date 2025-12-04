@@ -67,6 +67,7 @@ Preferred communication style: Simple, everyday language.
 - **Z-index Layering Strategy**: GenerationOrder-based z-index offset for proper layering.
 - **Enhanced Project Persistence**: Complete application state save/load with backward compatibility.
 - **Multi-Artboard Persistence**: All artboards are saved to `savedArtboards` array with `activeArtboardId` tracking, with automatic dimension validation per artboard during restore. Maintains backward compatibility with legacy single-artboard fields.
+- **Automatic Grid Recalculation**: When switching artboards with different dimensions, grid settings are automatically scaled via `recalculateGridForArtboard` utility. Only "define" mode settings (gridRowOffset, gridColumnOffset, gridStartX, gridStartY, gridMarginValue) are scaled based on artboard dimension ratios; auto modes (auto-centered, auto-edge-to-edge) recalculate automatically from artboard bounds. When shape sets are enabled, updated grid config requires explicit Apply to persist to set.
 - **Artboard Info Display**: Name, dimensions, and DPI displayed in a rounded container at top-right of artboard, positioned above all print overlays (bleed, safe zone, print marks). Container uses adaptive contrast (dark on light backgrounds, light on dark backgrounds) with semi-transparent background. Position calculation accounts for bleed area and print marks gutter scaled by zoom level.
 
 ### System Design Choices
