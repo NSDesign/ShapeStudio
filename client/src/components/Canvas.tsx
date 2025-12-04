@@ -316,46 +316,6 @@ export default function Canvas({
           ctx.strokeRect(currentArtboard.x, currentArtboard.y, currentArtboard.width, currentArtboard.height);
         }
         
-        // Display artboard information overlay (independent of border)
-        // Position at top-right of artboard, above bleed area
-        const fontSize = 12 / effectiveZoom;
-        const lineHeight = fontSize * 1.3;
-        let textYOffset = -5 / effectiveZoom;
-        const artboardRightEdge = currentArtboard.x + currentArtboard.width;
-        
-        ctx.fillStyle = '#0066cc';
-        ctx.font = `${fontSize}px Arial`;
-        ctx.textAlign = 'right';  // Right-align text
-        
-        // Display artboard name if enabled
-        if (currentArtboard.displayName !== false) {
-          ctx.fillText(currentArtboard.name, artboardRightEdge, currentArtboard.y + textYOffset);
-          textYOffset -= lineHeight;
-        }
-        
-        // Display dimensions if enabled
-        if (currentArtboard.displayDimensions === true) {
-          const displayDims = getArtboardDisplayDimensions(
-            currentArtboard.width,
-            currentArtboard.height,
-            currentArtboard.dpi ?? 72,
-            currentArtboard.unitType ?? 'pixels'
-          );
-          const dimensionText = `${displayDims.widthFormatted} × ${displayDims.heightFormatted}`;
-          ctx.fillText(dimensionText, artboardRightEdge, currentArtboard.y + textYOffset);
-          textYOffset -= lineHeight;
-        }
-        
-        // Display resolution if enabled
-        if (currentArtboard.displayResolution === true) {
-          const dpi = currentArtboard.dpi ?? 72;
-          const resolutionText = `${dpi} DPI`;
-          ctx.fillText(resolutionText, artboardRightEdge, currentArtboard.y + textYOffset);
-        }
-        
-        // Reset text alignment for other elements
-        ctx.textAlign = 'left';
-        
         // Print Configuration Overlays
         const printConfig = currentArtboard.printConfig || DEFAULT_PRINT_CONFIG;
         const artboardDpi = currentArtboard.dpi ?? 72;
@@ -496,6 +456,121 @@ export default function Canvas({
               ctx.stroke();
             });
           }
+        }
+        
+        // Artboard Info Container - rendered LAST to appear above all print overlays
+        // Calculate topmost boundary considering bleed and print marks gutter
+        const hasAnyInfoToDisplay = 
+          currentArtboard.displayName !== false || 
+          currentArtboard.displayDimensions === true || 
+          currentArtboard.displayResolution === true;
+        
+        if (hasAnyInfoToDisplay) {
+          // Calculate bleed amount in pixels (already in world-space)
+          const bleedPxForInfo = printConfig.overlays.bleed.display && printConfig.overlays.bleed.amount > 0
+            ? convertPrintUnitToPixels(printConfig.overlays.bleed.amount, overlayUnit, artboardDpi)
+            : 0;
+          
+          // Calculate print marks gutter in world-space (matching how marks are drawn)
+          // Marks are drawn with lengths/offsets scaled by 1/effectiveZoom, so we need to match
+          let printMarksGutter = 0;
+          if (printConfig.overlays.printMarks.display) {
+            const markLengthPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
+            const markOffsetPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+            // Registration marks use 8px base size scaled by zoom
+            const regMarkSizeBase = printConfig.overlays.printMarks.registrationMarks ? 8 : 0;
+            // Scale gutter to match drawn mark dimensions (marks are drawn at 1/effectiveZoom scale)
+            printMarksGutter = (markOffsetPxInfo + markLengthPxInfo + regMarkSizeBase) / effectiveZoom;
+          }
+          
+          // Topmost Y position (above all overlays)
+          const topBoundary = currentArtboard.y - bleedPxForInfo - printMarksGutter;
+          
+          // Container styling
+          const fontSize = 11 / effectiveZoom;
+          const lineHeight = fontSize * 1.4;
+          const paddingX = 8 / effectiveZoom;
+          const paddingY = 6 / effectiveZoom;
+          const borderRadius = 4 / effectiveZoom;
+          const containerGap = 6 / effectiveZoom;
+          
+          // Collect lines to display
+          const infoLines: string[] = [];
+          
+          if (currentArtboard.displayName !== false) {
+            infoLines.push(currentArtboard.name);
+          }
+          
+          if (currentArtboard.displayDimensions === true) {
+            const displayDims = getArtboardDisplayDimensions(
+              currentArtboard.width,
+              currentArtboard.height,
+              currentArtboard.dpi ?? 72,
+              currentArtboard.unitType ?? 'pixels'
+            );
+            infoLines.push(`${displayDims.widthFormatted} × ${displayDims.heightFormatted}`);
+          }
+          
+          if (currentArtboard.displayResolution === true) {
+            const dpi = currentArtboard.dpi ?? 72;
+            infoLines.push(`${dpi} DPI`);
+          }
+          
+          // Calculate container dimensions
+          ctx.font = `${fontSize}px Arial`;
+          let maxTextWidth = 0;
+          infoLines.forEach(line => {
+            const metrics = ctx.measureText(line);
+            if (metrics.width > maxTextWidth) maxTextWidth = metrics.width;
+          });
+          
+          const containerWidth = maxTextWidth + (paddingX * 2);
+          const containerHeight = (infoLines.length * lineHeight) + (paddingY * 2) - (lineHeight - fontSize);
+          
+          // Position container at top-right, above all overlays
+          const containerX = currentArtboard.x + currentArtboard.width - containerWidth;
+          const containerY = topBoundary - containerHeight - containerGap;
+          
+          // Determine background color based on artboard brightness
+          const bgColor = currentArtboard.backgroundColor || '#ffffff';
+          const r = parseInt(bgColor.slice(1, 3), 16);
+          const g = parseInt(bgColor.slice(3, 5), 16);
+          const b = parseInt(bgColor.slice(5, 7), 16);
+          const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+          
+          // Use dark container on light backgrounds, light container on dark backgrounds
+          const isLightBg = brightness > 128;
+          const containerBgColor = isLightBg ? 'rgba(30, 41, 59, 0.85)' : 'rgba(241, 245, 249, 0.9)';
+          const textColor = isLightBg ? '#f1f5f9' : '#1e293b';
+          
+          // Draw rounded rectangle container
+          ctx.fillStyle = containerBgColor;
+          ctx.beginPath();
+          ctx.moveTo(containerX + borderRadius, containerY);
+          ctx.lineTo(containerX + containerWidth - borderRadius, containerY);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY, containerX + containerWidth, containerY + borderRadius);
+          ctx.lineTo(containerX + containerWidth, containerY + containerHeight - borderRadius);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY + containerHeight, containerX + containerWidth - borderRadius, containerY + containerHeight);
+          ctx.lineTo(containerX + borderRadius, containerY + containerHeight);
+          ctx.quadraticCurveTo(containerX, containerY + containerHeight, containerX, containerY + containerHeight - borderRadius);
+          ctx.lineTo(containerX, containerY + borderRadius);
+          ctx.quadraticCurveTo(containerX, containerY, containerX + borderRadius, containerY);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Draw text inside container
+          ctx.fillStyle = textColor;
+          ctx.font = `${fontSize}px Arial`;
+          ctx.textAlign = 'right';
+          
+          let textY = containerY + paddingY + fontSize;
+          infoLines.forEach(line => {
+            ctx.fillText(line, containerX + containerWidth - paddingX, textY);
+            textY += lineHeight;
+          });
+          
+          // Reset text alignment
+          ctx.textAlign = 'left';
         }
       }
 
