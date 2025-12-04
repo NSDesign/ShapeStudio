@@ -7871,6 +7871,7 @@ export default function Sidebar({
             ref={scrollContainerRef} 
             className="flex-1 overflow-y-auto [&_*]:!scroll-m-0"
             onPointerDown={saveScrollPosition}
+            onFocusCapture={saveScrollPosition}
           >
           <Accordion 
             type="multiple" 

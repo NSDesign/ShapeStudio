@@ -1,8 +1,8 @@
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import { BufferedRangeSlider } from "@/components/ui/buffered-slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/ui/numeric-input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export type ModeKind = 'fixed' | 'range' | 'incremental';
 
@@ -19,6 +19,76 @@ export interface StyledModeFieldProps {
   unit?: string;
   step?: number;
   allowedModes?: ModeKind[];
+}
+
+interface RangeControlsProps {
+  config: Extract<ModeConfig, { kind: 'range' }>;
+  onChange: (config: ModeConfig) => void;
+  bounds: { min: number; max: number };
+  step: number;
+  idBase: string;
+}
+
+function RangeControls({ config, onChange, bounds, step, idBase }: RangeControlsProps) {
+  const [localMin, setLocalMin] = useState(config.min);
+  const [localMax, setLocalMax] = useState(config.max);
+  
+  useEffect(() => {
+    setLocalMin(config.min);
+    setLocalMax(config.max);
+  }, [config.min, config.max]);
+  
+  const handleSliderChange = useCallback((values: number[]) => {
+    setLocalMin(values[0]);
+    setLocalMax(values[1]);
+  }, []);
+  
+  const handleSliderCommit = useCallback((values: number[]) => {
+    onChange({ kind: 'range', min: values[0], max: values[1] });
+  }, [onChange]);
+  
+  return (
+    <div className="space-y-4">
+      <BufferedRangeSlider
+        value={[localMin, localMax]}
+        onValueChange={handleSliderChange}
+        onValueCommit={handleSliderCommit}
+        min={bounds.min}
+        max={bounds.max}
+        step={step}
+        className="w-full"
+        data-testid={`slider-${idBase}-range`}
+      />
+      <div className="flex space-x-2">
+        <NumericInput
+          value={localMin}
+          onChange={(min) => {
+            const clampedMin = Math.min(min, localMax);
+            setLocalMin(clampedMin);
+            onChange({ kind: 'range', min: clampedMin, max: localMax });
+          }}
+          min={bounds.min}
+          max={localMax}
+          step={step}
+          className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
+          data-testid={`input-${idBase}-min`}
+        />
+        <NumericInput
+          value={localMax}
+          onChange={(max) => {
+            const clampedMax = Math.max(max, localMin);
+            setLocalMax(clampedMax);
+            onChange({ kind: 'range', min: localMin, max: clampedMax });
+          }}
+          min={localMin}
+          max={bounds.max}
+          step={step}
+          className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
+          data-testid={`input-${idBase}-max`}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function StyledModeField({ label, config, onChange, bounds, unit = "", step = 1, allowedModes = ['fixed', 'range', 'incremental'] }: StyledModeFieldProps) {
@@ -128,43 +198,13 @@ export function StyledModeField({ label, config, onChange, bounds, unit = "", st
       )}
 
       {config.kind === 'range' && (
-        <div className="space-y-4">
-          <Slider
-            value={[config.min, config.max]}
-            onValueChange={([min, max]) => onChange({ ...config, min, max })}
-            min={bounds.min}
-            max={bounds.max}
-            step={step}
-            className="w-full"
-            data-testid={`slider-${idBase}-range`}
-          />
-          <div className="flex space-x-2">
-            <NumericInput
-              value={config.min}
-              onChange={(min) => {
-                const clampedMin = Math.min(min, config.max);
-                onChange({ ...config, min: clampedMin });
-              }}
-              min={bounds.min}
-              max={config.max}
-              step={step}
-              className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
-              data-testid={`input-${idBase}-min`}
-            />
-            <NumericInput
-              value={config.max}
-              onChange={(max) => {
-                const clampedMax = Math.max(max, config.min);
-                onChange({ ...config, max: clampedMax });
-              }}
-              min={config.min}
-              max={bounds.max}
-              step={step}
-              className="flex-1 h-9 bg-slate-700 border-slate-600 text-slate-300 show-spinners"
-              data-testid={`input-${idBase}-max`}
-            />
-          </div>
-        </div>
+        <RangeControls 
+          config={config} 
+          onChange={onChange} 
+          bounds={bounds} 
+          step={step} 
+          idBase={idBase} 
+        />
       )}
     </div>
   );
