@@ -4574,6 +4574,7 @@ export const useShapeEditor = () => {
     scatterSettings,
     generationConfigSettings,
     canvasSettings,
+    updateCanvasSettings,
     artboards,
     activeArtboard,
     
