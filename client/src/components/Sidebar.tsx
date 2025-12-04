@@ -506,7 +506,7 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
                 onCommit={(value) => updateBleed({ amount: value })}
                 step={0.1}
                 min={0}
-                className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 data-testid="input-bleed-amount"
               />
             </div>
@@ -563,7 +563,7 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
                 onCommit={(value) => updateSafeZone({ amount: value })}
                 step={0.1}
                 min={0}
-                className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 data-testid="input-safe-zone-amount"
               />
             </div>
@@ -647,7 +647,7 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
                     min={1}
                     max={100}
                     step={1}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-length"
                   />
                 </div>
@@ -659,7 +659,7 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
                     min={0}
                     max={50}
                     step={1}
-                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-offset"
                   />
                 </div>
