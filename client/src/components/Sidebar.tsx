@@ -1183,6 +1183,7 @@ export default function Sidebar({
       printMarksMarkOffset: printConfig.overlays.printMarks.markOffset,
       printMarksDisplay: printConfig.overlays.printMarks.display,
       printMarksRender: printConfig.overlays.printMarks.render,
+      printMarksScaleMode: printConfig.overlays.printMarks.scaleMode || 'none',
     };
     
     console.log('Saving app settings:', settings);
@@ -1225,6 +1226,7 @@ export default function Sidebar({
             markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
             display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
             render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
+            scaleMode: appSettingsDefaults.printMarksScaleMode ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.scaleMode,
           },
           background: DEFAULT_PRINT_CONFIG.overlays.background,
         },
@@ -2982,16 +2984,30 @@ export default function Sidebar({
         
         // Calculate print marks gutter (if render is enabled)
         if (printConfig.overlays.printMarks.render && (printConfig.overlays.printMarks.cropMarks || printConfig.overlays.printMarks.registrationMarks)) {
-          const markLengthPx = convertPrintUnitToPixels(
-            printConfig.overlays.printMarks.markLength,
-            overlayUnit,
-            exportDPI
-          );
-          const markOffsetPx = convertPrintUnitToPixels(
-            printConfig.overlays.printMarks.markOffset,
-            overlayUnit,
-            exportDPI
-          );
+          const scaleMode = printConfig.overlays.printMarks.scaleMode || 'none';
+          const minDimension = Math.min(artboard.width, artboard.height);
+          
+          let markLengthPx: number;
+          let markOffsetPx: number;
+          
+          if (scaleMode === 'percent') {
+            // Percentage mode: values are percentages of the smaller artboard dimension
+            markLengthPx = (printConfig.overlays.printMarks.markLength / 100) * minDimension;
+            markOffsetPx = (printConfig.overlays.printMarks.markOffset / 100) * minDimension;
+          } else {
+            // Default mode: convert from unified unit to pixels
+            markLengthPx = convertPrintUnitToPixels(
+              printConfig.overlays.printMarks.markLength,
+              overlayUnit,
+              exportDPI
+            );
+            markOffsetPx = convertPrintUnitToPixels(
+              printConfig.overlays.printMarks.markOffset,
+              overlayUnit,
+              exportDPI
+            );
+          }
+          
           // Gutter needs space for marks outside the bleed area
           printMarksGutterPx = markLengthPx + markOffsetPx + 10; // Extra 10px padding
           
@@ -3776,16 +3792,30 @@ export default function Sidebar({
               
               // Calculate print marks gutter (if render is enabled)
               if (batchPrintConfig.overlays.printMarks.render && (batchPrintConfig.overlays.printMarks.cropMarks || batchPrintConfig.overlays.printMarks.registrationMarks)) {
-                const markLengthPx = convertPrintUnitToPixels(
-                  batchPrintConfig.overlays.printMarks.markLength,
-                  batchOverlayUnit,
-                  batchExportDPI
-                );
-                const markOffsetPx = convertPrintUnitToPixels(
-                  batchPrintConfig.overlays.printMarks.markOffset,
-                  batchOverlayUnit,
-                  batchExportDPI
-                );
+                const scaleMode = batchPrintConfig.overlays.printMarks.scaleMode || 'none';
+                const minDimension = Math.min(targetArtboard.width, targetArtboard.height);
+                
+                let markLengthPx: number;
+                let markOffsetPx: number;
+                
+                if (scaleMode === 'percent') {
+                  // Percentage mode: values are percentages of the smaller artboard dimension
+                  markLengthPx = (batchPrintConfig.overlays.printMarks.markLength / 100) * minDimension;
+                  markOffsetPx = (batchPrintConfig.overlays.printMarks.markOffset / 100) * minDimension;
+                } else {
+                  // Default mode: convert from unified unit to pixels
+                  markLengthPx = convertPrintUnitToPixels(
+                    batchPrintConfig.overlays.printMarks.markLength,
+                    batchOverlayUnit,
+                    batchExportDPI
+                  );
+                  markOffsetPx = convertPrintUnitToPixels(
+                    batchPrintConfig.overlays.printMarks.markOffset,
+                    batchOverlayUnit,
+                    batchExportDPI
+                  );
+                }
+                
                 batchPrintMarksGutterPx = markLengthPx + markOffsetPx + 10;
                 
                 batchPrintMarksConfig = {

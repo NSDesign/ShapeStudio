@@ -224,6 +224,7 @@ export interface AppSettingsDefaults {
   printMarksMarkOffset: number;
   printMarksDisplay: boolean;
   printMarksRender: boolean;
+  printMarksScaleMode?: PrintMarksScaleMode;  // 'none' = use overlayUnit, 'percent' = scale relative to artboard
 }
 
 // Default app settings
@@ -265,6 +266,7 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   printMarksMarkOffset: 3,
   printMarksDisplay: false,
   printMarksRender: false,
+  printMarksScaleMode: 'none',
 };
 
 // User preferences schemas
