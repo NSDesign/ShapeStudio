@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { BufferedSliderWithNumericInput, BufferedRangeSliderWithNumericInputs } from '@/components/ui/buffered-slider';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { NumericInput } from '@/components/ui/numeric-input';
@@ -553,47 +554,29 @@ export default function BatchConfigDialog({
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
                                 <Label className="text-xs text-slate-400">Rows</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridRows}
-                                    onChange={(value) => handleSettingsUpdate({ gridRows: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-rows"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridRows]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridRows: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.gridRows}
+                                  onValueCommit={(value) => handleSettingsUpdate({ gridRows: value })}
+                                  min={1}
+                                  max={50}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                />
                               </div>
                               <div className="space-y-1">
                                 <Label className="text-xs text-slate-400">Columns</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.gridColumns}
-                                    onChange={(value) => handleSettingsUpdate({ gridColumns: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-grid-columns"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.gridColumns]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ gridColumns: value })}
-                                    min={1}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.gridColumns}
+                                  onValueCommit={(value) => handleSettingsUpdate({ gridColumns: value })}
+                                  min={1}
+                                  max={50}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                />
                               </div>
                             </div>
                           </div>
@@ -618,47 +601,29 @@ export default function BatchConfigDialog({
                               <div className="space-y-2 mt-2">
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Grid Start X (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.gridStartX || 0}
-                                      onChange={(value) => handleSettingsUpdate({ gridStartX: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-grid-start-x"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.gridStartX || 0]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ gridStartX: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.gridStartX || 0}
+                                    onValueCommit={(value) => handleSettingsUpdate({ gridStartX: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Column Offset (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.gridColumnOffset}
-                                      onChange={(value) => handleSettingsUpdate({ gridColumnOffset: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-grid-column-offset"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.gridColumnOffset]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ gridColumnOffset: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-green-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.gridColumnOffset}
+                                    onValueCommit={(value) => handleSettingsUpdate({ gridColumnOffset: value })}
+                                    min={0}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                  />
                                 </div>
                               </div>
                             )}
@@ -684,47 +649,29 @@ export default function BatchConfigDialog({
                               <div className="space-y-2 mt-2">
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Grid Start Y (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.gridStartY || 0}
-                                      onChange={(value) => handleSettingsUpdate({ gridStartY: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-grid-start-y"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.gridStartY || 0]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ gridStartY: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.gridStartY || 0}
+                                    onValueCommit={(value) => handleSettingsUpdate({ gridStartY: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Row Offset (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.gridRowOffset}
-                                      onChange={(value) => handleSettingsUpdate({ gridRowOffset: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-grid-row-offset"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.gridRowOffset]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ gridRowOffset: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-green-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.gridRowOffset}
+                                    onValueCommit={(value) => handleSettingsUpdate({ gridRowOffset: value })}
+                                    min={0}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                  />
                                 </div>
                               </div>
                             )}
@@ -746,25 +693,16 @@ export default function BatchConfigDialog({
                               {currentSettings.gridMarginEnabled && (
                                 <div className="space-y-1 mt-2">
                                   <Label className="text-xs text-slate-400">Margin (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.gridMarginValue || 50}
-                                      onChange={(value) => handleSettingsUpdate({ gridMarginValue: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-grid-margin"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.gridMarginValue || 50]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ gridMarginValue: value })}
-                                      min={0}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.gridMarginValue || 50}
+                                    onValueCommit={(value) => handleSettingsUpdate({ gridMarginValue: value })}
+                                    min={0}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -997,41 +935,24 @@ export default function BatchConfigDialog({
                                     {(currentSettings.gridOffsets?.row?.amountMode ?? 'fixed') === 'fixed' && (
                                       <div className="space-y-1">
                                         <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                        <div className="flex items-center gap-2">
-                                          <NumericInput
-                                            value={currentSettings.gridOffsets?.row?.amount ?? 0}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                row: {
-                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amount: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                            data-testid="input-grid-row-offset-amount"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.row?.amount ?? 0]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                row: {
-                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amount: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="flex-1 [&_[role=slider]]:bg-green-600"
-                                          />
-                                        </div>
+                                        <BufferedSliderWithNumericInput
+                                          value={currentSettings.gridOffsets?.row?.amount ?? 0}
+                                          onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              row: {
+                                                ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
+                                                amount: value
+                                              }
+                                            } 
+                                          }))}
+                                          min={-500}
+                                          max={500}
+                                          step={5}
+                                          layout="inline"
+                                          inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                          sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                        />
                                       </div>
                                     )}
                                     
@@ -1157,9 +1078,9 @@ export default function BatchConfigDialog({
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Base (px)</Label>
-                                          <NumericInput
+                                          <BufferedSliderWithNumericInput
                                             value={currentSettings.gridOffsets?.row?.amountBase ?? 0}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 row: {
@@ -1171,31 +1092,15 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-row-offset-amount-base"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.row?.amountBase ?? 0]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                row: {
-                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amountBase: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-green-600"
+                                            inputClassName="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            sliderClassName="[&_[role=slider]]:bg-green-600"
                                           />
                                         </div>
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                          <NumericInput
+                                          <BufferedSliderWithNumericInput
                                             value={currentSettings.gridOffsets?.row?.amountIncrement ?? 10}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 row: {
@@ -1207,24 +1112,8 @@ export default function BatchConfigDialog({
                                             min={-100}
                                             max={100}
                                             step={5}
-                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-row-offset-amount-increment"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.row?.amountIncrement ?? 10]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                row: {
-                                                  ...(prev.gridOffsets?.row || DEFAULT_GRID_OFFSETS.row),
-                                                  amountIncrement: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-100}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-green-600"
+                                            inputClassName="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            sliderClassName="[&_[role=slider]]:bg-green-600"
                                           />
                                         </div>
                                       </div>
@@ -1373,41 +1262,24 @@ export default function BatchConfigDialog({
                                     {(currentSettings.gridOffsets?.column?.amountMode ?? 'fixed') === 'fixed' && (
                                       <div className="space-y-1">
                                         <Label className="text-xs text-slate-400">Amount (px)</Label>
-                                        <div className="flex items-center gap-2">
-                                          <NumericInput
-                                            value={currentSettings.gridOffsets?.column?.amount ?? 0}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                column: {
-                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amount: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                            data-testid="input-grid-column-offset-amount"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.column?.amount ?? 0]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                column: {
-                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amount: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                          />
-                                        </div>
+                                        <BufferedSliderWithNumericInput
+                                          value={currentSettings.gridOffsets?.column?.amount ?? 0}
+                                          onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
+                                            gridOffsets: { 
+                                              ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
+                                              column: {
+                                                ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
+                                                amount: value
+                                              }
+                                            } 
+                                          }))}
+                                          min={-500}
+                                          max={500}
+                                          step={5}
+                                          layout="inline"
+                                          inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                          sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                        />
                                       </div>
                                     )}
                                     
@@ -1533,9 +1405,9 @@ export default function BatchConfigDialog({
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Base (px)</Label>
-                                          <NumericInput
+                                          <BufferedSliderWithNumericInput
                                             value={currentSettings.gridOffsets?.column?.amountBase ?? 0}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 column: {
@@ -1547,31 +1419,15 @@ export default function BatchConfigDialog({
                                             min={-500}
                                             max={500}
                                             step={5}
-                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-column-offset-amount-base"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.column?.amountBase ?? 0]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                column: {
-                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amountBase: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-500}
-                                            max={500}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-blue-600"
+                                            inputClassName="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            sliderClassName="[&_[role=slider]]:bg-blue-600"
                                           />
                                         </div>
                                         <div className="space-y-2">
                                           <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                          <NumericInput
+                                          <BufferedSliderWithNumericInput
                                             value={currentSettings.gridOffsets?.column?.amountIncrement ?? 10}
-                                            onChange={(value) => handleSettingsUpdate((prev) => ({ 
+                                            onValueCommit={(value) => handleSettingsUpdate((prev) => ({ 
                                               gridOffsets: { 
                                                 ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
                                                 column: {
@@ -1583,24 +1439,8 @@ export default function BatchConfigDialog({
                                             min={-100}
                                             max={100}
                                             step={5}
-                                            className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                            data-testid="input-grid-column-offset-amount-increment"
-                                          />
-                                          <Slider
-                                            value={[currentSettings.gridOffsets?.column?.amountIncrement ?? 10]}
-                                            onValueChange={([value]) => handleSettingsUpdate((prev) => ({ 
-                                              gridOffsets: { 
-                                                ...(prev.gridOffsets || DEFAULT_GRID_OFFSETS), 
-                                                column: {
-                                                  ...(prev.gridOffsets?.column || DEFAULT_GRID_OFFSETS.column),
-                                                  amountIncrement: value
-                                                }
-                                              } 
-                                            }))}
-                                            min={-100}
-                                            max={100}
-                                            step={5}
-                                            className="[&_[role=slider]]:bg-blue-600"
+                                            inputClassName="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                            sliderClassName="[&_[role=slider]]:bg-blue-600"
                                           />
                                         </div>
                                       </div>
@@ -1825,47 +1665,29 @@ export default function BatchConfigDialog({
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
                               <Label className="text-xs text-slate-400">X Random (px)</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.gridXRandomization}
-                                  onChange={(value) => handleSettingsUpdate({ gridXRandomization: value })}
-                                  min={0}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-grid-x-random"
-                                />
-                                <Slider
-                                  value={[currentSettings.gridXRandomization]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ gridXRandomization: value })}
-                                  min={0}
-                                  max={500}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.gridXRandomization}
+                                onValueCommit={(value) => handleSettingsUpdate({ gridXRandomization: value })}
+                                min={0}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                              />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-xs text-slate-400">Y Random (px)</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.gridYRandomization}
-                                  onChange={(value) => handleSettingsUpdate({ gridYRandomization: value })}
-                                  min={0}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                  data-testid="input-grid-y-random"
-                                />
-                                <Slider
-                                  value={[currentSettings.gridYRandomization]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ gridYRandomization: value })}
-                                  min={0}
-                                  max={500}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-purple-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.gridYRandomization}
+                                onValueCommit={(value) => handleSettingsUpdate({ gridYRandomization: value })}
+                                min={0}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                              />
                             </div>
                           </div>
                         </div>
@@ -2953,25 +2775,16 @@ export default function BatchConfigDialog({
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs text-slate-400">Randomization (%)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.widthRandomizationScale}
-                                        onChange={(value) => handleSettingsUpdate({ widthRandomizationScale: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-width-random"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.widthRandomizationScale]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ widthRandomizationScale: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-purple-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.widthRandomizationScale}
+                                      onValueCommit={(value) => handleSettingsUpdate({ widthRandomizationScale: value })}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      layout="inline"
+                                      inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                                    />
                                   </div>
                                 </div>
                               )}
@@ -2979,25 +2792,16 @@ export default function BatchConfigDialog({
                               {currentSettings.widthMode === 'value' && (
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.widthValue}
-                                      onChange={(value) => handleSettingsUpdate({ widthValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-width-fixed"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.widthValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ widthValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.widthValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ widthValue: value })}
+                                    min={10}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                               
@@ -3006,47 +2810,29 @@ export default function BatchConfigDialog({
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.widthStartValue}
-                                          onChange={(value) => handleSettingsUpdate({ widthStartValue: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-width-start"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.widthStartValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ widthStartValue: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.widthStartValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ widthStartValue: value })}
+                                        min={10}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.widthIncrement}
-                                          onChange={(value) => handleSettingsUpdate({ widthIncrement: value })}
-                                          min={1}
-                                          max={50}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-width-increment"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.widthIncrement]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ widthIncrement: value })}
-                                          min={1}
-                                          max={50}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.widthIncrement}
+                                        onValueCommit={(value) => handleSettingsUpdate({ widthIncrement: value })}
+                                        min={1}
+                                        max={50}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
@@ -3112,25 +2898,16 @@ export default function BatchConfigDialog({
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs text-slate-400">Randomization (%)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.heightRandomizationScale}
-                                        onChange={(value) => handleSettingsUpdate({ heightRandomizationScale: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-height-random"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.heightRandomizationScale]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ heightRandomizationScale: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-purple-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.heightRandomizationScale}
+                                      onValueCommit={(value) => handleSettingsUpdate({ heightRandomizationScale: value })}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      layout="inline"
+                                      inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                                    />
                                   </div>
                                 </div>
                               )}
@@ -3138,25 +2915,16 @@ export default function BatchConfigDialog({
                               {currentSettings.heightMode === 'value' && (
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.heightValue}
-                                      onChange={(value) => handleSettingsUpdate({ heightValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-height-fixed"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.heightValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ heightValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.heightValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ heightValue: value })}
+                                    min={10}
+                                    max={500}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                               
@@ -3165,47 +2933,29 @@ export default function BatchConfigDialog({
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.heightStartValue}
-                                          onChange={(value) => handleSettingsUpdate({ heightStartValue: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-height-start"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.heightStartValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ heightStartValue: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.heightStartValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ heightStartValue: value })}
+                                        min={10}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.heightIncrement}
-                                          onChange={(value) => handleSettingsUpdate({ heightIncrement: value })}
-                                          min={1}
-                                          max={50}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-height-increment"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.heightIncrement]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ heightIncrement: value })}
-                                          min={1}
-                                          max={50}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.heightIncrement}
+                                        onValueCommit={(value) => handleSettingsUpdate({ heightIncrement: value })}
+                                        min={1}
+                                        max={50}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
@@ -3319,25 +3069,16 @@ export default function BatchConfigDialog({
                               {currentSettings.xPositionMode === 'value' && (
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.xPositionValue}
-                                      onChange={(value) => handleSettingsUpdate({ xPositionValue: value })}
-                                      min={-400}
-                                      max={400}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-x-pos-fixed"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.xPositionValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xPositionValue: value })}
-                                      min={-400}
-                                      max={400}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.xPositionValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ xPositionValue: value })}
+                                    min={-400}
+                                    max={400}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                               
@@ -3359,49 +3100,31 @@ export default function BatchConfigDialog({
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Distance (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.positionDirectionalDistance}
-                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-dir-distance"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.positionDirectionalDistance]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.positionDirectionalDistance}
+                                        onValueCommit={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                        min={10}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   {currentSettings.positionDirectionalMode === 'angle-based' && (
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Angle (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.positionDirectionalAngle}
-                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-dir-angle"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.positionDirectionalAngle]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.positionDirectionalAngle}
+                                        onValueCommit={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                        min={0}
+                                        max={360}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                   <div className="flex items-center space-x-2">
@@ -3415,25 +3138,16 @@ export default function BatchConfigDialog({
                                   {!currentSettings.directionalEvenDistribution && (
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Cluster Angle (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.directionalClusterAngle}
-                                          onChange={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
-                                          min={10}
-                                          max={180}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-cluster-angle"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.directionalClusterAngle]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
-                                          min={10}
-                                          max={180}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.directionalClusterAngle}
+                                        onValueCommit={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                        min={10}
+                                        max={180}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -3444,47 +3158,29 @@ export default function BatchConfigDialog({
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.xPositionStartValue}
-                                          onChange={(value) => handleSettingsUpdate({ xPositionStartValue: value })}
-                                          min={0}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-inc-start"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.xPositionStartValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionStartValue: value })}
-                                          min={0}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.xPositionStartValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ xPositionStartValue: value })}
+                                        min={0}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.xPositionIncrement}
-                                          onChange={(value) => handleSettingsUpdate({ xPositionIncrement: value })}
-                                          min={1}
-                                          max={100}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-inc-step"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.xPositionIncrement]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionIncrement: value })}
-                                          min={1}
-                                          max={100}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.xPositionIncrement}
+                                        onValueCommit={(value) => handleSettingsUpdate({ xPositionIncrement: value })}
+                                        min={1}
+                                        max={100}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-between">
@@ -3513,25 +3209,16 @@ export default function BatchConfigDialog({
                                       <Label className="text-xs text-slate-400">
                                         {currentSettings.xPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
                                       </Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.xPositionModulationValue}
-                                          onChange={(value) => handleSettingsUpdate({ xPositionModulationValue: value })}
-                                          min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                          step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-x-mod-value"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.xPositionModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ xPositionModulationValue: value })}
-                                          min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                          step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.xPositionModulationValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ xPositionModulationValue: value })}
+                                        min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                        max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                        step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -3592,25 +3279,16 @@ export default function BatchConfigDialog({
                               {currentSettings.yPositionMode === 'value' && (
                                 <div className="space-y-1">
                                   <Label className="text-xs text-slate-400">Fixed Value (px)</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.yPositionValue}
-                                      onChange={(value) => handleSettingsUpdate({ yPositionValue: value })}
-                                      min={-400}
-                                      max={400}
-                                      step={5}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                      data-testid="input-y-pos-fixed"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.yPositionValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yPositionValue: value })}
-                                      min={-400}
-                                      max={400}
-                                      step={5}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.yPositionValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ yPositionValue: value })}
+                                    min={-400}
+                                    max={400}
+                                    step={5}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                               
@@ -3632,49 +3310,31 @@ export default function BatchConfigDialog({
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Distance (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.positionDirectionalDistance}
-                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-dir-distance"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.positionDirectionalDistance]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalDistance: value })}
-                                          min={10}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.positionDirectionalDistance}
+                                        onValueCommit={(value) => handleSettingsUpdate({ positionDirectionalDistance: value })}
+                                        min={10}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   {currentSettings.positionDirectionalMode === 'angle-based' && (
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Angle (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.positionDirectionalAngle}
-                                          onChange={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-dir-angle"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.positionDirectionalAngle]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ positionDirectionalAngle: value })}
-                                          min={0}
-                                          max={360}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.positionDirectionalAngle}
+                                        onValueCommit={(value) => handleSettingsUpdate({ positionDirectionalAngle: value })}
+                                        min={0}
+                                        max={360}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                   <div className="flex items-center space-x-2">
@@ -3688,25 +3348,16 @@ export default function BatchConfigDialog({
                                   {!currentSettings.directionalEvenDistribution && (
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Cluster Angle (°)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.directionalClusterAngle}
-                                          onChange={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
-                                          min={10}
-                                          max={180}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-cluster-angle"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.directionalClusterAngle]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ directionalClusterAngle: value })}
-                                          min={10}
-                                          max={180}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.directionalClusterAngle}
+                                        onValueCommit={(value) => handleSettingsUpdate({ directionalClusterAngle: value })}
+                                        min={10}
+                                        max={180}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -3717,47 +3368,29 @@ export default function BatchConfigDialog({
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Start (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.yPositionStartValue}
-                                          onChange={(value) => handleSettingsUpdate({ yPositionStartValue: value })}
-                                          min={0}
-                                          max={200}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-inc-start"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.yPositionStartValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionStartValue: value })}
-                                          min={0}
-                                          max={200}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.yPositionStartValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ yPositionStartValue: value })}
+                                        min={0}
+                                        max={200}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                     <div className="space-y-1">
                                       <Label className="text-xs text-slate-400">Increment (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.yPositionIncrement}
-                                          onChange={(value) => handleSettingsUpdate({ yPositionIncrement: value })}
-                                          min={1}
-                                          max={100}
-                                          step={1}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-inc-step"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.yPositionIncrement]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionIncrement: value })}
-                                          min={1}
-                                          max={100}
-                                          step={1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.yPositionIncrement}
+                                        onValueCommit={(value) => handleSettingsUpdate({ yPositionIncrement: value })}
+                                        min={1}
+                                        max={100}
+                                        step={1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-between">
@@ -3786,25 +3419,16 @@ export default function BatchConfigDialog({
                                       <Label className="text-xs text-slate-400">
                                         {currentSettings.yPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
                                       </Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.yPositionModulationValue}
-                                          onChange={(value) => handleSettingsUpdate({ yPositionModulationValue: value })}
-                                          min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                          step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-y-mod-value"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.yPositionModulationValue]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ yPositionModulationValue: value })}
-                                          min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                          step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                          className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.yPositionModulationValue}
+                                        onValueCommit={(value) => handleSettingsUpdate({ yPositionModulationValue: value })}
+                                        min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                        max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                        step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                        layout="inline"
+                                        inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -3840,25 +3464,16 @@ export default function BatchConfigDialog({
                           {/* Fill Type Probability - Controls solid vs gradient */}
                           <div className="space-y-2 p-2 bg-slate-700/50 rounded">
                             <Label className="text-xs font-medium text-slate-300">Fill Type Probability</Label>
-                            <div className="flex items-center gap-2">
-                              <NumericInput
-                                value={currentSettings.fillStyleProbability}
-                                onChange={(value) => handleSettingsUpdate({ fillStyleProbability: Math.max(0, Math.min(100, value)) })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-fill-type-probability"
-                              />
-                              <Slider
-                                value={[currentSettings.fillStyleProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ fillStyleProbability: value })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                              />
-                            </div>
+                            <BufferedSliderWithNumericInput
+                              value={currentSettings.fillStyleProbability}
+                              onValueCommit={(value) => handleSettingsUpdate({ fillStyleProbability: Math.max(0, Math.min(100, value)) })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              layout="inline"
+                              inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                            />
                             <p className="text-xs text-slate-500">{currentSettings.fillStyleProbability}% solid, {100 - currentSettings.fillStyleProbability}% gradient</p>
                           </div>
                           
@@ -4107,64 +3722,43 @@ export default function BatchConfigDialog({
                                   <div className="space-y-2">
                                     <div className="flex items-center gap-2">
                                       <Label className="text-xs text-slate-400 w-12">Linear</Label>
-                                      <NumericInput
+                                      <BufferedSliderWithNumericInput
                                         value={currentSettings.fillGradientLinearProbability}
-                                        onChange={(value) => handleSettingsUpdate({ fillGradientLinearProbability: Math.max(0, Math.min(100, value)) })}
+                                        onValueCommit={(value) => handleSettingsUpdate({ fillGradientLinearProbability: Math.max(0, Math.min(100, value)) })}
                                         min={0}
                                         max={100}
                                         step={5}
-                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                        data-testid="input-gradient-linear-prob"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.fillGradientLinearProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                        layout="inline"
+                                        inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
                                       />
                                     </div>
                                     
                                     <div className="flex items-center gap-2">
                                       <Label className="text-xs text-slate-400 w-12">Radial</Label>
-                                      <NumericInput
+                                      <BufferedSliderWithNumericInput
                                         value={currentSettings.fillGradientRadialProbability}
-                                        onChange={(value) => handleSettingsUpdate({ fillGradientRadialProbability: Math.max(0, Math.min(100, value)) })}
+                                        onValueCommit={(value) => handleSettingsUpdate({ fillGradientRadialProbability: Math.max(0, Math.min(100, value)) })}
                                         min={0}
                                         max={100}
                                         step={5}
-                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                        data-testid="input-gradient-radial-prob"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.fillGradientRadialProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-purple-500"
+                                        layout="inline"
+                                        inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-purple-500"
                                       />
                                     </div>
                                     
                                     <div className="flex items-center gap-2">
                                       <Label className="text-xs text-slate-400 w-12">Conic</Label>
-                                      <NumericInput
+                                      <BufferedSliderWithNumericInput
                                         value={currentSettings.fillGradientConicProbability}
-                                        onChange={(value) => handleSettingsUpdate({ fillGradientConicProbability: Math.max(0, Math.min(100, value)) })}
+                                        onValueCommit={(value) => handleSettingsUpdate({ fillGradientConicProbability: Math.max(0, Math.min(100, value)) })}
                                         min={0}
                                         max={100}
                                         step={5}
-                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                        data-testid="input-gradient-conic-prob"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.fillGradientConicProbability]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-orange-500"
+                                        layout="inline"
+                                        inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-orange-500"
                                       />
                                     </div>
                                   </div>
@@ -5705,25 +5299,16 @@ export default function BatchConfigDialog({
                             {currentSettings.fillOpacityMode === 'define' && (
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Opacity (%)</Label>
-                                <div className="flex items-center gap-3">
-                                  <NumericInput
-                                    value={currentSettings.fillOpacityDefine ?? 80}
-                                    onChange={(value) => handleSettingsUpdate({ fillOpacityDefine: value })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-fill-opacity-define"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.fillOpacityDefine ?? 80]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ fillOpacityDefine: value })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.fillOpacityDefine ?? 80}
+                                  onValueCommit={(value) => handleSettingsUpdate({ fillOpacityDefine: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  layout="inline"
+                                  inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
                               </div>
                             )}
       
@@ -5732,47 +5317,29 @@ export default function BatchConfigDialog({
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Start Value (%)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.fillOpacityStartValue ?? 70}
-                                        onChange={(value) => handleSettingsUpdate({ fillOpacityStartValue: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                        data-testid="input-fill-opacity-start"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.fillOpacityStartValue ?? 70]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillOpacityStartValue: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.fillOpacityStartValue ?? 70}
+                                      onValueCommit={(value) => handleSettingsUpdate({ fillOpacityStartValue: value })}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      layout="inline"
+                                      inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Increment (%/shape)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.fillOpacityIncrement ?? 5}
-                                        onChange={(value) => handleSettingsUpdate({ fillOpacityIncrement: value })}
-                                        min={-20}
-                                        max={20}
-                                        step={1}
-                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                        data-testid="input-fill-opacity-increment"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.fillOpacityIncrement ?? 5]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ fillOpacityIncrement: value })}
-                                        min={-20}
-                                        max={20}
-                                        step={1}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.fillOpacityIncrement ?? 5}
+                                      onValueCommit={(value) => handleSettingsUpdate({ fillOpacityIncrement: value })}
+                                      min={-20}
+                                      max={20}
+                                      step={1}
+                                      layout="inline"
+                                      inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                 </div>
                                 <div className="space-y-2 p-2 bg-slate-800/50 rounded">
@@ -5788,25 +5355,16 @@ export default function BatchConfigDialog({
                                   {currentSettings.fillOpacityModulationEnabled && (
                                     <div className="space-y-2 mt-2">
                                       <Label className="text-xs text-slate-400">Wrap at (%)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.fillOpacityModulationValue ?? 100}
-                                          onChange={(value) => handleSettingsUpdate({ fillOpacityModulationValue: value })}
-                                          min={10}
-                                          max={100}
-                                          step={5}
-                                          className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                          data-testid="input-fill-opacity-modulation"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.fillOpacityModulationValue ?? 100]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ fillOpacityModulationValue: value })}
-                                          min={10}
-                                          max={100}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.fillOpacityModulationValue ?? 100}
+                                        onValueCommit={(value) => handleSettingsUpdate({ fillOpacityModulationValue: value })}
+                                        min={10}
+                                        max={100}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -5841,24 +5399,17 @@ export default function BatchConfigDialog({
                           <div className="space-y-2 p-2 bg-slate-700/50 rounded">
                             <Label className="text-xs font-medium text-slate-300">Stroke Probability</Label>
                             <div className="flex items-center gap-3">
-                              <NumericInput
+                              <BufferedSliderWithNumericInput
                                 value={currentSettings.strokeProbability}
-                                onChange={(value) => handleSettingsUpdate({ strokeProbability: Math.max(0, Math.min(100, value)) })}
+                                onValueCommit={(value) => handleSettingsUpdate({ strokeProbability: Math.max(0, Math.min(100, value)) })}
                                 min={0}
                                 max={100}
                                 step={5}
-                                className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                data-testid="input-stroke-probability"
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
                               />
                               <span className="text-xs text-slate-400">%</span>
-                              <Slider
-                                value={[currentSettings.strokeProbability]}
-                                onValueChange={([value]) => handleSettingsUpdate({ strokeProbability: value })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                              />
                             </div>
                           </div>
                           
@@ -5922,25 +5473,16 @@ export default function BatchConfigDialog({
                             {currentSettings.strokeWidthMode === 'define' && (
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Width (px)</Label>
-                                <div className="flex items-center gap-3">
-                                  <NumericInput
-                                    value={currentSettings.strokeWidthDefine ?? 3}
-                                    onChange={(value) => handleSettingsUpdate({ strokeWidthDefine: value })}
-                                    min={0.5}
-                                    max={20}
-                                    step={0.5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-stroke-width-define"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.strokeWidthDefine ?? 3]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ strokeWidthDefine: value })}
-                                    min={0.5}
-                                    max={20}
-                                    step={0.5}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.strokeWidthDefine ?? 3}
+                                  onValueCommit={(value) => handleSettingsUpdate({ strokeWidthDefine: value })}
+                                  min={0.5}
+                                  max={20}
+                                  step={0.5}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
                               </div>
                             )}
                             
@@ -5949,47 +5491,29 @@ export default function BatchConfigDialog({
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Start Value (px)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.strokeWidthStartValue ?? 1}
-                                        onChange={(value) => handleSettingsUpdate({ strokeWidthStartValue: value })}
-                                        min={0.5}
-                                        max={20}
-                                        step={0.5}
-                                        className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-stroke-width-start"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.strokeWidthStartValue ?? 1]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeWidthStartValue: value })}
-                                        min={0.5}
-                                        max={20}
-                                        step={0.5}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.strokeWidthStartValue ?? 1}
+                                      onValueCommit={(value) => handleSettingsUpdate({ strokeWidthStartValue: value })}
+                                      min={0.5}
+                                      max={20}
+                                      step={0.5}
+                                      layout="inline"
+                                      inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Increment (px/shape)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.strokeWidthIncrement ?? 0.5}
-                                        onChange={(value) => handleSettingsUpdate({ strokeWidthIncrement: value })}
-                                        min={0}
-                                        max={2}
-                                        step={0.1}
-                                        className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-stroke-width-increment"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.strokeWidthIncrement ?? 0.5]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeWidthIncrement: value })}
-                                        min={0}
-                                        max={2}
-                                        step={0.1}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.strokeWidthIncrement ?? 0.5}
+                                      onValueCommit={(value) => handleSettingsUpdate({ strokeWidthIncrement: value })}
+                                      min={0}
+                                      max={2}
+                                      step={0.1}
+                                      layout="inline"
+                                      inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                 </div>
                                 <div className="space-y-2 p-2 bg-slate-800/50 rounded">
@@ -6005,25 +5529,16 @@ export default function BatchConfigDialog({
                                   {currentSettings.strokeWidthModulationEnabled && (
                                     <div className="space-y-2 mt-2">
                                       <Label className="text-xs text-slate-400">Wrap at (px)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.strokeWidthModulationValue ?? 10}
-                                          onChange={(value) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
-                                          min={1}
-                                          max={20}
-                                          step={0.5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-stroke-width-modulation"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.strokeWidthModulationValue ?? 10]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
-                                          min={1}
-                                          max={20}
-                                          step={0.5}
-                                          className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.strokeWidthModulationValue ?? 10}
+                                        onValueCommit={(value) => handleSettingsUpdate({ strokeWidthModulationValue: value })}
+                                        min={1}
+                                        max={20}
+                                        step={0.5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -6296,25 +5811,16 @@ export default function BatchConfigDialog({
                             {currentSettings.strokeOpacityMode === 'define' && (
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Opacity (%)</Label>
-                                <div className="flex items-center gap-3">
-                                  <NumericInput
-                                    value={currentSettings.strokeOpacityDefine ?? 80}
-                                    onChange={(value) => handleSettingsUpdate({ strokeOpacityDefine: value })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                    data-testid="input-stroke-opacity-define"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.strokeOpacityDefine ?? 80]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityDefine: value })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.strokeOpacityDefine ?? 80}
+                                  onValueCommit={(value) => handleSettingsUpdate({ strokeOpacityDefine: value })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
                               </div>
                             )}
       
@@ -6323,47 +5829,29 @@ export default function BatchConfigDialog({
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Start Value (%)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.strokeOpacityStartValue ?? 100}
-                                        onChange={(value) => handleSettingsUpdate({ strokeOpacityStartValue: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-stroke-opacity-start"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.strokeOpacityStartValue ?? 100]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityStartValue: value })}
-                                        min={0}
-                                        max={100}
-                                        step={5}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.strokeOpacityStartValue ?? 100}
+                                      onValueCommit={(value) => handleSettingsUpdate({ strokeOpacityStartValue: value })}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      layout="inline"
+                                      inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <Label className="text-xs text-slate-400">Increment (%/shape)</Label>
-                                    <div className="flex items-center gap-2">
-                                      <NumericInput
-                                        value={currentSettings.strokeOpacityIncrement ?? -5}
-                                        onChange={(value) => handleSettingsUpdate({ strokeOpacityIncrement: value })}
-                                        min={-20}
-                                        max={20}
-                                        step={1}
-                                        className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                        data-testid="input-stroke-opacity-increment"
-                                      />
-                                      <Slider
-                                        value={[currentSettings.strokeOpacityIncrement ?? -5]}
-                                        onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityIncrement: value })}
-                                        min={-20}
-                                        max={20}
-                                        step={1}
-                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                      />
-                                    </div>
+                                    <BufferedSliderWithNumericInput
+                                      value={currentSettings.strokeOpacityIncrement ?? -5}
+                                      onValueCommit={(value) => handleSettingsUpdate({ strokeOpacityIncrement: value })}
+                                      min={-20}
+                                      max={20}
+                                      step={1}
+                                      layout="inline"
+                                      inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                      sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                    />
                                   </div>
                                 </div>
                                 <div className="space-y-2 p-2 bg-slate-800/50 rounded">
@@ -6379,25 +5867,16 @@ export default function BatchConfigDialog({
                                   {currentSettings.strokeOpacityModulationEnabled && (
                                     <div className="space-y-2 mt-2">
                                       <Label className="text-xs text-slate-400">Wrap at (%)</Label>
-                                      <div className="flex items-center gap-2">
-                                        <NumericInput
-                                          value={currentSettings.strokeOpacityModulationValue ?? 50}
-                                          onChange={(value) => handleSettingsUpdate({ strokeOpacityModulationValue: value })}
-                                          min={10}
-                                          max={100}
-                                          step={5}
-                                          className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
-                                          data-testid="input-stroke-opacity-modulation"
-                                        />
-                                        <Slider
-                                          value={[currentSettings.strokeOpacityModulationValue ?? 50]}
-                                          onValueChange={([value]) => handleSettingsUpdate({ strokeOpacityModulationValue: value })}
-                                          min={10}
-                                          max={100}
-                                          step={5}
-                                          className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                        />
-                                      </div>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.strokeOpacityModulationValue ?? 50}
+                                        onValueCommit={(value) => handleSettingsUpdate({ strokeOpacityModulationValue: value })}
+                                        min={10}
+                                        max={100}
+                                        step={5}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
                                     </div>
                                   )}
                                 </div>
@@ -6467,25 +5946,16 @@ export default function BatchConfigDialog({
                           
                           {currentSettings.xTransformMode === 'value' && (
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.xTransformValue}
-                                  onChange={(value) => handleSettingsUpdate({ xTransformValue: value })}
-                                  min={-500}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-x-transform-value"
-                                />
-                                <Slider
-                                  value={[currentSettings.xTransformValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ xTransformValue: value })}
-                                  min={-200}
-                                  max={200}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.xTransformValue}
+                                onValueCommit={(value) => handleSettingsUpdate({ xTransformValue: value })}
+                                min={-500}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                              />
                               <p className="text-xs text-slate-500">Fixed X offset: {currentSettings.xTransformValue}px</p>
                             </div>
                           )}
@@ -6564,47 +6034,29 @@ export default function BatchConfigDialog({
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Start Value</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.xTransformStartValue ?? 0}
-                                    onChange={(value) => handleSettingsUpdate({ xTransformStartValue: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-x-start-value"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.xTransformStartValue ?? 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ xTransformStartValue: value })}
-                                    min={-200}
-                                    max={200}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.xTransformStartValue ?? 0}
+                                  onValueCommit={(value) => handleSettingsUpdate({ xTransformStartValue: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Increment</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.xTransformIncrement}
-                                    onChange={(value) => handleSettingsUpdate({ xTransformIncrement: value })}
-                                    min={-100}
-                                    max={100}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-x-increment"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.xTransformIncrement]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ xTransformIncrement: value })}
-                                    min={-50}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.xTransformIncrement}
+                                  onValueCommit={(value) => handleSettingsUpdate({ xTransformIncrement: value })}
+                                  min={-100}
+                                  max={100}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                />
                               </div>
                               <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
                                 <Checkbox
@@ -6618,25 +6070,16 @@ export default function BatchConfigDialog({
                               {currentSettings.xTransformModulationEnabled && (
                                 <div className="space-y-2">
                                   <Label className="text-xs text-slate-400">Modulation Wrap</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.xTransformModulationValue}
-                                      onChange={(value) => handleSettingsUpdate({ xTransformModulationValue: value })}
-                                      min={10}
-                                      max={1000}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                      data-testid="input-new-x-modulation"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.xTransformModulationValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xTransformModulationValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.xTransformModulationValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ xTransformModulationValue: value })}
+                                    min={10}
+                                    max={1000}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -6670,24 +6113,16 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 {currentSettings.xShapeAnchorMode === 'define' && (
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.xShapeAnchorDefine}
-                                      onChange={(value) => handleSettingsUpdate({ xShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.xShapeAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.xShapeAnchorDefine}
+                                    onValueCommit={(value) => handleSettingsUpdate({ xShapeAnchorDefine: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
                                 )}
                               </div>
                               <div className="space-y-2">
@@ -6716,24 +6151,16 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 {currentSettings.xArtboardAnchorMode === 'define' && (
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.xArtboardAnchorDefine}
-                                      onChange={(value) => handleSettingsUpdate({ xArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.xArtboardAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ xArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.xArtboardAnchorDefine}
+                                    onValueCommit={(value) => handleSettingsUpdate({ xArtboardAnchorDefine: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
                                 )}
                               </div>
                             </div>
@@ -6759,25 +6186,16 @@ export default function BatchConfigDialog({
                           
                           {currentSettings.yTransformMode === 'value' && (
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.yTransformValue}
-                                  onChange={(value) => handleSettingsUpdate({ yTransformValue: value })}
-                                  min={-500}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-y-transform-value"
-                                />
-                                <Slider
-                                  value={[currentSettings.yTransformValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ yTransformValue: value })}
-                                  min={-200}
-                                  max={200}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.yTransformValue}
+                                onValueCommit={(value) => handleSettingsUpdate({ yTransformValue: value })}
+                                min={-500}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                              />
                               <p className="text-xs text-slate-500">Fixed Y offset: {currentSettings.yTransformValue}px</p>
                             </div>
                           )}
@@ -6856,47 +6274,29 @@ export default function BatchConfigDialog({
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Start Value</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.yTransformStartValue ?? 0}
-                                    onChange={(value) => handleSettingsUpdate({ yTransformStartValue: value })}
-                                    min={-500}
-                                    max={500}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-y-start-value"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.yTransformStartValue ?? 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ yTransformStartValue: value })}
-                                    min={-200}
-                                    max={200}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.yTransformStartValue ?? 0}
+                                  onValueCommit={(value) => handleSettingsUpdate({ yTransformStartValue: value })}
+                                  min={-500}
+                                  max={500}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Increment</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.yTransformIncrement}
-                                    onChange={(value) => handleSettingsUpdate({ yTransformIncrement: value })}
-                                    min={-100}
-                                    max={100}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-y-increment"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.yTransformIncrement]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ yTransformIncrement: value })}
-                                    min={-50}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.yTransformIncrement}
+                                  onValueCommit={(value) => handleSettingsUpdate({ yTransformIncrement: value })}
+                                  min={-100}
+                                  max={100}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                />
                               </div>
                               <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
                                 <Checkbox
@@ -6910,25 +6310,16 @@ export default function BatchConfigDialog({
                               {currentSettings.yTransformModulationEnabled && (
                                 <div className="space-y-2">
                                   <Label className="text-xs text-slate-400">Modulation Wrap</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.yTransformModulationValue}
-                                      onChange={(value) => handleSettingsUpdate({ yTransformModulationValue: value })}
-                                      min={10}
-                                      max={1000}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                      data-testid="input-new-y-modulation"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.yTransformModulationValue]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yTransformModulationValue: value })}
-                                      min={10}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-blue-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.yTransformModulationValue}
+                                    onValueCommit={(value) => handleSettingsUpdate({ yTransformModulationValue: value })}
+                                    min={10}
+                                    max={1000}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -6962,24 +6353,16 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 {currentSettings.yShapeAnchorMode === 'define' && (
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.yShapeAnchorDefine}
-                                      onChange={(value) => handleSettingsUpdate({ yShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.yShapeAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yShapeAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.yShapeAnchorDefine}
+                                    onValueCommit={(value) => handleSettingsUpdate({ yShapeAnchorDefine: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
                                 )}
                               </div>
                               <div className="space-y-2">
@@ -7008,24 +6391,16 @@ export default function BatchConfigDialog({
                                   )}
                                 </div>
                                 {currentSettings.yArtboardAnchorMode === 'define' && (
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.yArtboardAnchorDefine}
-                                      onChange={(value) => handleSettingsUpdate({ yArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    />
-                                    <Slider
-                                      value={[currentSettings.yArtboardAnchorDefine]}
-                                      onValueChange={([value]) => handleSettingsUpdate({ yArtboardAnchorDefine: value })}
-                                      min={-500}
-                                      max={500}
-                                      step={10}
-                                      className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                    />
-                                  </div>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.yArtboardAnchorDefine}
+                                    onValueCommit={(value) => handleSettingsUpdate({ yArtboardAnchorDefine: value })}
+                                    min={-500}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
                                 )}
                               </div>
                             </div>
@@ -7085,35 +6460,21 @@ export default function BatchConfigDialog({
                           
                           {currentSettings.scaleXMode === 'value' && (
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.scaleXValue}
-                                  onChange={(value) => {
-                                    handleSettingsUpdate({ scaleXValue: value });
-                                    if (currentSettings.maintainScaleAspectRatio) {
-                                      handleSettingsUpdate({ scaleYValue: value });
-                                    }
-                                  }}
-                                  min={1}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-scale-x-value"
-                                />
-                                <Slider
-                                  value={[currentSettings.scaleXValue]}
-                                  onValueChange={([value]) => {
-                                    handleSettingsUpdate({ scaleXValue: value });
-                                    if (currentSettings.maintainScaleAspectRatio) {
-                                      handleSettingsUpdate({ scaleYValue: value });
-                                    }
-                                  }}
-                                  min={10}
-                                  max={300}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-green-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.scaleXValue}
+                                onValueCommit={(value) => {
+                                  handleSettingsUpdate({ scaleXValue: value });
+                                  if (currentSettings.maintainScaleAspectRatio) {
+                                    handleSettingsUpdate({ scaleYValue: value });
+                                  }
+                                }}
+                                min={1}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                              />
                               <p className="text-xs text-slate-500">Scale: {currentSettings.scaleXValue}%</p>
                             </div>
                           )}
@@ -7220,67 +6581,39 @@ export default function BatchConfigDialog({
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Start %</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.scaleXStartValue ?? 100}
-                                    onChange={(value) => {
-                                      handleSettingsUpdate({ scaleXStartValue: value });
-                                      if (currentSettings.maintainScaleAspectRatio) {
-                                        handleSettingsUpdate({ scaleYStartValue: value });
-                                      }
-                                    }}
-                                    min={0}
-                                    max={300}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-scale-x-start"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.scaleXStartValue ?? 100]}
-                                    onValueChange={([value]) => {
-                                      handleSettingsUpdate({ scaleXStartValue: value });
-                                      if (currentSettings.maintainScaleAspectRatio) {
-                                        handleSettingsUpdate({ scaleYStartValue: value });
-                                      }
-                                    }}
-                                    min={0}
-                                    max={200}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.scaleXStartValue ?? 100}
+                                  onValueCommit={(value) => {
+                                    handleSettingsUpdate({ scaleXStartValue: value });
+                                    if (currentSettings.maintainScaleAspectRatio) {
+                                      handleSettingsUpdate({ scaleYStartValue: value });
+                                    }
+                                  }}
+                                  min={0}
+                                  max={300}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Increment %</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.scaleXIncrement}
-                                    onChange={(value) => {
-                                      handleSettingsUpdate({ scaleXIncrement: value });
-                                      if (currentSettings.maintainScaleAspectRatio) {
-                                        handleSettingsUpdate({ scaleYIncrement: value });
-                                      }
-                                    }}
-                                    min={-100}
-                                    max={100}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    data-testid="input-new-scale-x-increment"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.scaleXIncrement]}
-                                    onValueChange={([value]) => {
-                                      handleSettingsUpdate({ scaleXIncrement: value });
-                                      if (currentSettings.maintainScaleAspectRatio) {
-                                        handleSettingsUpdate({ scaleYIncrement: value });
-                                      }
-                                    }}
-                                    min={-50}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.scaleXIncrement}
+                                  onValueCommit={(value) => {
+                                    handleSettingsUpdate({ scaleXIncrement: value });
+                                    if (currentSettings.maintainScaleAspectRatio) {
+                                      handleSettingsUpdate({ scaleYIncrement: value });
+                                    }
+                                  }}
+                                  min={-100}
+                                  max={100}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                />
                               </div>
                             </div>
                           )}
@@ -7308,27 +6641,17 @@ export default function BatchConfigDialog({
                           
                           {currentSettings.scaleYMode === 'value' && (
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.scaleYValue}
-                                  onChange={(value) => handleSettingsUpdate({ scaleYValue: value })}
-                                  min={1}
-                                  max={500}
-                                  step={5}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  disabled={currentSettings.maintainScaleAspectRatio}
-                                  data-testid="input-new-scale-y-value"
-                                />
-                                <Slider
-                                  value={[currentSettings.scaleYValue]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ scaleYValue: value })}
-                                  min={10}
-                                  max={300}
-                                  step={5}
-                                  className="flex-1 [&_[role=slider]]:bg-green-600"
-                                  disabled={currentSettings.maintainScaleAspectRatio}
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.scaleYValue}
+                                onValueCommit={(value) => handleSettingsUpdate({ scaleYValue: value })}
+                                min={1}
+                                max={500}
+                                step={5}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                disabled={currentSettings.maintainScaleAspectRatio}
+                              />
                               <p className="text-xs text-slate-500">Scale: {currentSettings.scaleYValue}%</p>
                             </div>
                           )}
@@ -7411,51 +6734,31 @@ export default function BatchConfigDialog({
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Start %</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.scaleYStartValue ?? 100}
-                                    onChange={(value) => handleSettingsUpdate({ scaleYStartValue: value })}
-                                    min={0}
-                                    max={300}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    disabled={currentSettings.maintainScaleAspectRatio}
-                                    data-testid="input-new-scale-y-start"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.scaleYStartValue ?? 100]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ scaleYStartValue: value })}
-                                    min={0}
-                                    max={200}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                    disabled={currentSettings.maintainScaleAspectRatio}
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.scaleYStartValue ?? 100}
+                                  onValueCommit={(value) => handleSettingsUpdate({ scaleYStartValue: value })}
+                                  min={0}
+                                  max={300}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                  disabled={currentSettings.maintainScaleAspectRatio}
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Increment %</Label>
-                                <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.scaleYIncrement}
-                                    onChange={(value) => handleSettingsUpdate({ scaleYIncrement: value })}
-                                    min={-100}
-                                    max={100}
-                                    step={1}
-                                    className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                    disabled={currentSettings.maintainScaleAspectRatio}
-                                    data-testid="input-new-scale-y-increment"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.scaleYIncrement]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ scaleYIncrement: value })}
-                                    min={-50}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-green-600"
-                                    disabled={currentSettings.maintainScaleAspectRatio}
-                                  />
-                                </div>
+                                <BufferedSliderWithNumericInput
+                                  value={currentSettings.scaleYIncrement}
+                                  onValueCommit={(value) => handleSettingsUpdate({ scaleYIncrement: value })}
+                                  min={-100}
+                                  max={100}
+                                  step={1}
+                                  layout="inline"
+                                  inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                  disabled={currentSettings.maintainScaleAspectRatio}
+                                />
                               </div>
                             </div>
                           )}
@@ -7481,25 +6784,16 @@ export default function BatchConfigDialog({
                       
                       {currentSettings.rotationMode === 'value' && (
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <NumericInput
-                              value={currentSettings.rotationValue}
-                              onChange={(value) => handleSettingsUpdate({ rotationValue: value })}
-                              min={0}
-                              max={360}
-                              step={5}
-                              className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                              data-testid="input-new-rotation-value"
-                            />
-                            <Slider
-                              value={[currentSettings.rotationValue]}
-                              onValueChange={([value]) => handleSettingsUpdate({ rotationValue: value })}
-                              min={0}
-                              max={360}
-                              step={5}
-                              className="flex-1 [&_[role=slider]]:bg-orange-600"
-                            />
-                          </div>
+                          <BufferedSliderWithNumericInput
+                            value={currentSettings.rotationValue}
+                            onValueCommit={(value) => handleSettingsUpdate({ rotationValue: value })}
+                            min={0}
+                            max={360}
+                            step={5}
+                            layout="inline"
+                            inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                            sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                          />
                           <p className="text-xs text-slate-500">Fixed rotation: {currentSettings.rotationValue}°</p>
                         </div>
                       )}
@@ -7577,69 +6871,42 @@ export default function BatchConfigDialog({
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-400">Start °</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.rotationStartValue ?? 0}
-                                  onChange={(value) => handleSettingsUpdate({ rotationStartValue: value })}
-                                  min={0}
-                                  max={360}
-                                  step={1}
-                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-rotation-start"
-                                />
-                                <Slider
-                                  value={[currentSettings.rotationStartValue ?? 0]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationStartValue: value })}
-                                  min={0}
-                                  max={360}
-                                  step={1}
-                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.rotationStartValue ?? 0}
+                                onValueCommit={(value) => handleSettingsUpdate({ rotationStartValue: value })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                layout="inline"
+                                inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-400">Step Size °</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.rotationIncrementStep}
-                                  onChange={(value) => handleSettingsUpdate({ rotationIncrementStep: value })}
-                                  min={1}
-                                  max={90}
-                                  step={1}
-                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-rotation-step"
-                                />
-                                <Slider
-                                  value={[currentSettings.rotationIncrementStep]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationIncrementStep: value })}
-                                  min={1}
-                                  max={90}
-                                  step={1}
-                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.rotationIncrementStep}
+                                onValueCommit={(value) => handleSettingsUpdate({ rotationIncrementStep: value })}
+                                min={1}
+                                max={90}
+                                step={1}
+                                layout="inline"
+                                inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-400">Increment °</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.rotationIncrement}
-                                  onChange={(value) => handleSettingsUpdate({ rotationIncrement: value })}
-                                  min={-180}
-                                  max={180}
-                                  step={currentSettings.rotationIncrementStep}
-                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-rotation-increment"
-                                />
-                                <Slider
-                                  value={[currentSettings.rotationIncrement]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationIncrement: value })}
-                                  min={-180}
-                                  max={180}
-                                  step={currentSettings.rotationIncrementStep}
-                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.rotationIncrement}
+                                onValueCommit={(value) => handleSettingsUpdate({ rotationIncrement: value })}
+                                min={-180}
+                                max={180}
+                                step={currentSettings.rotationIncrementStep}
+                                layout="inline"
+                                inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
                             </div>
                           </div>
                           <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded">
@@ -7654,25 +6921,16 @@ export default function BatchConfigDialog({
                           {currentSettings.rotationModulationEnabled && (
                             <div className="space-y-2">
                               <Label className="text-xs text-slate-400">Modulation Wrap °</Label>
-                              <div className="flex items-center gap-2">
-                                <NumericInput
-                                  value={currentSettings.rotationModulation}
-                                  onChange={(value) => handleSettingsUpdate({ rotationModulation: value })}
-                                  min={90}
-                                  max={720}
-                                  step={30}
-                                  className="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                  data-testid="input-new-rotation-modulation"
-                                />
-                                <Slider
-                                  value={[currentSettings.rotationModulation]}
-                                  onValueChange={([value]) => handleSettingsUpdate({ rotationModulation: value })}
-                                  min={90}
-                                  max={720}
-                                  step={30}
-                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
-                                />
-                              </div>
+                              <BufferedSliderWithNumericInput
+                                value={currentSettings.rotationModulation}
+                                onValueCommit={(value) => handleSettingsUpdate({ rotationModulation: value })}
+                                min={90}
+                                max={720}
+                                step={30}
+                                layout="inline"
+                                inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                sliderClassName="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
                             </div>
                           )}
                         </div>
@@ -7687,48 +6945,30 @@ export default function BatchConfigDialog({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-xs text-slate-300">Scale Randomization</Label>
-                          <div className="flex items-center gap-2">
-                            <NumericInput
-                              value={currentSettings.scaleRandomizationScale}
-                              onChange={(value) => handleSettingsUpdate({ scaleRandomizationScale: value })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                              data-testid="input-new-scale-randomization"
-                            />
-                            <Slider
-                              value={[currentSettings.scaleRandomizationScale]}
-                              onValueChange={([value]) => handleSettingsUpdate({ scaleRandomizationScale: value })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="flex-1 [&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
+                          <BufferedSliderWithNumericInput
+                            value={currentSettings.scaleRandomizationScale}
+                            onValueCommit={(value) => handleSettingsUpdate({ scaleRandomizationScale: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            layout="inline"
+                            inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                            sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                          />
                           <p className="text-xs text-slate-500">{currentSettings.scaleRandomizationScale}%</p>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs text-slate-300">Rotation Randomization</Label>
-                          <div className="flex items-center gap-2">
-                            <NumericInput
-                              value={currentSettings.rotationRandomizationScale}
-                              onChange={(value) => handleSettingsUpdate({ rotationRandomizationScale: value })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                              data-testid="input-new-rotation-randomization"
-                            />
-                            <Slider
-                              value={[currentSettings.rotationRandomizationScale]}
-                              onValueChange={([value]) => handleSettingsUpdate({ rotationRandomizationScale: value })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="flex-1 [&_[role=slider]]:bg-purple-600"
-                            />
-                          </div>
+                          <BufferedSliderWithNumericInput
+                            value={currentSettings.rotationRandomizationScale}
+                            onValueCommit={(value) => handleSettingsUpdate({ rotationRandomizationScale: value })}
+                            min={0}
+                            max={100}
+                            step={5}
+                            layout="inline"
+                            inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                            sliderClassName="flex-1 [&_[role=slider]]:bg-purple-600"
+                          />
                           <p className="text-xs text-slate-500">{currentSettings.rotationRandomizationScale}%</p>
                         </div>
                       </div>

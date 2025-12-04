@@ -26,7 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { BufferedSlider, BufferedRangeSlider, BufferedSliderWithLabel, BufferedRangeSliderWithLabel } from '@/components/ui/buffered-slider';
+import { BufferedSlider, BufferedRangeSlider, BufferedSliderWithLabel, BufferedRangeSliderWithLabel, BufferedSliderWithNumericInput, BufferedRangeSliderWithNumericInputs } from '@/components/ui/buffered-slider';
 import { NumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -5750,65 +5750,24 @@ export default function Sidebar({
           </div>
           
           {scatterSettings.shapeCountMode === 'range' ? (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label className="text-xs text-slate-400 mb-1 block">Min</Label>
-                  <NumericInput
-                    value={scatterSettings.minCount}
-                    onChange={(value) => {
-                      const clampedValue = Math.min(value, scatterSettings.maxCount - 1);
-                      onUpdateScatterSettings({ minCount: clampedValue });
-                    }}
-                    min={1}
-                    max={scatterSettings.maxCount - 1}
-                    step={1}
-                    className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Label className="text-xs text-slate-400 mb-1 block">Max</Label>
-                  <NumericInput
-                    value={scatterSettings.maxCount}
-                    onChange={(value) => {
-                      const clampedValue = Math.max(value, scatterSettings.minCount + 1);
-                      onUpdateScatterSettings({ maxCount: clampedValue });
-                    }}
-                    min={scatterSettings.minCount + 1}
-                    max={50}
-                    step={1}
-                    className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
-                  />
-                </div>
-              </div>
-              <BufferedRangeSlider
-                value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
-                onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
-                min={1}
-                max={50}
-                step={1}
-                className="w-full pt-2"
-              />
-            </div>
+            <BufferedRangeSliderWithNumericInputs
+              value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
+              onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+              min={1}
+              max={50}
+              step={1}
+              minLabel="Min"
+              maxLabel="Max"
+            />
           ) : (
-            <div className="space-y-2">
-              <NumericInput
-                value={scatterSettings.fixedShapeCount || 10}
-                onChange={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
-                min={1}
-                max={50}
-                step={1}
-                className="h-8 text-xs bg-slate-800 border-slate-600 text-white"
-              />
-              <BufferedSlider
-                value={[scatterSettings.fixedShapeCount || 10]}
-                onValueCommit={([value]) => onUpdateScatterSettings({ fixedShapeCount: value })}
-                min={1}
-                max={50}
-                step={1}
-                className="w-full pt-2"
-              />
-            </div>
+            <BufferedSliderWithNumericInput
+              value={scatterSettings.fixedShapeCount || 10}
+              onValueCommit={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
+              min={1}
+              max={50}
+              step={1}
+              sliderClassName="w-full pt-2"
+            />
           )}
         </div>
 
