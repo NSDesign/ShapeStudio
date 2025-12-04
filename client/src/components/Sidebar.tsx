@@ -27,7 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { BufferedSlider, BufferedRangeSlider, BufferedSliderWithLabel, BufferedRangeSliderWithLabel, BufferedSliderWithNumericInput, BufferedRangeSliderWithNumericInputs } from '@/components/ui/buffered-slider';
-import { NumericInput } from '@/components/ui/numeric-input';
+import { NumericInput, BufferedNumericInput } from '@/components/ui/numeric-input';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -501,12 +501,11 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-[10px] text-slate-500">Amount</Label>
-              <Input
-                type="number"
+              <BufferedNumericInput
+                value={printConfig.overlays.bleed.amount}
+                onCommit={(value) => updateBleed({ amount: value })}
                 step={0.1}
                 min={0}
-                value={printConfig.overlays.bleed.amount}
-                onChange={(e) => updateBleed({ amount: parseFloat(e.target.value) || 0 })}
                 className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 data-testid="input-bleed-amount"
               />
@@ -559,12 +558,11 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-[10px] text-slate-500">Amount</Label>
-              <Input
-                type="number"
+              <BufferedNumericInput
+                value={printConfig.overlays.safeZone.amount}
+                onCommit={(value) => updateSafeZone({ amount: value })}
                 step={0.1}
                 min={0}
-                value={printConfig.overlays.safeZone.amount}
-                onChange={(e) => updateSafeZone({ amount: parseFloat(e.target.value) || 0 })}
                 className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
                 data-testid="input-safe-zone-amount"
               />
@@ -643,24 +641,24 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-[10px] text-slate-500">Mark Length ({unitLabel})</Label>
-                  <Input
-                    type="number"
+                  <BufferedNumericInput
+                    value={printConfig.overlays.printMarks.markLength}
+                    onCommit={(value) => updatePrintMarks({ markLength: Math.round(value) })}
                     min={1}
                     max={100}
-                    value={printConfig.overlays.printMarks.markLength}
-                    onChange={(e) => updatePrintMarks({ markLength: parseInt(e.target.value) || 12 })}
+                    step={1}
                     className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-length"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-slate-500">Mark Offset ({unitLabel})</Label>
-                  <Input
-                    type="number"
+                  <BufferedNumericInput
+                    value={printConfig.overlays.printMarks.markOffset}
+                    onCommit={(value) => updatePrintMarks({ markOffset: Math.round(value) })}
                     min={0}
                     max={50}
-                    value={printConfig.overlays.printMarks.markOffset}
-                    onChange={(e) => updatePrintMarks({ markOffset: parseInt(e.target.value) || 3 })}
+                    step={1}
                     className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200"
                     data-testid="input-mark-offset"
                   />
@@ -1818,9 +1816,9 @@ export default function Sidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-[10px] text-slate-500">Width</Label>
-                      <NumericInput
+                      <BufferedNumericInput
                         value={customWidth}
-                        onChange={handleWidthChange}
+                        onCommit={handleWidthChange}
                         min={customUnit === 'pixels' ? 1 : 0.1}
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
@@ -1830,9 +1828,9 @@ export default function Sidebar({
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px] text-slate-500">Height</Label>
-                      <NumericInput
+                      <BufferedNumericInput
                         value={customHeight}
-                        onChange={handleHeightChange}
+                        onCommit={handleHeightChange}
                         min={customUnit === 'pixels' ? 1 : 0.1}
                         max={customUnit === 'pixels' ? 20000 : 100}
                         step={customUnit === 'pixels' ? 1 : (customUnit === 'mm' ? 1 : 0.1)}
@@ -2186,7 +2184,7 @@ export default function Sidebar({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-[10px] text-slate-500">Width</Label>
-                      <NumericInput
+                      <BufferedNumericInput
                         step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
                         value={(() => {
                           const displayDims = getArtboardDisplayDimensions(
@@ -2197,7 +2195,7 @@ export default function Sidebar({
                           );
                           return parseFloat(displayDims.widthFormatted);
                         })()}
-                        onChange={(value) => {
+                        onCommit={(value) => {
                           const dpi = currentArtboard.dpi ?? 72;
                           const unitType = currentArtboard.unitType ?? 'pixels';
                           
@@ -2230,7 +2228,7 @@ export default function Sidebar({
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px] text-slate-500">Height</Label>
-                      <NumericInput
+                      <BufferedNumericInput
                         step={currentArtboard.unitType === 'pixels' ? 1 : 0.01}
                         value={(() => {
                           const displayDims = getArtboardDisplayDimensions(
@@ -2241,7 +2239,7 @@ export default function Sidebar({
                           );
                           return parseFloat(displayDims.heightFormatted);
                         })()}
-                        onChange={(value) => {
+                        onCommit={(value) => {
                           const dpi = currentArtboard.dpi ?? 72;
                           const unitType = currentArtboard.unitType ?? 'pixels';
                           
@@ -7504,9 +7502,9 @@ export default function Sidebar({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Stroke Width</Label>
-              <NumericInput
+              <BufferedNumericInput
                 value={selectedShapes[0]?.properties.strokeWidth || 2}
-                onChange={(width) => {
+                onCommit={(width) => {
                   updateShapeProperty((shape) => {
                     shape.properties.strokeWidth = width;
                   });
@@ -7519,9 +7517,9 @@ export default function Sidebar({
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-slate-400">Stroke Opacity</Label>
-              <NumericInput
+              <BufferedNumericInput
                 value={Math.round((selectedShapes[0]?.properties.strokeOpacity || 1) * 100)}
-                onChange={(value) => {
+                onCommit={(value) => {
                   const opacity = value / 100;
                   updateShapeProperty((shape) => {
                     shape.properties.strokeOpacity = opacity;
@@ -7546,9 +7544,9 @@ export default function Sidebar({
               {selectedShapes[0].type === 'circle' && selectedShapes[0].radius && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Radius</Label>
-                  <NumericInput
+                  <BufferedNumericInput
                     value={selectedShapes[0].radius}
-                    onChange={(newRadius) => {
+                    onCommit={(newRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.type === 'circle') {
                           shape.radius = newRadius;
@@ -7568,9 +7566,9 @@ export default function Sidebar({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label className="text-xs text-slate-400">Width</Label>
-                    <NumericInput
+                    <BufferedNumericInput
                       value={selectedShapes[0].width || 0}
-                      onChange={(newWidth) => {
+                      onCommit={(newWidth) => {
                         updateShapeProperty((shape) => {
                           if (shape.width !== undefined) {
                             shape.width = newWidth;
@@ -7588,9 +7586,9 @@ export default function Sidebar({
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-slate-400">Height</Label>
-                    <NumericInput
+                    <BufferedNumericInput
                       value={selectedShapes[0].height || 0}
-                      onChange={(newHeight) => {
+                      onCommit={(newHeight) => {
                         updateShapeProperty((shape) => {
                           if (shape.height !== undefined) {
                             shape.height = newHeight;
@@ -7612,9 +7610,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'polygon' || selectedShapes[0].type === 'star') && selectedShapes[0].sides && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Sides</Label>
-                  <NumericInput
+                  <BufferedNumericInput
                     value={selectedShapes[0].sides}
-                    onChange={(newSides) => {
+                    onCommit={(newSides) => {
                       updateShapeProperty((shape) => {
                         if (shape.sides !== undefined) {
                           shape.sides = newSides;
@@ -7720,9 +7718,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'rounded-rectangle' || selectedShapes[0].type === 'rounded-square') && selectedShapes[0].cornerRadius !== undefined && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Corner Radius</Label>
-                  <NumericInput
+                  <BufferedNumericInput
                     value={selectedShapes[0].cornerRadius || 0}
-                    onChange={(newRadius) => {
+                    onCommit={(newRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.cornerRadius !== undefined) {
                           shape.cornerRadius = Math.max(0, newRadius);
@@ -7744,9 +7742,9 @@ export default function Sidebar({
               {(selectedShapes[0].type === 'star' || selectedShapes[0].type === 'ring') && selectedShapes[0].innerRadius !== undefined && (
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-400">Inner Radius</Label>
-                  <NumericInput
+                  <BufferedNumericInput
                     value={selectedShapes[0].innerRadius || 0}
-                    onChange={(newInnerRadius) => {
+                    onCommit={(newInnerRadius) => {
                       updateShapeProperty((shape) => {
                         if (shape.innerRadius !== undefined) {
                           shape.innerRadius = Math.max(0, newInnerRadius);
