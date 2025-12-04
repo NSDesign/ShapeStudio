@@ -10,7 +10,7 @@ import { BooleanOperations } from '../lib/booleanOperations';
 import { ColorUtils, ColorHarmonySettings } from '../lib/colorManipulation';
 import { BatchConfigSettings, defaultBatchConfigSettings, GenerationSet, ShapeCountMode, SupportedShapeType } from '@shared/schema';
 import { generateColor, generateGradientColors } from '../lib/hslColor';
-import { getEffectiveTranslateRange } from '../lib/artboardUtils';
+import { getEffectiveTranslateRange, recalculateGridForArtboard } from '../lib/artboardUtils';
 import { validateArtboardDimensions } from '../lib/artboardPresets';
 
 // Interface for overriding UI state during generation (used for generation sets)
@@ -4409,8 +4409,50 @@ export const useShapeEditor = () => {
   }, []);
 
   const selectArtboard = useCallback((artboardId: string) => {
+    // Get current and new artboard dimensions for grid recalculation
+    const currentArtboardObj = artboards.find(ab => ab.id === activeArtboard);
+    const newArtboardObj = artboards.find(ab => ab.id === artboardId);
+    
+    // If switching to a different artboard with different dimensions, recalculate grid settings
+    if (currentArtboardObj && newArtboardObj && 
+        (currentArtboardObj.width !== newArtboardObj.width || 
+         currentArtboardObj.height !== newArtboardObj.height)) {
+      
+      console.log(`🔄 Grid recalculation: switching from ${currentArtboardObj.width}×${currentArtboardObj.height} to ${newArtboardObj.width}×${newArtboardObj.height}`);
+      
+      // Recalculate grid settings for the new artboard dimensions
+      const updatedGridSettings = recalculateGridForArtboard(
+        {
+          gridRows: generationConfigSettings.gridRows,
+          gridColumns: generationConfigSettings.gridColumns,
+          gridStartX: generationConfigSettings.gridStartX,
+          gridStartY: generationConfigSettings.gridStartY,
+          gridSpacingXMode: generationConfigSettings.gridSpacingXMode,
+          gridSpacingYMode: generationConfigSettings.gridSpacingYMode,
+          gridRowOffset: generationConfigSettings.gridRowOffset,
+          gridColumnOffset: generationConfigSettings.gridColumnOffset,
+          gridMarginEnabled: generationConfigSettings.gridMarginEnabled,
+          gridMarginValue: generationConfigSettings.gridMarginValue,
+        },
+        { width: currentArtboardObj.width, height: currentArtboardObj.height },
+        { width: newArtboardObj.width, height: newArtboardObj.height }
+      );
+      
+      console.log(`🔄 Grid updated: spacing ${generationConfigSettings.gridColumnOffset}×${generationConfigSettings.gridRowOffset} → ${updatedGridSettings.gridColumnOffset}×${updatedGridSettings.gridRowOffset}`);
+      
+      // Update the generation config settings with recalculated grid values
+      setGenerationConfigSettings(prev => ({
+        ...prev,
+        gridStartX: updatedGridSettings.gridStartX,
+        gridStartY: updatedGridSettings.gridStartY,
+        gridRowOffset: updatedGridSettings.gridRowOffset,
+        gridColumnOffset: updatedGridSettings.gridColumnOffset,
+        ...(updatedGridSettings.gridMarginValue !== undefined && { gridMarginValue: updatedGridSettings.gridMarginValue })
+      }));
+    }
+    
     setActiveArtboard(artboardId);
-  }, []);
+  }, [artboards, activeArtboard, generationConfigSettings]);
 
   const deleteArtboard = useCallback((artboardId: string) => {
     setArtboards(prev => {

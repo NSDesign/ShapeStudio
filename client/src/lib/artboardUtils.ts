@@ -148,3 +148,80 @@ export function getEffectiveTranslateRange(
     ? [artboard.x, artboard.x + artboard.width]
     : [artboard.y, artboard.y + artboard.height];
 }
+
+/**
+ * Grid settings that can be recalculated when artboard dimensions change
+ */
+export interface GridRecalculationInput {
+  gridRows: number;
+  gridColumns: number;
+  gridStartX: number;
+  gridStartY: number;
+  gridSpacingXMode: 'define' | 'auto-centered' | 'auto-edge-to-edge';
+  gridSpacingYMode: 'define' | 'auto-centered' | 'auto-edge-to-edge';
+  gridRowOffset: number;
+  gridColumnOffset: number;
+  gridMarginEnabled?: boolean;
+  gridMarginValue?: number;
+}
+
+export interface GridRecalculationOutput {
+  gridStartX: number;
+  gridStartY: number;
+  gridRowOffset: number;
+  gridColumnOffset: number;
+  gridMarginValue?: number;
+}
+
+/**
+ * Recalculate grid settings when switching to an artboard with different dimensions.
+ * 
+ * For 'define' mode: Scale spacing values proportionally based on dimension ratio
+ * For 'auto-centered' and 'auto-edge-to-edge': No changes needed (auto-calculated from artboard)
+ * 
+ * @param currentSettings - Current grid settings
+ * @param oldDimensions - Previous artboard dimensions
+ * @param newDimensions - New artboard dimensions
+ * @returns Updated grid settings
+ */
+export function recalculateGridForArtboard(
+  currentSettings: GridRecalculationInput,
+  oldDimensions: { width: number; height: number },
+  newDimensions: { width: number; height: number }
+): GridRecalculationOutput {
+  // Calculate scale ratios
+  const scaleX = oldDimensions.width > 0 ? newDimensions.width / oldDimensions.width : 1;
+  const scaleY = oldDimensions.height > 0 ? newDimensions.height / oldDimensions.height : 1;
+  
+  // Start positions always need scaling as they're pixel offsets
+  const newStartX = Math.round(currentSettings.gridStartX * scaleX);
+  const newStartY = Math.round(currentSettings.gridStartY * scaleY);
+  
+  // For 'define' mode, scale the spacing values
+  // For auto modes, the spacing is calculated from artboard bounds automatically
+  let newColumnOffset = currentSettings.gridColumnOffset;
+  let newRowOffset = currentSettings.gridRowOffset;
+  
+  if (currentSettings.gridSpacingXMode === 'define') {
+    newColumnOffset = Math.round(currentSettings.gridColumnOffset * scaleX);
+  }
+  
+  if (currentSettings.gridSpacingYMode === 'define') {
+    newRowOffset = Math.round(currentSettings.gridRowOffset * scaleY);
+  }
+  
+  // Scale margin value if enabled (affects both axes, use average scale)
+  let newMarginValue = currentSettings.gridMarginValue;
+  if (currentSettings.gridMarginEnabled && currentSettings.gridMarginValue) {
+    const avgScale = (scaleX + scaleY) / 2;
+    newMarginValue = Math.round(currentSettings.gridMarginValue * avgScale);
+  }
+  
+  return {
+    gridStartX: newStartX,
+    gridStartY: newStartY,
+    gridRowOffset: newRowOffset,
+    gridColumnOffset: newColumnOffset,
+    gridMarginValue: newMarginValue
+  };
+}
