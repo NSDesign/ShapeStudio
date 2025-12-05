@@ -2876,60 +2876,70 @@ All validation tests passed successfully:
 
 ### Implementation Phases
 
-#### Phase 1: Core Server Export Service 📋 IN PROGRESS
-Create the server-side rendering engine:
+#### Phase 1: Core Server Export Service ✅ COMPLETED
+Created the server-side rendering engine:
 
 **Files:**
-- `server/services/exportService.ts` - Main export service
-- `server/templates/shape-renderer.html` - Minimal HTML page for headless rendering
+- `server/services/exportService.ts` - HighResolutionExportService class with headless Chrome rendering
+- `server/routes/export.ts` - POST /api/export/high-resolution endpoint
 
 **Functionality:**
-- Accept serialized shape/artboard data
-- Launch headless Chrome with rendering logic
-- Capture canvas at requested DPI/resolution
+- Accept serialized shape/artboard data with full geometry (matching projectManager format)
+- Launch headless Chrome with embedded rendering logic
+- Capture canvas at requested DPI/resolution including bleed and print marks
 - Pipe through Sharp for 16-bit TIFF with sRGB ICC profiles
 - Memory management and cleanup
 
 **Data Flow:**
 ```
 Frontend → POST /api/export/high-resolution
-         → { shapes, artboard, printConfig, exportSettings }
+         → { shapes, groups, artboard, exportSettings }
          → Server renders in headless Chrome
          → Sharp converts to 16-bit TIFF
          → Returns TIFF file as download
 ```
 
-#### Phase 2: Seamless Export Integration 📋 PLANNED
-Integrate with existing export flow transparently:
+#### Phase 2: Seamless Export Integration ✅ COMPLETED
+Integrated with existing export flow transparently:
 
-**Auto-Detection Logic:**
+**Auto-Detection Logic (requiresServerExport in imageExport.ts):**
 ```typescript
-// When to use server-side export:
+// Calculates scaled dimensions with DPI and bleed/print mark expansion
+const dpiScale = dpi / 72;  // Base 72 DPI
+const scaledWidth = width * dpiScale;
+const scaledHeight = height * dpiScale;
+
+// Server export triggers:
 const needsServerExport = (
-  estimatedMemory > 500_000_000 ||  // > 500 MB
-  (width * height * 4) > 268_000_000 ||  // > 268M pixels (browser limit)
-  format === 'tiff' && bitDepth === 16 ||  // 16-bit TIFF required
-  dpi >= 300 && (width >= 3000 || height >= 3000)  // High-res print
+  scaledWidth > 32767 || scaledHeight > 32767 ||  // Canvas dimension limit
+  totalPixels > 268_000_000 ||  // Browser pixel limit
+  memoryMB > 500 ||  // Memory threshold
+  format === 'tiff' && bitDepth === 16  // 16-bit TIFF required
 );
 ```
 
-**Enhanced Preflight Dialog:**
-- Detect when server processing is required
-- Show informative message: "This export requires server processing for best quality"
-- Display estimated processing time
-- Maintain existing "Don't show again" functionality
+**Enhanced Preflight Dialog (TiffPreflightModal.tsx):**
+- Detects when server processing is required
+- Shows purple "Server Processing Required" section
+- Displays estimated processing time and file size
+- Shows reason why server processing is needed
+- Maintains existing "Don't show again" functionality
 
 **Seamless Routing:**
 - User clicks export as normal
 - System automatically routes to server when needed
 - Falls back to client-side for smaller exports (faster)
 - Works for both single image and batch exports
+- Global loading state prevents UI inconsistencies
 
-#### Phase 3: Testing & Polish 📋 PLANNED
-- Test various export scenarios (different sizes, DPIs, formats)
-- Verify visual parity between client and server renders
-- Handle edge cases (very large exports, timeout handling)
-- Clean up validation folder after production-ready
+#### Phase 3: Testing & Polish 🧪 TESTING
+- Tested various export scenarios (different sizes, DPIs, formats)
+- Verified visual parity between client and server renders
+- Full shape serialization matching projectManager format (id, type, transform, properties, points, geometry, render settings)
+- Group serialization includes transform property
+- Consolidated loading state management (isServerExportingGlobal only)
+- DPI scaling applied before threshold checks
+- Bleed and print marks expansion included in dimension calculations
 
 ### Technical Specifications
 
