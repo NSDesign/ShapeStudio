@@ -1857,6 +1857,8 @@ export interface HighResExportRequest {
   shapes: any[];
   groups?: any[];
   artboard: {
+    x?: number;
+    y?: number;
     width: number;
     height: number;
     backgroundColor: string;
@@ -2191,6 +2193,61 @@ export class HighResolutionExportService {
       }
     }
     
+    // Draw spline-circle and spline-ellipse using 4-segment Bézier curves
+    function drawSplineCircle(ctx, points, controlPoints, closed) {
+      if (!points || points.length < 4) return;
+      if (!controlPoints || controlPoints.length < 8) {
+        // Fallback to polygon if no control points
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      // Four-segment Bézier curve (circle/ellipse approximation)
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      // Draw four Bézier segments
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      
+      if (closed !== false) {
+        ctx.closePath();
+      }
+    }
+    
+    // Draw spline-ring (donut shape) with inner and outer rings
+    function drawSplineRing(ctx, points, controlPoints) {
+      if (!points || points.length < 8) return;
+      if (!controlPoints || controlPoints.length < 16) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      // Outer ring - four Bézier segments
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+      
+      // Inner ring - four Bézier segments (reverse winding for hole)
+      ctx.moveTo(points[4].x, points[4].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[4 + ((i + 1) % 4)];
+        const cp1 = controlPoints[8 + i * 2];
+        const cp2 = controlPoints[8 + i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+    }
+    
     function renderShape(ctx, shape) {
       if (!shape.points || shape.points.length === 0) return;
       
@@ -2198,7 +2255,10 @@ export class HighResolutionExportService {
       
       ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
       
-      ctx.translate(shape.transform.x, shape.transform.y);
+      // Translate shape relative to artboard position
+      const artboardX = RENDER_DATA.artboard.x || 0;
+      const artboardY = RENDER_DATA.artboard.y || 0;
+      ctx.translate(shape.transform.x - artboardX, shape.transform.y - artboardY);
       ctx.rotate((shape.transform.rotation || 0) * Math.PI / 180);
       ctx.scale(shape.transform.scaleX || 1, shape.transform.scaleY || 1);
       ctx.transform(1, shape.transform.skewX || 0, shape.transform.skewY || 0, 1, 0, 0);
@@ -2212,6 +2272,10 @@ export class HighResolutionExportService {
       const shapeType = shape.type;
       if (shapeType === 'line' || shapeType === 'line-vector') {
         drawLine(ctx, shape.points);
+      } else if (shapeType === 'spline-circle' || shapeType === 'spline-ellipse') {
+        drawSplineCircle(ctx, shape.points, shape.controlPoints, shape.closed);
+      } else if (shapeType === 'spline-ring') {
+        drawSplineRing(ctx, shape.points, shape.controlPoints);
       } else if (shapeType === 'bezier' || shapeType === 'smooth-spline' || shapeType === 'cubic') {
         drawSmoothSpline(ctx, shape.points, shape.controlPoints);
         if (shape.closed) ctx.closePath();
@@ -2225,14 +2289,30 @@ export class HighResolutionExportService {
         if (shape.properties.gradient) {
           const bounds = getShapeBounds(shape.points);
           let gradient;
+          const gradientType = shape.properties.gradient.type;
           
-          if (shape.properties.gradient.type === 'radial') {
+          if (gradientType === 'conic') {
+            // Conic gradient support
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const startAngle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            gradient = ctx.createConicGradient(startAngle, cx, cy);
+          } else if (gradientType === 'radial') {
             const cx = bounds.x + bounds.width / 2;
             const cy = bounds.y + bounds.height / 2;
             const radius = Math.max(bounds.width, bounds.height) / 2;
             gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
           } else {
-            gradient = ctx.createLinearGradient(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height);
+            // Linear gradient (default)
+            const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const length = Math.max(bounds.width, bounds.height) / 2;
+            const x1 = cx - Math.cos(angle) * length;
+            const y1 = cy - Math.sin(angle) * length;
+            const x2 = cx + Math.cos(angle) * length;
+            const y2 = cy + Math.sin(angle) * length;
+            gradient = ctx.createLinearGradient(x1, y1, x2, y2);
           }
           
           shape.properties.gradient.stops.forEach(function(stop) {
@@ -2243,7 +2323,12 @@ export class HighResolutionExportService {
         } else {
           ctx.fillStyle = shape.properties.fillColor;
         }
-        ctx.fill();
+        // Use evenodd fill rule for spline-ring to create proper hole
+        if (shapeType === 'spline-ring') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
       }
       
       if (shape.properties.strokeColor !== 'none' && shape.properties.strokeWidth > 0) {

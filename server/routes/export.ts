@@ -19,6 +19,8 @@ const HighResExportSchema = z.object({
   shapes: z.array(z.any()),
   groups: z.array(z.any()).optional().default([]),
   artboard: z.object({
+    x: z.number().default(0),
+    y: z.number().default(0),
     width: z.number(),
     height: z.number(),
     backgroundColor: z.string(),

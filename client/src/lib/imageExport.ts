@@ -666,6 +666,8 @@ export interface ServerExportRequest {
   shapes: any[];
   groups: any[];
   artboard: {
+    x: number;
+    y: number;
     width: number;
     height: number;
     backgroundColor: string;

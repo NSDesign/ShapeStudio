@@ -4164,10 +4164,15 @@ export default function Sidebar({
             shapes: group.shapes.filter(s => shapeIds.has(s.id)).map(s => s.id)
           }));
         
+        const artboardX = targetArtboard?.x ?? backgroundArtboard?.x ?? 0;
+        const artboardY = targetArtboard?.y ?? backgroundArtboard?.y ?? 0;
+        
         const request: ServerExportRequest = {
           shapes: serializedShapes,
           groups: serializedGroups,
           artboard: {
+            x: artboardX,
+            y: artboardY,
             width: artboardWidth,
             height: artboardHeight,
             backgroundColor: artboardBgColor,
