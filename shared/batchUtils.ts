@@ -50,7 +50,7 @@ export function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex:
   
   switch (settings.fillGradientConicCenterXMode) {
     case 'range':
-      const [minX, maxX] = settings.fillGradientConicCenterXRange || [0, 100];
+      const [minX, maxX] = settings.fillGradientConicCenterXRange || [25, 75];
       result = minX + Math.random() * (maxX - minX);
       break;
     
@@ -79,7 +79,7 @@ export function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex:
   
   switch (settings.fillGradientConicCenterYMode) {
     case 'range':
-      const [minY, maxY] = settings.fillGradientConicCenterYRange || [0, 100];
+      const [minY, maxY] = settings.fillGradientConicCenterYRange || [25, 75];
       result = minY + Math.random() * (maxY - minY);
       break;
     
@@ -108,7 +108,7 @@ export function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex
   
   switch (settings.fillGradientRadialCenterXMode) {
     case 'range':
-      const [minX, maxX] = settings.fillGradientRadialCenterXRange || [0, 100];
+      const [minX, maxX] = settings.fillGradientRadialCenterXRange || [25, 75];
       result = minX + Math.random() * (maxX - minX);
       break;
     
@@ -137,7 +137,7 @@ export function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex
   
   switch (settings.fillGradientRadialCenterYMode) {
     case 'range':
-      const [minY, maxY] = settings.fillGradientRadialCenterYRange || [0, 100];
+      const [minY, maxY] = settings.fillGradientRadialCenterYRange || [25, 75];
       result = minY + Math.random() * (maxY - minY);
       break;
     

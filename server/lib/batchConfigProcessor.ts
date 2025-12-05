@@ -7,6 +7,13 @@ import { Shape } from './shapeGenerator';
 import { SmartDistributionAlgorithm } from './distributionAlgorithm';
 import { ColorUtils, generateColor, generateGradientColors } from './colorUtils';
 import type { BatchConfigSettings } from '../../shared/schema';
+import { 
+  calculateLinearAngle as sharedCalculateLinearAngle,
+  calculateConicCenterX as sharedCalculateConicCenterX,
+  calculateConicCenterY as sharedCalculateConicCenterY,
+  calculateRadialCenterX as sharedCalculateRadialCenterX,
+  calculateRadialCenterY as sharedCalculateRadialCenterY
+} from '../../shared/batchUtils';
 import type { ShapeType, Point, DistributionSettings } from '../../client/src/lib/shapeTypes';
 import { 
   applyGridDistribution, 
@@ -380,191 +387,12 @@ function calculateConicAngle(settings: BatchConfigSettings, shapeIndex: number):
   return (angleDegrees * Math.PI) / 180;
 }
 
-/**
- * Helper function to calculate conic gradient center X (returns 0-100 percentage, clamped)
- */
-function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex: number): number {
-  let result: number;
-  
-  switch (settings.fillGradientConicCenterXMode) {
-    case 'range':
-      const [minX, maxX] = settings.fillGradientConicCenterXRange || [25, 75];
-      result = minX + Math.random() * (maxX - minX);
-      break;
-    
-    case 'incremental':
-      const startX = settings.fillGradientConicCenterXStartValue ?? 50;
-      const incrementX = (settings.fillGradientConicCenterXIncrement || 0) * shapeIndex;
-      result = startX + incrementX;
-      
-      // Apply modulation to the final result, not just the increment
-      if (settings.fillGradientConicCenterXModulationEnabled && settings.fillGradientConicCenterXModulationValue > 0) {
-        const m = settings.fillGradientConicCenterXModulationValue;
-        result = ((result % m) + m) % m;
-      }
-      break;
-    
-    case 'fixed':
-    default:
-      result = settings.fillGradientConicCenterX ?? 50;
-      break;
-  }
-  
-  // Clamp to valid 0-100 percentage range
-  return Math.max(0, Math.min(100, result));
-}
-
-/**
- * Helper function to calculate conic gradient center Y (returns 0-100 percentage, clamped)
- */
-function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex: number): number {
-  let result: number;
-  
-  switch (settings.fillGradientConicCenterYMode) {
-    case 'range':
-      const [minY, maxY] = settings.fillGradientConicCenterYRange || [25, 75];
-      result = minY + Math.random() * (maxY - minY);
-      break;
-    
-    case 'incremental':
-      const startY = settings.fillGradientConicCenterYStartValue ?? 50;
-      const incrementY = (settings.fillGradientConicCenterYIncrement || 0) * shapeIndex;
-      result = startY + incrementY;
-      
-      // Apply modulation to the final result, not just the increment
-      if (settings.fillGradientConicCenterYModulationEnabled && settings.fillGradientConicCenterYModulationValue > 0) {
-        const m = settings.fillGradientConicCenterYModulationValue;
-        result = ((result % m) + m) % m;
-      }
-      break;
-    
-    case 'fixed':
-    default:
-      result = settings.fillGradientConicCenterY ?? 50;
-      break;
-  }
-  
-  // Clamp to valid 0-100 percentage range
-  return Math.max(0, Math.min(100, result));
-}
-
-/**
- * Helper function to calculate radial gradient center X (returns 0-100 percentage, clamped)
- */
-function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex: number): number {
-  let result: number;
-  
-  switch (settings.fillGradientRadialCenterXMode) {
-    case 'range':
-      const [minX, maxX] = settings.fillGradientRadialCenterXRange || [25, 75];
-      result = minX + Math.random() * (maxX - minX);
-      break;
-    
-    case 'incremental':
-      const startX = settings.fillGradientRadialCenterXStartValue ?? 50;
-      const incrementX = (settings.fillGradientRadialCenterXIncrement || 0) * shapeIndex;
-      result = startX + incrementX;
-      
-      // Apply modulation to the final result, not just the increment
-      if (settings.fillGradientRadialCenterXModulationEnabled && settings.fillGradientRadialCenterXModulationValue > 0) {
-        const m = settings.fillGradientRadialCenterXModulationValue;
-        result = ((result % m) + m) % m;
-      }
-      break;
-    
-    case 'fixed':
-    default:
-      result = settings.fillGradientRadialCenterX ?? 50;
-      break;
-  }
-  
-  // Clamp to valid 0-100 percentage range
-  return Math.max(0, Math.min(100, result));
-}
-
-/**
- * Helper function to calculate radial gradient center Y (returns 0-100 percentage, clamped)
- */
-function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex: number): number {
-  let result: number;
-  
-  switch (settings.fillGradientRadialCenterYMode) {
-    case 'range':
-      const [minY, maxY] = settings.fillGradientRadialCenterYRange || [25, 75];
-      result = minY + Math.random() * (maxY - minY);
-      break;
-    
-    case 'incremental':
-      const startY = settings.fillGradientRadialCenterYStartValue ?? 50;
-      const incrementY = (settings.fillGradientRadialCenterYIncrement || 0) * shapeIndex;
-      result = startY + incrementY;
-      
-      // Apply modulation to the final result, not just the increment
-      if (settings.fillGradientRadialCenterYModulationEnabled && settings.fillGradientRadialCenterYModulationValue > 0) {
-        const m = settings.fillGradientRadialCenterYModulationValue;
-        result = ((result % m) + m) % m;
-      }
-      break;
-    
-    case 'fixed':
-    default:
-      result = settings.fillGradientRadialCenterY ?? 50;
-      break;
-  }
-  
-  // Clamp to valid 0-100 percentage range
-  return Math.max(0, Math.min(100, result));
-}
-
-/**
- * Helper function to calculate linear gradient angle (returns degrees)
- */
-function calculateLinearAngle(settings: BatchConfigSettings, shapeIndex: number): number {
-  let angleDegrees: number;
-  
-  // Check if type & direction controls are enabled
-  if (!settings.fillGradientTypeDirectionEnabled) {
-    // Use default angle when controls are disabled
-    return 45; // Default diagonal
-  }
-  
-  switch (settings.fillGradientLinearDirection) {
-    case 'fixed':
-      angleDegrees = settings.fillGradientLinearAngle ?? 45;
-      break;
-    
-    case 'predefined':
-      // Map predefined direction to angle
-      switch (settings.fillGradientLinearPredefined) {
-        case 'horizontal':
-          angleDegrees = 0; // Left to right
-          break;
-        case 'vertical':
-          angleDegrees = 90; // Top to bottom
-          break;
-        case 'diagonal-down':
-          angleDegrees = 135; // Top-left to bottom-right
-          break;
-        case 'diagonal-up':
-          angleDegrees = 45; // Bottom-left to top-right
-          break;
-        default:
-          angleDegrees = 90;
-      }
-      break;
-    
-    case 'range':
-    default:
-      const [minAngle, maxAngle] = settings.fillGradientLinearAngleRange || [0, 360];
-      angleDegrees = minAngle + Math.random() * (maxAngle - minAngle);
-      break;
-  }
-  
-  // Wrap angle to 0-360 range
-  angleDegrees = ((angleDegrees % 360) + 360) % 360;
-  
-  return angleDegrees;
-}
+// Gradient center calculations - use shared utilities
+const calculateConicCenterX = sharedCalculateConicCenterX;
+const calculateConicCenterY = sharedCalculateConicCenterY;
+const calculateRadialCenterX = sharedCalculateRadialCenterX;
+const calculateRadialCenterY = sharedCalculateRadialCenterY;
+const calculateLinearAngle = sharedCalculateLinearAngle;
 
 /**
  * Main function to generate shapes with batch configuration
