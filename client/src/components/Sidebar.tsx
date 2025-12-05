@@ -3393,13 +3393,19 @@ export default function Sidebar({
       if (exportAbortControllerRef.current) {
         exportAbortControllerRef.current.abort();
         console.log('🛑 Export cancelled by user');
+        // Update local state
         setBatchStatus('Export cancelled');
         stopElapsedTimeTracking();
         setIsBatchExporting(false);
         setShowBatchResult(true);
         setBatchResultMessage('⚠️ Export was cancelled');
+        // Update global state for overlay
+        stopElapsedTimeTrackingGlobal();
+        setExportStatusGlobal('Export cancelled');
+        setExportIsErrorGlobal(true);
+        setExportResultMessageGlobal('⚠️ Export was cancelled');
       }
-    }, []);
+    }, [stopElapsedTimeTrackingGlobal]);
 
     // Helper function to convert print units to pixels
     const convertPrintUnitToPixels = (value: number, unit: PrintUnitType, dpi: number): number => {
@@ -4625,6 +4631,10 @@ export default function Sidebar({
           if (exportAbortControllerRef.current?.signal.aborted) {
             console.log('🛑 Export aborted during batch loop');
             stopElapsedTimeTracking();
+            stopElapsedTimeTrackingGlobal();
+            setExportStatusGlobal('Export cancelled');
+            setExportIsErrorGlobal(true);
+            setExportResultMessageGlobal('⚠️ Export was cancelled');
             return;
           }
           
@@ -4851,6 +4861,10 @@ export default function Sidebar({
           if (exportAbortControllerRef.current?.signal.aborted) {
             console.log('🛑 Export aborted after shape generation');
             stopElapsedTimeTracking();
+            stopElapsedTimeTrackingGlobal();
+            setExportStatusGlobal('Export cancelled');
+            setExportIsErrorGlobal(true);
+            setExportResultMessageGlobal('⚠️ Export was cancelled');
             return;
           }
 
@@ -5451,6 +5465,10 @@ export default function Sidebar({
           if (exportAbortControllerRef.current?.signal.aborted) {
             console.log('🛑 Export aborted after image creation');
             stopElapsedTimeTracking();
+            stopElapsedTimeTrackingGlobal();
+            setExportStatusGlobal('Export cancelled');
+            setExportIsErrorGlobal(true);
+            setExportResultMessageGlobal('⚠️ Export was cancelled');
             return;
           }
         }
@@ -5673,7 +5691,9 @@ export default function Sidebar({
         
       } finally {
         onClearAll?.();
+        // Stop both local and global timers (idempotent - safe to call multiple times)
         stopElapsedTimeTracking();
+        stopElapsedTimeTrackingGlobal();
         exportAbortControllerRef.current = null;
         // Keep the progress dialog visible until manually dismissed by user
         // setIsBatchExporting(false); // Removed to prevent auto-dismiss
