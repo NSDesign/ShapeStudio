@@ -1874,6 +1874,7 @@ export interface HighResExportRequest {
     includePrintMarks?: boolean;
     backgroundColor?: string;
     backgroundMode?: 'transparent' | 'artboard' | 'custom';
+    compression?: 'none' | 'deflate';
   };
 }
 
@@ -1996,7 +1997,7 @@ export class HighResolutionExportService {
   
   private async renderAndCapture(page: Page, request: HighResExportRequest): Promise<HighResExportResult> {
     const { shapes, groups = [], artboard, exportSettings } = request;
-    const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent' } = exportSettings;
+    const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent', compression = 'none' } = exportSettings;
     
     const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
     
@@ -2102,7 +2103,8 @@ export class HighResolutionExportService {
     
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
       bitDepth,
-      dpi: effectiveDpi
+      dpi: effectiveDpi,
+      compression: compression as 'none' | 'deflate'
     });
     
     console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -2117,8 +2119,8 @@ export class HighResolutionExportService {
     };
   }
   
-  private async convertToTiff(pngBuffer: Buffer, options: { bitDepth: 8 | 16; dpi: number }): Promise<Buffer> {
-    const { bitDepth, dpi } = options;
+  private async convertToTiff(pngBuffer: Buffer, options: { bitDepth: 8 | 16; dpi: number; compression?: 'none' | 'deflate' }): Promise<Buffer> {
+    const { bitDepth, dpi, compression = 'none' } = options;
     
     let pipeline = sharp(pngBuffer);
     
@@ -2126,12 +2128,16 @@ export class HighResolutionExportService {
       pipeline = pipeline.toColourspace('rgb16');
     }
     
+    // Map compression setting to Sharp's TIFF compression options
+    // Sharp supports: 'none', 'jpeg', 'deflate', 'packbits', 'ccittfax4', 'lzw', 'webp', 'zstd', 'jp2k'
+    const tiffCompression = compression === 'deflate' ? 'deflate' : 'none';
+    
     const tiffBuffer = await pipeline
       .withMetadata({
         density: dpi
       })
       .tiff({
-        compression: 'deflate',
+        compression: tiffCompression,
         quality: 100
       })
       .toBuffer();

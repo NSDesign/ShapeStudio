@@ -3181,7 +3181,7 @@ export default function Sidebar({
     const bleedEnabled = printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0;
     const backgroundMode = exportSettings.exportBackgroundMode || 'transparent';
     const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
-    const scale = exportScale;
+    const scale = effectiveExportScale;
     
     return calculateTiffPreflightInfo(
       artboardWidth,
@@ -3193,7 +3193,7 @@ export default function Sidebar({
       is16Bit,
       scale
     );
-  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode, exportSettings.tiffBitDepth, exportScale]);
+  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode, exportSettings.tiffBitDepth, effectiveExportScale]);
   
   // Handle TIFF pre-flight modal confirmation
   const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
@@ -4183,11 +4183,12 @@ export default function Sidebar({
             format: 'tiff',
             bitDepth: is16Bit ? 16 : 8,
             dpi: artboardDpi,
-            scale: exportScale,
+            scale: effectiveExportScale,
             includeBleed: printConfig?.overlays.bleed.render ?? false,
             includePrintMarks: printConfig?.overlays.printMarks.render ?? false,
             backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
-            backgroundMode: bgMode
+            backgroundMode: bgMode,
+            compression: exportSettings.tiffCompression ?? 'none'
           }
         };
         

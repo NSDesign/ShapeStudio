@@ -224,10 +224,11 @@ export function calculateTiffPreflightInfo(
   is16Bit: boolean = false,
   scale: number = 1
 ): TiffPreflightInfo {
-  const baseDpi = 72;
-  const dpiScale = artboardDpi / baseDpi;
-  const scaledWidth = Math.round(artboardWidth * dpiScale * scale);
-  const scaledHeight = Math.round(artboardHeight * dpiScale * scale);
+  // Scale is applied directly to artboard dimensions (which are already in pixels)
+  // No separate dpiScale needed - the scale parameter already includes DPI adjustment
+  // when auto-scale-from-DPI is enabled (effectiveExportScale = dpi/72)
+  const scaledWidth = Math.round(artboardWidth * scale);
+  const scaledHeight = Math.round(artboardHeight * scale);
   const pixelsPerImage = scaledWidth * scaledHeight;
   const megapixelsPerImage = pixelsPerImage / 1_000_000;
   const bytesPerPixel = is16Bit ? 8 : 4;

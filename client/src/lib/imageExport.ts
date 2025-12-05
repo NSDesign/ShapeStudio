@@ -683,6 +683,7 @@ export interface ServerExportRequest {
     includePrintMarks?: boolean;
     backgroundColor?: string;
     backgroundMode?: ExportBackgroundMode;
+    compression?: TiffCompression;
   };
 }
 
