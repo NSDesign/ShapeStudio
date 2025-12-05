@@ -2298,14 +2298,19 @@ export class HighResolutionExportService {
           const gradientType = shape.properties.gradient.type;
           
           if (gradientType === 'conic') {
-            // Conic gradient support
-            const cx = bounds.x + bounds.width / 2;
-            const cy = bounds.y + bounds.height / 2;
-            const startAngle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            // Conic gradient support with center positioning
+            const conicCenterXPercent = shape.properties.gradient.conicCenterX ?? 50;
+            const conicCenterYPercent = shape.properties.gradient.conicCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * conicCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * conicCenterYPercent / 100);
+            const startAngle = (shape.properties.gradient.conicAngle || 0);
             gradient = ctx.createConicGradient(startAngle, cx, cy);
           } else if (gradientType === 'radial') {
-            const cx = bounds.x + bounds.width / 2;
-            const cy = bounds.y + bounds.height / 2;
+            // Radial gradient with center positioning
+            const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
+            const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * radialCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * radialCenterYPercent / 100);
             const radius = Math.max(bounds.width, bounds.height) / 2;
             gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
           } else {
