@@ -37,6 +37,11 @@ Preferred communication style: Simple, everyday language.
     - "Don't show again" option with persisted user preference (skipTiffPreflightModal)
     - Inline validation warnings when DPI < 300, bleed disabled, or background is transparent
     - Reset capability for dismissed warnings in Settings > Export tab
+  - **Export Progress UI**: Enhanced batch export progress display with:
+    - Real-time elapsed time tracking (mm:ss format) displayed alongside progress percentage
+    - Cancel button to abort ongoing exports with AbortController integration
+    - Multiple abort checkpoints throughout export loop (after shape generation, after image creation)
+    - Timer cleanup in finally block ensures proper resource management
 - **Print-on-Demand Configuration (Phase 1)**: Print configuration system with printConfig stored per-artboard, supporting:
   - **Bleed**: Configurable amount/unit (px/mm/cm/in), display overlay on canvas (red dashed), render to export (expands dimensions by 2× bleed on each axis).
   - **Safe Zone**: Configurable amount/unit, display overlay on canvas (green dashed inset), display-only (not rendered to export).

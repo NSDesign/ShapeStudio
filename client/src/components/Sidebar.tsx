@@ -3295,6 +3295,52 @@ export default function Sidebar({
     const [batchStatus, setBatchStatus] = useState('');
     const [showBatchResult, setShowBatchResult] = useState(false);
     const [batchResultMessage, setBatchResultMessage] = useState('');
+    
+    // Export progress tracking with elapsed time and cancel
+    const [exportElapsedTime, setExportElapsedTime] = useState(0);
+    const exportStartTimeRef = useRef<number | null>(null);
+    const exportAbortControllerRef = useRef<AbortController | null>(null);
+    const elapsedTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    
+    // Format elapsed time as mm:ss
+    const formatElapsedTime = (seconds: number): string => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+    
+    // Start elapsed time tracking
+    const startElapsedTimeTracking = () => {
+      exportStartTimeRef.current = Date.now();
+      setExportElapsedTime(0);
+      elapsedTimeIntervalRef.current = setInterval(() => {
+        if (exportStartTimeRef.current) {
+          setExportElapsedTime(Math.floor((Date.now() - exportStartTimeRef.current) / 1000));
+        }
+      }, 1000);
+    };
+    
+    // Stop elapsed time tracking
+    const stopElapsedTimeTracking = () => {
+      if (elapsedTimeIntervalRef.current) {
+        clearInterval(elapsedTimeIntervalRef.current);
+        elapsedTimeIntervalRef.current = null;
+      }
+      exportStartTimeRef.current = null;
+    };
+    
+    // Cancel export
+    const handleCancelExport = useCallback(() => {
+      if (exportAbortControllerRef.current) {
+        exportAbortControllerRef.current.abort();
+        console.log('🛑 Export cancelled by user');
+        setBatchStatus('Export cancelled');
+        stopElapsedTimeTracking();
+        setIsBatchExporting(false);
+        setShowBatchResult(true);
+        setBatchResultMessage('⚠️ Export was cancelled');
+      }
+    }, []);
 
     // Helper function to convert print units to pixels
     const convertPrintUnitToPixels = (value: number, unit: PrintUnitType, dpi: number): number => {
@@ -4265,6 +4311,10 @@ export default function Sidebar({
     const handleBatchExportNewInternal = async () => {
       if (!exportSettings.exportBatchModeEnabled) return;
 
+      // Initialize abort controller and elapsed time tracking
+      exportAbortControllerRef.current = new AbortController();
+      startElapsedTimeTracking();
+
       setIsBatchExporting(true);
       setBatchProgress(0);
       // Calculate actual number of images to export for step calculation
@@ -4375,6 +4425,13 @@ export default function Sidebar({
         }
         
         for (let loopIndex = 0; loopIndex < imagesToExport.length; loopIndex++) {
+          // Check for abort signal at start of each iteration
+          if (exportAbortControllerRef.current?.signal.aborted) {
+            console.log('🛑 Export aborted during batch loop');
+            stopElapsedTimeTracking();
+            return;
+          }
+          
           const i = imagesToExport[loopIndex];
           console.log(`🎨 Creating artwork ${i + 1} of ${exportBatchCount}`);
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${exportBatchCount} exports`);
@@ -4594,6 +4651,13 @@ export default function Sidebar({
           }
           
           console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
+
+          // Check for abort after shape generation
+          if (exportAbortControllerRef.current?.signal.aborted) {
+            console.log('🛑 Export aborted after shape generation');
+            stopElapsedTimeTracking();
+            return;
+          }
 
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image
@@ -5154,6 +5218,13 @@ export default function Sidebar({
           }
 
           // Progress already updated after image creation step
+          
+          // Check for abort after image creation
+          if (exportAbortControllerRef.current?.signal.aborted) {
+            console.log('🛑 Export aborted after image creation');
+            stopElapsedTimeTracking();
+            return;
+          }
         }
         
         // FINAL STEP: Package and Download
@@ -5322,14 +5393,16 @@ export default function Sidebar({
         }
         
         // Mark progress as complete
+        stopElapsedTimeTracking();
         setBatchProgress(totalSteps);
         setBatchStatus('Export completed successfully!');
         
-        // Show persistent success message  
+        // Show persistent success message with elapsed time
+        const elapsedStr = formatElapsedTime(exportElapsedTime);
         const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
         const successMessage = packageAsZip 
-          ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`
-          : `✅ Success! Downloaded ${individualFiles.length} individual files`;
+          ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText} (${elapsedStr})`
+          : `✅ Success! Downloaded ${individualFiles.length} individual files (${elapsedStr})`;
         setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
@@ -5337,6 +5410,7 @@ export default function Sidebar({
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
+        stopElapsedTimeTracking();
         
         // Create a more detailed error message for mobile users who can't check console
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -5362,6 +5436,8 @@ export default function Sidebar({
         
       } finally {
         onClearAll?.();
+        stopElapsedTimeTracking();
+        exportAbortControllerRef.current = null;
         // Keep the progress dialog visible until manually dismissed by user
         // setIsBatchExporting(false); // Removed to prevent auto-dismiss
         // setBatchProgress(0); // Keep progress visible
@@ -5940,9 +6016,14 @@ export default function Sidebar({
                 <div className="space-y-2 p-3 bg-purple-900/20 rounded border border-purple-500/30">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-purple-300 font-medium">Batch Export Progress</span>
-                    <span className="text-purple-200">
-                      {batchProgress}/{batchTotalSteps} ({Math.round((batchProgress / Math.max(batchTotalSteps, 1)) * 100)}%)
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-400 font-mono">
+                        {formatElapsedTime(exportElapsedTime)}
+                      </span>
+                      <span className="text-purple-200">
+                        {batchProgress}/{batchTotalSteps} ({Math.round((batchProgress / Math.max(batchTotalSteps, 1)) * 100)}%)
+                      </span>
+                    </div>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div 
@@ -5950,8 +6031,21 @@ export default function Sidebar({
                       style={{ width: `${Math.min((batchProgress / Math.max(batchTotalSteps, 1)) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <div className="text-xs text-purple-400">
-                    {batchStatus || 'Processing...'}
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-purple-400">
+                      {batchStatus || 'Processing...'}
+                    </div>
+                    {batchProgress < batchTotalSteps && (
+                      <Button
+                        onClick={handleCancelExport}
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs bg-red-900/20 border-red-500/30 text-red-300 hover:bg-red-900/40 hover:text-red-200"
+                        data-testid="cancel-export-button"
+                      >
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                   {batchProgress >= batchTotalSteps && (
                     <div className="text-xs text-green-400 font-medium">
