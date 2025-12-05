@@ -84,17 +84,13 @@ Preferred communication style: Simple, everyday language.
   - **Auto** (default): Smart detection based on export size, format, and DPI - automatically chooses optimal renderer
   - **Client**: Force browser-based rendering for quick exports (subject to browser canvas limits)
   - **Server**: Force server-side rendering via Headless Chromium + Sharp for large/high-quality exports
-- **Server-Side Tiled Processing**: Automatic tile-based rendering for extremely large exports (A0+ at 600 DPI):
+- **Server-Side Tiled Processing**: Automatic tile-based rendering for extremely large exports (A0+ at 600 DPI), integrated seamlessly into the existing export flow:
   - **Tile Planning**: `calculateTilePlan` function determines optimal tile count and dimensions based on target ~32-64M pixels per tile
   - **Memory Management**: Each tile processes independently with garbage collection pauses between tiles
   - **Tile Rendering**: Puppeteer renders each tile with viewport clipping; shapes are filtered to tile bounds for efficiency
   - **Tile Combination**: Sharp composite assembles tiles incrementally, preserving 16-bit depth, DPI metadata, and ICC color profiles
-  - **Progress Tracking**: Real-time progress updates with tile phases ("Preparing tiles", "Rendering tile X of N", "Combining tiles", "Encoding")
-- **Async High-Res Export API**: Job-based async export pattern for long-running tiled exports:
-  - `POST /api/export/high-resolution/async`: Start async export, returns exportId and tiling info
-  - `GET /api/export/high-resolution/progress/:exportId`: Poll for progress updates (phase, percent, tile count)
-  - `GET /api/export/high-resolution/download/:exportId`: Download completed export result
-  - Automatic cleanup after 10 minutes; immediate cleanup after download
+  - **Progress Tracking**: Real-time progress updates via onProgress callback with tile phases (preparing, rendering tile X of Y, combining, encoding)
+  - **Seamless Integration**: Tiled processing triggers automatically within the existing /api/export/high-resolution endpoint when image exceeds ~200M pixels; no separate API required
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
