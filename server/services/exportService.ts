@@ -1851,7 +1851,137 @@ export class ExportService {
  * 
  * Uses Headless Chromium + Sharp for exports that exceed browser canvas limits.
  * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
+ * 
+ * TILED PROCESSING: For very large images (e.g., A0+ at 600 DPI), the service
+ * automatically breaks rendering into tiles to avoid memory limits.
  */
+
+// Tile planning interface for breaking large images into manageable chunks
+export interface TilePlan {
+  needsTiling: boolean;
+  totalWidth: number;
+  totalHeight: number;
+  tileWidth: number;
+  tileHeight: number;
+  tilesX: number;
+  tilesY: number;
+  totalTiles: number;
+  tiles: Array<{
+    index: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    row: number;
+    col: number;
+  }>;
+  estimatedMemoryMB: number;
+  reason?: string;
+}
+
+// Progress callback for tiled exports
+export type TileProgressCallback = (progress: {
+  phase: 'preparing' | 'rendering' | 'combining' | 'encoding' | 'completed' | 'error';
+  currentTile?: number;
+  totalTiles?: number;
+  percent: number;
+  message: string;
+}) => void;
+
+// Constants for tile planning
+const TILE_MEMORY_TARGET_MB = 256; // Target memory per tile in MB
+const MAX_TILE_PIXELS = 64_000_000; // Max 64 megapixels per tile (~8000x8000)
+const TILING_THRESHOLD_PIXELS = 100_000_000; // Enable tiling above 100 megapixels
+const TILING_THRESHOLD_BYTES = 400_000_000; // Enable tiling above 400MB raw
+
+/**
+ * Calculate optimal tile plan for a large image
+ */
+function calculateTilePlan(
+  width: number, 
+  height: number, 
+  bitDepth: 8 | 16 = 8,
+  channels: 3 | 4 = 4
+): TilePlan {
+  const totalPixels = width * height;
+  const bytesPerPixel = (bitDepth === 16 ? 2 : 1) * channels;
+  const totalBytes = totalPixels * bytesPerPixel;
+  
+  // Determine if tiling is needed
+  const needsTiling = totalPixels > TILING_THRESHOLD_PIXELS || totalBytes > TILING_THRESHOLD_BYTES;
+  
+  if (!needsTiling) {
+    return {
+      needsTiling: false,
+      totalWidth: width,
+      totalHeight: height,
+      tileWidth: width,
+      tileHeight: height,
+      tilesX: 1,
+      tilesY: 1,
+      totalTiles: 1,
+      tiles: [{
+        index: 0,
+        x: 0,
+        y: 0,
+        width,
+        height,
+        row: 0,
+        col: 0
+      }],
+      estimatedMemoryMB: totalBytes / (1024 * 1024)
+    };
+  }
+  
+  // Calculate optimal tile size based on memory target
+  const targetTileBytes = TILE_MEMORY_TARGET_MB * 1024 * 1024;
+  const targetTilePixels = Math.min(targetTileBytes / bytesPerPixel, MAX_TILE_PIXELS);
+  
+  // Calculate tile dimensions (prefer square-ish tiles)
+  const tileSize = Math.floor(Math.sqrt(targetTilePixels));
+  
+  // Ensure tile size doesn't exceed image dimensions
+  const tileWidth = Math.min(tileSize, width);
+  const tileHeight = Math.min(tileSize, height);
+  
+  // Calculate grid dimensions
+  const tilesX = Math.ceil(width / tileWidth);
+  const tilesY = Math.ceil(height / tileHeight);
+  const totalTiles = tilesX * tilesY;
+  
+  // Generate tile specifications
+  const tiles: TilePlan['tiles'] = [];
+  let index = 0;
+  
+  for (let row = 0; row < tilesY; row++) {
+    for (let col = 0; col < tilesX; col++) {
+      const x = col * tileWidth;
+      const y = row * tileHeight;
+      // Handle edge tiles that may be smaller
+      const w = Math.min(tileWidth, width - x);
+      const h = Math.min(tileHeight, height - y);
+      
+      tiles.push({ index, x, y, width: w, height: h, row, col });
+      index++;
+    }
+  }
+  
+  const tileBytes = tileWidth * tileHeight * bytesPerPixel;
+  
+  return {
+    needsTiling: true,
+    totalWidth: width,
+    totalHeight: height,
+    tileWidth,
+    tileHeight,
+    tilesX,
+    tilesY,
+    totalTiles,
+    tiles,
+    estimatedMemoryMB: tileBytes / (1024 * 1024),
+    reason: `Image ${width}x${height} (${(totalBytes / 1024 / 1024).toFixed(1)} MB) exceeds threshold, splitting into ${tilesX}x${tilesY} tiles`
+  };
+}
 
 export interface HighResExportRequest {
   shapes: any[];
@@ -1878,6 +2008,8 @@ export interface HighResExportRequest {
     flattenToRgb?: boolean;
     matteColor?: string;
   };
+  // Optional progress callback for tiled exports
+  onProgress?: TileProgressCallback;
 }
 
 export interface HighResExportResult {
@@ -1931,8 +2063,182 @@ function convertUnitToPixels(value: number, unit: string, dpi: number): number {
   }
 }
 
+// Progress tracking for high-res exports
+export interface HighResExportProgress {
+  exportId: string;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  phase: 'preparing' | 'rendering' | 'combining' | 'encoding' | 'completed' | 'error';
+  percent: number;
+  message: string;
+  currentTile?: number;
+  totalTiles?: number;
+  startTime: number;
+  endTime?: number;
+  error?: string;
+  result?: {
+    buffer: Buffer;
+    mimeType: string;
+    filename: string;
+    width: number;
+    height: number;
+  };
+}
+
 export class HighResolutionExportService {
   private browser: Browser | null = null;
+  private activeHighResExports = new Map<string, HighResExportProgress>();
+  
+  // Get progress for an export
+  getExportProgress(exportId: string): HighResExportProgress | undefined {
+    return this.activeHighResExports.get(exportId);
+  }
+  
+  // Start async export and return immediately with exportId
+  async startAsyncExport(request: HighResExportRequest): Promise<{ exportId: string; needsTiling: boolean; totalTiles?: number }> {
+    const exportId = `highres_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Calculate if tiling is needed
+    const { artboard, exportSettings } = request;
+    const { bitDepth = 16, scale = 1 } = exportSettings;
+    const effectiveDpi = exportSettings.dpi || artboard.dpi || 300;
+    
+    let bleedPx = 0;
+    let printMarksGutterPx = 0;
+    
+    if (artboard.printConfig) {
+      const config = artboard.printConfig;
+      const overlayUnit = config.overlays?.overlayUnit || 'pixels';
+      
+      if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
+        bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+      }
+      
+      if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
+        const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+        let markLengthPx: number;
+        let markOffsetPx: number;
+        
+        if (scaleMode === 'percent') {
+          const minDimension = Math.min(artboard.width, artboard.height);
+          markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
+          markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
+        } else {
+          markLengthPx = convertUnitToPixels(config.overlays.printMarks.markLength, overlayUnit, effectiveDpi);
+          markOffsetPx = convertUnitToPixels(config.overlays.printMarks.markOffset, overlayUnit, effectiveDpi);
+        }
+        
+        printMarksGutterPx = markLengthPx + markOffsetPx + 5;
+      }
+    }
+    
+    const printExpansion = bleedPx + printMarksGutterPx;
+    const canvasWidth = Math.ceil((artboard.width + printExpansion * 2) * scale);
+    const canvasHeight = Math.ceil((artboard.height + printExpansion * 2) * scale);
+    
+    const channels: 3 | 4 = (exportSettings.flattenToRgb || exportSettings.backgroundMode !== 'transparent') ? 3 : 4;
+    const tilePlan = calculateTilePlan(canvasWidth, canvasHeight, bitDepth, channels);
+    
+    // Initialize progress
+    const progress: HighResExportProgress = {
+      exportId,
+      status: 'pending',
+      phase: 'preparing',
+      percent: 0,
+      message: 'Starting export...',
+      startTime: Date.now(),
+      totalTiles: tilePlan.needsTiling ? tilePlan.totalTiles : undefined
+    };
+    
+    this.activeHighResExports.set(exportId, progress);
+    
+    // Start export in background
+    this.runAsyncExport(exportId, request).catch(error => {
+      console.error(`[HighResExport] Async export ${exportId} failed:`, error);
+    });
+    
+    return {
+      exportId,
+      needsTiling: tilePlan.needsTiling,
+      totalTiles: tilePlan.needsTiling ? tilePlan.totalTiles : undefined
+    };
+  }
+  
+  // Run export asynchronously and update progress
+  private async runAsyncExport(exportId: string, request: HighResExportRequest): Promise<void> {
+    const progress = this.activeHighResExports.get(exportId);
+    if (!progress) return;
+    
+    try {
+      progress.status = 'processing';
+      this.activeHighResExports.set(exportId, progress);
+      
+      // Add progress callback to request
+      const requestWithProgress: HighResExportRequest = {
+        ...request,
+        onProgress: (update) => {
+          const p = this.activeHighResExports.get(exportId);
+          if (p) {
+            p.phase = update.phase;
+            p.percent = update.percent;
+            p.message = update.message;
+            p.currentTile = update.currentTile;
+            p.totalTiles = update.totalTiles;
+            this.activeHighResExports.set(exportId, p);
+          }
+        }
+      };
+      
+      const result = await this.exportImage(requestWithProgress);
+      
+      if (result.success && result.buffer) {
+        progress.status = 'completed';
+        progress.phase = 'completed';
+        progress.percent = 100;
+        progress.message = 'Export completed successfully';
+        progress.endTime = Date.now();
+        progress.result = {
+          buffer: result.buffer,
+          mimeType: result.mimeType || 'application/octet-stream',
+          filename: result.filename || `export-${Date.now()}.tiff`,
+          width: result.width || 0,
+          height: result.height || 0
+        };
+      } else {
+        progress.status = 'error';
+        progress.phase = 'error';
+        progress.error = result.error || 'Export failed';
+        progress.endTime = Date.now();
+      }
+      
+      this.activeHighResExports.set(exportId, progress);
+      
+      // Clean up after 10 minutes
+      setTimeout(() => {
+        this.activeHighResExports.delete(exportId);
+      }, 10 * 60 * 1000);
+      
+    } catch (error) {
+      progress.status = 'error';
+      progress.phase = 'error';
+      progress.error = error instanceof Error ? error.message : 'Unknown error';
+      progress.endTime = Date.now();
+      this.activeHighResExports.set(exportId, progress);
+    }
+  }
+  
+  // Get export result (returns buffer if completed)
+  getExportResult(exportId: string): HighResExportProgress['result'] | undefined {
+    const progress = this.activeHighResExports.get(exportId);
+    if (progress?.status === 'completed' && progress.result) {
+      return progress.result;
+    }
+    return undefined;
+  }
+  
+  // Clean up a completed export
+  cleanupExport(exportId: string): void {
+    this.activeHighResExports.delete(exportId);
+  }
   
   async initialize(): Promise<void> {
     if (this.browser) return;
@@ -1968,6 +2274,8 @@ export class HighResolutionExportService {
   
   async exportImage(request: HighResExportRequest): Promise<HighResExportResult> {
     const startTime = Date.now();
+    const { artboard, exportSettings, onProgress } = request;
+    const { bitDepth = 16, scale = 1 } = exportSettings;
     
     try {
       await this.initialize();
@@ -1976,10 +2284,75 @@ export class HighResolutionExportService {
         throw new Error('Browser not initialized');
       }
       
+      // Calculate final canvas dimensions
+      const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
+      let bleedPx = 0;
+      let printMarksGutterPx = 0;
+      
+      if (artboard.printConfig) {
+        const config = artboard.printConfig;
+        const overlayUnit = config.overlays?.overlayUnit || 'pixels';
+        
+        if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
+          bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+        }
+        
+        if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
+          const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+          let markLengthPx: number;
+          let markOffsetPx: number;
+          
+          if (scaleMode === 'percent') {
+            const minDimension = Math.min(artboard.width, artboard.height);
+            markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
+            markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
+          } else {
+            markLengthPx = convertUnitToPixels(config.overlays.printMarks.markLength, overlayUnit, effectiveDpi);
+            markOffsetPx = convertUnitToPixels(config.overlays.printMarks.markOffset, overlayUnit, effectiveDpi);
+          }
+          
+          printMarksGutterPx = markLengthPx + markOffsetPx + 5;
+        }
+      }
+      
+      const printExpansion = bleedPx + printMarksGutterPx;
+      const canvasWidth = Math.ceil((artboard.width + printExpansion * 2) * scale);
+      const canvasHeight = Math.ceil((artboard.height + printExpansion * 2) * scale);
+      
+      // Calculate tile plan to determine if tiling is needed
+      const channels: 3 | 4 = (exportSettings.flattenToRgb || exportSettings.backgroundMode !== 'transparent') ? 3 : 4;
+      const tilePlan = calculateTilePlan(canvasWidth, canvasHeight, bitDepth, channels);
+      
+      if (tilePlan.needsTiling) {
+        console.log(`[HighResExport] ${tilePlan.reason}`);
+        console.log(`[HighResExport] Tile size: ${tilePlan.tileWidth}x${tilePlan.tileHeight}, Memory per tile: ~${tilePlan.estimatedMemoryMB.toFixed(1)} MB`);
+        
+        // Use tiled rendering path
+        const result = await this.renderTiled(request, tilePlan);
+        return {
+          ...result,
+          duration: Date.now() - startTime
+        };
+      }
+      
+      // Standard single-pass rendering
       const page = await this.browser.newPage();
       
       try {
+        onProgress?.({
+          phase: 'rendering',
+          percent: 10,
+          message: `Rendering ${canvasWidth}x${canvasHeight} image...`
+        });
+        
         const result = await this.renderAndCapture(page, request);
+        
+        onProgress?.({
+          phase: 'completed',
+          percent: 100,
+          message: 'Export completed'
+        });
+        
         return {
           ...result,
           duration: Date.now() - startTime
@@ -1989,12 +2362,534 @@ export class HighResolutionExportService {
       }
     } catch (error) {
       console.error('[HighResExport] Export failed:', error);
+      request.onProgress?.({
+        phase: 'error',
+        percent: 0,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         duration: Date.now() - startTime
       };
     }
+  }
+  
+  /**
+   * Render a large image using tiled processing
+   * Each tile is rendered separately and then combined using Sharp
+   */
+  private async renderTiled(request: HighResExportRequest, tilePlan: TilePlan): Promise<HighResExportResult> {
+    const { shapes, groups = [], artboard, exportSettings, onProgress } = request;
+    const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent', compression = 'none' } = exportSettings;
+    
+    const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
+    
+    // Calculate print expansion (same as single-pass)
+    let bleedPx = 0;
+    let printMarksGutterPx = 0;
+    
+    if (artboard.printConfig) {
+      const config = artboard.printConfig;
+      const overlayUnit = config.overlays?.overlayUnit || 'pixels';
+      
+      if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
+        bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+      }
+      
+      if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
+        const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+        let markLengthPx: number;
+        let markOffsetPx: number;
+        
+        if (scaleMode === 'percent') {
+          const minDimension = Math.min(artboard.width, artboard.height);
+          markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
+          markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
+        } else {
+          markLengthPx = convertUnitToPixels(config.overlays.printMarks.markLength, overlayUnit, effectiveDpi);
+          markOffsetPx = convertUnitToPixels(config.overlays.printMarks.markOffset, overlayUnit, effectiveDpi);
+        }
+        
+        printMarksGutterPx = markLengthPx + markOffsetPx + 5;
+      }
+    }
+    
+    const printExpansion = bleedPx + printMarksGutterPx;
+    
+    let bgColor = 'transparent';
+    if (backgroundMode === 'artboard') {
+      bgColor = artboard.backgroundColor || '#ffffff';
+    } else if (backgroundMode === 'custom' && exportSettings.backgroundColor) {
+      bgColor = exportSettings.backgroundColor;
+    }
+    
+    console.log(`[HighResExport] Starting tiled render: ${tilePlan.totalWidth}x${tilePlan.totalHeight}, ${tilePlan.totalTiles} tiles`);
+    
+    onProgress?.({
+      phase: 'preparing',
+      totalTiles: tilePlan.totalTiles,
+      percent: 5,
+      message: `Preparing ${tilePlan.tilesX}x${tilePlan.tilesY} tile grid (${tilePlan.totalTiles} tiles)...`
+    });
+    
+    // Render each tile
+    const tileBuffers: Array<{ buffer: Buffer; x: number; y: number; width: number; height: number }> = [];
+    const page = await this.browser!.newPage();
+    
+    try {
+      for (let i = 0; i < tilePlan.tiles.length; i++) {
+        const tile = tilePlan.tiles[i];
+        const tileProgress = Math.round(10 + (i / tilePlan.totalTiles) * 70); // 10-80% for tile rendering
+        
+        onProgress?.({
+          phase: 'rendering',
+          currentTile: i + 1,
+          totalTiles: tilePlan.totalTiles,
+          percent: tileProgress,
+          message: `Rendering tile ${i + 1} of ${tilePlan.totalTiles} (${tile.col + 1},${tile.row + 1})...`
+        });
+        
+        console.log(`[HighResExport] Rendering tile ${i + 1}/${tilePlan.totalTiles}: ${tile.width}x${tile.height} at (${tile.x}, ${tile.y})`);
+        
+        // Generate HTML for this tile with viewport offset
+        const tileRenderData = {
+          shapes,
+          groups,
+          artboard: {
+            ...artboard,
+            printConfig: artboard.printConfig
+          },
+          exportSettings: {
+            ...exportSettings,
+            dpi: effectiveDpi,
+            bleedPx,
+            printMarksGutterPx,
+            printExpansion,
+            backgroundColor: bgColor
+          },
+          canvasWidth: tile.width,
+          canvasHeight: tile.height,
+          scale,
+          // Tile-specific viewport offset
+          tileOffsetX: tile.x,
+          tileOffsetY: tile.y,
+          fullWidth: tilePlan.totalWidth,
+          fullHeight: tilePlan.totalHeight
+        };
+        
+        const tileHtml = this.generateTileRendererHtml(tileRenderData);
+        
+        await page.setViewport({
+          width: Math.max(tile.width, 800),
+          height: Math.max(tile.height, 600),
+          deviceScaleFactor: 1
+        });
+        
+        await page.setContent(tileHtml, { waitUntil: 'networkidle0' });
+        
+        const renderResult = await page.evaluate(() => {
+          return (window as any).renderShapes();
+        });
+        
+        if (!renderResult.success) {
+          throw new Error(`Tile ${i + 1} render failed: ${renderResult.error}`);
+        }
+        
+        // Capture tile as PNG buffer
+        const pngDataUrl = await page.evaluate(() => {
+          const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
+          return canvas.toDataURL('image/png');
+        });
+        
+        const tileBuffer = Buffer.from(pngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+        
+        tileBuffers.push({
+          buffer: tileBuffer,
+          x: tile.x,
+          y: tile.y,
+          width: tile.width,
+          height: tile.height
+        });
+        
+        console.log(`[HighResExport] Tile ${i + 1} captured: ${(tileBuffer.length / 1024).toFixed(1)} KB`);
+        
+        // Small delay between tiles to allow garbage collection
+        if (i < tilePlan.tiles.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    } finally {
+      await page.close();
+    }
+    
+    // Combine tiles into final image
+    onProgress?.({
+      phase: 'combining',
+      totalTiles: tilePlan.totalTiles,
+      percent: 85,
+      message: `Combining ${tilePlan.totalTiles} tiles into final image...`
+    });
+    
+    console.log(`[HighResExport] Combining ${tileBuffers.length} tiles into ${tilePlan.totalWidth}x${tilePlan.totalHeight} image`);
+    
+    const combinedBuffer = await this.combineTiles(tileBuffers, tilePlan, bgColor);
+    
+    // Encode to final format
+    onProgress?.({
+      phase: 'encoding',
+      percent: 95,
+      message: `Encoding ${format.toUpperCase()} image...`
+    });
+    
+    let finalBuffer: Buffer;
+    let mimeType: string;
+    let filename: string;
+    
+    if (format === 'png') {
+      finalBuffer = combinedBuffer;
+      mimeType = 'image/png';
+      filename = `export-${Date.now()}.png`;
+    } else {
+      // Convert to TIFF
+      const shouldFlattenToRgb = exportSettings.flattenToRgb || 
+        (backgroundMode === 'artboard' || backgroundMode === 'custom');
+      
+      finalBuffer = await this.convertToTiff(combinedBuffer, {
+        bitDepth,
+        dpi: effectiveDpi,
+        compression: compression as 'none' | 'deflate',
+        flattenToRgb: shouldFlattenToRgb,
+        matteColor: exportSettings.matteColor || '#ffffff'
+      });
+      
+      mimeType = 'image/tiff';
+      filename = `export-${Date.now()}.tiff`;
+    }
+    
+    onProgress?.({
+      phase: 'completed',
+      percent: 100,
+      message: 'Tiled export completed successfully'
+    });
+    
+    console.log(`[HighResExport] Tiled export complete: ${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    return {
+      success: true,
+      buffer: finalBuffer,
+      mimeType,
+      filename,
+      width: tilePlan.totalWidth,
+      height: tilePlan.totalHeight
+    };
+  }
+  
+  /**
+   * Combine tile buffers into a single image using Sharp
+   */
+  private async combineTiles(
+    tiles: Array<{ buffer: Buffer; x: number; y: number; width: number; height: number }>,
+    tilePlan: TilePlan,
+    backgroundColor: string
+  ): Promise<Buffer> {
+    // Create base canvas with background color
+    const isTransparent = backgroundColor === 'transparent';
+    
+    let baseImage: sharp.Sharp;
+    
+    if (isTransparent) {
+      // Create transparent RGBA base
+      baseImage = sharp({
+        create: {
+          width: tilePlan.totalWidth,
+          height: tilePlan.totalHeight,
+          channels: 4,
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
+        }
+      });
+    } else {
+      // Parse background color
+      const hexMatch = backgroundColor.match(/^#?([0-9a-fA-F]{6})$/);
+      const r = hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255;
+      const g = hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255;
+      const b = hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255;
+      
+      baseImage = sharp({
+        create: {
+          width: tilePlan.totalWidth,
+          height: tilePlan.totalHeight,
+          channels: 3,
+          background: { r, g, b }
+        }
+      });
+    }
+    
+    // Build composite array for all tiles
+    const compositeInputs: sharp.OverlayOptions[] = tiles.map(tile => ({
+      input: tile.buffer,
+      left: tile.x,
+      top: tile.y
+    }));
+    
+    // Composite all tiles at once
+    const combinedBuffer = await baseImage
+      .composite(compositeInputs)
+      .png()
+      .toBuffer();
+    
+    console.log(`[HighResExport] Combined ${tiles.length} tiles: ${(combinedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    return combinedBuffer;
+  }
+  
+  /**
+   * Generate HTML renderer for a single tile (with viewport offset)
+   */
+  private generateTileRendererHtml(data: any): string {
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullWidth, fullHeight } = data;
+    const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
+    
+    // Use the same base template but with tile offset applied
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>High-Res Tile Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+    #exportCanvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+  
+  <script>
+    const RENDER_DATA = ${JSON.stringify({ shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printMarksGutterPx, printExpansion, backgroundColor, tileOffsetX, tileOffsetY, fullWidth, fullHeight })};
+    
+    function drawPolygon(ctx, points) {
+      if (!points || points.length === 0) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+    }
+    
+    function drawLine(ctx, points) {
+      if (!points || points.length < 2) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+    }
+    
+    function drawSmoothSpline(ctx, points, controlPoints) {
+      if (!points || points.length < 2) return;
+      
+      if (controlPoints && controlPoints.length >= (points.length - 1) * 2) {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp1 = controlPoints[i * 2];
+          const cp2 = controlPoints[i * 2 + 1];
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, points[i + 1].x, points[i + 1].y);
+        }
+      } else {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+      }
+    }
+    
+    function drawSplineCircle(ctx, points, controlPoints, closed) {
+      if (!points || points.length < 4) return;
+      if (!controlPoints || controlPoints.length < 8) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      
+      if (closed !== false) {
+        ctx.closePath();
+      }
+    }
+    
+    function drawSplineRing(ctx, points, controlPoints) {
+      if (!points || points.length < 8) return;
+      if (!controlPoints || controlPoints.length < 16) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+      
+      ctx.moveTo(points[4].x, points[4].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[4 + ((i + 1) % 4)];
+        const cp1 = controlPoints[8 + i * 2];
+        const cp2 = controlPoints[8 + i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+    }
+    
+    function getShapeBounds(points) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const p of points) {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      }
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+    
+    function renderShape(ctx, shape) {
+      if (!shape.points || shape.points.length === 0) return;
+      
+      ctx.save();
+      
+      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+      
+      const artboardX = RENDER_DATA.artboard.x || 0;
+      const artboardY = RENDER_DATA.artboard.y || 0;
+      
+      // Apply tile offset for viewport clipping
+      const tileOffsetX = RENDER_DATA.tileOffsetX || 0;
+      const tileOffsetY = RENDER_DATA.tileOffsetY || 0;
+      
+      ctx.translate(shape.transform.x - artboardX - tileOffsetX, shape.transform.y - artboardY - tileOffsetY);
+      ctx.rotate((shape.transform.rotation || 0) * Math.PI / 180);
+      ctx.scale(shape.transform.scaleX || 1, shape.transform.scaleY || 1);
+      ctx.transform(1, shape.transform.skewX || 0, shape.transform.skewY || 0, 1, 0, 0);
+      
+      if (shape.properties.blurRadius > 0) {
+        ctx.filter = 'blur(' + shape.properties.blurRadius + 'px)';
+      }
+      
+      ctx.beginPath();
+      
+      const shapeType = shape.type;
+      if (shapeType === 'line' || shapeType === 'line-vector') {
+        drawLine(ctx, shape.points);
+      } else if (shapeType === 'spline-circle' || shapeType === 'spline-ellipse') {
+        drawSplineCircle(ctx, shape.points, shape.controlPoints, shape.closed);
+      } else if (shapeType === 'spline-ring') {
+        drawSplineRing(ctx, shape.points, shape.controlPoints);
+      } else if (shapeType === 'bezier' || shapeType === 'smooth-spline' || shapeType === 'cubic') {
+        drawSmoothSpline(ctx, shape.points, shape.controlPoints);
+        if (shape.closed) ctx.closePath();
+      } else {
+        drawPolygon(ctx, shape.points);
+      }
+      
+      // Fill and stroke logic (same as standard renderer)
+      if (shapeType !== 'line' && shapeType !== 'line-vector' && shape.properties.fillColor !== 'none') {
+        ctx.globalAlpha = shape.properties.fillOpacity || 1;
+        
+        if (shape.properties.gradient) {
+          const bounds = getShapeBounds(shape.points);
+          let gradient;
+          const gradientType = shape.properties.gradient.type;
+          
+          if (gradientType === 'conic') {
+            const cx = bounds.x + (bounds.width * (shape.properties.gradient.conicCenterX ?? 50) / 100);
+            const cy = bounds.y + (bounds.height * (shape.properties.gradient.conicCenterY ?? 50) / 100);
+            gradient = ctx.createConicGradient(shape.properties.gradient.conicAngle || 0, cx, cy);
+          } else if (gradientType === 'radial') {
+            const cx = bounds.x + (bounds.width * (shape.properties.gradient.radialCenterX ?? 50) / 100);
+            const cy = bounds.y + (bounds.height * (shape.properties.gradient.radialCenterY ?? 50) / 100);
+            const radius = Math.max(bounds.width, bounds.height) / 2;
+            gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          } else {
+            const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const length = Math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height) / 2;
+            gradient = ctx.createLinearGradient(
+              cx - Math.cos(angle) * length,
+              cy - Math.sin(angle) * length,
+              cx + Math.cos(angle) * length,
+              cy + Math.sin(angle) * length
+            );
+          }
+          
+          const stops = shape.properties.gradient.stops || [];
+          for (const stop of stops) {
+            gradient.addColorStop(stop.position, stop.color);
+          }
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = shape.properties.fillColor || '#000000';
+        }
+        
+        ctx.fill('evenodd');
+      }
+      
+      if (shape.properties.strokeColor && shape.properties.strokeColor !== 'none' && shape.properties.strokeWidth > 0) {
+        ctx.globalAlpha = shape.properties.strokeOpacity || 1;
+        ctx.strokeStyle = shape.properties.strokeColor;
+        ctx.lineWidth = shape.properties.strokeWidth;
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    }
+    
+    window.renderShapes = function() {
+      try {
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printMarksGutterPx, printExpansion, backgroundColor, tileOffsetX, tileOffsetY } = RENDER_DATA;
+        
+        ctx.save();
+        ctx.scale(scale, scale);
+        
+        // Apply print expansion offset for this tile
+        ctx.translate(printExpansion - (tileOffsetX / scale), printExpansion - (tileOffsetY / scale));
+        
+        // Draw background if not transparent
+        if (backgroundColor && backgroundColor !== 'transparent') {
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          ctx.restore();
+        }
+        
+        // Sort and render shapes
+        const sortedShapes = [...shapes].sort((a, b) => (a.properties.zIndex || 0) - (b.properties.zIndex || 0));
+        
+        for (const shape of sortedShapes) {
+          renderShape(ctx, shape);
+        }
+        
+        ctx.restore();
+        
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+  </script>
+</body>
+</html>`;
   }
   
   private async renderAndCapture(page: Page, request: HighResExportRequest): Promise<HighResExportResult> {
@@ -2539,6 +3434,13 @@ export class HighResolutionExportService {
     estimatedTime: string;
     estimatedSize: string;
     dimensions: { width: number; height: number };
+    tiling?: {
+      needsTiling: boolean;
+      tilesX: number;
+      tilesY: number;
+      totalTiles: number;
+      tileSize: string;
+    };
   } {
     const scale = exportSettings.scale || 1;
     const width = Math.ceil(artboard.width * scale);
@@ -2549,10 +3451,24 @@ export class HighResolutionExportService {
     const bytesPerPixel = exportSettings.bitDepth === 16 ? 8 : 4;
     const estimatedBytes = pixels * bytesPerPixel;
     
+    // Calculate tile plan for large images
+    const bitDepth = exportSettings.bitDepth || 8;
+    const channels: 3 | 4 = (exportSettings.flattenToRgb || exportSettings.backgroundMode !== 'transparent') ? 3 : 4;
+    const tilePlan = calculateTilePlan(width, height, bitDepth, channels);
+    
     let estimatedTime: string;
     if (needsServer) {
-      const seconds = Math.ceil(2 + pixels / 5_000_000);
-      estimatedTime = seconds < 60 ? `~${seconds} seconds` : `~${Math.ceil(seconds / 60)} minutes`;
+      if (tilePlan.needsTiling) {
+        // Tiled processing takes longer: base time + time per tile + combining time
+        const baseSeconds = 5;
+        const secondsPerTile = 3;
+        const combineSeconds = Math.ceil(pixels / 20_000_000);
+        const totalSeconds = baseSeconds + (tilePlan.totalTiles * secondsPerTile) + combineSeconds;
+        estimatedTime = totalSeconds < 60 ? `~${totalSeconds} seconds` : `~${Math.ceil(totalSeconds / 60)} minutes`;
+      } else {
+        const seconds = Math.ceil(2 + pixels / 5_000_000);
+        estimatedTime = seconds < 60 ? `~${seconds} seconds` : `~${Math.ceil(seconds / 60)} minutes`;
+      }
     } else {
       estimatedTime = '< 1 second';
     }
@@ -2564,7 +3480,14 @@ export class HighResolutionExportService {
       needsServer,
       estimatedTime,
       estimatedSize,
-      dimensions: { width, height }
+      dimensions: { width, height },
+      tiling: tilePlan.needsTiling ? {
+        needsTiling: true,
+        tilesX: tilePlan.tilesX,
+        tilesY: tilePlan.tilesY,
+        totalTiles: tilePlan.totalTiles,
+        tileSize: `${tilePlan.tileWidth}x${tilePlan.tileHeight}`
+      } : undefined
     };
   }
 }
