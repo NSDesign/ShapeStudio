@@ -84,6 +84,18 @@ Preferred communication style: Simple, everyday language.
   - **Auto** (default): Smart detection based on export size, format, and DPI - automatically chooses optimal renderer
   - **Client**: Force browser-based rendering for quick exports (subject to browser canvas limits)
   - **Server**: Force server-side rendering via Headless Chromium + Sharp for large/high-quality exports
+- **Tiled Export System**: Server-side tiled rendering pipeline for very large print files (A0+ at 600+ DPI):
+  - **Auto-Detection**: Automatically switches to tiled mode when canvas exceeds ~100M pixels or ~512MB raw memory threshold
+  - **Tile Planning**: Calculates optimal tile grid (e.g., 4x3 = 12 tiles) with ~8000px base tile size; edge tiles automatically sized smaller via min(baseTile, remaining)
+  - **Tiled Rendering**: Reuses single Puppeteer page, translates scene by (-tileX, -tileY) per tile, captures lossless PNG buffer for each tile
+  - **Sequential Composite**: Sharp creates full-size canvas and composites each tile at (x, y) position immediately after render; disposes tile buffer to minimize memory
+  - **Metadata Preservation**: DPI and sRGB ICC profile applied after all tiles stitched, before final TIFF/PNG encoding
+  - **Progress Integration**: Reports tile phases through existing batch export progress to ExportProgressOverlay:
+    - "Preparing tiles (4x3 grid)..."
+    - "Rendering tile 1 of 12..."
+    - "Stitching tiles..."
+    - "Encoding final TIFF..."
+  - **Error Handling**: Aborts on tile failure, surfaces error in progress, cleans up buffers; honors AbortSignal for cancellation
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.

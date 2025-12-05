@@ -1931,6 +1931,112 @@ function convertUnitToPixels(value: number, unit: string, dpi: number): number {
   }
 }
 
+/**
+ * Tile Planning for Large Exports
+ * 
+ * Calculates optimal tile grid for rendering very large images that exceed
+ * memory thresholds. Uses ~8000px base tile size with automatic edge sizing.
+ */
+
+export interface TilePlan {
+  needsTiling: boolean;
+  tileWidth: number;
+  tileHeight: number;
+  cols: number;
+  rows: number;
+  totalTiles: number;
+  tiles: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    index: number;
+  }>;
+  reason?: string;
+}
+
+const TILE_THRESHOLDS = {
+  maxSinglePassPixels: 100_000_000,  // ~100M pixels
+  maxSinglePassBytes: 512_000_000,   // ~512MB raw
+  baseTileSize: 8000,                // ~8000px base tile
+  minTileSize: 1000,                 // Minimum tile dimension
+};
+
+export function planTiles(
+  width: number,
+  height: number,
+  channels: number = 4,
+  bitDepth: number = 16
+): TilePlan {
+  const totalPixels = width * height;
+  const bytesPerPixel = channels * (bitDepth / 8);
+  const totalBytes = totalPixels * bytesPerPixel;
+  
+  // Check if tiling is needed
+  const exceedsPixelLimit = totalPixels > TILE_THRESHOLDS.maxSinglePassPixels;
+  const exceedsByteLimit = totalBytes > TILE_THRESHOLDS.maxSinglePassBytes;
+  const needsTiling = exceedsPixelLimit || exceedsByteLimit;
+  
+  if (!needsTiling) {
+    return {
+      needsTiling: false,
+      tileWidth: width,
+      tileHeight: height,
+      cols: 1,
+      rows: 1,
+      totalTiles: 1,
+      tiles: [{ x: 0, y: 0, width, height, index: 0 }],
+      reason: 'Image within single-pass limits'
+    };
+  }
+  
+  // Calculate optimal tile size
+  const baseTile = TILE_THRESHOLDS.baseTileSize;
+  const cols = Math.ceil(width / baseTile);
+  const rows = Math.ceil(height / baseTile);
+  const totalTiles = cols * rows;
+  
+  // Generate tile definitions with edge handling
+  const tiles: TilePlan['tiles'] = [];
+  let index = 0;
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * baseTile;
+      const y = row * baseTile;
+      // Edge tiles are sized to remaining pixels
+      const tileW = Math.min(baseTile, width - x);
+      const tileH = Math.min(baseTile, height - y);
+      
+      tiles.push({ x, y, width: tileW, height: tileH, index });
+      index++;
+    }
+  }
+  
+  const reason = exceedsPixelLimit 
+    ? `Exceeds ${(TILE_THRESHOLDS.maxSinglePassPixels / 1_000_000).toFixed(0)}M pixel limit (${(totalPixels / 1_000_000).toFixed(1)}M)`
+    : `Exceeds ${(TILE_THRESHOLDS.maxSinglePassBytes / 1_000_000).toFixed(0)}MB memory limit (${(totalBytes / 1_000_000).toFixed(1)}MB)`;
+  
+  console.log(`[TilePlanner] ${reason}`);
+  console.log(`[TilePlanner] Planning ${cols}x${rows} = ${totalTiles} tiles for ${width}x${height} canvas`);
+  
+  return {
+    needsTiling: true,
+    tileWidth: baseTile,
+    tileHeight: baseTile,
+    cols,
+    rows,
+    totalTiles,
+    tiles,
+    reason
+  };
+}
+
+/**
+ * Progress callback type for tiled export
+ */
+export type TileProgressCallback = (phase: string, current: number, total: number) => void;
+
 export class HighResolutionExportService {
   private browser: Browser | null = null;
   
@@ -1966,10 +2072,19 @@ export class HighResolutionExportService {
     }
   }
   
-  async exportImage(request: HighResExportRequest): Promise<HighResExportResult> {
+  async exportImage(
+    request: HighResExportRequest,
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
     const startTime = Date.now();
     
     try {
+      // Check for abort before starting
+      if (abortSignal?.aborted) {
+        return { success: false, error: 'Export cancelled', duration: 0 };
+      }
+      
       await this.initialize();
       
       if (!this.browser) {
@@ -1979,7 +2094,7 @@ export class HighResolutionExportService {
       const page = await this.browser.newPage();
       
       try {
-        const result = await this.renderAndCapture(page, request);
+        const result = await this.renderAndCapture(page, request, progressCallback, abortSignal);
         return {
           ...result,
           duration: Date.now() - startTime
@@ -1997,7 +2112,12 @@ export class HighResolutionExportService {
     }
   }
   
-  private async renderAndCapture(page: Page, request: HighResExportRequest): Promise<HighResExportResult> {
+  private async renderAndCapture(
+    page: Page,
+    request: HighResExportRequest,
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
     const { shapes, groups = [], artboard, exportSettings } = request;
     const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent', compression = 'none' } = exportSettings;
     
@@ -2044,6 +2164,31 @@ export class HighResolutionExportService {
     } else if (backgroundMode === 'custom' && exportSettings.backgroundColor) {
       bgColor = exportSettings.backgroundColor;
     }
+    
+    const shouldFlattenToRgb = exportSettings.flattenToRgb || 
+      (backgroundMode === 'artboard' || backgroundMode === 'custom');
+    
+    // Check if tiling is needed for large exports
+    const channels = shouldFlattenToRgb ? 3 : 4;
+    const tilePlan = planTiles(canvasWidth, canvasHeight, channels, bitDepth);
+    
+    if (tilePlan.needsTiling) {
+      console.log(`[HighResExport] Using tiled rendering: ${tilePlan.cols}x${tilePlan.rows} = ${tilePlan.totalTiles} tiles`);
+      return this.renderTiled(page, request, tilePlan, {
+        canvasWidth,
+        canvasHeight,
+        effectiveDpi,
+        bgColor,
+        bleedPx,
+        printMarksGutterPx,
+        printExpansion,
+        scale,
+        shouldFlattenToRgb
+      }, progressCallback, abortSignal);
+    }
+    
+    // Single-pass rendering for smaller images
+    progressCallback?.('Rendering image...', 1, 3);
     
     const renderData = {
       shapes,
@@ -2093,6 +2238,7 @@ export class HighResolutionExportService {
     console.log(`[HighResExport] Captured PNG buffer: ${(pngBuffer.length / 1024).toFixed(1)} KB`);
     
     if (format === 'png') {
+      progressCallback?.('Complete', 3, 3);
       return {
         success: true,
         buffer: pngBuffer,
@@ -2103,8 +2249,7 @@ export class HighResolutionExportService {
       };
     }
     
-    const shouldFlattenToRgb = exportSettings.flattenToRgb || 
-      (backgroundMode === 'artboard' || backgroundMode === 'custom');
+    progressCallback?.('Encoding TIFF...', 2, 3);
     
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
       bitDepth,
@@ -2116,6 +2261,8 @@ export class HighResolutionExportService {
     
     console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
     
+    progressCallback?.('Complete', 3, 3);
+    
     return {
       success: true,
       buffer: tiffBuffer,
@@ -2124,6 +2271,341 @@ export class HighResolutionExportService {
       width: canvasWidth,
       height: canvasHeight
     };
+  }
+  
+  /**
+   * Tiled rendering for very large exports
+   * Renders each tile separately and composites them using Sharp
+   */
+  private async renderTiled(
+    page: Page,
+    request: HighResExportRequest,
+    tilePlan: TilePlan,
+    renderConfig: {
+      canvasWidth: number;
+      canvasHeight: number;
+      effectiveDpi: number;
+      bgColor: string;
+      bleedPx: number;
+      printMarksGutterPx: number;
+      printExpansion: number;
+      scale: number;
+      shouldFlattenToRgb: boolean;
+    },
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
+    const { shapes, groups = [], artboard, exportSettings } = request;
+    const { format = 'tiff', bitDepth = 16, compression = 'none' } = exportSettings;
+    const { canvasWidth, canvasHeight, effectiveDpi, bgColor, bleedPx, printMarksGutterPx, printExpansion, scale, shouldFlattenToRgb } = renderConfig;
+    
+    // Calculate total steps for progress: 1 (prep) + tiles + 1 (stitch) + 1 (encode)
+    const totalSteps = 1 + tilePlan.totalTiles + 1 + 1;
+    let currentStep = 0;
+    
+    // Phase 1: Preparing tiles
+    progressCallback?.(`Preparing tiles (${tilePlan.cols}x${tilePlan.rows} grid)...`, ++currentStep, totalSteps);
+    console.log(`[HighResExport] Starting tiled render: ${tilePlan.totalTiles} tiles`);
+    
+    // Create base canvas for compositing with Sharp
+    // Parse background color for Sharp
+    let sharpBackground: { r: number; g: number; b: number; alpha?: number };
+    if (bgColor === 'transparent') {
+      sharpBackground = { r: 0, g: 0, b: 0, alpha: 0 };
+    } else {
+      const hexMatch = bgColor.match(/^#?([0-9a-fA-F]{6})$/);
+      sharpBackground = {
+        r: hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255,
+        g: hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255,
+        b: hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255
+      };
+    }
+    
+    // Create the full-size canvas as a Sharp instance
+    const channels = shouldFlattenToRgb ? 3 : 4;
+    let compositeImage = sharp({
+      create: {
+        width: canvasWidth,
+        height: canvasHeight,
+        channels: channels as 3 | 4,
+        background: sharpBackground
+      }
+    });
+    
+    // Collect tile buffers for compositing
+    const compositeInputs: Array<{ input: Buffer; left: number; top: number }> = [];
+    
+    // Phase 2: Render each tile
+    for (const tile of tilePlan.tiles) {
+      // Check for abort
+      if (abortSignal?.aborted) {
+        console.log('[HighResExport] Tiled export cancelled');
+        return { success: false, error: 'Export cancelled' };
+      }
+      
+      progressCallback?.(`Rendering tile ${tile.index + 1} of ${tilePlan.totalTiles}...`, ++currentStep, totalSteps);
+      console.log(`[HighResExport] Rendering tile ${tile.index + 1}/${tilePlan.totalTiles} at (${tile.x}, ${tile.y}) size ${tile.width}x${tile.height}`);
+      
+      // Generate HTML for this tile with offset translation
+      const tileRenderData = {
+        shapes,
+        groups,
+        artboard: {
+          ...artboard,
+          printConfig: artboard.printConfig
+        },
+        exportSettings: {
+          ...exportSettings,
+          dpi: effectiveDpi,
+          bleedPx,
+          printMarksGutterPx,
+          printExpansion,
+          backgroundColor: bgColor
+        },
+        canvasWidth: tile.width,
+        canvasHeight: tile.height,
+        scale,
+        // Tile offset for translation
+        tileOffsetX: tile.x,
+        tileOffsetY: tile.y,
+        fullCanvasWidth: canvasWidth,
+        fullCanvasHeight: canvasHeight
+      };
+      
+      const tileHtml = this.generateTileRendererHtml(tileRenderData);
+      
+      await page.setViewport({
+        width: Math.max(tile.width, 800),
+        height: Math.max(tile.height, 600),
+        deviceScaleFactor: 1
+      });
+      
+      await page.setContent(tileHtml, { waitUntil: 'networkidle0' });
+      
+      const tileRenderResult = await page.evaluate(() => {
+        return (window as any).renderShapes();
+      });
+      
+      if (!tileRenderResult.success) {
+        throw new Error(`Tile ${tile.index + 1} render failed: ${tileRenderResult.error}`);
+      }
+      
+      const tilePngDataUrl = await page.evaluate(() => {
+        const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
+        return canvas.toDataURL('image/png');
+      });
+      
+      const tilePngBuffer = Buffer.from(tilePngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+      console.log(`[HighResExport] Tile ${tile.index + 1} captured: ${(tilePngBuffer.length / 1024).toFixed(1)} KB`);
+      
+      // Add to composite inputs
+      compositeInputs.push({
+        input: tilePngBuffer,
+        left: tile.x,
+        top: tile.y
+      });
+    }
+    
+    // Check for abort before stitching
+    if (abortSignal?.aborted) {
+      console.log('[HighResExport] Tiled export cancelled before stitching');
+      return { success: false, error: 'Export cancelled' };
+    }
+    
+    // Phase 3: Stitch tiles together
+    progressCallback?.('Stitching tiles...', ++currentStep, totalSteps);
+    console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
+    
+    // Composite all tiles onto the base canvas
+    const stitchedBuffer = await compositeImage
+      .composite(compositeInputs)
+      .png()
+      .toBuffer();
+    
+    // Clear composite inputs to free memory
+    compositeInputs.length = 0;
+    
+    console.log(`[HighResExport] Stitched image: ${(stitchedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    if (format === 'png') {
+      progressCallback?.('Complete', totalSteps, totalSteps);
+      return {
+        success: true,
+        buffer: stitchedBuffer,
+        mimeType: 'image/png',
+        filename: `export-${Date.now()}.png`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    // Phase 4: Encode to TIFF
+    progressCallback?.('Encoding final TIFF...', ++currentStep, totalSteps);
+    
+    const tiffBuffer = await this.convertToTiff(stitchedBuffer, {
+      bitDepth,
+      dpi: effectiveDpi,
+      compression: compression as 'none' | 'deflate',
+      flattenToRgb: shouldFlattenToRgb,
+      matteColor: exportSettings.matteColor || '#ffffff'
+    });
+    
+    console.log(`[HighResExport] Final TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    progressCallback?.('Complete', totalSteps, totalSteps);
+    
+    return {
+      success: true,
+      buffer: tiffBuffer,
+      mimeType: 'image/tiff',
+      filename: `export-${Date.now()}.tiff`,
+      width: canvasWidth,
+      height: canvasHeight
+    };
+  }
+  
+  /**
+   * Generate HTML for rendering a single tile with offset translation
+   */
+  private generateTileRendererHtml(data: any): string {
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight } = data;
+    const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
+    
+    // Add tile offset to the render data for translation
+    const tileData = {
+      ...data,
+      tileOffsetX,
+      tileOffsetY,
+      fullCanvasWidth,
+      fullCanvasHeight
+    };
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tile Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+    #exportCanvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+  <script>
+    const renderData = ${JSON.stringify(tileData)};
+    
+    window.renderShapes = function() {
+      try {
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Apply tile offset translation (negative to shift content into view)
+        ctx.translate(-${tileOffsetX}, -${tileOffsetY});
+        
+        // Fill background if not transparent
+        if ('${backgroundColor}' !== 'transparent') {
+          ctx.fillStyle = '${backgroundColor}';
+          ctx.fillRect(${tileOffsetX}, ${tileOffsetY}, ${canvasWidth}, ${canvasHeight});
+        }
+        
+        const shapes = renderData.shapes || [];
+        const scale = renderData.scale || 1;
+        const printExpansion = renderData.exportSettings?.printExpansion || 0;
+        
+        // Render each shape with proper transforms
+        shapes.forEach((shapeData, index) => {
+          ctx.save();
+          
+          // Apply shape transforms
+          const x = (shapeData.x + printExpansion) * scale;
+          const y = (shapeData.y + printExpansion) * scale;
+          const rotation = shapeData.rotation || 0;
+          
+          ctx.translate(x, y);
+          if (rotation !== 0) {
+            ctx.rotate(rotation * Math.PI / 180);
+          }
+          
+          // Set fill style
+          ctx.fillStyle = shapeData.fillColor || '#000000';
+          ctx.globalAlpha = shapeData.fillOpacity !== undefined ? shapeData.fillOpacity : 1;
+          
+          // Draw based on shape type
+          const type = shapeData.type;
+          const w = (shapeData.width || 0) * scale;
+          const h = (shapeData.height || 0) * scale;
+          const r = (shapeData.radius || 0) * scale;
+          
+          ctx.beginPath();
+          
+          if (type === 'rectangle' || type === 'roundedRectangle') {
+            const cornerRadius = (shapeData.cornerRadius || 0) * scale;
+            if (cornerRadius > 0) {
+              ctx.roundRect(-w/2, -h/2, w, h, cornerRadius);
+            } else {
+              ctx.rect(-w/2, -h/2, w, h);
+            }
+          } else if (type === 'ellipse' || type === 'circle') {
+            const rx = w / 2;
+            const ry = h / 2 || rx;
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+          } else if (type === 'triangle') {
+            ctx.moveTo(0, -h/2);
+            ctx.lineTo(w/2, h/2);
+            ctx.lineTo(-w/2, h/2);
+            ctx.closePath();
+          } else if (type === 'polygon' || type === 'star') {
+            const sides = shapeData.sides || 5;
+            const innerRadius = (shapeData.innerRadius || r * 0.5) * scale;
+            const outerRadius = r;
+            
+            if (type === 'star') {
+              for (let i = 0; i < sides * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI / sides) - Math.PI / 2;
+                const px = Math.cos(angle) * radius;
+                const py = Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+            } else {
+              for (let i = 0; i < sides; i++) {
+                const angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
+                const px = Math.cos(angle) * outerRadius;
+                const py = Math.sin(angle) * outerRadius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+            }
+            ctx.closePath();
+          } else {
+            // Default rectangle fallback
+            ctx.rect(-w/2, -h/2, w, h);
+          }
+          
+          ctx.fill();
+          
+          // Draw stroke if present
+          if (shapeData.strokeWidth && shapeData.strokeColor) {
+            ctx.strokeStyle = shapeData.strokeColor;
+            ctx.lineWidth = shapeData.strokeWidth * scale;
+            ctx.globalAlpha = shapeData.strokeOpacity !== undefined ? shapeData.strokeOpacity : 1;
+            ctx.stroke();
+          }
+          
+          ctx.restore();
+        });
+        
+        return { success: true, shapesRendered: shapes.length };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+  </script>
+</body>
+</html>`;
   }
   
   private async convertToTiff(pngBuffer: Buffer, options: { 
