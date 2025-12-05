@@ -1604,6 +1604,9 @@ export default function Sidebar({
   const [globalRepetitionValue, setGlobalRepetitionValue] = useState<number>(0);
   const [globalRepetitionRange, setGlobalRepetitionRange] = useState<[number, number]>([0, 0]);
   
+  // Ref to skip UI restoration after Apply button (prevents scroll jump)
+  const skipNextRestoreRef = useRef(false);
+  
   // Sets Manager Dialog state is now managed centrally via props
 
   // Get user preferences for sidebar section visibility
@@ -3242,6 +3245,9 @@ export default function Sidebar({
 
     setApplyStatus('applying');
     
+    // Set flag to skip the automatic UI restoration that would reset scroll position
+    skipNextRestoreRef.current = true;
+    
     try {
       // Prepare shape types partial update - only what this section controls
       const shapeTypesUpdate: Partial<GenerationSet> = {
@@ -3270,7 +3276,8 @@ export default function Sidebar({
       }, 1000);
     } catch (error) {
       console.error('Failed to apply shape types:', error);
-      // On error, revert to idle
+      // On error, revert to idle and clear the skip flag
+      skipNextRestoreRef.current = false;
       setApplyStatus('idle');
     }
   }, [currentGenerationSetId, updateGenerationSetPartial, enabledShapeTypes, shapeCountMode, shapeCountFixed, shapeCountRange, scatterSettings.shapeSpecific]);
@@ -8404,7 +8411,13 @@ export default function Sidebar({
         currentSetId={effectiveCurrentSetId}
         onCurrentSetChange={onCurrentGenerationSetChange}
         onCurrentSetUpdate={(setId) => {
-          // When current set is updated, restore UI state from it
+          // Skip restoration if Apply button just saved (prevents scroll jump)
+          if (skipNextRestoreRef.current) {
+            console.log('⏭️ [SIDEBAR] Skipping UI restoration after Apply - scroll position preserved');
+            skipNextRestoreRef.current = false;
+            return;
+          }
+          // When current set is updated externally, restore UI state from it
           console.log('🔄 [SIDEBAR] Current set updated, restoring UI state:', setId);
           onRestoreUIStateFromSet?.(setId);
         }}
