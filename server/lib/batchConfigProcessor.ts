@@ -517,6 +517,56 @@ function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex: numbe
 }
 
 /**
+ * Helper function to calculate linear gradient angle (returns degrees)
+ */
+function calculateLinearAngle(settings: BatchConfigSettings, shapeIndex: number): number {
+  let angleDegrees: number;
+  
+  // Check if type & direction controls are enabled
+  if (!settings.fillGradientTypeDirectionEnabled) {
+    // Use default angle when controls are disabled
+    return 45; // Default diagonal
+  }
+  
+  switch (settings.fillGradientLinearDirection) {
+    case 'fixed':
+      angleDegrees = settings.fillGradientLinearAngle ?? 45;
+      break;
+    
+    case 'predefined':
+      // Map predefined direction to angle
+      switch (settings.fillGradientLinearPredefined) {
+        case 'horizontal':
+          angleDegrees = 90; // Left to right
+          break;
+        case 'vertical':
+          angleDegrees = 180; // Top to bottom
+          break;
+        case 'diagonal-down':
+          angleDegrees = 135; // Top-left to bottom-right
+          break;
+        case 'diagonal-up':
+          angleDegrees = 45; // Bottom-left to top-right
+          break;
+        default:
+          angleDegrees = 90;
+      }
+      break;
+    
+    case 'range':
+    default:
+      const [minAngle, maxAngle] = settings.fillGradientLinearAngleRange || [0, 360];
+      angleDegrees = minAngle + Math.random() * (maxAngle - minAngle);
+      break;
+  }
+  
+  // Wrap angle to 0-360 range
+  angleDegrees = ((angleDegrees % 360) + 360) % 360;
+  
+  return angleDegrees;
+}
+
+/**
  * Main function to generate shapes with batch configuration
  * Returns both the generated shapes and metadata for tracking generation boundaries
  */
@@ -679,11 +729,16 @@ export function generateShapesWithBatchConfig(
                              Math.random() * 100 < (100 - batchConfig.fillStyleProbability);
           
           if (useGradient) {
-            // Simplified gradient generation
-            const [minStops, maxStops] = batchConfig.fillGradientStopsRange || [2, 5];
-            const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+            // Determine stop count based on mode
+            let stopCount: number;
+            if (batchConfig.fillGradientStopsMode === 'fixed') {
+              stopCount = batchConfig.fillGradientStopsCount ?? 3;
+            } else {
+              const [minStops, maxStops] = batchConfig.fillGradientStopsRange || [2, 5];
+              stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+            }
             
-            const gradientColors = generateGradientColors(
+            let gradientColors = generateGradientColors(
               batchConfig.fillGradientColorMode,
               stopCount,
               batchConfig.fillGradientColorRange,
@@ -693,10 +748,34 @@ export function generateShapesWithBatchConfig(
               batchConfig.fillGradientColorRangeFlip
             );
 
-            const stops = gradientColors.map((color, i) => ({
-              offset: stopCount === 1 ? 0 : i / (stopCount - 1),
-              color: color
-            }));
+            // Apply reverse if enabled
+            if (batchConfig.fillGradientStopsReverse) {
+              gradientColors = gradientColors.reverse();
+            }
+
+            // Calculate stop positions based on distribution mode
+            let stops = gradientColors.map((color, i) => {
+              let offset: number;
+              if (batchConfig.fillGradientStopDistribution === 'random' && stopCount > 2) {
+                // Random distribution (keep first and last at 0 and 1)
+                if (i === 0) {
+                  offset = 0;
+                } else if (i === stopCount - 1) {
+                  offset = 1;
+                } else {
+                  offset = Math.random();
+                }
+              } else {
+                // Even distribution (default)
+                offset = stopCount === 1 ? 0 : i / (stopCount - 1);
+              }
+              return { offset, color };
+            });
+
+            // Sort by offset for random distribution to maintain proper order
+            if (batchConfig.fillGradientStopDistribution === 'random') {
+              stops = stops.sort((a, b) => a.offset - b.offset);
+            }
 
             // Determine gradient type based on settings
             let gradientType: 'linear' | 'radial' | 'conic' = 'linear';
@@ -748,6 +827,7 @@ export function generateShapesWithBatchConfig(
             const gradientObj: {
               type: 'linear' | 'radial' | 'conic';
               stops: { offset: number; color: string }[];
+              angle?: number;
               radialCenterX?: number;
               radialCenterY?: number;
               conicAngle?: number;
@@ -757,6 +837,11 @@ export function generateShapesWithBatchConfig(
               type: gradientType,
               stops: stops
             };
+            
+            // Add linear-specific parameters when gradient type is linear
+            if (gradientType === 'linear') {
+              gradientObj.angle = calculateLinearAngle(batchConfig, index);
+            }
             
             // Add radial-specific parameters when gradient type is radial
             if (gradientType === 'radial') {

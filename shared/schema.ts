@@ -882,10 +882,16 @@ export interface BatchConfigSettings {
   // Additional HSL controls for range mode
   fillGradientColorSaturationRange: [number, number]; // 0-100% for range mode
   fillGradientColorLightnessRange: [number, number]; // 0-100% for range mode
-  fillGradientStopsRange: [number, number]; // RGBA gradient stops
+  fillGradientStopsMode: 'fixed' | 'range'; // Mode for color stops count
+  fillGradientStopsCount: number; // Fixed mode: exact number of color stops
+  fillGradientStopsRange: [number, number]; // Range mode: min-max color stops
+  // Stop Position Distribution Controls
+  fillGradientStopDistribution: 'even' | 'random'; // How stops are positioned
+  fillGradientStopsReverse: boolean; // Reverse the color order of stops
   // Enhanced Gradient Type & Direction Controls
-  fillGradientLinearDirection: 'range' | 'predefined'; // Linear direction mode
-  fillGradientLinearAngleRange: [number, number]; // Min-max angle range for range mode
+  fillGradientLinearDirection: 'fixed' | 'range' | 'predefined'; // Linear direction mode
+  fillGradientLinearAngle: number; // Fixed mode: exact angle in degrees
+  fillGradientLinearAngleRange: [number, number]; // Range mode: min-max angle range
   fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
   fillGradientLinearAlignToShape: boolean; // Whether to align gradient to shape orientation/rotation
   fillGradientRadialCenter: 'center' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
@@ -1447,10 +1453,15 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // HSL range controls for range mode
   fillGradientColorSaturationRange: [40, 90],
   fillGradientColorLightnessRange: [20, 80],
+  fillGradientStopsMode: 'range',
+  fillGradientStopsCount: 3,
   fillGradientStopsRange: [2, 4],
+  fillGradientStopDistribution: 'even',
+  fillGradientStopsReverse: false,
   
   // Enhanced Gradient Type & Direction Controls
   fillGradientLinearDirection: 'range', // Default to range control
+  fillGradientLinearAngle: 45, // Default fixed angle (diagonal)
   fillGradientLinearAngleRange: [0, 360], // Default full angle range
   fillGradientLinearPredefined: 'diagonal-down', // Default predefined direction
   fillGradientLinearAlignToShape: false, // Default: don't align to shape
@@ -2539,8 +2550,13 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientColorDefine: z.array(z.string()),
   fillGradientColorSaturationRange: z.tuple([z.number(), z.number()]),
   fillGradientColorLightnessRange: z.tuple([z.number(), z.number()]),
+  fillGradientStopsMode: z.enum(['fixed', 'range']),
+  fillGradientStopsCount: z.number(),
   fillGradientStopsRange: z.tuple([z.number(), z.number()]),
-  fillGradientLinearDirection: z.enum(['range', 'predefined']),
+  fillGradientStopDistribution: z.enum(['even', 'random']),
+  fillGradientStopsReverse: z.boolean(),
+  fillGradientLinearDirection: z.enum(['fixed', 'range', 'predefined']),
+  fillGradientLinearAngle: z.number(),
   fillGradientLinearAngleRange: z.tuple([z.number(), z.number()]),
   fillGradientLinearPredefined: z.enum(['horizontal', 'vertical', 'diagonal-down', 'diagonal-up']),
   fillGradientLinearAlignToShape: z.boolean(),

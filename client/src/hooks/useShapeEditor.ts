@@ -1974,6 +1974,54 @@ export const useShapeEditor = () => {
     return Math.max(0, Math.min(100, result));
   };
 
+  // Helper function to calculate linear gradient angle (returns degrees)
+  const calculateLinearAngle = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    let angleDegrees: number;
+    
+    // Check if type & direction controls are enabled
+    if (!settings.fillGradientTypeDirectionEnabled) {
+      // Use default angle when controls are disabled
+      return 45; // Default diagonal
+    }
+    
+    switch (settings.fillGradientLinearDirection) {
+      case 'fixed':
+        angleDegrees = settings.fillGradientLinearAngle ?? 45;
+        break;
+      
+      case 'predefined':
+        // Map predefined direction to angle
+        switch (settings.fillGradientLinearPredefined) {
+          case 'horizontal':
+            angleDegrees = 90; // Left to right
+            break;
+          case 'vertical':
+            angleDegrees = 180; // Top to bottom
+            break;
+          case 'diagonal-down':
+            angleDegrees = 135; // Top-left to bottom-right
+            break;
+          case 'diagonal-up':
+            angleDegrees = 45; // Bottom-left to top-right
+            break;
+          default:
+            angleDegrees = 90;
+        }
+        break;
+      
+      case 'range':
+      default:
+        const [minAngle, maxAngle] = settings.fillGradientLinearAngleRange || [0, 360];
+        angleDegrees = minAngle + Math.random() * (maxAngle - minAngle);
+        break;
+    }
+    
+    // Wrap angle to 0-360 range
+    angleDegrees = ((angleDegrees % 360) + 360) % 360;
+    
+    return angleDegrees;
+  };
+
   const calculateDirectionalPosition = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): { x: number, y: number } => {
     let angle = 0;
     let distance = settings.positionDirectionalDistance;
@@ -2331,10 +2379,17 @@ export const useShapeEditor = () => {
                 }
               }
             }
-            const [minStops, maxStops] = effectiveBatchConfig.fillGradientStopsRange;
-            const stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+            // Determine stop count based on mode
+            let stopCount: number;
+            if (effectiveBatchConfig.fillGradientStopsMode === 'fixed') {
+              stopCount = effectiveBatchConfig.fillGradientStopsCount ?? 3;
+            } else {
+              const [minStops, maxStops] = effectiveBatchConfig.fillGradientStopsRange;
+              stopCount = Math.floor(minStops + Math.random() * (maxStops - minStops + 1));
+            }
 
-            const gradientStops = [];
+            // Generate colors for gradient stops
+            const gradientColors: string[] = [];
             for (let i = 0; i < stopCount; i++) {
               let stopColor: string;
 
@@ -2357,17 +2412,43 @@ export const useShapeEditor = () => {
                   } : undefined
                 );
               }
+              gradientColors.push(stopColor);
+            }
 
-              gradientStops.push({
-                offset: i / (stopCount - 1),
-                color: stopColor
-              });
+            // Apply reverse if enabled
+            if (effectiveBatchConfig.fillGradientStopsReverse) {
+              gradientColors.reverse();
+            }
+
+            // Calculate stop positions based on distribution mode
+            const gradientStops = gradientColors.map((color, i) => {
+              let offset: number;
+              if (effectiveBatchConfig.fillGradientStopDistribution === 'random' && stopCount > 2) {
+                // Random distribution (keep first and last at 0 and 1)
+                if (i === 0) {
+                  offset = 0;
+                } else if (i === stopCount - 1) {
+                  offset = 1;
+                } else {
+                  offset = Math.random();
+                }
+              } else {
+                // Even distribution (default)
+                offset = stopCount === 1 ? 0 : i / (stopCount - 1);
+              }
+              return { offset, color };
+            });
+
+            // Sort by offset for random distribution to maintain proper order
+            if (effectiveBatchConfig.fillGradientStopDistribution === 'random') {
+              gradientStops.sort((a, b) => a.offset - b.offset);
             }
 
             // Build gradient object with type-specific parameters
             const gradientObj: {
               type: 'linear' | 'radial' | 'conic';
               stops: { offset: number; color: string }[];
+              angle?: number;
               radialCenterX?: number;
               radialCenterY?: number;
               conicAngle?: number;
@@ -2377,6 +2458,11 @@ export const useShapeEditor = () => {
               type: gradientType,
               stops: gradientStops
             };
+            
+            // Add linear-specific parameters when gradient type is linear
+            if (gradientType === 'linear') {
+              gradientObj.angle = calculateLinearAngle(effectiveBatchConfig, index);
+            }
             
             // Add radial-specific parameters when gradient type is radial
             if (gradientType === 'radial') {

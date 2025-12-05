@@ -3764,40 +3764,105 @@ export default function BatchConfigDialog({
                                   </div>
                                 </div>
       
-                                {/* Color Stops Range */}
+                                {/* Color Stops */}
                                 <div className="space-y-2">
-                                  <Label className="text-xs text-slate-400">Color Stops Range</Label>
-                                  <div className="flex items-center gap-2">
-                                    <NumericInput
-                                      value={currentSettings.fillGradientStopsRange?.[0] ?? 2}
-                                      onChange={(value) => handleSettingsUpdate({ 
-                                        fillGradientStopsRange: [value, currentSettings.fillGradientStopsRange?.[1] ?? 5] 
-                                      })}
-                                      min={2}
-                                      max={10}
-                                      step={1}
-                                      className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                      data-testid="input-gradient-stops-min"
-                                    />
-                                    <Slider
-                                      value={currentSettings.fillGradientStopsRange || [2, 5]}
-                                      onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
-                                      min={2}
-                                      max={10}
-                                      step={1}
-                                      className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                    />
-                                    <NumericInput
-                                      value={currentSettings.fillGradientStopsRange?.[1] ?? 5}
-                                      onChange={(value) => handleSettingsUpdate({ 
-                                        fillGradientStopsRange: [currentSettings.fillGradientStopsRange?.[0] ?? 2, value] 
-                                      })}
-                                      min={2}
-                                      max={10}
-                                      step={1}
-                                      className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                      data-testid="input-gradient-stops-max"
-                                    />
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs text-slate-400">Color Stops</Label>
+                                    <Select 
+                                      value={currentSettings.fillGradientStopsMode ?? 'range'} 
+                                      onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsMode: value as 'fixed' | 'range' })}
+                                    >
+                                      <SelectTrigger className="h-7 w-20 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-gradient-stops-mode">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                        <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+                                        <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  {(currentSettings.fillGradientStopsMode ?? 'range') === 'fixed' ? (
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.fillGradientStopsCount ?? 3}
+                                        onChange={(value) => handleSettingsUpdate({ fillGradientStopsCount: value })}
+                                        min={2}
+                                        max={10}
+                                        step={1}
+                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-gradient-stops-count"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.fillGradientStopsCount ?? 3]}
+                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsCount: value[0] })}
+                                        min={2}
+                                        max={10}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.fillGradientStopsRange?.[0] ?? 2}
+                                        onChange={(value) => handleSettingsUpdate({ 
+                                          fillGradientStopsRange: [value, currentSettings.fillGradientStopsRange?.[1] ?? 5] 
+                                        })}
+                                        min={2}
+                                        max={10}
+                                        step={1}
+                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-gradient-stops-min"
+                                      />
+                                      <Slider
+                                        value={currentSettings.fillGradientStopsRange || [2, 5]}
+                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientStopsRange: value as [number, number] })}
+                                        min={2}
+                                        max={10}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                      <NumericInput
+                                        value={currentSettings.fillGradientStopsRange?.[1] ?? 5}
+                                        onChange={(value) => handleSettingsUpdate({ 
+                                          fillGradientStopsRange: [currentSettings.fillGradientStopsRange?.[0] ?? 2, value] 
+                                        })}
+                                        min={2}
+                                        max={10}
+                                        step={1}
+                                        className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                        data-testid="input-gradient-stops-max"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Stop Distribution Options */}
+                                  <div className="flex items-center gap-4 pt-2">
+                                    <div className="flex items-center gap-2">
+                                      <Label className="text-xs text-slate-400">Distribution:</Label>
+                                      <Select 
+                                        value={currentSettings.fillGradientStopDistribution ?? 'even'} 
+                                        onValueChange={(value) => handleSettingsUpdate({ fillGradientStopDistribution: value as 'even' | 'random' })}
+                                      >
+                                        <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-gradient-stop-distribution">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                          <SelectItem value="even" className="text-slate-200 hover:bg-slate-700">Even</SelectItem>
+                                          <SelectItem value="random" className="text-slate-200 hover:bg-slate-700">Random</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Checkbox 
+                                        checked={currentSettings.fillGradientStopsReverse ?? false}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientStopsReverse: checked as boolean })}
+                                        className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                        data-testid="checkbox-gradient-stops-reverse"
+                                      />
+                                      <Label className="text-xs text-slate-300">Reverse</Label>
+                                    </div>
                                   </div>
                                 </div>
       
@@ -4126,17 +4191,43 @@ export default function BatchConfigDialog({
                                           <Label className="text-xs font-medium text-slate-300">Linear Direction</Label>
                                           <Select 
                                             value={currentSettings.fillGradientLinearDirection || 'range'} 
-                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearDirection: value as 'range' | 'predefined' })}
+                                            onValueChange={(value) => handleSettingsUpdate({ fillGradientLinearDirection: value as 'fixed' | 'range' | 'predefined' })}
                                           >
                                             <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-linear-direction-mode">
                                               <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
+                                              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
                                               <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
                                               <SelectItem value="predefined" className="text-slate-200 hover:bg-slate-700">Predefined</SelectItem>
                                             </SelectContent>
                                           </Select>
                                         </div>
+                                        
+                                        {currentSettings.fillGradientLinearDirection === 'fixed' && (
+                                          <div className="space-y-2">
+                                            <Label className="text-xs text-slate-400">Angle (°)</Label>
+                                            <div className="flex items-center gap-2">
+                                              <NumericInput
+                                                value={currentSettings.fillGradientLinearAngle ?? 45}
+                                                onChange={(value) => handleSettingsUpdate({ fillGradientLinearAngle: value })}
+                                                min={0}
+                                                max={360}
+                                                step={15}
+                                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                data-testid="input-linear-angle-fixed"
+                                              />
+                                              <Slider
+                                                value={[currentSettings.fillGradientLinearAngle ?? 45]}
+                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearAngle: value })}
+                                                min={0}
+                                                max={360}
+                                                step={15}
+                                                className="flex-1 [&_[role=slider]]:bg-purple-600"
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
                                         
                                         {currentSettings.fillGradientLinearDirection === 'range' && (
                                           <div className="space-y-2">
