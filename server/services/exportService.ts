@@ -2037,8 +2037,31 @@ export function planTiles(
  */
 export type TileProgressCallback = (phase: string, current: number, total: number) => void;
 
+/**
+ * SSE progress callback type - emits structured events for SSE streaming
+ */
+export type SSEProgressCallback = (event: import('../../shared/schema').SSEExportEvent) => void;
+
+/**
+ * SSE export session for tracking active streaming exports
+ */
+export interface SSEExportSessionData {
+  exportId: string;
+  status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+  startTime: number;
+  abortController: AbortController;
+  downloadUrl?: string;
+  filename?: string;
+  filePath?: string;
+  error?: string;
+  dimensions?: { width: number; height: number };
+  sizeBytes?: number;
+}
+
 export class HighResolutionExportService {
   private browser: Browser | null = null;
+  private sseExportSessions = new Map<string, SSEExportSessionData>();
+  private exportFiles = new Map<string, { buffer: Buffer; filename: string; mimeType: string }>();
   
   async initialize(): Promise<void> {
     if (this.browser) return;
@@ -2069,6 +2092,229 @@ export class HighResolutionExportService {
       await this.browser.close();
       this.browser = null;
       console.log('[HighResExport] Browser closed');
+    }
+  }
+  
+  // ===== SSE EXPORT SESSION MANAGEMENT =====
+  
+  /**
+   * Generate unique export session ID
+   */
+  generateExportId(): string {
+    return `sse_export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  /**
+   * Create a new SSE export session
+   */
+  createSSESession(exportId: string): SSEExportSessionData {
+    const session: SSEExportSessionData = {
+      exportId,
+      status: 'pending',
+      startTime: Date.now(),
+      abortController: new AbortController()
+    };
+    this.sseExportSessions.set(exportId, session);
+    console.log(`[SSE Export] Created session: ${exportId}`);
+    return session;
+  }
+  
+  /**
+   * Get an SSE export session by ID
+   */
+  getSSESession(exportId: string): SSEExportSessionData | undefined {
+    return this.sseExportSessions.get(exportId);
+  }
+  
+  /**
+   * Cancel an SSE export session
+   */
+  cancelSSESession(exportId: string): boolean {
+    const session = this.sseExportSessions.get(exportId);
+    if (session && session.status === 'processing') {
+      session.abortController.abort();
+      session.status = 'cancelled';
+      console.log(`[SSE Export] Cancelled session: ${exportId}`);
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * Clean up an SSE export session
+   */
+  cleanupSSESession(exportId: string): void {
+    this.sseExportSessions.delete(exportId);
+    this.exportFiles.delete(exportId);
+    console.log(`[SSE Export] Cleaned up session: ${exportId}`);
+  }
+  
+  /**
+   * Get stored export file for download
+   */
+  getExportFileBuffer(exportId: string): { buffer: Buffer; filename: string; mimeType: string } | undefined {
+    return this.exportFiles.get(exportId);
+  }
+  
+  /**
+   * Store export file for later download
+   */
+  storeExportFile(exportId: string, buffer: Buffer, filename: string, mimeType: string): void {
+    this.exportFiles.set(exportId, { buffer, filename, mimeType });
+    console.log(`[SSE Export] Stored file for ${exportId}: ${filename} (${(buffer.length / 1024 / 1024).toFixed(2)} MB)`);
+  }
+  
+  /**
+   * Export with SSE progress streaming
+   * This wraps the existing exportImage method with structured SSE events
+   */
+  async exportWithSSE(
+    request: HighResExportRequest,
+    exportId: string,
+    onProgress: SSEProgressCallback
+  ): Promise<void> {
+    const session = this.getSSESession(exportId);
+    if (!session) {
+      onProgress({
+        type: 'error',
+        message: 'Export session not found',
+        timestamp: Date.now()
+      });
+      return;
+    }
+    
+    session.status = 'processing';
+    const startTime = Date.now();
+    
+    // Calculate estimated duration for progress tracking
+    const scale = request.exportSettings.scale || 1;
+    const width = Math.ceil(request.artboard.width * scale);
+    const height = Math.ceil(request.artboard.height * scale);
+    const pixels = width * height;
+    const estimatedTotalSeconds = Math.ceil(2 + pixels / 5_000_000);
+    
+    // Create a tile progress callback that emits SSE events
+    const sseProgressCallback: TileProgressCallback = (phase: string, current: number, total: number) => {
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+      const progressPct = Math.round((current / total) * 100);
+      const estimatedRemaining = Math.max(0, Math.ceil((estimatedTotalSeconds * (100 - progressPct)) / 100));
+      
+      // Parse the phase message to determine event type
+      if (phase.includes('Preparing tiles')) {
+        onProgress({
+          type: 'phase',
+          phase: 'preparing',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Rendering tile')) {
+        // Extract tile numbers from message like "Rendering tile 3 of 12..."
+        const match = phase.match(/tile (\d+) of (\d+)/);
+        if (match) {
+          onProgress({
+            type: 'tile',
+            tileIndex: parseInt(match[1], 10),
+            totalTiles: parseInt(match[2], 10),
+            step: 'render',
+            message: phase,
+            progressPct,
+            timestamp: Date.now()
+          });
+        }
+      } else if (phase.includes('Stitching')) {
+        onProgress({
+          type: 'phase',
+          phase: 'stitching',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Encoding')) {
+        onProgress({
+          type: 'phase',
+          phase: 'encoding',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Rendering image')) {
+        onProgress({
+          type: 'phase',
+          phase: 'rendering',
+          message: phase,
+          timestamp: Date.now()
+        });
+      }
+      
+      // Always emit progress update
+      onProgress({
+        type: 'progress',
+        progressPct,
+        status: phase,
+        estimatedSecondsRemaining: estimatedRemaining,
+        timestamp: Date.now()
+      });
+    };
+    
+    try {
+      // Emit initial phase
+      onProgress({
+        type: 'phase',
+        phase: 'preparing',
+        message: 'Initializing export...',
+        timestamp: Date.now()
+      });
+      
+      // Run the export with SSE progress callback
+      const result = await this.exportImage(
+        request,
+        sseProgressCallback,
+        session.abortController.signal
+      );
+      
+      if (result.success && result.buffer) {
+        // Store the file for download
+        const filename = result.filename || `export-${exportId}.${request.exportSettings.format || 'tiff'}`;
+        this.storeExportFile(exportId, result.buffer, filename, result.mimeType || 'image/tiff');
+        
+        // Update session
+        session.status = 'completed';
+        session.filename = filename;
+        session.downloadUrl = `/api/export/highres/download/${exportId}`;
+        session.dimensions = { width: result.width || width, height: result.height || height };
+        session.sizeBytes = result.buffer.length;
+        
+        // Emit completion event
+        onProgress({
+          type: 'complete',
+          downloadUrl: session.downloadUrl,
+          filename,
+          contentType: result.mimeType || 'image/tiff',
+          sizeBytes: result.buffer.length,
+          dimensions: session.dimensions,
+          timestamp: Date.now()
+        });
+        
+        console.log(`[SSE Export] Completed: ${exportId} - ${filename}`);
+      } else {
+        session.status = 'error';
+        session.error = result.error || 'Export failed';
+        
+        onProgress({
+          type: 'error',
+          message: result.error || 'Export failed',
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      session.status = 'error';
+      session.error = error instanceof Error ? error.message : 'Unknown error';
+      
+      onProgress({
+        type: 'error',
+        message: session.error,
+        timestamp: Date.now()
+      });
+      
+      console.error(`[SSE Export] Error: ${exportId}`, error);
     }
   }
   
