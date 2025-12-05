@@ -1875,6 +1875,8 @@ export interface HighResExportRequest {
     backgroundColor?: string;
     backgroundMode?: 'transparent' | 'artboard' | 'custom';
     compression?: 'none' | 'deflate';
+    flattenToRgb?: boolean;
+    matteColor?: string;
   };
 }
 
@@ -2101,10 +2103,15 @@ export class HighResolutionExportService {
       };
     }
     
+    const shouldFlattenToRgb = exportSettings.flattenToRgb || 
+      (backgroundMode === 'artboard' || backgroundMode === 'custom');
+    
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
       bitDepth,
       dpi: effectiveDpi,
-      compression: compression as 'none' | 'deflate'
+      compression: compression as 'none' | 'deflate',
+      flattenToRgb: shouldFlattenToRgb,
+      matteColor: exportSettings.matteColor || '#ffffff'
     });
     
     console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -2119,10 +2126,26 @@ export class HighResolutionExportService {
     };
   }
   
-  private async convertToTiff(pngBuffer: Buffer, options: { bitDepth: 8 | 16; dpi: number; compression?: 'none' | 'deflate' }): Promise<Buffer> {
-    const { bitDepth, dpi, compression = 'none' } = options;
+  private async convertToTiff(pngBuffer: Buffer, options: { 
+    bitDepth: 8 | 16; 
+    dpi: number; 
+    compression?: 'none' | 'deflate';
+    flattenToRgb?: boolean;
+    matteColor?: string;
+  }): Promise<Buffer> {
+    const { bitDepth, dpi, compression = 'none', flattenToRgb = false, matteColor = '#ffffff' } = options;
     
     let pipeline = sharp(pngBuffer);
+    
+    if (flattenToRgb) {
+      const hexMatch = matteColor.match(/^#?([0-9a-fA-F]{6})$/);
+      const r = hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255;
+      const g = hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255;
+      const b = hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255;
+      
+      pipeline = pipeline.flatten({ background: { r, g, b } });
+      console.log(`[HighResExport] Flattening to RGB with matte color: ${matteColor} (${r}, ${g}, ${b})`);
+    }
     
     if (bitDepth === 16) {
       pipeline = pipeline.toColourspace('rgb16');
