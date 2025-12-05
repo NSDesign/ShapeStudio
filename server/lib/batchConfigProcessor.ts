@@ -537,10 +537,10 @@ function calculateLinearAngle(settings: BatchConfigSettings, shapeIndex: number)
       // Map predefined direction to angle
       switch (settings.fillGradientLinearPredefined) {
         case 'horizontal':
-          angleDegrees = 90; // Left to right
+          angleDegrees = 0; // Left to right
           break;
         case 'vertical':
-          angleDegrees = 180; // Top to bottom
+          angleDegrees = 90; // Top to bottom
           break;
         case 'diagonal-down':
           angleDegrees = 135; // Top-left to bottom-right
