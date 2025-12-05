@@ -104,10 +104,16 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       
       
       if (shape.properties.gradient.type === 'linear') {
-        gradient = ctx.createLinearGradient(
-          bounds.x, bounds.y, 
-          bounds.x + bounds.width, bounds.y + bounds.height
-        );
+        // Use angle property for proper linear gradient direction
+        const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+        const cx = bounds.x + bounds.width / 2;
+        const cy = bounds.y + bounds.height / 2;
+        const length = Math.max(bounds.width, bounds.height) / 2;
+        const x1 = cx - Math.cos(angle) * length;
+        const y1 = cy - Math.sin(angle) * length;
+        const x2 = cx + Math.cos(angle) * length;
+        const y2 = cy + Math.sin(angle) * length;
+        gradient = ctx.createLinearGradient(x1, y1, x2, y2);
       } else if (shape.properties.gradient.type === 'radial') {
         // Use radial gradient parameters if available, otherwise use center defaults
         const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;

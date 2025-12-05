@@ -1957,10 +1957,16 @@ export class Shape {
         let gradient: CanvasGradient;
         
         if (this.properties.gradient.type === 'linear') {
-          gradient = ctx.createLinearGradient(
-            bounds.x, bounds.y, 
-            bounds.x + bounds.width, bounds.y + bounds.height
-          );
+          // Use angle property for proper linear gradient direction
+          const angle = (this.properties.gradient.angle || 0) * Math.PI / 180;
+          const cx = bounds.x + bounds.width / 2;
+          const cy = bounds.y + bounds.height / 2;
+          const length = Math.max(bounds.width, bounds.height) / 2;
+          const x1 = cx - Math.cos(angle) * length;
+          const y1 = cy - Math.sin(angle) * length;
+          const x2 = cx + Math.cos(angle) * length;
+          const y2 = cy + Math.sin(angle) * length;
+          gradient = ctx.createLinearGradient(x1, y1, x2, y2);
         } else if (this.properties.gradient.type === 'conic') {
           // Use conic gradient parameters if available
           const conicCenterXPercent = this.properties.gradient.conicCenterX ?? 50;
