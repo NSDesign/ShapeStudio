@@ -9,7 +9,7 @@ if (typeof window !== 'undefined') {
   (window as unknown as { pako: typeof pako }).pako = pako;
 }
 import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
-import { executeServerExport, ServerExportRequest } from '@/lib/imageExport';
+import { executeServerExport, fetchServerExportEstimate, ServerExportRequest } from '@/lib/imageExport';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
@@ -1609,6 +1609,7 @@ export default function Sidebar({
   const [exportIsCompleteGlobal, setExportIsCompleteGlobal] = useState(false);
   const [exportIsErrorGlobal, setExportIsErrorGlobal] = useState(false);
   const [exportResultMessageGlobal, setExportResultMessageGlobal] = useState('');
+  const [exportEstimatedTimeGlobal, setExportEstimatedTimeGlobal] = useState<number | undefined>(undefined);
   const exportStartTimeGlobalRef = useRef<number | null>(null);
   const elapsedTimeIntervalGlobalRef = useRef<NodeJS.Timeout | null>(null);
   const exportAbortControllerGlobalRef = useRef<AbortController | null>(null);
@@ -1652,6 +1653,7 @@ export default function Sidebar({
     setExportTotalStepsGlobal(0);
     setExportStatusGlobal('');
     setExportElapsedTimeGlobal(0);
+    setExportEstimatedTimeGlobal(undefined);
     setExportIsCompleteGlobal(false);
     setExportIsErrorGlobal(false);
     setExportResultMessageGlobal('');
@@ -4298,17 +4300,18 @@ export default function Sidebar({
       setShowExportProgressOverlay(true);
       setIsServerExportingGlobal(true);
       setExportTotalStepsGlobal(100);
-      setExportProgressGlobal(10);
-      setExportStatusGlobal('Preparing server export...');
+      setExportProgressGlobal(5);
+      setExportStatusGlobal('Calculating export estimate...');
       setExportIsCompleteGlobal(false);
       setExportIsErrorGlobal(false);
       setExportResultMessageGlobal('');
+      setExportEstimatedTimeGlobal(undefined);
       exportAbortControllerGlobalRef.current = new AbortController();
       startElapsedTimeTrackingGlobal();
       
       // Also update local state for accordion display
-      setBatchStatus('Processing on server...');
-      setBatchProgress(10);
+      setBatchStatus('Calculating estimate...');
+      setBatchProgress(5);
       
       try {
         const backgroundArtboard = artboards.find(ab => ab.id === activeArtboard);
@@ -4326,6 +4329,35 @@ export default function Sidebar({
         
         const bgMode = exportSettings.exportBackgroundMode || 'transparent';
         const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
+        
+        // Fetch export estimate for estimated time display
+        try {
+          const estimate = await fetchServerExportEstimate(
+            { 
+              width: artboardWidth, 
+              height: artboardHeight, 
+              dpi: artboardDpi,
+              printConfig: printConfig
+            },
+            { 
+              format: 'tiff', 
+              bitDepth: is16Bit ? 16 : 8, 
+              scale: effectiveExportScale 
+            }
+          );
+          // Convert milliseconds to seconds for display
+          if (estimate.estimatedDuration > 0) {
+            setExportEstimatedTimeGlobal(Math.ceil(estimate.estimatedDuration / 1000));
+          }
+        } catch (estimateError) {
+          // Estimate is optional, continue without it
+          console.log('Could not fetch export estimate:', estimateError);
+        }
+        
+        setExportProgressGlobal(10);
+        setExportStatusGlobal('Preparing server export...');
+        setBatchProgress(10);
+        setBatchStatus('Processing on server...');
         
         // Determine which shapes to export based on export mode
         // This mirrors the client-side export logic
@@ -8855,6 +8887,7 @@ export default function Sidebar({
         totalSteps={exportTotalStepsGlobal}
         status={exportStatusGlobal}
         elapsedTime={exportElapsedTimeGlobal}
+        estimatedTime={exportEstimatedTimeGlobal}
         isServerExport={isServerExportingGlobal}
         onCancel={handleCancelExportGlobal}
         isComplete={exportIsCompleteGlobal}

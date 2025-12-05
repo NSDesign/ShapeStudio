@@ -10,6 +10,7 @@ interface ExportProgressOverlayProps {
   totalSteps: number;
   status: string;
   elapsedTime: number;
+  estimatedTime?: number;
   isServerExport?: boolean;
   onCancel?: () => void;
   isComplete?: boolean;
@@ -30,6 +31,7 @@ export default function ExportProgressOverlay({
   totalSteps,
   status,
   elapsedTime,
+  estimatedTime,
   isServerExport = false,
   onCancel,
   isComplete = false,
@@ -86,7 +88,12 @@ export default function ExportProgressOverlay({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-slate-400">
                 <Clock className="w-4 h-4" />
-                <span className="font-mono">{formatElapsedTime(elapsedTime)}</span>
+                <span className="font-mono">
+                  {formatElapsedTime(elapsedTime)}
+                  {estimatedTime !== undefined && estimatedTime > 0 && !isComplete && !isError && (
+                    <span className="text-slate-500"> / Est: ~{formatElapsedTime(estimatedTime)}</span>
+                  )}
+                </span>
               </div>
               <span className="text-slate-300 font-medium">
                 {progressPercent}%
