@@ -3527,22 +3527,35 @@ export default function Sidebar({
             }
             
             // Build TIFF metadata
-            // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
-            // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
-            // UTIF handles compression internally when t259 is set and pako is available globally
+            // Note: UTIF.js encodeImage behavior with compression:
+            // - UTIF auto-detects window.pako and applies deflate compression when available
+            // - Setting t259 in metadata can conflict with this auto-detection
+            // - For reliable encoding: DON'T set t259 for deflate (let UTIF auto-detect)
+            //   only set t259=[1] to explicitly disable compression
+            // - 16-bit exports do NOT support deflate compression (UTIF limitation)
+            // - LZW compression (5) is NOT supported for encoding at all
             const tiffMetadata: Record<string, unknown> = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
             
-            // Set compression type (UTIF handles compression internally)
-            if (tiffCompression === 'deflate') {
-              tiffMetadata.t259 = [8];  // Deflate compression (requires pako globally available)
-              console.log(`📄 TIFF: Using Deflate compression`);
+            // Handle compression based on bit depth and user setting
+            // UTIF.js deflate only works reliably with 8-bit data
+            const effectiveCompression = (tiffBitDepth === 16) ? 'none' : tiffCompression;
+            
+            if (effectiveCompression === 'deflate') {
+              // For deflate: DON'T set t259 - let UTIF auto-detect pako and apply compression
+              // UTIF.js checks window.pako and auto-applies deflate (cmpr=8) when available
+              console.log(`📄 TIFF: Using Deflate compression (UTIF auto-detection with pako)`);
             } else {
+              // Explicitly disable compression by setting t259=[1]
               tiffMetadata.t259 = [1];  // No compression
-              console.log(`📄 TIFF: No compression (uncompressed)`);
+              if (tiffBitDepth === 16 && tiffCompression === 'deflate') {
+                console.log(`📄 TIFF: 16-bit mode - forcing uncompressed (deflate not supported for 16-bit)`);
+              } else {
+                console.log(`📄 TIFF: No compression (uncompressed)`);
+              }
             }
             
             // Set bit depth tag for 16-bit exports
@@ -5094,20 +5107,28 @@ export default function Sidebar({
                     const batchTiffDPI = Math.round(72 * effectiveExportScale);
                     
                     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-                    // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
-                    // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
+                    // Note: UTIF.js encodeImage behavior with compression:
+                    // - UTIF auto-detects window.pako and applies deflate compression when available
+                    // - Setting t259 in metadata can conflict with this auto-detection
+                    // - For reliable encoding: DON'T set t259 for deflate (let UTIF auto-detect)
+                    //   only set t259=[1] to explicitly disable compression
                     const batchTiffCompression = exportSettings.tiffCompression ?? 'none';
-                    const tiffMetadata = {
+                    const tiffMetadata: Record<string, unknown> = {
                       t282: [batchTiffDPI],  // XResolution
                       t283: [batchTiffDPI],  // YResolution
                       t296: [2],          // ResolutionUnit (2 = inch)
-                      t259: [batchTiffCompression === 'deflate' ? 8 : 1], // Compression: 8=Deflate, 1=None
-                    } as unknown as UTIF.IFD;
+                    };
                     
-                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate' : 'no'} compression`);
+                    // For deflate: DON'T set t259 - let UTIF auto-detect pako
+                    // For no compression: explicitly set t259=[1]
+                    if (batchTiffCompression !== 'deflate') {
+                      tiffMetadata.t259 = [1];  // No compression
+                    }
+                    
+                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate (UTIF auto-detection)' : 'no'} compression`);
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
-                    const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
+                    const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata as UTIF.IFD);
                     const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
                     
                     if (packageAsZip && zip) {

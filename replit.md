@@ -30,7 +30,9 @@ Preferred communication style: Simple, everyday language.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation, with client/server parity.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes, including grid position filters (alternating, pattern, invert, priority) and planned future filters.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF, TIFF), high-resolution export, batch processing, and complete application state persistence.
-  - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags). Note: UTIF.js encoding only supports uncompressed output; LZW compression not available for encoding.
+  - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags).
+    - **Compression**: UTIF.js auto-detects pako for deflate compression. For reliable encoding: don't set t259 metadata for deflate (let UTIF auto-detect), only set t259=[1] to explicitly disable compression.
+    - **Limitations**: LZW compression (5) is NOT supported for encoding. Deflate compression only works reliably with 8-bit data; 16-bit exports automatically fall back to uncompressed.
   - **TIFF Memory Management**: Automatic batch size limiting and sequential processing with memory cleanup for large TIFF exports. Estimates memory requirements based on canvas dimensions and DPI, reduces batch count when approaching browser limits (~600 MB threshold), and pauses between images to allow garbage collection.
   - **TIFF Pre-flight UX**: Enhanced user experience for TIFF batch exports including:
     - Pre-flight confirmation modal with memory estimation and effective batch count display
