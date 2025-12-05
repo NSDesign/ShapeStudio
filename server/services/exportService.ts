@@ -22,6 +22,9 @@ import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import { createCanvas, Canvas as NodeCanvas } from 'canvas';
 import { renderShape } from '../lib/canvasRenderer';
+import puppeteer, { Browser, Page } from 'puppeteer-core';
+import sharp from 'sharp';
+import { execSync } from 'child_process';
 
 export interface BatchExportSettings {
   // Format and quality
@@ -1842,3 +1845,609 @@ export class ExportService {
     }
   }
 }
+
+/**
+ * High-Resolution Export Service
+ * 
+ * Uses Headless Chromium + Sharp for exports that exceed browser canvas limits.
+ * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
+ */
+
+export interface HighResExportRequest {
+  shapes: any[];
+  groups?: any[];
+  artboard: {
+    width: number;
+    height: number;
+    backgroundColor: string;
+    dpi: number;
+    printConfig?: any;
+  };
+  exportSettings: {
+    format: 'tiff' | 'png';
+    bitDepth?: 8 | 16;
+    dpi?: number;
+    scale?: number;
+    includeBleed?: boolean;
+    includePrintMarks?: boolean;
+    backgroundColor?: string;
+    backgroundMode?: 'transparent' | 'artboard' | 'custom';
+  };
+}
+
+export interface HighResExportResult {
+  success: boolean;
+  buffer?: Buffer;
+  mimeType?: string;
+  filename?: string;
+  width?: number;
+  height?: number;
+  error?: string;
+  duration?: number;
+}
+
+let chromiumPathCache: string | null = null;
+
+function findChromiumPath(): string {
+  if (chromiumPathCache) return chromiumPathCache;
+  
+  try {
+    const result = execSync('which chromium', { encoding: 'utf-8' }).trim();
+    if (result && fs.existsSync(result)) {
+      chromiumPathCache = result;
+      return result;
+    }
+  } catch {}
+  
+  const commonPaths = [
+    '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+  ];
+  
+  for (const p of commonPaths) {
+    if (fs.existsSync(p)) {
+      chromiumPathCache = p;
+      return p;
+    }
+  }
+  
+  throw new Error('Chromium not found. Please install Chromium via replit.nix');
+}
+
+function convertUnitToPixels(value: number, unit: string, dpi: number): number {
+  switch (unit) {
+    case 'pixels': return value;
+    case 'mm': return (value / 25.4) * dpi;
+    case 'cm': return (value / 2.54) * dpi;
+    case 'inches': return value * dpi;
+    default: return value;
+  }
+}
+
+export class HighResolutionExportService {
+  private browser: Browser | null = null;
+  
+  async initialize(): Promise<void> {
+    if (this.browser) return;
+    
+    const executablePath = findChromiumPath();
+    console.log(`[HighResExport] Launching browser from: ${executablePath}`);
+    
+    this.browser = await puppeteer.launch({
+      executablePath,
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-extensions'
+      ]
+    });
+    
+    console.log('[HighResExport] Browser initialized');
+  }
+  
+  async shutdown(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      console.log('[HighResExport] Browser closed');
+    }
+  }
+  
+  async exportImage(request: HighResExportRequest): Promise<HighResExportResult> {
+    const startTime = Date.now();
+    
+    try {
+      await this.initialize();
+      
+      if (!this.browser) {
+        throw new Error('Browser not initialized');
+      }
+      
+      const page = await this.browser.newPage();
+      
+      try {
+        const result = await this.renderAndCapture(page, request);
+        return {
+          ...result,
+          duration: Date.now() - startTime
+        };
+      } finally {
+        await page.close();
+      }
+    } catch (error) {
+      console.error('[HighResExport] Export failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration: Date.now() - startTime
+      };
+    }
+  }
+  
+  private async renderAndCapture(page: Page, request: HighResExportRequest): Promise<HighResExportResult> {
+    const { shapes, groups = [], artboard, exportSettings } = request;
+    const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent' } = exportSettings;
+    
+    const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
+    
+    let bleedPx = 0;
+    let printMarksGutterPx = 0;
+    
+    if (artboard.printConfig) {
+      const config = artboard.printConfig;
+      const overlayUnit = config.overlays?.overlayUnit || 'pixels';
+      
+      if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
+        bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+      }
+      
+      if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
+        const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+        let markLengthPx: number;
+        let markOffsetPx: number;
+        
+        if (scaleMode === 'percent') {
+          const minDimension = Math.min(artboard.width, artboard.height);
+          markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
+          markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
+        } else {
+          markLengthPx = convertUnitToPixels(config.overlays.printMarks.markLength, overlayUnit, effectiveDpi);
+          markOffsetPx = convertUnitToPixels(config.overlays.printMarks.markOffset, overlayUnit, effectiveDpi);
+        }
+        
+        printMarksGutterPx = markLengthPx + markOffsetPx + 5;
+      }
+    }
+    
+    const printExpansion = bleedPx + printMarksGutterPx;
+    const canvasWidth = Math.ceil((artboard.width + printExpansion * 2) * scale);
+    const canvasHeight = Math.ceil((artboard.height + printExpansion * 2) * scale);
+    
+    console.log(`[HighResExport] Rendering ${canvasWidth}x${canvasHeight} canvas at ${effectiveDpi} DPI`);
+    
+    let bgColor = 'transparent';
+    if (backgroundMode === 'artboard') {
+      bgColor = artboard.backgroundColor || '#ffffff';
+    } else if (backgroundMode === 'custom' && exportSettings.backgroundColor) {
+      bgColor = exportSettings.backgroundColor;
+    }
+    
+    const renderData = {
+      shapes,
+      groups,
+      artboard: {
+        ...artboard,
+        printConfig: artboard.printConfig
+      },
+      exportSettings: {
+        ...exportSettings,
+        dpi: effectiveDpi,
+        bleedPx,
+        printMarksGutterPx,
+        printExpansion,
+        backgroundColor: bgColor
+      },
+      canvasWidth,
+      canvasHeight,
+      scale
+    };
+    
+    const templateHtml = this.generateRendererHtml(renderData);
+    
+    await page.setViewport({
+      width: Math.max(canvasWidth, 800),
+      height: Math.max(canvasHeight, 600),
+      deviceScaleFactor: 1
+    });
+    
+    await page.setContent(templateHtml, { waitUntil: 'networkidle0' });
+    
+    const renderResult = await page.evaluate(() => {
+      return (window as any).renderShapes();
+    });
+    
+    if (!renderResult.success) {
+      throw new Error(`Render failed: ${renderResult.error}`);
+    }
+    
+    const pngDataUrl = await page.evaluate(() => {
+      const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
+      return canvas.toDataURL('image/png');
+    });
+    
+    const pngBuffer = Buffer.from(pngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+    
+    console.log(`[HighResExport] Captured PNG buffer: ${(pngBuffer.length / 1024).toFixed(1)} KB`);
+    
+    if (format === 'png') {
+      return {
+        success: true,
+        buffer: pngBuffer,
+        mimeType: 'image/png',
+        filename: `export-${Date.now()}.png`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    const tiffBuffer = await this.convertToTiff(pngBuffer, {
+      bitDepth,
+      dpi: effectiveDpi
+    });
+    
+    console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    return {
+      success: true,
+      buffer: tiffBuffer,
+      mimeType: 'image/tiff',
+      filename: `export-${Date.now()}.tiff`,
+      width: canvasWidth,
+      height: canvasHeight
+    };
+  }
+  
+  private async convertToTiff(pngBuffer: Buffer, options: { bitDepth: 8 | 16; dpi: number }): Promise<Buffer> {
+    const { bitDepth, dpi } = options;
+    
+    let pipeline = sharp(pngBuffer);
+    
+    if (bitDepth === 16) {
+      pipeline = pipeline.toColourspace('rgb16');
+    }
+    
+    const tiffBuffer = await pipeline
+      .withMetadata({
+        density: dpi
+      })
+      .tiff({
+        compression: 'deflate',
+        quality: 100
+      })
+      .toBuffer();
+    
+    return tiffBuffer;
+  }
+  
+  private generateRendererHtml(data: any): string {
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale } = data;
+    const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>High-Res Shape Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+    #exportCanvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+  
+  <script>
+    const RENDER_DATA = ${JSON.stringify({ shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printMarksGutterPx, printExpansion, backgroundColor })};
+    
+    function drawPolygon(ctx, points) {
+      if (!points || points.length === 0) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+    }
+    
+    function drawLine(ctx, points) {
+      if (!points || points.length < 2) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+    }
+    
+    function drawSmoothSpline(ctx, points, controlPoints) {
+      if (!points || points.length < 2) return;
+      
+      if (controlPoints && controlPoints.length >= (points.length - 1) * 2) {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp1 = controlPoints[i * 2];
+          const cp2 = controlPoints[i * 2 + 1];
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, points[i + 1].x, points[i + 1].y);
+        }
+      } else {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+      }
+    }
+    
+    function renderShape(ctx, shape) {
+      if (!shape.points || shape.points.length === 0) return;
+      
+      ctx.save();
+      
+      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+      
+      ctx.translate(shape.transform.x, shape.transform.y);
+      ctx.rotate((shape.transform.rotation || 0) * Math.PI / 180);
+      ctx.scale(shape.transform.scaleX || 1, shape.transform.scaleY || 1);
+      ctx.transform(1, shape.transform.skewX || 0, shape.transform.skewY || 0, 1, 0, 0);
+      
+      if (shape.properties.blurRadius > 0) {
+        ctx.filter = 'blur(' + shape.properties.blurRadius + 'px)';
+      }
+      
+      ctx.beginPath();
+      
+      const shapeType = shape.type;
+      if (shapeType === 'line' || shapeType === 'line-vector') {
+        drawLine(ctx, shape.points);
+      } else if (shapeType === 'bezier' || shapeType === 'smooth-spline' || shapeType === 'cubic') {
+        drawSmoothSpline(ctx, shape.points, shape.controlPoints);
+        if (shape.closed) ctx.closePath();
+      } else {
+        drawPolygon(ctx, shape.points);
+      }
+      
+      if (shapeType !== 'line' && shapeType !== 'line-vector' && shape.properties.fillColor !== 'none') {
+        ctx.globalAlpha = shape.properties.fillOpacity || 1;
+        
+        if (shape.properties.gradient) {
+          const bounds = getShapeBounds(shape.points);
+          let gradient;
+          
+          if (shape.properties.gradient.type === 'radial') {
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const radius = Math.max(bounds.width, bounds.height) / 2;
+            gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          } else {
+            gradient = ctx.createLinearGradient(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height);
+          }
+          
+          shape.properties.gradient.stops.forEach(function(stop) {
+            gradient.addColorStop(stop.offset, stop.color);
+          });
+          
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = shape.properties.fillColor;
+        }
+        ctx.fill();
+      }
+      
+      if (shape.properties.strokeColor !== 'none' && shape.properties.strokeWidth > 0) {
+        ctx.globalAlpha = shape.properties.strokeOpacity || 1;
+        ctx.strokeStyle = shape.properties.strokeColor;
+        ctx.lineWidth = shape.properties.strokeWidth;
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    }
+    
+    function getShapeBounds(points) {
+      if (!points || points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      points.forEach(function(p) {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+    
+    function renderPrintMarks(ctx, x, y, width, height, bleedPx, config) {
+      if (!config.cropMarks && !config.registrationMarks) return;
+      
+      ctx.save();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 0.5;
+      
+      const markLength = config.markLength || 20;
+      const markOffset = config.markOffset || 5;
+      
+      if (config.cropMarks) {
+        const corners = [
+          { x: x - bleedPx, y: y - bleedPx },
+          { x: x + width + bleedPx, y: y - bleedPx },
+          { x: x + width + bleedPx, y: y + height + bleedPx },
+          { x: x - bleedPx, y: y + height + bleedPx }
+        ];
+        
+        corners.forEach(function(corner, i) {
+          ctx.beginPath();
+          if (i === 0) {
+            ctx.moveTo(corner.x - markOffset - markLength, corner.y);
+            ctx.lineTo(corner.x - markOffset, corner.y);
+            ctx.moveTo(corner.x, corner.y - markOffset - markLength);
+            ctx.lineTo(corner.x, corner.y - markOffset);
+          } else if (i === 1) {
+            ctx.moveTo(corner.x + markOffset, corner.y);
+            ctx.lineTo(corner.x + markOffset + markLength, corner.y);
+            ctx.moveTo(corner.x, corner.y - markOffset - markLength);
+            ctx.lineTo(corner.x, corner.y - markOffset);
+          } else if (i === 2) {
+            ctx.moveTo(corner.x + markOffset, corner.y);
+            ctx.lineTo(corner.x + markOffset + markLength, corner.y);
+            ctx.moveTo(corner.x, corner.y + markOffset);
+            ctx.lineTo(corner.x, corner.y + markOffset + markLength);
+          } else {
+            ctx.moveTo(corner.x - markOffset - markLength, corner.y);
+            ctx.lineTo(corner.x - markOffset, corner.y);
+            ctx.moveTo(corner.x, corner.y + markOffset);
+            ctx.lineTo(corner.x, corner.y + markOffset + markLength);
+          }
+          ctx.stroke();
+        });
+      }
+      
+      if (config.registrationMarks) {
+        const regSize = 8;
+        const positions = [
+          { x: x + width / 2, y: y - bleedPx - markOffset - regSize },
+          { x: x + width / 2, y: y + height + bleedPx + markOffset + regSize },
+          { x: x - bleedPx - markOffset - regSize, y: y + height / 2 },
+          { x: x + width + bleedPx + markOffset + regSize, y: y + height / 2 }
+        ];
+        
+        positions.forEach(function(pos) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, regSize / 2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(pos.x - regSize, pos.y);
+          ctx.lineTo(pos.x + regSize, pos.y);
+          ctx.moveTo(pos.x, pos.y - regSize);
+          ctx.lineTo(pos.x, pos.y + regSize);
+          ctx.stroke();
+        });
+      }
+      
+      ctx.restore();
+    }
+    
+    window.renderShapes = function() {
+      try {
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printExpansion, backgroundColor } = RENDER_DATA;
+        
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        if (backgroundColor && backgroundColor !== 'transparent') {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        
+        ctx.save();
+        ctx.scale(scale, scale);
+        ctx.translate(printExpansion, printExpansion);
+        
+        const allShapes = [...shapes];
+        if (groups) {
+          groups.forEach(function(group) {
+            if (group.shapes) {
+              group.shapes.forEach(function(s) {
+                allShapes.push(s);
+              });
+            }
+          });
+        }
+        
+        allShapes.sort(function(a, b) {
+          return (a.properties.zIndex || 0) - (b.properties.zIndex || 0);
+        });
+        
+        allShapes.forEach(function(shape) {
+          renderShape(ctx, shape);
+        });
+        
+        if (artboard.printConfig && artboard.printConfig.overlays && artboard.printConfig.overlays.printMarks && artboard.printConfig.overlays.printMarks.render && exportSettings.includePrintMarks !== false) {
+          const config = artboard.printConfig.overlays.printMarks;
+          renderPrintMarks(ctx, 0, 0, artboard.width, artboard.height, bleedPx, {
+            cropMarks: config.cropMarks,
+            registrationMarks: config.registrationMarks,
+            markLength: config.markLength,
+            markOffset: config.markOffset
+          });
+        }
+        
+        ctx.restore();
+        
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+  </script>
+</body>
+</html>`;
+  }
+  
+  needsServerExport(artboard: { width: number; height: number; dpi?: number }, exportSettings: any): boolean {
+    const width = artboard.width * (exportSettings.scale || 1);
+    const height = artboard.height * (exportSettings.scale || 1);
+    
+    const estimatedMemory = width * height * 4;
+    const maxBrowserPixels = 268_000_000;
+    const maxBrowserMemory = 500_000_000;
+    
+    if (estimatedMemory > maxBrowserMemory) return true;
+    if (width * height > maxBrowserPixels) return true;
+    if (exportSettings.format === 'tiff' && exportSettings.bitDepth === 16) return true;
+    
+    const dpi = exportSettings.dpi || artboard.dpi || 72;
+    if (dpi >= 300 && (width >= 3000 || height >= 3000)) return true;
+    
+    return false;
+  }
+  
+  getExportEstimate(artboard: { width: number; height: number; dpi?: number }, exportSettings: any): {
+    needsServer: boolean;
+    estimatedTime: string;
+    estimatedSize: string;
+    dimensions: { width: number; height: number };
+  } {
+    const scale = exportSettings.scale || 1;
+    const width = Math.ceil(artboard.width * scale);
+    const height = Math.ceil(artboard.height * scale);
+    const needsServer = this.needsServerExport(artboard, exportSettings);
+    
+    const pixels = width * height;
+    const bytesPerPixel = exportSettings.bitDepth === 16 ? 8 : 4;
+    const estimatedBytes = pixels * bytesPerPixel;
+    
+    let estimatedTime: string;
+    if (needsServer) {
+      const seconds = Math.ceil(2 + pixels / 5_000_000);
+      estimatedTime = seconds < 60 ? `~${seconds} seconds` : `~${Math.ceil(seconds / 60)} minutes`;
+    } else {
+      estimatedTime = '< 1 second';
+    }
+    
+    const sizeMB = estimatedBytes / 1024 / 1024;
+    const estimatedSize = sizeMB < 1 ? `~${Math.ceil(sizeMB * 1024)} KB` : `~${sizeMB.toFixed(1)} MB`;
+    
+    return {
+      needsServer,
+      estimatedTime,
+      estimatedSize,
+      dimensions: { width, height }
+    };
+  }
+}
+
+export const highResExportService = new HighResolutionExportService();

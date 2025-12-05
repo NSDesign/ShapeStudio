@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { ExportService, BatchExportSettings } from '../services/exportService';
+import { ExportService, BatchExportSettings, highResExportService, HighResExportRequest } from '../services/exportService';
 import { ProjectService, SaveProjectSettings } from '../services/projectService';
 import { z } from 'zod';
 import * as path from 'path';
@@ -13,6 +13,29 @@ import {
 // Create service instances
 const exportService = new ExportService();
 const projectService = new ProjectService();
+
+// High-resolution export schema
+const HighResExportSchema = z.object({
+  shapes: z.array(z.any()),
+  groups: z.array(z.any()).optional().default([]),
+  artboard: z.object({
+    width: z.number(),
+    height: z.number(),
+    backgroundColor: z.string(),
+    dpi: z.number().default(300),
+    printConfig: z.any().optional()
+  }),
+  exportSettings: z.object({
+    format: z.enum(['tiff', 'png']).default('tiff'),
+    bitDepth: z.union([z.literal(8), z.literal(16)]).default(16),
+    dpi: z.number().optional(),
+    scale: z.number().min(0.1).max(10).default(1),
+    includeBleed: z.boolean().default(true),
+    includePrintMarks: z.boolean().default(true),
+    backgroundColor: z.string().optional(),
+    backgroundMode: z.enum(['transparent', 'artboard', 'custom']).default('transparent')
+  })
+});
 
 // Validation schemas
 // V2 Generation Count Schema
@@ -780,6 +803,94 @@ export function registerExportRoutes(app: Express): void {
         }
       }
     });
+  });
+
+  /**
+   * High-Resolution Export Endpoint
+   * 
+   * Uses Headless Chromium + Sharp for exports that exceed browser canvas limits.
+   * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
+   */
+  app.post('/api/export/high-resolution', async (req, res) => {
+    try {
+      const validationResult = HighResExportSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request parameters',
+          details: validationResult.error.errors
+        });
+      }
+      
+      const request: HighResExportRequest = validationResult.data;
+      
+      console.log(`[HighRes Export] Starting export: ${request.artboard.width}x${request.artboard.height} @ ${request.exportSettings.dpi || request.artboard.dpi} DPI`);
+      console.log(`[HighRes Export] Format: ${request.exportSettings.format}, BitDepth: ${request.exportSettings.bitDepth}`);
+      
+      const result = await highResExportService.exportImage(request);
+      
+      if (!result.success || !result.buffer) {
+        return res.status(500).json({
+          success: false,
+          error: result.error || 'Export failed',
+          duration: result.duration
+        });
+      }
+      
+      const filename = result.filename || `export-${Date.now()}.${request.exportSettings.format}`;
+      
+      res.setHeader('Content-Type', result.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', result.buffer.length);
+      res.setHeader('X-Export-Width', result.width || 0);
+      res.setHeader('X-Export-Height', result.height || 0);
+      res.setHeader('X-Export-Duration', result.duration || 0);
+      
+      console.log(`[HighRes Export] Success: ${filename} (${(result.buffer.length / 1024 / 1024).toFixed(2)} MB) in ${result.duration}ms`);
+      
+      res.send(result.buffer);
+      
+    } catch (error) {
+      console.error('[HighRes Export] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'High-resolution export failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * High-Resolution Export Estimate Endpoint
+   * 
+   * Returns whether server-side export is needed and time/size estimates.
+   */
+  app.post('/api/export/high-resolution/estimate', (req, res) => {
+    try {
+      const { artboard, exportSettings } = req.body;
+      
+      if (!artboard || !artboard.width || !artboard.height) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing artboard dimensions'
+        });
+      }
+      
+      const estimate = highResExportService.getExportEstimate(artboard, exportSettings || {});
+      
+      res.json({
+        success: true,
+        ...estimate
+      });
+      
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to calculate estimate',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   // Cleanup endpoint (can be called by cron job)
