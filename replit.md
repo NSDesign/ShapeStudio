@@ -54,7 +54,11 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines.
 - **Advanced Grid Layout Sorting**: Comprehensive sorting criteria (layer, creation-time, shape-type, size, color, opacity, angle, id).
 - **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets, three spacing modes (Define, Auto-Centered, Auto-Edge-to-Edge), and independent axis configuration.
-- **Grid Offset System**: Row/column offset controls with presets (Brick, Honeycomb, Staircase, Zigzag, Diamond) and value modes (Fixed, Range, Incremental), with client/server parity.
+- **Grid Offset System**: Row/column offset controls with presets (Brick, Honeycomb, Staircase, Zigzag, Diamond) and value modes (Fixed, Range, Incremental), with client/server parity via shared utilities in `shared/gridOffsetUtils.ts`.
+- **Shared Utilities**: Common calculation functions extracted to `shared/` directory to ensure client/server parity:
+  - `shared/batchUtils.ts`: Linear angle, conic/radial center calculations for batch generation
+  - `shared/gradientUtils.ts`: Linear, radial, conic gradient coordinate calculations
+  - `shared/gridOffsetUtils.ts`: Grid offset calculations (fixed/range/incremental modes) and position masking
 - **Grid Render Mode**: Controls how shapes are positioned within grid cells (Point Mode, Cell Mode with fit options and padding), including a debug grid overlay.
 - **Shape Type Architecture**: Clear distinction between standard and rounded shapes with specific corner radius properties.
 - **Shape Sets System**: Layer management with synchronized dropdowns for shape types and generation config settings, supporting set-level positioning, blending, compositing, transforms, and alignment.
