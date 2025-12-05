@@ -23,6 +23,7 @@ This document outlines complex features that have been identified for future dev
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
+| **Server-Side High-Resolution Export** | 🔶 In Progress | [Section 9](#9-server-side-high-resolution-export) |
 
 ### Status Legend
 - ✅ **Implemented**: Feature is fully functional in the codebase
@@ -2836,8 +2837,168 @@ All effects must render identically in:
 
 ---
 
+## 9. Server-Side High-Resolution Export 🔶 IN PROGRESS
+
+### Overview
+A server-side rendering system using Headless Chromium + Sharp library to overcome browser canvas memory limitations and produce professional print-quality exports (A4+ at 300+ DPI, 16-bit TIFF with sRGB ICC profiles).
+
+### Problem Statement
+Browser-based canvas rendering has inherent limitations:
+- **Memory ceiling**: ~600 MB per tab, limiting canvas size to approximately 8000×8000 pixels
+- **Bit depth**: Browser canvas only supports 8-bit color (256 levels per channel)
+- **ICC profiles**: No native support for embedding color profiles in exports
+- **Large exports**: A4 at 300 DPI (2480×3508 pixels) works, but A3/A2 at 300+ DPI exceeds browser limits
+
+### Solution: Headless Chromium + Sharp Pipeline
+Server-side rendering that:
+1. Receives serialized shape/artboard data from the frontend
+2. Renders shapes in headless Chrome using existing rendering logic
+3. Captures canvas as PNG buffer
+4. Pipes through Sharp for 16-bit TIFF conversion with sRGB ICC profiles and DPI metadata
+
+### Validation Status ✅ COMPLETED (December 2025)
+
+All validation tests passed successfully:
+
+| Phase | Test | Result | Details |
+|-------|------|--------|---------|
+| **1** | Puppeteer (Headless Chrome) | ✅ PASSED | Screenshot: 212 KB, uses system Chromium |
+| **2a** | Sharp 16-bit TIFF | ✅ PASSED | Depth: ushort (16-bit), DPI: 300, ICC: embedded |
+| **2b** | Sharp Large Image (A4 @ 300 DPI) | ✅ PASSED | 2480×3508px, 0.06 MB, 306ms |
+| **3** | Full Integration Pipeline | ✅ PASSED | Canvas→PNG→16-bit TIFF, 0.19 MB, 5s total |
+
+**Key Technical Findings:**
+- Sharp uses `.toColourspace('rgb16')` for true 16-bit output
+- Sharp reports 16-bit as `depth: 'ushort'` (unsigned short)
+- Use `.withMetadata()` to preserve ICC profiles (default strips them)
+- Use deflate compression for 16-bit TIFF (LZW increases file size)
+- Puppeteer requires `--no-sandbox` and `--disable-setuid-sandbox` flags on Replit
+
+### Implementation Phases
+
+#### Phase 1: Core Server Export Service 📋 IN PROGRESS
+Create the server-side rendering engine:
+
+**Files:**
+- `server/services/exportService.ts` - Main export service
+- `server/templates/shape-renderer.html` - Minimal HTML page for headless rendering
+
+**Functionality:**
+- Accept serialized shape/artboard data
+- Launch headless Chrome with rendering logic
+- Capture canvas at requested DPI/resolution
+- Pipe through Sharp for 16-bit TIFF with sRGB ICC profiles
+- Memory management and cleanup
+
+**Data Flow:**
+```
+Frontend → POST /api/export/high-resolution
+         → { shapes, artboard, printConfig, exportSettings }
+         → Server renders in headless Chrome
+         → Sharp converts to 16-bit TIFF
+         → Returns TIFF file as download
+```
+
+#### Phase 2: Seamless Export Integration 📋 PLANNED
+Integrate with existing export flow transparently:
+
+**Auto-Detection Logic:**
+```typescript
+// When to use server-side export:
+const needsServerExport = (
+  estimatedMemory > 500_000_000 ||  // > 500 MB
+  (width * height * 4) > 268_000_000 ||  // > 268M pixels (browser limit)
+  format === 'tiff' && bitDepth === 16 ||  // 16-bit TIFF required
+  dpi >= 300 && (width >= 3000 || height >= 3000)  // High-res print
+);
+```
+
+**Enhanced Preflight Dialog:**
+- Detect when server processing is required
+- Show informative message: "This export requires server processing for best quality"
+- Display estimated processing time
+- Maintain existing "Don't show again" functionality
+
+**Seamless Routing:**
+- User clicks export as normal
+- System automatically routes to server when needed
+- Falls back to client-side for smaller exports (faster)
+- Works for both single image and batch exports
+
+#### Phase 3: Testing & Polish 📋 PLANNED
+- Test various export scenarios (different sizes, DPIs, formats)
+- Verify visual parity between client and server renders
+- Handle edge cases (very large exports, timeout handling)
+- Clean up validation folder after production-ready
+
+### Technical Specifications
+
+#### Supported Output Formats (Server-Side)
+| Format | Bit Depth | ICC Profile | Compression | Use Case |
+|--------|-----------|-------------|-------------|----------|
+| TIFF | 16-bit | sRGB embedded | Deflate | Professional printing |
+| PNG | 8-bit | sRGB embedded | Default | Web/digital |
+
+#### Size Limits
+| Paper Size | DPI | Dimensions (px) | Memory Est. | Server Required |
+|------------|-----|-----------------|-------------|-----------------|
+| A4 | 300 | 2480×3508 | ~35 MB | No (but recommended) |
+| A3 | 300 | 3508×4960 | ~70 MB | Recommended |
+| A2 | 300 | 4960×7016 | ~139 MB | Yes |
+| A4 | 600 | 4960×7016 | ~139 MB | Yes |
+| A1 | 300 | 7016×9933 | ~279 MB | Yes |
+
+#### Performance Expectations
+- Canvas render in headless Chrome: 1-3 seconds
+- Sharp 16-bit TIFF conversion: 0.3-1 second
+- Total pipeline: 2-5 seconds for typical print sizes
+- Memory-safe processing with proper cleanup
+
+### Files Created for Validation
+Located in `server/validation/` (isolated, can be deleted after implementation):
+- `puppeteer-test.ts` - Headless Chrome validation
+- `sharp-test.ts` - 16-bit TIFF with ICC profile validation
+- `integration-test.ts` - Full pipeline validation
+- `run-all-tests.ts` - Test runner
+- `output/` - Generated test files and validation report
+
+### Dependencies Added
+- `puppeteer-core` - Headless Chrome automation (uses system Chromium)
+- `sharp` - High-performance image processing with 16-bit support
+- System: `chromium` (added to replit.nix)
+
+### UX Flow (Final Implementation)
+
+1. **User initiates export** (existing UI, no changes)
+2. **System checks requirements**:
+   - If within browser limits → client-side export (instant)
+   - If exceeds limits → show preflight dialog
+3. **Preflight dialog** (when server needed):
+   - "This export requires server processing for professional print quality"
+   - Shows estimated time
+   - "Continue" / "Cancel" buttons
+4. **Server processing**:
+   - Progress indicator shown
+   - Shapes rendered in headless Chrome
+   - Converted to 16-bit TIFF via Sharp
+5. **Download** - File downloads automatically
+
+### Synergy with Existing Features
+
+**Print-on-Demand Configuration:**
+- Bleed, safe zone, and print marks render correctly at any DPI
+- Background mode (transparent, artboard color, custom) supported
+- Unit conversion (px/mm/cm/in) based on artboard DPI
+
+**Batch Export:**
+- Server export works transparently in batch mode
+- Each image processed sequentially with memory cleanup
+- Existing batch progress UI shows server processing status
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: December 4, 2025
+Last updated: December 5, 2025
