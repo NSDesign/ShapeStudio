@@ -830,7 +830,14 @@ export function registerExportRoutes(app: Express): void {
       console.log(`[HighRes Export] Starting export: ${request.artboard.width}x${request.artboard.height} @ ${request.exportSettings.dpi || request.artboard.dpi} DPI`);
       console.log(`[HighRes Export] Format: ${request.exportSettings.format}, BitDepth: ${request.exportSettings.bitDepth}`);
       
-      const result = await highResExportService.exportImage(request);
+      // Progress callback for tile rendering (logs to console for now)
+      // TODO: Add SSE streaming endpoint for real-time client progress updates
+      const progressCallback = (phase: string, current: number, total: number) => {
+        const percent = Math.round((current / total) * 100);
+        console.log(`[HighRes Export] Progress: ${phase} (${percent}%)`);
+      };
+      
+      const result = await highResExportService.exportImage(request, progressCallback);
       
       if (!result.success || !result.buffer) {
         return res.status(500).json({
