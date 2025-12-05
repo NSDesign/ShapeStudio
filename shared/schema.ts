@@ -3241,3 +3241,105 @@ export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings
   
   return migrated;
 }
+
+// ===== SSE EXPORT PROGRESS EVENTS =====
+
+/**
+ * SSE Export Phase - high-level export phases
+ */
+export type SSEExportPhase = 'preparing' | 'rendering' | 'rendering-tiles' | 'stitching' | 'encoding' | 'finalizing';
+
+/**
+ * SSE Event Types for export progress streaming
+ */
+export type SSEEventType = 'phase' | 'tile' | 'progress' | 'complete' | 'error' | 'heartbeat';
+
+/**
+ * Base SSE event interface
+ */
+export interface SSEEventBase {
+  type: SSEEventType;
+  timestamp: number;
+}
+
+/**
+ * Phase change event - indicates major export phase transitions
+ */
+export interface SSEPhaseEvent extends SSEEventBase {
+  type: 'phase';
+  phase: SSEExportPhase;
+  message: string;
+}
+
+/**
+ * Tile progress event - for tiled rendering updates
+ */
+export interface SSETileEvent extends SSEEventBase {
+  type: 'tile';
+  tileIndex: number;
+  totalTiles: number;
+  step: 'render' | 'stitch';
+  message: string;
+  progressPct?: number;
+}
+
+/**
+ * General progress event - overall progress updates
+ */
+export interface SSEProgressEvent extends SSEEventBase {
+  type: 'progress';
+  progressPct: number;
+  status: string;
+  estimatedSecondsRemaining?: number;
+}
+
+/**
+ * Export complete event - final event with download info
+ */
+export interface SSECompleteEvent extends SSEEventBase {
+  type: 'complete';
+  downloadUrl: string;
+  filename: string;
+  contentType: string;
+  sizeBytes?: number;
+  dimensions?: { width: number; height: number };
+}
+
+/**
+ * Error event - export failure
+ */
+export interface SSEErrorEvent extends SSEEventBase {
+  type: 'error';
+  message: string;
+  code?: string;
+}
+
+/**
+ * Heartbeat event - keep connection alive
+ */
+export interface SSEHeartbeatEvent extends SSEEventBase {
+  type: 'heartbeat';
+}
+
+/**
+ * Union type for all SSE events
+ */
+export type SSEExportEvent = 
+  | SSEPhaseEvent 
+  | SSETileEvent 
+  | SSEProgressEvent 
+  | SSECompleteEvent 
+  | SSEErrorEvent 
+  | SSEHeartbeatEvent;
+
+/**
+ * SSE export session state
+ */
+export interface SSEExportSession {
+  exportId: string;
+  status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+  startTime: number;
+  downloadUrl?: string;
+  filename?: string;
+  error?: string;
+}
