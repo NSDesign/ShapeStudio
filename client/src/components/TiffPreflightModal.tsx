@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertTriangle, Info, Server, Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertTriangle, Info, Server, Loader2, Palette } from 'lucide-react';
 
 interface TiffPreflightInfo {
   requestedCount: number;
@@ -39,6 +40,10 @@ interface TiffPreflightModalProps {
   onConfirm: (dontShowAgain: boolean) => void;
   onCancel: () => void;
   isExporting?: boolean;
+  flattenToRgb?: boolean;
+  onFlattenToRgbChange?: (value: boolean) => void;
+  matteColor?: string;
+  onMatteColorChange?: (value: string) => void;
 }
 
 export default function TiffPreflightModal({
@@ -48,6 +53,10 @@ export default function TiffPreflightModal({
   onConfirm,
   onCancel,
   isExporting = false,
+  flattenToRgb = false,
+  onFlattenToRgbChange,
+  matteColor = '#ffffff',
+  onMatteColorChange,
 }: TiffPreflightModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -160,6 +169,47 @@ export default function TiffPreflightModal({
                     <li>Background is transparent - some print services require solid background</li>
                   )}
                 </ul>
+              </div>
+            )}
+
+            {preflightInfo.hasTransparentBackground && onFlattenToRgbChange && (
+              <div className="p-3 bg-slate-800 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
+                  <Palette className="w-4 h-4" />
+                  RGB Optimization
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="flatten-to-rgb" className="text-xs text-slate-300 cursor-pointer">
+                      Flatten to RGB (drop transparency)
+                    </Label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      ~10-20% smaller files, removes alpha channel
+                    </p>
+                  </div>
+                  <Switch
+                    id="flatten-to-rgb"
+                    checked={flattenToRgb}
+                    onCheckedChange={onFlattenToRgbChange}
+                    disabled={isExporting}
+                    className="data-[state=checked]:bg-green-600"
+                  />
+                </div>
+                {flattenToRgb && onMatteColorChange && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <Label className="text-xs text-slate-400">Matte Color:</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={matteColor}
+                        onChange={(e) => onMatteColorChange(e.target.value)}
+                        disabled={isExporting}
+                        className="w-8 h-8 rounded cursor-pointer border border-slate-600 bg-transparent"
+                      />
+                      <span className="text-xs text-slate-400 font-mono">{matteColor}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

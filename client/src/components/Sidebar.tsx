@@ -8707,6 +8707,10 @@ export default function Sidebar({
         onConfirm={handleTiffPreflightConfirm}
         onCancel={handleTiffPreflightCancel}
         isExporting={isServerExportingGlobal}
+        flattenToRgb={exportSettings.flattenToRgb ?? false}
+        onFlattenToRgbChange={(value) => updateExportSettings.mutate({ flattenToRgb: value })}
+        matteColor={exportSettings.matteColor || '#ffffff'}
+        onMatteColorChange={(value) => updateExportSettings.mutate({ matteColor: value })}
       />
     </div>
   );
