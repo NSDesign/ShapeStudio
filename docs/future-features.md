@@ -3005,6 +3005,112 @@ Located in `server/validation/` (isolated, can be deleted after implementation):
 - Each image processed sequentially with memory cleanup
 - Existing batch progress UI shows server processing status
 
+### Future Enhancements (Planned)
+
+#### 9.1 SSE Streaming for Real-Time Tile Progress Updates 📋 PLANNED
+
+**Problem:** Currently, server-side exports use synchronous HTTP requests. For very large exports that use tiled rendering (A0+ at 600+ DPI), the client waits for the complete response with only a generic "Server processing..." message displayed. The tile progress (e.g., "Rendering tile 3 of 12...") is only logged on the server console.
+
+**Proposed Solution:** Implement Server-Sent Events (SSE) streaming endpoint for real-time progress updates:
+
+```typescript
+// New SSE endpoint
+app.get('/api/export/high-resolution/stream/:exportId', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  
+  // Stream progress events
+  const progressHandler = (phase: string, current: number, total: number) => {
+    res.write(`data: ${JSON.stringify({ phase, current, total })}\n\n`);
+  };
+  
+  // When complete, send final event with download URL
+  res.write(`data: ${JSON.stringify({ complete: true, downloadUrl: '/api/export/download/...' })}\n\n`);
+});
+```
+
+**Client Integration:**
+```typescript
+const eventSource = new EventSource(`/api/export/high-resolution/stream/${exportId}`);
+eventSource.onmessage = (event) => {
+  const { phase, current, total, complete, downloadUrl } = JSON.parse(event.data);
+  if (complete) {
+    // Trigger download
+  } else {
+    // Update progress overlay with tile phase
+    setStatus(phase); // "Rendering tile 3 of 12..."
+    setProgress(current);
+    setTotalSteps(total);
+  }
+};
+```
+
+**Benefits:**
+- Real-time tile progress updates visible in the client
+- Better UX for long-running exports (minutes for very large prints)
+- Ability to show detailed phase information (Preparing tiles, Rendering, Stitching, Encoding)
+- Natural integration with existing ExportProgressOverlay component
+
+#### 9.2 Estimated Time Display in Progress Overlay 📋 PLANNED
+
+**Problem:** During exports, users see elapsed time but have no indication of how long the export will take. This creates uncertainty for large exports that may take minutes.
+
+**Proposed Solution:** Display estimated completion time alongside elapsed time in the progress overlay:
+
+**UI Format:** `Elapsed: 00:45 / Est: ~02:30`
+
+**Implementation Approach:**
+1. Fetch estimate before starting server export (endpoint already exists: `/api/export/high-resolution/estimate`)
+2. Pass `estimatedDuration` to ExportProgressOverlay component
+3. Display formatted estimate alongside elapsed time
+4. Optionally: Refine estimate during export based on actual progress
+
+**Enhanced Estimate Calculation:**
+```typescript
+interface ServerExportEstimate {
+  requiresServerExport: boolean;
+  reason: string | null;
+  estimatedDuration: number;  // milliseconds
+  estimatedFileSizeMB: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  memoryRequiredMB: number;
+  needsTiling: boolean;      // New: whether tiled rendering is needed
+  tileCount: number;         // New: number of tiles if tiling
+}
+
+// Enhanced estimate formula
+const baseRenderTime = pixelCount / 100_000_000 * 3000; // ~3s per 100MP
+const tileOverhead = needsTiling ? tileCount * 500 : 0;  // ~500ms per tile
+const stitchTime = needsTiling ? tileCount * 200 : 0;    // ~200ms per tile stitch
+const encodeTime = format === 'tiff' && bitDepth === 16 ? 2000 : 500;
+const estimatedDuration = baseRenderTime + tileOverhead + stitchTime + encodeTime;
+```
+
+**ExportProgressOverlay Enhancement:**
+```typescript
+interface ExportProgressOverlayProps {
+  // ... existing props
+  estimatedTime?: number;  // New: estimated duration in seconds
+}
+
+// Display format
+<div className="flex items-center gap-2 text-slate-400">
+  <Clock className="w-4 h-4" />
+  <span className="font-mono">
+    {formatElapsedTime(elapsedTime)}
+    {estimatedTime && ` / Est: ~${formatElapsedTime(estimatedTime)}`}
+  </span>
+</div>
+```
+
+**Benefits:**
+- Users can plan around export times for large prints
+- Reduces anxiety during long exports
+- Provides realistic expectations for A0+ exports at 600 DPI
+- Natural fit with existing elapsed time display
+
 ---
 
 ## Notes
