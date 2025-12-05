@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
 import TiffPreflightModal, { calculateTiffPreflightInfo } from './TiffPreflightModal';
+import ExportProgressOverlay from './ExportProgressOverlay';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode, PrintMarksScaleMode } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
@@ -1598,6 +1599,64 @@ export default function Sidebar({
   const [pendingTiffExport, setPendingTiffExport] = useState<boolean>(false);
   const pendingTiffExportRef = useRef<(() => void) | null>(null);
   const [isServerExportingGlobal, setIsServerExportingGlobal] = useState(false);
+  
+  // Export progress overlay state (lifted to component level for global visibility)
+  const [showExportProgressOverlay, setShowExportProgressOverlay] = useState(false);
+  const [exportProgressGlobal, setExportProgressGlobal] = useState(0);
+  const [exportTotalStepsGlobal, setExportTotalStepsGlobal] = useState(0);
+  const [exportStatusGlobal, setExportStatusGlobal] = useState('');
+  const [exportElapsedTimeGlobal, setExportElapsedTimeGlobal] = useState(0);
+  const [exportIsCompleteGlobal, setExportIsCompleteGlobal] = useState(false);
+  const [exportIsErrorGlobal, setExportIsErrorGlobal] = useState(false);
+  const [exportResultMessageGlobal, setExportResultMessageGlobal] = useState('');
+  const exportStartTimeGlobalRef = useRef<number | null>(null);
+  const elapsedTimeIntervalGlobalRef = useRef<NodeJS.Timeout | null>(null);
+  const exportAbortControllerGlobalRef = useRef<AbortController | null>(null);
+  
+  // Start elapsed time tracking (global)
+  const startElapsedTimeTrackingGlobal = useCallback(() => {
+    exportStartTimeGlobalRef.current = Date.now();
+    setExportElapsedTimeGlobal(0);
+    elapsedTimeIntervalGlobalRef.current = setInterval(() => {
+      if (exportStartTimeGlobalRef.current) {
+        setExportElapsedTimeGlobal(Math.floor((Date.now() - exportStartTimeGlobalRef.current) / 1000));
+      }
+    }, 1000);
+  }, []);
+  
+  // Stop elapsed time tracking (global)
+  const stopElapsedTimeTrackingGlobal = useCallback(() => {
+    if (elapsedTimeIntervalGlobalRef.current) {
+      clearInterval(elapsedTimeIntervalGlobalRef.current);
+      elapsedTimeIntervalGlobalRef.current = null;
+    }
+    exportStartTimeGlobalRef.current = null;
+  }, []);
+  
+  // Cancel export (global)
+  const handleCancelExportGlobal = useCallback(() => {
+    if (exportAbortControllerGlobalRef.current) {
+      exportAbortControllerGlobalRef.current.abort();
+      console.log('🛑 Export cancelled by user (global)');
+      setExportStatusGlobal('Export cancelled');
+      setExportIsErrorGlobal(true);
+      setExportResultMessageGlobal('⚠️ Export was cancelled');
+      stopElapsedTimeTrackingGlobal();
+    }
+  }, [stopElapsedTimeTrackingGlobal]);
+  
+  // Reset export overlay state
+  const resetExportOverlay = useCallback(() => {
+    setShowExportProgressOverlay(false);
+    setExportProgressGlobal(0);
+    setExportTotalStepsGlobal(0);
+    setExportStatusGlobal('');
+    setExportElapsedTimeGlobal(0);
+    setExportIsCompleteGlobal(false);
+    setExportIsErrorGlobal(false);
+    setExportResultMessageGlobal('');
+    setIsServerExportingGlobal(false);
+  }, []);
   
   // Global repetition settings for generation sets
   const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
@@ -4229,7 +4288,19 @@ export default function Sidebar({
 
     // Server-side high-resolution export handler
     const handleServerExport = async () => {
+      // Initialize global overlay
+      setShowExportProgressOverlay(true);
       setIsServerExportingGlobal(true);
+      setExportTotalStepsGlobal(100);
+      setExportProgressGlobal(10);
+      setExportStatusGlobal('Preparing server export...');
+      setExportIsCompleteGlobal(false);
+      setExportIsErrorGlobal(false);
+      setExportResultMessageGlobal('');
+      exportAbortControllerGlobalRef.current = new AbortController();
+      startElapsedTimeTrackingGlobal();
+      
+      // Also update local state for accordion display
       setBatchStatus('Processing on server...');
       setBatchProgress(10);
       
@@ -4331,6 +4402,8 @@ export default function Sidebar({
         
         setBatchProgress(30);
         setBatchStatus('Rendering on server...');
+        setExportProgressGlobal(30);
+        setExportStatusGlobal('Rendering on server...');
         
         console.log(`🖥️ SERVER EXPORT: Starting high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
         
@@ -4338,6 +4411,8 @@ export default function Sidebar({
         
         setBatchProgress(90);
         setBatchStatus('Downloading...');
+        setExportProgressGlobal(90);
+        setExportStatusGlobal('Downloading...');
         
         // Download the file
         const timestamp = Date.now();
@@ -4351,6 +4426,11 @@ export default function Sidebar({
         
         setBatchProgress(100);
         setBatchStatus('Export complete!');
+        setExportProgressGlobal(100);
+        setExportStatusGlobal('Export complete!');
+        setExportIsCompleteGlobal(true);
+        setExportResultMessageGlobal(`✅ Exported ${filename} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+        stopElapsedTimeTrackingGlobal();
         console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
         
         setTimeout(() => {
@@ -4361,7 +4441,12 @@ export default function Sidebar({
         
       } catch (error) {
         console.error('Server export failed:', error);
-        setBatchStatus(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setBatchStatus(`Export failed: ${errorMessage}`);
+        setExportStatusGlobal(`Export failed: ${errorMessage}`);
+        setExportIsErrorGlobal(true);
+        setExportResultMessageGlobal(`❌ Export failed: ${errorMessage}`);
+        stopElapsedTimeTrackingGlobal();
         
         setTimeout(() => {
           setIsServerExportingGlobal(false);
@@ -4402,12 +4487,6 @@ export default function Sidebar({
     const handleBatchExportNewInternal = async () => {
       if (!exportSettings.exportBatchModeEnabled) return;
 
-      // Initialize abort controller and elapsed time tracking
-      exportAbortControllerRef.current = new AbortController();
-      startElapsedTimeTracking();
-
-      setIsBatchExporting(true);
-      setBatchProgress(0);
       // Calculate actual number of images to export for step calculation
       const actualImageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
       
@@ -4415,6 +4494,24 @@ export default function Sidebar({
       const totalSteps = packageAsZip 
         ? (actualImageCount * 2) + 2 // 2 steps per image + zip creation + download
         : (actualImageCount * 3); // 2 steps per image + individual download per image
+
+      // Initialize abort controller and elapsed time tracking
+      exportAbortControllerRef.current = new AbortController();
+      startElapsedTimeTracking();
+      
+      // Initialize global overlay for client-side batch export
+      setShowExportProgressOverlay(true);
+      setExportTotalStepsGlobal(totalSteps);
+      setExportProgressGlobal(0);
+      setExportStatusGlobal('Initializing batch export...');
+      setExportIsCompleteGlobal(false);
+      setExportIsErrorGlobal(false);
+      setExportResultMessageGlobal('');
+      exportAbortControllerGlobalRef.current = exportAbortControllerRef.current;
+      startElapsedTimeTrackingGlobal();
+
+      setIsBatchExporting(true);
+      setBatchProgress(0);
       setBatchTotalSteps(totalSteps);
       setBatchStatus('Initializing batch export...');
       console.log(`🚀 BATCH EXPORT: Starting ${actualImageCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'}) - ${exportAllImages ? 'All images' : 'Selected images'}`);
@@ -4494,9 +4591,17 @@ export default function Sidebar({
         }
       }
       
+      // Helper to update both local and global progress
+      const updateProgress = (step: number, status: string) => {
+        setBatchProgress(step);
+        setBatchStatus(status);
+        setExportProgressGlobal(step);
+        setExportStatusGlobal(status);
+      };
+      
       try {
         // Initialize packaging based on user setting
-        setBatchStatus(packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
+        updateProgress(1, packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
         const zip = packageAsZip ? new JSZip() : null;
         const timestamp = Date.now();
         const individualFiles: Array<{blob: Blob, filename: string}> = [];
@@ -4528,8 +4633,7 @@ export default function Sidebar({
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${exportBatchCount} exports`);
           
           // STEP 1: Shape Generation
-          setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
-          setBatchProgress(currentStep);
+          updateProgress(currentStep, `Generating shapes for artwork ${i + 1}...`);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
           
           // Force UI update before incrementing step
@@ -4756,8 +4860,7 @@ export default function Sidebar({
           
           if (currentExportShapes.length > 0) {
             // STEP 2: Image Creation and Export
-            setBatchStatus(`Creating image for artwork ${i + 1}...`);
-            setBatchProgress(currentStep);
+            updateProgress(currentStep, `Creating image for artwork ${i + 1}...`);
             console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating image for artwork ${i + 1}`);
             
             // Force UI update before incrementing step
@@ -5355,8 +5458,7 @@ export default function Sidebar({
         // FINAL STEP: Package and Download
         if (packageAsZip && zip) {
           // ZIP Creation and Download
-          setBatchStatus('Creating ZIP file...');
-          setBatchProgress(currentStep);
+          updateProgress(currentStep, 'Creating ZIP file...');
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
           
           // Force UI update before incrementing step
@@ -5393,8 +5495,7 @@ export default function Sidebar({
             throw new Error(`Failed to generate ZIP file: ${zipError instanceof Error ? zipError.message : 'Unknown ZIP error'}`);
           }
         
-          setBatchStatus('Downloading ZIP file...');
-          setBatchProgress(currentStep);
+          updateProgress(currentStep, 'Downloading ZIP file...');
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
           
           // Force UI update before download
@@ -5476,8 +5577,7 @@ export default function Sidebar({
               await new Promise(resolve => setTimeout(resolve, delayMs));
             }
             
-            setBatchStatus(`Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
-            setBatchProgress(currentStep);
+            updateProgress(currentStep, `Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
             console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ${filename}`);
             currentStep++;
             
@@ -5519,15 +5619,23 @@ export default function Sidebar({
         
         // Mark progress as complete
         stopElapsedTimeTracking();
-        setBatchProgress(totalSteps);
-        setBatchStatus('Export completed successfully!');
+        stopElapsedTimeTrackingGlobal();
         
-        // Show persistent success message with elapsed time
         const elapsedStr = formatElapsedTime(exportElapsedTime);
         const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
         const successMessage = packageAsZip 
           ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText} (${elapsedStr})`
           : `✅ Success! Downloaded ${individualFiles.length} individual files (${elapsedStr})`;
+        
+        // Update both local and global progress
+        setBatchProgress(totalSteps);
+        setBatchStatus('Export completed successfully!');
+        setExportProgressGlobal(totalSteps);
+        setExportStatusGlobal('Export completed successfully!');
+        setExportIsCompleteGlobal(true);
+        setExportResultMessageGlobal(successMessage);
+        
+        // Show persistent success message with elapsed time
         setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
@@ -5536,6 +5644,7 @@ export default function Sidebar({
       } catch (error) {
         console.error('❌ Batch export error:', error);
         stopElapsedTimeTracking();
+        stopElapsedTimeTrackingGlobal();
         
         // Create a more detailed error message for mobile users who can't check console
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -5550,8 +5659,11 @@ export default function Sidebar({
           enabledShapeTypes: Array.from(enabledShapeTypes)
         });
         
-        // Mark progress as failed but visible
+        // Mark progress as failed but visible (both local and global)
         setBatchStatus(`Export failed: ${errorMessage}`);
+        setExportStatusGlobal(`Export failed: ${errorMessage}`);
+        setExportIsErrorGlobal(true);
+        setExportResultMessageGlobal(`❌ Export failed: ${errorMessage}`);
         
         // Show persistent error message
         setBatchResultMessage(`❌ Export failed: ${errorMessage}`);
@@ -8711,6 +8823,23 @@ export default function Sidebar({
         onFlattenToRgbChange={(value) => updateExportSettings.mutate({ flattenToRgb: value })}
         matteColor={exportSettings.matteColor || '#ffffff'}
         onMatteColorChange={(value) => updateExportSettings.mutate({ matteColor: value })}
+      />
+      
+      {/* Export Progress Overlay - Always visible during export */}
+      <ExportProgressOverlay
+        open={showExportProgressOverlay}
+        onOpenChange={(open) => {
+          if (!open) resetExportOverlay();
+        }}
+        progress={exportProgressGlobal}
+        totalSteps={exportTotalStepsGlobal}
+        status={exportStatusGlobal}
+        elapsedTime={exportElapsedTimeGlobal}
+        isServerExport={isServerExportingGlobal}
+        onCancel={handleCancelExportGlobal}
+        isComplete={exportIsCompleteGlobal}
+        isError={exportIsErrorGlobal}
+        resultMessage={exportResultMessageGlobal}
       />
     </div>
   );
