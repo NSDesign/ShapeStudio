@@ -191,46 +191,7 @@ export default function BatchConfigDialog({
     setCurrentSettings(prevSettings => {
       // Resolve updates if it's a function
       const resolvedUpdates = typeof updates === 'function' ? updates(prevSettings) : updates;
-      
-      // Handle gradient probability auto-balancing
-      if ('fillGradientLinearProbability' in resolvedUpdates || 'fillGradientRadialProbability' in resolvedUpdates || 'fillGradientConicProbability' in resolvedUpdates) {
-        const newSettings = { ...prevSettings, ...resolvedUpdates };
-        
-        // Get the current probabilities
-        const linear = newSettings.fillGradientLinearProbability;
-        const radial = newSettings.fillGradientRadialProbability;
-        const conic = newSettings.fillGradientConicProbability;
-        
-        // Auto-balance to 100%
-        const total = linear + radial + conic;
-        if (total !== 100 && total > 0) {
-          // Determine which property was changed
-          const changedKey = Object.keys(resolvedUpdates)[0];
-          const changedValue = resolvedUpdates[changedKey as keyof typeof resolvedUpdates] as number;
-          
-          if (changedKey === 'fillGradientLinearProbability') {
-            const remaining = 100 - changedValue;
-            const radialRatio = radial / (radial + conic || 1);
-            newSettings.fillGradientRadialProbability = Math.round(remaining * radialRatio);
-            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientRadialProbability;
-          } else if (changedKey === 'fillGradientRadialProbability') {
-            const remaining = 100 - changedValue;
-            const linearRatio = linear / (linear + conic || 1);
-            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
-            newSettings.fillGradientConicProbability = remaining - newSettings.fillGradientLinearProbability;
-          } else if (changedKey === 'fillGradientConicProbability') {
-            const remaining = 100 - changedValue;
-            const linearRatio = linear / (linear + radial || 1);
-            newSettings.fillGradientLinearProbability = Math.round(remaining * linearRatio);
-            newSettings.fillGradientRadialProbability = remaining - newSettings.fillGradientLinearProbability;
-          }
-        }
-        
-        return newSettings;
-      } else {
-        // Only update internal state, don't call parent callback immediately
-        return { ...prevSettings, ...resolvedUpdates };
-      }
+      return { ...prevSettings, ...resolvedUpdates };
     });
   }, [isOpen]);
 
@@ -4112,78 +4073,6 @@ export default function BatchConfigDialog({
                                           <p className="text-xs text-slate-500">Radial/conic for round shapes, linear for geometric</p>
                                         </div>
                                       </div>
-                                      
-                                      {/* Override Type Probabilities - shown when match shape is disabled */}
-                                      {!currentSettings.fillGradientMatchShape && (
-                                        <div className="space-y-2 p-2 bg-slate-900/30 rounded">
-                                          <Label className="text-xs font-medium text-slate-300">Override Type Probabilities</Label>
-                                          <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                              <Label className="text-xs text-slate-400 w-12">Linear</Label>
-                                              <NumericInput
-                                                value={currentSettings.fillGradientLinearProbability}
-                                                onChange={(value) => handleSettingsUpdate({ fillGradientLinearProbability: Math.max(0, Math.min(100, value)) })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                data-testid="input-override-linear-prob"
-                                              />
-                                              <Slider
-                                                value={[currentSettings.fillGradientLinearProbability]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientLinearProbability: value })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="flex-1 [&_[role=slider]]:bg-purple-600"
-                                              />
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <Label className="text-xs text-slate-400 w-12">Radial</Label>
-                                              <NumericInput
-                                                value={currentSettings.fillGradientRadialProbability}
-                                                onChange={(value) => handleSettingsUpdate({ fillGradientRadialProbability: Math.max(0, Math.min(100, value)) })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                data-testid="input-override-radial-prob"
-                                              />
-                                              <Slider
-                                                value={[currentSettings.fillGradientRadialProbability]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientRadialProbability: value })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="flex-1 [&_[role=slider]]:bg-pink-600"
-                                              />
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                              <Label className="text-xs text-slate-400 w-12">Conic</Label>
-                                              <NumericInput
-                                                value={currentSettings.fillGradientConicProbability}
-                                                onChange={(value) => handleSettingsUpdate({ fillGradientConicProbability: Math.max(0, Math.min(100, value)) })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                                data-testid="input-override-conic-prob"
-                                              />
-                                              <Slider
-                                                value={[currentSettings.fillGradientConicProbability]}
-                                                onValueChange={([value]) => handleSettingsUpdate({ fillGradientConicProbability: value })}
-                                                min={0}
-                                                max={100}
-                                                step={5}
-                                                className="flex-1 [&_[role=slider]]:bg-amber-600"
-                                              />
-                                            </div>
-                                          </div>
-                                          <p className="text-xs text-slate-500">
-                                            Total: {currentSettings.fillGradientLinearProbability + currentSettings.fillGradientRadialProbability + currentSettings.fillGradientConicProbability}%
-                                          </p>
-                                        </div>
-                                      )}
                                       
                                       {/* Linear Direction */}
                                       <div className="space-y-2 p-2 bg-slate-900/30 rounded">
