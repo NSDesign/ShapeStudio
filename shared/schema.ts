@@ -103,6 +103,9 @@ export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
 // Export background mode type (transparent ignores artboard background, artboard uses artboard's configured color)
 export type ExportBackgroundMode = 'transparent' | 'artboard';
 
+// Render mode for exports - determines whether to use client-side or server-side rendering
+export type ExportRenderMode = 'auto' | 'client' | 'server';
+
 // Export settings configuration type
 export interface ExportSettingsConfig {
   exportBatchModeEnabled: boolean;    // Whether batch export mode is enabled
@@ -118,6 +121,7 @@ export interface ExportSettingsConfig {
   tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
   tiffCompression: 'none' | 'deflate'; // TIFF compression: 'none' for uncompressed, 'deflate' for ZIP/Deflate (requires Pako.js)
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
+  renderMode: ExportRenderMode;       // Render mode: 'auto' (smart detection), 'client' (browser), 'server' (headless)
   copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
   // Image metadata fields for export
   artistName: string;                 // Artist/Creator name (pre-filled from logged-in user, editable)
@@ -139,6 +143,7 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
   tiffCompression: 'none',            // No compression by default (Deflate requires Pako.js)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
+  renderMode: 'auto',                 // Auto mode by default - smart detection of client vs server
   copyrightText: '',                  // Empty by default - user can add their copyright notice
   // Image metadata defaults
   artistName: '',                     // Empty by default - pre-filled from user profile on first load

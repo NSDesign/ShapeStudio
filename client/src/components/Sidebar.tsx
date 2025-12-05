@@ -5586,6 +5586,33 @@ export default function Sidebar({
             )}
           </div>
 
+          {/* Render Mode Setting */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-400">Render Mode</Label>
+            <Select 
+              value={exportSettings.renderMode || 'auto'} 
+              onValueChange={(value: 'auto' | 'client' | 'server') => 
+                updateExportSettings.mutate({ renderMode: value })
+              }
+            >
+              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600" data-testid="select-render-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="auto" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Auto (Recommended)</SelectItem>
+                <SelectItem value="client" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Browser</SelectItem>
+                <SelectItem value="server" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Server</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">
+              {exportSettings.renderMode === 'auto' 
+                ? 'Automatically chooses best renderer based on export size and format' 
+                : exportSettings.renderMode === 'server'
+                ? 'Uses server-side rendering for large/high-quality exports'
+                : 'Uses browser for quick exports (may have size limits)'}
+            </p>
+          </div>
+
           {/* TIFF Print-Ready Warnings */}
           {exportFormat === 'tiff' && (() => {
             const preflightInfo = getTiffPreflightInfo();

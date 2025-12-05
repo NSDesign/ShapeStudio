@@ -80,6 +80,10 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Artboard Persistence**: All artboards are saved to `savedArtboards` array with `activeArtboardId` tracking, with automatic dimension validation per artboard during restore. Maintains backward compatibility with legacy single-artboard fields.
 - **Automatic Grid Recalculation**: When switching artboards with different dimensions, grid settings are automatically scaled via `recalculateGridForArtboard` utility. Only "define" mode settings (gridRowOffset, gridColumnOffset, gridStartX, gridStartY, gridMarginValue) are scaled based on artboard dimension ratios; auto modes (auto-centered, auto-edge-to-edge) recalculate automatically from artboard bounds. When shape sets are enabled, updated grid config requires explicit Apply to persist to set.
 - **Artboard Info Display**: Name, dimensions, and DPI displayed in a rounded container at top-right of artboard, positioned above all print overlays (bleed, safe zone, print marks). Container uses adaptive contrast (dark on light backgrounds, light on dark backgrounds) with semi-transparent background. Position calculation accounts for bleed area and print marks gutter scaled by zoom level.
+- **Export Render Mode Selector**: UI control for choosing rendering pipeline with Auto/Client/Server options:
+  - **Auto** (default): Smart detection based on export size, format, and DPI - automatically chooses optimal renderer
+  - **Client**: Force browser-based rendering for quick exports (subject to browser canvas limits)
+  - **Server**: Force server-side rendering via Headless Chromium + Sharp for large/high-quality exports
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
