@@ -814,6 +814,19 @@ export function registerExportRoutes(app: Express): void {
    * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
    */
   app.post('/api/export/high-resolution', async (req, res) => {
+    // Create AbortController for cancellation on client disconnect
+    const abortController = new AbortController();
+    let isClientDisconnected = false;
+    
+    // Listen for client disconnect to abort long-running exports
+    req.on('close', () => {
+      if (!res.writableEnded) {
+        isClientDisconnected = true;
+        abortController.abort();
+        console.log('[HighRes Export] Client disconnected, aborting export...');
+      }
+    });
+    
     try {
       const validationResult = HighResExportSchema.safeParse(req.body);
       
@@ -830,14 +843,24 @@ export function registerExportRoutes(app: Express): void {
       console.log(`[HighRes Export] Starting export: ${request.artboard.width}x${request.artboard.height} @ ${request.exportSettings.dpi || request.artboard.dpi} DPI`);
       console.log(`[HighRes Export] Format: ${request.exportSettings.format}, BitDepth: ${request.exportSettings.bitDepth}`);
       
-      // Progress callback for tile rendering (logs to console for now)
-      // TODO: Add SSE streaming endpoint for real-time client progress updates
+      // Progress callback for tile rendering (logs to console)
+      // Note: Real-time client progress would require SSE streaming (future enhancement)
       const progressCallback = (phase: string, current: number, total: number) => {
         const percent = Math.round((current / total) * 100);
         console.log(`[HighRes Export] Progress: ${phase} (${percent}%)`);
       };
       
-      const result = await highResExportService.exportImage(request, progressCallback);
+      const result = await highResExportService.exportImage(
+        request, 
+        progressCallback, 
+        abortController.signal
+      );
+      
+      // Check if client disconnected during export
+      if (isClientDisconnected) {
+        console.log('[HighRes Export] Export completed but client disconnected, discarding result');
+        return;
+      }
       
       if (!result.success || !result.buffer) {
         return res.status(500).json({
@@ -861,6 +884,12 @@ export function registerExportRoutes(app: Express): void {
       res.send(result.buffer);
       
     } catch (error) {
+      // Don't send error response if client already disconnected
+      if (isClientDisconnected) {
+        console.log('[HighRes Export] Error after client disconnect:', error instanceof Error ? error.message : 'Unknown error');
+        return;
+      }
+      
       console.error('[HighRes Export] Error:', error);
       res.status(500).json({
         success: false,
