@@ -3440,6 +3440,51 @@ export default function Sidebar({
       ctx.restore();
     };
 
+    const convertRgbaToRgb = (
+      rgbaData: Uint8Array | Uint16Array, 
+      width: number, 
+      height: number, 
+      matteColor: string,
+      is16Bit: boolean = false
+    ): Uint8Array | Uint16Array => {
+      const pixelCount = width * height;
+      const maxValue = is16Bit ? 65535 : 255;
+      
+      const hexToRgb = (hex: string): [number, number, number] => {
+        const cleanHex = hex.replace('#', '');
+        const r = parseInt(cleanHex.substring(0, 2), 16);
+        const g = parseInt(cleanHex.substring(2, 4), 16);
+        const b = parseInt(cleanHex.substring(4, 6), 16);
+        if (is16Bit) {
+          return [r * 257, g * 257, b * 257];
+        }
+        return [r, g, b];
+      };
+      
+      const [matteR, matteG, matteB] = hexToRgb(matteColor);
+      const rgbData = is16Bit 
+        ? new Uint16Array(pixelCount * 3)
+        : new Uint8Array(pixelCount * 3);
+      
+      for (let i = 0; i < pixelCount; i++) {
+        const srcIdx = i * 4;
+        const dstIdx = i * 3;
+        
+        const r = rgbaData[srcIdx];
+        const g = rgbaData[srcIdx + 1];
+        const b = rgbaData[srcIdx + 2];
+        const a = rgbaData[srcIdx + 3];
+        
+        const alpha = a / maxValue;
+        
+        rgbData[dstIdx] = Math.round(r * alpha + matteR * (1 - alpha));
+        rgbData[dstIdx + 1] = Math.round(g * alpha + matteG * (1 - alpha));
+        rgbData[dstIdx + 2] = Math.round(b * alpha + matteB * (1 - alpha));
+      }
+      
+      return rgbData;
+    };
+
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
       const originalSelected = shape.selected;
@@ -3513,7 +3558,14 @@ export default function Sidebar({
             }
             
             const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
-            let rgba: Uint8Array | Uint16Array;
+            let pixelData: Uint8Array | Uint16Array;
+            
+            // Determine if we should flatten to RGB (drop alpha channel)
+            // Auto-flatten when background is artboard (no transparency needed)
+            // Or when user explicitly enables flattenToRgb for transparent background
+            const bgMode = exportSettings.exportBackgroundMode || 'transparent';
+            const shouldFlattenToRgb = bgMode === 'artboard' || (exportSettings.flattenToRgb ?? false);
+            const matteColor = exportSettings.matteColor || '#ffffff';
             
             if (tiffBitDepth === 16) {
               // Convert 8-bit to 16-bit by scaling values (0-255 -> 0-65535)
@@ -3521,9 +3573,22 @@ export default function Sidebar({
               for (let i = 0; i < imageData.data.length; i++) {
                 rgba16[i] = imageData.data[i] * 257; // Scale 8-bit to 16-bit (255 * 257 = 65535)
               }
-              rgba = rgba16;
+              
+              if (shouldFlattenToRgb) {
+                pixelData = convertRgbaToRgb(rgba16, canvas.width, canvas.height, matteColor, true);
+                console.log(`📄 TIFF: Flattening to RGB (16-bit) - ~25% smaller file, matte: ${matteColor}`);
+              } else {
+                pixelData = rgba16;
+              }
             } else {
-              rgba = new Uint8Array(imageData.data.buffer);
+              const rgba8 = new Uint8Array(imageData.data.buffer);
+              
+              if (shouldFlattenToRgb) {
+                pixelData = convertRgbaToRgb(rgba8, canvas.width, canvas.height, matteColor, false);
+                console.log(`📄 TIFF: Flattening to RGB (8-bit) - ~25% smaller file, matte: ${matteColor}`);
+              } else {
+                pixelData = rgba8;
+              }
             }
             
             // Build TIFF metadata
@@ -3539,6 +3604,16 @@ export default function Sidebar({
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
+            
+            // Set samples per pixel and photometric interpretation based on RGB vs RGBA
+            if (shouldFlattenToRgb) {
+              tiffMetadata.t277 = [3];  // SamplesPerPixel = 3 (RGB)
+              tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB)
+            } else {
+              tiffMetadata.t277 = [4];  // SamplesPerPixel = 4 (RGBA)
+              tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB with alpha)
+              tiffMetadata.t338 = [1];  // ExtraSamples = 1 (associated alpha)
+            }
             
             // Handle compression based on bit depth and user setting
             // UTIF.js deflate only works reliably with 8-bit data
@@ -3558,9 +3633,11 @@ export default function Sidebar({
               }
             }
             
-            // Set bit depth tag for 16-bit exports
+            // Set bit depth tag based on RGB vs RGBA
             if (tiffBitDepth === 16) {
-              tiffMetadata.t258 = [16, 16, 16, 16]; // BitsPerSample (R, G, B, A)
+              tiffMetadata.t258 = shouldFlattenToRgb ? [16, 16, 16] : [16, 16, 16, 16]; // BitsPerSample
+            } else {
+              tiffMetadata.t258 = shouldFlattenToRgb ? [8, 8, 8] : [8, 8, 8, 8]; // BitsPerSample
             }
             
             // Embed sRGB ICC profile if requested (TIFF tag 34675 = InterColorProfile)
@@ -3610,7 +3687,7 @@ export default function Sidebar({
             // Encode to TIFF buffer
             // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
             const tiffBuffer = UTIF.encodeImage(
-              tiffBitDepth === 16 ? new Uint8Array((rgba as Uint16Array).buffer) : rgba as Uint8Array, 
+              tiffBitDepth === 16 ? new Uint8Array((pixelData as Uint16Array).buffer) : pixelData as Uint8Array, 
               canvas.width, 
               canvas.height, 
               tiffMetadata as UTIF.IFD
@@ -3622,7 +3699,8 @@ export default function Sidebar({
             tiffLink.download = filename;
             tiffLink.click();
             URL.revokeObjectURL(url);
-            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata, ${tiffBitDepth}-bit${embedIccProfile ? ', sRGB ICC profile' : ''}`);
+            const channelMode = shouldFlattenToRgb ? 'RGB' : 'RGBA';
+            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata, ${tiffBitDepth}-bit ${channelMode}${embedIccProfile ? ', sRGB ICC profile' : ''}`);
           }
           break;
         default:
@@ -5103,6 +5181,19 @@ export default function Sidebar({
                     const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
                     const rgba = new Uint8Array(imageData.data.buffer);
                     
+                    // Determine if we should flatten to RGB (auto when background is artboard, or explicit)
+                    const batchBgMode = exportSettings.exportBackgroundMode || 'transparent';
+                    const batchShouldFlattenToRgb = batchBgMode === 'artboard' || (exportSettings.flattenToRgb ?? false);
+                    const batchMatteColor = exportSettings.matteColor || '#ffffff';
+                    
+                    let batchPixelData: Uint8Array;
+                    if (batchShouldFlattenToRgb) {
+                      batchPixelData = convertRgbaToRgb(rgba, canvas.width, canvas.height, batchMatteColor, false) as Uint8Array;
+                      console.log(`📄 TIFF batch: Flattening to RGB - ~25% smaller file, matte: ${batchMatteColor}`);
+                    } else {
+                      batchPixelData = rgba;
+                    }
+                    
                     // Calculate effective DPI based on export scale (same as artboard export)
                     const batchTiffDPI = Math.round(72 * effectiveExportScale);
                     
@@ -5119,16 +5210,29 @@ export default function Sidebar({
                       t296: [2],          // ResolutionUnit (2 = inch)
                     };
                     
+                    // Set samples per pixel and photometric interpretation based on RGB vs RGBA
+                    if (batchShouldFlattenToRgb) {
+                      tiffMetadata.t277 = [3];  // SamplesPerPixel = 3 (RGB)
+                      tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB)
+                      tiffMetadata.t258 = [8, 8, 8];  // BitsPerSample (R, G, B)
+                    } else {
+                      tiffMetadata.t277 = [4];  // SamplesPerPixel = 4 (RGBA)
+                      tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB with alpha)
+                      tiffMetadata.t338 = [1];  // ExtraSamples = 1 (associated alpha)
+                      tiffMetadata.t258 = [8, 8, 8, 8];  // BitsPerSample (R, G, B, A)
+                    }
+                    
                     // For deflate: DON'T set t259 - let UTIF auto-detect pako
                     // For no compression: explicitly set t259=[1]
                     if (batchTiffCompression !== 'deflate') {
                       tiffMetadata.t259 = [1];  // No compression
                     }
                     
-                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate (UTIF auto-detection)' : 'no'} compression`);
+                    const batchChannelMode = batchShouldFlattenToRgb ? 'RGB' : 'RGBA';
+                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate (UTIF auto-detection)' : 'no'} compression, ${batchChannelMode}`);
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
-                    const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata as UTIF.IFD);
+                    const tiffBuffer = UTIF.encodeImage(batchPixelData, canvas.width, canvas.height, tiffMetadata as UTIF.IFD);
                     const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
                     
                     if (packageAsZip && zip) {
