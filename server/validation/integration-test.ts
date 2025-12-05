@@ -273,7 +273,8 @@ export async function runIntegrationTest(options?: {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   console.log('\n=== Integration Test (Canvas → PNG → 16-bit TIFF) ===\n');
   
   runIntegrationTest({

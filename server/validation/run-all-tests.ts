@@ -5,9 +5,15 @@
  * Usage: npx tsx server/validation/run-all-tests.ts
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { runPuppeteerTest, PuppeteerTestResult } from './puppeteer-test';
 import { runSharpTest, runLargeImageTest, SharpTestResult } from './sharp-test';
 import { runIntegrationTest, IntegrationTestResult } from './integration-test';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface ValidationReport {
   timestamp: string;
@@ -143,12 +149,11 @@ async function runAllValidationTests(): Promise<ValidationReport> {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   runAllValidationTests()
     .then(report => {
       // Save report to file
-      const fs = require('fs');
-      const path = require('path');
       const reportPath = path.join(__dirname, 'output', 'validation-report.json');
       
       // Ensure output directory exists

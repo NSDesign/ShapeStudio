@@ -216,7 +216,8 @@ export async function runLargeImageTest(): Promise<SharpTestResult> {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   (async () => {
     console.log('\n=== Sharp Basic Test ===');
     const basicResult = await runSharpTest();

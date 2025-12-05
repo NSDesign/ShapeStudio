@@ -139,7 +139,8 @@ export async function runPuppeteerTest(): Promise<PuppeteerTestResult> {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   runPuppeteerTest().then(result => {
     console.log('\n=== Puppeteer Test Result ===');
     console.log(JSON.stringify(result, null, 2));
