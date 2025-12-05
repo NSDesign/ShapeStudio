@@ -1,4 +1,9 @@
 import { Shape } from './shapes';
+import { 
+  calculateLinearGradientCoords,
+  calculateRadialGradientCoords,
+  calculateConicGradientCoords
+} from '@shared/gradientUtils';
 
 export function renderShape(ctx: CanvasRenderingContext2D, shape: Shape, zoom: number, skipSelectionAdornments = false): void {
   if (!shape.points || shape.points.length === 0) {
@@ -104,47 +109,36 @@ function drawShape(ctx: CanvasRenderingContext2D, shape: Shape): void {
       
       
       if (shape.properties.gradient.type === 'linear') {
-        // Use angle property for proper linear gradient direction
-        const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
-        const cx = bounds.x + bounds.width / 2;
-        const cy = bounds.y + bounds.height / 2;
-        const length = Math.max(bounds.width, bounds.height) / 2;
-        const x1 = cx - Math.cos(angle) * length;
-        const y1 = cy - Math.sin(angle) * length;
-        const x2 = cx + Math.cos(angle) * length;
-        const y2 = cy + Math.sin(angle) * length;
-        gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+        const coords = calculateLinearGradientCoords(bounds, shape.properties.gradient.angle || 0);
+        gradient = ctx.createLinearGradient(coords.x1, coords.y1, coords.x2, coords.y2);
       } else if (shape.properties.gradient.type === 'radial') {
-        // Use radial gradient parameters if available, otherwise use center defaults
-        const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
-        const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
-        
-        // Convert percentage to actual position within bounds
-        const centerX = bounds.x + (bounds.width * radialCenterXPercent / 100);
-        const centerY = bounds.y + (bounds.height * radialCenterYPercent / 100);
-        const radius = Math.max(bounds.width, bounds.height) / 2;
-        gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        const coords = calculateRadialGradientCoords(
+          bounds,
+          shape.properties.gradient.radialCenterX ?? 50,
+          shape.properties.gradient.radialCenterY ?? 50
+        );
+        gradient = ctx.createRadialGradient(
+          coords.centerX, coords.centerY, coords.innerRadius,
+          coords.centerX, coords.centerY, coords.outerRadius
+        );
       } else if (shape.properties.gradient.type === 'conic') {
-        // Use gradient parameters if available, otherwise use center defaults
-        const conicCenterXPercent = shape.properties.gradient.conicCenterX ?? 50;
-        const conicCenterYPercent = shape.properties.gradient.conicCenterY ?? 50;
-        const conicAngle = shape.properties.gradient.conicAngle ?? 0;
-        
-        // Convert percentage to actual position within bounds
-        const centerX = bounds.x + (bounds.width * conicCenterXPercent / 100);
-        const centerY = bounds.y + (bounds.height * conicCenterYPercent / 100);
-        
-        // createConicGradient(startAngle, centerX, centerY) - colors rotate around center point
-        gradient = ctx.createConicGradient(conicAngle, centerX, centerY);
+        const coords = calculateConicGradientCoords(
+          bounds,
+          shape.properties.gradient.conicCenterX ?? 50,
+          shape.properties.gradient.conicCenterY ?? 50,
+          shape.properties.gradient.conicAngle ?? 0
+        );
+        gradient = ctx.createConicGradient(coords.startAngle, coords.centerX, coords.centerY);
       } else {
-        // Default fallback to radial gradient with center positioning
-        const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
-        const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
-        
-        const centerX = bounds.x + (bounds.width * radialCenterXPercent / 100);
-        const centerY = bounds.y + (bounds.height * radialCenterYPercent / 100);
-        const radius = Math.max(bounds.width, bounds.height) / 2;
-        gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        const coords = calculateRadialGradientCoords(
+          bounds,
+          shape.properties.gradient.radialCenterX ?? 50,
+          shape.properties.gradient.radialCenterY ?? 50
+        );
+        gradient = ctx.createRadialGradient(
+          coords.centerX, coords.centerY, coords.innerRadius,
+          coords.centerX, coords.centerY, coords.outerRadius
+        );
       }
       
       shape.properties.gradient.stops.forEach(stop => {
