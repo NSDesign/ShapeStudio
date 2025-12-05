@@ -691,6 +691,703 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
   );
 });
 
+// Memoized ShapeTypesContent - extracted to top level to prevent remounting on parent re-renders
+interface ShapeTypesContentProps {
+  scatterSettings: ScatterSettings;
+  onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
+  enabledShapeTypes: Set<ShapeType>;
+  onToggleShapeType: (type: ShapeType) => void;
+  shapeListAccordionOpen: string | undefined;
+  setShapeListAccordionOpen: (value: string | undefined) => void;
+  openShapeCategories: string[];
+  setOpenShapeCategories: (value: string[]) => void;
+  expandedShapes: Set<string>;
+  toggleShapeExpansion: (shapeType: string) => void;
+  setsEnabled: boolean;
+  currentGenerationSetId: string | null;
+  updateGenerationSetPartial: ((id: string, updates: Partial<GenerationSet>) => Promise<void>) | undefined;
+  applyStatus: 'idle' | 'applying' | 'success';
+  handleApplyToCurrentSet: () => void;
+  onGenerateRandomShapes: () => void;
+}
+
+const ShapeTypesContentMemo = React.memo(function ShapeTypesContentMemo({
+  scatterSettings,
+  onUpdateScatterSettings,
+  enabledShapeTypes,
+  onToggleShapeType,
+  shapeListAccordionOpen,
+  setShapeListAccordionOpen,
+  openShapeCategories,
+  setOpenShapeCategories,
+  expandedShapes,
+  toggleShapeExpansion,
+  setsEnabled,
+  currentGenerationSetId,
+  updateGenerationSetPartial,
+  applyStatus,
+  handleApplyToCurrentSet,
+  onGenerateRandomShapes
+}: ShapeTypesContentProps) {
+
+  const getShapeProperties = useCallback((shapeType: string) => {
+    switch (shapeType) {
+      case 'polygon':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Edge Count"
+              config={convertScatterToModeConfig('polygon', 'edgeCount', scatterSettings, [3, 20])}
+              onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 3, max: 20 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+      
+      case 'line-vector':
+        const lineVectorConfig = { 
+          ...getDefaultLineVectorConfig(), 
+          ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
+        };
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Direction"
+              config={convertLineVectorToModeConfig(lineVectorConfig.direction)}
+              onChange={(modeConfig) => {
+                handleLineVectorModeConfigChange('direction', modeConfig, scatterSettings, onUpdateScatterSettings);
+              }}
+              bounds={{ min: 0, max: 360 }}
+              unit="°"
+              step={15}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <StyledModeField
+              label="Length"
+              config={convertLineVectorToModeConfig(lineVectorConfig.length)}
+              onChange={(modeConfig) => {
+                handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
+              }}
+              bounds={{ min: 0, max: 500 }}
+              unit="px"
+              step={5}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <StyledModeField
+              label="Centroid"
+              config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
+              onChange={(modeConfig) => {
+                handleLineVectorModeConfigChange('centroid', modeConfig, scatterSettings, onUpdateScatterSettings);
+              }}
+              bounds={{ min: 0, max: 1 }}
+              step={0.01}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+              <div className="space-y-2">
+                {['round', 'square', 'butt'].map((cap) => (
+                  <div key={cap} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-300 capitalize">{cap}</span>
+                      <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
+                    </div>
+                    <BufferedSlider
+                      value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
+                      onValueCommit={(value) => {
+                        const probability = value[0];
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            'line-vector': { 
+                              ...lineVectorConfig,
+                              strokeCapProbabilities: {
+                                round: cap === 'round' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.round || 0),
+                                square: cap === 'square' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.square || 0),
+                                butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.butt || 0)
+                              }
+                            }
+                          }
+                        });
+                      }}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'circle':
+      case 'ellipse':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Segment Count"
+              config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
+              onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 8, max: 64 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+      
+      case 'bezier':
+      case 'smooth-spline':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Point Count"
+              config={convertScatterToModeConfig(shapeType, 'pointCount', scatterSettings, [3, 6])}
+              onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 3, max: 10 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
+                  <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
+                </div>
+                <BufferedSlider
+                  value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
+                  onValueCommit={([value]) => {
+                    console.log(`${shapeType} open probability: ${value}%`);
+                    onUpdateScatterSettings({
+                      shapeSpecific: {
+                        ...scatterSettings.shapeSpecific,
+                        [shapeType]: { 
+                          ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
+                          openProbability: value 
+                        }
+                      }
+                    });
+                  }}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
+              <div className="space-y-2">
+                {['round', 'square', 'butt'].map((cap) => {
+                  const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] ?? (cap === 'round' ? 50 : 25);
+                  return (
+                    <div key={cap} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <Label className="text-slate-300 capitalize">{cap}</Label>
+                        <span className="text-slate-400">{currentValue}%</span>
+                      </div>
+                      <BufferedSlider
+                        value={[currentValue]}
+                        onValueCommit={([value]) => {
+                          console.log(`${shapeType} ${cap} cap: ${value}%`);
+                          const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
+                          onUpdateScatterSettings({
+                            shapeSpecific: {
+                              ...scatterSettings.shapeSpecific,
+                              [shapeType]: { 
+                                ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
+                                strokeCapProbabilities: {
+                                  ...currentCaps,
+                                  [cap]: value
+                                }
+                              }
+                            }
+                          });
+                        }}
+                        min={0}
+                        max={100}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'star':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Point Count"
+              config={convertScatterToModeConfig('star', 'pointCount', scatterSettings, [5, 8])}
+              onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 5, max: 12 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <StyledModeField
+              label="Inner Radius"
+              config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
+              onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 10, max: 90 }}
+              step={1}
+              unit="%"
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+
+      case 'ring':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Inner Radius"
+              config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
+              onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 10, max: 90 }}
+              step={1}
+              unit="%"
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+
+      case 'spline-ring':
+        return (
+          <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Inner Radius"
+              config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
+              onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 10, max: 90 }}
+              step={1}
+              unit="%"
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+
+      case 'line':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Point Count"
+              config={convertScatterToModeConfig('line', 'pointCount', scatterSettings, [2, 4])}
+              onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 2, max: 8 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+            <div className="space-y-2">
+              <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+              <div className="space-y-2">
+                {['round', 'square', 'butt'].map((cap) => (
+                  <div key={cap} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-300 capitalize">{cap}</span>
+                      <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
+                    </div>
+                    <BufferedSlider
+                      value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
+                      onValueCommit={(value) => {
+                        const probability = value[0];
+                        onUpdateScatterSettings({
+                          shapeSpecific: {
+                            ...scatterSettings.shapeSpecific,
+                            line: { 
+                              pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
+                              strokeCapProbabilities: {
+                                round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
+                                square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
+                                butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
+                              }
+                            }
+                          }
+                        });
+                      }}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'rectangle':
+        return null;
+        
+      case 'rounded-rectangle':
+      case 'rounded-square':
+        return (
+          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Corner Radius"
+              config={convertScatterToModeConfig(shapeType, 'cornerRadius', scatterSettings, [0, 20])}
+              onChange={(config) => handleScatterModeConfigChange(shapeType, 'cornerRadius', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 0, max: 50 }}
+              step={1}
+              unit="px"
+              allowedModes={['fixed', 'range']}
+            />
+          </div>
+        );
+        
+      case 'cubic':
+        return (
+          <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+            <StyledModeField
+              label="Point Count"
+              config={convertScatterToModeConfig('cubic', 'pointCount', scatterSettings, [3, 7])}
+              onChange={(config) => handleScatterModeConfigChange('cubic', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 3, max: 8 }}
+              step={1}
+              allowedModes={['fixed', 'range']}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <StyledModeField
+              label="Curvature"
+              config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
+              onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 10, max: 100 }}
+              step={1}
+              unit="%"
+              allowedModes={['fixed', 'range']}
+            />
+            
+            <Separator className="bg-slate-600" />
+            
+            <StyledModeField
+              label="Curve Spread"
+              config={convertScatterToModeConfig('cubic', 'spread', scatterSettings, [40, 120])}
+              onChange={(config) => handleScatterModeConfigChange('cubic', 'spread', config, scatterSettings, onUpdateScatterSettings)}
+              bounds={{ min: 20, max: 200 }}
+              step={10}
+              unit="px"
+              allowedModes={['fixed', 'range']}
+            />
+            
+            <Separator className="bg-slate-600" />
+
+            <div className="space-y-3">
+              <Label className="text-xs text-slate-400">Curve Pattern</Label>
+              <Select 
+                value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
+                onValueChange={(value) => {
+                  onUpdateScatterSettings({
+                    shapeSpecific: {
+                      ...scatterSettings.shapeSpecific,
+                      cubic: { 
+                        pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                        curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                        spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                        patternType: parseInt(value),
+                        openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                      }
+                    }
+                  });
+                }}
+              >
+                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Spiral</SelectItem>
+                  <SelectItem value="1">Wave</SelectItem>
+                  <SelectItem value="2">Organic</SelectItem>
+                  <SelectItem value="3">Arc</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator className="bg-slate-600" />
+
+            <div className="space-y-3">
+              <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
+              <BufferedSlider
+                value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
+                onValueCommit={(value) => {
+                  const probability = value[0];
+                  onUpdateScatterSettings({
+                    shapeSpecific: {
+                      ...scatterSettings.shapeSpecific,
+                      cubic: { 
+                        pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                        curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                        spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                        patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                        openProbability: probability
+                      }
+                    }
+                  });
+                }}
+                min={0}
+                max={100}
+                step={5}
+                className="w-full"
+              />
+            </div>
+          </div>
+        );
+
+      case 'square':
+        return null;
+
+      default:
+        return null;
+    }
+  }, [scatterSettings, onUpdateScatterSettings]);
+
+  return (
+    <div className="space-y-3">
+      {/* Internal accordion to control shape list visibility */}
+      <Accordion 
+        type="single" 
+        collapsible 
+        value={shapeListAccordionOpen} 
+        onValueChange={setShapeListAccordionOpen}
+        className="w-full"
+      >
+        <AccordionItem value="shape-list" className="border-0">
+          <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
+            <span>Shape List ({Object.keys(shapeTypeDisplayNames).length} types)</span>
+          </AccordionTrigger>
+          <AccordionContent className="pb-2">
+            <div className="space-y-3">
+              {/* Nested accordion for shape categories */}
+              <Accordion 
+                type="multiple" 
+                className="w-full"
+                value={openShapeCategories}
+                onValueChange={setOpenShapeCategories}
+              >
+                {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
+                  const enabledInCategory = categoryShapes.filter(shapeType => 
+                    enabledShapeTypes.has(shapeType)
+                  ).length;
+                  
+                  return (
+                    <AccordionItem key={categoryName} value={categoryName} className="border-slate-700">
+                      <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <span>{categoryName}</span>
+                          <span className="text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
+                            {enabledInCategory}/{categoryShapes.length}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-2 pt-2">
+                        {categoryShapes.map((shapeType) => {
+                          const displayName = shapeTypeDisplayNames[shapeType];
+                          const isEnabled = enabledShapeTypes.has(shapeType);
+                          const isExpanded = expandedShapes.has(shapeType);
+                          const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(shapeType);
+
+                          return (
+                            <div key={shapeType} className="space-y-2">
+                              {/* Shape Toggle Row */}
+                              <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                                isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+                              }`}>
+                                <div className="flex items-center space-x-3">
+                                  <div className={`w-3 h-3 rounded transition-colors ${
+                                    isEnabled ? 'bg-blue-400' : 'bg-slate-500'
+                                  }`} />
+                                  <Label className={`text-sm transition-colors ${
+                                    isEnabled ? 'text-blue-200' : 'text-slate-300'
+                                  }`}>{displayName}</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {isEnabled && hasProperties && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => toggleShapeExpansion(shapeType)}
+                                      className="p-1 h-6 w-6 hover:bg-slate-700"
+                                    >
+                                      <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
+                                        isExpanded ? 'rotate-180' : ''
+                                      }`} />
+                                    </Button>
+                                  )}
+                                  <Switch
+                                    checked={isEnabled}
+                                    onCheckedChange={() => onToggleShapeType(shapeType)}
+                                    className="data-[state=checked]:bg-blue-600"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {/* Shape Properties (Accordion Content) */}
+                              {isEnabled && isExpanded && hasProperties && (
+                                <div className="ml-4">
+                                  {getShapeProperties(shapeType)}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+              
+              {/* Separator inside accordion so it disappears when collapsed */}
+              <Separator className="bg-slate-600" />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* All On/Off Buttons */}
+      <div className="flex gap-2 py-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const allTypes = Object.keys(shapeTypeDisplayNames) as ShapeType[];
+            allTypes.forEach(type => {
+              if (!enabledShapeTypes.has(type)) {
+                onToggleShapeType(type);
+              }
+            });
+          }}
+          className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+        >
+          All On
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const enabledTypes = Array.from(enabledShapeTypes);
+            enabledTypes.forEach(type => {
+              onToggleShapeType(type);
+            });
+          }}
+          className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+        >
+          All Off
+        </Button>
+      </div>
+
+      {/* Shape Count Settings */}
+      <div className="space-y-2 pb-6">
+        <div className="flex items-center space-x-2">
+          <Label className="text-xs text-slate-400">Shape Count</Label>
+          <Select 
+            value={scatterSettings.shapeCountMode || 'range'} 
+            onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
+          >
+            <SelectTrigger className="h-8 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200 px-2 py-3">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-slate-600">
+              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {scatterSettings.shapeCountMode === 'range' ? (
+          <BufferedRangeSliderWithNumericInputs
+            value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
+            onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+            min={1}
+            max={50}
+            step={1}
+            minLabel="Min"
+            maxLabel="Max"
+          />
+        ) : (
+          <BufferedSliderWithNumericInput
+            value={scatterSettings.fixedShapeCount || 10}
+            onValueCommit={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
+            min={1}
+            max={50}
+            step={1}
+            sliderClassName="w-full pt-2"
+          />
+        )}
+      </div>
+
+
+      {/* Apply and Generate Buttons */}
+      <div className="flex flex-col gap-2">
+        {setsEnabled && (
+          <Button 
+            onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
+            disabled={!currentGenerationSetId || !updateGenerationSetPartial}
+            className={`w-full h-8 ${
+              !currentGenerationSetId || !updateGenerationSetPartial
+                ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                : applyStatus === 'applying'
+                ? 'bg-blue-600 text-white cursor-not-allowed'
+                : applyStatus === 'success'
+                ? 'bg-green-600 text-white cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            } transition-colors duration-200`}
+            data-testid="button-apply-shape-types"
+          >
+            <div className="flex items-center space-x-2">
+              {!currentGenerationSetId || !updateGenerationSetPartial ? (
+                <AlertTriangle className="w-4 h-4" />
+              ) : applyStatus === 'applying' ? (
+                <>
+                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span>Applying...</span>
+                </>
+              ) : applyStatus === 'success' ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Applied!</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Apply</span>
+                </>
+              )}
+            </div>
+          </Button>
+        )}
+        <Button 
+          onClick={onGenerateRandomShapes}
+          className="w-full h-8 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+        >
+          <Wand2 className="w-4 h-4 mr-2" />
+          {scatterSettings.shapeCountMode === 'fixed' 
+            ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
+            : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
+          }
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
@@ -5407,681 +6104,53 @@ export default function Sidebar({
     handleOpenManager
   ]);
 
-  // Variant-aware ShapeTypesSection that includes Shape Sets UI + ShapeTypesContent
+  // Variant-aware ShapeTypesSection that includes Shape Sets UI + ShapeTypesContentMemo
   const ShapeTypesSection = useCallback(({ variant }: { variant: 'expanded' | 'collapsed' }) => {
     return (
       <>
         {ShapeSetsUI}
-        <ShapeTypesContent />
+        <ShapeTypesContentMemo
+          scatterSettings={scatterSettings}
+          onUpdateScatterSettings={onUpdateScatterSettings}
+          enabledShapeTypes={enabledShapeTypes}
+          onToggleShapeType={onToggleShapeType}
+          shapeListAccordionOpen={shapeListAccordionOpen}
+          setShapeListAccordionOpen={setShapeListAccordionOpen}
+          openShapeCategories={openShapeCategories}
+          setOpenShapeCategories={setOpenShapeCategories}
+          expandedShapes={expandedShapes}
+          toggleShapeExpansion={toggleShapeExpansion}
+          setsEnabled={setsEnabled}
+          currentGenerationSetId={currentGenerationSetId}
+          updateGenerationSetPartial={updateGenerationSetPartial}
+          applyStatus={applyStatus}
+          handleApplyToCurrentSet={handleApplyToCurrentSet}
+          onGenerateRandomShapes={onGenerateRandomShapes}
+        />
       </>
     );
-  }, [ShapeSetsUI]);
+  }, [
+    ShapeSetsUI, 
+    scatterSettings, 
+    onUpdateScatterSettings, 
+    enabledShapeTypes, 
+    onToggleShapeType, 
+    shapeListAccordionOpen,
+    openShapeCategories,
+    expandedShapes,
+    toggleShapeExpansion,
+    setsEnabled,
+    currentGenerationSetId,
+    updateGenerationSetPartial,
+    applyStatus,
+    handleApplyToCurrentSet,
+    onGenerateRandomShapes
+  ]);
 
   // Create stable collapsed content component
   const CollapsedShapeTypesContent = useCallback(() => {
     return <ShapeTypesSection variant="collapsed" />;
   }, [ShapeTypesSection]);
-
-  function ShapeTypesContent() {
-
-    const getShapeProperties = (shapeType: string) => {
-      switch (shapeType) {
-        case 'polygon':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Edge Count"
-                config={convertScatterToModeConfig('polygon', 'edgeCount', scatterSettings, [3, 20])}
-                onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 3, max: 20 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-        
-        case 'line-vector':
-          // Deep merge with defaults to backfill missing fields in legacy configs
-          const lineVectorConfig = { 
-            ...getDefaultLineVectorConfig(), 
-            ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
-          };
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Direction"
-                config={convertLineVectorToModeConfig(lineVectorConfig.direction)}
-                onChange={(modeConfig) => {
-                  handleLineVectorModeConfigChange('direction', modeConfig, scatterSettings, onUpdateScatterSettings);
-                }}
-                bounds={{ min: 0, max: 360 }}
-                unit="°"
-                step={15}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <StyledModeField
-                label="Length"
-                config={convertLineVectorToModeConfig(lineVectorConfig.length)}
-                onChange={(modeConfig) => {
-                  handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
-                }}
-                bounds={{ min: 0, max: 500 }}
-                unit="px"
-                step={5}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <StyledModeField
-                label="Centroid"
-                config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
-                onChange={(modeConfig) => {
-                  handleLineVectorModeConfigChange('centroid', modeConfig, scatterSettings, onUpdateScatterSettings);
-                }}
-                bounds={{ min: 0, max: 1 }}
-                step={0.01}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
-                <div className="space-y-2">
-                  {['round', 'square', 'butt'].map((cap) => (
-                    <div key={cap} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300 capitalize">{cap}</span>
-                        <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
-                      </div>
-                      <BufferedSlider
-                        value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
-                        onValueCommit={(value) => {
-                          const probability = value[0];
-                          onUpdateScatterSettings({
-                            shapeSpecific: {
-                              ...scatterSettings.shapeSpecific,
-                              'line-vector': { 
-                                ...lineVectorConfig,
-                                strokeCapProbabilities: {
-                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.round || 0),
-                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.square || 0),
-                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.butt || 0)
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        min={0}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        
-        case 'circle':
-        case 'ellipse':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Segment Count"
-                config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
-                onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 8, max: 64 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-        
-        case 'bezier':
-        case 'smooth-spline':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Point Count"
-                config={convertScatterToModeConfig(shapeType, 'pointCount', scatterSettings, [3, 6])}
-                onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 3, max: 10 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
-                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
-                  </div>
-                  <BufferedSlider
-                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
-                    onValueCommit={([value]) => {
-                      console.log(`${shapeType} open probability: ${value}%`);
-                      onUpdateScatterSettings({
-                        shapeSpecific: {
-                          ...scatterSettings.shapeSpecific,
-                          [shapeType]: { 
-                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
-                            openProbability: value 
-                          }
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
-                <div className="space-y-2">
-                  {['round', 'square', 'butt'].map((cap) => {
-                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] ?? (cap === 'round' ? 50 : 25);
-                    return (
-                      <div key={cap} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <Label className="text-slate-300 capitalize">{cap}</Label>
-                          <span className="text-slate-400">{currentValue}%</span>
-                        </div>
-                        <BufferedSlider
-                          value={[currentValue]}
-                          onValueCommit={([value]) => {
-                            console.log(`${shapeType} ${cap} cap: ${value}%`);
-                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
-                            onUpdateScatterSettings({
-                              shapeSpecific: {
-                                ...scatterSettings.shapeSpecific,
-                                [shapeType]: { 
-                                  ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
-                                  strokeCapProbabilities: {
-                                    ...currentCaps,
-                                    [cap]: value
-                                  }
-                                }
-                              }
-                            });
-                          }}
-                          min={0}
-                          max={100}
-                          step={5}
-                          className="w-full"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-
-        case 'star':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Point Count"
-                config={convertScatterToModeConfig('star', 'pointCount', scatterSettings, [5, 8])}
-                onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 5, max: 12 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <StyledModeField
-                label="Inner Radius"
-                config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
-                onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 10, max: 90 }}
-                step={1}
-                unit="%"
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-
-        case 'ring':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Inner Radius"
-                config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
-                onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 10, max: 90 }}
-                step={1}
-                unit="%"
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-
-        case 'spline-ring':
-          return (
-            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Inner Radius"
-                config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
-                onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 10, max: 90 }}
-                step={1}
-                unit="%"
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-
-        case 'line':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Point Count"
-                config={convertScatterToModeConfig('line', 'pointCount', scatterSettings, [2, 4])}
-                onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 2, max: 8 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-              <div className="space-y-2">
-                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
-                <div className="space-y-2">
-                  {['round', 'square', 'butt'].map((cap) => (
-                    <div key={cap} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300 capitalize">{cap}</span>
-                        <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
-                      </div>
-                      <BufferedSlider
-                        value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
-                        onValueCommit={(value) => {
-                          const probability = value[0];
-                          onUpdateScatterSettings({
-                            shapeSpecific: {
-                              ...scatterSettings.shapeSpecific,
-                              line: { 
-                                pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
-                                strokeCapProbabilities: {
-                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
-                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
-                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        min={0}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-
-        case 'rectangle':
-          return null; // Standard rectangle has no properties
-          
-        case 'rounded-rectangle':
-        case 'rounded-square':
-          return (
-            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Corner Radius"
-                config={convertScatterToModeConfig(shapeType, 'cornerRadius', scatterSettings, [0, 20])}
-                onChange={(config) => handleScatterModeConfigChange(shapeType, 'cornerRadius', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 0, max: 50 }}
-                step={1}
-                unit="px"
-                allowedModes={['fixed', 'range']}
-              />
-            </div>
-          );
-          
-        case 'cubic':
-          return (
-            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
-              <StyledModeField
-                label="Point Count"
-                config={convertScatterToModeConfig('cubic', 'pointCount', scatterSettings, [3, 7])}
-                onChange={(config) => handleScatterModeConfigChange('cubic', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 3, max: 8 }}
-                step={1}
-                allowedModes={['fixed', 'range']}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <StyledModeField
-                label="Curvature"
-                config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
-                onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 10, max: 100 }}
-                step={1}
-                unit="%"
-                allowedModes={['fixed', 'range']}
-              />
-              
-              <Separator className="bg-slate-600" />
-              
-              <StyledModeField
-                label="Curve Spread"
-                config={convertScatterToModeConfig('cubic', 'spread', scatterSettings, [40, 120])}
-                onChange={(config) => handleScatterModeConfigChange('cubic', 'spread', config, scatterSettings, onUpdateScatterSettings)}
-                bounds={{ min: 20, max: 200 }}
-                step={10}
-                unit="px"
-                allowedModes={['fixed', 'range']}
-              />
-              
-              <Separator className="bg-slate-600" />
-
-              <div className="space-y-3">
-                <Label className="text-xs text-slate-400">Curve Pattern</Label>
-                <Select 
-                  value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
-                  onValueChange={(value) => {
-                    onUpdateScatterSettings({
-                      shapeSpecific: {
-                        ...scatterSettings.shapeSpecific,
-                        cubic: { 
-                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                          patternType: parseInt(value),
-                          openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
-                        }
-                      }
-                    });
-                  }}
-                >
-                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Spiral</SelectItem>
-                    <SelectItem value="1">Wave</SelectItem>
-                    <SelectItem value="2">Organic</SelectItem>
-                    <SelectItem value="3">Arc</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator className="bg-slate-600" />
-
-              <div className="space-y-3">
-                <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
-                <BufferedSlider
-                  value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
-                  onValueCommit={(value) => {
-                    const probability = value[0];
-                    onUpdateScatterSettings({
-                      shapeSpecific: {
-                        ...scatterSettings.shapeSpecific,
-                        cubic: { 
-                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                          patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                          openProbability: probability
-                        }
-                      }
-                    });
-                  }}
-                  min={0}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
-              </div>
-            </div>
-          );
-
-        case 'square':
-          return null; // Standard square has no properties
-
-        default:
-          return null;
-      }
-    };
-
-    return (
-      <div className="space-y-3">
-        {/* Internal accordion to control shape list visibility */}
-        <Accordion 
-          type="single" 
-          collapsible 
-          value={shapeListAccordionOpen} 
-          onValueChange={setShapeListAccordionOpen}
-          className="w-full"
-        >
-          <AccordionItem value="shape-list" className="border-0">
-            <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
-              <span>Shape List ({Object.keys(shapeTypeDisplayNames).length} types)</span>
-            </AccordionTrigger>
-            <AccordionContent className="pb-2">
-              <div className="space-y-3">
-                {/* Nested accordion for shape categories */}
-                <Accordion 
-                  type="multiple" 
-                  className="w-full"
-                  value={openShapeCategories}
-                  onValueChange={setOpenShapeCategories}
-                >
-                  {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
-                    const enabledInCategory = categoryShapes.filter(shapeType => 
-                      enabledShapeTypes.has(shapeType)
-                    ).length;
-                    
-                    return (
-                      <AccordionItem key={categoryName} value={categoryName} className="border-slate-700">
-                        <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <span>{categoryName}</span>
-                            <span className="text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
-                              {enabledInCategory}/{categoryShapes.length}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-2 pt-2">
-                          {categoryShapes.map((shapeType) => {
-                            const displayName = shapeTypeDisplayNames[shapeType];
-                            const isEnabled = enabledShapeTypes.has(shapeType);
-                            const isExpanded = expandedShapes.has(shapeType);
-                            const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(shapeType);
-
-                            return (
-                              <div key={shapeType} className="space-y-2">
-                                {/* Shape Toggle Row */}
-                                <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                                  isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-                                }`}>
-                                  <div className="flex items-center space-x-3">
-                                    <div className={`w-3 h-3 rounded transition-colors ${
-                                      isEnabled ? 'bg-blue-400' : 'bg-slate-500'
-                                    }`} />
-                                    <Label className={`text-sm transition-colors ${
-                                      isEnabled ? 'text-blue-200' : 'text-slate-300'
-                                    }`}>{displayName}</Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {isEnabled && hasProperties && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => toggleShapeExpansion(shapeType)}
-                                        className="p-1 h-6 w-6 hover:bg-slate-700"
-                                      >
-                                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
-                                          isExpanded ? 'rotate-180' : ''
-                                        }`} />
-                                      </Button>
-                                    )}
-                                    <Switch
-                                      checked={isEnabled}
-                                      onCheckedChange={() => onToggleShapeType(shapeType)}
-                                      className="data-[state=checked]:bg-blue-600"
-                                    />
-                                  </div>
-                                </div>
-                                
-                                {/* Shape Properties (Accordion Content) */}
-                                {isEnabled && isExpanded && hasProperties && (
-                                  <div className="ml-4">
-                                    {getShapeProperties(shapeType)}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
-                
-                {/* Separator inside accordion so it disappears when collapsed */}
-                <Separator className="bg-slate-600" />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* All On/Off Buttons */}
-        <div className="flex gap-2 py-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const allTypes = Object.keys(shapeTypeDisplayNames) as ShapeType[];
-              allTypes.forEach(type => {
-                if (!enabledShapeTypes.has(type)) {
-                  onToggleShapeType(type);
-                }
-              });
-            }}
-            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
-          >
-            All On
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const enabledTypes = Array.from(enabledShapeTypes);
-              enabledTypes.forEach(type => {
-                onToggleShapeType(type);
-              });
-            }}
-            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
-          >
-            All Off
-          </Button>
-        </div>
-
-        {/* Shape Count Settings */}
-        <div className="space-y-2 pb-6">
-          <div className="flex items-center space-x-2">
-            <Label className="text-xs text-slate-400">Shape Count</Label>
-            <Select 
-              value={scatterSettings.shapeCountMode || 'range'} 
-              onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
-            >
-              <SelectTrigger className="h-8 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200 px-2 py-3">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {scatterSettings.shapeCountMode === 'range' ? (
-            <BufferedRangeSliderWithNumericInputs
-              value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
-              onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
-              min={1}
-              max={50}
-              step={1}
-              minLabel="Min"
-              maxLabel="Max"
-            />
-          ) : (
-            <BufferedSliderWithNumericInput
-              value={scatterSettings.fixedShapeCount || 10}
-              onValueCommit={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
-              min={1}
-              max={50}
-              step={1}
-              sliderClassName="w-full pt-2"
-            />
-          )}
-        </div>
-
-
-        {/* Apply and Generate Buttons */}
-        <div className="flex flex-col gap-2">
-          {setsEnabled && (
-            <Button 
-              onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
-              disabled={!currentGenerationSetId || !updateGenerationSetPartial}
-              className={`w-full h-8 ${
-                !currentGenerationSetId || !updateGenerationSetPartial
-                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                  : applyStatus === 'applying'
-                  ? 'bg-blue-600 text-white cursor-not-allowed'
-                  : applyStatus === 'success'
-                  ? 'bg-green-600 text-white cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              } transition-colors duration-200`}
-              data-testid="button-apply-shape-types"
-            >
-              <div className="flex items-center space-x-2">
-                {!currentGenerationSetId || !updateGenerationSetPartial ? (
-                  <AlertTriangle className="w-4 h-4" />
-                ) : applyStatus === 'applying' ? (
-                  <>
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    <span>Applying...</span>
-                  </>
-                ) : applyStatus === 'success' ? (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Applied!</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Apply</span>
-                  </>
-                )}
-              </div>
-            </Button>
-          )}
-          <Button 
-            onClick={onGenerateRandomShapes}
-            className="w-full h-8 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-          >
-            <Wand2 className="w-4 h-4 mr-2" />
-            {scatterSettings.shapeCountMode === 'fixed' 
-              ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
-              : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
-            }
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   function CompositionContent() {
     return (
