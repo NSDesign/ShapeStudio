@@ -9,6 +9,7 @@ if (typeof window !== 'undefined') {
   (window as unknown as { pako: typeof pako }).pako = pako;
 }
 import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
+import { executeServerExport, ServerExportRequest } from '@/lib/imageExport';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
@@ -899,6 +900,7 @@ export default function Sidebar({
   const [isTiffPreflightOpen, setIsTiffPreflightOpen] = useState(false);
   const [pendingTiffExport, setPendingTiffExport] = useState<boolean>(false);
   const pendingTiffExportRef = useRef<(() => void) | null>(null);
+  const [isServerExportingGlobal, setIsServerExportingGlobal] = useState(false);
   
   // Global repetition settings for generation sets
   const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
@@ -2478,6 +2480,8 @@ export default function Sidebar({
     const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig ?? DEFAULT_PRINT_CONFIG;
     const bleedEnabled = printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0;
     const backgroundMode = exportSettings.exportBackgroundMode || 'transparent';
+    const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
+    const scale = exportScale;
     
     return calculateTiffPreflightInfo(
       artboardWidth,
@@ -2485,9 +2489,11 @@ export default function Sidebar({
       artboardDpi,
       requestedCount,
       bleedEnabled,
-      backgroundMode
+      backgroundMode,
+      is16Bit,
+      scale
     );
-  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode]);
+  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode, exportSettings.tiffBitDepth, exportScale]);
   
   // Handle TIFF pre-flight modal confirmation
   const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
@@ -2579,6 +2585,7 @@ export default function Sidebar({
     // Local export state (not needed by API generator)
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
+    // Server export state is managed at the Sidebar component level (isServerExportingGlobal) for proper modal synchronization
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchTotalSteps, setBatchTotalSteps] = useState(0);
     const [batchStatus, setBatchStatus] = useState('');
@@ -3379,18 +3386,170 @@ export default function Sidebar({
       await exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
     };
 
+    // Server-side high-resolution export handler
+    const handleServerExport = async () => {
+      setIsServerExportingGlobal(true);
+      setBatchStatus('Processing on server...');
+      setBatchProgress(10);
+      
+      try {
+        const backgroundArtboard = artboards.find(ab => ab.id === activeArtboard);
+        const targetArtboard = exportMode === 'artboard' 
+          ? (selectedArtboardForExport 
+              ? artboards.find(ab => ab.id === selectedArtboardForExport)
+              : backgroundArtboard)
+          : backgroundArtboard;
+        
+        const artboardWidth = targetArtboard?.width ?? backgroundArtboard?.width ?? 400;
+        const artboardHeight = targetArtboard?.height ?? backgroundArtboard?.height ?? 400;
+        const artboardDpi = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
+        const artboardBgColor = targetArtboard?.backgroundColor ?? backgroundArtboard?.backgroundColor ?? '#ffffff';
+        const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig;
+        
+        const bgMode = exportSettings.exportBackgroundMode || 'transparent';
+        const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
+        
+        // Determine which shapes to export based on export mode
+        // This mirrors the client-side export logic
+        let shapesToExport: Shape[] = [];
+        
+        if (exportMode === 'artboard' || exportMode === 'all') {
+          // Export all shapes - same behavior as client batch export
+          shapesToExport = shapes;
+        } else if (exportMode === 'selection') {
+          // Export only selected shapes
+          shapesToExport = selectedShapes;
+        } else {
+          // Default to all shapes
+          shapesToExport = shapes;
+        }
+        
+        // Serialize shapes with full data for server rendering (matching projectManager format)
+        const serializeShape = (shape: Shape) => ({
+          id: shape.id,
+          type: shape.type,
+          transform: shape.transform,
+          properties: shape.properties,
+          points: shape.points,
+          sides: shape.sides,
+          radius: shape.radius,
+          innerRadius: shape.innerRadius,
+          width: shape.width,
+          height: shape.height,
+          controlPoints: shape.controlPoints,
+          tangentHandles: shape.tangentHandles,
+          smoothPoints: shape.smoothPoints,
+          closed: shape.closed,
+          segments: shape.segments,
+          renderType: shape.renderType,
+          cornerRadius: shape.cornerRadius,
+          strokeCap: shape.strokeCap
+        });
+        
+        const serializedShapes = shapesToExport.map(serializeShape);
+        
+        // Serialize groups - include all groups that contain any of the shapes being exported
+        // Use all available groups, not just selectedGroups
+        const shapeIds = new Set(shapesToExport.map(s => s.id));
+        const allGroups = [...selectedGroups]; // selectedGroups contains all groups in the scene
+        const serializedGroups = allGroups
+          .filter(group => group.shapes.some(s => shapeIds.has(s.id)))
+          .map(group => ({
+            id: group.id,
+            transform: group.transform,
+            shapes: group.shapes.filter(s => shapeIds.has(s.id)).map(s => s.id)
+          }));
+        
+        const request: ServerExportRequest = {
+          shapes: serializedShapes,
+          groups: serializedGroups,
+          artboard: {
+            width: artboardWidth,
+            height: artboardHeight,
+            backgroundColor: artboardBgColor,
+            dpi: artboardDpi,
+            printConfig: printConfig
+          },
+          exportSettings: {
+            format: 'tiff',
+            bitDepth: is16Bit ? 16 : 8,
+            dpi: artboardDpi,
+            scale: exportScale,
+            includeBleed: printConfig?.overlays.bleed.render ?? false,
+            includePrintMarks: printConfig?.overlays.printMarks.render ?? false,
+            backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
+            backgroundMode: bgMode
+          }
+        };
+        
+        setBatchProgress(30);
+        setBatchStatus('Rendering on server...');
+        
+        console.log(`🖥️ SERVER EXPORT: Starting high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
+        
+        const blob = await executeServerExport(request);
+        
+        setBatchProgress(90);
+        setBatchStatus('Downloading...');
+        
+        // Download the file
+        const timestamp = Date.now();
+        const filename = `export-${timestamp}.tiff`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        setBatchProgress(100);
+        setBatchStatus('Export complete!');
+        console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+        
+        setTimeout(() => {
+          setIsServerExportingGlobal(false);
+          setBatchProgress(0);
+          setBatchStatus('');
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Server export failed:', error);
+        setBatchStatus(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        
+        setTimeout(() => {
+          setIsServerExportingGlobal(false);
+          setBatchProgress(0);
+          setBatchStatus('');
+        }, 3000);
+      }
+    };
+
     // Wrapper function that shows TIFF pre-flight modal if needed
     const handleBatchExportWithPreflight = useCallback(() => {
       if (!exportSettings.exportBatchModeEnabled) return;
       
       if (exportFormat === 'tiff' && !exportSettings.skipTiffPreflightModal) {
         // Store the export function to call after confirmation
-        pendingTiffExportRef.current = handleBatchExportNewInternal;
+        // Check if server export is needed
+        const preflightInfo = getTiffPreflightInfo();
+        if (preflightInfo.requiresServerExport) {
+          pendingTiffExportRef.current = handleServerExport;
+        } else {
+          pendingTiffExportRef.current = handleBatchExportNewInternal;
+        }
         setIsTiffPreflightOpen(true);
       } else {
+        // For TIFF exports that skip preflight, still check if server export is needed
+        if (exportFormat === 'tiff') {
+          const preflightInfo = getTiffPreflightInfo();
+          if (preflightInfo.requiresServerExport) {
+            handleServerExport();
+            return;
+          }
+        }
         handleBatchExportNewInternal();
       }
-    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat]);
+    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat, getTiffPreflightInfo]);
     
     // NEW BATCH EXPORT WITH ZIP PACKAGING (internal implementation)
     const handleBatchExportNewInternal = async () => {
@@ -8213,6 +8372,7 @@ export default function Sidebar({
         preflightInfo={getTiffPreflightInfo()}
         onConfirm={handleTiffPreflightConfirm}
         onCancel={handleTiffPreflightCancel}
+        isExporting={isServerExportingGlobal}
       />
     </div>
   );

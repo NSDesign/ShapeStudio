@@ -650,3 +650,219 @@ export class ImageExporter {
     }
   }
 }
+
+// Server-side high-resolution export utilities
+export interface ServerExportEstimate {
+  requiresServerExport: boolean;
+  reason: string | null;
+  estimatedDuration: number;
+  estimatedFileSizeMB: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  memoryRequiredMB: number;
+}
+
+export interface ServerExportRequest {
+  shapes: any[];
+  groups: any[];
+  artboard: {
+    width: number;
+    height: number;
+    backgroundColor: string;
+    dpi: number;
+    printConfig?: PrintConfig;
+  };
+  exportSettings: {
+    format: 'tiff' | 'png';
+    bitDepth: 8 | 16;
+    dpi?: number;
+    scale?: number;
+    includeBleed?: boolean;
+    includePrintMarks?: boolean;
+    backgroundColor?: string;
+    backgroundMode?: ExportBackgroundMode;
+  };
+}
+
+// Browser canvas limits
+const MAX_CANVAS_DIMENSION = 32767;
+const MAX_CANVAS_PIXELS = 268435456; // ~268M pixels
+const BROWSER_MEMORY_THRESHOLD_MB = 500; // Conservative threshold for browser memory
+
+export function calculateExportDimensions(
+  artboardWidth: number,
+  artboardHeight: number,
+  dpi: number,
+  scale: number = 1,
+  printConfig?: PrintConfig
+): { width: number; height: number; bleedPx: number; printMarksGutterPx: number } {
+  const config = printConfig || DEFAULT_PRINT_CONFIG;
+  const effectiveDpi = config.outputSpecs.dpi || dpi;
+  const overlayUnit = config.overlays.overlayUnit;
+  
+  // Calculate bleed expansion
+  let bleedPx = 0;
+  if (config.overlays.bleed.render && config.overlays.bleed.amount > 0) {
+    bleedPx = convertPrintUnitToPixels(
+      config.overlays.bleed.amount,
+      overlayUnit,
+      effectiveDpi
+    );
+  }
+  
+  // Calculate print marks gutter
+  let printMarksGutterPx = 0;
+  if (config.overlays.printMarks.render) {
+    const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+    let markLengthPx: number;
+    let markOffsetPx: number;
+    
+    if (scaleMode === 'percent') {
+      const minDimension = Math.min(artboardWidth, artboardHeight);
+      const markLengthPercent = config.overlays.printMarks.markLength || 3;
+      const markOffsetPercent = config.overlays.printMarks.markOffset || 1;
+      markLengthPx = (markLengthPercent / 100) * minDimension;
+      markOffsetPx = (markOffsetPercent / 100) * minDimension;
+    } else {
+      markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        overlayUnit,
+        effectiveDpi
+      );
+      markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        overlayUnit,
+        effectiveDpi
+      );
+    }
+    printMarksGutterPx = Math.ceil(markLengthPx + markOffsetPx);
+  }
+  
+  // Total expansion on each side
+  const expansionPerSide = bleedPx + printMarksGutterPx;
+  
+  // Final dimensions with scale
+  const width = Math.ceil((artboardWidth + (expansionPerSide * 2)) * scale);
+  const height = Math.ceil((artboardHeight + (expansionPerSide * 2)) * scale);
+  
+  return { width, height, bleedPx, printMarksGutterPx };
+}
+
+export function estimateMemoryUsage(width: number, height: number, bitDepth: 8 | 16 = 8): number {
+  const bytesPerPixel = bitDepth === 16 ? 8 : 4; // RGBA
+  const totalBytes = width * height * bytesPerPixel;
+  return totalBytes / (1024 * 1024); // MB
+}
+
+export function requiresServerExport(
+  artboardWidth: number,
+  artboardHeight: number,
+  dpi: number,
+  scale: number = 1,
+  format: ImageFormat = 'png',
+  bitDepth: 8 | 16 = 8,
+  printConfig?: PrintConfig
+): ServerExportEstimate {
+  // Calculate dimensions including bleed, print marks expansions and DPI scaling
+  const { width, height, bleedPx, printMarksGutterPx } = calculateExportDimensions(artboardWidth, artboardHeight, dpi, scale, printConfig);
+  
+  // Apply DPI scaling to get final canvas dimensions (base 72 DPI)
+  const baseDpi = 72;
+  const dpiScale = dpi / baseDpi;
+  const scaledWidth = Math.ceil(width * dpiScale);
+  const scaledHeight = Math.ceil(height * dpiScale);
+  
+  const memoryMB = estimateMemoryUsage(scaledWidth, scaledHeight, bitDepth);
+  const totalPixels = scaledWidth * scaledHeight;
+  
+  let requiresServer = false;
+  let reason: string | null = null;
+  
+  // Check dimension limits
+  if (scaledWidth > MAX_CANVAS_DIMENSION || scaledHeight > MAX_CANVAS_DIMENSION) {
+    requiresServer = true;
+    reason = `Canvas dimension ${Math.max(scaledWidth, scaledHeight)}px exceeds browser limit of ${MAX_CANVAS_DIMENSION}px`;
+  }
+  
+  // Check pixel count
+  if (!requiresServer && totalPixels > MAX_CANVAS_PIXELS) {
+    requiresServer = true;
+    reason = `Total pixels (${(totalPixels / 1000000).toFixed(1)}M) exceeds browser limit of ${(MAX_CANVAS_PIXELS / 1000000).toFixed(0)}M`;
+  }
+  
+  // Check memory threshold
+  if (!requiresServer && memoryMB > BROWSER_MEMORY_THRESHOLD_MB) {
+    requiresServer = true;
+    reason = `Estimated memory (${memoryMB.toFixed(0)}MB) exceeds browser threshold of ${BROWSER_MEMORY_THRESHOLD_MB}MB`;
+  }
+  
+  // 16-bit TIFF always uses server for better quality
+  if (!requiresServer && format === 'tiff' && bitDepth === 16) {
+    requiresServer = true;
+    reason = '16-bit TIFF requires server-side processing for proper bit depth';
+  }
+  
+  // Estimate duration (based on validation test results: ~5 seconds for integration test)
+  const baseDurationMs = 5000;
+  const pixelFactor = totalPixels / (3000 * 4000); // A4@300DPI as baseline
+  const estimatedDuration = Math.ceil(baseDurationMs * Math.max(1, pixelFactor));
+  
+  // Estimate file size (very rough: ~0.5 bytes per pixel for compressed TIFF/PNG)
+  const estimatedFileSizeMB = (totalPixels * 0.5) / (1024 * 1024);
+  
+  return {
+    requiresServerExport: requiresServer,
+    reason,
+    estimatedDuration,
+    estimatedFileSizeMB,
+    canvasWidth: scaledWidth,
+    canvasHeight: scaledHeight,
+    memoryRequiredMB: memoryMB
+  };
+}
+
+export async function fetchServerExportEstimate(
+  artboard: { width: number; height: number; dpi: number; printConfig?: PrintConfig },
+  exportSettings: { format?: ImageFormat; bitDepth?: 8 | 16; scale?: number }
+): Promise<ServerExportEstimate> {
+  try {
+    const response = await fetch('/api/export/high-resolution/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artboard, exportSettings })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server estimate failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    // Fall back to client-side calculation
+    console.warn('Server estimate failed, using client calculation:', error);
+    return requiresServerExport(
+      artboard.width,
+      artboard.height,
+      artboard.dpi,
+      exportSettings.scale || 1,
+      exportSettings.format || 'png',
+      exportSettings.bitDepth || 8,
+      artboard.printConfig
+    );
+  }
+}
+
+export async function executeServerExport(request: ServerExportRequest): Promise<Blob> {
+  const response = await fetch('/api/export/high-resolution', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Export failed' }));
+    throw new Error(error.error || error.message || 'Server export failed');
+  }
+  
+  return await response.blob();
+}
