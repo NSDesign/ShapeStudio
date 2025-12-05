@@ -122,6 +122,8 @@ export interface ExportSettingsConfig {
   tiffCompression: 'none' | 'deflate'; // TIFF compression: 'none' for uncompressed, 'deflate' for ZIP/Deflate (requires Pako.js)
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
   renderMode: ExportRenderMode;       // Render mode: 'auto' (smart detection), 'client' (browser), 'server' (headless)
+  flattenToRgb: boolean;              // Flatten to RGB (drop alpha) for ~10-20% smaller files; auto-enabled when background is artboard
+  matteColor: string;                 // Matte color for flattening transparent images to RGB (default: white)
   copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
   // Image metadata fields for export
   artistName: string;                 // Artist/Creator name (pre-filled from logged-in user, editable)
@@ -144,6 +146,8 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   tiffCompression: 'none',            // No compression by default (Deflate requires Pako.js)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
   renderMode: 'auto',                 // Auto mode by default - smart detection of client vs server
+  flattenToRgb: false,                // Off by default - user can enable for smaller files when transparency not needed
+  matteColor: '#ffffff',              // White matte color by default
   copyrightText: '',                  // Empty by default - user can add their copyright notice
   // Image metadata defaults
   artistName: '',                     // Empty by default - pre-filled from user profile on first load
