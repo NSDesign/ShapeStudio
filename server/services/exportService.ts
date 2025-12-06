@@ -12,7 +12,8 @@ import {
   SupportedShapeType,
   exportJobs,
   InsertExportJob,
-  ExportJob
+  ExportJob,
+  SSEExportEvent
 } from '../../shared/schema';
 import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
@@ -2040,7 +2041,7 @@ export type TileProgressCallback = (phase: string, current: number, total: numbe
 /**
  * SSE progress callback type - emits structured events for SSE streaming
  */
-export type SSEProgressCallback = (event: import('../../shared/schema').SSEExportEvent) => void;
+export type SSEProgressCallback = (event: SSEExportEvent) => void;
 
 /**
  * SSE export session for tracking active streaming exports
