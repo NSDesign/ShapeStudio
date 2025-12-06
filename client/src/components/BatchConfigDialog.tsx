@@ -5590,21 +5590,40 @@ export default function BatchConfigDialog({
                           {/* Stroke Color Subsection */}
                           <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Color</Label>
-                              <Select 
-                                value={currentSettings.strokeColorMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as 'range' | 'palette' | 'define' })}
-                              >
-                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-color-mode">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.strokeColorEnabled ?? true}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ strokeColorEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                  data-testid="checkbox-stroke-color-enabled"
+                                />
+                                <Label className="text-sm font-medium text-slate-200">Stroke Color</Label>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                {currentSettings.strokeColorEnabled !== false ? 
+                                  (currentSettings.strokeColorMode === 'range' ? 'Range' : 
+                                   currentSettings.strokeColorMode === 'palette' ? 'Palette' : 
+                                   'Define') : 'Disabled'}
+                              </span>
                             </div>
+                            
+                            {currentSettings.strokeColorEnabled !== false && (
+                              <>
+                              <div className="flex justify-end">
+                                <Select 
+                                  value={currentSettings.strokeColorMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ strokeColorMode: value as 'range' | 'palette' | 'define' })}
+                                >
+                                  <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-color-mode">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
       
                             {currentSettings.strokeColorMode === 'range' && (
                               <div className="space-y-3">
@@ -5788,6 +5807,8 @@ export default function BatchConfigDialog({
                                 </div>
                                 <p className="text-xs text-slate-500">All shapes use this exact color</p>
                               </div>
+                            )}
+                              </>
                             )}
                           </div>
                           
@@ -8341,10 +8362,10 @@ export default function BatchConfigDialog({
                         </div>
                         {currentSettings.echoSpread?.opacity?.enabled !== false && (
                           <>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-2">
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Start %</span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <NumericInput
                                 value={currentSettings.echoSpread?.opacity?.startOpacity ?? 80}
                                 onChange={(value) => handleSettingsUpdate({ 
@@ -8356,44 +8377,87 @@ export default function BatchConfigDialog({
                                 min={0}
                                 max={100}
                                 step={5}
-                                className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
                                 data-testid="input-echo-opacity-start"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.opacity?.startOpacity ?? 80]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, startOpacity: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
                           </div>
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Falloff %</span>
-                            <NumericInput
-                              value={currentSettings.echoSpread?.opacity?.falloffRate ?? 25}
-                              onChange={(value) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  opacity: { ...currentSettings.echoSpread?.opacity, falloffRate: Math.max(0, Math.min(100, value)) } 
-                                } 
-                              })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                              data-testid="input-echo-opacity-falloff"
-                            />
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.opacity?.falloffRate ?? 25}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, falloffRate: Math.max(0, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                data-testid="input-echo-opacity-falloff"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.opacity?.falloffRate ?? 25]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, falloffRate: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Min %</span>
-                            <NumericInput
-                              value={currentSettings.echoSpread?.opacity?.minOpacity ?? 5}
-                              onChange={(value) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  opacity: { ...currentSettings.echoSpread?.opacity, minOpacity: Math.max(0, Math.min(100, value)) } 
-                                } 
-                              })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                              data-testid="input-echo-opacity-min"
-                            />
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.opacity?.minOpacity ?? 5}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, minOpacity: Math.max(0, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                data-testid="input-echo-opacity-min"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.opacity?.minOpacity ?? 5]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, minOpacity: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
                           </div>
                         </div>
                         {currentSettings.echoSpread?.opacity?.jitter?.enabled && (
@@ -8402,15 +8466,26 @@ export default function BatchConfigDialog({
                               <span className="text-xs text-slate-500">Mode:</span>
                               <Select
                                 value={currentSettings.echoSpread?.opacity?.jitter?.mode ?? 'fixed'} 
-                                onValueChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    opacity: { 
-                                      ...currentSettings.echoSpread?.opacity, 
-                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, mode: value as 'fixed' | 'range' } 
+                                onValueChange={(value) => {
+                                  const mode = value as 'fixed' | 'range';
+                                  const currentJitter = currentSettings.echoSpread?.opacity?.jitter ?? {};
+                                  const safeJitter = {
+                                    enabled: currentJitter.enabled ?? true,
+                                    mode,
+                                    fixedAmount: currentJitter.fixedAmount ?? 10,
+                                    rangeMin: currentJitter.rangeMin ?? 0,
+                                    rangeMax: currentJitter.rangeMax ?? 20,
+                                  };
+                                  handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      opacity: { 
+                                        ...currentSettings.echoSpread?.opacity, 
+                                        jitter: safeJitter
+                                      } 
                                     } 
-                                  } 
-                                })}
+                                  });
+                                }}
                               >
                                 <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                   <SelectValue />
@@ -8477,7 +8552,7 @@ export default function BatchConfigDialog({
                                   min={-100}
                                   max={100}
                                   step={5}
-                                  inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                  inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                   sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                 />
                               </div>
@@ -8527,57 +8602,102 @@ export default function BatchConfigDialog({
                         </div>
                         {currentSettings.echoSpread?.blur?.enabled && (
                           <>
-                            <div className="grid grid-cols-3 gap-2 mt-2">
+                            <div className="space-y-2 mt-2">
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Start px</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.blur?.startBlur ?? 0}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      blur: { ...currentSettings.echoSpread?.blur, startBlur: Math.max(0, Math.min(50, value)) } 
-                                    } 
-                                  })}
-                                  min={0}
-                                  max={50}
-                                  step={1}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-blur-start"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.blur?.startBlur ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, startBlur: Math.max(0, Math.min(50, value)) } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-blur-start"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.blur?.startBlur ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, startBlur: value } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Delta px</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.blur?.blurDelta ?? 2}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      blur: { ...currentSettings.echoSpread?.blur, blurDelta: Math.max(0, Math.min(20, value)) } 
-                                    } 
-                                  })}
-                                  min={0}
-                                  max={20}
-                                  step={0.5}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-blur-delta"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.blur?.blurDelta ?? 2}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, blurDelta: Math.max(0, Math.min(20, value)) } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={20}
+                                    step={0.5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-blur-delta"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.blur?.blurDelta ?? 2]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, blurDelta: value } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={20}
+                                    step={0.5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Max px</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.blur?.maxBlur ?? 20}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      blur: { ...currentSettings.echoSpread?.blur, maxBlur: Math.max(0, Math.min(100, value)) } 
-                                    } 
-                                  })}
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-blur-max"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.blur?.maxBlur ?? 20}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, maxBlur: Math.max(0, Math.min(100, value)) } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-blur-max"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.blur?.maxBlur ?? 20]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { ...currentSettings.echoSpread?.blur, maxBlur: value } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                             </div>
                             {currentSettings.echoSpread?.blur?.jitter?.enabled && (
@@ -8586,15 +8706,26 @@ export default function BatchConfigDialog({
                                   <span className="text-xs text-slate-500">Mode:</span>
                                   <Select
                                     value={currentSettings.echoSpread?.blur?.jitter?.mode ?? 'fixed'} 
-                                    onValueChange={(value) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        blur: { 
-                                          ...currentSettings.echoSpread?.blur, 
-                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, mode: value as 'fixed' | 'range' } 
+                                    onValueChange={(value) => {
+                                      const mode = value as 'fixed' | 'range';
+                                      const currentJitter = currentSettings.echoSpread?.blur?.jitter ?? {};
+                                      const safeJitter = {
+                                        enabled: currentJitter.enabled ?? true,
+                                        mode,
+                                        fixedAmount: currentJitter.fixedAmount ?? 5,
+                                        rangeMin: currentJitter.rangeMin ?? 0,
+                                        rangeMax: currentJitter.rangeMax ?? 10,
+                                      };
+                                      handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          blur: { 
+                                            ...currentSettings.echoSpread?.blur, 
+                                            jitter: safeJitter
+                                          } 
                                         } 
-                                      } 
-                                    })}
+                                      });
+                                    }}
                                   >
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
@@ -8661,7 +8792,7 @@ export default function BatchConfigDialog({
                                       min={-50}
                                       max={50}
                                       step={1}
-                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>
@@ -8711,40 +8842,70 @@ export default function BatchConfigDialog({
                         </div>
                         {currentSettings.echoSpread?.scale?.enabled && (
                           <>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="space-y-2 mt-2">
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Start %</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.scale?.startScale ?? 100}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      scale: { ...currentSettings.echoSpread?.scale, startScale: Math.max(10, Math.min(200, value)) } 
-                                    } 
-                                  })}
-                                  min={10}
-                                  max={200}
-                                  step={5}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-scale-start"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.scale?.startScale ?? 100}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { ...currentSettings.echoSpread?.scale, startScale: Math.max(10, Math.min(200, value)) } 
+                                      } 
+                                    })}
+                                    min={10}
+                                    max={200}
+                                    step={5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-scale-start"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.scale?.startScale ?? 100]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { ...currentSettings.echoSpread?.scale, startScale: value } 
+                                      } 
+                                    })}
+                                    min={10}
+                                    max={200}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Delta %</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.scale?.scaleDelta ?? -10}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      scale: { ...currentSettings.echoSpread?.scale, scaleDelta: Math.max(-50, Math.min(50, value)) } 
-                                    } 
-                                  })}
-                                  min={-50}
-                                  max={50}
-                                  step={5}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-scale-delta"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.scale?.scaleDelta ?? -10}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { ...currentSettings.echoSpread?.scale, scaleDelta: Math.max(-50, Math.min(50, value)) } 
+                                      } 
+                                    })}
+                                    min={-50}
+                                    max={50}
+                                    step={5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-scale-delta"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.scale?.scaleDelta ?? -10]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { ...currentSettings.echoSpread?.scale, scaleDelta: value } 
+                                      } 
+                                    })}
+                                    min={-50}
+                                    max={50}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                             </div>
                             <div className="space-y-1 mt-2">
@@ -8760,7 +8921,7 @@ export default function BatchConfigDialog({
                                 min={1}
                                 max={500}
                                 step={5}
-                                inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
@@ -8770,15 +8931,26 @@ export default function BatchConfigDialog({
                                   <span className="text-xs text-slate-500">Mode:</span>
                                   <Select
                                     value={currentSettings.echoSpread?.scale?.jitter?.mode ?? 'fixed'} 
-                                    onValueChange={(value) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        scale: { 
-                                          ...currentSettings.echoSpread?.scale, 
-                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, mode: value as 'fixed' | 'range' } 
+                                    onValueChange={(value) => {
+                                      const mode = value as 'fixed' | 'range';
+                                      const currentJitter = currentSettings.echoSpread?.scale?.jitter ?? {};
+                                      const safeJitter = {
+                                        enabled: currentJitter.enabled ?? true,
+                                        mode,
+                                        fixedAmount: currentJitter.fixedAmount ?? 10,
+                                        rangeMin: currentJitter.rangeMin ?? 0,
+                                        rangeMax: currentJitter.rangeMax ?? 20,
+                                      };
+                                      handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          scale: { 
+                                            ...currentSettings.echoSpread?.scale, 
+                                            jitter: safeJitter
+                                          } 
                                         } 
-                                      } 
-                                    })}
+                                      });
+                                    }}
                                   >
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
@@ -8845,7 +9017,7 @@ export default function BatchConfigDialog({
                                       min={-100}
                                       max={100}
                                       step={5}
-                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>
@@ -8895,40 +9067,70 @@ export default function BatchConfigDialog({
                         </div>
                         {currentSettings.echoSpread?.rotation?.enabled && (
                           <>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="space-y-2 mt-2">
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Start °</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.rotation?.startRotation ?? 0}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      rotation: { ...currentSettings.echoSpread?.rotation, startRotation: Math.max(0, Math.min(360, value)) } 
-                                    } 
-                                  })}
-                                  min={0}
-                                  max={360}
-                                  step={5}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-rotation-start"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.rotation?.startRotation ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { ...currentSettings.echoSpread?.rotation, startRotation: Math.max(0, Math.min(360, value)) } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={360}
+                                    step={5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-rotation-start"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.rotation?.startRotation ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { ...currentSettings.echoSpread?.rotation, startRotation: value } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={360}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                               <div className="space-y-1">
                                 <span className="text-xs text-slate-500">Delta °</span>
-                                <NumericInput
-                                  value={currentSettings.echoSpread?.rotation?.rotationDelta ?? 0}
-                                  onChange={(value) => handleSettingsUpdate({ 
-                                    echoSpread: { 
-                                      ...currentSettings.echoSpread, 
-                                      rotation: { ...currentSettings.echoSpread?.rotation, rotationDelta: Math.max(-180, Math.min(180, value)) } 
-                                    } 
-                                  })}
-                                  min={-180}
-                                  max={180}
-                                  step={5}
-                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                  data-testid="input-echo-rotation-delta"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.rotation?.rotationDelta ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { ...currentSettings.echoSpread?.rotation, rotationDelta: Math.max(-180, Math.min(180, value)) } 
+                                      } 
+                                    })}
+                                    min={-180}
+                                    max={180}
+                                    step={5}
+                                    className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-rotation-delta"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.rotation?.rotationDelta ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { ...currentSettings.echoSpread?.rotation, rotationDelta: value } 
+                                      } 
+                                    })}
+                                    min={-180}
+                                    max={180}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
                               </div>
                             </div>
                             <div className="space-y-1 mt-2">
@@ -8944,7 +9146,7 @@ export default function BatchConfigDialog({
                                 min={-360}
                                 max={360}
                                 step={5}
-                                inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
@@ -8954,15 +9156,26 @@ export default function BatchConfigDialog({
                                   <span className="text-xs text-slate-500">Mode:</span>
                                   <Select
                                     value={currentSettings.echoSpread?.rotation?.jitter?.mode ?? 'fixed'} 
-                                    onValueChange={(value) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        rotation: { 
-                                          ...currentSettings.echoSpread?.rotation, 
-                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, mode: value as 'fixed' | 'range' } 
+                                    onValueChange={(value) => {
+                                      const mode = value as 'fixed' | 'range';
+                                      const currentJitter = currentSettings.echoSpread?.rotation?.jitter ?? {};
+                                      const safeJitter = {
+                                        enabled: currentJitter.enabled ?? true,
+                                        mode,
+                                        fixedAmount: currentJitter.fixedAmount ?? 15,
+                                        rangeMin: currentJitter.rangeMin ?? 0,
+                                        rangeMax: currentJitter.rangeMax ?? 30,
+                                      };
+                                      handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          rotation: { 
+                                            ...currentSettings.echoSpread?.rotation, 
+                                            jitter: safeJitter
+                                          } 
                                         } 
-                                      } 
-                                    })}
+                                      });
+                                    }}
                                   >
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
@@ -9029,7 +9242,7 @@ export default function BatchConfigDialog({
                                       min={-180}
                                       max={180}
                                       step={5}
-                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>

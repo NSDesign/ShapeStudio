@@ -1195,6 +1195,7 @@ export interface BatchConfigSettings {
   // Additional HSL controls for range mode
   strokeColorSaturationRange: [number, number]; // 0-100% for range mode
   strokeColorLightnessRange: [number, number]; // 0-100% for range mode
+  strokeColorEnabled: boolean; // Enable/disable stroke color configuration
   
   // Stroke Opacity Settings
   strokeOpacityEnabled: boolean;
@@ -1774,6 +1775,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // HSL range controls for range mode
   strokeColorSaturationRange: [60, 100],
   strokeColorLightnessRange: [20, 60],
+  strokeColorEnabled: true,
   
   // Stroke Opacity Settings
   strokeOpacityEnabled: true,
@@ -2871,6 +2873,7 @@ export const BatchConfigSettingsSchema = z.object({
   strokeColorDefine: z.string(),
   strokeColorSaturationRange: z.tuple([z.number(), z.number()]),
   strokeColorLightnessRange: z.tuple([z.number(), z.number()]),
+  strokeColorEnabled: z.boolean(),
   strokeOpacityEnabled: z.boolean(),
   strokeOpacityMode: z.enum(['range', 'define', 'incremental']),
   strokeOpacityRange: z.tuple([z.number(), z.number()]),

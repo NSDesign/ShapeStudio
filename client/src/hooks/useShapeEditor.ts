@@ -2419,20 +2419,24 @@ export const useShapeEditor = () => {
               shape.properties.strokeOpacity = 1; // Default to full opacity when disabled
             }
 
-            // Apply stroke color using range mode with saturation/lightness controls
-            const strokeColor = generateColor(
-              effectiveBatchConfig.strokeColorMode,
-              effectiveBatchConfig.strokeColorRange,
-              effectiveBatchConfig.strokeColorPalette,
-              effectiveBatchConfig.strokeColorDefine,
-              index,
-              effectiveBatchConfig.strokeColorMode === 'range' ? {
-                saturationRange: effectiveBatchConfig.strokeColorSaturationRange,
-                lightnessRange: effectiveBatchConfig.strokeColorLightnessRange,
-                flip: effectiveBatchConfig.strokeColorRangeFlip
-              } : undefined
-            );
-            shape.properties.strokeColor = strokeColor;
+            // Apply stroke color using range mode with saturation/lightness controls (only if strokeColorEnabled)
+            if (effectiveBatchConfig.strokeColorEnabled !== false) {
+              const strokeColor = generateColor(
+                effectiveBatchConfig.strokeColorMode,
+                effectiveBatchConfig.strokeColorRange,
+                effectiveBatchConfig.strokeColorPalette,
+                effectiveBatchConfig.strokeColorDefine,
+                index,
+                effectiveBatchConfig.strokeColorMode === 'range' ? {
+                  saturationRange: effectiveBatchConfig.strokeColorSaturationRange,
+                  lightnessRange: effectiveBatchConfig.strokeColorLightnessRange,
+                  flip: effectiveBatchConfig.strokeColorRangeFlip
+                } : undefined
+              );
+              shape.properties.strokeColor = strokeColor;
+            } else {
+              shape.properties.strokeColor = '#000000'; // Default to black when disabled
+            }
           }
         } else {
           // Stroke section disabled - ensure no stroke

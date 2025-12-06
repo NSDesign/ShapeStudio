@@ -780,19 +780,24 @@ export function generateShapesWithBatchConfig(
             shape.properties.strokeOpacity = 1; // Default to full opacity when disabled
           }
 
-          const strokeColor = generateColor(
-            batchConfig.strokeColorMode,
-            batchConfig.strokeColorRange,
-            batchConfig.strokeColorPalette,
-            batchConfig.strokeColorDefine,
-            index,
-            batchConfig.strokeColorMode === 'range' ? {
-              saturationRange: batchConfig.strokeColorSaturationRange,
-              lightnessRange: batchConfig.strokeColorLightnessRange,
-              flip: batchConfig.strokeColorRangeFlip
-            } : undefined
-          );
-          shape.properties.strokeColor = strokeColor;
+          // Apply stroke color (only if strokeColorEnabled)
+          if (batchConfig.strokeColorEnabled !== false) {
+            const strokeColor = generateColor(
+              batchConfig.strokeColorMode,
+              batchConfig.strokeColorRange,
+              batchConfig.strokeColorPalette,
+              batchConfig.strokeColorDefine,
+              index,
+              batchConfig.strokeColorMode === 'range' ? {
+                saturationRange: batchConfig.strokeColorSaturationRange,
+                lightnessRange: batchConfig.strokeColorLightnessRange,
+                flip: batchConfig.strokeColorRangeFlip
+              } : undefined
+            );
+            shape.properties.strokeColor = strokeColor;
+          } else {
+            shape.properties.strokeColor = '#000000'; // Default to black when disabled
+          }
         }
       } else {
         shape.properties.strokeColor = 'transparent';
