@@ -2569,6 +2569,7 @@ export class HighResolutionExportService {
     }
     
     // Create the full-size canvas as a Sharp instance
+    // Set limitInputPixels to false to allow processing very large print files (A0+ at 600 DPI)
     const channels = shouldFlattenToRgb ? 3 : 4;
     let compositeImage = sharp({
       create: {
@@ -2576,7 +2577,8 @@ export class HighResolutionExportService {
         height: canvasHeight,
         channels: channels as 3 | 4,
         background: sharpBackground
-      }
+      },
+      limitInputPixels: false
     });
     
     // Collect tile buffers for compositing
@@ -2864,7 +2866,8 @@ export class HighResolutionExportService {
   }): Promise<Buffer> {
     const { bitDepth, dpi, compression = 'none', flattenToRgb = false, matteColor = '#ffffff' } = options;
     
-    let pipeline = sharp(pngBuffer);
+    // Use limitInputPixels: false to allow processing very large print files
+    let pipeline = sharp(pngBuffer, { limitInputPixels: false });
     
     if (flattenToRgb) {
       const hexMatch = matteColor.match(/^#?([0-9a-fA-F]{6})$/);

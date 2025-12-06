@@ -3981,6 +3981,20 @@ export default function Sidebar({
                    shapeTop > bleedExpandedBounds.y + bleedExpandedBounds.height);
         });
 
+        // DEBUG: Log shape filtering results
+        console.log('🔍 [EXPORT DEBUG] Shape Filtering:', {
+          totalShapes: shapes.length,
+          shapesFoundInArtboard: shapesToExport.length,
+          artboardBounds: bleedExpandedBounds,
+          artboardPosition: { x: artboard.x, y: artboard.y },
+          sampleShapePositions: shapes.slice(0, 3).map(s => ({
+            id: s.id.slice(-8),
+            x: s.transform.x,
+            y: s.transform.y,
+            bounds: s.getBounds()
+          }))
+        });
+
         // Canvas dimensions include bleed and print marks gutter
         canvasWidth = (artboard.width + (printExpansion * 2)) * effectiveExportScale;
         canvasHeight = (artboard.height + (printExpansion * 2)) * effectiveExportScale;
@@ -4129,12 +4143,30 @@ export default function Sidebar({
         }
       }
 
-      if (shapesToExport.length === 0) return;
+      if (shapesToExport.length === 0) {
+        console.warn('⚠️ [EXPORT] No shapes found to export. Check if shapes overlap with the selected artboard.');
+        toast({
+          title: "No shapes to export",
+          description: "No shapes were found within the selected artboard bounds. Make sure your shapes are positioned on the artboard.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log(`✅ [EXPORT] Proceeding with export of ${shapesToExport.length} shapes`);
 
       // Create export canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        console.error('❌ [EXPORT] Failed to create canvas context');
+        toast({
+          title: "Export failed",
+          description: "Could not create canvas for rendering. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
