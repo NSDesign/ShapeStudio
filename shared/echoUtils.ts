@@ -41,7 +41,10 @@ const DEFAULT_ROTATION_CONFIG: EchoRotationConfig = {
 /**
  * Get per-effect jitter config with safe defaults
  * Handles legacy configs that don't have the jitter property
- * Also migrates legacy configs with old 'range' property to new structure
+ * 
+ * Legacy migration: Old configs had a single 'range' property representing ±range jitter.
+ * This is converted to 'range' mode with rangeMin: -legacyRange, rangeMax: +legacyRange
+ * to maintain the symmetric ±range behavior in the new system.
  */
 function getPerEffectJitter(jitter: EchoPerEffectJitterConfig | undefined): EchoPerEffectJitterConfig {
   if (!jitter) {
@@ -51,13 +54,16 @@ function getPerEffectJitter(jitter: EchoPerEffectJitterConfig | undefined): Echo
   // Check for legacy config (has 'range' but not 'mode')
   const legacyJitter = jitter as any;
   if (legacyJitter.range !== undefined && jitter.mode === undefined) {
-    // Migrate legacy config: treat 'range' as fixedAmount
+    // Convert legacy config to 'range' mode with symmetric ±range values
+    // Legacy behavior was: (random() * 2 - 1) * range → uniform from -range to +range
+    // New range mode with negative rangeMin achieves the same symmetric distribution
+    const legacyRange = legacyJitter.range ?? 0;
     return {
-      enabled: jitter.enabled,
-      mode: 'fixed',
-      fixedAmount: legacyJitter.range ?? 0,
-      rangeMin: 0,
-      rangeMax: legacyJitter.range ?? 0
+      enabled: jitter.enabled ?? false,
+      mode: 'range',
+      fixedAmount: 0,
+      rangeMin: -legacyRange,  // Symmetric negative bound
+      rangeMax: legacyRange     // Symmetric positive bound
     };
   }
   
@@ -325,14 +331,15 @@ export function applyPerEffectJitter(
     const sign = random() > 0.5 ? 1 : -1;
     return baseValue + (sign * fixedAmount);
   } else {
-    // Range mode: randomize between min and max
+    // Range mode: randomize between min and max (direct interpolation, no sign manipulation)
+    // This supports both symmetric ranges (e.g., -10 to +10 from legacy) and asymmetric ranges
     const rangeMin = effectJitter.rangeMin ?? 0;
     const rangeMax = effectJitter.rangeMax ?? 0;
     if (rangeMin === 0 && rangeMax === 0) return baseValue;
+    
+    // Direct interpolation: pick a random value between rangeMin and rangeMax
     const jitterAmount = rangeMin + (random() * (rangeMax - rangeMin));
-    // Apply with random sign for symmetric variation
-    const sign = random() > 0.5 ? 1 : -1;
-    return baseValue + (sign * jitterAmount);
+    return baseValue + jitterAmount;
   }
 }
 

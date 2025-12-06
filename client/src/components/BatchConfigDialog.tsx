@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig, migrateEchoJitter } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -152,7 +152,7 @@ export default function BatchConfigDialog({
 
   // Initialize settings with backward compatibility migration
   useEffect(() => {
-    const mergedSettings = { ...defaultSettings, ...settings };
+    let mergedSettings = { ...defaultSettings, ...settings };
     console.log('🔄 [DIALOG INIT] Incoming settings.cellConstraints:', JSON.stringify(settings.cellConstraints));
     console.log('🔄 [DIALOG INIT] Merged cellConstraints:', JSON.stringify(mergedSettings.cellConstraints));
     
@@ -178,6 +178,9 @@ export default function BatchConfigDialog({
         mergedSettings.gridMarginValue = 50;
       }
     }
+    
+    // Apply echo jitter migration for legacy configs
+    mergedSettings = migrateEchoJitter(mergedSettings) as BatchConfigSettings;
     
     setCurrentSettings(mergedSettings);
   }, [settings]);
@@ -8377,7 +8380,7 @@ export default function BatchConfigDialog({
                                       } 
                                     } 
                                   })}
-                                  min={0}
+                                  min={-100}
                                   max={100}
                                   step={5}
                                   inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
@@ -8559,7 +8562,7 @@ export default function BatchConfigDialog({
                                           } 
                                         } 
                                       })}
-                                      min={0}
+                                      min={-50}
                                       max={50}
                                       step={1}
                                       inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
@@ -8743,7 +8746,7 @@ export default function BatchConfigDialog({
                                           } 
                                         } 
                                       })}
-                                      min={0}
+                                      min={-100}
                                       max={100}
                                       step={5}
                                       inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
@@ -8927,7 +8930,7 @@ export default function BatchConfigDialog({
                                           } 
                                         } 
                                       })}
-                                      min={0}
+                                      min={-180}
                                       max={180}
                                       step={5}
                                       inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"

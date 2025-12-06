@@ -3467,6 +3467,81 @@ export function migrateTransformOrigin(settings: Partial<BatchConfigSettings> & 
 }
 
 /**
+ * Helper to migrate a single per-effect jitter config from legacy format
+ * Legacy configs had a single 'range' property, new configs have mode/fixedAmount/rangeMin/rangeMax
+ */
+function migratePerEffectJitter(jitter: any): EchoPerEffectJitterConfig | undefined {
+  if (!jitter) return undefined;
+  
+  // Check for legacy config (has 'range' but not 'mode')
+  if (jitter.range !== undefined && jitter.mode === undefined) {
+    const legacyRange = jitter.range ?? 0;
+    return {
+      enabled: jitter.enabled ?? false,
+      mode: 'range',
+      fixedAmount: 0,
+      rangeMin: -legacyRange,  // Symmetric negative bound
+      rangeMax: legacyRange    // Symmetric positive bound
+    };
+  }
+  
+  // Return as-is if already in new format or missing
+  return jitter;
+}
+
+/**
+ * Migrates echo spread per-effect jitter configs from legacy format
+ * Legacy configs had a single 'range' property representing ±range jitter
+ * New format uses mode/fixedAmount/rangeMin/rangeMax for more control
+ * 
+ * IMPORTANT: This function deep-clones all effect configs to avoid shared
+ * references that could leak legacy data back into the state.
+ * 
+ * @param settings - Batch config settings (may have legacy jitter configs)
+ * @returns Settings with migrated per-effect jitter configs (deep cloned)
+ */
+export function migrateEchoJitter(settings: Partial<BatchConfigSettings>): Partial<BatchConfigSettings> {
+  if (!settings.echoSpread) return settings;
+  
+  const echoSpread = settings.echoSpread;
+  
+  // Start by spreading ALL original echoSpread properties to preserve any fields
+  // Then deep clone nested objects to break references
+  const updatedEchoSpread: any = {
+    ...echoSpread,
+    // Deep clone direction config if present
+    direction: echoSpread.direction ? { ...echoSpread.direction } : echoSpread.direction,
+    // Deep clone position jitter config if present
+    jitter: echoSpread.jitter ? { ...echoSpread.jitter } : echoSpread.jitter
+  };
+  
+  // Check each effect for legacy jitter config and deep clone
+  const effects = ['opacity', 'blur', 'scale', 'rotation'] as const;
+  
+  for (const effect of effects) {
+    const effectConfig = (echoSpread as any)[effect];
+    if (effectConfig) {
+      // Deep clone the effect config
+      const clonedConfig: any = { ...effectConfig };
+      
+      // Migrate jitter if present
+      if (effectConfig.jitter) {
+        const migratedJitter = migratePerEffectJitter(effectConfig.jitter);
+        // Always deep clone the jitter config
+        clonedConfig.jitter = { ...migratedJitter };
+      }
+      
+      updatedEchoSpread[effect] = clonedConfig;
+    }
+  }
+  
+  return {
+    ...settings,
+    echoSpread: updatedEchoSpread
+  };
+}
+
+/**
  * Master migration function that applies all batch config migrations
  * This should be called at all persistence boundaries (load/save)
  * 
@@ -3483,6 +3558,7 @@ export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings
   let migrated = migrateSizeConstraintMode(settings);
   migrated = migrateRotationSettings(migrated);
   migrated = migrateTransformOrigin(migrated);
+  migrated = migrateEchoJitter(migrated);
   
   return migrated;
 }
