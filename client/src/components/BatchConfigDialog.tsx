@@ -8325,40 +8325,19 @@ export default function BatchConfigDialog({
                       
                       {/* Opacity Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={currentSettings.echoSpread?.opacity?.enabled ?? true}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  opacity: { ...currentSettings.echoSpread?.opacity, enabled: checked as boolean } 
-                                } 
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-opacity-enabled"
-                            />
-                            <Label className="text-xs text-slate-400">Opacity</Label>
-                          </div>
-                          {currentSettings.echoSpread?.opacity?.enabled !== false && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Jitter</span>
-                              <Checkbox
-                                checked={currentSettings.echoSpread?.opacity?.jitter?.enabled ?? false}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    opacity: { 
-                                      ...currentSettings.echoSpread?.opacity, 
-                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, enabled: checked as boolean } 
-                                    } 
-                                  } 
-                                })}
-                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-echo-opacity-jitter"
-                              />
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.opacity?.enabled ?? true}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                opacity: { ...currentSettings.echoSpread?.opacity, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-opacity-enabled"
+                          />
+                          <Label className="text-xs text-slate-400">Opacity</Label>
                         </div>
                         {currentSettings.echoSpread?.opacity?.enabled !== false && (
                           <>
@@ -8459,6 +8438,23 @@ export default function BatchConfigDialog({
                               />
                             </div>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.opacity?.jitter?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                opacity: { 
+                                  ...currentSettings.echoSpread?.opacity, 
+                                  jitter: { ...currentSettings.echoSpread?.opacity?.jitter, enabled: checked as boolean } 
+                                } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-opacity-jitter"
+                          />
+                          <span className="text-xs text-slate-400">Jitter</span>
                         </div>
                         {currentSettings.echoSpread?.opacity?.jitter?.enabled && (
                           <div className="mt-2 space-y-2">
@@ -8565,40 +8561,19 @@ export default function BatchConfigDialog({
 
                       {/* Blur Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={currentSettings.echoSpread?.blur?.enabled ?? false}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  blur: { ...currentSettings.echoSpread?.blur, enabled: checked as boolean } 
-                                } 
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-blur-enabled"
-                            />
-                            <Label className="text-xs text-slate-400">Blur</Label>
-                          </div>
-                          {currentSettings.echoSpread?.blur?.enabled && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Jitter</span>
-                              <Checkbox
-                                checked={currentSettings.echoSpread?.blur?.jitter?.enabled ?? false}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    blur: { 
-                                      ...currentSettings.echoSpread?.blur, 
-                                      jitter: { ...currentSettings.echoSpread?.blur?.jitter, enabled: checked as boolean } 
-                                    } 
-                                  } 
-                                })}
-                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-echo-blur-jitter"
-                              />
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.blur?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                blur: { ...currentSettings.echoSpread?.blur, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-blur-enabled"
+                          />
+                          <Label className="text-xs text-slate-400">Blur</Label>
                         </div>
                         {currentSettings.echoSpread?.blur?.enabled && (
                           <>
@@ -8699,6 +8674,23 @@ export default function BatchConfigDialog({
                                   />
                                 </div>
                               </div>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.blur?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    blur: { 
+                                      ...currentSettings.echoSpread?.blur, 
+                                      jitter: { ...currentSettings.echoSpread?.blur?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-blur-jitter"
+                              />
+                              <span className="text-xs text-slate-400">Jitter</span>
                             </div>
                             {currentSettings.echoSpread?.blur?.jitter?.enabled && (
                               <div className="mt-2 space-y-2">
@@ -8805,40 +8797,19 @@ export default function BatchConfigDialog({
 
                       {/* Scale Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={currentSettings.echoSpread?.scale?.enabled ?? false}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  scale: { ...currentSettings.echoSpread?.scale, enabled: checked as boolean } 
-                                } 
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-scale-enabled"
-                            />
-                            <Label className="text-xs text-slate-400">Scale</Label>
-                          </div>
-                          {currentSettings.echoSpread?.scale?.enabled && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Jitter</span>
-                              <Checkbox
-                                checked={currentSettings.echoSpread?.scale?.jitter?.enabled ?? false}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    scale: { 
-                                      ...currentSettings.echoSpread?.scale, 
-                                      jitter: { ...currentSettings.echoSpread?.scale?.jitter, enabled: checked as boolean } 
-                                    } 
-                                  } 
-                                })}
-                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-echo-scale-jitter"
-                              />
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.scale?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                scale: { ...currentSettings.echoSpread?.scale, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-scale-enabled"
+                          />
+                          <Label className="text-xs text-slate-400">Scale</Label>
                         </div>
                         {currentSettings.echoSpread?.scale?.enabled && (
                           <>
@@ -8924,6 +8895,23 @@ export default function BatchConfigDialog({
                                 inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.scale?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { 
+                                      ...currentSettings.echoSpread?.scale, 
+                                      jitter: { ...currentSettings.echoSpread?.scale?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-scale-jitter"
+                              />
+                              <span className="text-xs text-slate-400">Jitter</span>
                             </div>
                             {currentSettings.echoSpread?.scale?.jitter?.enabled && (
                               <div className="mt-2 space-y-2">
@@ -9030,40 +9018,19 @@ export default function BatchConfigDialog({
 
                       {/* Rotation Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={currentSettings.echoSpread?.rotation?.enabled ?? false}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  rotation: { ...currentSettings.echoSpread?.rotation, enabled: checked as boolean } 
-                                } 
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-rotation-enabled"
-                            />
-                            <Label className="text-xs text-slate-400">Rotation</Label>
-                          </div>
-                          {currentSettings.echoSpread?.rotation?.enabled && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-500">Jitter</span>
-                              <Checkbox
-                                checked={currentSettings.echoSpread?.rotation?.jitter?.enabled ?? false}
-                                onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    rotation: { 
-                                      ...currentSettings.echoSpread?.rotation, 
-                                      jitter: { ...currentSettings.echoSpread?.rotation?.jitter, enabled: checked as boolean } 
-                                    } 
-                                  } 
-                                })}
-                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                                data-testid="checkbox-echo-rotation-jitter"
-                              />
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.rotation?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                rotation: { ...currentSettings.echoSpread?.rotation, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-rotation-enabled"
+                          />
+                          <Label className="text-xs text-slate-400">Rotation</Label>
                         </div>
                         {currentSettings.echoSpread?.rotation?.enabled && (
                           <>
@@ -9149,6 +9116,23 @@ export default function BatchConfigDialog({
                                 inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.rotation?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    rotation: { 
+                                      ...currentSettings.echoSpread?.rotation, 
+                                      jitter: { ...currentSettings.echoSpread?.rotation?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-rotation-jitter"
+                              />
+                              <span className="text-xs text-slate-400">Jitter</span>
                             </div>
                             {currentSettings.echoSpread?.rotation?.jitter?.enabled && (
                               <div className="mt-2 space-y-2">
