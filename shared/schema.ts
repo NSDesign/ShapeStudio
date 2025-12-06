@@ -675,6 +675,136 @@ export const DEFAULT_CELL_CONSTRAINTS: CellConstraintsConfig = {
   showDebugGrid: false
 };
 
+// ===== ECHO/MOTION TRAILS CONFIGURATION =====
+// Echo/Motion Trails creates trailing copies of shapes with progressive effects
+// Project A: Set-Level only (scope locked to 'set', driver is setRepIndex)
+
+// Echo direction mode - how the echo direction is determined
+export type EchoDirectionMode = 'fixed-vector' | 'auto-motion';
+
+// Echo scope - which level echoes apply to (Project A: only 'set' is enabled)
+export type EchoScope = 'set' | 'shape' | 'both';
+
+// Echo driver - what determines echo progression (Project A: only 'setRepIndex' active)
+export type EchoDriver = 'setRepIndex' | 'shapeIndex' | 'combined';
+
+// Per-echo opacity settings
+export interface EchoOpacityConfig {
+  startOpacity: number;      // 0-100% - starting opacity for first echo
+  falloffRate: number;       // 0-100% - how fast opacity decreases per echo
+  minOpacity: number;        // 0-100% - minimum opacity floor
+}
+
+// Per-echo blur settings
+export interface EchoBlurConfig {
+  enabled: boolean;
+  startBlur: number;         // 0-50px - starting blur for first echo
+  blurDelta: number;         // 0-20px - blur increase per echo
+  maxBlur: number;           // 0-100px - maximum blur cap
+}
+
+// Per-echo scale settings
+export interface EchoScaleConfig {
+  enabled: boolean;
+  startScale: number;        // 10-200% - starting scale for first echo
+  scaleDelta: number;        // -50 to +50% - scale change per echo
+  minScale: number;          // 1-100% - minimum scale floor
+  maxScale: number;          // 100-500% - maximum scale cap
+}
+
+// Echo jitter settings for organic variation
+export interface EchoJitterConfig {
+  enabled: boolean;
+  distanceRange: number;     // 0-100px - random distance variation
+  angleRange: number;        // 0-180° - random angle variation
+}
+
+// Fixed-vector mode settings
+export interface EchoFixedVectorConfig {
+  angle: number;             // 0-360° - direction of echoes
+  distance: number;          // 0-500px - distance between echoes
+}
+
+// Auto-motion mode settings
+export interface EchoAutoMotionConfig {
+  fallbackAngle: number;     // 0-360° - angle when no motion detected
+  distanceMultiplier: number; // 0.1-5.0 - multiplier for detected motion
+}
+
+// Main Echo/Motion Trails configuration
+export interface EchoSpreadConfig {
+  version: number;           // Schema version for migrations (starts at 1)
+  enabled: boolean;
+  
+  // Scope and driver (Project A: scope locked to 'set', driver to 'setRepIndex')
+  scope: EchoScope;
+  driver: EchoDriver;
+  
+  // Echo count
+  echoCount: number;         // 1-20 - number of echo copies
+  
+  // Direction mode
+  directionMode: EchoDirectionMode;
+  fixedVector: EchoFixedVectorConfig;
+  autoMotion: EchoAutoMotionConfig;
+  
+  // Per-echo effects
+  opacity: EchoOpacityConfig;
+  blur: EchoBlurConfig;
+  scale: EchoScaleConfig;
+  rotationDelta: number;     // -180 to +180° - rotation change per echo
+  
+  // Jitter for organic variation
+  jitter: EchoJitterConfig;
+}
+
+// Default echo/motion trails configuration
+export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
+  version: 1,
+  enabled: false,
+  
+  scope: 'set',              // Project A: locked to 'set'
+  driver: 'setRepIndex',     // Project A: locked to 'setRepIndex'
+  
+  echoCount: 3,
+  
+  directionMode: 'fixed-vector',
+  fixedVector: {
+    angle: 225,              // Default: trailing behind (up-left)
+    distance: 20
+  },
+  autoMotion: {
+    fallbackAngle: 225,
+    distanceMultiplier: 1.0
+  },
+  
+  opacity: {
+    startOpacity: 80,
+    falloffRate: 25,
+    minOpacity: 10
+  },
+  blur: {
+    enabled: false,
+    startBlur: 0,
+    blurDelta: 2,
+    maxBlur: 20
+  },
+  scale: {
+    enabled: false,
+    startScale: 100,
+    scaleDelta: -5,
+    minScale: 20,
+    maxScale: 200
+  },
+  rotationDelta: 0,
+  
+  jitter: {
+    enabled: false,
+    distanceRange: 0,
+    angleRange: 0
+  }
+};
+
 export interface BatchConfigSettings {
   // Preset Selection
   selectedPreset: string;
@@ -1201,6 +1331,9 @@ export interface BatchConfigSettings {
   
   // Shape Effects
   shapeEffectsEnabled: boolean;
+  
+  // Echo/Motion Trails (Project A: Set-Level)
+  echoSpread: EchoSpreadConfig;
   
   // Color Harmony
   colorHarmonyEnabled: boolean;
@@ -1769,6 +1902,9 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Shape Effects
   shapeEffectsEnabled: false,
+  
+  // Echo/Motion Trails
+  echoSpread: DEFAULT_ECHO_SPREAD_CONFIG,
   
   colorHarmonyEnabled: false,
   harmonyType: 'complementary',
@@ -2846,6 +2982,48 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Shape effects
   shapeEffectsEnabled: z.boolean(),
+  
+  // Echo/Motion Trails (Project A: Set-Level)
+  echoSpread: z.object({
+    version: z.number(),
+    enabled: z.boolean(),
+    scope: z.enum(['set', 'shape', 'both']),
+    driver: z.enum(['setRepIndex', 'shapeIndex', 'combined']),
+    echoCount: z.number().min(1).max(20),
+    directionMode: z.enum(['fixed-vector', 'auto-motion']),
+    fixedVector: z.object({
+      angle: z.number().min(0).max(360),
+      distance: z.number().min(0).max(500)
+    }),
+    autoMotion: z.object({
+      fallbackAngle: z.number().min(0).max(360),
+      distanceMultiplier: z.number().min(0.1).max(5)
+    }),
+    opacity: z.object({
+      startOpacity: z.number().min(0).max(100),
+      falloffRate: z.number().min(0).max(100),
+      minOpacity: z.number().min(0).max(100)
+    }),
+    blur: z.object({
+      enabled: z.boolean(),
+      startBlur: z.number().min(0).max(50),
+      blurDelta: z.number().min(0).max(20),
+      maxBlur: z.number().min(0).max(100)
+    }),
+    scale: z.object({
+      enabled: z.boolean(),
+      startScale: z.number().min(10).max(200),
+      scaleDelta: z.number().min(-50).max(50),
+      minScale: z.number().min(1).max(100),
+      maxScale: z.number().min(100).max(500)
+    }),
+    rotationDelta: z.number().min(-180).max(180),
+    jitter: z.object({
+      enabled: z.boolean(),
+      distanceRange: z.number().min(0).max(100),
+      angleRange: z.number().min(0).max(180)
+    })
+  }),
   
   // Color harmony
   colorHarmonyEnabled: z.boolean(),
