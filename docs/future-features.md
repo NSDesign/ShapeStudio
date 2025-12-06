@@ -3207,6 +3207,144 @@ interface ExportProgressOverlayProps {
 
 ---
 
+## 10. Shape Selection Groups (Future Abstraction) 📋 PLANNED
+
+### Overview
+
+Shape Selection Groups is a proposed abstraction that unifies how different features target subsets of shapes. Currently, filtering logic is embedded directly in each feature (Shape Masking, Echo/Motion Trails applyTo, future effects). This creates duplication and prevents filter reuse across features.
+
+### Problem Statement
+
+Multiple features need to select subsets of shapes:
+
+| Feature | Current Filter Location | Filter Capabilities |
+|---------|------------------------|---------------------|
+| Shape Masking | `shapeMaskingConfig` at top-level | Grid position (alternating, pattern), invert, priority |
+| Echo/Motion Trails | `echoSpread.applyTo` in BatchConfig | Shape types, indices, probability |
+| Future Effects | (not yet built) | Would need similar filtering |
+
+Each feature reimplements similar concepts:
+- Index-based selection (all, even, odd, step)
+- Type-based filtering (rectangle, circle, etc.)
+- Probability/random sampling
+- Boolean logic (invert, combine)
+
+### Proposed Solution
+
+Create reusable **Shape Selection Groups** that can be:
+1. Defined once with a name and filter rules
+2. Referenced by ID in any feature that needs shape filtering
+3. Managed in a dedicated UI section
+4. Persisted and shared across features
+
+### Prospective API
+
+```typescript
+interface ShapeSelectionGroup {
+  id: string;
+  name: string;                      // User-friendly name
+  description?: string;              // Optional notes
+  
+  filters: ShapeSelectionFilter[];
+  combineMode: 'all' | 'any';        // AND vs OR logic
+  invert: boolean;                   // Flip selection
+}
+
+interface ShapeSelectionFilter {
+  type: 'shapeType' | 'index' | 'gridPosition' | 'probability' | 'setId' | 'property';
+  
+  // Type-specific config (union type)
+  shapeTypes?: ShapeType[];          // For 'shapeType' filter
+  indexMode?: 'all' | 'even' | 'odd' | 'step' | 'specific';
+  indexStep?: number;                // For step mode
+  specificIndices?: number[];        // For specific mode
+  gridPattern?: GridPositionPattern; // For 'gridPosition' filter
+  probability?: number;              // For 'probability' filter (0-1)
+  setIds?: string[];                 // For 'setId' filter
+  propertyName?: string;             // For 'property' filter
+  propertyComparator?: 'eq' | 'gt' | 'lt' | 'range';
+  propertyValue?: number | string | [number, number];
+}
+
+// Usage in Echo/Motion Trails
+interface EchoSpreadConfig {
+  enabled: boolean;
+  // ... other fields
+  
+  // Future: Replace embedded applyTo with reference
+  selectionGroupId?: string;         // Reference to ShapeSelectionGroup
+  
+  // Legacy: Keep for backward compatibility during migration
+  applyTo?: EchoApplyToConfig;       // Deprecated after migration
+}
+
+// Usage in Shape Masking
+interface ShapeMaskingConfig {
+  enabled: boolean;
+  
+  // Future: Reference selection group
+  selectionGroupId?: string;
+  
+  // Legacy: Keep current embedded config
+  gridPositionFilter?: GridPositionFilter;  // Deprecated after migration
+}
+```
+
+### UI Concept
+
+**Selection Groups Manager (new section in Sidebar):**
+- List of defined selection groups
+- Create/Edit/Delete groups
+- Preview which shapes a group selects
+- Duplicate groups for variations
+
+**Feature Integration:**
+- Features show dropdown to select existing group
+- "Create New Group" option in dropdown
+- "Edit" link to modify referenced group
+- Visual indicator showing group name and match count
+
+### Migration Strategy
+
+1. **Phase 1: Build Infrastructure**
+   - Implement `ShapeSelectionGroup` schema and storage
+   - Build Selection Groups Manager UI
+   - No feature integration yet
+
+2. **Phase 2: Add to New Features First**
+   - Echo/Motion Trails Project B uses selection groups natively
+   - Any new effects use selection groups from start
+
+3. **Phase 3: Migrate Existing Features**
+   - Add `selectionGroupId` field to Shape Masking
+   - Auto-migrate embedded filters to selection groups on project load
+   - Deprecation warnings for direct filter usage
+
+4. **Phase 4: Remove Legacy**
+   - Remove embedded filter fields from features
+   - Selection groups become the only way to filter shapes
+
+### Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| Reusability | Define once, use in Echo, Masking, future effects |
+| Consistency | All features use same filter logic and UI patterns |
+| Composability | Combine groups with AND/OR logic |
+| Discoverability | Central place to see all filter definitions |
+| Maintainability | Filter logic in one place, not spread across features |
+
+### Implementation Timeline
+
+Shape Selection Groups is planned for implementation **after** Echo/Motion Trails Project B completes. The Echo `applyTo` field names are designed to map cleanly to this abstraction when migration occurs.
+
+**Dependencies:**
+- Echo/Motion Trails Project A: No dependency (uses set-level only)
+- Echo/Motion Trails Project B: Uses `applyTo` with forward-compatible naming
+- Shape Selection Groups: Built as standalone, then connected to existing features
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
