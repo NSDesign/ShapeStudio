@@ -8552,7 +8552,7 @@ export default function BatchConfigDialog({
                                   min={-100}
                                   max={100}
                                   step={5}
-                                  inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                  inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                   sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                 />
                               </div>
@@ -8792,7 +8792,7 @@ export default function BatchConfigDialog({
                                       min={-50}
                                       max={50}
                                       step={1}
-                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>
@@ -8921,7 +8921,7 @@ export default function BatchConfigDialog({
                                 min={1}
                                 max={500}
                                 step={5}
-                                inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
@@ -9017,7 +9017,7 @@ export default function BatchConfigDialog({
                                       min={-100}
                                       max={100}
                                       step={5}
-                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>
@@ -9146,7 +9146,7 @@ export default function BatchConfigDialog({
                                 min={-360}
                                 max={360}
                                 step={5}
-                                inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                 sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
@@ -9242,7 +9242,7 @@ export default function BatchConfigDialog({
                                       min={-180}
                                       max={180}
                                       step={5}
-                                      inputClassName="h-9 w-20 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      inputClassName="h-9 min-w-[80px] bg-slate-800 border-slate-600 text-slate-200 text-xs"
                                       sliderClassName="[&_[role=slider]]:bg-cyan-600"
                                     />
                                   </div>
