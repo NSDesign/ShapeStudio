@@ -650,3 +650,403 @@ export class ImageExporter {
     }
   }
 }
+
+// Server-side high-resolution export utilities
+export interface ServerExportEstimate {
+  requiresServerExport: boolean;
+  reason: string | null;
+  estimatedDuration: number;
+  estimatedFileSizeMB: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  memoryRequiredMB: number;
+}
+
+export interface ServerExportRequest {
+  shapes: any[];
+  groups: any[];
+  artboard: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    backgroundColor: string;
+    dpi: number;
+    printConfig?: PrintConfig;
+  };
+  exportSettings: {
+    format: 'tiff' | 'png';
+    bitDepth: 8 | 16;
+    dpi?: number;
+    scale?: number;
+    includeBleed?: boolean;
+    includePrintMarks?: boolean;
+    backgroundColor?: string;
+    backgroundMode?: ExportBackgroundMode;
+    compression?: TiffCompression;
+  };
+}
+
+// Browser canvas limits
+const MAX_CANVAS_DIMENSION = 32767;
+const MAX_CANVAS_PIXELS = 268435456; // ~268M pixels
+const BROWSER_MEMORY_THRESHOLD_MB = 500; // Conservative threshold for browser memory
+
+export function calculateExportDimensions(
+  artboardWidth: number,
+  artboardHeight: number,
+  dpi: number,
+  scale: number = 1,
+  printConfig?: PrintConfig
+): { width: number; height: number; bleedPx: number; printMarksGutterPx: number } {
+  const config = printConfig || DEFAULT_PRINT_CONFIG;
+  const effectiveDpi = config.outputSpecs.dpi || dpi;
+  const overlayUnit = config.overlays.overlayUnit;
+  
+  // Calculate bleed expansion
+  let bleedPx = 0;
+  if (config.overlays.bleed.render && config.overlays.bleed.amount > 0) {
+    bleedPx = convertPrintUnitToPixels(
+      config.overlays.bleed.amount,
+      overlayUnit,
+      effectiveDpi
+    );
+  }
+  
+  // Calculate print marks gutter
+  let printMarksGutterPx = 0;
+  if (config.overlays.printMarks.render) {
+    const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+    let markLengthPx: number;
+    let markOffsetPx: number;
+    
+    if (scaleMode === 'percent') {
+      const minDimension = Math.min(artboardWidth, artboardHeight);
+      const markLengthPercent = config.overlays.printMarks.markLength || 3;
+      const markOffsetPercent = config.overlays.printMarks.markOffset || 1;
+      markLengthPx = (markLengthPercent / 100) * minDimension;
+      markOffsetPx = (markOffsetPercent / 100) * minDimension;
+    } else {
+      markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        overlayUnit,
+        effectiveDpi
+      );
+      markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        overlayUnit,
+        effectiveDpi
+      );
+    }
+    printMarksGutterPx = Math.ceil(markLengthPx + markOffsetPx);
+  }
+  
+  // Total expansion on each side
+  const expansionPerSide = bleedPx + printMarksGutterPx;
+  
+  // Final dimensions with scale
+  const width = Math.ceil((artboardWidth + (expansionPerSide * 2)) * scale);
+  const height = Math.ceil((artboardHeight + (expansionPerSide * 2)) * scale);
+  
+  return { width, height, bleedPx, printMarksGutterPx };
+}
+
+export function estimateMemoryUsage(width: number, height: number, bitDepth: 8 | 16 = 8): number {
+  const bytesPerPixel = bitDepth === 16 ? 8 : 4; // RGBA
+  const totalBytes = width * height * bytesPerPixel;
+  return totalBytes / (1024 * 1024); // MB
+}
+
+export function requiresServerExport(
+  artboardWidth: number,
+  artboardHeight: number,
+  dpi: number,
+  scale: number = 1,
+  format: ImageFormat = 'png',
+  bitDepth: 8 | 16 = 8,
+  printConfig?: PrintConfig
+): ServerExportEstimate {
+  // Calculate dimensions including bleed, print marks expansions and DPI scaling
+  const { width, height, bleedPx, printMarksGutterPx } = calculateExportDimensions(artboardWidth, artboardHeight, dpi, scale, printConfig);
+  
+  // Apply DPI scaling to get final canvas dimensions (base 72 DPI)
+  const baseDpi = 72;
+  const dpiScale = dpi / baseDpi;
+  const scaledWidth = Math.ceil(width * dpiScale);
+  const scaledHeight = Math.ceil(height * dpiScale);
+  
+  const memoryMB = estimateMemoryUsage(scaledWidth, scaledHeight, bitDepth);
+  const totalPixels = scaledWidth * scaledHeight;
+  
+  let requiresServer = false;
+  let reason: string | null = null;
+  
+  // Check dimension limits
+  if (scaledWidth > MAX_CANVAS_DIMENSION || scaledHeight > MAX_CANVAS_DIMENSION) {
+    requiresServer = true;
+    reason = `Canvas dimension ${Math.max(scaledWidth, scaledHeight)}px exceeds browser limit of ${MAX_CANVAS_DIMENSION}px`;
+  }
+  
+  // Check pixel count
+  if (!requiresServer && totalPixels > MAX_CANVAS_PIXELS) {
+    requiresServer = true;
+    reason = `Total pixels (${(totalPixels / 1000000).toFixed(1)}M) exceeds browser limit of ${(MAX_CANVAS_PIXELS / 1000000).toFixed(0)}M`;
+  }
+  
+  // Check memory threshold
+  if (!requiresServer && memoryMB > BROWSER_MEMORY_THRESHOLD_MB) {
+    requiresServer = true;
+    reason = `Estimated memory (${memoryMB.toFixed(0)}MB) exceeds browser threshold of ${BROWSER_MEMORY_THRESHOLD_MB}MB`;
+  }
+  
+  // 16-bit TIFF always uses server for better quality
+  if (!requiresServer && format === 'tiff' && bitDepth === 16) {
+    requiresServer = true;
+    reason = '16-bit TIFF requires server-side processing for proper bit depth';
+  }
+  
+  // Estimate duration (based on validation test results: ~5 seconds for integration test)
+  const baseDurationMs = 5000;
+  const pixelFactor = totalPixels / (3000 * 4000); // A4@300DPI as baseline
+  const estimatedDuration = Math.ceil(baseDurationMs * Math.max(1, pixelFactor));
+  
+  // Estimate file size (very rough: ~0.5 bytes per pixel for compressed TIFF/PNG)
+  const estimatedFileSizeMB = (totalPixels * 0.5) / (1024 * 1024);
+  
+  return {
+    requiresServerExport: requiresServer,
+    reason,
+    estimatedDuration,
+    estimatedFileSizeMB,
+    canvasWidth: scaledWidth,
+    canvasHeight: scaledHeight,
+    memoryRequiredMB: memoryMB
+  };
+}
+
+export async function fetchServerExportEstimate(
+  artboard: { width: number; height: number; dpi: number; printConfig?: PrintConfig },
+  exportSettings: { format?: ImageFormat; bitDepth?: 8 | 16; scale?: number }
+): Promise<ServerExportEstimate> {
+  try {
+    const response = await fetch('/api/export/high-resolution/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artboard, exportSettings })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server estimate failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    // Fall back to client-side calculation
+    console.warn('Server estimate failed, using client calculation:', error);
+    return requiresServerExport(
+      artboard.width,
+      artboard.height,
+      artboard.dpi,
+      exportSettings.scale || 1,
+      exportSettings.format || 'png',
+      exportSettings.bitDepth || 8,
+      artboard.printConfig
+    );
+  }
+}
+
+export async function executeServerExport(request: ServerExportRequest): Promise<Blob> {
+  const response = await fetch('/api/export/high-resolution', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Export failed' }));
+    throw new Error(error.error || error.message || 'Server export failed');
+  }
+  
+  return await response.blob();
+}
+
+// SSE Export Types
+export interface SSEExportCallbacks {
+  onPhase?: (phase: string, message: string) => void;
+  onTile?: (tileIndex: number, totalTiles: number, step: 'render' | 'stitch', progressPct: number) => void;
+  onProgress?: (progressPct: number, status: string, estimatedSecondsRemaining?: number) => void;
+  onComplete?: (downloadUrl: string, filename: string, sizeBytes: number) => void;
+  onError?: (message: string) => void;
+}
+
+export interface SSEExportSession {
+  exportId: string;
+  streamUrl: string;
+  downloadUrl: string;
+}
+
+/**
+ * Start an SSE streaming export session
+ * Returns session info including exportId and stream URL
+ */
+export async function startSSEExport(request: ServerExportRequest): Promise<SSEExportSession> {
+  const response = await fetch('/api/export/highres/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to start export' }));
+    throw new Error(error.error || error.message || 'Failed to start SSE export');
+  }
+  
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to start SSE export');
+  }
+  
+  return {
+    exportId: data.exportId,
+    streamUrl: data.streamUrl,
+    downloadUrl: data.downloadUrl
+  };
+}
+
+/**
+ * Cancel an ongoing SSE export
+ */
+export async function cancelSSEExport(exportId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/export/highres/${exportId}`, {
+      method: 'DELETE'
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Download the completed export file
+ */
+export async function downloadSSEExportFile(downloadUrl: string): Promise<Blob> {
+  const response = await fetch(downloadUrl);
+  
+  if (!response.ok) {
+    throw new Error('Failed to download export file');
+  }
+  
+  return await response.blob();
+}
+
+/**
+ * Execute server export with SSE streaming for real-time progress updates
+ * This is the main function to use for SSE-based exports
+ */
+export function executeServerExportWithSSE(
+  request: ServerExportRequest,
+  callbacks: SSEExportCallbacks,
+  abortSignal?: AbortSignal
+): Promise<{ success: boolean; blob?: Blob; error?: string }> {
+  return new Promise(async (resolve) => {
+    let eventSource: EventSource | null = null;
+    let exportSession: SSEExportSession | null = null;
+    
+    // Handle abort
+    const handleAbort = async () => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      if (exportSession) {
+        await cancelSSEExport(exportSession.exportId);
+      }
+      resolve({ success: false, error: 'Export cancelled' });
+    };
+    
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', handleAbort);
+    }
+    
+    try {
+      // Start the export session
+      exportSession = await startSSEExport(request);
+      
+      // Connect to the SSE stream
+      eventSource = new EventSource(exportSession.streamUrl);
+      
+      eventSource.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'phase':
+              callbacks.onPhase?.(data.phase, data.message);
+              break;
+              
+            case 'tile':
+              callbacks.onTile?.(data.tileIndex, data.totalTiles, data.step, data.progressPct || 0);
+              break;
+              
+            case 'progress':
+              callbacks.onProgress?.(data.progressPct, data.status, data.estimatedSecondsRemaining);
+              break;
+              
+            case 'complete':
+              // Close the event source
+              if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+              }
+              
+              // Notify completion
+              callbacks.onComplete?.(data.downloadUrl, data.filename, data.sizeBytes || 0);
+              
+              // Download the file
+              try {
+                const blob = await downloadSSEExportFile(data.downloadUrl);
+                resolve({ success: true, blob });
+              } catch (downloadError) {
+                resolve({ 
+                  success: false, 
+                  error: `Download failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}` 
+                });
+              }
+              break;
+              
+            case 'error':
+              if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+              }
+              callbacks.onError?.(data.message);
+              resolve({ success: false, error: data.message });
+              break;
+              
+            case 'heartbeat':
+              // Keep-alive, no action needed
+              break;
+          }
+        } catch (parseError) {
+          console.error('Failed to parse SSE event:', parseError);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        callbacks.onError?.('Connection to export stream lost');
+        resolve({ success: false, error: 'SSE connection error' });
+      };
+      
+    } catch (startError) {
+      const errorMessage = startError instanceof Error ? startError.message : 'Failed to start export';
+      callbacks.onError?.(errorMessage);
+      resolve({ success: false, error: errorMessage });
+    }
+  });
+}

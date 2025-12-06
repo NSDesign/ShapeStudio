@@ -1186,7 +1186,7 @@ export default function Canvas({
             </Tooltip>
             
             <NumericInput
-              value={Math.round((canvasSettings.zoom && canvasSettings.zoom > 0.05 ? canvasSettings.zoom : 1) * 100)}
+              value={Math.round((canvasSettings.zoom || 1) * 100)}
               onChange={(value) => onZoomChange(value / 100)}
               min={5}
               max={500}

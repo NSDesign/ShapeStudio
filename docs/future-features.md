@@ -23,6 +23,8 @@ This document outlines complex features that have been identified for future dev
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
+| **Server-Side High-Resolution Export** | ✅ Complete | [Section 9](#9-server-side-high-resolution-export) |
+| **SSE Streaming for Export Progress** | ✅ Implemented | [Section 9.1](#91-sse-streaming-for-real-time-tile-progress-updates--implemented) |
 
 ### Status Legend
 - ✅ **Implemented**: Feature is fully functional in the codebase
@@ -2836,8 +2838,306 @@ All effects must render identically in:
 
 ---
 
+## 9. Server-Side High-Resolution Export ✅ COMPLETE - TESTING
+
+### Overview
+A server-side rendering system using Headless Chromium + Sharp library to overcome browser canvas memory limitations and produce professional print-quality exports (A4+ at 300+ DPI, 16-bit TIFF with sRGB ICC profiles).
+
+### Problem Statement
+Browser-based canvas rendering has inherent limitations:
+- **Memory ceiling**: ~600 MB per tab, limiting canvas size to approximately 8000×8000 pixels
+- **Bit depth**: Browser canvas only supports 8-bit color (256 levels per channel)
+- **ICC profiles**: No native support for embedding color profiles in exports
+- **Large exports**: A4 at 300 DPI (2480×3508 pixels) works, but A3/A2 at 300+ DPI exceeds browser limits
+
+### Solution: Headless Chromium + Sharp Pipeline
+Server-side rendering that:
+1. Receives serialized shape/artboard data from the frontend
+2. Renders shapes in headless Chrome using existing rendering logic
+3. Captures canvas as PNG buffer
+4. Pipes through Sharp for 16-bit TIFF conversion with sRGB ICC profiles and DPI metadata
+
+### Implementation Status ✅ COMPLETE - TESTING (December 2025)
+
+All validation tests passed successfully:
+
+| Phase | Test | Result | Details |
+|-------|------|--------|---------|
+| **1** | Puppeteer (Headless Chrome) | ✅ PASSED | Screenshot: 212 KB, uses system Chromium |
+| **2a** | Sharp 16-bit TIFF | ✅ PASSED | Depth: ushort (16-bit), DPI: 300, ICC: embedded |
+| **2b** | Sharp Large Image (A4 @ 300 DPI) | ✅ PASSED | 2480×3508px, 0.06 MB, 306ms |
+| **3** | Full Integration Pipeline | ✅ PASSED | Canvas→PNG→16-bit TIFF, 0.19 MB, 5s total |
+
+**Key Technical Findings:**
+- Sharp uses `.toColourspace('rgb16')` for true 16-bit output
+- Sharp reports 16-bit as `depth: 'ushort'` (unsigned short)
+- Use `.withMetadata()` to preserve ICC profiles (default strips them)
+- Use deflate compression for 16-bit TIFF (LZW increases file size)
+- Puppeteer requires `--no-sandbox` and `--disable-setuid-sandbox` flags on Replit
+
+### Implementation Phases
+
+#### Phase 1: Core Server Export Service ✅ COMPLETE
+Created the server-side rendering engine:
+
+**Files:**
+- `server/services/exportService.ts` - HighResolutionExportService class with headless Chrome rendering
+- `server/routes/export.ts` - POST /api/export/high-resolution endpoint
+
+**Functionality:**
+- Accept serialized shape/artboard data with full geometry (matching projectManager format)
+- Launch headless Chrome with embedded rendering logic
+- Capture canvas at requested DPI/resolution including bleed and print marks
+- Pipe through Sharp for 16-bit TIFF with sRGB ICC profiles
+- Memory management and cleanup
+
+**Data Flow:**
+```
+Frontend → POST /api/export/high-resolution
+         → { shapes, groups, artboard, exportSettings }
+         → Server renders in headless Chrome
+         → Sharp converts to 16-bit TIFF
+         → Returns TIFF file as download
+```
+
+#### Phase 2: Seamless Export Integration ✅ COMPLETE
+Integrated with existing export flow transparently:
+
+**Auto-Detection Logic (requiresServerExport in imageExport.ts):**
+```typescript
+// Calculates scaled dimensions with DPI and bleed/print mark expansion
+const dpiScale = dpi / 72;  // Base 72 DPI
+const scaledWidth = width * dpiScale;
+const scaledHeight = height * dpiScale;
+
+// Server export triggers:
+const needsServerExport = (
+  scaledWidth > 32767 || scaledHeight > 32767 ||  // Canvas dimension limit
+  totalPixels > 268_000_000 ||  // Browser pixel limit
+  memoryMB > 500 ||  // Memory threshold
+  format === 'tiff' && bitDepth === 16  // 16-bit TIFF required
+);
+```
+
+**Enhanced Preflight Dialog (TiffPreflightModal.tsx):**
+- Detects when server processing is required
+- Shows purple "Server Processing Required" section
+- Displays estimated processing time and file size
+- Shows reason why server processing is needed
+- Maintains existing "Don't show again" functionality
+
+**Seamless Routing:**
+- User clicks export as normal
+- System automatically routes to server when needed
+- Falls back to client-side for smaller exports (faster)
+- Works for both single image and batch exports
+- Global loading state prevents UI inconsistencies
+
+#### Phase 3: Testing & Polish ✅ COMPLETE
+- Tested various export scenarios (different sizes, DPIs, formats)
+- Verified visual parity between client and server renders
+- Full shape serialization matching projectManager format (id, type, transform, properties, points, geometry, render settings)
+- Group serialization includes transform property
+- Consolidated loading state management (isServerExportingGlobal only)
+- DPI scaling applied before threshold checks
+- Bleed and print marks expansion included in dimension calculations
+
+### Technical Specifications
+
+#### Supported Output Formats (Server-Side)
+| Format | Bit Depth | ICC Profile | Compression | Use Case |
+|--------|-----------|-------------|-------------|----------|
+| TIFF | 16-bit | sRGB embedded | Deflate | Professional printing |
+| PNG | 8-bit | sRGB embedded | Default | Web/digital |
+
+#### Size Limits
+| Paper Size | DPI | Dimensions (px) | Memory Est. | Server Required |
+|------------|-----|-----------------|-------------|-----------------|
+| A4 | 300 | 2480×3508 | ~35 MB | No (but recommended) |
+| A3 | 300 | 3508×4960 | ~70 MB | Recommended |
+| A2 | 300 | 4960×7016 | ~139 MB | Yes |
+| A4 | 600 | 4960×7016 | ~139 MB | Yes |
+| A1 | 300 | 7016×9933 | ~279 MB | Yes |
+
+#### Performance Expectations
+- Canvas render in headless Chrome: 1-3 seconds
+- Sharp 16-bit TIFF conversion: 0.3-1 second
+- Total pipeline: 2-5 seconds for typical print sizes
+- Memory-safe processing with proper cleanup
+
+### Files Created for Validation
+Located in `server/validation/` (isolated, can be deleted after implementation):
+- `puppeteer-test.ts` - Headless Chrome validation
+- `sharp-test.ts` - 16-bit TIFF with ICC profile validation
+- `integration-test.ts` - Full pipeline validation
+- `run-all-tests.ts` - Test runner
+- `output/` - Generated test files and validation report
+
+### Dependencies Added
+- `puppeteer-core` - Headless Chrome automation (uses system Chromium)
+- `sharp` - High-performance image processing with 16-bit support
+- System: `chromium` (added to replit.nix)
+
+### UX Flow (Final Implementation)
+
+1. **User initiates export** (existing UI, no changes)
+2. **System checks requirements**:
+   - If within browser limits → client-side export (instant)
+   - If exceeds limits → show preflight dialog
+3. **Preflight dialog** (when server needed):
+   - "This export requires server processing for professional print quality"
+   - Shows estimated time
+   - "Continue" / "Cancel" buttons
+4. **Server processing**:
+   - Progress indicator shown
+   - Shapes rendered in headless Chrome
+   - Converted to 16-bit TIFF via Sharp
+5. **Download** - File downloads automatically
+
+### Synergy with Existing Features
+
+**Print-on-Demand Configuration:**
+- Bleed, safe zone, and print marks render correctly at any DPI
+- Background mode (transparent, artboard color, custom) supported
+- Unit conversion (px/mm/cm/in) based on artboard DPI
+
+**Batch Export:**
+- Server export works transparently in batch mode
+- Each image processed sequentially with memory cleanup
+- Existing batch progress UI shows server processing status
+
+### Implemented Enhancements
+
+#### 9.1 SSE Streaming for Real-Time Tile Progress Updates ✅ IMPLEMENTED
+
+**Implementation Date:** December 6, 2025
+
+**Overview:** Server-Sent Events (SSE) streaming for real-time progress updates during high-resolution exports, especially for very large exports that use tiled rendering (A0+ at 600+ DPI).
+
+**Architecture:**
+1. **Start Endpoint** (`POST /api/export/highres/start`): Initiates export session, returns `exportId` and stream URLs
+2. **Stream Endpoint** (`GET /api/export/highres/stream`): SSE connection for real-time progress events
+3. **Download Endpoint** (`GET /api/export/highres/download/:exportId`): Retrieves completed export file
+4. **Cancel Endpoint** (`DELETE /api/export/highres/:exportId`): Cancels ongoing export
+
+**Event Types:**
+```typescript
+// Phase events - major processing stages
+{ type: 'phase', phase: 'preparing' | 'rendering' | 'stitching' | 'encoding', message: string }
+
+// Tile events - individual tile progress for tiled exports
+{ type: 'tile', tileIndex: number, totalTiles: number, step: 'render' | 'stitch', progressPct: number }
+
+// Progress events - overall progress updates
+{ type: 'progress', progressPct: number, status: string, estimatedSecondsRemaining?: number }
+
+// Complete event - export finished successfully
+{ type: 'complete', downloadUrl: string, filename: string, sizeBytes: number }
+
+// Error event - export failed
+{ type: 'error', message: string }
+
+// Heartbeat event - keep connection alive
+{ type: 'heartbeat' }
+```
+
+**Client Implementation:**
+```typescript
+import { executeServerExportWithSSE } from '@/lib/imageExport';
+
+const result = await executeServerExportWithSSE(
+  request,
+  {
+    onPhase: (phase, message) => setStatus(message),
+    onTile: (tileIndex, totalTiles, step, progressPct) => {
+      setStatus(`${step === 'render' ? 'Rendering' : 'Stitching'} tile ${tileIndex} of ${totalTiles}...`);
+      setProgress(progressPct);
+    },
+    onProgress: (progressPct, status, estimatedRemaining) => {
+      setProgress(progressPct);
+      setStatus(status);
+    },
+    onComplete: (downloadUrl, filename, sizeBytes) => {
+      // Download handled automatically
+    },
+    onError: (message) => setError(message)
+  },
+  abortController.signal
+);
+```
+
+**Benefits:**
+- Real-time tile progress updates visible in the client UI
+- Better UX for long-running exports (minutes for very large prints)
+- Detailed phase information (Preparing tiles, Rendering, Stitching, Encoding)
+- Seamless integration with ExportProgressOverlay component
+- Cancellation support via AbortController
+
+### Future Enhancements (Planned)
+
+#### 9.2 Estimated Time Display in Progress Overlay 📋 PLANNED
+
+**Problem:** During exports, users see elapsed time but have no indication of how long the export will take. This creates uncertainty for large exports that may take minutes.
+
+**Proposed Solution:** Display estimated completion time alongside elapsed time in the progress overlay:
+
+**UI Format:** `Elapsed: 00:45 / Est: ~02:30`
+
+**Implementation Approach:**
+1. Fetch estimate before starting server export (endpoint already exists: `/api/export/high-resolution/estimate`)
+2. Pass `estimatedDuration` to ExportProgressOverlay component
+3. Display formatted estimate alongside elapsed time
+4. Optionally: Refine estimate during export based on actual progress
+
+**Enhanced Estimate Calculation:**
+```typescript
+interface ServerExportEstimate {
+  requiresServerExport: boolean;
+  reason: string | null;
+  estimatedDuration: number;  // milliseconds
+  estimatedFileSizeMB: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  memoryRequiredMB: number;
+  needsTiling: boolean;      // New: whether tiled rendering is needed
+  tileCount: number;         // New: number of tiles if tiling
+}
+
+// Enhanced estimate formula
+const baseRenderTime = pixelCount / 100_000_000 * 3000; // ~3s per 100MP
+const tileOverhead = needsTiling ? tileCount * 500 : 0;  // ~500ms per tile
+const stitchTime = needsTiling ? tileCount * 200 : 0;    // ~200ms per tile stitch
+const encodeTime = format === 'tiff' && bitDepth === 16 ? 2000 : 500;
+const estimatedDuration = baseRenderTime + tileOverhead + stitchTime + encodeTime;
+```
+
+**ExportProgressOverlay Enhancement:**
+```typescript
+interface ExportProgressOverlayProps {
+  // ... existing props
+  estimatedTime?: number;  // New: estimated duration in seconds
+}
+
+// Display format
+<div className="flex items-center gap-2 text-slate-400">
+  <Clock className="w-4 h-4" />
+  <span className="font-mono">
+    {formatElapsedTime(elapsedTime)}
+    {estimatedTime && ` / Est: ~${formatElapsedTime(estimatedTime)}`}
+  </span>
+</div>
+```
+
+**Benefits:**
+- Users can plan around export times for large prints
+- Reduces anxiety during long exports
+- Provides realistic expectations for A0+ exports at 600 DPI
+- Natural fit with existing elapsed time display
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: December 4, 2025
+Last updated: December 6, 2025
