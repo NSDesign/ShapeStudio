@@ -8300,43 +8300,91 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                         {currentSettings.echoSpread?.opacity?.jitter?.enabled && (
-                          <div className="mt-2 space-y-1">
-                            <span className="text-xs text-slate-500">Jitter Range (±%)</span>
+                          <div className="mt-2 space-y-2">
                             <div className="flex items-center gap-2">
-                              <NumericInput
-                                value={currentSettings.echoSpread?.opacity?.jitter?.range ?? 0}
-                                onChange={(value) => handleSettingsUpdate({ 
+                              <span className="text-xs text-slate-500">Mode:</span>
+                              <Select
+                                value={currentSettings.echoSpread?.opacity?.jitter?.mode ?? 'fixed'} 
+                                onValueChange={(value) => handleSettingsUpdate({ 
                                   echoSpread: { 
                                     ...currentSettings.echoSpread, 
                                     opacity: { 
                                       ...currentSettings.echoSpread?.opacity, 
-                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, range: Math.max(0, Math.min(100, value)) } 
+                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, mode: value as 'fixed' | 'range' } 
                                     } 
                                   } 
                                 })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                data-testid="input-echo-opacity-jitter-range"
-                              />
-                              <Slider
-                                value={[currentSettings.echoSpread?.opacity?.jitter?.range ?? 0]}
-                                onValueChange={([value]) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    opacity: { 
-                                      ...currentSettings.echoSpread?.opacity, 
-                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, range: value } 
-                                    } 
-                                  } 
-                                })}
-                                min={0}
-                                max={100}
-                                step={5}
-                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                              />
+                              >
+                                <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="fixed">Fixed</SelectItem>
+                                  <SelectItem value="range">Range</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
+                            {(currentSettings.echoSpread?.opacity?.jitter?.mode ?? 'fixed') === 'fixed' ? (
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Fixed Amount (±%)</span>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.opacity?.jitter?.fixedAmount ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        opacity: { 
+                                          ...currentSettings.echoSpread?.opacity, 
+                                          jitter: { ...currentSettings.echoSpread?.opacity?.jitter, fixedAmount: Math.max(0, Math.min(100, value)) } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-opacity-jitter-fixed"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.opacity?.jitter?.fixedAmount ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        opacity: { 
+                                          ...currentSettings.echoSpread?.opacity, 
+                                          jitter: { ...currentSettings.echoSpread?.opacity?.jitter, fixedAmount: value } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Jitter Range (%)</span>
+                                <BufferedRangeSliderWithNumericInputs
+                                  value={[currentSettings.echoSpread?.opacity?.jitter?.rangeMin ?? 0, currentSettings.echoSpread?.opacity?.jitter?.rangeMax ?? 20]}
+                                  onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      opacity: { 
+                                        ...currentSettings.echoSpread?.opacity, 
+                                        jitter: { ...currentSettings.echoSpread?.opacity?.jitter, rangeMin: minVal, rangeMax: maxVal } 
+                                      } 
+                                    } 
+                                  })}
+                                  min={0}
+                                  max={100}
+                                  step={5}
+                                  inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                  sliderClassName="[&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -8434,43 +8482,91 @@ export default function BatchConfigDialog({
                               </div>
                             </div>
                             {currentSettings.echoSpread?.blur?.jitter?.enabled && (
-                              <div className="mt-2 space-y-1">
-                                <span className="text-xs text-slate-500">Jitter Range (±px)</span>
+                              <div className="mt-2 space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.echoSpread?.blur?.jitter?.range ?? 0}
-                                    onChange={(value) => handleSettingsUpdate({ 
+                                  <span className="text-xs text-slate-500">Mode:</span>
+                                  <Select
+                                    value={currentSettings.echoSpread?.blur?.jitter?.mode ?? 'fixed'} 
+                                    onValueChange={(value) => handleSettingsUpdate({ 
                                       echoSpread: { 
                                         ...currentSettings.echoSpread, 
                                         blur: { 
                                           ...currentSettings.echoSpread?.blur, 
-                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, range: Math.max(0, Math.min(50, value)) } 
+                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, mode: value as 'fixed' | 'range' } 
                                         } 
                                       } 
                                     })}
-                                    min={0}
-                                    max={50}
-                                    step={1}
-                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                    data-testid="input-echo-blur-jitter-range"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.echoSpread?.blur?.jitter?.range ?? 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        blur: { 
-                                          ...currentSettings.echoSpread?.blur, 
-                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, range: value } 
-                                        } 
-                                      } 
-                                    })}
-                                    min={0}
-                                    max={50}
-                                    step={1}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
+                                  >
+                                    <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">Fixed</SelectItem>
+                                      <SelectItem value="range">Range</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
+                                {(currentSettings.echoSpread?.blur?.jitter?.mode ?? 'fixed') === 'fixed' ? (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Fixed Amount (±px)</span>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.echoSpread?.blur?.jitter?.fixedAmount ?? 0}
+                                        onChange={(value) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            blur: { 
+                                              ...currentSettings.echoSpread?.blur, 
+                                              jitter: { ...currentSettings.echoSpread?.blur?.jitter, fixedAmount: Math.max(0, Math.min(50, value)) } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={50}
+                                        step={1}
+                                        className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                        data-testid="input-echo-blur-jitter-fixed"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.echoSpread?.blur?.jitter?.fixedAmount ?? 0]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            blur: { 
+                                              ...currentSettings.echoSpread?.blur, 
+                                              jitter: { ...currentSettings.echoSpread?.blur?.jitter, fixedAmount: value } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={50}
+                                        step={1}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Jitter Range (px)</span>
+                                    <BufferedRangeSliderWithNumericInputs
+                                      value={[currentSettings.echoSpread?.blur?.jitter?.rangeMin ?? 0, currentSettings.echoSpread?.blur?.jitter?.rangeMax ?? 10]}
+                                      onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          blur: { 
+                                            ...currentSettings.echoSpread?.blur, 
+                                            jitter: { ...currentSettings.echoSpread?.blur?.jitter, rangeMin: minVal, rangeMax: maxVal } 
+                                          } 
+                                        } 
+                                      })}
+                                      min={0}
+                                      max={50}
+                                      step={1}
+                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      sliderClassName="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </>
@@ -8570,43 +8666,91 @@ export default function BatchConfigDialog({
                               />
                             </div>
                             {currentSettings.echoSpread?.scale?.jitter?.enabled && (
-                              <div className="mt-2 space-y-1">
-                                <span className="text-xs text-slate-500">Jitter Range (±%)</span>
+                              <div className="mt-2 space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.echoSpread?.scale?.jitter?.range ?? 0}
-                                    onChange={(value) => handleSettingsUpdate({ 
+                                  <span className="text-xs text-slate-500">Mode:</span>
+                                  <Select
+                                    value={currentSettings.echoSpread?.scale?.jitter?.mode ?? 'fixed'} 
+                                    onValueChange={(value) => handleSettingsUpdate({ 
                                       echoSpread: { 
                                         ...currentSettings.echoSpread, 
                                         scale: { 
                                           ...currentSettings.echoSpread?.scale, 
-                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, range: Math.max(0, Math.min(100, value)) } 
+                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, mode: value as 'fixed' | 'range' } 
                                         } 
                                       } 
                                     })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                    data-testid="input-echo-scale-jitter-range"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.echoSpread?.scale?.jitter?.range ?? 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        scale: { 
-                                          ...currentSettings.echoSpread?.scale, 
-                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, range: value } 
-                                        } 
-                                      } 
-                                    })}
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
+                                  >
+                                    <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">Fixed</SelectItem>
+                                      <SelectItem value="range">Range</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
+                                {(currentSettings.echoSpread?.scale?.jitter?.mode ?? 'fixed') === 'fixed' ? (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Fixed Amount (±%)</span>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.echoSpread?.scale?.jitter?.fixedAmount ?? 0}
+                                        onChange={(value) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            scale: { 
+                                              ...currentSettings.echoSpread?.scale, 
+                                              jitter: { ...currentSettings.echoSpread?.scale?.jitter, fixedAmount: Math.max(0, Math.min(100, value)) } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                        data-testid="input-echo-scale-jitter-fixed"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.echoSpread?.scale?.jitter?.fixedAmount ?? 0]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            scale: { 
+                                              ...currentSettings.echoSpread?.scale, 
+                                              jitter: { ...currentSettings.echoSpread?.scale?.jitter, fixedAmount: value } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Jitter Range (%)</span>
+                                    <BufferedRangeSliderWithNumericInputs
+                                      value={[currentSettings.echoSpread?.scale?.jitter?.rangeMin ?? 0, currentSettings.echoSpread?.scale?.jitter?.rangeMax ?? 20]}
+                                      onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          scale: { 
+                                            ...currentSettings.echoSpread?.scale, 
+                                            jitter: { ...currentSettings.echoSpread?.scale?.jitter, rangeMin: minVal, rangeMax: maxVal } 
+                                          } 
+                                        } 
+                                      })}
+                                      min={0}
+                                      max={100}
+                                      step={5}
+                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      sliderClassName="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </>
@@ -8706,43 +8850,91 @@ export default function BatchConfigDialog({
                               />
                             </div>
                             {currentSettings.echoSpread?.rotation?.jitter?.enabled && (
-                              <div className="mt-2 space-y-1">
-                                <span className="text-xs text-slate-500">Jitter Range (±°)</span>
+                              <div className="mt-2 space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <NumericInput
-                                    value={currentSettings.echoSpread?.rotation?.jitter?.range ?? 0}
-                                    onChange={(value) => handleSettingsUpdate({ 
+                                  <span className="text-xs text-slate-500">Mode:</span>
+                                  <Select
+                                    value={currentSettings.echoSpread?.rotation?.jitter?.mode ?? 'fixed'} 
+                                    onValueChange={(value) => handleSettingsUpdate({ 
                                       echoSpread: { 
                                         ...currentSettings.echoSpread, 
                                         rotation: { 
                                           ...currentSettings.echoSpread?.rotation, 
-                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, range: Math.max(0, Math.min(180, value)) } 
+                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, mode: value as 'fixed' | 'range' } 
                                         } 
                                       } 
                                     })}
-                                    min={0}
-                                    max={180}
-                                    step={5}
-                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
-                                    data-testid="input-echo-rotation-jitter-range"
-                                  />
-                                  <Slider
-                                    value={[currentSettings.echoSpread?.rotation?.jitter?.range ?? 0]}
-                                    onValueChange={([value]) => handleSettingsUpdate({ 
-                                      echoSpread: { 
-                                        ...currentSettings.echoSpread, 
-                                        rotation: { 
-                                          ...currentSettings.echoSpread?.rotation, 
-                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, range: value } 
-                                        } 
-                                      } 
-                                    })}
-                                    min={0}
-                                    max={180}
-                                    step={5}
-                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                                  />
+                                  >
+                                    <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">Fixed</SelectItem>
+                                      <SelectItem value="range">Range</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
+                                {(currentSettings.echoSpread?.rotation?.jitter?.mode ?? 'fixed') === 'fixed' ? (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Fixed Amount (±°)</span>
+                                    <div className="flex items-center gap-2">
+                                      <NumericInput
+                                        value={currentSettings.echoSpread?.rotation?.jitter?.fixedAmount ?? 0}
+                                        onChange={(value) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            rotation: { 
+                                              ...currentSettings.echoSpread?.rotation, 
+                                              jitter: { ...currentSettings.echoSpread?.rotation?.jitter, fixedAmount: Math.max(0, Math.min(180, value)) } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={180}
+                                        step={5}
+                                        className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                        data-testid="input-echo-rotation-jitter-fixed"
+                                      />
+                                      <Slider
+                                        value={[currentSettings.echoSpread?.rotation?.jitter?.fixedAmount ?? 0]}
+                                        onValueChange={([value]) => handleSettingsUpdate({ 
+                                          echoSpread: { 
+                                            ...currentSettings.echoSpread, 
+                                            rotation: { 
+                                              ...currentSettings.echoSpread?.rotation, 
+                                              jitter: { ...currentSettings.echoSpread?.rotation?.jitter, fixedAmount: value } 
+                                            } 
+                                          } 
+                                        })}
+                                        min={0}
+                                        max={180}
+                                        step={5}
+                                        className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="text-xs text-slate-500">Jitter Range (°)</span>
+                                    <BufferedRangeSliderWithNumericInputs
+                                      value={[currentSettings.echoSpread?.rotation?.jitter?.rangeMin ?? 0, currentSettings.echoSpread?.rotation?.jitter?.rangeMax ?? 30]}
+                                      onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
+                                        echoSpread: { 
+                                          ...currentSettings.echoSpread, 
+                                          rotation: { 
+                                            ...currentSettings.echoSpread?.rotation, 
+                                            jitter: { ...currentSettings.echoSpread?.rotation?.jitter, rangeMin: minVal, rangeMax: maxVal } 
+                                          } 
+                                        } 
+                                      })}
+                                      min={0}
+                                      max={180}
+                                      step={5}
+                                      inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                      sliderClassName="[&_[role=slider]]:bg-cyan-600"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             )}
                           </>
@@ -8750,10 +8942,10 @@ export default function BatchConfigDialog({
                       </div>
                     </div>
 
-                    {/* Jitter Controls */}
+                    {/* Echo Position Jitter Controls */}
                     <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                       <div className="flex items-center justify-between">
-                        <Label className="text-xs font-medium text-slate-300">Jitter</Label>
+                        <Label className="text-xs font-medium text-slate-300">Echo Position Jitter</Label>
                         <Checkbox
                           checked={currentSettings.echoSpread?.jitter?.enabled ?? false}
                           onCheckedChange={(checked) => handleSettingsUpdate({ 
@@ -8834,7 +9026,7 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                       )}
-                      <p className="text-xs text-slate-500">Adds randomization to echo positions for organic feel</p>
+                      <p className="text-xs text-slate-500">Adds randomization to echo positions (angle and distance) for organic variation. Different from per-effect jitter above.</p>
                     </div>
                   </div>
                 )}
