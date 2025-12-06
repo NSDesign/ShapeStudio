@@ -22,7 +22,10 @@ import type {
 // Default per-effect jitter config (safe fallback)
 const DEFAULT_PER_EFFECT_JITTER: EchoPerEffectJitterConfig = {
   enabled: false,
-  range: 0
+  mode: 'fixed',
+  fixedAmount: 0,
+  rangeMin: 0,
+  rangeMax: 0
 };
 
 // Default rotation config (safe fallback for legacy configs)
@@ -32,15 +35,40 @@ const DEFAULT_ROTATION_CONFIG: EchoRotationConfig = {
   rotationDelta: 0,
   minRotation: -360,
   maxRotation: 360,
-  jitter: { enabled: false, range: 0 }
+  jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
 };
 
 /**
  * Get per-effect jitter config with safe defaults
  * Handles legacy configs that don't have the jitter property
+ * Also migrates legacy configs with old 'range' property to new structure
  */
 function getPerEffectJitter(jitter: EchoPerEffectJitterConfig | undefined): EchoPerEffectJitterConfig {
-  return jitter ?? DEFAULT_PER_EFFECT_JITTER;
+  if (!jitter) {
+    return DEFAULT_PER_EFFECT_JITTER;
+  }
+  
+  // Check for legacy config (has 'range' but not 'mode')
+  const legacyJitter = jitter as any;
+  if (legacyJitter.range !== undefined && jitter.mode === undefined) {
+    // Migrate legacy config: treat 'range' as fixedAmount
+    return {
+      enabled: jitter.enabled,
+      mode: 'fixed',
+      fixedAmount: legacyJitter.range ?? 0,
+      rangeMin: 0,
+      rangeMax: legacyJitter.range ?? 0
+    };
+  }
+  
+  // Return with safe defaults for any missing properties
+  return {
+    enabled: jitter.enabled ?? false,
+    mode: jitter.mode ?? 'fixed',
+    fixedAmount: jitter.fixedAmount ?? 0,
+    rangeMin: jitter.rangeMin ?? 0,
+    rangeMax: jitter.rangeMax ?? 0
+  };
 }
 
 /**
@@ -261,6 +289,7 @@ export function calculateEchoRotation(
 /**
  * Apply per-effect jitter to a calculated effect value
  * Uses deterministic seeded random for reproducibility
+ * Supports both 'fixed' mode (constant jitter) and 'range' mode (random between min/max)
  * 
  * @param effectJitter - Per-effect jitter config
  * @param baseValue - The calculated base value
@@ -272,13 +301,39 @@ export function applyPerEffectJitter(
   baseValue: number,
   seed: number
 ): number {
-  if (!effectJitter.enabled || effectJitter.range === 0) {
+  if (!effectJitter.enabled) {
     return baseValue;
   }
   
   const random = seededRandom(seed);
-  const jitterAmount = (random() * 2 - 1) * effectJitter.range;
-  return baseValue + jitterAmount;
+  
+  // Handle legacy configs that might only have 'range' property (backward compatibility)
+  const legacyRange = (effectJitter as any).range;
+  if (legacyRange !== undefined && effectJitter.mode === undefined) {
+    // Legacy mode: use range as ±amount
+    if (legacyRange === 0) return baseValue;
+    const jitterAmount = (random() * 2 - 1) * legacyRange;
+    return baseValue + jitterAmount;
+  }
+  
+  const mode = effectJitter.mode ?? 'fixed';
+  
+  if (mode === 'fixed') {
+    // Fixed mode: apply constant jitter amount with random sign
+    const fixedAmount = effectJitter.fixedAmount ?? 0;
+    if (fixedAmount === 0) return baseValue;
+    const sign = random() > 0.5 ? 1 : -1;
+    return baseValue + (sign * fixedAmount);
+  } else {
+    // Range mode: randomize between min and max
+    const rangeMin = effectJitter.rangeMin ?? 0;
+    const rangeMax = effectJitter.rangeMax ?? 0;
+    if (rangeMin === 0 && rangeMax === 0) return baseValue;
+    const jitterAmount = rangeMin + (random() * (rangeMax - rangeMin));
+    // Apply with random sign for symmetric variation
+    const sign = random() > 0.5 ? 1 : -1;
+    return baseValue + (sign * jitterAmount);
+  }
 }
 
 /**

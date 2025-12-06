@@ -688,10 +688,16 @@ export type EchoScope = 'set' | 'shape' | 'both';
 // Echo driver - what determines echo progression (Project A: only 'setRepIndex' active)
 export type EchoDriver = 'setRepIndex' | 'shapeIndex' | 'combined';
 
+// Per-effect jitter mode
+export type EchoPerEffectJitterMode = 'fixed' | 'range';
+
 // Per-effect jitter settings (applies to individual effects for granular control)
 export interface EchoPerEffectJitterConfig {
   enabled: boolean;
-  range: number;             // Effect-specific range (percentage or degrees depending on effect)
+  mode: EchoPerEffectJitterMode;  // 'fixed' uses fixedAmount, 'range' randomizes between min/max
+  fixedAmount: number;            // Fixed jitter amount (used in 'fixed' mode)
+  rangeMin: number;               // Minimum jitter (used in 'range' mode)
+  rangeMax: number;               // Maximum jitter (used in 'range' mode)
 }
 
 // Per-echo opacity settings
@@ -781,7 +787,10 @@ export interface EchoSpreadConfig {
 // Default per-effect jitter config
 export const DEFAULT_ECHO_PER_EFFECT_JITTER: EchoPerEffectJitterConfig = {
   enabled: false,
-  range: 0
+  mode: 'fixed',
+  fixedAmount: 0,
+  rangeMin: 0,
+  rangeMax: 0
 };
 
 // Default echo/motion trails configuration
@@ -808,14 +817,14 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
     startOpacity: 80,
     falloffRate: 25,
     minOpacity: 10,
-    jitter: { enabled: false, range: 0 }
+    jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
   },
   blur: {
     enabled: false,
     startBlur: 0,
     blurDelta: 2,
     maxBlur: 20,
-    jitter: { enabled: false, range: 0 }
+    jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
   },
   scale: {
     enabled: false,
@@ -823,7 +832,7 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
     scaleDelta: -5,
     minScale: 20,
     maxScale: 200,
-    jitter: { enabled: false, range: 0 }
+    jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
   },
   rotation: {
     enabled: false,
@@ -831,7 +840,7 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
     rotationDelta: 0,
     minRotation: -360,
     maxRotation: 360,
-    jitter: { enabled: false, range: 0 }
+    jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
   },
   
   jitter: {
