@@ -119,27 +119,44 @@ if (sizeConstraintMode !== 'none' && aspectRatioMode !== '1:1') {
 
 ---
 
-### Echo/Spread Effect (⏳ PLANNED)
+### Echo/Motion Trails (⏳ PLANNED)
 
-**Description**: A controlled layering system that creates deliberate position offsets between repetitions.
+**Description**: A temporal/instancing effect system that creates multiple copies of shapes with progressive visual changes. This is fundamentally different from Shape Effects (blur, shadow, glow) which modify individual shape appearance.
 
-**Concept**: Each repetition is positioned at a predictable offset from the previous instance.
+**Key Distinction from Shape Effects**: 
+- **Shape Effects**: Per-shape visual filters applied to a single shape instance (e.g., blur, drop shadow, glow)
+- **Echo/Motion Trails**: Creates multiple distinct shape *instances* with controlled property variations between each echo copy
 
-**Visual Result**: Creates a "motion blur trail," "drop shadow," or "echo" effect.
+**Concept**: Each echo is a separate shape instance positioned at a predictable offset from the previous, with progressive changes to opacity, blur, scale, rotation, and color.
 
-**Implementation**: Apply incremental X/Y offset to each successive repetition (e.g., +5px X, +5px Y per instance).
+**Visual Results**:
+- Motion blur trails
+- Echo patterns
+- Depth illusions
+- Drop shadow stacks
+- Kinetic effects
 
-**Example**: 5 repetitions with offset (5,5) would appear at positions (0,0), (5,5), (10,10), (15,15), (20,20).
+**Example**: 5 echoes with offset (5,5) and 20% opacity falloff would create:
+- Echo 1: (5,5), 80% opacity
+- Echo 2: (10,10), 60% opacity
+- Echo 3: (15,15), 40% opacity
+- Echo 4: (20,20), 20% opacity
+- Original: (0,0), 100% opacity (rendered on top)
 
-**Difference from Randomization**: Produces controlled, predictable visual patterns rather than chaotic variety.
-
-**Combination Potential**: Could work with randomization (random properties + predictable position offsets) for creative effects.
+**Relationship with Set Rep Index**: Complements Set Repetition Index Control:
+- Set Rep Index modifies properties based on repetition index
+- Echo/Motion Trails creates visual trails with position offsets and progressive fading
+- Can be combined for complex effects (e.g., radial burst with fading echoes)
 
 **Use Cases**: 
-- Depth simulation
-- Vintage print registration effects
-- Neon glow trails
-- Kinetic typography
+- Motion blur trails (follow position increments automatically)
+- Depth simulation (scale + opacity fade)
+- Vintage print misregistration effects (small jitter + color shift)
+- Neon glow trails (blur + opacity fade)
+- Kinetic typography (positioned echo copies suggest motion)
+- Radial bursts (rotation delta per echo)
+
+> **Full Documentation**: See `docs/future-features.md` section "6. Echo/Motion Trails" for complete technical specification including TypeScript schema, rendering logic, and UI/UX design.
 
 ---
 

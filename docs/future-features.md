@@ -629,8 +629,8 @@ Creates perfect radial burst with evenly spaced lines.
 
 ### Synergies with Existing Features
 
-#### Echo/Spread Effect (Future Feature)
-Documented in replit.md, this feature provides controlled position offsets between repetitions. When combined with Set Rep Index:
+#### Echo/Motion Trails (Future Feature)
+A temporal/instancing effect (not a per-shape visual filter) that creates multiple copies of shapes with progressive property changes. When combined with Set Rep Index:
 - **Echo effect** provides predictable X/Y offsets
 - **Set Rep Index** adds other property progressions (size, color, opacity, rotation)
 - **Result:** Motion blur trails with color shifts, size changes, or rotation
