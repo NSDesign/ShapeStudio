@@ -702,6 +702,7 @@ export interface EchoPerEffectJitterConfig {
 
 // Per-echo opacity settings
 export interface EchoOpacityConfig {
+  enabled?: boolean;         // Whether opacity effect is enabled (defaults to true for backward compat)
   startOpacity: number;      // 0-100% - starting opacity for first echo
   falloffRate: number;       // 0-100% - how fast opacity decreases per echo
   minOpacity: number;        // 0-100% - minimum opacity floor
@@ -3509,8 +3510,10 @@ export function migrateEchoJitter(settings: Partial<BatchConfigSettings>): Parti
   // Then deep clone nested objects to break references
   const updatedEchoSpread: any = {
     ...echoSpread,
-    // Deep clone direction config if present
-    direction: echoSpread.direction ? { ...echoSpread.direction } : echoSpread.direction,
+    // Deep clone fixedVector config if present
+    fixedVector: echoSpread.fixedVector ? { ...echoSpread.fixedVector } : echoSpread.fixedVector,
+    // Deep clone autoMotion config if present
+    autoMotion: echoSpread.autoMotion ? { ...echoSpread.autoMotion } : echoSpread.autoMotion,
     // Deep clone position jitter config if present
     jitter: echoSpread.jitter ? { ...echoSpread.jitter } : echoSpread.jitter
   };

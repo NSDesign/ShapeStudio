@@ -186,18 +186,12 @@ export default function BatchConfigDialog({
   }, [settings]);
 
   const handleSettingsUpdate = useCallback((updates: Partial<BatchConfigSettings> | ((prev: BatchConfigSettings) => Partial<BatchConfigSettings>)) => {
-    console.log('[BatchConfigDialog] Settings update triggered:', {
-      updates: typeof updates === 'function' ? 'functional updater' : updates,
-      currentDialogOpen: isOpen,
-      timestamp: new Date().toISOString()
-    });
-    
     setCurrentSettings(prevSettings => {
       // Resolve updates if it's a function
       const resolvedUpdates = typeof updates === 'function' ? updates(prevSettings) : updates;
       return { ...prevSettings, ...resolvedUpdates };
     });
-  }, [isOpen]);
+  }, []);
 
   const resetToDefaults = useCallback(() => {
     setCurrentSettings(defaultSettings);
@@ -8228,25 +8222,42 @@ export default function BatchConfigDialog({
                       {/* Opacity Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs text-slate-400">Opacity</Label>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500">Jitter</span>
                             <Checkbox
-                              checked={currentSettings.echoSpread?.opacity?.jitter?.enabled ?? false}
+                              checked={currentSettings.echoSpread?.opacity?.enabled ?? true}
                               onCheckedChange={(checked) => handleSettingsUpdate({ 
                                 echoSpread: { 
                                   ...currentSettings.echoSpread, 
-                                  opacity: { 
-                                    ...currentSettings.echoSpread?.opacity, 
-                                    jitter: { ...currentSettings.echoSpread?.opacity?.jitter, enabled: checked as boolean } 
-                                  } 
+                                  opacity: { ...currentSettings.echoSpread?.opacity, enabled: checked as boolean } 
                                 } 
                               })}
                               className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-opacity-jitter"
+                              data-testid="checkbox-echo-opacity-enabled"
                             />
+                            <Label className="text-xs text-slate-400">Opacity</Label>
                           </div>
+                          {currentSettings.echoSpread?.opacity?.enabled !== false && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Jitter</span>
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.opacity?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { 
+                                      ...currentSettings.echoSpread?.opacity, 
+                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-opacity-jitter"
+                              />
+                            </div>
+                          )}
                         </div>
+                        {currentSettings.echoSpread?.opacity?.enabled !== false && (
+                          <>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Start %</span>
@@ -8390,6 +8401,8 @@ export default function BatchConfigDialog({
                             )}
                           </div>
                         )}
+                        </>
+                      )}
                       </div>
 
                       {/* Blur Controls */}

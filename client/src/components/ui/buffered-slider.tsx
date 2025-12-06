@@ -2,6 +2,7 @@ import * as React from "react"
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Slider } from "./slider"
 import { NumericInput } from "./numeric-input"
+import { cn } from "@/lib/utils"
 
 interface BufferedSliderProps {
   value: number[];
@@ -413,7 +414,7 @@ export function BufferedRangeSliderWithNumericInputs({
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <span className={labelClassName}>{minLabel}</span>
           <NumericInput
             value={localValue[0]}
@@ -422,10 +423,10 @@ export function BufferedRangeSliderWithNumericInputs({
             max={localValue[1] - step}
             step={step}
             disabled={disabled}
-            className={inputClassName}
+            className={cn("w-full min-w-[4.5rem]", inputClassName)}
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <span className={labelClassName}>{maxLabel}</span>
           <NumericInput
             value={localValue[1]}
@@ -434,7 +435,7 @@ export function BufferedRangeSliderWithNumericInputs({
             max={max}
             step={step}
             disabled={disabled}
-            className={inputClassName}
+            className={cn("w-full min-w-[4.5rem]", inputClassName)}
           />
         </div>
       </div>
