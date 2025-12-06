@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -66,7 +66,7 @@ interface BatchConfigDialogProps {
   selectedImageIndices?: number[];
 }
 
-export default function BatchConfigDialog({ 
+function BatchConfigDialogInner({ 
   settings, 
   onSettingsChange, 
   isOpen: controlledIsOpen, 
@@ -10211,3 +10211,24 @@ export default function BatchConfigDialog({
     </>
   );
 }
+
+// Custom comparison function - only re-render when meaningful props change
+// Function props rarely change in identity, so we focus on data props
+function arePropsEqual(prevProps: BatchConfigDialogProps, nextProps: BatchConfigDialogProps): boolean {
+  // Fast path: if settings object reference is the same, nothing changed
+  if (prevProps.settings === nextProps.settings &&
+      prevProps.isOpen === nextProps.isOpen &&
+      prevProps.sidebarCollapsed === nextProps.sidebarCollapsed &&
+      prevProps.generationSets === nextProps.generationSets &&
+      prevProps.currentGenerationSetId === nextProps.currentGenerationSetId &&
+      prevProps.generationSetsEnabled === nextProps.generationSetsEnabled &&
+      prevProps.shapeCountMode === nextProps.shapeCountMode &&
+      prevProps.shapeCountFixed === nextProps.shapeCountFixed &&
+      prevProps.activeArtboard === nextProps.activeArtboard) {
+    return true;
+  }
+  return false;
+}
+
+const BatchConfigDialog = memo(BatchConfigDialogInner, arePropsEqual);
+export default BatchConfigDialog;
