@@ -1,0 +1,165 @@
+Shape-Level is the Same Effect with Finer Control
+Shape-level Echo/Spread is the same class of effect (progressive positional/visual offsets) but offers:
+
+Target specific shapes by index, probability, or filters
+Use shape index OR set rep index as the driver (or combine both)
+More creative possibilities without duplicating sets
+Recommended Architecture
+Configuration Location: BatchConfigSettings (like blur), with optional per-set overrides in Sets Manager. This keeps it consistent with existing patterns.
+
+Key Parameters:
+
+Parameter	Purpose
+scope	set / shape / both
+count	Number of echo copies
+offset	X/Y displacement per echo
+opacity	Start value + falloff rate
+scale	Start value + delta per echo
+blur	Start value + delta per echo
+driver	shapeIndex / setRepIndex / combined
+applyTo	Filters (shape types, indices, probability, even/odd)
+Coexistence Strategy:
+
+Basic (Set-level): Simple mode - entire set repetitions offset
+Advanced (Shape-level): Per-shape control with filters and probability
+Both can be active simultaneously without conflicting - the renderer would handle them as separate passes.
+
+Would you like me to update the documentation to reflect this unified shape-level architecture? It would essentially replace the current set-only concept with a more flexible system that can operate at either level.
+
+-----
+
+Echo/Spread: Its Own Section, Not a Shape Effect
+Reasoning: Echo/Spread is a temporal/instancing effect (creates multiple copies with progressive changes), while Shape Effects (blur, shadow, glow) are per-shape shading effects. They're orthogonal - you could apply blur to each echo copy, for example.
+
+Section Name: "Echo / Motion Trails" (sibling to Shape Effects)
+
+Delta-Based Design with Auto-Motion Mode
+The cleanest approach combines your ideas:
+
+Direction Mode	Description
+Fixed	User specifies angle + magnitude (e.g., 45° at 10px per echo)
+Auto from Motion	Derives direction from existing incremental changes (position delta between shapes)
+Custom Vector	User specifies exact X/Y offset
+Auto-Motion is the key insight - when enabled, the renderer looks at the delta between successive shapes (by shapeIndex or setRepIndex) and uses that as the echo direction. This gives "follow the path" motion blur without coupling into every property mode.
+
+Why NOT as a Property Mode Option
+Making it another option alongside "incremental/range/define" would:
+
+Bloat every property control
+Create complex coupling between properties
+Still need a shared renderer anyway
+Better to keep it as an independent effect that can optionally react to motion via "auto from motion" mode.
+
+--
+
+Proposed Parameters
+- scope: set | shape | both
+- driver: shapeIndex | setRepIndex | combined
+- count: number of echoes
+- direction: fixed | auto-from-motion | custom
+- offset: magnitude (or x/y for custom)
+- opacity: start, falloff, min
+- blur: start, delta per echo, max
+- scale: start, delta per echo, min/max
+- rotation: delta per echo (optional)
+- color: shift/tint per echo (optional)
+- applyTo: filters (types, indices, probability, even/odd)
+
+
+----Here's the finalized design:
+
+Offset Mode Structure (Clarified)
+Mode	Description
+Fixed Vector	Angle + distance per echo (accumulates: echo 1 at 10px, echo 2 at 20px, etc.)
+Auto-Motion	Derives direction from shape/set delta, uses specified distance (with fallback angle if no motion detected)
+Absolute Position	Fixed target X/Y position (no accumulation - all echoes share target, just fade/scale differently)
+Range as a Jitter Modifier (Not Separate Modes)
+Instead of creating range + shapeIndex and range + setRepIndex as separate modes, jitter is a modifier applied on top of any mode:
+
+jitter: {
+  distance?: number;  // Random ± variation to distance per echo
+  angle?: number;     // Random ± variation to angle per echo
+}This keeps the mode count manageable while giving you randomness for any driver (shapeIndex, setRepIndex, or combined).
+
+Complete Parameter StructureEchoSpreadConfig: {
+  enabled: boolean;
+  scope: 'set' | 'shape' | 'both';
+  driver: 'shapeIndex' | 'setRepIndex' | 'combined';
+  count: number;
+  
+  // Offset/Direction
+  mode: 'fixed-vector' | 'auto-motion' | 'absolute-position';
+  angle?: number;              // For fixed-vector
+  distancePerEcho?: number;    // For fixed-vector, auto-motion
+  fallbackAngle?: number;      // For auto-motion (when no delta detected)
+  target?: { x: number; y: number };  // For absolute-position
+  jitter?: { distance?: number; angle?: number };
+  
+  // Per-Echo Effects
+  opacity: { start: number; falloff: number; min?: number };
+  blur: { start: number; delta: number; max?: number };
+  scale: { start: number; delta: number; min?: number; max?: number };
+  rotationDelta?: number;
+  colorShift?: { /* tint/lerp params */ };
+  
+  // Filters
+  applyTo?: { 
+    shapeTypes?: ShapeType[]; 
+    indices?: number[]; 
+    selector?: 'all' | 'even' | 'odd' | 'step'; 
+    probability?: number; 
+  };
+}
+
+---
+
+Jitter should be range-based with min/max values to be consistent with the rest of the system:
+
+jitter?: { 
+  distance?: { min: number; max: number }; 
+  angle?: { min: number; max: number }; 
+};Behavior:
+
+--------
+
+Per-echo random sampling between min and max
+If omitted, no jitter applied
+Layers on top of any direction mode (fixed-vector, auto-motion, absolute-position)
+
+
+Updated Complete Schema
+
+EchoSpreadConfig: {
+  enabled: boolean;
+  scope: 'set' | 'shape' | 'both';
+  driver: 'shapeIndex' | 'setRepIndex' | 'combined';
+  count: number;
+  
+  // Offset/Direction
+  mode: 'fixed-vector' | 'auto-motion' | 'absolute-position';
+  angle?: number;
+  distancePerEcho?: number;
+  fallbackAngle?: number;
+  target?: { x: number; y: number };
+  
+  // Jitter (range-based modifier)
+  jitter?: { 
+    distance?: { min: number; max: number }; 
+    angle?: { min: number; max: number }; 
+  };
+  
+  // Per-Echo Effects
+  opacity: { start: number; falloff: number; min?: number };
+  blur: { start: number; delta: number; max?: number };
+  scale: { start: number; delta: number; min?: number; max?: number };
+  rotationDelta?: number;
+  colorShift?: { /* tint/lerp params */ };
+  
+  // Filters
+  applyTo?: { 
+    shapeTypes?: ShapeType[]; 
+    indices?: number[]; 
+    selector?: 'all' | 'even' | 'odd' | 'step'; 
+    probability?: number; 
+  };
+}

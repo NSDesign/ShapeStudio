@@ -19,12 +19,14 @@ This document outlines complex features that have been identified for future dev
 | **Grid Offset Presets (Phase 5)** | ✅ Implemented | [Section 5](#phase-5-grid-offset-presets--completed) |
 | **Grid Offset Value Modes (Phase 6)** | ✅ Implemented | [Section 5](#phase-6-grid-offset-value-modes--completed) |
 | **Future Shape Masking Filters (Phase 7)** | 📋 Planned | [Section 5](#phase-7-future-shape-masking-filter-types--future) |
-| **Echo/Motion Trails** | ❌ Not Implemented | [Section 6](#6-echomotion-trails) |
+| **Echo/Motion Trails - Project A (Set-Level)** | 📋 Planned | [Section 6](#project-a-set-level-echomotion-trails) |
+| **Echo/Motion Trails - Project B (Shape-Level)** | 📋 Planned | [Section 6](#project-b-shape-level-echomotion-trails) |
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
 | **Server-Side High-Resolution Export** | ✅ Complete | [Section 9](#9-server-side-high-resolution-export) |
 | **SSE Streaming for Export Progress** | ✅ Implemented | [Section 9.1](#91-sse-streaming-for-real-time-tile-progress-updates--implemented) |
+| **Shape Selection Groups** | 📋 Planned | [Section 10](#10-shape-selection-groups-future-abstraction) |
 
 ### Status Legend
 - ✅ **Implemented**: Feature is fully functional in the codebase

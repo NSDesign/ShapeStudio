@@ -1,0 +1,55 @@
+# Echo/Spread: A Unified Implementation Plan
+
+Let me walk you through how this feature comes together, building from the core concept up to the complete implementation.
+
+## Understanding the Core Concept
+
+Echo/Spread is fundamentally about creating motion trails or multiplicative effects by generating progressive copies of shapes with incremental changes. Think of it like the motion blur you see in comic books, where a character leaves ghost images trailing behind them. The key insight here is that this isn't a per-shape styling effect like blur or shadow—it's an instancing effect that creates entirely new copies of content with systematic variations applied to each copy.
+
+## Where This Lives in the Architecture
+
+The configuration naturally belongs in BatchConfigSettings, following the same pattern you've established for blur and other batch-level settings. This placement makes sense because echo effects often apply to entire sets or filtered groups of shapes, though the system is flexible enough to target specific shapes when needed. You can also provide per-set overrides in the Sets Manager, which gives you both global defaults and fine-grained control where it matters.
+
+The effect gets its own dedicated section called "Echo / Motion Trails" rather than being grouped with Shape Effects. This distinction is important because Shape Effects are shading operations applied to individual shapes, while Echo/Spread is a temporal or instancing operation that creates multiple copies. These are orthogonal concerns—you could apply blur to each echo copy, for example, which demonstrates they operate at different levels of the rendering pipeline.
+
+## How Scope and Drivers Work Together
+
+The system operates along two key dimensions. First, the scope determines whether echoes apply at the set level (duplicating entire sets), the shape level (duplicating individual shapes within sets), or both simultaneously. Second, the driver determines what provides the sequential context for the echoes—either the shape index within a set, the set repetition index, or a combination of both.
+
+When you use shape index as the driver, each shape's position in the sequence influences its echo behavior. When you use set repetition index, the echoes respond to which iteration of the set is being rendered. The combined mode lets you create effects that respond to both dimensions simultaneously, opening up more complex animation-like patterns.
+
+## Three Fundamental Direction Modes
+
+The direction system offers three conceptually distinct approaches. In fixed-vector mode, you specify an angle and distance, and each echo accumulates that offset—the first echo appears at ten pixels in your chosen direction, the second at twenty pixels, the third at thirty, and so on. This gives you precise control over the trail direction and spacing.
+
+Auto-motion mode is where things get particularly interesting. The renderer analyzes the actual movement happening in your shapes—the position delta between successive shapes based on your chosen driver—and uses that detected motion as the echo direction. If you have shapes moving in a curve, the echoes will follow that curve naturally. You specify how far apart the echoes should be, and the system figures out the direction from the existing motion. There's a fallback angle parameter for situations where no motion is detected, ensuring the effect still works even on stationary shapes.
+
+Absolute-position mode takes a completely different approach. Instead of accumulating offsets, all echoes target the same fixed X/Y position. They differ only in their opacity, blur, and scale values, creating effects like shapes converging toward or diverging from a focal point.
+
+## Jitter as a Universal Modifier
+
+Rather than creating separate randomized modes for each direction approach, jitter operates as a modifier layer on top of any mode. For each echo copy generated, the system can randomly vary the distance within a specified min/max range, and similarly vary the angle within its own range. This keeps the mode count manageable while giving you randomization capabilities regardless of which driver or direction mode you're using. The jitter values are sampled independently for each echo, so you get organic-looking variation rather than uniform spacing.
+
+## Progressive Effects Applied to Each Echo
+
+Each echo copy can have multiple effects applied progressively. Opacity typically starts at some value and falls off with each successive echo, eventually reaching a minimum threshold. This creates the fading trail effect. Blur can start at a certain value and increase with each echo, reinforcing the motion blur aesthetic. Scale can shrink or grow progressively, and you can specify both minimum and maximum constraints to prevent echoes from becoming too small or too large.
+
+You can also apply rotation delta, where each echo is rotated by an incremental amount, and color shift effects to create rainbow trails or other color progressions. All of these effects compound naturally—the fifth echo might have five times the blur delta, five times the scale change, and five times the rotation applied compared to the first echo.
+
+## Filtering System for Precise Targeting
+
+The applyTo filter system lets you be surgical about which shapes receive echo effects. You can target specific shape types (only apply echoes to circles, for instance), specific indices (echo only the third and seventh shapes), or use selectors like "even" or "odd" to create alternating patterns. The probability parameter adds another layer, where each shape has a random chance of receiving echoes, creating organic variation across your composition.
+
+This filtering capability is what elevates echo from a simple motion blur effect to a creative tool. You can have some shapes leave trails while others remain clean, or create patterns where echoes appear only on shapes that meet specific criteria.
+
+## Coexistence and Rendering Strategy
+
+Set-level and shape-level echoes can operate simultaneously without conflict because they're handled as separate rendering passes. The renderer would first process set-level echoes if enabled, creating duplicate sets with progressive offsets, then process shape-level echoes, creating duplicate shapes within each set. This separation means you could have both a global set-based motion effect and local per-shape trail effects active at the same time, compounding to create complex visual results.
+
+## Implementation Sequence
+
+When building this feature, start with the core rendering logic for generating echo copies—this is your foundation. Then implement the fixed-vector direction mode since it's the most straightforward. Add the per-echo effects for opacity, blur, and scale next, as these are essential for making echoes visually distinct from their originals.
+
+Once the basics work, implement auto-motion mode, which requires analyzing shape deltas to derive direction. Then add the filtering system so you can target specific shapes. Jitter comes after the base direction modes are solid, since it modifies their output. Finally, build the UI controls in BatchConfigSettings and wire up the per-set override capability.
+
+This progression moves from simple to complex, letting you validate each layer before adding the next, which makes debugging much easier than trying to build everything simultaneously.
