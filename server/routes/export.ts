@@ -950,4 +950,254 @@ export function registerExportRoutes(app: Express): void {
       });
     }
   });
+
+  // ===== SSE STREAMING EXPORT ENDPOINTS =====
+
+  /**
+   * Start SSE High-Resolution Export
+   * 
+   * Creates an export session and returns the exportId.
+   * Client should then connect to the SSE stream endpoint with this exportId.
+   */
+  app.post('/api/export/highres/start', async (req, res) => {
+    try {
+      const validationResult = HighResExportSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request parameters',
+          details: validationResult.error.errors
+        });
+      }
+      
+      // Generate export ID and create session
+      const exportId = highResExportService.generateExportId();
+      highResExportService.createSSESession(exportId);
+      
+      // Store the request data for the SSE stream handler
+      // Using a temporary in-memory store for pending requests
+      pendingSSERequests.set(exportId, validationResult.data);
+      
+      console.log(`[SSE Export] Session started: ${exportId}`);
+      
+      res.json({
+        success: true,
+        exportId,
+        streamUrl: `/api/export/highres/stream?exportId=${exportId}`,
+        downloadUrl: `/api/export/highres/download/${exportId}`
+      });
+      
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to start SSE export session',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * SSE Stream Endpoint for High-Resolution Export Progress
+   * 
+   * Streams real-time progress events during export processing.
+   * Events include: phase, tile, progress, complete, error, heartbeat
+   */
+  app.get('/api/export/highres/stream', async (req, res) => {
+    const exportId = req.query.exportId as string;
+    
+    if (!exportId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing exportId parameter'
+      });
+    }
+    
+    const session = highResExportService.getSSESession(exportId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: 'Export session not found'
+      });
+    }
+    
+    const request = pendingSSERequests.get(exportId);
+    if (!request) {
+      return res.status(400).json({
+        success: false,
+        error: 'No pending export request for this session'
+      });
+    }
+    
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+    res.flushHeaders();
+    
+    // Helper to send SSE event
+    const sendEvent = (event: any) => {
+      if (!res.writableEnded) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    };
+    
+    // Setup heartbeat to keep connection alive
+    const heartbeatInterval = setInterval(() => {
+      if (!res.writableEnded) {
+        sendEvent({ type: 'heartbeat', timestamp: Date.now() });
+      }
+    }, 15000); // Every 15 seconds
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      console.log(`[SSE Export] Client disconnected: ${exportId}`);
+      clearInterval(heartbeatInterval);
+      
+      // Cancel the export if still processing
+      if (session.status === 'processing') {
+        highResExportService.cancelSSESession(exportId);
+      }
+      
+      // Cleanup pending request
+      pendingSSERequests.delete(exportId);
+    });
+    
+    // Send initial connection event
+    sendEvent({ 
+      type: 'phase', 
+      phase: 'preparing', 
+      message: 'Connected to export stream',
+      timestamp: Date.now()
+    });
+    
+    try {
+      // Start the export with SSE progress streaming
+      await highResExportService.exportWithSSE(
+        request as HighResExportRequest,
+        exportId,
+        (event) => {
+          sendEvent(event);
+          
+          // Close the stream on complete or error
+          if (event.type === 'complete' || event.type === 'error') {
+            clearInterval(heartbeatInterval);
+            pendingSSERequests.delete(exportId);
+            res.end();
+          }
+        }
+      );
+    } catch (error) {
+      clearInterval(heartbeatInterval);
+      sendEvent({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Export failed',
+        timestamp: Date.now()
+      });
+      pendingSSERequests.delete(exportId);
+      res.end();
+    }
+  });
+
+  /**
+   * Download endpoint for SSE exports
+   * 
+   * After SSE export completes, the file can be downloaded from this endpoint.
+   */
+  app.get('/api/export/highres/download/:exportId', (req, res) => {
+    const { exportId } = req.params;
+    
+    const session = highResExportService.getSSESession(exportId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: 'Export session not found'
+      });
+    }
+    
+    if (session.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: `Export not ready: status is ${session.status}`
+      });
+    }
+    
+    const fileData = highResExportService.getExportFileBuffer(exportId);
+    if (!fileData) {
+      return res.status(404).json({
+        success: false,
+        error: 'Export file not found'
+      });
+    }
+    
+    res.setHeader('Content-Type', fileData.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileData.filename}"`);
+    res.setHeader('Content-Length', fileData.buffer.length);
+    
+    console.log(`[SSE Export] Download: ${exportId} - ${fileData.filename}`);
+    
+    res.send(fileData.buffer);
+    
+    // Schedule cleanup after download (give time for retry)
+    setTimeout(() => {
+      highResExportService.cleanupSSESession(exportId);
+    }, 60000); // Cleanup after 1 minute
+  });
+
+  /**
+   * Cancel SSE Export
+   * 
+   * Cancels an ongoing SSE export session.
+   */
+  app.delete('/api/export/highres/:exportId', (req, res) => {
+    const { exportId } = req.params;
+    
+    const cancelled = highResExportService.cancelSSESession(exportId);
+    pendingSSERequests.delete(exportId);
+    
+    if (cancelled) {
+      res.json({
+        success: true,
+        message: 'Export cancelled'
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot cancel: export not in progress or not found'
+      });
+    }
+  });
+
+  /**
+   * Get SSE Export Session Status
+   */
+  app.get('/api/export/highres/status/:exportId', (req, res) => {
+    const { exportId } = req.params;
+    
+    const session = highResExportService.getSSESession(exportId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: 'Export session not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      session: {
+        exportId: session.exportId,
+        status: session.status,
+        startTime: session.startTime,
+        downloadUrl: session.downloadUrl,
+        filename: session.filename,
+        error: session.error,
+        dimensions: session.dimensions,
+        sizeBytes: session.sizeBytes
+      }
+    });
+  });
 }
+
+// In-memory store for pending SSE export requests
+const pendingSSERequests = new Map<string, any>();
