@@ -9,7 +9,7 @@ if (typeof window !== 'undefined') {
   (window as unknown as { pako: typeof pako }).pako = pako;
 }
 import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
-import { executeServerExport, fetchServerExportEstimate, ServerExportRequest } from '@/lib/imageExport';
+import { executeServerExport, executeServerExportWithSSE, fetchServerExportEstimate, ServerExportRequest } from '@/lib/imageExport';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
@@ -4438,44 +4438,87 @@ export default function Sidebar({
           }
         };
         
-        setBatchProgress(30);
-        setBatchStatus('Rendering on server...');
-        setExportProgressGlobal(30);
-        setExportStatusGlobal('Rendering on server...');
+        setBatchProgress(15);
+        setBatchStatus('Connecting to server...');
+        setExportProgressGlobal(15);
+        setExportStatusGlobal('Connecting to server...');
         
-        console.log(`🖥️ SERVER EXPORT: Starting high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
+        console.log(`🖥️ SERVER EXPORT: Starting SSE high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
         
-        const blob = await executeServerExport(request);
+        // Use SSE streaming for real-time progress updates
+        const result = await executeServerExportWithSSE(
+          request,
+          {
+            onPhase: (phase, message) => {
+              console.log(`📋 Phase: ${phase} - ${message}`);
+              setExportStatusGlobal(message);
+              setBatchStatus(message);
+            },
+            onTile: (tileIndex, totalTiles, step, progressPct) => {
+              const tileMessage = step === 'render' 
+                ? `Rendering tile ${tileIndex} of ${totalTiles}...`
+                : `Stitching tile ${tileIndex} of ${totalTiles}...`;
+              console.log(`🧩 Tile: ${tileMessage} (${progressPct}%)`);
+              setExportStatusGlobal(tileMessage);
+              setBatchStatus(tileMessage);
+              // Map tile progress to 20-80% range
+              const mappedProgress = 20 + (progressPct * 0.6);
+              setExportProgressGlobal(Math.round(mappedProgress));
+              setBatchProgress(Math.round(mappedProgress));
+            },
+            onProgress: (progressPct, status, estimatedRemaining) => {
+              // Map progress to 20-80% range (reserve 0-20 for init, 80-100 for download)
+              const mappedProgress = 20 + (progressPct * 0.6);
+              setExportProgressGlobal(Math.round(mappedProgress));
+              setBatchProgress(Math.round(mappedProgress));
+              setExportStatusGlobal(status);
+              setBatchStatus(status);
+              if (estimatedRemaining !== undefined) {
+                setExportEstimatedTimeGlobal(estimatedRemaining);
+              }
+            },
+            onComplete: (downloadUrl, filename, sizeBytes) => {
+              console.log(`📥 Export complete: ${filename} (${(sizeBytes / 1024 / 1024).toFixed(2)} MB)`);
+              setExportProgressGlobal(85);
+              setBatchProgress(85);
+              setExportStatusGlobal('Downloading...');
+              setBatchStatus('Downloading...');
+            },
+            onError: (message) => {
+              console.error(`❌ SSE Export error: ${message}`);
+            }
+          },
+          exportAbortControllerGlobalRef.current?.signal
+        );
         
-        setBatchProgress(90);
-        setBatchStatus('Downloading...');
-        setExportProgressGlobal(90);
-        setExportStatusGlobal('Downloading...');
-        
-        // Download the file
-        const timestamp = Date.now();
-        const filename = `export-${timestamp}.tiff`;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.click();
-        URL.revokeObjectURL(url);
-        
-        setBatchProgress(100);
-        setBatchStatus('Export complete!');
-        setExportProgressGlobal(100);
-        setExportStatusGlobal('Export complete!');
-        setExportIsCompleteGlobal(true);
-        setExportResultMessageGlobal(`✅ Exported ${filename} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
-        stopElapsedTimeTrackingGlobal();
-        console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
-        
-        setTimeout(() => {
-          setIsServerExportingGlobal(false);
-          setBatchProgress(0);
-          setBatchStatus('');
-        }, 2000);
+        if (result.success && result.blob) {
+          // Download the file
+          const timestamp = Date.now();
+          const filename = `export-${timestamp}.tiff`;
+          const url = URL.createObjectURL(result.blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          URL.revokeObjectURL(url);
+          
+          setBatchProgress(100);
+          setBatchStatus('Export complete!');
+          setExportProgressGlobal(100);
+          setExportStatusGlobal('Export complete!');
+          setExportIsCompleteGlobal(true);
+          setExportResultMessageGlobal(`✅ Exported ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
+          stopElapsedTimeTrackingGlobal();
+          console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
+          
+          setTimeout(() => {
+            setIsServerExportingGlobal(false);
+            setBatchProgress(0);
+            setBatchStatus('');
+          }, 2000);
+        } else {
+          throw new Error(result.error || 'Export failed');
+        }
         
       } catch (error) {
         console.error('Server export failed:', error);

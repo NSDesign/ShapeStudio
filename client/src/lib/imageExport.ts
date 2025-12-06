@@ -869,3 +869,184 @@ export async function executeServerExport(request: ServerExportRequest): Promise
   
   return await response.blob();
 }
+
+// SSE Export Types
+export interface SSEExportCallbacks {
+  onPhase?: (phase: string, message: string) => void;
+  onTile?: (tileIndex: number, totalTiles: number, step: 'render' | 'stitch', progressPct: number) => void;
+  onProgress?: (progressPct: number, status: string, estimatedSecondsRemaining?: number) => void;
+  onComplete?: (downloadUrl: string, filename: string, sizeBytes: number) => void;
+  onError?: (message: string) => void;
+}
+
+export interface SSEExportSession {
+  exportId: string;
+  streamUrl: string;
+  downloadUrl: string;
+}
+
+/**
+ * Start an SSE streaming export session
+ * Returns session info including exportId and stream URL
+ */
+export async function startSSEExport(request: ServerExportRequest): Promise<SSEExportSession> {
+  const response = await fetch('/api/export/highres/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to start export' }));
+    throw new Error(error.error || error.message || 'Failed to start SSE export');
+  }
+  
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to start SSE export');
+  }
+  
+  return {
+    exportId: data.exportId,
+    streamUrl: data.streamUrl,
+    downloadUrl: data.downloadUrl
+  };
+}
+
+/**
+ * Cancel an ongoing SSE export
+ */
+export async function cancelSSEExport(exportId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/export/highres/${exportId}`, {
+      method: 'DELETE'
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Download the completed export file
+ */
+export async function downloadSSEExportFile(downloadUrl: string): Promise<Blob> {
+  const response = await fetch(downloadUrl);
+  
+  if (!response.ok) {
+    throw new Error('Failed to download export file');
+  }
+  
+  return await response.blob();
+}
+
+/**
+ * Execute server export with SSE streaming for real-time progress updates
+ * This is the main function to use for SSE-based exports
+ */
+export function executeServerExportWithSSE(
+  request: ServerExportRequest,
+  callbacks: SSEExportCallbacks,
+  abortSignal?: AbortSignal
+): Promise<{ success: boolean; blob?: Blob; error?: string }> {
+  return new Promise(async (resolve) => {
+    let eventSource: EventSource | null = null;
+    let exportSession: SSEExportSession | null = null;
+    
+    // Handle abort
+    const handleAbort = async () => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      if (exportSession) {
+        await cancelSSEExport(exportSession.exportId);
+      }
+      resolve({ success: false, error: 'Export cancelled' });
+    };
+    
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', handleAbort);
+    }
+    
+    try {
+      // Start the export session
+      exportSession = await startSSEExport(request);
+      
+      // Connect to the SSE stream
+      eventSource = new EventSource(exportSession.streamUrl);
+      
+      eventSource.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'phase':
+              callbacks.onPhase?.(data.phase, data.message);
+              break;
+              
+            case 'tile':
+              callbacks.onTile?.(data.tileIndex, data.totalTiles, data.step, data.progressPct || 0);
+              break;
+              
+            case 'progress':
+              callbacks.onProgress?.(data.progressPct, data.status, data.estimatedSecondsRemaining);
+              break;
+              
+            case 'complete':
+              // Close the event source
+              if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+              }
+              
+              // Notify completion
+              callbacks.onComplete?.(data.downloadUrl, data.filename, data.sizeBytes || 0);
+              
+              // Download the file
+              try {
+                const blob = await downloadSSEExportFile(data.downloadUrl);
+                resolve({ success: true, blob });
+              } catch (downloadError) {
+                resolve({ 
+                  success: false, 
+                  error: `Download failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}` 
+                });
+              }
+              break;
+              
+            case 'error':
+              if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+              }
+              callbacks.onError?.(data.message);
+              resolve({ success: false, error: data.message });
+              break;
+              
+            case 'heartbeat':
+              // Keep-alive, no action needed
+              break;
+          }
+        } catch (parseError) {
+          console.error('Failed to parse SSE event:', parseError);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        callbacks.onError?.('Connection to export stream lost');
+        resolve({ success: false, error: 'SSE connection error' });
+      };
+      
+    } catch (startError) {
+      const errorMessage = startError instanceof Error ? startError.message : 'Failed to start export';
+      callbacks.onError?.(errorMessage);
+      resolve({ success: false, error: errorMessage });
+    }
+  });
+}
