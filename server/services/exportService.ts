@@ -2647,9 +2647,16 @@ export class HighResolutionExportService {
       const tilePngBuffer = Buffer.from(tilePngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
       console.log(`[HighResExport] Tile ${tile.index + 1} captured: ${(tilePngBuffer.length / 1024).toFixed(1)} KB`);
       
-      // Add to composite inputs
+      // Preprocess tile through Sharp with limitInputPixels: false to avoid pixel limit during compositing
+      // This is necessary because Sharp's composite() creates internal decoders that use the default limit
+      const preprocessedTileBuffer = await sharp(tilePngBuffer, { limitInputPixels: false })
+        .ensureAlpha()
+        .png()
+        .toBuffer();
+      
+      // Add preprocessed tile to composite inputs
       compositeInputs.push({
-        input: tilePngBuffer,
+        input: preprocessedTileBuffer,
         left: tile.x,
         top: tile.y
       });

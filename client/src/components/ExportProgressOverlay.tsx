@@ -47,7 +47,7 @@ export default function ExportProgressOverlay({
       onOpenChange(newOpen);
     }}>
       <DialogContent 
-        className="max-w-[400px] bg-slate-900 border-slate-700 text-slate-100 p-0 gap-0"
+        className="max-w-[400px] bg-slate-900 border-slate-700 text-slate-100 p-0 gap-0 [&>button:last-child]:hidden"
         onPointerDownOutside={(e) => {
           if (!canClose) e.preventDefault();
         }}
