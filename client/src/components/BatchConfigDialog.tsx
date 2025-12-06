@@ -8098,11 +8098,15 @@ function BatchConfigDialogInner({
                               className={`text-slate-200 hover:bg-slate-700 ${isSetRepIndexDisabled ? 'opacity-50' : ''}`}
                               disabled={isSetRepIndexDisabled}
                             >
-                              Set Rep Index {isSetRepIndexDisabled && '(needs repetitions > 1)'}
+                              Set Rep Index {isSetRepIndexDisabled && '(needs reps > 1)'}
                             </SelectItem>
                             <SelectItem value="shapeIndex" className="text-slate-200 hover:bg-slate-700">Shape Index</SelectItem>
-                            <SelectItem value="combined" className="text-slate-200 hover:bg-slate-700">
-                              Combined (Shape + Set)
+                            <SelectItem 
+                              value="combined" 
+                              className={`text-slate-200 hover:bg-slate-700 ${isSetRepIndexDisabled ? 'opacity-50' : ''}`}
+                              disabled={isSetRepIndexDisabled}
+                            >
+                              Combined (Shape + Set) {isSetRepIndexDisabled && '(needs reps > 1)'}
                             </SelectItem>
                           </SelectContent>
                         </Select>
