@@ -19,6 +19,8 @@ import {
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 import { getEffectiveTranslateRange, recalculateGridForArtboard } from '../lib/artboardUtils';
 import { validateArtboardDimensions } from '../lib/artboardPresets';
+import { calculateEchoTransforms, isEchoEnabled, type AutoMotionContext, type EchoTransform } from '@shared/echoUtils';
+import { DEFAULT_ECHO_SPREAD_CONFIG } from '@shared/schema';
 
 // Interface for overriding UI state during generation (used for generation sets)
 export interface GenerationContextOverrides {
@@ -3545,9 +3547,96 @@ export const useShapeEditor = () => {
             }
           }
 
+          // Echo/Motion Trails generation (Project A: Set-Level)
+          const echoConfig = set.batchConfig?.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG;
+          if (isEchoEnabled(echoConfig)) {
+            // Calculate set centroid for auto-motion mode
+            let setCentroidX = 0, setCentroidY = 0;
+            if (setShapes.length > 0) {
+              setShapes.forEach(shape => {
+                setCentroidX += shape.transform.x;
+                setCentroidY += shape.transform.y;
+              });
+              setCentroidX /= setShapes.length;
+              setCentroidY /= setShapes.length;
+            }
+            
+            // Build auto-motion context from previous repetition position
+            const autoMotionContext: AutoMotionContext | undefined = repIndex > 0 && 
+              (window as any).__prevSetCentroid ? {
+                prevX: (window as any).__prevSetCentroid.x,
+                prevY: (window as any).__prevSetCentroid.y,
+                currentX: setCentroidX,
+                currentY: setCentroidY
+              } : undefined;
+            
+            // Store current centroid for next repetition
+            (window as any).__prevSetCentroid = { x: setCentroidX, y: setCentroidY };
+            
+            // Calculate echo transforms using shared utility
+            const echoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContext);
+            
+            if (echoTransforms.length > 0) {
+              console.log(`👻 [ECHO] Generating ${echoTransforms.length} echo copies for ${setShapes.length} shapes in set "${set.name}"`);
+              
+              const echoShapes: Shape[] = [];
+              
+              // Create echo copies for each original shape
+              setShapes.forEach((originalShape, shapeIdx) => {
+                echoTransforms.forEach((echo, echoIdx) => {
+                  // Clone the original shape for this echo
+                  const echoShape = originalShape.clone();
+                  
+                  // Mark as echo shape for potential filtering/identification
+                  (echoShape as any)._isEcho = true;
+                  (echoShape as any)._echoIndex = echoIdx;
+                  (echoShape as any)._sourceShapeId = originalShape.id;
+                  
+                  // Apply position offset
+                  echoShape.transform.x += echo.offsetX;
+                  echoShape.transform.y += echo.offsetY;
+                  
+                  // Apply opacity (multiply with existing opacity)
+                  echoShape.properties.fillOpacity *= echo.opacity;
+                  echoShape.properties.strokeOpacity *= echo.opacity;
+                  
+                  // Apply scale
+                  if (echo.scale !== 1.0) {
+                    echoShape.transform.scaleX *= echo.scale;
+                    echoShape.transform.scaleY *= echo.scale;
+                  }
+                  
+                  // Apply rotation
+                  if (echo.rotation !== 0) {
+                    echoShape.transform.rotation += echo.rotation;
+                  }
+                  
+                  // Apply blur to shape properties (uses existing canvas blur system)
+                  if (echo.blur > 0) {
+                    echoShape.properties.blurRadius = echo.blur;
+                  }
+                  
+                  // Adjust z-index to render behind original (echoes are behind)
+                  // Each echo is progressively further behind
+                  echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
+                  
+                  echoShapes.push(echoShape);
+                });
+              });
+              
+              console.log(`👻 [ECHO] Created ${echoShapes.length} total echo shapes`);
+              
+              // Insert echoes BEFORE original shapes (render behind)
+              setShapes.unshift(...echoShapes);
+            }
+          }
+
           // Add the generated shapes to the collection
           allNewShapes.push(...setShapes);
         } // End of repetition loop
+        
+        // Clear auto-motion context after set processing
+        delete (window as any).__prevSetCentroid;
       });
 
       console.log(`✅ Generated total of ${allNewShapes.length} shapes from ${enabledGenerationSets.length} generation sets`);
