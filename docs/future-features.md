@@ -19,7 +19,7 @@ This document outlines complex features that have been identified for future dev
 | **Grid Offset Presets (Phase 5)** | ✅ Implemented | [Section 5](#phase-5-grid-offset-presets--completed) |
 | **Grid Offset Value Modes (Phase 6)** | ✅ Implemented | [Section 5](#phase-6-grid-offset-value-modes--completed) |
 | **Future Shape Masking Filters (Phase 7)** | 📋 Planned | [Section 5](#phase-7-future-shape-masking-filter-types--future) |
-| **Echo/Motion Trails - Project A (Set-Level)** | 📋 Planned | [Section 6](#project-a-set-level-echomotion-trails) |
+| **Echo/Motion Trails - Project A (Set-Level)** | ✅ Implemented | [Section 6](#project-a-set-level-echomotion-trails) |
 | **Echo/Motion Trails - Project B (Shape-Level)** | 📋 Planned | [Section 6](#project-b-shape-level-echomotion-trails) |
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
@@ -1979,7 +1979,7 @@ function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: n
 
 ---
 
-## 6. Echo/Motion Trails ❌ NOT IMPLEMENTED
+## 6. Echo/Motion Trails 🔶 PARTIAL (Project A Complete)
 
 ### Overview
 A temporal/instancing effect system that creates multiple copies of shapes with progressive visual changes, producing motion blur trails, echo patterns, depth illusions, and kinetic effects. Unlike Shape Effects (blur, shadow, glow) which modify individual shape appearance, Echo/Motion Trails creates deliberate multi-copy arrangements with controlled property variations per echo.
@@ -2325,9 +2325,13 @@ Echo/Motion Trails is split into two sequential projects to reduce risk and vali
 
 ---
 
-#### Project A: Set-Level Echo/Motion Trails
+#### Project A: Set-Level Echo/Motion Trails ✅ IMPLEMENTED
 
 **Goal:** Implement echo effects that operate on entire set repetitions, building on existing set repetition infrastructure.
+
+**Implementation Date:** December 2025
+
+**What was implemented:**
 
 **Scope:** `scope` locked to `'set'` only. UI shows scope selector but "Shape" and "Both" options are disabled with tooltip explaining they're coming in a future update.
 
@@ -2350,6 +2354,12 @@ Echo/Motion Trails is split into two sequential projects to reduce risk and vali
 3. UI controls in BatchConfigSettings
 4. Canvas preview of echo trails
 5. Persistence in project save/load
+6. Server-side parity in `batchConfigProcessor.ts` for batch exports
+
+**Server Parity Notes:**
+- Fixed-vector mode: Full parity with client
+- Auto-motion mode: Simulated on server (previous centroid not tracked across batch calls); fallback angle used
+- All per-echo effects (opacity, blur, scale, rotation) with jitter: Full parity
 
 **Success Criteria:**
 - Set repetitions show trailing echoes with progressive fade/blur/scale

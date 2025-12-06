@@ -7,6 +7,7 @@ import { Shape } from './shapeGenerator';
 import { SmartDistributionAlgorithm } from './distributionAlgorithm';
 import { ColorUtils, generateColor, generateGradientColors } from './colorUtils';
 import type { BatchConfigSettings } from '../../shared/schema';
+import { DEFAULT_ECHO_SPREAD_CONFIG } from '../../shared/schema';
 import { 
   calculateLinearAngle as sharedCalculateLinearAngle,
   calculateConicCenterX as sharedCalculateConicCenterX,
@@ -14,6 +15,11 @@ import {
   calculateRadialCenterX as sharedCalculateRadialCenterX,
   calculateRadialCenterY as sharedCalculateRadialCenterY
 } from '../../shared/batchUtils';
+import { 
+  calculateEchoTransforms, 
+  isEchoEnabled,
+  type AutoMotionContext
+} from '../../shared/echoUtils';
 import type { ShapeType, Point, DistributionSettings } from '../../client/src/lib/shapeTypes';
 import { 
   applyGridDistribution, 
@@ -1328,6 +1334,90 @@ export function generateShapesWithBatchConfig(
         // Extract shapes from grid results (no modulation needed)
         finalShapes = gridResults.map(r => r.shape);
       }
+    }
+  }
+
+  // Echo/Motion Trails generation (Project A: Set-Level parity with client)
+  const echoConfig = batchConfig.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG;
+  if (isEchoEnabled(echoConfig)) {
+    const repIndex = generationContext?.generationIndex ?? 0;
+    
+    // Calculate set centroid for auto-motion mode
+    let setCentroidX = 0, setCentroidY = 0;
+    if (finalShapes.length > 0) {
+      finalShapes.forEach(shape => {
+        setCentroidX += shape.transform.x;
+        setCentroidY += shape.transform.y;
+      });
+      setCentroidX /= finalShapes.length;
+      setCentroidY /= finalShapes.length;
+    }
+    
+    // Build auto-motion context (for direction detection in auto-motion mode)
+    // Server maintains previous centroid via closure or global state would be needed for true parity
+    // For now, use a simple approach based on generation index
+    const autoMotionContext: AutoMotionContext = {
+      prevX: repIndex > 0 ? setCentroidX - 20 : undefined, // Simulate previous position
+      prevY: repIndex > 0 ? setCentroidY - 20 : undefined,
+      currentX: setCentroidX,
+      currentY: setCentroidY
+    };
+    
+    // Calculate echo transforms using shared utility
+    const echoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContext);
+    
+    if (echoTransforms.length > 0) {
+      console.log(`👻 [SERVER ECHO] Generating ${echoTransforms.length} echo copies for ${finalShapes.length} shapes`);
+      
+      const echoShapes: Shape[] = [];
+      
+      // Create echo copies for each original shape
+      finalShapes.forEach((originalShape, shapeIdx) => {
+        echoTransforms.forEach((echo, echoIdx) => {
+          // Clone the original shape for this echo
+          const echoShape = originalShape.clone();
+          
+          // Mark as echo shape for potential filtering/identification
+          (echoShape as any)._isEcho = true;
+          (echoShape as any)._echoIndex = echoIdx;
+          (echoShape as any)._sourceShapeId = originalShape.id;
+          
+          // Apply position offset
+          echoShape.transform.x += echo.offsetX;
+          echoShape.transform.y += echo.offsetY;
+          
+          // Apply opacity (multiply with existing opacity)
+          echoShape.properties.fillOpacity *= echo.opacity;
+          echoShape.properties.strokeOpacity *= echo.opacity;
+          
+          // Apply scale
+          if (echo.scale !== 1.0) {
+            echoShape.transform.scaleX *= echo.scale;
+            echoShape.transform.scaleY *= echo.scale;
+          }
+          
+          // Apply rotation
+          if (echo.rotation !== 0) {
+            echoShape.transform.rotation += echo.rotation;
+          }
+          
+          // Apply blur to shape properties (uses existing canvas blur system)
+          if (echo.blur > 0) {
+            echoShape.properties.blurRadius = echo.blur;
+          }
+          
+          // Adjust z-index to render behind original (echoes are behind)
+          // Each echo is progressively further behind
+          echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
+          
+          echoShapes.push(echoShape);
+        });
+      });
+      
+      console.log(`👻 [SERVER ECHO] Created ${echoShapes.length} total echo shapes`);
+      
+      // Insert echoes BEFORE original shapes (render behind)
+      finalShapes = [...echoShapes, ...finalShapes];
     }
   }
 
