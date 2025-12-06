@@ -688,11 +688,18 @@ export type EchoScope = 'set' | 'shape' | 'both';
 // Echo driver - what determines echo progression (Project A: only 'setRepIndex' active)
 export type EchoDriver = 'setRepIndex' | 'shapeIndex' | 'combined';
 
+// Per-effect jitter settings (applies to individual effects for granular control)
+export interface EchoPerEffectJitterConfig {
+  enabled: boolean;
+  range: number;             // Effect-specific range (percentage or degrees depending on effect)
+}
+
 // Per-echo opacity settings
 export interface EchoOpacityConfig {
   startOpacity: number;      // 0-100% - starting opacity for first echo
   falloffRate: number;       // 0-100% - how fast opacity decreases per echo
   minOpacity: number;        // 0-100% - minimum opacity floor
+  jitter: EchoPerEffectJitterConfig; // Opacity-specific jitter
 }
 
 // Per-echo blur settings
@@ -701,6 +708,7 @@ export interface EchoBlurConfig {
   startBlur: number;         // 0-50px - starting blur for first echo
   blurDelta: number;         // 0-20px - blur increase per echo
   maxBlur: number;           // 0-100px - maximum blur cap
+  jitter: EchoPerEffectJitterConfig; // Blur-specific jitter
 }
 
 // Per-echo scale settings
@@ -710,9 +718,20 @@ export interface EchoScaleConfig {
   scaleDelta: number;        // -50 to +50% - scale change per echo
   minScale: number;          // 1-100% - minimum scale floor
   maxScale: number;          // 100-500% - maximum scale cap
+  jitter: EchoPerEffectJitterConfig; // Scale-specific jitter
 }
 
-// Echo jitter settings for organic variation
+// Per-echo rotation settings
+export interface EchoRotationConfig {
+  enabled: boolean;
+  startRotation: number;     // 0-360° - starting rotation for first echo
+  rotationDelta: number;     // -180 to +180° - rotation change per echo
+  minRotation: number;       // -360 to 0° - minimum rotation floor
+  maxRotation: number;       // 0 to 360° - maximum rotation cap
+  jitter: EchoPerEffectJitterConfig; // Rotation-specific jitter
+}
+
+// Echo jitter settings for organic variation (position/direction jitter)
 export interface EchoJitterConfig {
   enabled: boolean;
   distanceRange: number;     // 0-100px - random distance variation
@@ -752,15 +771,21 @@ export interface EchoSpreadConfig {
   opacity: EchoOpacityConfig;
   blur: EchoBlurConfig;
   scale: EchoScaleConfig;
-  rotationDelta: number;     // -180 to +180° - rotation change per echo
+  rotation: EchoRotationConfig;
   
-  // Jitter for organic variation
+  // Jitter for organic variation (position/direction)
   jitter: EchoJitterConfig;
 }
 
+// Default per-effect jitter config
+export const DEFAULT_ECHO_PER_EFFECT_JITTER: EchoPerEffectJitterConfig = {
+  enabled: false,
+  range: 0
+};
+
 // Default echo/motion trails configuration
 export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
-  version: 1,
+  version: 2,                // Schema version 2: per-effect jitter + rotation config
   enabled: false,
   
   scope: 'set',              // Project A: locked to 'set'
@@ -781,22 +806,32 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
   opacity: {
     startOpacity: 80,
     falloffRate: 25,
-    minOpacity: 10
+    minOpacity: 10,
+    jitter: { enabled: false, range: 0 }
   },
   blur: {
     enabled: false,
     startBlur: 0,
     blurDelta: 2,
-    maxBlur: 20
+    maxBlur: 20,
+    jitter: { enabled: false, range: 0 }
   },
   scale: {
     enabled: false,
     startScale: 100,
     scaleDelta: -5,
     minScale: 20,
-    maxScale: 200
+    maxScale: 200,
+    jitter: { enabled: false, range: 0 }
   },
-  rotationDelta: 0,
+  rotation: {
+    enabled: false,
+    startRotation: 0,
+    rotationDelta: 0,
+    minRotation: -360,
+    maxRotation: 360,
+    jitter: { enabled: false, range: 0 }
+  },
   
   jitter: {
     enabled: false,
@@ -3002,22 +3037,44 @@ export const BatchConfigSettingsSchema = z.object({
     opacity: z.object({
       startOpacity: z.number().min(0).max(100),
       falloffRate: z.number().min(0).max(100),
-      minOpacity: z.number().min(0).max(100)
+      minOpacity: z.number().min(0).max(100),
+      jitter: z.object({
+        enabled: z.boolean(),
+        range: z.number().min(0).max(100)
+      })
     }),
     blur: z.object({
       enabled: z.boolean(),
       startBlur: z.number().min(0).max(50),
       blurDelta: z.number().min(0).max(20),
-      maxBlur: z.number().min(0).max(100)
+      maxBlur: z.number().min(0).max(100),
+      jitter: z.object({
+        enabled: z.boolean(),
+        range: z.number().min(0).max(50)
+      })
     }),
     scale: z.object({
       enabled: z.boolean(),
       startScale: z.number().min(10).max(200),
       scaleDelta: z.number().min(-50).max(50),
       minScale: z.number().min(1).max(100),
-      maxScale: z.number().min(100).max(500)
+      maxScale: z.number().min(100).max(500),
+      jitter: z.object({
+        enabled: z.boolean(),
+        range: z.number().min(0).max(100)
+      })
     }),
-    rotationDelta: z.number().min(-180).max(180),
+    rotation: z.object({
+      enabled: z.boolean(),
+      startRotation: z.number().min(0).max(360),
+      rotationDelta: z.number().min(-180).max(180),
+      minRotation: z.number().min(-360).max(0),
+      maxRotation: z.number().min(0).max(360),
+      jitter: z.object({
+        enabled: z.boolean(),
+        range: z.number().min(0).max(180)
+      })
+    }),
     jitter: z.object({
       enabled: z.boolean(),
       distanceRange: z.number().min(0).max(100),

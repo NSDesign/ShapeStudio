@@ -12,7 +12,9 @@ import type {
   EchoOpacityConfig, 
   EchoBlurConfig, 
   EchoScaleConfig,
+  EchoRotationConfig,
   EchoJitterConfig,
+  EchoPerEffectJitterConfig,
   EchoFixedVectorConfig,
   EchoAutoMotionConfig
 } from './schema';
@@ -184,16 +186,48 @@ export function calculateEchoScale(
 
 /**
  * Calculate rotation for a specific echo index
+ * Now uses the full rotation config with start, delta, min, and max values
  * 
- * @param rotationDelta - Rotation delta per echo in degrees
+ * @param rotationConfig - Rotation configuration
  * @param echoIndex - 0-based echo index
  * @returns Total rotation in degrees
  */
 export function calculateEchoRotation(
-  rotationDelta: number,
+  rotationConfig: EchoRotationConfig,
   echoIndex: number
 ): number {
-  return rotationDelta * (echoIndex + 1);
+  if (!rotationConfig.enabled) {
+    return 0;
+  }
+  
+  const rotation = rotationConfig.startRotation + (rotationConfig.rotationDelta * (echoIndex + 1));
+  return Math.max(
+    rotationConfig.minRotation,
+    Math.min(rotationConfig.maxRotation, rotation)
+  );
+}
+
+/**
+ * Apply per-effect jitter to a calculated effect value
+ * Uses deterministic seeded random for reproducibility
+ * 
+ * @param effectJitter - Per-effect jitter config
+ * @param baseValue - The calculated base value
+ * @param seed - Random seed for deterministic jitter
+ * @returns Jittered value
+ */
+export function applyPerEffectJitter(
+  effectJitter: EchoPerEffectJitterConfig,
+  baseValue: number,
+  seed: number
+): number {
+  if (!effectJitter.enabled || effectJitter.range === 0) {
+    return baseValue;
+  }
+  
+  const random = seededRandom(seed);
+  const jitterAmount = (random() * 2 - 1) * effectJitter.range;
+  return baseValue + jitterAmount;
 }
 
 /**
@@ -257,15 +291,19 @@ export function calculateEchoTransforms(
   const baseDistance = calculateEchoDistance(config, autoMotionContext);
   
   for (let i = 0; i < config.echoCount; i++) {
-    // Create deterministic seed based on set rep index and echo index
-    const jitterSeed = setRepIndex * 1000 + i * 17;
+    // Create deterministic seeds based on set rep index, echo index, and effect type
+    const baseSeed = setRepIndex * 1000 + i * 17;
+    const opacitySeed = baseSeed + 1;
+    const blurSeed = baseSeed + 2;
+    const scaleSeed = baseSeed + 3;
+    const rotationSeed = baseSeed + 4;
     
-    // Apply jitter to angle and distance
+    // Apply position jitter to angle and distance
     const { angle, distance } = applyJitter(
       config.jitter,
       baseAngle,
       baseDistance,
-      jitterSeed
+      baseSeed
     );
     
     // Calculate cumulative position offset for this echo
@@ -275,11 +313,19 @@ export function calculateEchoTransforms(
     const offsetX = Math.cos(angleRad) * cumulativeDistance;
     const offsetY = Math.sin(angleRad) * cumulativeDistance;
     
-    // Calculate per-echo effects
-    const opacity = calculateEchoOpacity(config.opacity, i, config.echoCount);
-    const blur = calculateEchoBlur(config.blur, i);
-    const scale = calculateEchoScale(config.scale, i);
-    const rotation = calculateEchoRotation(config.rotationDelta, i);
+    // Calculate per-echo effects with per-effect jitter
+    let opacity = calculateEchoOpacity(config.opacity, i, config.echoCount);
+    opacity = Math.max(0, Math.min(1, applyPerEffectJitter(config.opacity.jitter, opacity, opacitySeed)));
+    
+    let blur = calculateEchoBlur(config.blur, i);
+    blur = Math.max(0, applyPerEffectJitter(config.blur.jitter, blur, blurSeed));
+    
+    let scale = calculateEchoScale(config.scale, i);
+    const scaleJitterAmount = applyPerEffectJitter(config.scale.jitter, 0, scaleSeed) / 100; // Convert percentage jitter to scale factor
+    scale = Math.max(0.01, scale + scaleJitterAmount);
+    
+    let rotation = calculateEchoRotation(config.rotation, i);
+    rotation = applyPerEffectJitter(config.rotation.jitter, rotation, rotationSeed);
     
     echoes.push({
       echoIndex: i,
