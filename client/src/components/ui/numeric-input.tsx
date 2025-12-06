@@ -70,7 +70,7 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
     }, []);
 
     return (
-      <div className="relative flex items-center">
+      <div className="relative flex items-stretch overflow-hidden rounded-md">
         <input
           type="number"
           ref={ref}
@@ -79,16 +79,16 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
+            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             className
           )}
           {...props}
         />
-        <div className="absolute right-0 flex flex-col gap-0">
+        <div className="absolute right-0 top-0 bottom-0 flex flex-col">
           <button
             type="button"
             onClick={handleIncrement}
-            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            className={cn("flex-1 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-tr-md transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
             <ChevronUp className={cn("h-3 w-3", arrowColor)} />
@@ -96,7 +96,7 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
           <button
             type="button"
             onClick={handleDecrement}
-            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            className={cn("flex-1 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-br-md transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
             <ChevronDown className={cn("h-3 w-3", arrowColor)} />
@@ -189,7 +189,7 @@ const BufferedNumericInput = React.forwardRef<HTMLInputElement, BufferedNumericI
     }, [localValue, value, commitValue]);
 
     return (
-      <div className="relative flex items-center">
+      <div className="relative flex items-stretch overflow-hidden rounded-md">
         <input
           type="number"
           ref={ref}
@@ -198,16 +198,16 @@ const BufferedNumericInput = React.forwardRef<HTMLInputElement, BufferedNumericI
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
+            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             className
           )}
           {...props}
         />
-        <div className="absolute right-0 flex flex-col gap-0">
+        <div className="absolute right-0 top-0 bottom-0 flex flex-col">
           <button
             type="button"
             onClick={handleIncrement}
-            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            className={cn("flex-1 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-tr-md transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
             <ChevronUp className={cn("h-3 w-3", arrowColor)} />
@@ -215,7 +215,7 @@ const BufferedNumericInput = React.forwardRef<HTMLInputElement, BufferedNumericI
           <button
             type="button"
             onClick={handleDecrement}
-            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            className={cn("flex-1 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-br-md transition-colors", arrowHoverBg)}
             tabIndex={-1}
           >
             <ChevronDown className={cn("h-3 w-3", arrowColor)} />
