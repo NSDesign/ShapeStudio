@@ -8168,24 +8168,45 @@ export default function BatchConfigDialog({
                       
                       {/* Opacity Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <Label className="text-xs text-slate-400">Opacity</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-slate-400">Opacity</Label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-500">Jitter</span>
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.opacity?.jitter?.enabled ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  opacity: { 
+                                    ...currentSettings.echoSpread?.opacity, 
+                                    jitter: { ...currentSettings.echoSpread?.opacity?.jitter, enabled: checked as boolean } 
+                                  } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-opacity-jitter"
+                            />
+                          </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Start %</span>
-                            <NumericInput
-                              value={currentSettings.echoSpread?.opacity?.startOpacity ?? 80}
-                              onChange={(value) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  opacity: { ...currentSettings.echoSpread?.opacity, startOpacity: Math.max(0, Math.min(100, value)) } 
-                                } 
-                              })}
-                              min={0}
-                              max={100}
-                              step={5}
-                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                              data-testid="input-echo-opacity-start"
-                            />
+                            <div className="flex items-center gap-1">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.opacity?.startOpacity ?? 80}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { ...currentSettings.echoSpread?.opacity, startOpacity: Math.max(0, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                data-testid="input-echo-opacity-start"
+                              />
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <span className="text-xs text-slate-500">Falloff %</span>
@@ -8200,7 +8221,7 @@ export default function BatchConfigDialog({
                               min={0}
                               max={100}
                               step={5}
-                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
                               data-testid="input-echo-opacity-falloff"
                             />
                           </div>
@@ -8217,203 +8238,459 @@ export default function BatchConfigDialog({
                               min={0}
                               max={100}
                               step={5}
-                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
                               data-testid="input-echo-opacity-min"
                             />
                           </div>
                         </div>
+                        {currentSettings.echoSpread?.opacity?.jitter?.enabled && (
+                          <div className="mt-2 space-y-1">
+                            <span className="text-xs text-slate-500">Jitter Range (±%)</span>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.opacity?.jitter?.range ?? 0}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { 
+                                      ...currentSettings.echoSpread?.opacity, 
+                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, range: Math.max(0, Math.min(100, value)) } 
+                                    } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                data-testid="input-echo-opacity-jitter-range"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.opacity?.jitter?.range ?? 0]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    opacity: { 
+                                      ...currentSettings.echoSpread?.opacity, 
+                                      jitter: { ...currentSettings.echoSpread?.opacity?.jitter, range: value } 
+                                    } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Blur Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs text-slate-400">Blur</Label>
-                          <Checkbox
-                            checked={currentSettings.echoSpread?.blur?.enabled ?? false}
-                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                              echoSpread: { 
-                                ...currentSettings.echoSpread, 
-                                blur: { ...currentSettings.echoSpread?.blur, enabled: checked as boolean } 
-                              } 
-                            })}
-                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                            data-testid="checkbox-echo-blur-enabled"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.blur?.enabled ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  blur: { ...currentSettings.echoSpread?.blur, enabled: checked as boolean } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-blur-enabled"
+                            />
+                            <Label className="text-xs text-slate-400">Blur</Label>
+                          </div>
+                          {currentSettings.echoSpread?.blur?.enabled && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Jitter</span>
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.blur?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    blur: { 
+                                      ...currentSettings.echoSpread?.blur, 
+                                      jitter: { ...currentSettings.echoSpread?.blur?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-blur-jitter"
+                              />
+                            </div>
+                          )}
                         </div>
                         {currentSettings.echoSpread?.blur?.enabled && (
-                          <div className="grid grid-cols-3 gap-2 mt-2">
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Start px</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.blur?.startBlur ?? 0}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    blur: { ...currentSettings.echoSpread?.blur, startBlur: Math.max(0, Math.min(50, value)) } 
-                                  } 
-                                })}
-                                min={0}
-                                max={50}
-                                step={1}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-blur-start"
-                              />
+                          <>
+                            <div className="grid grid-cols-3 gap-2 mt-2">
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Start px</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.blur?.startBlur ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      blur: { ...currentSettings.echoSpread?.blur, startBlur: Math.max(0, Math.min(50, value)) } 
+                                    } 
+                                  })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-blur-start"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Delta px</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.blur?.blurDelta ?? 2}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      blur: { ...currentSettings.echoSpread?.blur, blurDelta: Math.max(0, Math.min(20, value)) } 
+                                    } 
+                                  })}
+                                  min={0}
+                                  max={20}
+                                  step={0.5}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-blur-delta"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Max px</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.blur?.maxBlur ?? 20}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      blur: { ...currentSettings.echoSpread?.blur, maxBlur: Math.max(0, Math.min(100, value)) } 
+                                    } 
+                                  })}
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-blur-max"
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Delta px</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.blur?.blurDelta ?? 2}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    blur: { ...currentSettings.echoSpread?.blur, blurDelta: Math.max(0, Math.min(20, value)) } 
-                                  } 
-                                })}
-                                min={0}
-                                max={20}
-                                step={0.5}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-blur-delta"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Max px</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.blur?.maxBlur ?? 20}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    blur: { ...currentSettings.echoSpread?.blur, maxBlur: Math.max(0, Math.min(100, value)) } 
-                                  } 
-                                })}
-                                min={0}
-                                max={100}
-                                step={1}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-blur-max"
-                              />
-                            </div>
-                          </div>
+                            {currentSettings.echoSpread?.blur?.jitter?.enabled && (
+                              <div className="mt-2 space-y-1">
+                                <span className="text-xs text-slate-500">Jitter Range (±px)</span>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.blur?.jitter?.range ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { 
+                                          ...currentSettings.echoSpread?.blur, 
+                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, range: Math.max(0, Math.min(50, value)) } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-blur-jitter-range"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.blur?.jitter?.range ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        blur: { 
+                                          ...currentSettings.echoSpread?.blur, 
+                                          jitter: { ...currentSettings.echoSpread?.blur?.jitter, range: value } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={50}
+                                    step={1}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
 
                       {/* Scale Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs text-slate-400">Scale</Label>
-                          <Checkbox
-                            checked={currentSettings.echoSpread?.scale?.enabled ?? false}
-                            onCheckedChange={(checked) => handleSettingsUpdate({ 
-                              echoSpread: { 
-                                ...currentSettings.echoSpread, 
-                                scale: { ...currentSettings.echoSpread?.scale, enabled: checked as boolean } 
-                              } 
-                            })}
-                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                            data-testid="checkbox-echo-scale-enabled"
-                          />
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.scale?.enabled ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  scale: { ...currentSettings.echoSpread?.scale, enabled: checked as boolean } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-scale-enabled"
+                            />
+                            <Label className="text-xs text-slate-400">Scale</Label>
+                          </div>
+                          {currentSettings.echoSpread?.scale?.enabled && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Jitter</span>
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.scale?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { 
+                                      ...currentSettings.echoSpread?.scale, 
+                                      jitter: { ...currentSettings.echoSpread?.scale?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-scale-jitter"
+                              />
+                            </div>
+                          )}
                         </div>
                         {currentSettings.echoSpread?.scale?.enabled && (
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Start %</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.scale?.startScale ?? 100}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    scale: { ...currentSettings.echoSpread?.scale, startScale: Math.max(10, Math.min(200, value)) } 
-                                  } 
-                                })}
-                                min={10}
-                                max={200}
-                                step={5}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-scale-start"
-                              />
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Start %</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.scale?.startScale ?? 100}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      scale: { ...currentSettings.echoSpread?.scale, startScale: Math.max(10, Math.min(200, value)) } 
+                                    } 
+                                  })}
+                                  min={10}
+                                  max={200}
+                                  step={5}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-scale-start"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Delta %</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.scale?.scaleDelta ?? -10}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      scale: { ...currentSettings.echoSpread?.scale, scaleDelta: Math.max(-50, Math.min(50, value)) } 
+                                    } 
+                                  })}
+                                  min={-50}
+                                  max={50}
+                                  step={5}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-scale-delta"
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Delta %</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.scale?.scaleDelta ?? -10}
-                                onChange={(value) => handleSettingsUpdate({ 
+                            <div className="space-y-1 mt-2">
+                              <span className="text-xs text-slate-500">Scale Range (min-max %)</span>
+                              <BufferedRangeSliderWithNumericInputs
+                                value={[currentSettings.echoSpread?.scale?.minScale ?? 10, currentSettings.echoSpread?.scale?.maxScale ?? 200]}
+                                onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
                                   echoSpread: { 
                                     ...currentSettings.echoSpread, 
-                                    scale: { ...currentSettings.echoSpread?.scale, scaleDelta: Math.max(-50, Math.min(50, value)) } 
-                                  } 
-                                })}
-                                min={-50}
-                                max={50}
-                                step={5}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-scale-delta"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Min %</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.scale?.minScale ?? 10}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    scale: { ...currentSettings.echoSpread?.scale, minScale: Math.max(1, Math.min(100, value)) } 
+                                    scale: { ...currentSettings.echoSpread?.scale, minScale: minVal, maxScale: maxVal } 
                                   } 
                                 })}
                                 min={1}
-                                max={100}
-                                step={5}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-scale-min"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-xs text-slate-500">Max %</span>
-                              <NumericInput
-                                value={currentSettings.echoSpread?.scale?.maxScale ?? 200}
-                                onChange={(value) => handleSettingsUpdate({ 
-                                  echoSpread: { 
-                                    ...currentSettings.echoSpread, 
-                                    scale: { ...currentSettings.echoSpread?.scale, maxScale: Math.max(100, Math.min(500, value)) } 
-                                  } 
-                                })}
-                                min={100}
                                 max={500}
-                                step={10}
-                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                                data-testid="input-echo-scale-max"
+                                step={5}
+                                inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                sliderClassName="[&_[role=slider]]:bg-cyan-600"
                               />
                             </div>
-                          </div>
+                            {currentSettings.echoSpread?.scale?.jitter?.enabled && (
+                              <div className="mt-2 space-y-1">
+                                <span className="text-xs text-slate-500">Jitter Range (±%)</span>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.scale?.jitter?.range ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { 
+                                          ...currentSettings.echoSpread?.scale, 
+                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, range: Math.max(0, Math.min(100, value)) } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-scale-jitter-range"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.scale?.jitter?.range ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        scale: { 
+                                          ...currentSettings.echoSpread?.scale, 
+                                          jitter: { ...currentSettings.echoSpread?.scale?.jitter, range: value } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={100}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
 
-                      {/* Rotation Delta */}
+                      {/* Rotation Controls */}
                       <div className="space-y-2 p-2 bg-slate-800/50 rounded">
-                        <Label className="text-xs text-slate-400">Rotation Delta (per echo)</Label>
-                        <div className="flex items-center gap-2">
-                          <NumericInput
-                            value={currentSettings.echoSpread?.rotationDelta ?? 0}
-                            onChange={(value) => handleSettingsUpdate({ 
-                              echoSpread: { ...currentSettings.echoSpread, rotationDelta: Math.max(-180, Math.min(180, value)) } 
-                            })}
-                            min={-180}
-                            max={180}
-                            step={5}
-                            className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
-                            data-testid="input-echo-rotation-delta"
-                          />
-                          <Slider
-                            value={[currentSettings.echoSpread?.rotationDelta ?? 0]}
-                            onValueChange={([value]) => handleSettingsUpdate({ 
-                              echoSpread: { ...currentSettings.echoSpread, rotationDelta: value } 
-                            })}
-                            min={-180}
-                            max={180}
-                            step={5}
-                            className="flex-1 [&_[role=slider]]:bg-cyan-600"
-                          />
-                          <span className="text-xs text-slate-400 w-8">{currentSettings.echoSpread?.rotationDelta ?? 0}°</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.rotation?.enabled ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  rotation: { ...currentSettings.echoSpread?.rotation, enabled: checked as boolean } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-rotation-enabled"
+                            />
+                            <Label className="text-xs text-slate-400">Rotation</Label>
+                          </div>
+                          {currentSettings.echoSpread?.rotation?.enabled && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Jitter</span>
+                              <Checkbox
+                                checked={currentSettings.echoSpread?.rotation?.jitter?.enabled ?? false}
+                                onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    rotation: { 
+                                      ...currentSettings.echoSpread?.rotation, 
+                                      jitter: { ...currentSettings.echoSpread?.rotation?.jitter, enabled: checked as boolean } 
+                                    } 
+                                  } 
+                                })}
+                                className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-rotation-jitter"
+                              />
+                            </div>
+                          )}
                         </div>
+                        {currentSettings.echoSpread?.rotation?.enabled && (
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Start °</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.rotation?.startRotation ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      rotation: { ...currentSettings.echoSpread?.rotation, startRotation: Math.max(0, Math.min(360, value)) } 
+                                    } 
+                                  })}
+                                  min={0}
+                                  max={360}
+                                  step={5}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-rotation-start"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-xs text-slate-500">Delta °</span>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.rotation?.rotationDelta ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      rotation: { ...currentSettings.echoSpread?.rotation, rotationDelta: Math.max(-180, Math.min(180, value)) } 
+                                    } 
+                                  })}
+                                  min={-180}
+                                  max={180}
+                                  step={5}
+                                  className="h-9 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-rotation-delta"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1 mt-2">
+                              <span className="text-xs text-slate-500">Rotation Range (min-max °)</span>
+                              <BufferedRangeSliderWithNumericInputs
+                                value={[currentSettings.echoSpread?.rotation?.minRotation ?? -360, currentSettings.echoSpread?.rotation?.maxRotation ?? 360]}
+                                onValueCommit={([minVal, maxVal]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    rotation: { ...currentSettings.echoSpread?.rotation, minRotation: minVal, maxRotation: maxVal } 
+                                  } 
+                                })}
+                                min={-360}
+                                max={360}
+                                step={5}
+                                inputClassName="h-9 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs"
+                                sliderClassName="[&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                            {currentSettings.echoSpread?.rotation?.jitter?.enabled && (
+                              <div className="mt-2 space-y-1">
+                                <span className="text-xs text-slate-500">Jitter Range (±°)</span>
+                                <div className="flex items-center gap-2">
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.rotation?.jitter?.range ?? 0}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { 
+                                          ...currentSettings.echoSpread?.rotation, 
+                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, range: Math.max(0, Math.min(180, value)) } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={180}
+                                    step={5}
+                                    className="h-9 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-rotation-jitter-range"
+                                  />
+                                  <Slider
+                                    value={[currentSettings.echoSpread?.rotation?.jitter?.range ?? 0]}
+                                    onValueChange={([value]) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        rotation: { 
+                                          ...currentSettings.echoSpread?.rotation, 
+                                          jitter: { ...currentSettings.echoSpread?.rotation?.jitter, range: value } 
+                                        } 
+                                      } 
+                                    })}
+                                    min={0}
+                                    max={180}
+                                    step={5}
+                                    className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
 
