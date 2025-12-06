@@ -119,6 +119,30 @@ if (sizeConstraintMode !== 'none' && aspectRatioMode !== '1:1') {
 
 ---
 
+### Echo/Spread Effect (⏳ PLANNED)
+
+**Description**: A controlled layering system that creates deliberate position offsets between repetitions.
+
+**Concept**: Each repetition is positioned at a predictable offset from the previous instance.
+
+**Visual Result**: Creates a "motion blur trail," "drop shadow," or "echo" effect.
+
+**Implementation**: Apply incremental X/Y offset to each successive repetition (e.g., +5px X, +5px Y per instance).
+
+**Example**: 5 repetitions with offset (5,5) would appear at positions (0,0), (5,5), (10,10), (15,15), (20,20).
+
+**Difference from Randomization**: Produces controlled, predictable visual patterns rather than chaotic variety.
+
+**Combination Potential**: Could work with randomization (random properties + predictable position offsets) for creative effects.
+
+**Use Cases**: 
+- Depth simulation
+- Vintage print registration effects
+- Neon glow trails
+- Kinetic typography
+
+---
+
 ### Randomization Per Repetition (⏳ PLANNED)
 
 **Description**: When generating multiple repetitions of a shape set, each repetition receives independent random values for enhanced variety.

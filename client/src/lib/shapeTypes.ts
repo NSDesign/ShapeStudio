@@ -18,11 +18,6 @@ import {
   PrintConfig,
   DEFAULT_PRINT_CONFIG,
 } from '@shared/schema';
-import { 
-  calculateGridOffsetAmount, 
-  calculateGridOffsets,
-  isGridPositionMasked 
-} from '@shared/gridOffsetUtils';
 
 // Re-export print types for convenience
 export type { 
@@ -270,8 +265,6 @@ export interface ShapeProperties {
   gradient?: {
     type: 'linear' | 'radial' | 'conic';
     stops: { offset: number; color: string }[];
-    // Linear gradient specific parameters
-    angle?: number; // Angle in degrees (0-360)
     // Radial gradient specific parameters
     radialCenterX?: number; // Center X as percentage of shape bounds (0-100)
     radialCenterY?: number; // Center Y as percentage of shape bounds (0-100)
@@ -652,17 +645,98 @@ export function calculateGridPosition(
   let y = startY + (row * effectiveRowOffset) + (ignoreGridStartY ? 0 : gridStartY);
   
   // Apply grid offsets (alternating or pattern-based row/column offsets)
-  // Uses shared utility for consistent client/server behavior
-  const { offsetX, offsetY } = calculateGridOffsets(row, column, gridOffsets);
-  x += offsetX;
-  y += offsetY;
+  if (gridOffsets?.enabled) {
+    const mode = gridOffsets.mode ?? 'alternating';
+    
+    // Helper to calculate offset amount based on mode and occurrence index
+    const calculateOffsetAmount = (
+      axisConfig: GridOffsetAxisConfig,
+      occurrenceIndex: number
+    ): number => {
+      const amountMode = axisConfig.amountMode ?? 'fixed';
+      
+      if (amountMode === 'fixed') {
+        return axisConfig.amount ?? 0;
+      } else if (amountMode === 'range') {
+        const min = axisConfig.amountMin ?? 0;
+        const max = axisConfig.amountMax ?? 50;
+        return min + Math.random() * (max - min);
+      } else if (amountMode === 'incremental') {
+        const base = axisConfig.amountBase ?? 0;
+        const increment = axisConfig.amountIncrement ?? 10;
+        return base + (increment * occurrenceIndex);
+      }
+      return 0;
+    };
+    
+    // Count how many times this row/column has had an offset applied (for incremental mode)
+    // For alternating mode, occurrence = row/2 or column/2 (roughly)
+    // For pattern mode, we use the position in the pattern array
+    
+    // Row offset affects X position (shifts rows left/right)
+    if (gridOffsets.row?.enabled) {
+      let shouldApplyRowOffset = false;
+      let rowOccurrenceIndex = 0;
+      
+      if (mode === 'alternating') {
+        // Alternating mode: check if row index modulo 2 matches startIndex
+        const startIndex = gridOffsets.row.startIndex ?? 0;
+        shouldApplyRowOffset = (row % 2) === startIndex;
+        // Calculate occurrence index: how many alternating rows have been offset before this one
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = Math.floor((row - startIndex) / 2);
+        }
+      } else if (mode === 'pattern') {
+        // Pattern mode: check if row index is in the pattern array
+        const rowPattern = gridOffsets.row.pattern ?? [];
+        const patternIndex = rowPattern.indexOf(row);
+        shouldApplyRowOffset = patternIndex >= 0;
+        if (shouldApplyRowOffset) {
+          rowOccurrenceIndex = patternIndex;
+        }
+      }
+      
+      if (shouldApplyRowOffset) {
+        const amount = calculateOffsetAmount(gridOffsets.row, rowOccurrenceIndex);
+        x += gridOffsets.row.direction === 'right' ? amount : -amount;
+      }
+    }
+    
+    // Column offset affects Y position (shifts columns up/down)
+    if (gridOffsets.column?.enabled) {
+      let shouldApplyColumnOffset = false;
+      let columnOccurrenceIndex = 0;
+      
+      if (mode === 'alternating') {
+        // Alternating mode: check if column index modulo 2 matches startIndex
+        const startIndex = gridOffsets.column.startIndex ?? 0;
+        shouldApplyColumnOffset = (column % 2) === startIndex;
+        // Calculate occurrence index: how many alternating columns have been offset before this one
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = Math.floor((column - startIndex) / 2);
+        }
+      } else if (mode === 'pattern') {
+        // Pattern mode: check if column index is in the pattern array
+        const columnPattern = gridOffsets.column.pattern ?? [];
+        const patternIndex = columnPattern.indexOf(column);
+        shouldApplyColumnOffset = patternIndex >= 0;
+        if (shouldApplyColumnOffset) {
+          columnOccurrenceIndex = patternIndex;
+        }
+      }
+      
+      if (shouldApplyColumnOffset) {
+        const amount = calculateOffsetAmount(gridOffsets.column, columnOccurrenceIndex);
+        y += gridOffsets.column.direction === 'down' ? amount : -amount;
+      }
+    }
+  }
   
   return { x, y, row, column };
 }
 
 /**
  * Determines if a grid position should be masked (excluded from shape rendering)
- * Uses shared utility for consistent client/server behavior
  * @param row - Row index (0-indexed)
  * @param column - Column index (0-indexed)
  * @param shapeMasking - Shape masking configuration
@@ -673,7 +747,49 @@ export function isPositionMasked(
   column: number,
   shapeMasking?: ShapeMaskingConfig
 ): boolean {
-  return isGridPositionMasked(row, column, shapeMasking);
+  // If masking is not enabled or not provided, render all positions
+  if (!shapeMasking?.enabled || !shapeMasking?.grid?.enabled) {
+    return false;
+  }
+  
+  const grid = shapeMasking.grid;
+  const mode = grid.mode ?? 'alternating';
+  const invert = grid.invert ?? false;
+  
+  let isMatched = false;
+  
+  if (mode === 'alternating') {
+    const { skipEvery, startIndex } = grid.alternating;
+    const skipN = skipEvery ?? 2;
+    const start = startIndex ?? 0;
+    
+    // In row-first priority, determine masking based on row index first
+    // In column-first priority, determine masking based on column index first
+    if (grid.priority === 'row-first') {
+      // Row determines if the entire row is masked
+      isMatched = ((row - start) % skipN) === 0 && row >= start;
+    } else {
+      // Column determines if the entire column is masked
+      isMatched = ((column - start) % skipN) === 0 && column >= start;
+    }
+  } else if (mode === 'pattern') {
+    // Pattern mode: check explicit row/column combinations
+    const patterns = grid.pattern ?? [];
+    
+    for (const patternEntry of patterns) {
+      if (patternEntry.row === row) {
+        // Check if this column is in the columns array for this row
+        if (patternEntry.columns.includes(column)) {
+          isMatched = true;
+          break;
+        }
+      }
+    }
+  }
+  
+  // invert=false: matched positions are excluded (masked)
+  // invert=true: only matched positions are rendered (non-matched are masked)
+  return invert ? !isMatched : isMatched;
 }
 
 /**

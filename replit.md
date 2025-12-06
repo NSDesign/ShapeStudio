@@ -30,20 +30,13 @@ Preferred communication style: Simple, everyday language.
 - **Distribution Algorithms**: Advanced shape placement with Grid, Auto Distribute, Wave, Ellipse, and Spiral patterns, including randomization and physics simulation, with client/server parity.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes, including grid position filters (alternating, pattern, invert, priority) and planned future filters.
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF, TIFF), high-resolution export, batch processing, and complete application state persistence.
-  - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags).
-    - **Compression**: UTIF.js auto-detects pako for deflate compression. For reliable encoding: don't set t259 metadata for deflate (let UTIF auto-detect), only set t259=[1] to explicitly disable compression.
-    - **Limitations**: LZW compression (5) is NOT supported for encoding. Deflate compression only works reliably with 8-bit data; 16-bit exports automatically fall back to uncompressed.
+  - **TIFF Export (Phase 2)**: Professional printing format via UTIF library with embedded DPI metadata (XResolution, YResolution, ResolutionUnit tags). Note: UTIF.js encoding only supports uncompressed output; LZW compression not available for encoding.
   - **TIFF Memory Management**: Automatic batch size limiting and sequential processing with memory cleanup for large TIFF exports. Estimates memory requirements based on canvas dimensions and DPI, reduces batch count when approaching browser limits (~600 MB threshold), and pauses between images to allow garbage collection.
   - **TIFF Pre-flight UX**: Enhanced user experience for TIFF batch exports including:
     - Pre-flight confirmation modal with memory estimation and effective batch count display
     - "Don't show again" option with persisted user preference (skipTiffPreflightModal)
     - Inline validation warnings when DPI < 300, bleed disabled, or background is transparent
     - Reset capability for dismissed warnings in Settings > Export tab
-  - **Export Progress UI**: Enhanced batch export progress display with:
-    - Real-time elapsed time tracking (mm:ss format) displayed alongside progress percentage
-    - Cancel button to abort ongoing exports with AbortController integration
-    - Multiple abort checkpoints throughout export loop (after shape generation, after image creation)
-    - Timer cleanup in finally block ensures proper resource management
 - **Print-on-Demand Configuration (Phase 1)**: Print configuration system with printConfig stored per-artboard, supporting:
   - **Bleed**: Configurable amount/unit (px/mm/cm/in), display overlay on canvas (red dashed), render to export (expands dimensions by 2× bleed on each axis).
   - **Safe Zone**: Configurable amount/unit, display overlay on canvas (green dashed inset), display-only (not rendered to export).
@@ -61,11 +54,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines.
 - **Advanced Grid Layout Sorting**: Comprehensive sorting criteria (layer, creation-time, shape-type, size, color, opacity, angle, id).
 - **Enhanced Grid Distribution System**: Advanced grid layout controls with start position offsets, three spacing modes (Define, Auto-Centered, Auto-Edge-to-Edge), and independent axis configuration.
-- **Grid Offset System**: Row/column offset controls with presets (Brick, Honeycomb, Staircase, Zigzag, Diamond) and value modes (Fixed, Range, Incremental), with client/server parity via shared utilities in `shared/gridOffsetUtils.ts`.
-- **Shared Utilities**: Common calculation functions extracted to `shared/` directory to ensure client/server parity:
-  - `shared/batchUtils.ts`: Linear angle, conic/radial center calculations for batch generation
-  - `shared/gradientUtils.ts`: Linear, radial, conic gradient coordinate calculations
-  - `shared/gridOffsetUtils.ts`: Grid offset calculations (fixed/range/incremental modes) and position masking
+- **Grid Offset System**: Row/column offset controls with presets (Brick, Honeycomb, Staircase, Zigzag, Diamond) and value modes (Fixed, Range, Incremental), with client/server parity.
 - **Grid Render Mode**: Controls how shapes are positioned within grid cells (Point Mode, Cell Mode with fit options and padding), including a debug grid overlay.
 - **Shape Type Architecture**: Clear distinction between standard and rounded shapes with specific corner radius properties.
 - **Shape Sets System**: Layer management with synchronized dropdowns for shape types and generation config settings, supporting set-level positioning, blending, compositing, transforms, and alignment.
@@ -80,27 +69,6 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Artboard Persistence**: All artboards are saved to `savedArtboards` array with `activeArtboardId` tracking, with automatic dimension validation per artboard during restore. Maintains backward compatibility with legacy single-artboard fields.
 - **Automatic Grid Recalculation**: When switching artboards with different dimensions, grid settings are automatically scaled via `recalculateGridForArtboard` utility. Only "define" mode settings (gridRowOffset, gridColumnOffset, gridStartX, gridStartY, gridMarginValue) are scaled based on artboard dimension ratios; auto modes (auto-centered, auto-edge-to-edge) recalculate automatically from artboard bounds. When shape sets are enabled, updated grid config requires explicit Apply to persist to set.
 - **Artboard Info Display**: Name, dimensions, and DPI displayed in a rounded container at top-right of artboard, positioned above all print overlays (bleed, safe zone, print marks). Container uses adaptive contrast (dark on light backgrounds, light on dark backgrounds) with semi-transparent background. Position calculation accounts for bleed area and print marks gutter scaled by zoom level.
-- **Export Render Mode Selector**: UI control for choosing rendering pipeline with Auto/Client/Server options:
-  - **Auto** (default): Smart detection based on export size, format, and DPI - automatically chooses optimal renderer
-  - **Client**: Force browser-based rendering for quick exports (subject to browser canvas limits)
-  - **Server**: Force server-side rendering via Headless Chromium + Sharp for large/high-quality exports
-- **Tiled Export System**: Server-side tiled rendering pipeline for very large print files (A0+ at 600+ DPI):
-  - **Auto-Detection**: Automatically switches to tiled mode when canvas exceeds ~100M pixels or ~512MB raw memory threshold
-  - **Tile Planning**: Calculates optimal tile grid (e.g., 4x3 = 12 tiles) with ~8000px base tile size; edge tiles automatically sized smaller via min(baseTile, remaining)
-  - **Tiled Rendering**: Reuses single Puppeteer page, translates scene by (-tileX, -tileY) per tile, captures lossless PNG buffer for each tile
-  - **Sequential Composite**: Sharp creates full-size canvas and composites each tile at (x, y) position immediately after render; disposes tile buffer to minimize memory
-  - **Metadata Preservation**: DPI and sRGB ICC profile applied after all tiles stitched, before final TIFF/PNG encoding
-  - **Progress Integration**: Reports tile phases through existing batch export progress to ExportProgressOverlay:
-    - "Preparing tiles (4x3 grid)..."
-    - "Rendering tile 1 of 12..."
-    - "Stitching tiles..."
-    - "Encoding final TIFF..."
-  - **Error Handling**: Aborts on tile failure, surfaces error in progress, cleans up buffers; honors AbortSignal for cancellation
-- **SSE Streaming for Server Exports**: Real-time progress streaming via Server-Sent Events for high-resolution exports:
-  - **Endpoints**: POST `/api/export/highres/start` (init), GET `/api/export/highres/stream` (SSE), GET `/api/export/highres/download/:id` (file), DELETE `/api/export/highres/:id` (cancel)
-  - **Event Types**: phase (preparing/rendering/stitching/encoding), tile (index/total/step), progress (pct/status/eta), complete (url/filename/size), error, heartbeat
-  - **Client Integration**: `executeServerExportWithSSE()` in `client/src/lib/imageExport.ts` with typed callbacks
-  - **Benefits**: Real-time tile progress, cancellation support, better UX for long-running exports
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.
