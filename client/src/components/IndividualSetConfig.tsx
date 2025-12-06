@@ -34,7 +34,8 @@ import {
   Move,
   RotateCcw,
   Maximize2,
-  AlignCenter
+  AlignCenter,
+  Waves
 } from 'lucide-react';
 import { 
   GenerationSet, 
@@ -44,7 +45,9 @@ import {
   SupportedShapeTypeSchema,
   BlendMode,
   CompositingOperation,
-  BLEND_MODES
+  BLEND_MODES,
+  EchoSpreadConfig,
+  DEFAULT_ECHO_SPREAD_CONFIG
 } from '@shared/schema';
 import {
   ShapeSpecificPropertiesHelper,
@@ -1032,6 +1035,544 @@ export function IndividualSetConfig({
                             Point around which rotation and scaling occurs
                         </p>
                     </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Echo/Motion Trails Override */}
+            <AccordionItem value="echo-override" className="border-slate-700">
+              <AccordionTrigger className="text-slate-200 hover:text-white hover:no-underline py-3" data-testid="trigger-echo-override">
+                <div className="flex items-center gap-2">
+                  <Waves className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-medium">Echo/Motion Trails</span>
+                  {generationSet.echoOverride?.enabled && (
+                    <Badge variant="outline" className="ml-2 text-xs border-cyan-500 text-cyan-400">
+                      Override
+                    </Badge>
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="grid grid-cols-1 gap-4 pt-2">
+                  {/* Enable Override Toggle */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white text-sm">Override Global Echo Settings</Label>
+                    <Checkbox
+                      checked={generationSet.echoOverride?.enabled ?? false}
+                      onCheckedChange={(checked) => {
+                        const newEchoOverride = {
+                          enabled: checked as boolean,
+                          config: generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG }
+                        };
+                        onUpdate({ echoOverride: newEchoOverride });
+                      }}
+                      className="border-slate-600 data-[state=checked]:bg-cyan-600"
+                      data-testid="checkbox-echo-override-enabled"
+                    />
+                  </div>
+
+                  {generationSet.echoOverride?.enabled && (
+                    <>
+                      {/* Echo Enabled Toggle */}
+                      <div className="flex items-center justify-between">
+                        <Label className="text-white text-sm">Enable Echoes for this Set</Label>
+                        <Checkbox
+                          checked={generationSet.echoOverride.config?.enabled ?? false}
+                          onCheckedChange={(checked) => {
+                            const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                            onUpdate({
+                              echoOverride: {
+                                enabled: true,
+                                config: { ...currentConfig, enabled: checked as boolean }
+                              }
+                            });
+                          }}
+                          className="border-slate-600 data-[state=checked]:bg-cyan-600"
+                          data-testid="checkbox-echo-enabled"
+                        />
+                      </div>
+
+                      {generationSet.echoOverride.config?.enabled && (
+                        <>
+                          {/* Echo Count */}
+                          <div>
+                            <Label className="text-white text-xs">
+                              Echo Count: {generationSet.echoOverride.config.echoCount ?? 3}
+                            </Label>
+                            <Slider
+                              value={[generationSet.echoOverride.config.echoCount ?? 3]}
+                              onValueChange={([value]) => {
+                                const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                onUpdate({
+                                  echoOverride: {
+                                    enabled: true,
+                                    config: { ...currentConfig, echoCount: value }
+                                  }
+                                });
+                              }}
+                              min={1}
+                              max={20}
+                              step={1}
+                              className="mt-2"
+                              data-testid="slider-echo-count"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">Number of echo copies (1-20)</p>
+                          </div>
+
+                          {/* Scope Selection */}
+                          <div>
+                            <Label className="text-white text-xs">Scope</Label>
+                            <Select
+                              value={generationSet.echoOverride.config.scope ?? 'set'}
+                              onValueChange={(value: 'set' | 'shape' | 'both') => {
+                                const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                onUpdate({
+                                  echoOverride: {
+                                    enabled: true,
+                                    config: { ...currentConfig, scope: value }
+                                  }
+                                });
+                              }}
+                              data-testid="select-echo-scope"
+                            >
+                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="set" className="text-white hover:bg-slate-600">Set Level</SelectItem>
+                                <SelectItem value="shape" className="text-white hover:bg-slate-600">Shape Level</SelectItem>
+                                <SelectItem value="both" className="text-white hover:bg-slate-600">Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500 mt-1">Set: same echoes for all shapes, Shape: per-shape trails</p>
+                          </div>
+
+                          {/* Driver Selection */}
+                          <div>
+                            <Label className="text-white text-xs">Driver</Label>
+                            <Select
+                              value={generationSet.echoOverride.config.driver ?? 'setRepIndex'}
+                              onValueChange={(value: 'setRepIndex' | 'shapeIndex' | 'combined') => {
+                                const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                onUpdate({
+                                  echoOverride: {
+                                    enabled: true,
+                                    config: { ...currentConfig, driver: value }
+                                  }
+                                });
+                              }}
+                              data-testid="select-echo-driver"
+                            >
+                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="setRepIndex" className="text-white hover:bg-slate-600">Set Repetition</SelectItem>
+                                <SelectItem value="shapeIndex" className="text-white hover:bg-slate-600">Shape Index</SelectItem>
+                                <SelectItem value="combined" className="text-white hover:bg-slate-600">Combined</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500 mt-1">What drives echo variation</p>
+                          </div>
+
+                          {/* Direction Mode */}
+                          <div>
+                            <Label className="text-white text-xs">Direction Mode</Label>
+                            <Select
+                              value={generationSet.echoOverride.config.directionMode ?? 'fixed-vector'}
+                              onValueChange={(value: 'fixed-vector' | 'auto-motion' | 'absolute-position') => {
+                                const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                onUpdate({
+                                  echoOverride: {
+                                    enabled: true,
+                                    config: { ...currentConfig, directionMode: value }
+                                  }
+                                });
+                              }}
+                              data-testid="select-echo-direction-mode"
+                            >
+                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="fixed-vector" className="text-white hover:bg-slate-600">Fixed Vector</SelectItem>
+                                <SelectItem value="auto-motion" className="text-white hover:bg-slate-600">Auto Motion</SelectItem>
+                                <SelectItem value="absolute-position" className="text-white hover:bg-slate-600">Absolute Position</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Fixed Vector Settings (when direction mode is fixed-vector) */}
+                          {generationSet.echoOverride.config.directionMode === 'fixed-vector' && (
+                            <div className="space-y-3 pl-3 border-l-2 border-slate-600">
+                              <div>
+                                <Label className="text-white text-xs">
+                                  Angle: {generationSet.echoOverride.config.fixedVector?.angle ?? 225}°
+                                </Label>
+                                <Slider
+                                  value={[generationSet.echoOverride.config.fixedVector?.angle ?? 225]}
+                                  onValueChange={([value]) => {
+                                    const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                    onUpdate({
+                                      echoOverride: {
+                                        enabled: true,
+                                        config: {
+                                          ...currentConfig,
+                                          fixedVector: {
+                                            ...currentConfig.fixedVector,
+                                            angle: value
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  min={0}
+                                  max={360}
+                                  step={1}
+                                  className="mt-2"
+                                  data-testid="slider-echo-angle"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-white text-xs">
+                                  Distance: {generationSet.echoOverride.config.fixedVector?.distance ?? 20}px
+                                </Label>
+                                <Slider
+                                  value={[generationSet.echoOverride.config.fixedVector?.distance ?? 20]}
+                                  onValueChange={([value]) => {
+                                    const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                    onUpdate({
+                                      echoOverride: {
+                                        enabled: true,
+                                        config: {
+                                          ...currentConfig,
+                                          fixedVector: {
+                                            ...currentConfig.fixedVector,
+                                            distance: value
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  min={1}
+                                  max={100}
+                                  step={1}
+                                  className="mt-2"
+                                  data-testid="slider-echo-distance"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Opacity Settings */}
+                          <div className="space-y-3">
+                            <Label className="text-white text-xs font-medium">Opacity Falloff</Label>
+                            <div className="space-y-2 pl-3 border-l-2 border-slate-600">
+                              <div>
+                                <Label className="text-white text-xs">
+                                  Start Opacity: {generationSet.echoOverride.config.opacity?.startOpacity ?? 80}%
+                                </Label>
+                                <Slider
+                                  value={[generationSet.echoOverride.config.opacity?.startOpacity ?? 80]}
+                                  onValueChange={([value]) => {
+                                    const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                    onUpdate({
+                                      echoOverride: {
+                                        enabled: true,
+                                        config: {
+                                          ...currentConfig,
+                                          opacity: {
+                                            ...currentConfig.opacity,
+                                            startOpacity: value
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="mt-2"
+                                  data-testid="slider-echo-opacity-start"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-white text-xs">
+                                  Falloff Rate: {generationSet.echoOverride.config.opacity?.falloffRate ?? 25}%
+                                </Label>
+                                <Slider
+                                  value={[generationSet.echoOverride.config.opacity?.falloffRate ?? 25]}
+                                  onValueChange={([value]) => {
+                                    const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                    onUpdate({
+                                      echoOverride: {
+                                        enabled: true,
+                                        config: {
+                                          ...currentConfig,
+                                          opacity: {
+                                            ...currentConfig.opacity,
+                                            falloffRate: value
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="mt-2"
+                                  data-testid="slider-echo-opacity-falloff"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Scale Settings */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-white text-xs font-medium">Scale Effect</Label>
+                              <Checkbox
+                                checked={generationSet.echoOverride.config.scale?.enabled ?? false}
+                                onCheckedChange={(checked) => {
+                                  const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                  onUpdate({
+                                    echoOverride: {
+                                      enabled: true,
+                                      config: {
+                                        ...currentConfig,
+                                        scale: {
+                                          ...currentConfig.scale,
+                                          enabled: checked as boolean
+                                        }
+                                      }
+                                    }
+                                  });
+                                }}
+                                className="border-slate-600 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-scale-enabled"
+                              />
+                            </div>
+                            {generationSet.echoOverride.config.scale?.enabled && (
+                              <div className="space-y-2 pl-3 border-l-2 border-slate-600">
+                                <div>
+                                  <Label className="text-white text-xs">
+                                    Scale Delta: {generationSet.echoOverride.config.scale?.scaleDelta ?? -5}%
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.echoOverride.config.scale?.scaleDelta ?? -5]}
+                                    onValueChange={([value]) => {
+                                      const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                      onUpdate({
+                                        echoOverride: {
+                                          enabled: true,
+                                          config: {
+                                            ...currentConfig,
+                                            scale: {
+                                              ...currentConfig.scale,
+                                              scaleDelta: value
+                                            }
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    min={-50}
+                                    max={50}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid="slider-echo-scale-delta"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Blur Settings */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-white text-xs font-medium">Blur Effect</Label>
+                              <Checkbox
+                                checked={generationSet.echoOverride.config.blur?.enabled ?? false}
+                                onCheckedChange={(checked) => {
+                                  const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                  onUpdate({
+                                    echoOverride: {
+                                      enabled: true,
+                                      config: {
+                                        ...currentConfig,
+                                        blur: {
+                                          ...currentConfig.blur,
+                                          enabled: checked as boolean
+                                        }
+                                      }
+                                    }
+                                  });
+                                }}
+                                className="border-slate-600 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-blur-enabled"
+                              />
+                            </div>
+                            {generationSet.echoOverride.config.blur?.enabled && (
+                              <div className="space-y-2 pl-3 border-l-2 border-slate-600">
+                                <div>
+                                  <Label className="text-white text-xs">
+                                    Blur Delta: {generationSet.echoOverride.config.blur?.blurDelta ?? 2}px
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.echoOverride.config.blur?.blurDelta ?? 2]}
+                                    onValueChange={([value]) => {
+                                      const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                      onUpdate({
+                                        echoOverride: {
+                                          enabled: true,
+                                          config: {
+                                            ...currentConfig,
+                                            blur: {
+                                              ...currentConfig.blur,
+                                              blurDelta: value
+                                            }
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    min={0}
+                                    max={20}
+                                    step={0.5}
+                                    className="mt-2"
+                                    data-testid="slider-echo-blur-delta"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Color Shift Settings */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-white text-xs font-medium">Color Shift</Label>
+                              <Checkbox
+                                checked={generationSet.echoOverride.config.colorShift?.enabled ?? false}
+                                onCheckedChange={(checked) => {
+                                  const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                  onUpdate({
+                                    echoOverride: {
+                                      enabled: true,
+                                      config: {
+                                        ...currentConfig,
+                                        colorShift: {
+                                          ...(currentConfig.colorShift ?? { hueDelta: 0, saturationDelta: 0, lightnessDelta: 0 }),
+                                          enabled: checked as boolean
+                                        }
+                                      }
+                                    }
+                                  });
+                                }}
+                                className="border-slate-600 data-[state=checked]:bg-cyan-600"
+                                data-testid="checkbox-echo-color-shift-enabled"
+                              />
+                            </div>
+                            {generationSet.echoOverride.config.colorShift?.enabled && (
+                              <div className="space-y-2 pl-3 border-l-2 border-slate-600">
+                                <div>
+                                  <Label className="text-white text-xs">
+                                    Hue Delta: {generationSet.echoOverride.config.colorShift?.hueDelta ?? 0}°
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.echoOverride.config.colorShift?.hueDelta ?? 0]}
+                                    onValueChange={([value]) => {
+                                      const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                      onUpdate({
+                                        echoOverride: {
+                                          enabled: true,
+                                          config: {
+                                            ...currentConfig,
+                                            colorShift: {
+                                              ...(currentConfig.colorShift ?? { enabled: true, saturationDelta: 0, lightnessDelta: 0 }),
+                                              hueDelta: value
+                                            }
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    min={-180}
+                                    max={180}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid="slider-echo-hue-delta"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-white text-xs">
+                                    Saturation Delta: {generationSet.echoOverride.config.colorShift?.saturationDelta ?? 0}%
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.echoOverride.config.colorShift?.saturationDelta ?? 0]}
+                                    onValueChange={([value]) => {
+                                      const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                      onUpdate({
+                                        echoOverride: {
+                                          enabled: true,
+                                          config: {
+                                            ...currentConfig,
+                                            colorShift: {
+                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, lightnessDelta: 0 }),
+                                              saturationDelta: value
+                                            }
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    min={-50}
+                                    max={50}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid="slider-echo-saturation-delta"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-white text-xs">
+                                    Lightness Delta: {generationSet.echoOverride.config.colorShift?.lightnessDelta ?? 0}%
+                                  </Label>
+                                  <Slider
+                                    value={[generationSet.echoOverride.config.colorShift?.lightnessDelta ?? 0]}
+                                    onValueChange={([value]) => {
+                                      const currentConfig = generationSet.echoOverride?.config ?? { ...DEFAULT_ECHO_SPREAD_CONFIG };
+                                      onUpdate({
+                                        echoOverride: {
+                                          enabled: true,
+                                          config: {
+                                            ...currentConfig,
+                                            colorShift: {
+                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, saturationDelta: 0 }),
+                                              lightnessDelta: value
+                                            }
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    min={-50}
+                                    max={50}
+                                    step={1}
+                                    className="mt-2"
+                                    data-testid="slider-echo-lightness-delta"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-400 mt-2 italic">
+                            These settings override global echo configuration for this set only.
+                          </p>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {!generationSet.echoOverride?.enabled && (
+                    <p className="text-xs text-slate-500">
+                      Enable override to customize echo settings for this set instead of using global settings.
+                    </p>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
 

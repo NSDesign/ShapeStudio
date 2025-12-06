@@ -124,7 +124,8 @@ export function processGenerationSets(
         enabledShapeTypes: set.enabledShapeTypes as ShapeType[],
         batchConfig: set.batchConfig,
         distributionEnabled: true,
-        scatterSettings: scatterSettings
+        scatterSettings: scatterSettings,
+        echoOverride: set.echoOverride
       }
     );
 

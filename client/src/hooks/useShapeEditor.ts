@@ -3582,7 +3582,10 @@ export const useShapeEditor = () => {
           }
 
           // Echo/Motion Trails generation (Project A: Set-Level, Project B: Shape-Level)
-          const echoConfig = set.batchConfig?.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG;
+          // Check for per-set echo override first, fall back to batchConfig.echoSpread
+          const echoConfig = (set.echoOverride?.enabled && set.echoOverride?.config) 
+            ? set.echoOverride.config 
+            : (set.batchConfig?.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG);
           if (isEchoEnabled(echoConfig)) {
             const echoScope = echoConfig.scope ?? 'set';
             const echoDriver = echoConfig.driver ?? 'setRepIndex';
@@ -3617,8 +3620,8 @@ export const useShapeEditor = () => {
                 echoConfig.directionMode === 'absolute-position' ? {
                   shapeX: setCentroidX,
                   shapeY: setCentroidY,
-                  artboardWidth: artboardDimensions.width,
-                  artboardHeight: artboardDimensions.height
+                  artboardWidth: currentArtboard?.width ?? canvasBounds.width,
+                  artboardHeight: currentArtboard?.height ?? canvasBounds.height
                 } : undefined;
               
               const echoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContext, absolutePositionContext);
@@ -3704,8 +3707,8 @@ export const useShapeEditor = () => {
                   echoConfig.directionMode === 'absolute-position' ? {
                     shapeX: originalShape.transform.x,
                     shapeY: originalShape.transform.y,
-                    artboardWidth: artboardDimensions.width,
-                    artboardHeight: artboardDimensions.height
+                    artboardWidth: currentArtboard?.width ?? canvasBounds.width,
+                    artboardHeight: currentArtboard?.height ?? canvasBounds.height
                   } : undefined;
                 
                 const echoTransforms = calculateEchoTransforms(echoConfig, driverIndex, autoMotionContext, absolutePositionContext);
@@ -3775,8 +3778,8 @@ export const useShapeEditor = () => {
                 echoConfig.directionMode === 'absolute-position' ? {
                   shapeX: setCentroidX,
                   shapeY: setCentroidY,
-                  artboardWidth: artboardDimensions.width,
-                  artboardHeight: artboardDimensions.height
+                  artboardWidth: currentArtboard?.width ?? canvasBounds.width,
+                  artboardHeight: currentArtboard?.height ?? canvasBounds.height
                 } : undefined;
               
               const setEchoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContextSet, absolutePositionContextSet);
@@ -3858,8 +3861,8 @@ export const useShapeEditor = () => {
                   echoConfig.directionMode === 'absolute-position' ? {
                     shapeX: originalShape.transform.x,
                     shapeY: originalShape.transform.y,
-                    artboardWidth: artboardDimensions.width,
-                    artboardHeight: artboardDimensions.height
+                    artboardWidth: currentArtboard?.width ?? canvasBounds.width,
+                    artboardHeight: currentArtboard?.height ?? canvasBounds.height
                   } : undefined;
                 
                 const shapeEchoTransforms = calculateEchoTransforms(echoConfig, driverIndex, autoMotionContextShape, absolutePositionContextShape);

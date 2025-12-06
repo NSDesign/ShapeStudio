@@ -2384,6 +2384,12 @@ export interface GenerationSet {
   
   // Set locks - granular control over operations
   locks: SetLocks;                      // Lock states for this set (composite, blend, transform, etc.)
+  
+  // Per-set echo override (Project B feature)
+  echoOverride?: {
+    enabled: boolean;                   // Whether to override global echo settings
+    config?: EchoSpreadConfig;          // Custom echo config for this set (if enabled)
+  };
 }
 
 // Enhanced batch configuration supporting both single and multi-generation modes
@@ -3274,7 +3280,12 @@ export const GenerationSetSchema = z.object({
   repetitionValue: z.number().min(0),
   repetitionRange: z.tuple([z.number().min(0), z.number().min(0)]),
   // Lock settings
-  locks: SetLocksSchema
+  locks: SetLocksSchema,
+  // Per-set echo override (Project B feature)
+  echoOverride: z.object({
+    enabled: z.boolean(),
+    config: z.any().optional()
+  }).optional()
 });
 
 export const EnhancedBatchConfigSchema = z.object({

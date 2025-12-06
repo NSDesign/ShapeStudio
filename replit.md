@@ -70,6 +70,7 @@ Preferred communication style: Simple, everyday language.
   - **Color Shift**: Progressive HSL (hue/saturation/lightness) changes per echo for gradient/rainbow effects
   - **ApplyTo Filters**: Shape type filtering, index selectors (all/even/odd/step), probability-based application
   - **Jitter Systems**: Per-effect jitter for organic variation, position jitter for angle/distance randomization
+  - **Per-Set Echo Override**: Individual shape sets can override global echo settings with custom configuration via `echoOverride` property in GenerationSet, with dedicated UI in IndividualSetConfig.tsx accordion section
   - Uses shared echoUtils.ts with safe defaults for backward compatibility. Full client/server parity via batchConfigProcessor.ts for batch exports.
 - **Shape Selection Groups (Planned)**: Future abstraction for unifying filtering logic across various features.
 

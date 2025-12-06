@@ -6,7 +6,7 @@
 import { Shape } from './shapeGenerator';
 import { SmartDistributionAlgorithm } from './distributionAlgorithm';
 import { ColorUtils, generateColor, generateGradientColors } from './colorUtils';
-import type { BatchConfigSettings } from '../../shared/schema';
+import type { BatchConfigSettings, EchoSpreadConfig } from '../../shared/schema';
 import { DEFAULT_ECHO_SPREAD_CONFIG } from '../../shared/schema';
 import { 
   calculateLinearAngle as sharedCalculateLinearAngle,
@@ -48,6 +48,10 @@ interface GenerationOptions {
   scatterSettings?: {
     distribution: DistributionSettings;
     shapeSpecific?: Record<string, any>;
+  };
+  echoOverride?: {
+    enabled: boolean;
+    config?: EchoSpreadConfig;
   };
 }
 
@@ -1340,7 +1344,10 @@ export function generateShapesWithBatchConfig(
   }
 
   // Echo/Motion Trails generation (Project A: Set-Level, Project B: Shape-Level)
-  const echoConfig = batchConfig.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG;
+  // Check for per-set echo override first, fall back to batchConfig.echoSpread
+  const echoConfig = (options.echoOverride?.enabled && options.echoOverride?.config) 
+    ? options.echoOverride.config 
+    : (batchConfig.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG);
   if (isEchoEnabled(echoConfig)) {
     const repIndex = generationContext?.generationIndex ?? 0;
     const echoScope = echoConfig.scope ?? 'set';
