@@ -298,7 +298,7 @@ export function BufferedSliderWithNumericInput({
 
   if (layout === 'inline') {
     return (
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2">
         {label && <span className={labelClassName}>{label}</span>}
         <NumericInput
           value={localValue}
@@ -317,7 +317,7 @@ export function BufferedSliderWithNumericInput({
           max={max}
           step={step}
           disabled={disabled}
-          className={sliderClassName ? `flex-1 min-w-0 ${sliderClassName}` : "flex-1 min-w-0"}
+          className={sliderClassName || "flex-1"}
         />
       </div>
     );

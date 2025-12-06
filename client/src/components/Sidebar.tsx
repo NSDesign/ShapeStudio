@@ -9,12 +9,10 @@ if (typeof window !== 'undefined') {
   (window as unknown as { pako: typeof pako }).pako = pako;
 }
 import { getSrgbIccProfile, embedIccInPng, embedIccInJpeg } from '@/lib/iccProfile';
-import { executeServerExport, executeServerExportWithSSE, fetchServerExportEstimate, ServerExportRequest } from '@/lib/imageExport';
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
 import TiffPreflightModal, { calculateTiffPreflightInfo } from './TiffPreflightModal';
-import ExportProgressOverlay from './ExportProgressOverlay';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode, PrintMarksScaleMode } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
@@ -692,703 +690,6 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
   );
 });
 
-// Memoized ShapeTypesContent - extracted to top level to prevent remounting on parent re-renders
-interface ShapeTypesContentProps {
-  scatterSettings: ScatterSettings;
-  onUpdateScatterSettings: (settings: Partial<ScatterSettings>) => void;
-  enabledShapeTypes: Set<ShapeType>;
-  onToggleShapeType: (type: ShapeType) => void;
-  shapeListAccordionOpen: string | undefined;
-  setShapeListAccordionOpen: (value: string | undefined) => void;
-  openShapeCategories: string[];
-  setOpenShapeCategories: (value: string[]) => void;
-  expandedShapes: Set<string>;
-  toggleShapeExpansion: (shapeType: string) => void;
-  setsEnabled: boolean;
-  currentGenerationSetId: string | null;
-  updateGenerationSetPartial: ((id: string, updates: Partial<GenerationSet>) => Promise<void>) | undefined;
-  applyStatus: 'idle' | 'applying' | 'success';
-  handleApplyToCurrentSet: () => void;
-  onGenerateRandomShapes: () => void;
-}
-
-const ShapeTypesContentMemo = React.memo(function ShapeTypesContentMemo({
-  scatterSettings,
-  onUpdateScatterSettings,
-  enabledShapeTypes,
-  onToggleShapeType,
-  shapeListAccordionOpen,
-  setShapeListAccordionOpen,
-  openShapeCategories,
-  setOpenShapeCategories,
-  expandedShapes,
-  toggleShapeExpansion,
-  setsEnabled,
-  currentGenerationSetId,
-  updateGenerationSetPartial,
-  applyStatus,
-  handleApplyToCurrentSet,
-  onGenerateRandomShapes
-}: ShapeTypesContentProps) {
-
-  const getShapeProperties = useCallback((shapeType: string) => {
-    switch (shapeType) {
-      case 'polygon':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Edge Count"
-              config={convertScatterToModeConfig('polygon', 'edgeCount', scatterSettings, [3, 20])}
-              onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 3, max: 20 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-      
-      case 'line-vector':
-        const lineVectorConfig = { 
-          ...getDefaultLineVectorConfig(), 
-          ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
-        };
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Direction"
-              config={convertLineVectorToModeConfig(lineVectorConfig.direction)}
-              onChange={(modeConfig) => {
-                handleLineVectorModeConfigChange('direction', modeConfig, scatterSettings, onUpdateScatterSettings);
-              }}
-              bounds={{ min: 0, max: 360 }}
-              unit="°"
-              step={15}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <StyledModeField
-              label="Length"
-              config={convertLineVectorToModeConfig(lineVectorConfig.length)}
-              onChange={(modeConfig) => {
-                handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
-              }}
-              bounds={{ min: 0, max: 500 }}
-              unit="px"
-              step={5}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <StyledModeField
-              label="Centroid"
-              config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
-              onChange={(modeConfig) => {
-                handleLineVectorModeConfigChange('centroid', modeConfig, scatterSettings, onUpdateScatterSettings);
-              }}
-              bounds={{ min: 0, max: 1 }}
-              step={0.01}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
-              <div className="space-y-2">
-                {['round', 'square', 'butt'].map((cap) => (
-                  <div key={cap} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-300 capitalize">{cap}</span>
-                      <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
-                    </div>
-                    <BufferedSlider
-                      value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
-                      onValueCommit={(value) => {
-                        const probability = value[0];
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            'line-vector': { 
-                              ...lineVectorConfig,
-                              strokeCapProbabilities: {
-                                round: cap === 'round' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.round || 0),
-                                square: cap === 'square' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.square || 0),
-                                butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.butt || 0)
-                              }
-                            }
-                          }
-                        });
-                      }}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      
-      case 'circle':
-      case 'ellipse':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Segment Count"
-              config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
-              onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 8, max: 64 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-      
-      case 'bezier':
-      case 'smooth-spline':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Point Count"
-              config={convertScatterToModeConfig(shapeType, 'pointCount', scatterSettings, [3, 6])}
-              onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 3, max: 10 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
-                  <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
-                </div>
-                <BufferedSlider
-                  value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
-                  onValueCommit={([value]) => {
-                    console.log(`${shapeType} open probability: ${value}%`);
-                    onUpdateScatterSettings({
-                      shapeSpecific: {
-                        ...scatterSettings.shapeSpecific,
-                        [shapeType]: { 
-                          ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
-                          openProbability: value 
-                        }
-                      }
-                    });
-                  }}
-                  min={0}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
-              <div className="space-y-2">
-                {['round', 'square', 'butt'].map((cap) => {
-                  const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] ?? (cap === 'round' ? 50 : 25);
-                  return (
-                    <div key={cap} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <Label className="text-slate-300 capitalize">{cap}</Label>
-                        <span className="text-slate-400">{currentValue}%</span>
-                      </div>
-                      <BufferedSlider
-                        value={[currentValue]}
-                        onValueCommit={([value]) => {
-                          console.log(`${shapeType} ${cap} cap: ${value}%`);
-                          const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
-                          onUpdateScatterSettings({
-                            shapeSpecific: {
-                              ...scatterSettings.shapeSpecific,
-                              [shapeType]: { 
-                                ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
-                                strokeCapProbabilities: {
-                                  ...currentCaps,
-                                  [cap]: value
-                                }
-                              }
-                            }
-                          });
-                        }}
-                        min={0}
-                        max={100}
-                        step={5}
-                        className="w-full"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'star':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Point Count"
-              config={convertScatterToModeConfig('star', 'pointCount', scatterSettings, [5, 8])}
-              onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 5, max: 12 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <StyledModeField
-              label="Inner Radius"
-              config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
-              onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 10, max: 90 }}
-              step={1}
-              unit="%"
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-
-      case 'ring':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Inner Radius"
-              config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
-              onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 10, max: 90 }}
-              step={1}
-              unit="%"
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-
-      case 'spline-ring':
-        return (
-          <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Inner Radius"
-              config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
-              onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 10, max: 90 }}
-              step={1}
-              unit="%"
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-
-      case 'line':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Point Count"
-              config={convertScatterToModeConfig('line', 'pointCount', scatterSettings, [2, 4])}
-              onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 2, max: 8 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
-              <div className="space-y-2">
-                {['round', 'square', 'butt'].map((cap) => (
-                  <div key={cap} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-300 capitalize">{cap}</span>
-                      <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
-                    </div>
-                    <BufferedSlider
-                      value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
-                      onValueCommit={(value) => {
-                        const probability = value[0];
-                        onUpdateScatterSettings({
-                          shapeSpecific: {
-                            ...scatterSettings.shapeSpecific,
-                            line: { 
-                              pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
-                              strokeCapProbabilities: {
-                                round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
-                                square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
-                                butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
-                              }
-                            }
-                          }
-                        });
-                      }}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'rectangle':
-        return null;
-        
-      case 'rounded-rectangle':
-      case 'rounded-square':
-        return (
-          <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Corner Radius"
-              config={convertScatterToModeConfig(shapeType, 'cornerRadius', scatterSettings, [0, 20])}
-              onChange={(config) => handleScatterModeConfigChange(shapeType, 'cornerRadius', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 0, max: 50 }}
-              step={1}
-              unit="px"
-              allowedModes={['fixed', 'range']}
-            />
-          </div>
-        );
-        
-      case 'cubic':
-        return (
-          <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
-            <StyledModeField
-              label="Point Count"
-              config={convertScatterToModeConfig('cubic', 'pointCount', scatterSettings, [3, 7])}
-              onChange={(config) => handleScatterModeConfigChange('cubic', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 3, max: 8 }}
-              step={1}
-              allowedModes={['fixed', 'range']}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <StyledModeField
-              label="Curvature"
-              config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
-              onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 10, max: 100 }}
-              step={1}
-              unit="%"
-              allowedModes={['fixed', 'range']}
-            />
-            
-            <Separator className="bg-slate-600" />
-            
-            <StyledModeField
-              label="Curve Spread"
-              config={convertScatterToModeConfig('cubic', 'spread', scatterSettings, [40, 120])}
-              onChange={(config) => handleScatterModeConfigChange('cubic', 'spread', config, scatterSettings, onUpdateScatterSettings)}
-              bounds={{ min: 20, max: 200 }}
-              step={10}
-              unit="px"
-              allowedModes={['fixed', 'range']}
-            />
-            
-            <Separator className="bg-slate-600" />
-
-            <div className="space-y-3">
-              <Label className="text-xs text-slate-400">Curve Pattern</Label>
-              <Select 
-                value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
-                onValueChange={(value) => {
-                  onUpdateScatterSettings({
-                    shapeSpecific: {
-                      ...scatterSettings.shapeSpecific,
-                      cubic: { 
-                        pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                        curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                        spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                        patternType: parseInt(value),
-                        openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
-                      }
-                    }
-                  });
-                }}
-              >
-                <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-300">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">Spiral</SelectItem>
-                  <SelectItem value="1">Wave</SelectItem>
-                  <SelectItem value="2">Organic</SelectItem>
-                  <SelectItem value="3">Arc</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Separator className="bg-slate-600" />
-
-            <div className="space-y-3">
-              <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
-              <BufferedSlider
-                value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
-                onValueCommit={(value) => {
-                  const probability = value[0];
-                  onUpdateScatterSettings({
-                    shapeSpecific: {
-                      ...scatterSettings.shapeSpecific,
-                      cubic: { 
-                        pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
-                        curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
-                        spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
-                        patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
-                        openProbability: probability
-                      }
-                    }
-                  });
-                }}
-                min={0}
-                max={100}
-                step={5}
-                className="w-full"
-              />
-            </div>
-          </div>
-        );
-
-      case 'square':
-        return null;
-
-      default:
-        return null;
-    }
-  }, [scatterSettings, onUpdateScatterSettings]);
-
-  return (
-    <div className="space-y-3">
-      {/* Internal accordion to control shape list visibility */}
-      <Accordion 
-        type="single" 
-        collapsible 
-        value={shapeListAccordionOpen} 
-        onValueChange={setShapeListAccordionOpen}
-        className="w-full"
-      >
-        <AccordionItem value="shape-list" className="border-0">
-          <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
-            <span>Shape List ({Object.keys(shapeTypeDisplayNames).length} types)</span>
-          </AccordionTrigger>
-          <AccordionContent className="pb-2">
-            <div className="space-y-3">
-              {/* Nested accordion for shape categories */}
-              <Accordion 
-                type="multiple" 
-                className="w-full"
-                value={openShapeCategories}
-                onValueChange={setOpenShapeCategories}
-              >
-                {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
-                  const enabledInCategory = categoryShapes.filter(shapeType => 
-                    enabledShapeTypes.has(shapeType)
-                  ).length;
-                  
-                  return (
-                    <AccordionItem key={categoryName} value={categoryName} className="border-slate-700">
-                      <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
-                        <div className="flex items-center gap-2">
-                          <span>{categoryName}</span>
-                          <span className="text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
-                            {enabledInCategory}/{categoryShapes.length}
-                          </span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="space-y-2 pt-2">
-                        {categoryShapes.map((shapeType) => {
-                          const displayName = shapeTypeDisplayNames[shapeType];
-                          const isEnabled = enabledShapeTypes.has(shapeType);
-                          const isExpanded = expandedShapes.has(shapeType);
-                          const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(shapeType);
-
-                          return (
-                            <div key={shapeType} className="space-y-2">
-                              {/* Shape Toggle Row */}
-                              <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                                isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
-                              }`}>
-                                <div className="flex items-center space-x-3">
-                                  <div className={`w-3 h-3 rounded transition-colors ${
-                                    isEnabled ? 'bg-blue-400' : 'bg-slate-500'
-                                  }`} />
-                                  <Label className={`text-sm transition-colors ${
-                                    isEnabled ? 'text-blue-200' : 'text-slate-300'
-                                  }`}>{displayName}</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  {isEnabled && hasProperties && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => toggleShapeExpansion(shapeType)}
-                                      className="p-1 h-6 w-6 hover:bg-slate-700"
-                                    >
-                                      <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
-                                        isExpanded ? 'rotate-180' : ''
-                                      }`} />
-                                    </Button>
-                                  )}
-                                  <Switch
-                                    checked={isEnabled}
-                                    onCheckedChange={() => onToggleShapeType(shapeType)}
-                                    className="data-[state=checked]:bg-blue-600"
-                                  />
-                                </div>
-                              </div>
-                              
-                              {/* Shape Properties (Accordion Content) */}
-                              {isEnabled && isExpanded && hasProperties && (
-                                <div className="ml-4">
-                                  {getShapeProperties(shapeType)}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
-              
-              {/* Separator inside accordion so it disappears when collapsed */}
-              <Separator className="bg-slate-600" />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      {/* All On/Off Buttons */}
-      <div className="flex gap-2 py-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const allTypes = Object.keys(shapeTypeDisplayNames) as ShapeType[];
-            allTypes.forEach(type => {
-              if (!enabledShapeTypes.has(type)) {
-                onToggleShapeType(type);
-              }
-            });
-          }}
-          className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
-        >
-          All On
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const enabledTypes = Array.from(enabledShapeTypes);
-            enabledTypes.forEach(type => {
-              onToggleShapeType(type);
-            });
-          }}
-          className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
-        >
-          All Off
-        </Button>
-      </div>
-
-      {/* Shape Count Settings */}
-      <div className="space-y-2 pb-6">
-        <div className="flex items-center space-x-2">
-          <Label className="text-xs text-slate-400">Shape Count</Label>
-          <Select 
-            value={scatterSettings.shapeCountMode || 'range'} 
-            onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
-          >
-            <SelectTrigger className="h-8 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200 px-2 py-3">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-800 border-slate-600">
-              <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-              <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {scatterSettings.shapeCountMode === 'range' ? (
-          <BufferedRangeSliderWithNumericInputs
-            value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
-            onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
-            min={1}
-            max={50}
-            step={1}
-            minLabel="Min"
-            maxLabel="Max"
-          />
-        ) : (
-          <BufferedSliderWithNumericInput
-            value={scatterSettings.fixedShapeCount || 10}
-            onValueCommit={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
-            min={1}
-            max={50}
-            step={1}
-            sliderClassName="w-full pt-2"
-          />
-        )}
-      </div>
-
-
-      {/* Apply and Generate Buttons */}
-      <div className="flex flex-col gap-2">
-        {setsEnabled && (
-          <Button 
-            onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
-            disabled={!currentGenerationSetId || !updateGenerationSetPartial}
-            className={`w-full h-8 ${
-              !currentGenerationSetId || !updateGenerationSetPartial
-                ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                : applyStatus === 'applying'
-                ? 'bg-blue-600 text-white cursor-not-allowed'
-                : applyStatus === 'success'
-                ? 'bg-green-600 text-white cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            } transition-colors duration-200`}
-            data-testid="button-apply-shape-types"
-          >
-            <div className="flex items-center space-x-2">
-              {!currentGenerationSetId || !updateGenerationSetPartial ? (
-                <AlertTriangle className="w-4 h-4" />
-              ) : applyStatus === 'applying' ? (
-                <>
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Applying...</span>
-                </>
-              ) : applyStatus === 'success' ? (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Applied!</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Apply</span>
-                </>
-              )}
-            </div>
-          </Button>
-        )}
-        <Button 
-          onClick={onGenerateRandomShapes}
-          className="w-full h-8 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
-        >
-          <Wand2 className="w-4 h-4 mr-2" />
-          {scatterSettings.shapeCountMode === 'fixed' 
-            ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
-            : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
-          }
-        </Button>
-      </div>
-    </div>
-  );
-});
-
 interface SidebarProps {
   enabledShapeTypes: Set<ShapeType>;
   scatterSettings: ScatterSettings;
@@ -1598,75 +899,11 @@ export default function Sidebar({
   const [isTiffPreflightOpen, setIsTiffPreflightOpen] = useState(false);
   const [pendingTiffExport, setPendingTiffExport] = useState<boolean>(false);
   const pendingTiffExportRef = useRef<(() => void) | null>(null);
-  const [isServerExportingGlobal, setIsServerExportingGlobal] = useState(false);
-  
-  // Export progress overlay state (lifted to component level for global visibility)
-  const [showExportProgressOverlay, setShowExportProgressOverlay] = useState(false);
-  const [exportProgressGlobal, setExportProgressGlobal] = useState(0);
-  const [exportTotalStepsGlobal, setExportTotalStepsGlobal] = useState(0);
-  const [exportStatusGlobal, setExportStatusGlobal] = useState('');
-  const [exportElapsedTimeGlobal, setExportElapsedTimeGlobal] = useState(0);
-  const [exportIsCompleteGlobal, setExportIsCompleteGlobal] = useState(false);
-  const [exportIsErrorGlobal, setExportIsErrorGlobal] = useState(false);
-  const [exportResultMessageGlobal, setExportResultMessageGlobal] = useState('');
-  const [exportEstimatedTimeGlobal, setExportEstimatedTimeGlobal] = useState<number | undefined>(undefined);
-  const exportStartTimeGlobalRef = useRef<number | null>(null);
-  const elapsedTimeIntervalGlobalRef = useRef<NodeJS.Timeout | null>(null);
-  const exportAbortControllerGlobalRef = useRef<AbortController | null>(null);
-  
-  // Start elapsed time tracking (global)
-  const startElapsedTimeTrackingGlobal = useCallback(() => {
-    exportStartTimeGlobalRef.current = Date.now();
-    setExportElapsedTimeGlobal(0);
-    elapsedTimeIntervalGlobalRef.current = setInterval(() => {
-      if (exportStartTimeGlobalRef.current) {
-        setExportElapsedTimeGlobal(Math.floor((Date.now() - exportStartTimeGlobalRef.current) / 1000));
-      }
-    }, 1000);
-  }, []);
-  
-  // Stop elapsed time tracking (global)
-  const stopElapsedTimeTrackingGlobal = useCallback(() => {
-    if (elapsedTimeIntervalGlobalRef.current) {
-      clearInterval(elapsedTimeIntervalGlobalRef.current);
-      elapsedTimeIntervalGlobalRef.current = null;
-    }
-    exportStartTimeGlobalRef.current = null;
-  }, []);
-  
-  // Cancel export (global)
-  const handleCancelExportGlobal = useCallback(() => {
-    if (exportAbortControllerGlobalRef.current) {
-      exportAbortControllerGlobalRef.current.abort();
-      console.log('🛑 Export cancelled by user (global)');
-      setExportStatusGlobal('Export cancelled');
-      setExportIsErrorGlobal(true);
-      setExportResultMessageGlobal('⚠️ Export was cancelled');
-      stopElapsedTimeTrackingGlobal();
-    }
-  }, [stopElapsedTimeTrackingGlobal]);
-  
-  // Reset export overlay state
-  const resetExportOverlay = useCallback(() => {
-    setShowExportProgressOverlay(false);
-    setExportProgressGlobal(0);
-    setExportTotalStepsGlobal(0);
-    setExportStatusGlobal('');
-    setExportElapsedTimeGlobal(0);
-    setExportEstimatedTimeGlobal(undefined);
-    setExportIsCompleteGlobal(false);
-    setExportIsErrorGlobal(false);
-    setExportResultMessageGlobal('');
-    setIsServerExportingGlobal(false);
-  }, []);
   
   // Global repetition settings for generation sets
   const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
   const [globalRepetitionValue, setGlobalRepetitionValue] = useState<number>(0);
   const [globalRepetitionRange, setGlobalRepetitionRange] = useState<[number, number]>([0, 0]);
-  
-  // Ref to skip UI restoration after Apply button (prevents scroll jump)
-  const skipNextRestoreRef = useRef(false);
   
   // Sets Manager Dialog state is now managed centrally via props
 
@@ -3241,8 +2478,6 @@ export default function Sidebar({
     const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig ?? DEFAULT_PRINT_CONFIG;
     const bleedEnabled = printConfig.overlays.bleed.render && printConfig.overlays.bleed.amount > 0;
     const backgroundMode = exportSettings.exportBackgroundMode || 'transparent';
-    const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
-    const scale = effectiveExportScale;
     
     return calculateTiffPreflightInfo(
       artboardWidth,
@@ -3250,11 +2485,9 @@ export default function Sidebar({
       artboardDpi,
       requestedCount,
       bleedEnabled,
-      backgroundMode,
-      is16Bit,
-      scale
+      backgroundMode
     );
-  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode, exportSettings.tiffBitDepth, effectiveExportScale]);
+  }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode]);
   
   // Handle TIFF pre-flight modal confirmation
   const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
@@ -3306,9 +2539,6 @@ export default function Sidebar({
 
     setApplyStatus('applying');
     
-    // Set flag to skip the automatic UI restoration that would reset scroll position
-    skipNextRestoreRef.current = true;
-    
     try {
       // Prepare shape types partial update - only what this section controls
       const shapeTypesUpdate: Partial<GenerationSet> = {
@@ -3337,8 +2567,7 @@ export default function Sidebar({
       }, 1000);
     } catch (error) {
       console.error('Failed to apply shape types:', error);
-      // On error, revert to idle and clear the skip flag
-      skipNextRestoreRef.current = false;
+      // On error, revert to idle
       setApplyStatus('idle');
     }
   }, [currentGenerationSetId, updateGenerationSetPartial, enabledShapeTypes, shapeCountMode, shapeCountFixed, shapeCountRange, scatterSettings.shapeSpecific]);
@@ -3350,64 +2579,11 @@ export default function Sidebar({
     // Local export state (not needed by API generator)
     const [batchExportPath, setBatchExportPath] = useState<string>('');
     const [isBatchExporting, setIsBatchExporting] = useState(false);
-    // Server export state is managed at the Sidebar component level (isServerExportingGlobal) for proper modal synchronization
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchTotalSteps, setBatchTotalSteps] = useState(0);
     const [batchStatus, setBatchStatus] = useState('');
     const [showBatchResult, setShowBatchResult] = useState(false);
     const [batchResultMessage, setBatchResultMessage] = useState('');
-    
-    // Export progress tracking with elapsed time and cancel
-    const [exportElapsedTime, setExportElapsedTime] = useState(0);
-    const exportStartTimeRef = useRef<number | null>(null);
-    const exportAbortControllerRef = useRef<AbortController | null>(null);
-    const elapsedTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    
-    // Format elapsed time as mm:ss
-    const formatElapsedTime = (seconds: number): string => {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-    
-    // Start elapsed time tracking
-    const startElapsedTimeTracking = () => {
-      exportStartTimeRef.current = Date.now();
-      setExportElapsedTime(0);
-      elapsedTimeIntervalRef.current = setInterval(() => {
-        if (exportStartTimeRef.current) {
-          setExportElapsedTime(Math.floor((Date.now() - exportStartTimeRef.current) / 1000));
-        }
-      }, 1000);
-    };
-    
-    // Stop elapsed time tracking
-    const stopElapsedTimeTracking = () => {
-      if (elapsedTimeIntervalRef.current) {
-        clearInterval(elapsedTimeIntervalRef.current);
-        elapsedTimeIntervalRef.current = null;
-      }
-      exportStartTimeRef.current = null;
-    };
-    
-    // Cancel export
-    const handleCancelExport = useCallback(() => {
-      if (exportAbortControllerRef.current) {
-        exportAbortControllerRef.current.abort();
-        console.log('🛑 Export cancelled by user');
-        // Update local state
-        setBatchStatus('Export cancelled');
-        stopElapsedTimeTracking();
-        setIsBatchExporting(false);
-        setShowBatchResult(true);
-        setBatchResultMessage('⚠️ Export was cancelled');
-        // Update global state for overlay
-        stopElapsedTimeTrackingGlobal();
-        setExportStatusGlobal('Export cancelled');
-        setExportIsErrorGlobal(true);
-        setExportResultMessageGlobal('⚠️ Export was cancelled');
-      }
-    }, [stopElapsedTimeTrackingGlobal]);
 
     // Helper function to convert print units to pixels
     const convertPrintUnitToPixels = (value: number, unit: PrintUnitType, dpi: number): number => {
@@ -3507,51 +2683,6 @@ export default function Sidebar({
       ctx.restore();
     };
 
-    const convertRgbaToRgb = (
-      rgbaData: Uint8Array | Uint16Array, 
-      width: number, 
-      height: number, 
-      matteColor: string,
-      is16Bit: boolean = false
-    ): Uint8Array | Uint16Array => {
-      const pixelCount = width * height;
-      const maxValue = is16Bit ? 65535 : 255;
-      
-      const hexToRgb = (hex: string): [number, number, number] => {
-        const cleanHex = hex.replace('#', '');
-        const r = parseInt(cleanHex.substring(0, 2), 16);
-        const g = parseInt(cleanHex.substring(2, 4), 16);
-        const b = parseInt(cleanHex.substring(4, 6), 16);
-        if (is16Bit) {
-          return [r * 257, g * 257, b * 257];
-        }
-        return [r, g, b];
-      };
-      
-      const [matteR, matteG, matteB] = hexToRgb(matteColor);
-      const rgbData = is16Bit 
-        ? new Uint16Array(pixelCount * 3)
-        : new Uint8Array(pixelCount * 3);
-      
-      for (let i = 0; i < pixelCount; i++) {
-        const srcIdx = i * 4;
-        const dstIdx = i * 3;
-        
-        const r = rgbaData[srcIdx];
-        const g = rgbaData[srcIdx + 1];
-        const b = rgbaData[srcIdx + 2];
-        const a = rgbaData[srcIdx + 3];
-        
-        const alpha = a / maxValue;
-        
-        rgbData[dstIdx] = Math.round(r * alpha + matteR * (1 - alpha));
-        rgbData[dstIdx + 1] = Math.round(g * alpha + matteG * (1 - alpha));
-        rgbData[dstIdx + 2] = Math.round(b * alpha + matteB * (1 - alpha));
-      }
-      
-      return rgbData;
-    };
-
     const renderShapeForExport = (ctx: CanvasRenderingContext2D, shape: Shape) => {
       // Temporarily disable selection to avoid selection indicators, but keep the original shape
       const originalSelected = shape.selected;
@@ -3625,14 +2756,7 @@ export default function Sidebar({
             }
             
             const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
-            let pixelData: Uint8Array | Uint16Array;
-            
-            // Determine if we should flatten to RGB (drop alpha channel)
-            // Auto-flatten when background is artboard (no transparency needed)
-            // Or when user explicitly enables flattenToRgb for transparent background
-            const bgMode = exportSettings.exportBackgroundMode || 'transparent';
-            const shouldFlattenToRgb = bgMode === 'artboard' || (exportSettings.flattenToRgb ?? false);
-            const matteColor = exportSettings.matteColor || '#ffffff';
+            let rgba: Uint8Array | Uint16Array;
             
             if (tiffBitDepth === 16) {
               // Convert 8-bit to 16-bit by scaling values (0-255 -> 0-65535)
@@ -3640,71 +2764,33 @@ export default function Sidebar({
               for (let i = 0; i < imageData.data.length; i++) {
                 rgba16[i] = imageData.data[i] * 257; // Scale 8-bit to 16-bit (255 * 257 = 65535)
               }
-              
-              if (shouldFlattenToRgb) {
-                pixelData = convertRgbaToRgb(rgba16, canvas.width, canvas.height, matteColor, true);
-                console.log(`📄 TIFF: Flattening to RGB (16-bit) - ~25% smaller file, matte: ${matteColor}`);
-              } else {
-                pixelData = rgba16;
-              }
+              rgba = rgba16;
             } else {
-              const rgba8 = new Uint8Array(imageData.data.buffer);
-              
-              if (shouldFlattenToRgb) {
-                pixelData = convertRgbaToRgb(rgba8, canvas.width, canvas.height, matteColor, false);
-                console.log(`📄 TIFF: Flattening to RGB (8-bit) - ~25% smaller file, matte: ${matteColor}`);
-              } else {
-                pixelData = rgba8;
-              }
+              rgba = new Uint8Array(imageData.data.buffer);
             }
             
             // Build TIFF metadata
-            // Note: UTIF.js encodeImage behavior with compression:
-            // - UTIF auto-detects window.pako and applies deflate compression when available
-            // - Setting t259 in metadata can conflict with this auto-detection
-            // - For reliable encoding: DON'T set t259 for deflate (let UTIF auto-detect)
-            //   only set t259=[1] to explicitly disable compression
-            // - 16-bit exports do NOT support deflate compression (UTIF limitation)
-            // - LZW compression (5) is NOT supported for encoding at all
+            // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
+            // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
+            // UTIF handles compression internally when t259 is set and pako is available globally
             const tiffMetadata: Record<string, unknown> = {
               t282: [dpi],  // XResolution
               t283: [dpi],  // YResolution
               t296: [2],    // ResolutionUnit (2 = inch)
             };
             
-            // Set samples per pixel and photometric interpretation based on RGB vs RGBA
-            if (shouldFlattenToRgb) {
-              tiffMetadata.t277 = [3];  // SamplesPerPixel = 3 (RGB)
-              tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB)
+            // Set compression type (UTIF handles compression internally)
+            if (tiffCompression === 'deflate') {
+              tiffMetadata.t259 = [8];  // Deflate compression (requires pako globally available)
+              console.log(`📄 TIFF: Using Deflate compression`);
             } else {
-              tiffMetadata.t277 = [4];  // SamplesPerPixel = 4 (RGBA)
-              tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB with alpha)
-              tiffMetadata.t338 = [1];  // ExtraSamples = 1 (associated alpha)
-            }
-            
-            // Handle compression based on bit depth and user setting
-            // UTIF.js deflate only works reliably with 8-bit data
-            const effectiveCompression = (tiffBitDepth === 16) ? 'none' : tiffCompression;
-            
-            if (effectiveCompression === 'deflate') {
-              // For deflate: DON'T set t259 - let UTIF auto-detect pako and apply compression
-              // UTIF.js checks window.pako and auto-applies deflate (cmpr=8) when available
-              console.log(`📄 TIFF: Using Deflate compression (UTIF auto-detection with pako)`);
-            } else {
-              // Explicitly disable compression by setting t259=[1]
               tiffMetadata.t259 = [1];  // No compression
-              if (tiffBitDepth === 16 && tiffCompression === 'deflate') {
-                console.log(`📄 TIFF: 16-bit mode - forcing uncompressed (deflate not supported for 16-bit)`);
-              } else {
-                console.log(`📄 TIFF: No compression (uncompressed)`);
-              }
+              console.log(`📄 TIFF: No compression (uncompressed)`);
             }
             
-            // Set bit depth tag based on RGB vs RGBA
+            // Set bit depth tag for 16-bit exports
             if (tiffBitDepth === 16) {
-              tiffMetadata.t258 = shouldFlattenToRgb ? [16, 16, 16] : [16, 16, 16, 16]; // BitsPerSample
-            } else {
-              tiffMetadata.t258 = shouldFlattenToRgb ? [8, 8, 8] : [8, 8, 8, 8]; // BitsPerSample
+              tiffMetadata.t258 = [16, 16, 16, 16]; // BitsPerSample (R, G, B, A)
             }
             
             // Embed sRGB ICC profile if requested (TIFF tag 34675 = InterColorProfile)
@@ -3754,7 +2840,7 @@ export default function Sidebar({
             // Encode to TIFF buffer
             // Note: UTIF.encodeImage expects Uint8Array, so for 16-bit we pass the buffer view
             const tiffBuffer = UTIF.encodeImage(
-              tiffBitDepth === 16 ? new Uint8Array((pixelData as Uint16Array).buffer) : pixelData as Uint8Array, 
+              tiffBitDepth === 16 ? new Uint8Array((rgba as Uint16Array).buffer) : rgba as Uint8Array, 
               canvas.width, 
               canvas.height, 
               tiffMetadata as UTIF.IFD
@@ -3766,8 +2852,7 @@ export default function Sidebar({
             tiffLink.download = filename;
             tiffLink.click();
             URL.revokeObjectURL(url);
-            const channelMode = shouldFlattenToRgb ? 'RGB' : 'RGBA';
-            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata, ${tiffBitDepth}-bit ${channelMode}${embedIccProfile ? ', sRGB ICC profile' : ''}`);
+            console.log(`📁 File saved: ${filename} (check your Downloads folder) with ${dpi} DPI metadata, ${tiffBitDepth}-bit${embedIccProfile ? ', sRGB ICC profile' : ''}`);
           }
           break;
         default:
@@ -4294,280 +3379,25 @@ export default function Sidebar({
       await exportCanvasAsFormat(canvas, filename, exportFormat, exportQuality, effectiveExportScale, exportDPI);
     };
 
-    // Server-side high-resolution export handler
-    const handleServerExport = async () => {
-      // Initialize global overlay
-      setShowExportProgressOverlay(true);
-      setIsServerExportingGlobal(true);
-      setExportTotalStepsGlobal(100);
-      setExportProgressGlobal(5);
-      setExportStatusGlobal('Calculating export estimate...');
-      setExportIsCompleteGlobal(false);
-      setExportIsErrorGlobal(false);
-      setExportResultMessageGlobal('');
-      setExportEstimatedTimeGlobal(undefined);
-      exportAbortControllerGlobalRef.current = new AbortController();
-      startElapsedTimeTrackingGlobal();
-      
-      // Also update local state for accordion display
-      setBatchStatus('Calculating estimate...');
-      setBatchProgress(5);
-      
-      try {
-        const backgroundArtboard = artboards.find(ab => ab.id === activeArtboard);
-        const targetArtboard = exportMode === 'artboard' 
-          ? (selectedArtboardForExport 
-              ? artboards.find(ab => ab.id === selectedArtboardForExport)
-              : backgroundArtboard)
-          : backgroundArtboard;
-        
-        const artboardWidth = targetArtboard?.width ?? backgroundArtboard?.width ?? 400;
-        const artboardHeight = targetArtboard?.height ?? backgroundArtboard?.height ?? 400;
-        const artboardDpi = targetArtboard?.dpi ?? backgroundArtboard?.dpi ?? 72;
-        const artboardBgColor = targetArtboard?.backgroundColor ?? backgroundArtboard?.backgroundColor ?? '#ffffff';
-        const printConfig = targetArtboard?.printConfig ?? backgroundArtboard?.printConfig;
-        
-        const bgMode = exportSettings.exportBackgroundMode || 'transparent';
-        const is16Bit = (exportSettings.tiffBitDepth ?? 8) === 16;
-        
-        // Fetch export estimate for estimated time display
-        try {
-          const estimate = await fetchServerExportEstimate(
-            { 
-              width: artboardWidth, 
-              height: artboardHeight, 
-              dpi: artboardDpi,
-              printConfig: printConfig
-            },
-            { 
-              format: 'tiff', 
-              bitDepth: is16Bit ? 16 : 8, 
-              scale: effectiveExportScale 
-            }
-          );
-          // Convert milliseconds to seconds for display
-          if (estimate.estimatedDuration > 0) {
-            setExportEstimatedTimeGlobal(Math.ceil(estimate.estimatedDuration / 1000));
-          }
-        } catch (estimateError) {
-          // Estimate is optional, continue without it
-          console.log('Could not fetch export estimate:', estimateError);
-        }
-        
-        setExportProgressGlobal(10);
-        setExportStatusGlobal('Preparing server export...');
-        setBatchProgress(10);
-        setBatchStatus('Processing on server...');
-        
-        // Determine which shapes to export based on export mode
-        // This mirrors the client-side export logic
-        let shapesToExport: Shape[] = [];
-        
-        if (exportMode === 'artboard' || exportMode === 'all') {
-          // Export all shapes - same behavior as client batch export
-          shapesToExport = shapes;
-        } else if (exportMode === 'selection') {
-          // Export only selected shapes
-          shapesToExport = selectedShapes;
-        } else {
-          // Default to all shapes
-          shapesToExport = shapes;
-        }
-        
-        // Serialize shapes with full data for server rendering (matching projectManager format)
-        const serializeShape = (shape: Shape) => ({
-          id: shape.id,
-          type: shape.type,
-          transform: shape.transform,
-          properties: shape.properties,
-          points: shape.points,
-          sides: shape.sides,
-          radius: shape.radius,
-          innerRadius: shape.innerRadius,
-          width: shape.width,
-          height: shape.height,
-          controlPoints: shape.controlPoints,
-          tangentHandles: shape.tangentHandles,
-          smoothPoints: shape.smoothPoints,
-          closed: shape.closed,
-          segments: shape.segments,
-          renderType: shape.renderType,
-          cornerRadius: shape.cornerRadius,
-          strokeCap: shape.strokeCap
-        });
-        
-        const serializedShapes = shapesToExport.map(serializeShape);
-        
-        // Serialize groups - include all groups that contain any of the shapes being exported
-        // Use all available groups, not just selectedGroups
-        const shapeIds = new Set(shapesToExport.map(s => s.id));
-        const allGroups = [...selectedGroups]; // selectedGroups contains all groups in the scene
-        const serializedGroups = allGroups
-          .filter(group => group.shapes.some(s => shapeIds.has(s.id)))
-          .map(group => ({
-            id: group.id,
-            transform: group.transform,
-            shapes: group.shapes.filter(s => shapeIds.has(s.id)).map(s => s.id)
-          }));
-        
-        const artboardX = targetArtboard?.x ?? backgroundArtboard?.x ?? 0;
-        const artboardY = targetArtboard?.y ?? backgroundArtboard?.y ?? 0;
-        
-        const request: ServerExportRequest = {
-          shapes: serializedShapes,
-          groups: serializedGroups,
-          artboard: {
-            x: artboardX,
-            y: artboardY,
-            width: artboardWidth,
-            height: artboardHeight,
-            backgroundColor: artboardBgColor,
-            dpi: artboardDpi,
-            printConfig: printConfig
-          },
-          exportSettings: {
-            format: 'tiff',
-            bitDepth: is16Bit ? 16 : 8,
-            dpi: artboardDpi,
-            scale: effectiveExportScale,
-            includeBleed: printConfig?.overlays.bleed.render ?? false,
-            includePrintMarks: printConfig?.overlays.printMarks.render ?? false,
-            backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
-            backgroundMode: bgMode,
-            compression: exportSettings.tiffCompression ?? 'none'
-          }
-        };
-        
-        setBatchProgress(15);
-        setBatchStatus('Connecting to server...');
-        setExportProgressGlobal(15);
-        setExportStatusGlobal('Connecting to server...');
-        
-        console.log(`🖥️ SERVER EXPORT: Starting SSE high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
-        
-        // Use SSE streaming for real-time progress updates
-        const result = await executeServerExportWithSSE(
-          request,
-          {
-            onPhase: (phase, message) => {
-              console.log(`📋 Phase: ${phase} - ${message}`);
-              setExportStatusGlobal(message);
-              setBatchStatus(message);
-            },
-            onTile: (tileIndex, totalTiles, step, progressPct) => {
-              const tileMessage = step === 'render' 
-                ? `Rendering tile ${tileIndex} of ${totalTiles}...`
-                : `Stitching tile ${tileIndex} of ${totalTiles}...`;
-              console.log(`🧩 Tile: ${tileMessage} (${progressPct}%)`);
-              setExportStatusGlobal(tileMessage);
-              setBatchStatus(tileMessage);
-              // Map tile progress to 20-80% range
-              const mappedProgress = 20 + (progressPct * 0.6);
-              setExportProgressGlobal(Math.round(mappedProgress));
-              setBatchProgress(Math.round(mappedProgress));
-            },
-            onProgress: (progressPct, status, estimatedRemaining) => {
-              // Map progress to 20-80% range (reserve 0-20 for init, 80-100 for download)
-              const mappedProgress = 20 + (progressPct * 0.6);
-              setExportProgressGlobal(Math.round(mappedProgress));
-              setBatchProgress(Math.round(mappedProgress));
-              setExportStatusGlobal(status);
-              setBatchStatus(status);
-              if (estimatedRemaining !== undefined) {
-                setExportEstimatedTimeGlobal(estimatedRemaining);
-              }
-            },
-            onComplete: (downloadUrl, filename, sizeBytes) => {
-              console.log(`📥 Export complete: ${filename} (${(sizeBytes / 1024 / 1024).toFixed(2)} MB)`);
-              setExportProgressGlobal(85);
-              setBatchProgress(85);
-              setExportStatusGlobal('Downloading...');
-              setBatchStatus('Downloading...');
-            },
-            onError: (message) => {
-              console.error(`❌ SSE Export error: ${message}`);
-            }
-          },
-          exportAbortControllerGlobalRef.current?.signal
-        );
-        
-        if (result.success && result.blob) {
-          // Download the file
-          const timestamp = Date.now();
-          const filename = `export-${timestamp}.tiff`;
-          const url = URL.createObjectURL(result.blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          link.click();
-          URL.revokeObjectURL(url);
-          
-          setBatchProgress(100);
-          setBatchStatus('Export complete!');
-          setExportProgressGlobal(100);
-          setExportStatusGlobal('Export complete!');
-          setExportIsCompleteGlobal(true);
-          setExportResultMessageGlobal(`✅ Exported ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
-          stopElapsedTimeTrackingGlobal();
-          console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
-          
-          setTimeout(() => {
-            setIsServerExportingGlobal(false);
-            setBatchProgress(0);
-            setBatchStatus('');
-          }, 2000);
-        } else {
-          throw new Error(result.error || 'Export failed');
-        }
-        
-      } catch (error) {
-        console.error('Server export failed:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        setBatchStatus(`Export failed: ${errorMessage}`);
-        setExportStatusGlobal(`Export failed: ${errorMessage}`);
-        setExportIsErrorGlobal(true);
-        setExportResultMessageGlobal(`❌ Export failed: ${errorMessage}`);
-        stopElapsedTimeTrackingGlobal();
-        
-        setTimeout(() => {
-          setIsServerExportingGlobal(false);
-          setBatchProgress(0);
-          setBatchStatus('');
-        }, 3000);
-      }
-    };
-
     // Wrapper function that shows TIFF pre-flight modal if needed
     const handleBatchExportWithPreflight = useCallback(() => {
       if (!exportSettings.exportBatchModeEnabled) return;
       
       if (exportFormat === 'tiff' && !exportSettings.skipTiffPreflightModal) {
         // Store the export function to call after confirmation
-        // Check if server export is needed
-        const preflightInfo = getTiffPreflightInfo();
-        if (preflightInfo.requiresServerExport) {
-          pendingTiffExportRef.current = handleServerExport;
-        } else {
-          pendingTiffExportRef.current = handleBatchExportNewInternal;
-        }
+        pendingTiffExportRef.current = handleBatchExportNewInternal;
         setIsTiffPreflightOpen(true);
       } else {
-        // For TIFF exports that skip preflight, still check if server export is needed
-        if (exportFormat === 'tiff') {
-          const preflightInfo = getTiffPreflightInfo();
-          if (preflightInfo.requiresServerExport) {
-            handleServerExport();
-            return;
-          }
-        }
         handleBatchExportNewInternal();
       }
-    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat, getTiffPreflightInfo]);
+    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat]);
     
     // NEW BATCH EXPORT WITH ZIP PACKAGING (internal implementation)
     const handleBatchExportNewInternal = async () => {
       if (!exportSettings.exportBatchModeEnabled) return;
 
+      setIsBatchExporting(true);
+      setBatchProgress(0);
       // Calculate actual number of images to export for step calculation
       const actualImageCount = exportAllImages ? exportBatchCount : selectedImageIndices.length;
       
@@ -4575,24 +3405,6 @@ export default function Sidebar({
       const totalSteps = packageAsZip 
         ? (actualImageCount * 2) + 2 // 2 steps per image + zip creation + download
         : (actualImageCount * 3); // 2 steps per image + individual download per image
-
-      // Initialize abort controller and elapsed time tracking
-      exportAbortControllerRef.current = new AbortController();
-      startElapsedTimeTracking();
-      
-      // Initialize global overlay for client-side batch export
-      setShowExportProgressOverlay(true);
-      setExportTotalStepsGlobal(totalSteps);
-      setExportProgressGlobal(0);
-      setExportStatusGlobal('Initializing batch export...');
-      setExportIsCompleteGlobal(false);
-      setExportIsErrorGlobal(false);
-      setExportResultMessageGlobal('');
-      exportAbortControllerGlobalRef.current = exportAbortControllerRef.current;
-      startElapsedTimeTrackingGlobal();
-
-      setIsBatchExporting(true);
-      setBatchProgress(0);
       setBatchTotalSteps(totalSteps);
       setBatchStatus('Initializing batch export...');
       console.log(`🚀 BATCH EXPORT: Starting ${actualImageCount} exports (${packageAsZip ? 'ZIP package' : 'individual files'}) - ${exportAllImages ? 'All images' : 'Selected images'}`);
@@ -4672,17 +3484,9 @@ export default function Sidebar({
         }
       }
       
-      // Helper to update both local and global progress
-      const updateProgress = (step: number, status: string) => {
-        setBatchProgress(step);
-        setBatchStatus(status);
-        setExportProgressGlobal(step);
-        setExportStatusGlobal(status);
-      };
-      
       try {
         // Initialize packaging based on user setting
-        updateProgress(1, packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
+        setBatchStatus(packageAsZip ? 'Initializing ZIP archive...' : 'Preparing individual files...');
         const zip = packageAsZip ? new JSZip() : null;
         const timestamp = Date.now();
         const individualFiles: Array<{blob: Blob, filename: string}> = [];
@@ -4702,23 +3506,13 @@ export default function Sidebar({
         }
         
         for (let loopIndex = 0; loopIndex < imagesToExport.length; loopIndex++) {
-          // Check for abort signal at start of each iteration
-          if (exportAbortControllerRef.current?.signal.aborted) {
-            console.log('🛑 Export aborted during batch loop');
-            stopElapsedTimeTracking();
-            stopElapsedTimeTrackingGlobal();
-            setExportStatusGlobal('Export cancelled');
-            setExportIsErrorGlobal(true);
-            setExportResultMessageGlobal('⚠️ Export was cancelled');
-            return;
-          }
-          
           const i = imagesToExport[loopIndex];
           console.log(`🎨 Creating artwork ${i + 1} of ${exportBatchCount}`);
           console.log(`📊 BATCH PROCESSING: ${i + 1} of ${exportBatchCount} exports`);
           
           // STEP 1: Shape Generation
-          updateProgress(currentStep, `Generating shapes for artwork ${i + 1}...`);
+          setBatchStatus(`Generating shapes for artwork ${i + 1}...`);
+          setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Generating shapes for artwork ${i + 1}`);
           
           // Force UI update before incrementing step
@@ -4932,24 +3726,14 @@ export default function Sidebar({
           
           console.log(`✨ Generated ${currentExportShapes.length} total shapes from ${generationCallsCount} generation calls for export ${i + 1}`);
 
-          // Check for abort after shape generation
-          if (exportAbortControllerRef.current?.signal.aborted) {
-            console.log('🛑 Export aborted after shape generation');
-            stopElapsedTimeTracking();
-            stopElapsedTimeTrackingGlobal();
-            setExportStatusGlobal('Export cancelled');
-            setExportIsErrorGlobal(true);
-            setExportResultMessageGlobal('⚠️ Export was cancelled');
-            return;
-          }
-
           // Create image data for ZIP with timestamp
           const imageTimestamp = Date.now() + i; // Unique timestamp for each image
           const filename = `batch-${String(i + 1).padStart(3, '0')}-${imageTimestamp}.${exportFormat}`;
           
           if (currentExportShapes.length > 0) {
             // STEP 2: Image Creation and Export
-            updateProgress(currentStep, `Creating image for artwork ${i + 1}...`);
+            setBatchStatus(`Creating image for artwork ${i + 1}...`);
+            setBatchProgress(currentStep);
             console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating image for artwork ${i + 1}`);
             
             // Force UI update before incrementing step
@@ -5373,58 +4157,24 @@ export default function Sidebar({
                     const imageData = tiffCtx.getImageData(0, 0, canvas.width, canvas.height);
                     const rgba = new Uint8Array(imageData.data.buffer);
                     
-                    // Determine if we should flatten to RGB (auto when background is artboard, or explicit)
-                    const batchBgMode = exportSettings.exportBackgroundMode || 'transparent';
-                    const batchShouldFlattenToRgb = batchBgMode === 'artboard' || (exportSettings.flattenToRgb ?? false);
-                    const batchMatteColor = exportSettings.matteColor || '#ffffff';
-                    
-                    let batchPixelData: Uint8Array;
-                    if (batchShouldFlattenToRgb) {
-                      batchPixelData = convertRgbaToRgb(rgba, canvas.width, canvas.height, batchMatteColor, false) as Uint8Array;
-                      console.log(`📄 TIFF batch: Flattening to RGB - ~25% smaller file, matte: ${batchMatteColor}`);
-                    } else {
-                      batchPixelData = rgba;
-                    }
-                    
                     // Calculate effective DPI based on export scale (same as artboard export)
                     const batchTiffDPI = Math.round(72 * effectiveExportScale);
                     
                     // Build TIFF metadata with DPI tags only (not width/height/data - those are separate params)
-                    // Note: UTIF.js encodeImage behavior with compression:
-                    // - UTIF auto-detects window.pako and applies deflate compression when available
-                    // - Setting t259 in metadata can conflict with this auto-detection
-                    // - For reliable encoding: DON'T set t259 for deflate (let UTIF auto-detect)
-                    //   only set t259=[1] to explicitly disable compression
+                    // Note: UTIF.js encodeImage supports uncompressed (1) or Deflate (8) with Pako.js
+                    // LZW compression (5) is NOT supported for encoding - setting t259=[5] corrupts output
                     const batchTiffCompression = exportSettings.tiffCompression ?? 'none';
-                    const tiffMetadata: Record<string, unknown> = {
+                    const tiffMetadata = {
                       t282: [batchTiffDPI],  // XResolution
                       t283: [batchTiffDPI],  // YResolution
                       t296: [2],          // ResolutionUnit (2 = inch)
-                    };
+                      t259: [batchTiffCompression === 'deflate' ? 8 : 1], // Compression: 8=Deflate, 1=None
+                    } as unknown as UTIF.IFD;
                     
-                    // Set samples per pixel and photometric interpretation based on RGB vs RGBA
-                    if (batchShouldFlattenToRgb) {
-                      tiffMetadata.t277 = [3];  // SamplesPerPixel = 3 (RGB)
-                      tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB)
-                      tiffMetadata.t258 = [8, 8, 8];  // BitsPerSample (R, G, B)
-                    } else {
-                      tiffMetadata.t277 = [4];  // SamplesPerPixel = 4 (RGBA)
-                      tiffMetadata.t262 = [2];  // PhotometricInterpretation = 2 (RGB with alpha)
-                      tiffMetadata.t338 = [1];  // ExtraSamples = 1 (associated alpha)
-                      tiffMetadata.t258 = [8, 8, 8, 8];  // BitsPerSample (R, G, B, A)
-                    }
-                    
-                    // For deflate: DON'T set t259 - let UTIF auto-detect pako
-                    // For no compression: explicitly set t259=[1]
-                    if (batchTiffCompression !== 'deflate') {
-                      tiffMetadata.t259 = [1];  // No compression
-                    }
-                    
-                    const batchChannelMode = batchShouldFlattenToRgb ? 'RGB' : 'RGBA';
-                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate (UTIF auto-detection)' : 'no'} compression, ${batchChannelMode}`);
+                    console.log(`📄 TIFF batch: Using ${batchTiffCompression === 'deflate' ? 'Deflate' : 'no'} compression`);
                     
                     console.log(`🔄 Encoding TIFF for image ${i + 1}...`);
-                    const tiffBuffer = UTIF.encodeImage(batchPixelData, canvas.width, canvas.height, tiffMetadata as UTIF.IFD);
+                    const tiffBuffer = UTIF.encodeImage(rgba, canvas.width, canvas.height, tiffMetadata);
                     const tiffBlob = new Blob([tiffBuffer], { type: 'image/tiff' });
                     
                     if (packageAsZip && zip) {
@@ -5535,23 +4285,13 @@ export default function Sidebar({
           }
 
           // Progress already updated after image creation step
-          
-          // Check for abort after image creation
-          if (exportAbortControllerRef.current?.signal.aborted) {
-            console.log('🛑 Export aborted after image creation');
-            stopElapsedTimeTracking();
-            stopElapsedTimeTrackingGlobal();
-            setExportStatusGlobal('Export cancelled');
-            setExportIsErrorGlobal(true);
-            setExportResultMessageGlobal('⚠️ Export was cancelled');
-            return;
-          }
         }
         
         // FINAL STEP: Package and Download
         if (packageAsZip && zip) {
           // ZIP Creation and Download
-          updateProgress(currentStep, 'Creating ZIP file...');
+          setBatchStatus('Creating ZIP file...');
+          setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Creating ZIP file`);
           
           // Force UI update before incrementing step
@@ -5588,7 +4328,8 @@ export default function Sidebar({
             throw new Error(`Failed to generate ZIP file: ${zipError instanceof Error ? zipError.message : 'Unknown ZIP error'}`);
           }
         
-          updateProgress(currentStep, 'Downloading ZIP file...');
+          setBatchStatus('Downloading ZIP file...');
+          setBatchProgress(currentStep);
           console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ZIP file`);
           
           // Force UI update before download
@@ -5670,7 +4411,8 @@ export default function Sidebar({
               await new Promise(resolve => setTimeout(resolve, delayMs));
             }
             
-            updateProgress(currentStep, `Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
+            setBatchStatus(`Downloading ${filename} (${fileIndex + 1}/${individualFiles.length})...`);
+            setBatchProgress(currentStep);
             console.log(`📊 PROGRESS UPDATE: Step ${currentStep}/${totalSteps} - Downloading ${filename}`);
             currentStep++;
             
@@ -5711,24 +4453,14 @@ export default function Sidebar({
         }
         
         // Mark progress as complete
-        stopElapsedTimeTracking();
-        stopElapsedTimeTrackingGlobal();
-        
-        const elapsedStr = formatElapsedTime(exportElapsedTime);
-        const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
-        const successMessage = packageAsZip 
-          ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText} (${elapsedStr})`
-          : `✅ Success! Downloaded ${individualFiles.length} individual files (${elapsedStr})`;
-        
-        // Update both local and global progress
         setBatchProgress(totalSteps);
         setBatchStatus('Export completed successfully!');
-        setExportProgressGlobal(totalSteps);
-        setExportStatusGlobal('Export completed successfully!');
-        setExportIsCompleteGlobal(true);
-        setExportResultMessageGlobal(successMessage);
         
-        // Show persistent success message with elapsed time
+        // Show persistent success message  
+        const projectFilesText = exportSaveProjectFiles ? ` and ${exportBatchCount} project files` : '';
+        const successMessage = packageAsZip 
+          ? `✅ Success! Downloaded batch-export-${timestamp}.zip with ${exportBatchCount} images${projectFilesText}`
+          : `✅ Success! Downloaded ${individualFiles.length} individual files`;
         setBatchResultMessage(successMessage);
         setShowBatchResult(true);
         
@@ -5736,8 +4468,6 @@ export default function Sidebar({
         
       } catch (error) {
         console.error('❌ Batch export error:', error);
-        stopElapsedTimeTracking();
-        stopElapsedTimeTrackingGlobal();
         
         // Create a more detailed error message for mobile users who can't check console
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -5752,11 +4482,8 @@ export default function Sidebar({
           enabledShapeTypes: Array.from(enabledShapeTypes)
         });
         
-        // Mark progress as failed but visible (both local and global)
+        // Mark progress as failed but visible
         setBatchStatus(`Export failed: ${errorMessage}`);
-        setExportStatusGlobal(`Export failed: ${errorMessage}`);
-        setExportIsErrorGlobal(true);
-        setExportResultMessageGlobal(`❌ Export failed: ${errorMessage}`);
         
         // Show persistent error message
         setBatchResultMessage(`❌ Export failed: ${errorMessage}`);
@@ -5766,10 +4493,6 @@ export default function Sidebar({
         
       } finally {
         onClearAll?.();
-        // Stop both local and global timers (idempotent - safe to call multiple times)
-        stopElapsedTimeTracking();
-        stopElapsedTimeTrackingGlobal();
-        exportAbortControllerRef.current = null;
         // Keep the progress dialog visible until manually dismissed by user
         // setIsBatchExporting(false); // Removed to prevent auto-dismiss
         // setBatchProgress(0); // Keep progress visible
@@ -5895,33 +4618,6 @@ export default function Sidebar({
             {exportSettings.exportBackgroundMode === 'artboard' && (
               <p className="text-xs text-slate-500">Background color is configured in the Artboard section</p>
             )}
-          </div>
-
-          {/* Render Mode Setting */}
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Render Mode</Label>
-            <Select 
-              value={exportSettings.renderMode || 'auto'} 
-              onValueChange={(value: 'auto' | 'client' | 'server') => 
-                updateExportSettings.mutate({ renderMode: value })
-              }
-            >
-              <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600" data-testid="select-render-mode">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                <SelectItem value="auto" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Auto (Recommended)</SelectItem>
-                <SelectItem value="client" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Browser</SelectItem>
-                <SelectItem value="server" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Server</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-slate-500">
-              {exportSettings.renderMode === 'auto' 
-                ? 'Automatically chooses best renderer based on export size and format' 
-                : exportSettings.renderMode === 'server'
-                ? 'Uses server-side rendering for large/high-quality exports'
-                : 'Uses browser for quick exports (may have size limits)'}
-            </p>
           </div>
 
           {/* TIFF Print-Ready Warnings */}
@@ -6375,14 +5071,9 @@ export default function Sidebar({
                 <div className="space-y-2 p-3 bg-purple-900/20 rounded border border-purple-500/30">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-purple-300 font-medium">Batch Export Progress</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 font-mono">
-                        {formatElapsedTime(exportElapsedTime)}
-                      </span>
-                      <span className="text-purple-200">
-                        {batchProgress}/{batchTotalSteps} ({Math.round((batchProgress / Math.max(batchTotalSteps, 1)) * 100)}%)
-                      </span>
-                    </div>
+                    <span className="text-purple-200">
+                      {batchProgress}/{batchTotalSteps} ({Math.round((batchProgress / Math.max(batchTotalSteps, 1)) * 100)}%)
+                    </span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div 
@@ -6390,21 +5081,8 @@ export default function Sidebar({
                       style={{ width: `${Math.min((batchProgress / Math.max(batchTotalSteps, 1)) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-purple-400">
-                      {batchStatus || 'Processing...'}
-                    </div>
-                    {batchProgress < batchTotalSteps && (
-                      <Button
-                        onClick={handleCancelExport}
-                        variant="outline"
-                        size="sm"
-                        className="h-6 px-2 text-xs bg-red-900/20 border-red-500/30 text-red-300 hover:bg-red-900/40 hover:text-red-200"
-                        data-testid="cancel-export-button"
-                      >
-                        Cancel
-                      </Button>
-                    )}
+                  <div className="text-xs text-purple-400">
+                    {batchStatus || 'Processing...'}
                   </div>
                   {batchProgress >= batchTotalSteps && (
                     <div className="text-xs text-green-400 font-medium">
@@ -6570,53 +5248,681 @@ export default function Sidebar({
     handleOpenManager
   ]);
 
-  // Variant-aware ShapeTypesSection that includes Shape Sets UI + ShapeTypesContentMemo
+  // Variant-aware ShapeTypesSection that includes Shape Sets UI + ShapeTypesContent
   const ShapeTypesSection = useCallback(({ variant }: { variant: 'expanded' | 'collapsed' }) => {
     return (
       <>
         {ShapeSetsUI}
-        <ShapeTypesContentMemo
-          scatterSettings={scatterSettings}
-          onUpdateScatterSettings={onUpdateScatterSettings}
-          enabledShapeTypes={enabledShapeTypes}
-          onToggleShapeType={onToggleShapeType}
-          shapeListAccordionOpen={shapeListAccordionOpen}
-          setShapeListAccordionOpen={setShapeListAccordionOpen}
-          openShapeCategories={openShapeCategories}
-          setOpenShapeCategories={setOpenShapeCategories}
-          expandedShapes={expandedShapes}
-          toggleShapeExpansion={toggleShapeExpansion}
-          setsEnabled={setsEnabled}
-          currentGenerationSetId={currentGenerationSetId}
-          updateGenerationSetPartial={updateGenerationSetPartial}
-          applyStatus={applyStatus}
-          handleApplyToCurrentSet={handleApplyToCurrentSet}
-          onGenerateRandomShapes={onGenerateRandomShapes}
-        />
+        <ShapeTypesContent />
       </>
     );
-  }, [
-    ShapeSetsUI, 
-    scatterSettings, 
-    onUpdateScatterSettings, 
-    enabledShapeTypes, 
-    onToggleShapeType, 
-    shapeListAccordionOpen,
-    openShapeCategories,
-    expandedShapes,
-    toggleShapeExpansion,
-    setsEnabled,
-    currentGenerationSetId,
-    updateGenerationSetPartial,
-    applyStatus,
-    handleApplyToCurrentSet,
-    onGenerateRandomShapes
-  ]);
+  }, [ShapeSetsUI]);
 
   // Create stable collapsed content component
   const CollapsedShapeTypesContent = useCallback(() => {
     return <ShapeTypesSection variant="collapsed" />;
   }, [ShapeTypesSection]);
+
+  function ShapeTypesContent() {
+
+    const getShapeProperties = (shapeType: string) => {
+      switch (shapeType) {
+        case 'polygon':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Edge Count"
+                config={convertScatterToModeConfig('polygon', 'edgeCount', scatterSettings, [3, 20])}
+                onChange={(config) => handleScatterModeConfigChange('polygon', 'edgeCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 20 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+        
+        case 'line-vector':
+          // Deep merge with defaults to backfill missing fields in legacy configs
+          const lineVectorConfig = { 
+            ...getDefaultLineVectorConfig(), 
+            ...(scatterSettings.shapeSpecific['line-vector'] || {}) 
+          };
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Direction"
+                config={convertLineVectorToModeConfig(lineVectorConfig.direction)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('direction', modeConfig, scatterSettings, onUpdateScatterSettings);
+                }}
+                bounds={{ min: 0, max: 360 }}
+                unit="°"
+                step={15}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Length"
+                config={convertLineVectorToModeConfig(lineVectorConfig.length)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('length', modeConfig, scatterSettings, onUpdateScatterSettings);
+                }}
+                bounds={{ min: 0, max: 500 }}
+                unit="px"
+                step={5}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Centroid"
+                config={convertLineVectorToModeConfig(lineVectorConfig.centroid)}
+                onChange={(modeConfig) => {
+                  handleLineVectorModeConfigChange('centroid', modeConfig, scatterSettings, onUpdateScatterSettings);
+                }}
+                bounds={{ min: 0, max: 1 }}
+                step={0.01}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+                <div className="space-y-2">
+                  {['round', 'square', 'butt'].map((cap) => (
+                    <div key={cap} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-300 capitalize">{cap}</span>
+                        <span className="text-slate-400">{(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
+                      </div>
+                      <BufferedSlider
+                        value={[(scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities as any)?.[cap] || 0]}
+                        onValueCommit={(value) => {
+                          const probability = value[0];
+                          onUpdateScatterSettings({
+                            shapeSpecific: {
+                              ...scatterSettings.shapeSpecific,
+                              'line-vector': { 
+                                ...lineVectorConfig,
+                                strokeCapProbabilities: {
+                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.round || 0),
+                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.square || 0),
+                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific['line-vector']?.strokeCapProbabilities?.butt || 0)
+                                }
+                              }
+                            }
+                          });
+                        }}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        
+        case 'circle':
+        case 'ellipse':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Segment Count"
+                config={convertScatterToModeConfig(shapeType, 'segmentCount', scatterSettings, [16, 32])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'segmentCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 8, max: 64 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+        
+        case 'bezier':
+        case 'smooth-spline':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig(shapeType, 'pointCount', scatterSettings, [3, 6])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 10 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Open/Closed Probability</Label>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Open: {(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50}%</span>
+                    <span className="text-slate-400">Closed: {100 - ((scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50)}%</span>
+                  </div>
+                  <BufferedSlider
+                    value={[(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.openProbability ?? 50]}
+                    onValueCommit={([value]) => {
+                      console.log(`${shapeType} open probability: ${value}%`);
+                      onUpdateScatterSettings({
+                        shapeSpecific: {
+                          ...scatterSettings.shapeSpecific,
+                          [shapeType]: { 
+                            ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
+                            openProbability: value 
+                          }
+                        }
+                      });
+                    }}
+                    min={0}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Probability</Label>
+                <div className="space-y-2">
+                  {['round', 'square', 'butt'].map((cap) => {
+                    const currentValue = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities?.[cap] ?? (cap === 'round' ? 50 : 25);
+                    return (
+                      <div key={cap} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <Label className="text-slate-300 capitalize">{cap}</Label>
+                          <span className="text-slate-400">{currentValue}%</span>
+                        </div>
+                        <BufferedSlider
+                          value={[currentValue]}
+                          onValueCommit={([value]) => {
+                            console.log(`${shapeType} ${cap} cap: ${value}%`);
+                            const currentCaps = (scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] as any)?.strokeCapProbabilities ?? { round: 50, square: 25, butt: 25 };
+                            onUpdateScatterSettings({
+                              shapeSpecific: {
+                                ...scatterSettings.shapeSpecific,
+                                [shapeType]: { 
+                                  ...(scatterSettings.shapeSpecific[shapeType as 'bezier' | 'smooth-spline'] || {}),
+                                  strokeCapProbabilities: {
+                                    ...currentCaps,
+                                    [cap]: value
+                                  }
+                                }
+                              }
+                            });
+                          }}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="w-full"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'star':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('star', 'pointCount', scatterSettings, [5, 8])}
+                onChange={(config) => handleScatterModeConfigChange('star', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 5, max: 12 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('star', 'innerRadius', scatterSettings, [30, 70])}
+                onChange={(config) => handleScatterModeConfigChange('star', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={1}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+
+        case 'ring':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('ring', 'innerRadius', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={1}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+
+        case 'spline-ring':
+          return (
+            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Inner Radius"
+                config={convertScatterToModeConfig('spline-ring', 'innerRadius', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('spline-ring', 'innerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 90 }}
+                step={1}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+
+        case 'line':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('line', 'pointCount', scatterSettings, [2, 4])}
+                onChange={(config) => handleScatterModeConfigChange('line', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 2, max: 8 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-400">Stroke Cap Probabilities (%)</Label>
+                <div className="space-y-2">
+                  {['round', 'square', 'butt'].map((cap) => (
+                    <div key={cap} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-300 capitalize">{cap}</span>
+                        <span className="text-slate-400">{(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0}%</span>
+                      </div>
+                      <BufferedSlider
+                        value={[(scatterSettings.shapeSpecific.line?.strokeCapProbabilities as any)?.[cap] || 0]}
+                        onValueCommit={(value) => {
+                          const probability = value[0];
+                          onUpdateScatterSettings({
+                            shapeSpecific: {
+                              ...scatterSettings.shapeSpecific,
+                              line: { 
+                                pointCountRange: scatterSettings.shapeSpecific.line?.pointCountRange || [2, 4] as [number, number],
+                                strokeCapProbabilities: {
+                                  round: cap === 'round' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.round || 0),
+                                  square: cap === 'square' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.square || 0),
+                                  butt: cap === 'butt' ? probability : (scatterSettings.shapeSpecific.line?.strokeCapProbabilities?.butt || 0)
+                                }
+                              }
+                            }
+                          });
+                        }}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'rectangle':
+          return null; // Standard rectangle has no properties
+          
+        case 'rounded-rectangle':
+        case 'rounded-square':
+          return (
+            <div className="space-y-3 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Corner Radius"
+                config={convertScatterToModeConfig(shapeType, 'cornerRadius', scatterSettings, [0, 20])}
+                onChange={(config) => handleScatterModeConfigChange(shapeType, 'cornerRadius', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 0, max: 50 }}
+                step={1}
+                unit="px"
+                allowedModes={['fixed', 'range']}
+              />
+            </div>
+          );
+          
+        case 'cubic':
+          return (
+            <div className="space-y-4 p-3 bg-slate-800/30 rounded border border-slate-600">
+              <StyledModeField
+                label="Point Count"
+                config={convertScatterToModeConfig('cubic', 'pointCount', scatterSettings, [3, 7])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'pointCount', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 3, max: 8 }}
+                step={1}
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Curvature"
+                config={convertScatterToModeConfig('cubic', 'curvature', scatterSettings, [20, 80])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'curvature', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 10, max: 100 }}
+                step={1}
+                unit="%"
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
+              
+              <StyledModeField
+                label="Curve Spread"
+                config={convertScatterToModeConfig('cubic', 'spread', scatterSettings, [40, 120])}
+                onChange={(config) => handleScatterModeConfigChange('cubic', 'spread', config, scatterSettings, onUpdateScatterSettings)}
+                bounds={{ min: 20, max: 200 }}
+                step={10}
+                unit="px"
+                allowedModes={['fixed', 'range']}
+              />
+              
+              <Separator className="bg-slate-600" />
+
+              <div className="space-y-3">
+                <Label className="text-xs text-slate-400">Curve Pattern</Label>
+                <Select 
+                  value={String(scatterSettings.shapeSpecific.cubic?.patternType || 2)} 
+                  onValueChange={(value) => {
+                    onUpdateScatterSettings({
+                      shapeSpecific: {
+                        ...scatterSettings.shapeSpecific,
+                        cubic: { 
+                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                          patternType: parseInt(value),
+                          openProbability: scatterSettings.shapeSpecific.cubic?.openProbability || 85
+                        }
+                      }
+                    });
+                  }}
+                >
+                  <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Spiral</SelectItem>
+                    <SelectItem value="1">Wave</SelectItem>
+                    <SelectItem value="2">Organic</SelectItem>
+                    <SelectItem value="3">Arc</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator className="bg-slate-600" />
+
+              <div className="space-y-3">
+                <Label className="text-xs text-slate-400">Open Curve Probability: {scatterSettings.shapeSpecific.cubic?.openProbability || 85}%</Label>
+                <BufferedSlider
+                  value={[scatterSettings.shapeSpecific.cubic?.openProbability || 85]}
+                  onValueCommit={(value) => {
+                    const probability = value[0];
+                    onUpdateScatterSettings({
+                      shapeSpecific: {
+                        ...scatterSettings.shapeSpecific,
+                        cubic: { 
+                          pointCountRange: scatterSettings.shapeSpecific.cubic?.pointCountRange || [3, 7],
+                          curvatureRange: scatterSettings.shapeSpecific.cubic?.curvatureRange || [0.2, 0.8],
+                          spreadRange: scatterSettings.shapeSpecific.cubic?.spreadRange || [40, 120],
+                          patternType: scatterSettings.shapeSpecific.cubic?.patternType || 2,
+                          openProbability: probability
+                        }
+                      }
+                    });
+                  }}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          );
+
+        case 'square':
+          return null; // Standard square has no properties
+
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="space-y-3">
+        {/* Internal accordion to control shape list visibility */}
+        <Accordion 
+          type="single" 
+          collapsible 
+          value={shapeListAccordionOpen} 
+          onValueChange={setShapeListAccordionOpen}
+          className="w-full"
+        >
+          <AccordionItem value="shape-list" className="border-0">
+            <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
+              <span>Shape List ({Object.keys(shapeTypeDisplayNames).length} types)</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <div className="space-y-3">
+                {/* Nested accordion for shape categories */}
+                <Accordion 
+                  type="multiple" 
+                  className="w-full"
+                  value={openShapeCategories}
+                  onValueChange={setOpenShapeCategories}
+                >
+                  {Object.entries(SHAPE_CATEGORIES).map(([categoryName, categoryShapes]) => {
+                    const enabledInCategory = categoryShapes.filter(shapeType => 
+                      enabledShapeTypes.has(shapeType)
+                    ).length;
+                    
+                    return (
+                      <AccordionItem key={categoryName} value={categoryName} className="border-slate-700">
+                        <AccordionTrigger className="text-xs text-slate-400 hover:text-slate-300 py-2 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <span>{categoryName}</span>
+                            <span className="text-blue-400 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs">
+                              {enabledInCategory}/{categoryShapes.length}
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-2 pt-2">
+                          {categoryShapes.map((shapeType) => {
+                            const displayName = shapeTypeDisplayNames[shapeType];
+                            const isEnabled = enabledShapeTypes.has(shapeType);
+                            const isExpanded = expandedShapes.has(shapeType);
+                            const hasProperties = ['polygon', 'circle', 'ellipse', 'bezier', 'cubic', 'smooth-spline', 'star', 'ring', 'spline-ring', 'line', 'line-vector', 'rounded-rectangle', 'rounded-square'].includes(shapeType);
+
+                            return (
+                              <div key={shapeType} className="space-y-2">
+                                {/* Shape Toggle Row */}
+                                <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                                  isEnabled ? 'bg-blue-900/30 border border-blue-500/50' : 'bg-slate-800/50 hover:bg-slate-700/50'
+                                }`}>
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-3 h-3 rounded transition-colors ${
+                                      isEnabled ? 'bg-blue-400' : 'bg-slate-500'
+                                    }`} />
+                                    <Label className={`text-sm transition-colors ${
+                                      isEnabled ? 'text-blue-200' : 'text-slate-300'
+                                    }`}>{displayName}</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {isEnabled && hasProperties && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleShapeExpansion(shapeType)}
+                                        className="p-1 h-6 w-6 hover:bg-slate-700"
+                                      >
+                                        <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${
+                                          isExpanded ? 'rotate-180' : ''
+                                        }`} />
+                                      </Button>
+                                    )}
+                                    <Switch
+                                      checked={isEnabled}
+                                      onCheckedChange={() => onToggleShapeType(shapeType)}
+                                      className="data-[state=checked]:bg-blue-600"
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Shape Properties (Accordion Content) */}
+                                {isEnabled && isExpanded && hasProperties && (
+                                  <div className="ml-4">
+                                    {getShapeProperties(shapeType)}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
+                
+                {/* Separator inside accordion so it disappears when collapsed */}
+                <Separator className="bg-slate-600" />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* All On/Off Buttons */}
+        <div className="flex gap-2 py-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const allTypes = Object.keys(shapeTypeDisplayNames) as ShapeType[];
+              allTypes.forEach(type => {
+                if (!enabledShapeTypes.has(type)) {
+                  onToggleShapeType(type);
+                }
+              });
+            }}
+            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+          >
+            All On
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const enabledTypes = Array.from(enabledShapeTypes);
+              enabledTypes.forEach(type => {
+                onToggleShapeType(type);
+              });
+            }}
+            className="flex-1 h-8 text-xs bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+          >
+            All Off
+          </Button>
+        </div>
+
+        {/* Shape Count Settings */}
+        <div className="space-y-2 pb-6">
+          <div className="flex items-center space-x-2">
+            <Label className="text-xs text-slate-400">Shape Count</Label>
+            <Select 
+              value={scatterSettings.shapeCountMode || 'range'} 
+              onValueChange={(value) => onUpdateScatterSettings({ shapeCountMode: value as 'range' | 'fixed' })}
+            >
+              <SelectTrigger className="h-8 w-24 text-xs bg-slate-700 border-slate-600 text-slate-200 px-2 py-3">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {scatterSettings.shapeCountMode === 'range' ? (
+            <BufferedRangeSliderWithNumericInputs
+              value={[scatterSettings.minCount, scatterSettings.maxCount] as [number, number]}
+              onValueCommit={([min, max]) => onUpdateScatterSettings({ minCount: min, maxCount: max })}
+              min={1}
+              max={50}
+              step={1}
+              minLabel="Min"
+              maxLabel="Max"
+            />
+          ) : (
+            <BufferedSliderWithNumericInput
+              value={scatterSettings.fixedShapeCount || 10}
+              onValueCommit={(value) => onUpdateScatterSettings({ fixedShapeCount: value })}
+              min={1}
+              max={50}
+              step={1}
+              sliderClassName="w-full pt-2"
+            />
+          )}
+        </div>
+
+
+        {/* Apply and Generate Buttons */}
+        <div className="flex flex-col gap-2">
+          {setsEnabled && (
+            <Button 
+              onClick={applyStatus === 'idle' ? handleApplyToCurrentSet : undefined}
+              disabled={!currentGenerationSetId || !updateGenerationSetPartial}
+              className={`w-full h-8 ${
+                !currentGenerationSetId || !updateGenerationSetPartial
+                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                  : applyStatus === 'applying'
+                  ? 'bg-blue-600 text-white cursor-not-allowed'
+                  : applyStatus === 'success'
+                  ? 'bg-green-600 text-white cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              } transition-colors duration-200`}
+              data-testid="button-apply-shape-types"
+            >
+              <div className="flex items-center space-x-2">
+                {!currentGenerationSetId || !updateGenerationSetPartial ? (
+                  <AlertTriangle className="w-4 h-4" />
+                ) : applyStatus === 'applying' ? (
+                  <>
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Applying...</span>
+                  </>
+                ) : applyStatus === 'success' ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Applied!</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Apply</span>
+                  </>
+                )}
+              </div>
+            </Button>
+          )}
+          <Button 
+            onClick={onGenerateRandomShapes}
+            className="w-full h-8 bg-[var(--editor-accent)] hover:bg-purple-700 text-white font-medium"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            {scatterSettings.shapeCountMode === 'fixed' 
+              ? `Generate ${scatterSettings.fixedShapeCount || 10} Shapes`
+              : `Generate ${scatterSettings.minCount}-${scatterSettings.maxCount} Shapes`
+            }
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   function CompositionContent() {
     return (
@@ -8870,13 +8176,7 @@ export default function Sidebar({
         currentSetId={effectiveCurrentSetId}
         onCurrentSetChange={onCurrentGenerationSetChange}
         onCurrentSetUpdate={(setId) => {
-          // Skip restoration if Apply button just saved (prevents scroll jump)
-          if (skipNextRestoreRef.current) {
-            console.log('⏭️ [SIDEBAR] Skipping UI restoration after Apply - scroll position preserved');
-            skipNextRestoreRef.current = false;
-            return;
-          }
-          // When current set is updated externally, restore UI state from it
+          // When current set is updated, restore UI state from it
           console.log('🔄 [SIDEBAR] Current set updated, restoring UI state:', setId);
           onRestoreUIStateFromSet?.(setId);
         }}
@@ -8913,29 +8213,6 @@ export default function Sidebar({
         preflightInfo={getTiffPreflightInfo()}
         onConfirm={handleTiffPreflightConfirm}
         onCancel={handleTiffPreflightCancel}
-        isExporting={isServerExportingGlobal}
-        flattenToRgb={exportSettings.flattenToRgb ?? false}
-        onFlattenToRgbChange={(value) => updateExportSettings.mutate({ flattenToRgb: value })}
-        matteColor={exportSettings.matteColor || '#ffffff'}
-        onMatteColorChange={(value) => updateExportSettings.mutate({ matteColor: value })}
-      />
-      
-      {/* Export Progress Overlay - Always visible during export */}
-      <ExportProgressOverlay
-        open={showExportProgressOverlay}
-        onOpenChange={(open) => {
-          if (!open) resetExportOverlay();
-        }}
-        progress={exportProgressGlobal}
-        totalSteps={exportTotalStepsGlobal}
-        status={exportStatusGlobal}
-        elapsedTime={exportElapsedTimeGlobal}
-        estimatedTime={exportEstimatedTimeGlobal}
-        isServerExport={isServerExportingGlobal}
-        onCancel={handleCancelExportGlobal}
-        isComplete={exportIsCompleteGlobal}
-        isError={exportIsErrorGlobal}
-        resultMessage={exportResultMessageGlobal}
       />
     </div>
   );

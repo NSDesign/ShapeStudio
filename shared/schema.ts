@@ -103,9 +103,6 @@ export const DEFAULT_SIDEBAR_SECTIONS: SidebarSectionConfig = {
 // Export background mode type (transparent ignores artboard background, artboard uses artboard's configured color)
 export type ExportBackgroundMode = 'transparent' | 'artboard';
 
-// Render mode for exports - determines whether to use client-side or server-side rendering
-export type ExportRenderMode = 'auto' | 'client' | 'server';
-
 // Export settings configuration type
 export interface ExportSettingsConfig {
   exportBatchModeEnabled: boolean;    // Whether batch export mode is enabled
@@ -121,9 +118,6 @@ export interface ExportSettingsConfig {
   tiffBitDepth: 8 | 16;               // TIFF bit depth: 8-bit (default) or 16-bit for professional printing
   tiffCompression: 'none' | 'deflate'; // TIFF compression: 'none' for uncompressed, 'deflate' for ZIP/Deflate (requires Pako.js)
   embedIccProfile: boolean;           // Embed sRGB ICC profile in TIFF/PNG/JPEG exports (POD requirement)
-  renderMode: ExportRenderMode;       // Render mode: 'auto' (smart detection), 'client' (browser), 'server' (headless)
-  flattenToRgb: boolean;              // Flatten to RGB (drop alpha) for ~10-20% smaller files; auto-enabled when background is artboard
-  matteColor: string;                 // Matte color for flattening transparent images to RGB (default: white)
   copyrightText: string;              // Copyright text to embed in exported images (EXIF/XMP metadata)
   // Image metadata fields for export
   artistName: string;                 // Artist/Creator name (pre-filled from logged-in user, editable)
@@ -145,9 +139,6 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettingsConfig = {
   tiffBitDepth: 8,                    // 8-bit by default (smaller files, most common)
   tiffCompression: 'none',            // No compression by default (Deflate requires Pako.js)
   embedIccProfile: true,              // Embed sRGB ICC profile by default for POD compliance
-  renderMode: 'auto',                 // Auto mode by default - smart detection of client vs server
-  flattenToRgb: false,                // Off by default - user can enable for smaller files when transparency not needed
-  matteColor: '#ffffff',              // White matte color by default
   copyrightText: '',                  // Empty by default - user can add their copyright notice
   // Image metadata defaults
   artistName: '',                     // Empty by default - pre-filled from user profile on first load
@@ -891,16 +882,10 @@ export interface BatchConfigSettings {
   // Additional HSL controls for range mode
   fillGradientColorSaturationRange: [number, number]; // 0-100% for range mode
   fillGradientColorLightnessRange: [number, number]; // 0-100% for range mode
-  fillGradientStopsMode: 'fixed' | 'range'; // Mode for color stops count
-  fillGradientStopsCount: number; // Fixed mode: exact number of color stops
-  fillGradientStopsRange: [number, number]; // Range mode: min-max color stops
-  // Stop Position Distribution Controls
-  fillGradientStopDistribution: 'even' | 'random'; // How stops are positioned
-  fillGradientStopsReverse: boolean; // Reverse the color order of stops
+  fillGradientStopsRange: [number, number]; // RGBA gradient stops
   // Enhanced Gradient Type & Direction Controls
-  fillGradientLinearDirection: 'fixed' | 'range' | 'predefined'; // Linear direction mode
-  fillGradientLinearAngle: number; // Fixed mode: exact angle in degrees
-  fillGradientLinearAngleRange: [number, number]; // Range mode: min-max angle range
+  fillGradientLinearDirection: 'range' | 'predefined'; // Linear direction mode
+  fillGradientLinearAngleRange: [number, number]; // Min-max angle range for range mode
   fillGradientLinearPredefined: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up'; // Predefined directions
   fillGradientLinearAlignToShape: boolean; // Whether to align gradient to shape orientation/rotation
   fillGradientRadialCenter: 'center' | 'corners' | 'midpoints' | 'coordinates'; // Radial center positioning
@@ -1462,15 +1447,10 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   // HSL range controls for range mode
   fillGradientColorSaturationRange: [40, 90],
   fillGradientColorLightnessRange: [20, 80],
-  fillGradientStopsMode: 'range',
-  fillGradientStopsCount: 3,
   fillGradientStopsRange: [2, 4],
-  fillGradientStopDistribution: 'even',
-  fillGradientStopsReverse: false,
   
   // Enhanced Gradient Type & Direction Controls
   fillGradientLinearDirection: 'range', // Default to range control
-  fillGradientLinearAngle: 45, // Default fixed angle (diagonal)
   fillGradientLinearAngleRange: [0, 360], // Default full angle range
   fillGradientLinearPredefined: 'diagonal-down', // Default predefined direction
   fillGradientLinearAlignToShape: false, // Default: don't align to shape
@@ -2559,13 +2539,8 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientColorDefine: z.array(z.string()),
   fillGradientColorSaturationRange: z.tuple([z.number(), z.number()]),
   fillGradientColorLightnessRange: z.tuple([z.number(), z.number()]),
-  fillGradientStopsMode: z.enum(['fixed', 'range']),
-  fillGradientStopsCount: z.number(),
   fillGradientStopsRange: z.tuple([z.number(), z.number()]),
-  fillGradientStopDistribution: z.enum(['even', 'random']),
-  fillGradientStopsReverse: z.boolean(),
-  fillGradientLinearDirection: z.enum(['fixed', 'range', 'predefined']),
-  fillGradientLinearAngle: z.number(),
+  fillGradientLinearDirection: z.enum(['range', 'predefined']),
   fillGradientLinearAngleRange: z.tuple([z.number(), z.number()]),
   fillGradientLinearPredefined: z.enum(['horizontal', 'vertical', 'diagonal-down', 'diagonal-up']),
   fillGradientLinearAlignToShape: z.boolean(),
@@ -3240,106 +3215,4 @@ export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings
   migrated = migrateTransformOrigin(migrated);
   
   return migrated;
-}
-
-// ===== SSE EXPORT PROGRESS EVENTS =====
-
-/**
- * SSE Export Phase - high-level export phases
- */
-export type SSEExportPhase = 'preparing' | 'rendering' | 'rendering-tiles' | 'stitching' | 'encoding' | 'finalizing';
-
-/**
- * SSE Event Types for export progress streaming
- */
-export type SSEEventType = 'phase' | 'tile' | 'progress' | 'complete' | 'error' | 'heartbeat';
-
-/**
- * Base SSE event interface
- */
-export interface SSEEventBase {
-  type: SSEEventType;
-  timestamp: number;
-}
-
-/**
- * Phase change event - indicates major export phase transitions
- */
-export interface SSEPhaseEvent extends SSEEventBase {
-  type: 'phase';
-  phase: SSEExportPhase;
-  message: string;
-}
-
-/**
- * Tile progress event - for tiled rendering updates
- */
-export interface SSETileEvent extends SSEEventBase {
-  type: 'tile';
-  tileIndex: number;
-  totalTiles: number;
-  step: 'render' | 'stitch';
-  message: string;
-  progressPct?: number;
-}
-
-/**
- * General progress event - overall progress updates
- */
-export interface SSEProgressEvent extends SSEEventBase {
-  type: 'progress';
-  progressPct: number;
-  status: string;
-  estimatedSecondsRemaining?: number;
-}
-
-/**
- * Export complete event - final event with download info
- */
-export interface SSECompleteEvent extends SSEEventBase {
-  type: 'complete';
-  downloadUrl: string;
-  filename: string;
-  contentType: string;
-  sizeBytes?: number;
-  dimensions?: { width: number; height: number };
-}
-
-/**
- * Error event - export failure
- */
-export interface SSEErrorEvent extends SSEEventBase {
-  type: 'error';
-  message: string;
-  code?: string;
-}
-
-/**
- * Heartbeat event - keep connection alive
- */
-export interface SSEHeartbeatEvent extends SSEEventBase {
-  type: 'heartbeat';
-}
-
-/**
- * Union type for all SSE events
- */
-export type SSEExportEvent = 
-  | SSEPhaseEvent 
-  | SSETileEvent 
-  | SSEProgressEvent 
-  | SSECompleteEvent 
-  | SSEErrorEvent 
-  | SSEHeartbeatEvent;
-
-/**
- * SSE export session state
- */
-export interface SSEExportSession {
-  exportId: string;
-  status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
-  startTime: number;
-  downloadUrl?: string;
-  filename?: string;
-  error?: string;
 }
