@@ -59,7 +59,7 @@ Preferred communication style: Simple, everyday language.
 - **Export Render Mode Selector**: UI control for choosing rendering pipeline with Auto/Client/Server options.
 - **Tiled Export System**: Server-side tiled rendering pipeline for very large print files, with auto-detection, tile planning, rendering, sequential composite, metadata preservation, progress integration, and error handling.
 - **SSE Streaming for Server Exports**: Real-time progress streaming via Server-Sent Events for high-resolution exports, including endpoints for initiation, streaming, download, cancellation, and client integration with typed callbacks.
-- **Echo/Motion Trails (Planned)**: Future features for set-level and shape-level echo/motion effects.
+- **Echo/Motion Trails System (Project A: Set-Level)**: Creates motion trail effects behind shapes with configurable direction modes (fixed-vector, auto-motion), per-echo effects (opacity falloff, blur progression, scale delta, rotation), and jitter modifiers for organic variation. Uses shared echoUtils.ts for client/server parity. Project B (Shape-Level) planned for future.
 - **Shape Selection Groups (Planned)**: Future abstraction for unifying filtering logic across various features.
 
 ### System Design Choices
