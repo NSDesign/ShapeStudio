@@ -2319,17 +2319,86 @@ New "Echo / Motion Trails" section in BatchConfigDialog, positioned after Shape 
 
 ---
 
-### Implementation Phases
+### Implementation Roadmap
 
-| Phase | Features | Priority |
-|-------|----------|----------|
-| **Phase 1** | Core: Fixed-vector mode, count, distance, opacity fade | High |
-| **Phase 2** | Auto-motion mode with delta detection, fallback angle | High |
-| **Phase 3** | Per-echo blur, scale, rotation effects | Medium |
-| **Phase 4** | Range-based jitter modifier | Medium |
-| **Phase 5** | Apply-to filters (shape types, indices, probability) | Medium |
-| **Phase 6** | Color shift per echo, absolute-position mode | Low |
-| **Phase 7** | Scope/driver options (shape vs set level) | Low |
+Echo/Motion Trails is split into two sequential projects to reduce risk and validate core logic before adding complexity.
+
+---
+
+#### Project A: Set-Level Echo/Motion Trails
+
+**Goal:** Implement echo effects that operate on entire set repetitions, building on existing set repetition infrastructure.
+
+**Scope:** `scope` locked to `'set'` only. UI shows scope selector but "Shape" and "Both" options are disabled with tooltip explaining they're coming in a future update.
+
+**Driver:** Uses `setRepIndex` driver. Combined mode stubbed but not active.
+
+**Features Included:**
+| Feature | Description |
+|---------|-------------|
+| Core Renderer | Echo generation logic with position offset calculations |
+| Fixed-Vector Mode | User-defined angle + distance per echo |
+| Auto-Motion Mode | Direction derived from set position deltas, with fallback angle |
+| Per-Echo Effects | Opacity (start/falloff/min), blur (start/delta/max), scale (start/delta/min/max) |
+| Rotation Delta | Progressive rotation per echo |
+| Basic Jitter | Range-based distance and angle randomization |
+| UI Section | "Echo / Motion Trails" in BatchConfigSettings with scope locked to Set |
+
+**Deliverables:**
+1. `EchoSpreadConfig` schema in `shared/schema.ts`
+2. Echo rendering logic in generation pipeline (client-side)
+3. UI controls in BatchConfigSettings
+4. Canvas preview of echo trails
+5. Persistence in project save/load
+
+**Success Criteria:**
+- Set repetitions show trailing echoes with progressive fade/blur/scale
+- Fixed-vector and auto-motion modes work correctly
+- Jitter adds organic variation
+- Performance acceptable for sets with 10+ repetitions and 5+ echoes each
+
+---
+
+#### Project B: Shape-Level Echo/Motion Trails
+
+**Goal:** Extend echo system to operate on individual shapes within sets, enabling fine-grained creative control.
+
+**Scope:** Unlocks `scope: 'shape'` and `scope: 'both'` in UI.
+
+**Driver:** Full support for `shapeIndex`, `setRepIndex`, and `combined` drivers.
+
+**Features Included:**
+| Feature | Description |
+|---------|-------------|
+| Shape-Level Echoes | Per-shape duplication with individual echo trails |
+| Combined Driver | Uses both shape index and set rep index for complex effects |
+| Granular applyTo Filters | Target by shape type, specific indices, even/odd/step selectors |
+| Probability Filter | Random chance per shape to receive echoes |
+| Absolute-Position Mode | All echoes converge toward/diverge from a fixed point |
+| Color Shift | Progressive hue/saturation/lightness changes per echo |
+| Per-Set Overrides | Override global echo config in Sets Manager |
+
+**Performance Considerations:**
+- Shape-level echoes can multiply shape count significantly (100 shapes × 5 echoes = 500 rendered shapes)
+- Implement echo count warnings when total exceeds threshold
+- Consider lazy echo generation or level-of-detail culling for canvas preview
+- Server-side export may need batching for very large echo counts
+
+**Deliverables:**
+1. Extended renderer supporting shape-level echo generation
+2. Full `applyTo` filter implementation with UI controls
+3. Scope/driver selector fully enabled
+4. Per-set override UI in Sets Manager
+5. Performance monitoring and warnings
+
+**Success Criteria:**
+- Individual shapes can have independent echo trails
+- Filters correctly target subsets of shapes
+- Combined driver creates complex layered effects
+- Performance remains acceptable with reasonable echo counts
+
+**Relationship to Shape Selection Groups:**
+The `applyTo` filter in Project B uses field names designed for future migration to the unified Shape Selection Groups system (Section 10). When that abstraction is built, echo filtering will reference reusable selection group IDs instead of embedding filter rules directly.
 
 ---
 
