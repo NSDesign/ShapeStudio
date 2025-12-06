@@ -2402,6 +2402,32 @@ The `applyTo` filter in Project B uses field names designed for future migration
 
 ---
 
+#### Forward Compatibility & Persistence Notes
+
+**Schema Versioning:**
+- `EchoSpreadConfig` will include a `version` field starting at `1`
+- Project files will store echo config in `batchConfig.echoSpread`
+- Backward compatibility: Projects without `echoSpread` default to `{ enabled: false }`
+
+**Field Naming for Future Migration:**
+The `applyTo` sub-object uses field names aligned with the future Shape Selection Groups abstraction:
+
+| Echo Field | Future Selection Group Field | Purpose |
+|------------|------------------------------|---------|
+| `applyTo.shapeTypes` | `filter.shapeTypes` | Target specific shape types |
+| `applyTo.indexMode` | `filter.indexMode` | all/even/odd/step selection |
+| `applyTo.indexStep` | `filter.indexStep` | Step interval for step mode |
+| `applyTo.probability` | `filter.probability` | Random sampling chance |
+
+This alignment enables automated migration when Shape Selection Groups are implemented.
+
+**Client/Server Parity:**
+- Echo rendering logic will be implemented in shared utilities (`shared/echoUtils.ts`)
+- Both client preview and server export use identical calculation functions
+- Similar pattern to existing `shared/gridOffsetUtils.ts` and `shared/batchUtils.ts`
+
+---
+
 ## 7. Advanced Multi-Filter System for Shape Sets ❌ NOT IMPLEMENTED
 
 ### Overview
