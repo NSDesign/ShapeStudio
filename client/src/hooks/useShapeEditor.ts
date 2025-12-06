@@ -3620,6 +3620,8 @@ export const useShapeEditor = () => {
                 echoConfig.directionMode === 'absolute-position' ? {
                   shapeX: setCentroidX,
                   shapeY: setCentroidY,
+                  artboardX: currentArtboard?.x ?? canvasBounds.x,
+                  artboardY: currentArtboard?.y ?? canvasBounds.y,
                   artboardWidth: currentArtboard?.width ?? canvasBounds.width,
                   artboardHeight: currentArtboard?.height ?? canvasBounds.height
                 } : undefined;
@@ -3707,6 +3709,8 @@ export const useShapeEditor = () => {
                   echoConfig.directionMode === 'absolute-position' ? {
                     shapeX: originalShape.transform.x,
                     shapeY: originalShape.transform.y,
+                    artboardX: currentArtboard?.x ?? canvasBounds.x,
+                    artboardY: currentArtboard?.y ?? canvasBounds.y,
                     artboardWidth: currentArtboard?.width ?? canvasBounds.width,
                     artboardHeight: currentArtboard?.height ?? canvasBounds.height
                   } : undefined;
@@ -3778,6 +3782,8 @@ export const useShapeEditor = () => {
                 echoConfig.directionMode === 'absolute-position' ? {
                   shapeX: setCentroidX,
                   shapeY: setCentroidY,
+                  artboardX: currentArtboard?.x ?? canvasBounds.x,
+                  artboardY: currentArtboard?.y ?? canvasBounds.y,
                   artboardWidth: currentArtboard?.width ?? canvasBounds.width,
                   artboardHeight: currentArtboard?.height ?? canvasBounds.height
                 } : undefined;
@@ -3861,6 +3867,8 @@ export const useShapeEditor = () => {
                   echoConfig.directionMode === 'absolute-position' ? {
                     shapeX: originalShape.transform.x,
                     shapeY: originalShape.transform.y,
+                    artboardX: currentArtboard?.x ?? canvasBounds.x,
+                    artboardY: currentArtboard?.y ?? canvasBounds.y,
                     artboardWidth: currentArtboard?.width ?? canvasBounds.width,
                     artboardHeight: currentArtboard?.height ?? canvasBounds.height
                   } : undefined;

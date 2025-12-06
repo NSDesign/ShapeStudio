@@ -766,11 +766,14 @@ export interface EchoAutoMotionConfig {
   distanceMultiplier: number; // 0.1-5.0 - multiplier for detected motion
 }
 
+// Artboard target presets for absolute-position mode
+export type EchoArtboardTarget = 'center' | 'top-left' | 'top-right' | 'bottom-right' | 'bottom-left' | 'custom';
+
 // Absolute-position mode settings (Project B: converging/diverging effects)
 export interface EchoAbsolutePositionConfig {
-  targetX: number;           // Target X coordinate
-  targetY: number;           // Target Y coordinate
-  useArtboardCenter: boolean; // Use artboard center as target (default: true)
+  targetX: number;           // Target X coordinate (artboard-relative, used when artboardTarget='custom')
+  targetY: number;           // Target Y coordinate (artboard-relative, used when artboardTarget='custom')
+  artboardTarget: EchoArtboardTarget; // Predefined artboard location or custom coordinates
   mode: 'converge' | 'diverge'; // Converge toward target or diverge away from it
 }
 
@@ -861,7 +864,7 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
   absolutePosition: {
     targetX: 0,
     targetY: 0,
-    useArtboardCenter: true,
+    artboardTarget: 'center',
     mode: 'converge'
   },
   
@@ -3129,7 +3132,7 @@ export const BatchConfigSettingsSchema = z.object({
     absolutePosition: z.object({
       targetX: z.number(),
       targetY: z.number(),
-      useArtboardCenter: z.boolean(),
+      artboardTarget: z.enum(['center', 'top-left', 'top-right', 'bottom-right', 'bottom-left', 'custom']),
       mode: z.enum(['converge', 'diverge'])
     }).optional(),
     opacity: z.object({

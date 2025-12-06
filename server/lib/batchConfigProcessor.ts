@@ -1380,6 +1380,8 @@ export function generateShapesWithBatchConfig(
         echoConfig.directionMode === 'absolute-position' ? {
           shapeX: setCentroidX,
           shapeY: setCentroidY,
+          artboardX: canvasBounds.x,
+          artboardY: canvasBounds.y,
           artboardWidth: canvasBounds.width,
           artboardHeight: canvasBounds.height
         } : undefined;
@@ -1466,6 +1468,8 @@ export function generateShapesWithBatchConfig(
           echoConfig.directionMode === 'absolute-position' ? {
             shapeX: originalShape.transform.x,
             shapeY: originalShape.transform.y,
+            artboardX: canvasBounds.x,
+            artboardY: canvasBounds.y,
             artboardWidth: canvasBounds.width,
             artboardHeight: canvasBounds.height
           } : undefined;
@@ -1534,6 +1538,8 @@ export function generateShapesWithBatchConfig(
         echoConfig.directionMode === 'absolute-position' ? {
           shapeX: setCentroidX,
           shapeY: setCentroidY,
+          artboardX: canvasBounds.x,
+          artboardY: canvasBounds.y,
           artboardWidth: canvasBounds.width,
           artboardHeight: canvasBounds.height
         } : undefined;
@@ -1617,6 +1623,8 @@ export function generateShapesWithBatchConfig(
           echoConfig.directionMode === 'absolute-position' ? {
             shapeX: originalShape.transform.x,
             shapeY: originalShape.transform.y,
+            artboardX: canvasBounds.x,
+            artboardY: canvasBounds.y,
             artboardWidth: canvasBounds.width,
             artboardHeight: canvasBounds.height
           } : undefined;

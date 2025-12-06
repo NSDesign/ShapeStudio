@@ -8498,30 +8498,38 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                         
-                        {/* Target: Use Artboard Center or Custom */}
+                        {/* Artboard Target Selection */}
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={currentSettings.echoSpread?.absolutePosition?.useArtboardCenter ?? true}
-                              onCheckedChange={(checked) => handleSettingsUpdate({ 
-                                echoSpread: { 
-                                  ...currentSettings.echoSpread, 
-                                  absolutePosition: { 
-                                    ...currentSettings.echoSpread?.absolutePosition, 
-                                    useArtboardCenter: checked as boolean 
-                                  } 
+                          <Label className="text-xs text-slate-400">Artboard Target</Label>
+                          <Select 
+                            value={currentSettings.echoSpread?.absolutePosition?.artboardTarget ?? 'center'} 
+                            onValueChange={(value) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                absolutePosition: { 
+                                  ...currentSettings.echoSpread?.absolutePosition, 
+                                  artboardTarget: value as any 
                                 } 
-                              })}
-                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
-                              data-testid="checkbox-echo-use-artboard-center"
-                            />
-                            <Label className="text-xs text-slate-400">Use Artboard Center</Label>
-                          </div>
+                              } 
+                            })}
+                          >
+                            <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-artboard-target">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                              <SelectItem value="center" className="text-slate-200 hover:bg-slate-700">Center</SelectItem>
+                              <SelectItem value="top-left" className="text-slate-200 hover:bg-slate-700">Top Left</SelectItem>
+                              <SelectItem value="top-right" className="text-slate-200 hover:bg-slate-700">Top Right</SelectItem>
+                              <SelectItem value="bottom-right" className="text-slate-200 hover:bg-slate-700">Bottom Right</SelectItem>
+                              <SelectItem value="bottom-left" className="text-slate-200 hover:bg-slate-700">Bottom Left</SelectItem>
+                              <SelectItem value="custom" className="text-slate-200 hover:bg-slate-700">Custom</SelectItem>
+                            </SelectContent>
+                          </Select>
                           
-                          {!currentSettings.echoSpread?.absolutePosition?.useArtboardCenter && (
+                          {currentSettings.echoSpread?.absolutePosition?.artboardTarget === 'custom' && (
                             <div className="grid grid-cols-2 gap-3 mt-2">
                               <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Target X</Label>
+                                <Label className="text-xs text-slate-400">Target X (artboard-relative)</Label>
                                 <NumericInput
                                   value={currentSettings.echoSpread?.absolutePosition?.targetX ?? 0}
                                   onChange={(value) => handleSettingsUpdate({ 
@@ -8538,7 +8546,7 @@ export default function BatchConfigDialog({
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-xs text-slate-400">Target Y</Label>
+                                <Label className="text-xs text-slate-400">Target Y (artboard-relative)</Label>
                                 <NumericInput
                                   value={currentSettings.echoSpread?.absolutePosition?.targetY ?? 0}
                                   onChange={(value) => handleSettingsUpdate({ 

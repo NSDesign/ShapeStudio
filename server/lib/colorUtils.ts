@@ -124,6 +124,26 @@ export class ColorUtils {
   }
 
   /**
+   * Apply HSL shift to a color
+   * Used for echo color shift effects
+   */
+  static applyHSLShift(color: string, shift: { enabled: boolean; hue: number; saturation: number; lightness: number }): string {
+    if (!shift.enabled || color === 'none') return color;
+
+    const hsl = this.hexToHSL(color);
+    
+    // Apply shifts with proper clamping
+    let newH = hsl.h + shift.hue;
+    while (newH < 0) newH += 360;
+    while (newH >= 360) newH -= 360;
+    
+    const newS = Math.max(0, Math.min(100, hsl.s + shift.saturation));
+    const newL = Math.max(0, Math.min(100, hsl.l + shift.lightness));
+
+    return this.hslToHex({ h: newH, s: newS, l: newL });
+  }
+
+  /**
    * Generate color using harmony settings
    */
   static generateHarmonyColor(settings: ColorHarmonySettings): string {

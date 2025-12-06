@@ -138,10 +138,12 @@ export interface AutoMotionContext {
  * Context for absolute-position mode - target coordinates and artboard dimensions
  */
 export interface AbsolutePositionContext {
-  shapeX: number;           // Current shape X position
-  shapeY: number;           // Current shape Y position
-  artboardWidth: number;    // Artboard width for center calculation
-  artboardHeight: number;   // Artboard height for center calculation
+  shapeX: number;           // Current shape X position (canvas coordinates)
+  shapeY: number;           // Current shape Y position (canvas coordinates)
+  artboardX: number;        // Artboard X position on canvas
+  artboardY: number;        // Artboard Y position on canvas
+  artboardWidth: number;    // Artboard width
+  artboardHeight: number;   // Artboard height
 }
 
 /**
@@ -246,20 +248,54 @@ export function calculateEchoDirection(
     const absConfig = config.absolutePosition ?? {
       targetX: 0,
       targetY: 0,
-      useArtboardCenter: true,
+      artboardTarget: 'center',
       mode: 'converge'
     };
     
-    // Determine target coordinates
-    let targetX = absConfig.targetX;
-    let targetY = absConfig.targetY;
+    // Determine target coordinates in canvas space based on artboardTarget
+    let targetX: number;
+    let targetY: number;
     
-    if (absConfig.useArtboardCenter) {
-      targetX = absolutePositionContext.artboardWidth / 2;
-      targetY = absolutePositionContext.artboardHeight / 2;
+    const artX = absolutePositionContext.artboardX;
+    const artY = absolutePositionContext.artboardY;
+    const artW = absolutePositionContext.artboardWidth;
+    const artH = absolutePositionContext.artboardHeight;
+    
+    // Handle legacy configs that still have useArtboardCenter
+    const artboardTarget = (absConfig as any).useArtboardCenter === true 
+      ? 'center' 
+      : (absConfig.artboardTarget ?? 'center');
+    
+    switch (artboardTarget) {
+      case 'center':
+        targetX = artX + artW / 2;
+        targetY = artY + artH / 2;
+        break;
+      case 'top-left':
+        targetX = artX;
+        targetY = artY;
+        break;
+      case 'top-right':
+        targetX = artX + artW;
+        targetY = artY;
+        break;
+      case 'bottom-right':
+        targetX = artX + artW;
+        targetY = artY + artH;
+        break;
+      case 'bottom-left':
+        targetX = artX;
+        targetY = artY + artH;
+        break;
+      case 'custom':
+      default:
+        // Custom coordinates are artboard-relative, convert to canvas space
+        targetX = artX + absConfig.targetX;
+        targetY = artY + absConfig.targetY;
+        break;
     }
     
-    // Calculate direction from shape to target
+    // Calculate direction from shape to target (both in canvas coordinates)
     const dx = targetX - absolutePositionContext.shapeX;
     const dy = targetY - absolutePositionContext.shapeY;
     
