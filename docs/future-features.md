@@ -20,7 +20,7 @@ This document outlines complex features that have been identified for future dev
 | **Grid Offset Value Modes (Phase 6)** | ✅ Implemented | [Section 5](#phase-6-grid-offset-value-modes--completed) |
 | **Future Shape Masking Filters (Phase 7)** | 📋 Planned | [Section 5](#phase-7-future-shape-masking-filter-types--future) |
 | **Echo/Motion Trails - Project A (Set-Level)** | ✅ Implemented | [Section 6](#project-a-set-level-echomotion-trails) |
-| **Echo/Motion Trails - Project B (Shape-Level)** | 📋 Planned | [Section 6](#project-b-shape-level-echomotion-trails) |
+| **Echo/Motion Trails - Project B (Shape-Level)** | ✅ Implemented | [Section 6](#project-b-shape-level-echomotion-trails) |
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
@@ -2369,7 +2369,7 @@ Echo/Motion Trails is split into two sequential projects to reduce risk and vali
 
 ---
 
-#### Project B: Shape-Level Echo/Motion Trails
+#### Project B: Shape-Level Echo/Motion Trails ✅ IMPLEMENTED
 
 **Goal:** Extend echo system to operate on individual shapes within sets, enabling fine-grained creative control.
 

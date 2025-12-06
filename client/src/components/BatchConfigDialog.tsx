@@ -8025,6 +8025,21 @@ export default function BatchConfigDialog({
                 
                 {currentSettings.echoSpread?.enabled && (
                   <div className="space-y-4 mt-3">
+                    {/* Performance Warning for high echo counts */}
+                    {(currentSettings.echoSpread?.echoCount ?? 3) >= 8 && (
+                      <div className="flex items-start gap-2 p-2 bg-amber-900/30 border border-amber-600/50 rounded-lg">
+                        <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-amber-200">
+                          High echo count ({currentSettings.echoSpread?.echoCount ?? 3}) may impact performance. 
+                          {(currentSettings.echoSpread?.scope === 'shape' || currentSettings.echoSpread?.scope === 'both') && (
+                            <span className="block mt-1">
+                              With shape-level scope, total rendered shapes = shapes × echoes per shape.
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    
                     {/* Scope & Driver Row - with future options disabled */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
