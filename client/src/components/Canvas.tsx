@@ -117,6 +117,8 @@ export default function Canvas({
   const infiniteCanvasRef = useRef<HTMLCanvasElement>(null);
   const artboardCanvasRef = useRef<HTMLCanvasElement>(null);
   const dirtyRef = useRef<boolean>(true); // Track if canvas needs re-render
+  const shapesDirtyRef = useRef<boolean>(true); // Track if shapes need re-render (expensive)
+  const shapesCanvasRef = useRef<HTMLCanvasElement | null>(null); // Cached shapes rendering
   const isAnimatingRef = useRef<boolean>(false); // Track if animation loop is active
 
   // Set canvas size to match container with proper pixel density for all three layers
@@ -161,12 +163,14 @@ export default function Canvas({
         requestAnimationFrame(() => {
           resizeCanvas();
           dirtyRef.current = true; // Mark as dirty after resize
+          shapesDirtyRef.current = true; // Need to re-render shapes after resize
         });
       }, 16); // ~60fps debouncing
     };
 
     resizeCanvas();
     dirtyRef.current = true; // Mark as dirty on mount
+    shapesDirtyRef.current = true; // Also need to re-render shapes on mount
     
     const resizeObserver = new ResizeObserver(debouncedResizeCanvas);
     if (canvasRef.current?.parentElement) {
@@ -1087,6 +1091,12 @@ export default function Canvas({
   useEffect(() => {
     dirtyRef.current = true;
   }, [shapes, groups, canvasSettings, artboards, activeArtboard, selectedShapes, selectedGroups, isMarqueeSelecting, marqueeStart, marqueeEnd, editMode, selectedPoints, selectedSegments, generationSets]);
+
+  // Mark shapes as dirty only when shape/artboard/settings change (not selection)
+  // This is used to optimize rendering - only re-render expensive shapes when needed
+  useEffect(() => {
+    shapesDirtyRef.current = true;
+  }, [shapes, groups, canvasSettings, artboards, activeArtboard, generationSets]);
 
   // Wrap interaction handlers to set dirty flag for immediate visual feedback
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
