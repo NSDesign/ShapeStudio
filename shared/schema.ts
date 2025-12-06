@@ -758,6 +758,7 @@ export interface EchoSpreadConfig {
   // Scope and driver (Project A: scope locked to 'set', driver to 'setRepIndex')
   scope: EchoScope;
   driver: EchoDriver;
+  syncBothScopes?: boolean;  // When scope='both', sync settings between Set and Shape levels (default: true)
   
   // Echo count
   echoCount: number;         // 1-20 - number of echo copies

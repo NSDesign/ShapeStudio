@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
@@ -7967,6 +7968,61 @@ export default function BatchConfigDialog({
                         </Select>
                       </div>
                     </div>
+
+                    {/* Both Scope Tabbed UI (Future: Project B) */}
+                    {currentSettings.echoSpread?.scope === 'both' && (
+                      <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-cyan-600/50">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-medium text-cyan-400">Dual Scope Configuration</Label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">Apply Same Settings</span>
+                            <Switch
+                              checked={currentSettings.echoSpread?.syncBothScopes ?? true}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { ...currentSettings.echoSpread, syncBothScopes: checked } 
+                              })}
+                              className="data-[state=checked]:bg-cyan-600"
+                              data-testid="switch-echo-sync-scopes"
+                            />
+                          </div>
+                        </div>
+                        
+                        {currentSettings.echoSpread?.syncBothScopes ? (
+                          <p className="text-xs text-slate-400">
+                            Settings below will apply to both Set-level and Shape-level echoes.
+                          </p>
+                        ) : (
+                          <Tabs defaultValue="set" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2 bg-slate-800 h-8">
+                              <TabsTrigger 
+                                value="set" 
+                                className="text-xs data-[state=active]:bg-cyan-600 data-[state=active]:text-white"
+                                data-testid="tab-echo-set"
+                              >
+                                Set Level
+                              </TabsTrigger>
+                              <TabsTrigger 
+                                value="shape" 
+                                className="text-xs data-[state=active]:bg-cyan-600 data-[state=active]:text-white"
+                                data-testid="tab-echo-shape"
+                              >
+                                Shape Level
+                              </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="set" className="mt-2">
+                              <p className="text-xs text-slate-400 p-2 bg-slate-800/50 rounded">
+                                Set-level echo settings (applied per set repetition). Configure settings below.
+                              </p>
+                            </TabsContent>
+                            <TabsContent value="shape" className="mt-2">
+                              <p className="text-xs text-slate-400 p-2 bg-slate-800/50 rounded">
+                                Shape-level echo settings (applied per individual shape). Configure settings below.
+                              </p>
+                            </TabsContent>
+                          </Tabs>
+                        )}
+                      </div>
+                    )}
 
                     {/* Echo Count & Direction Mode */}
                     <div className="grid grid-cols-2 gap-3">
