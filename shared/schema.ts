@@ -1040,6 +1040,7 @@ export interface BatchConfigSettings {
   
   // Fill Properties - Controls solid vs gradient vs pattern
   fillEnabled: boolean;
+  fillSolidEnabled: boolean; // Enable/disable solid fill section
   fillStyleProbability: number; // 0-100% - probability for solid fill vs gradient fill
   
   // Fill Color Settings (for solid fills)
@@ -1161,6 +1162,7 @@ export interface BatchConfigSettings {
   fillGradientConicCenterYModulationValue: number; // Modulation value
   
   // Fill Opacity Settings
+  fillOpacityEnabled: boolean;
   fillOpacityMode: 'range' | 'define' | 'incremental';
   fillOpacityRange: [number, number]; // For range mode
   fillOpacityDefine: number; // For define mode
@@ -1195,6 +1197,7 @@ export interface BatchConfigSettings {
   strokeColorLightnessRange: [number, number]; // 0-100% for range mode
   
   // Stroke Opacity Settings
+  strokeOpacityEnabled: boolean;
   strokeOpacityMode: 'range' | 'define' | 'incremental';
   strokeOpacityRange: [number, number]; // For range mode
   strokeOpacityDefine: number; // For define mode
@@ -1204,6 +1207,7 @@ export interface BatchConfigSettings {
   strokeOpacityModulationValue: number; // Modulation value
   
   // Stroke Width Settings
+  strokeWidthEnabled: boolean;
   strokeWidthMode: 'range' | 'define' | 'incremental';
   strokeWidthRange: [number, number];
   strokeWidthDefine: number; // For define mode
@@ -1615,6 +1619,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   
   // Fill Properties
   fillEnabled: true,
+  fillSolidEnabled: true, // Solid fill section enabled by default
   fillStyleProbability: 60, // 60% solid fill, 40% gradient fill
   
   // Fill Color Settings
@@ -1736,6 +1741,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientConicCenterYModulationValue: 100,
   
   // Fill Opacity Settings
+  fillOpacityEnabled: true,
   fillOpacityMode: 'range',
   fillOpacityRange: [70, 100],
   fillOpacityDefine: 80,
@@ -1770,6 +1776,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   strokeColorLightnessRange: [20, 60],
   
   // Stroke Opacity Settings
+  strokeOpacityEnabled: true,
   strokeOpacityMode: 'range',
   strokeOpacityRange: [40, 100],
   strokeOpacityDefine: 80,
@@ -1779,6 +1786,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   strokeOpacityModulationValue: 100,
   
   // Stroke Width Settings
+  strokeWidthEnabled: true,
   strokeWidthMode: 'range',
   strokeWidthRange: [1, 5],
   strokeWidthDefine: 3,
@@ -2720,6 +2728,7 @@ export const BatchConfigSettingsSchema = z.object({
   
   // Fill properties
   fillEnabled: z.boolean(),
+  fillSolidEnabled: z.boolean(),
   fillStyleProbability: z.number(),
   fillColorMode: z.enum(['range', 'palette', 'define']),
   fillColorRange: z.tuple([z.string(), z.string()]),
@@ -2832,6 +2841,7 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientConicCenterYModulationValue: z.number(),
   
   // Fill opacity
+  fillOpacityEnabled: z.boolean(),
   fillOpacityMode: z.enum(['range', 'define', 'incremental']),
   fillOpacityRange: z.tuple([z.number(), z.number()]),
   fillOpacityDefine: z.number(),
@@ -2861,6 +2871,7 @@ export const BatchConfigSettingsSchema = z.object({
   strokeColorDefine: z.string(),
   strokeColorSaturationRange: z.tuple([z.number(), z.number()]),
   strokeColorLightnessRange: z.tuple([z.number(), z.number()]),
+  strokeOpacityEnabled: z.boolean(),
   strokeOpacityMode: z.enum(['range', 'define', 'incremental']),
   strokeOpacityRange: z.tuple([z.number(), z.number()]),
   strokeOpacityDefine: z.number(),
@@ -2868,6 +2879,7 @@ export const BatchConfigSettingsSchema = z.object({
   strokeOpacityIncrement: z.number(),
   strokeOpacityModulationEnabled: z.boolean(),
   strokeOpacityModulationValue: z.number(),
+  strokeWidthEnabled: z.boolean(),
   strokeWidthMode: z.enum(['range', 'define', 'incremental']),
   strokeWidthRange: z.tuple([z.number(), z.number()]),
   strokeWidthDefine: z.number(),

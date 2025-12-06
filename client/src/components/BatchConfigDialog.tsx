@@ -472,20 +472,28 @@ export default function BatchConfigDialog({
               )}
 
               {/* Distribution Layout */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={currentSettings.distributionLayoutEnabled}
-                    onCheckedChange={(checked) => handleSettingsUpdate({ distributionLayoutEnabled: checked as boolean })}
-                    className="border-slate-500 data-[state=checked]:bg-blue-600"
-                  />
-                  <Label className="font-medium text-slate-200">Distribution Layout</Label>
+              <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={currentSettings.distributionLayoutEnabled}
+                      onCheckedChange={(checked) => handleSettingsUpdate({ distributionLayoutEnabled: checked as boolean })}
+                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                      data-testid="checkbox-distribution-layout-enabled"
+                    />
+                    <Label className="text-sm font-medium text-slate-200">Distribution Layout</Label>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {currentSettings.distributionLayoutEnabled
+                      ? `Pattern: ${currentSettings.distributionPattern}`
+                      : 'Disabled'}
+                  </span>
                 </div>
                 
                 {currentSettings.distributionLayoutEnabled && (
-                  <div className="ml-6 space-y-4">
+                  <div className="space-y-4 mt-3">
                     {/* Main Layout Controls Container */}
-                    <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                       {/* Pattern Type */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-slate-200">Pattern Type</Label>
@@ -3441,30 +3449,39 @@ export default function BatchConfigDialog({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2">
                                 <Checkbox 
-                                  checked={currentSettings.fillStyleProbability > 0}
-                                  onCheckedChange={(checked) => handleSettingsUpdate({ fillStyleProbability: checked ? 50 : 0 })}
+                                  checked={currentSettings.fillSolidEnabled}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ fillSolidEnabled: checked as boolean })}
                                   className="border-slate-500 data-[state=checked]:bg-cyan-600"
                                   data-testid="checkbox-solid-fill-enabled"
                                 />
                                 <Label className="text-sm font-medium text-slate-200">Solid Fill</Label>
                               </div>
-                              <Select 
-                                value={currentSettings.fillColorMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as 'range' | 'palette' | 'define' })}
-                              >
-                                <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-fill-color-mode">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <span className="text-xs text-slate-400">
+                                {currentSettings.fillSolidEnabled ? currentSettings.fillColorMode : 'Disabled'}
+                              </span>
                             </div>
       
-                            {currentSettings.fillColorMode === 'range' && (
+                            {currentSettings.fillSolidEnabled && (
                               <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-slate-400">Color Mode</Label>
+                                  <Select 
+                                    value={currentSettings.fillColorMode} 
+                                    onValueChange={(value) => handleSettingsUpdate({ fillColorMode: value as 'range' | 'palette' | 'define' })}
+                                  >
+                                    <SelectTrigger className="h-7 w-24 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-fill-color-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                      <SelectItem value="palette" className="text-slate-200 hover:bg-slate-700">Palette</SelectItem>
+                                      <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                {currentSettings.fillColorMode === 'range' && (
+                                  <div className="space-y-3">
                                 <div className="space-y-2">
                                   <Label className="text-xs text-slate-400">Color Range</Label>
                                   <div className="flex items-center gap-3">
@@ -3573,10 +3590,10 @@ export default function BatchConfigDialog({
                                     />
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                                  </div>
+                                )}
       
-                            {currentSettings.fillColorMode === 'palette' && (
+                                {currentSettings.fillColorMode === 'palette' && (
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Color Palette</Label>
                                 <div className="flex flex-wrap gap-2 p-2 bg-slate-800/50 rounded">
@@ -3644,6 +3661,8 @@ export default function BatchConfigDialog({
                                   />
                                 </div>
                                 <p className="text-xs text-slate-500">All shapes use this exact color</p>
+                              </div>
+                            )}
                               </div>
                             )}
                           </div>
@@ -5220,21 +5239,41 @@ export default function BatchConfigDialog({
                           {/* Fill Opacity Subsection */}
                           <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
-                              <Select 
-                                value={currentSettings.fillOpacityMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as 'range' | 'define' | 'incremental' })}
-                              >
-                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-fill-opacity-mode">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  checked={currentSettings.fillOpacityEnabled}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ fillOpacityEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                  data-testid="checkbox-fill-opacity-enabled"
+                                />
+                                <Label className="text-sm font-medium text-slate-200">Fill Opacity</Label>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                {currentSettings.fillOpacityEnabled ? 
+                                  (currentSettings.fillOpacityMode === 'range' ? 'Range' : 
+                                   currentSettings.fillOpacityMode === 'define' ? 'Fixed' : 
+                                   'Incremental') : 'Disabled'}
+                              </span>
                             </div>
+      
+                            {currentSettings.fillOpacityEnabled && (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-xs text-slate-400">Mode</Label>
+                                  <Select 
+                                    value={currentSettings.fillOpacityMode} 
+                                    onValueChange={(value) => handleSettingsUpdate({ fillOpacityMode: value as 'range' | 'define' | 'incremental' })}
+                                  >
+                                    <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-fill-opacity-mode">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                      <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                      <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                      <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
       
                             {currentSettings.fillOpacityMode === 'range' && (
                               <div className="space-y-2">
@@ -5349,6 +5388,8 @@ export default function BatchConfigDialog({
                                 <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
                               </div>
                             )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -5394,21 +5435,40 @@ export default function BatchConfigDialog({
                           {/* Stroke Width Subsection */}
                           <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Width</Label>
-                              <Select 
-                                value={currentSettings.strokeWidthMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as 'range' | 'define' | 'incremental' })}
-                              >
-                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-width-mode">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.strokeWidthEnabled ?? true}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ strokeWidthEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                  data-testid="checkbox-stroke-width-enabled"
+                                />
+                                <Label className="text-sm font-medium text-slate-200">Stroke Width</Label>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                {currentSettings.strokeWidthEnabled !== false ? 
+                                  (currentSettings.strokeWidthMode === 'range' ? 'Range' : 
+                                   currentSettings.strokeWidthMode === 'define' ? 'Fixed' : 
+                                   'Incremental') : 'Disabled'}
+                              </span>
                             </div>
+                            
+                            {currentSettings.strokeWidthEnabled !== false && (
+                              <>
+                              <div className="flex justify-end">
+                                <Select 
+                                  value={currentSettings.strokeWidthMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ strokeWidthMode: value as 'range' | 'define' | 'incremental' })}
+                                >
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-width-mode">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             
                             {currentSettings.strokeWidthMode === 'range' && (
                               <div className="space-y-2">
@@ -5522,6 +5582,8 @@ export default function BatchConfigDialog({
                                 </div>
                                 <p className="text-xs text-slate-500">Progressive stroke width with optional modulation wrap</p>
                               </div>
+                            )}
+                              </>
                             )}
                           </div>
                           
@@ -5732,22 +5794,41 @@ export default function BatchConfigDialog({
                           {/* Stroke Opacity Subsection */}
                           <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium text-slate-200">Stroke Opacity</Label>
-                              <Select 
-                                value={currentSettings.strokeOpacityMode} 
-                                onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as 'range' | 'define' | 'incremental' })}
-                              >
-                                <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-opacity-mode">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                  <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                  <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                                  <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.strokeOpacityEnabled ?? true}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ strokeOpacityEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                                  data-testid="checkbox-stroke-opacity-enabled"
+                                />
+                                <Label className="text-sm font-medium text-slate-200">Stroke Opacity</Label>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                {currentSettings.strokeOpacityEnabled !== false ? 
+                                  (currentSettings.strokeOpacityMode === 'range' ? 'Range' : 
+                                   currentSettings.strokeOpacityMode === 'define' ? 'Fixed' : 
+                                   'Incremental') : 'Disabled'}
+                              </span>
                             </div>
       
+                            {currentSettings.strokeOpacityEnabled !== false && (
+                              <>
+                              <div className="flex justify-end">
+                                <Select 
+                                  value={currentSettings.strokeOpacityMode} 
+                                  onValueChange={(value) => handleSettingsUpdate({ strokeOpacityMode: value as 'range' | 'define' | 'incremental' })}
+                                >
+                                  <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200" data-testid="select-stroke-opacity-mode">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
+                                    <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
+                                    <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
                             {currentSettings.strokeOpacityMode === 'range' && (
                               <div className="space-y-2">
                                 <Label className="text-xs text-slate-400">Opacity Range (%)</Label>
@@ -5860,6 +5941,8 @@ export default function BatchConfigDialog({
                                 </div>
                                 <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
                               </div>
+                            )}
+                              </>
                             )}
                           </div>
                         </div>

@@ -332,20 +332,25 @@ function calculateBlur(settings: BatchConfigSettings, shapeIndex: number): numbe
  * Helper function to calculate stroke width based on mode
  */
 function calculateStrokeWidth(settings: BatchConfigSettings, shapeIndex: number): number {
+  // Short-circuit if strokeWidthEnabled is false
+  if (settings.strokeWidthEnabled === false) {
+    return 1; // Default stroke width when disabled
+  }
+  
   switch (settings.strokeWidthMode) {
     case 'range':
-      const [minWidth, maxWidth] = settings.strokeWidthRange;
+      const [minWidth, maxWidth] = settings.strokeWidthRange ?? [1, 5];
       return minWidth + Math.random() * (maxWidth - minWidth);
     
     case 'define':
-      return settings.strokeWidthDefine;
+      return settings.strokeWidthDefine ?? 3;
     
     case 'incremental':
-      let incrementAmount = (settings.strokeWidthIncrement || 0) * shapeIndex;
+      let incrementAmount = (settings.strokeWidthIncrement ?? 0.5) * shapeIndex;
       if (settings.strokeWidthModulationEnabled && settings.strokeWidthModulationValue > 0) {
         incrementAmount = incrementAmount % settings.strokeWidthModulationValue;
       }
-      return settings.strokeWidthStartValue + incrementAmount;
+      return (settings.strokeWidthStartValue ?? 1) + incrementAmount;
     
     default:
       return 1; // Default stroke width
@@ -553,8 +558,10 @@ export function generateShapesWithBatchConfig(
           shape.properties.gradient = undefined;
         } else {
           // Determine whether to use gradient based on fillStyleProbability
+          // If fillSolidEnabled is false, treat solid fill probability as 0
+          const effectiveSolidProbability = batchConfig.fillSolidEnabled !== false ? batchConfig.fillStyleProbability : 0;
           const useGradient = batchConfig.fillGradientEnabled && 
-                             Math.random() * 100 < (100 - batchConfig.fillStyleProbability);
+                             Math.random() * 100 < (100 - effectiveSolidProbability);
           
           if (useGradient) {
             // Determine stop count based on mode
@@ -687,9 +694,15 @@ export function generateShapesWithBatchConfig(
             shape.properties.gradient = gradientObj;
 
             shape.properties.fillColor = gradientColors[0];
-            shape.properties.fillOpacity = batchConfig.fillOpacityMode === 'range'
-              ? (batchConfig.fillOpacityRange[0] + Math.random() * (batchConfig.fillOpacityRange[1] - batchConfig.fillOpacityRange[0])) / 100
-              : batchConfig.fillOpacityDefine / 100;
+            // Apply fill opacity based on mode (only if fillOpacityEnabled)
+            if (batchConfig.fillOpacityEnabled !== false) {
+              const opacityRange = batchConfig.fillOpacityRange ?? [60, 100];
+              shape.properties.fillOpacity = batchConfig.fillOpacityMode === 'range'
+                ? (opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0])) / 100
+                : (batchConfig.fillOpacityDefine ?? 80) / 100;
+            } else {
+              shape.properties.fillOpacity = 1; // Default to full opacity when disabled
+            }
           } else {
             const fillColor = batchConfig.colorHarmonyEnabled
               ? ColorUtils.generateHarmonyColor({
@@ -721,9 +734,15 @@ export function generateShapesWithBatchConfig(
 
             shape.properties.gradient = undefined;
             shape.properties.fillColor = fillColor;
-            shape.properties.fillOpacity = batchConfig.fillOpacityMode === 'range'
-              ? (batchConfig.fillOpacityRange[0] + Math.random() * (batchConfig.fillOpacityRange[1] - batchConfig.fillOpacityRange[0])) / 100
-              : batchConfig.fillOpacityDefine / 100;
+            // Apply fill opacity based on mode (only if fillOpacityEnabled)
+            if (batchConfig.fillOpacityEnabled !== false) {
+              const opacityRange = batchConfig.fillOpacityRange ?? [60, 100];
+              shape.properties.fillOpacity = batchConfig.fillOpacityMode === 'range'
+                ? (opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0])) / 100
+                : (batchConfig.fillOpacityDefine ?? 80) / 100;
+            } else {
+              shape.properties.fillOpacity = 1; // Default to full opacity when disabled
+            }
           }
         }
       } else {
@@ -740,13 +759,25 @@ export function generateShapesWithBatchConfig(
           shape.properties.strokeWidth = 0;
         } else {
           // Apply stroke width using helper function that supports all modes (range/define/incremental)
-          shape.properties.strokeWidth = calculateStrokeWidth(batchConfig, index);
+          // Only if strokeWidthEnabled is true, otherwise use a default
+          if (batchConfig.strokeWidthEnabled !== false) {
+            shape.properties.strokeWidth = calculateStrokeWidth(batchConfig, index);
+          } else {
+            shape.properties.strokeWidth = 1; // Default stroke width when disabled
+          }
 
-          if (batchConfig.strokeOpacityMode === 'range') {
-            const [minOpacity, maxOpacity] = batchConfig.strokeOpacityRange;
-            shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-          } else if (batchConfig.strokeOpacityMode === 'define') {
-            shape.properties.strokeOpacity = batchConfig.strokeOpacityDefine / 100;
+          // Apply stroke opacity based on mode (only if strokeOpacityEnabled)
+          if (batchConfig.strokeOpacityEnabled !== false) {
+            if (batchConfig.strokeOpacityMode === 'range') {
+              const [minOpacity, maxOpacity] = batchConfig.strokeOpacityRange ?? [40, 100];
+              shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+            } else if (batchConfig.strokeOpacityMode === 'define') {
+              shape.properties.strokeOpacity = (batchConfig.strokeOpacityDefine ?? 80) / 100;
+            } else {
+              shape.properties.strokeOpacity = 1; // Default for incremental or unknown mode
+            }
+          } else {
+            shape.properties.strokeOpacity = 1; // Default to full opacity when disabled
           }
 
           const strokeColor = generateColor(

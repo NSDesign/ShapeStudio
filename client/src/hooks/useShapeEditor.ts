@@ -1802,20 +1802,25 @@ export const useShapeEditor = () => {
 
   // Helper function to calculate stroke width based on mode
   const calculateStrokeWidth = (settings: BatchConfigSettings, shapeIndex: number): number => {
+    // Short-circuit if strokeWidthEnabled is false
+    if (settings.strokeWidthEnabled === false) {
+      return 1; // Default stroke width when disabled
+    }
+    
     switch (settings.strokeWidthMode) {
       case 'range':
-        const [minWidth, maxWidth] = settings.strokeWidthRange;
+        const [minWidth, maxWidth] = settings.strokeWidthRange ?? [1, 5];
         return minWidth + Math.random() * (maxWidth - minWidth);
       
       case 'define':
-        return settings.strokeWidthDefine;
+        return settings.strokeWidthDefine ?? 3;
       
       case 'incremental':
-        let incrementAmount = (settings.strokeWidthIncrement || 0) * shapeIndex;
+        let incrementAmount = (settings.strokeWidthIncrement ?? 0.5) * shapeIndex;
         if (settings.strokeWidthModulationEnabled && settings.strokeWidthModulationValue > 0) {
           incrementAmount = incrementAmount % settings.strokeWidthModulationValue;
         }
-        return settings.strokeWidthStartValue + incrementAmount;
+        return (settings.strokeWidthStartValue ?? 1) + incrementAmount;
       
       default:
         return 1; // Default stroke width
@@ -2161,7 +2166,9 @@ export const useShapeEditor = () => {
         // Handle fill style: solid vs gradient (not transparent vs opaque)
         if (effectiveBatchConfig.fillEnabled) {
           // Determine if this shape gets solid or gradient fill
-          const shouldHaveSolidFill = Math.random() * 100 < effectiveBatchConfig.fillStyleProbability;
+          // If fillSolidEnabled is false, treat solid fill probability as 0
+          const effectiveSolidProbability = effectiveBatchConfig.fillSolidEnabled !== false ? effectiveBatchConfig.fillStyleProbability : 0;
+          const shouldHaveSolidFill = Math.random() * 100 < effectiveSolidProbability;
           const shouldHaveGradient = !shouldHaveSolidFill && effectiveBatchConfig.fillGradientEnabled;
 
           // Determine fill type based on probabilities
@@ -2323,12 +2330,18 @@ export const useShapeEditor = () => {
             // This ensures compatibility with export rendering that may check fillColor before gradient
             shape.properties.fillColor = gradientStops[0]?.color ?? '#3b82f6';
 
-            // Apply fill opacity based on mode
-            if (effectiveBatchConfig.fillOpacityMode === 'range') {
-              const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
-              shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
-              shape.properties.fillOpacity = effectiveBatchConfig.fillOpacityDefine / 100;
+            // Apply fill opacity based on mode (only if fillOpacityEnabled)
+            if (effectiveBatchConfig.fillOpacityEnabled !== false) {
+              if (effectiveBatchConfig.fillOpacityMode === 'range') {
+                const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange ?? [60, 100];
+                shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+              } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
+                shape.properties.fillOpacity = (effectiveBatchConfig.fillOpacityDefine ?? 80) / 100;
+              } else {
+                shape.properties.fillOpacity = 1; // Default for incremental or unknown mode
+              }
+            } else {
+              shape.properties.fillOpacity = 1; // Default to full opacity when disabled
             }
 
           } else if (shouldHaveSolidFill) {
@@ -2350,12 +2363,18 @@ export const useShapeEditor = () => {
             );
             shape.properties.fillColor = fillColor;
 
-            // Apply fill opacity based on mode
-            if (effectiveBatchConfig.fillOpacityMode === 'range') {
-              const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange;
-              shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
-              shape.properties.fillOpacity = effectiveBatchConfig.fillOpacityDefine / 100;
+            // Apply fill opacity based on mode (only if fillOpacityEnabled)
+            if (effectiveBatchConfig.fillOpacityEnabled !== false) {
+              if (effectiveBatchConfig.fillOpacityMode === 'range') {
+                const [minOpacity, maxOpacity] = effectiveBatchConfig.fillOpacityRange ?? [60, 100];
+                shape.properties.fillOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+              } else if (effectiveBatchConfig.fillOpacityMode === 'define') {
+                shape.properties.fillOpacity = (effectiveBatchConfig.fillOpacityDefine ?? 80) / 100;
+              } else {
+                shape.properties.fillOpacity = 1; // Default for incremental or unknown mode
+              }
+            } else {
+              shape.properties.fillOpacity = 1; // Default to full opacity when disabled
             }
 
           } else {
@@ -2379,14 +2398,25 @@ export const useShapeEditor = () => {
             // Stroke enabled - apply all stroke properties
 
             // Apply stroke width using helper function that supports all modes (range/define/incremental)
-            shape.properties.strokeWidth = calculateStrokeWidth(effectiveBatchConfig, index);
+            // Only if strokeWidthEnabled is true, otherwise use a default
+            if (effectiveBatchConfig.strokeWidthEnabled !== false) {
+              shape.properties.strokeWidth = calculateStrokeWidth(effectiveBatchConfig, index);
+            } else {
+              shape.properties.strokeWidth = 1; // Default stroke width when disabled
+            }
 
-            // Apply stroke opacity based on mode
-            if (effectiveBatchConfig.strokeOpacityMode === 'range') {
-              const [minOpacity, maxOpacity] = effectiveBatchConfig.strokeOpacityRange;
-              shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
-            } else if (effectiveBatchConfig.strokeOpacityMode === 'define') {
-              shape.properties.strokeOpacity = effectiveBatchConfig.strokeOpacityDefine / 100;
+            // Apply stroke opacity based on mode (only if strokeOpacityEnabled)
+            if (effectiveBatchConfig.strokeOpacityEnabled !== false) {
+              if (effectiveBatchConfig.strokeOpacityMode === 'range') {
+                const [minOpacity, maxOpacity] = effectiveBatchConfig.strokeOpacityRange ?? [40, 100];
+                shape.properties.strokeOpacity = (minOpacity + Math.random() * (maxOpacity - minOpacity)) / 100;
+              } else if (effectiveBatchConfig.strokeOpacityMode === 'define') {
+                shape.properties.strokeOpacity = (effectiveBatchConfig.strokeOpacityDefine ?? 80) / 100;
+              } else {
+                shape.properties.strokeOpacity = 1; // Default for incremental or unknown mode
+              }
+            } else {
+              shape.properties.strokeOpacity = 1; // Default to full opacity when disabled
             }
 
             // Apply stroke color using range mode with saturation/lightness controls
