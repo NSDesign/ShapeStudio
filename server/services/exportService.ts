@@ -22,6 +22,9 @@ import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import { createCanvas, Canvas as NodeCanvas } from 'canvas';
 import { renderShape } from '../lib/canvasRenderer';
+import puppeteer, { Browser, Page } from 'puppeteer-core';
+import sharp from 'sharp';
+import { execSync } from 'child_process';
 
 export interface BatchExportSettings {
   // Format and quality
@@ -1842,3 +1845,1456 @@ export class ExportService {
     }
   }
 }
+
+/**
+ * High-Resolution Export Service
+ * 
+ * Uses Headless Chromium + Sharp for exports that exceed browser canvas limits.
+ * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
+ */
+
+export interface HighResExportRequest {
+  shapes: any[];
+  groups?: any[];
+  artboard: {
+    x?: number;
+    y?: number;
+    width: number;
+    height: number;
+    backgroundColor: string;
+    dpi: number;
+    printConfig?: any;
+  };
+  exportSettings: {
+    format: 'tiff' | 'png';
+    bitDepth?: 8 | 16;
+    dpi?: number;
+    scale?: number;
+    includeBleed?: boolean;
+    includePrintMarks?: boolean;
+    backgroundColor?: string;
+    backgroundMode?: 'transparent' | 'artboard' | 'custom';
+    compression?: 'none' | 'deflate';
+    flattenToRgb?: boolean;
+    matteColor?: string;
+  };
+}
+
+export interface HighResExportResult {
+  success: boolean;
+  buffer?: Buffer;
+  mimeType?: string;
+  filename?: string;
+  width?: number;
+  height?: number;
+  error?: string;
+  duration?: number;
+}
+
+let chromiumPathCache: string | null = null;
+
+function findChromiumPath(): string {
+  if (chromiumPathCache) return chromiumPathCache;
+  
+  try {
+    const result = execSync('which chromium', { encoding: 'utf-8' }).trim();
+    if (result && fs.existsSync(result)) {
+      chromiumPathCache = result;
+      return result;
+    }
+  } catch {}
+  
+  const commonPaths = [
+    '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+  ];
+  
+  for (const p of commonPaths) {
+    if (fs.existsSync(p)) {
+      chromiumPathCache = p;
+      return p;
+    }
+  }
+  
+  throw new Error('Chromium not found. Please install Chromium via replit.nix');
+}
+
+function convertUnitToPixels(value: number, unit: string, dpi: number): number {
+  switch (unit) {
+    case 'pixels': return value;
+    case 'mm': return (value / 25.4) * dpi;
+    case 'cm': return (value / 2.54) * dpi;
+    case 'inches': return value * dpi;
+    default: return value;
+  }
+}
+
+/**
+ * Tile Planning for Large Exports
+ * 
+ * Calculates optimal tile grid for rendering very large images that exceed
+ * memory thresholds. Uses ~8000px base tile size with automatic edge sizing.
+ */
+
+export interface TilePlan {
+  needsTiling: boolean;
+  tileWidth: number;
+  tileHeight: number;
+  cols: number;
+  rows: number;
+  totalTiles: number;
+  tiles: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    index: number;
+  }>;
+  reason?: string;
+}
+
+const TILE_THRESHOLDS = {
+  maxSinglePassPixels: 100_000_000,  // ~100M pixels
+  maxSinglePassBytes: 512_000_000,   // ~512MB raw
+  baseTileSize: 8000,                // ~8000px base tile
+  minTileSize: 1000,                 // Minimum tile dimension
+};
+
+export function planTiles(
+  width: number,
+  height: number,
+  channels: number = 4,
+  bitDepth: number = 16
+): TilePlan {
+  const totalPixels = width * height;
+  const bytesPerPixel = channels * (bitDepth / 8);
+  const totalBytes = totalPixels * bytesPerPixel;
+  
+  // Check if tiling is needed
+  const exceedsPixelLimit = totalPixels > TILE_THRESHOLDS.maxSinglePassPixels;
+  const exceedsByteLimit = totalBytes > TILE_THRESHOLDS.maxSinglePassBytes;
+  const needsTiling = exceedsPixelLimit || exceedsByteLimit;
+  
+  if (!needsTiling) {
+    return {
+      needsTiling: false,
+      tileWidth: width,
+      tileHeight: height,
+      cols: 1,
+      rows: 1,
+      totalTiles: 1,
+      tiles: [{ x: 0, y: 0, width, height, index: 0 }],
+      reason: 'Image within single-pass limits'
+    };
+  }
+  
+  // Calculate optimal tile size
+  const baseTile = TILE_THRESHOLDS.baseTileSize;
+  const cols = Math.ceil(width / baseTile);
+  const rows = Math.ceil(height / baseTile);
+  const totalTiles = cols * rows;
+  
+  // Generate tile definitions with edge handling
+  const tiles: TilePlan['tiles'] = [];
+  let index = 0;
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * baseTile;
+      const y = row * baseTile;
+      // Edge tiles are sized to remaining pixels
+      const tileW = Math.min(baseTile, width - x);
+      const tileH = Math.min(baseTile, height - y);
+      
+      tiles.push({ x, y, width: tileW, height: tileH, index });
+      index++;
+    }
+  }
+  
+  const reason = exceedsPixelLimit 
+    ? `Exceeds ${(TILE_THRESHOLDS.maxSinglePassPixels / 1_000_000).toFixed(0)}M pixel limit (${(totalPixels / 1_000_000).toFixed(1)}M)`
+    : `Exceeds ${(TILE_THRESHOLDS.maxSinglePassBytes / 1_000_000).toFixed(0)}MB memory limit (${(totalBytes / 1_000_000).toFixed(1)}MB)`;
+  
+  console.log(`[TilePlanner] ${reason}`);
+  console.log(`[TilePlanner] Planning ${cols}x${rows} = ${totalTiles} tiles for ${width}x${height} canvas`);
+  
+  return {
+    needsTiling: true,
+    tileWidth: baseTile,
+    tileHeight: baseTile,
+    cols,
+    rows,
+    totalTiles,
+    tiles,
+    reason
+  };
+}
+
+/**
+ * Progress callback type for tiled export
+ */
+export type TileProgressCallback = (phase: string, current: number, total: number) => void;
+
+/**
+ * SSE progress callback type - emits structured events for SSE streaming
+ */
+export type SSEProgressCallback = (event: import('../../shared/schema').SSEExportEvent) => void;
+
+/**
+ * SSE export session for tracking active streaming exports
+ */
+export interface SSEExportSessionData {
+  exportId: string;
+  status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+  startTime: number;
+  abortController: AbortController;
+  downloadUrl?: string;
+  filename?: string;
+  filePath?: string;
+  error?: string;
+  dimensions?: { width: number; height: number };
+  sizeBytes?: number;
+}
+
+export class HighResolutionExportService {
+  private browser: Browser | null = null;
+  private sseExportSessions = new Map<string, SSEExportSessionData>();
+  private exportFiles = new Map<string, { buffer: Buffer; filename: string; mimeType: string }>();
+  
+  async initialize(): Promise<void> {
+    if (this.browser) return;
+    
+    const executablePath = findChromiumPath();
+    console.log(`[HighResExport] Launching browser from: ${executablePath}`);
+    
+    this.browser = await puppeteer.launch({
+      executablePath,
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-extensions'
+      ]
+    });
+    
+    console.log('[HighResExport] Browser initialized');
+  }
+  
+  async shutdown(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      console.log('[HighResExport] Browser closed');
+    }
+  }
+  
+  // ===== SSE EXPORT SESSION MANAGEMENT =====
+  
+  /**
+   * Generate unique export session ID
+   */
+  generateExportId(): string {
+    return `sse_export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  /**
+   * Create a new SSE export session
+   */
+  createSSESession(exportId: string): SSEExportSessionData {
+    const session: SSEExportSessionData = {
+      exportId,
+      status: 'pending',
+      startTime: Date.now(),
+      abortController: new AbortController()
+    };
+    this.sseExportSessions.set(exportId, session);
+    console.log(`[SSE Export] Created session: ${exportId}`);
+    return session;
+  }
+  
+  /**
+   * Get an SSE export session by ID
+   */
+  getSSESession(exportId: string): SSEExportSessionData | undefined {
+    return this.sseExportSessions.get(exportId);
+  }
+  
+  /**
+   * Cancel an SSE export session
+   */
+  cancelSSESession(exportId: string): boolean {
+    const session = this.sseExportSessions.get(exportId);
+    if (session && session.status === 'processing') {
+      session.abortController.abort();
+      session.status = 'cancelled';
+      console.log(`[SSE Export] Cancelled session: ${exportId}`);
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * Clean up an SSE export session
+   */
+  cleanupSSESession(exportId: string): void {
+    this.sseExportSessions.delete(exportId);
+    this.exportFiles.delete(exportId);
+    console.log(`[SSE Export] Cleaned up session: ${exportId}`);
+  }
+  
+  /**
+   * Get stored export file for download
+   */
+  getExportFileBuffer(exportId: string): { buffer: Buffer; filename: string; mimeType: string } | undefined {
+    return this.exportFiles.get(exportId);
+  }
+  
+  /**
+   * Store export file for later download
+   */
+  storeExportFile(exportId: string, buffer: Buffer, filename: string, mimeType: string): void {
+    this.exportFiles.set(exportId, { buffer, filename, mimeType });
+    console.log(`[SSE Export] Stored file for ${exportId}: ${filename} (${(buffer.length / 1024 / 1024).toFixed(2)} MB)`);
+  }
+  
+  /**
+   * Export with SSE progress streaming
+   * This wraps the existing exportImage method with structured SSE events
+   */
+  async exportWithSSE(
+    request: HighResExportRequest,
+    exportId: string,
+    onProgress: SSEProgressCallback
+  ): Promise<void> {
+    const session = this.getSSESession(exportId);
+    if (!session) {
+      onProgress({
+        type: 'error',
+        message: 'Export session not found',
+        timestamp: Date.now()
+      });
+      return;
+    }
+    
+    session.status = 'processing';
+    const startTime = Date.now();
+    
+    // Calculate estimated duration for progress tracking
+    const scale = request.exportSettings.scale || 1;
+    const width = Math.ceil(request.artboard.width * scale);
+    const height = Math.ceil(request.artboard.height * scale);
+    const pixels = width * height;
+    const estimatedTotalSeconds = Math.ceil(2 + pixels / 5_000_000);
+    
+    // Create a tile progress callback that emits SSE events
+    const sseProgressCallback: TileProgressCallback = (phase: string, current: number, total: number) => {
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+      const progressPct = Math.round((current / total) * 100);
+      const estimatedRemaining = Math.max(0, Math.ceil((estimatedTotalSeconds * (100 - progressPct)) / 100));
+      
+      // Parse the phase message to determine event type
+      if (phase.includes('Preparing tiles')) {
+        onProgress({
+          type: 'phase',
+          phase: 'preparing',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Rendering tile')) {
+        // Extract tile numbers from message like "Rendering tile 3 of 12..."
+        const match = phase.match(/tile (\d+) of (\d+)/);
+        if (match) {
+          onProgress({
+            type: 'tile',
+            tileIndex: parseInt(match[1], 10),
+            totalTiles: parseInt(match[2], 10),
+            step: 'render',
+            message: phase,
+            progressPct,
+            timestamp: Date.now()
+          });
+        }
+      } else if (phase.includes('Stitching')) {
+        onProgress({
+          type: 'phase',
+          phase: 'stitching',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Encoding')) {
+        onProgress({
+          type: 'phase',
+          phase: 'encoding',
+          message: phase,
+          timestamp: Date.now()
+        });
+      } else if (phase.includes('Rendering image')) {
+        onProgress({
+          type: 'phase',
+          phase: 'rendering',
+          message: phase,
+          timestamp: Date.now()
+        });
+      }
+      
+      // Always emit progress update
+      onProgress({
+        type: 'progress',
+        progressPct,
+        status: phase,
+        estimatedSecondsRemaining: estimatedRemaining,
+        timestamp: Date.now()
+      });
+    };
+    
+    try {
+      // Emit initial phase
+      onProgress({
+        type: 'phase',
+        phase: 'preparing',
+        message: 'Initializing export...',
+        timestamp: Date.now()
+      });
+      
+      // Run the export with SSE progress callback
+      const result = await this.exportImage(
+        request,
+        sseProgressCallback,
+        session.abortController.signal
+      );
+      
+      if (result.success && result.buffer) {
+        // Store the file for download
+        const filename = result.filename || `export-${exportId}.${request.exportSettings.format || 'tiff'}`;
+        this.storeExportFile(exportId, result.buffer, filename, result.mimeType || 'image/tiff');
+        
+        // Update session
+        session.status = 'completed';
+        session.filename = filename;
+        session.downloadUrl = `/api/export/highres/download/${exportId}`;
+        session.dimensions = { width: result.width || width, height: result.height || height };
+        session.sizeBytes = result.buffer.length;
+        
+        // Emit completion event
+        onProgress({
+          type: 'complete',
+          downloadUrl: session.downloadUrl,
+          filename,
+          contentType: result.mimeType || 'image/tiff',
+          sizeBytes: result.buffer.length,
+          dimensions: session.dimensions,
+          timestamp: Date.now()
+        });
+        
+        console.log(`[SSE Export] Completed: ${exportId} - ${filename}`);
+      } else {
+        session.status = 'error';
+        session.error = result.error || 'Export failed';
+        
+        onProgress({
+          type: 'error',
+          message: result.error || 'Export failed',
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      session.status = 'error';
+      session.error = error instanceof Error ? error.message : 'Unknown error';
+      
+      onProgress({
+        type: 'error',
+        message: session.error,
+        timestamp: Date.now()
+      });
+      
+      console.error(`[SSE Export] Error: ${exportId}`, error);
+    }
+  }
+  
+  async exportImage(
+    request: HighResExportRequest,
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Check for abort before starting
+      if (abortSignal?.aborted) {
+        return { success: false, error: 'Export cancelled', duration: 0 };
+      }
+      
+      await this.initialize();
+      
+      if (!this.browser) {
+        throw new Error('Browser not initialized');
+      }
+      
+      const page = await this.browser.newPage();
+      
+      try {
+        const result = await this.renderAndCapture(page, request, progressCallback, abortSignal);
+        return {
+          ...result,
+          duration: Date.now() - startTime
+        };
+      } finally {
+        await page.close();
+      }
+    } catch (error) {
+      console.error('[HighResExport] Export failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration: Date.now() - startTime
+      };
+    }
+  }
+  
+  private async renderAndCapture(
+    page: Page,
+    request: HighResExportRequest,
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
+    const { shapes, groups = [], artboard, exportSettings } = request;
+    const { format = 'tiff', bitDepth = 16, scale = 1, backgroundMode = 'transparent', compression = 'none' } = exportSettings;
+    
+    const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
+    
+    let bleedPx = 0;
+    let printMarksGutterPx = 0;
+    
+    if (artboard.printConfig) {
+      const config = artboard.printConfig;
+      const overlayUnit = config.overlays?.overlayUnit || 'pixels';
+      
+      if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
+        bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+      }
+      
+      if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
+        const scaleMode = config.overlays.printMarks.scaleMode || 'none';
+        let markLengthPx: number;
+        let markOffsetPx: number;
+        
+        if (scaleMode === 'percent') {
+          const minDimension = Math.min(artboard.width, artboard.height);
+          markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
+          markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
+        } else {
+          markLengthPx = convertUnitToPixels(config.overlays.printMarks.markLength, overlayUnit, effectiveDpi);
+          markOffsetPx = convertUnitToPixels(config.overlays.printMarks.markOffset, overlayUnit, effectiveDpi);
+        }
+        
+        printMarksGutterPx = markLengthPx + markOffsetPx + 5;
+      }
+    }
+    
+    const printExpansion = bleedPx + printMarksGutterPx;
+    const canvasWidth = Math.ceil((artboard.width + printExpansion * 2) * scale);
+    const canvasHeight = Math.ceil((artboard.height + printExpansion * 2) * scale);
+    
+    console.log(`[HighResExport] Rendering ${canvasWidth}x${canvasHeight} canvas at ${effectiveDpi} DPI`);
+    
+    let bgColor = 'transparent';
+    if (backgroundMode === 'artboard') {
+      bgColor = artboard.backgroundColor || '#ffffff';
+    } else if (backgroundMode === 'custom' && exportSettings.backgroundColor) {
+      bgColor = exportSettings.backgroundColor;
+    }
+    
+    const shouldFlattenToRgb = exportSettings.flattenToRgb || 
+      (backgroundMode === 'artboard' || backgroundMode === 'custom');
+    
+    // Check if tiling is needed for large exports
+    const channels = shouldFlattenToRgb ? 3 : 4;
+    const tilePlan = planTiles(canvasWidth, canvasHeight, channels, bitDepth);
+    
+    if (tilePlan.needsTiling) {
+      console.log(`[HighResExport] Using tiled rendering: ${tilePlan.cols}x${tilePlan.rows} = ${tilePlan.totalTiles} tiles`);
+      return this.renderTiled(page, request, tilePlan, {
+        canvasWidth,
+        canvasHeight,
+        effectiveDpi,
+        bgColor,
+        bleedPx,
+        printMarksGutterPx,
+        printExpansion,
+        scale,
+        shouldFlattenToRgb
+      }, progressCallback, abortSignal);
+    }
+    
+    // Single-pass rendering for smaller images
+    progressCallback?.('Rendering image...', 1, 3);
+    
+    const renderData = {
+      shapes,
+      groups,
+      artboard: {
+        ...artboard,
+        printConfig: artboard.printConfig
+      },
+      exportSettings: {
+        ...exportSettings,
+        dpi: effectiveDpi,
+        bleedPx,
+        printMarksGutterPx,
+        printExpansion,
+        backgroundColor: bgColor
+      },
+      canvasWidth,
+      canvasHeight,
+      scale
+    };
+    
+    const templateHtml = this.generateRendererHtml(renderData);
+    
+    await page.setViewport({
+      width: Math.max(canvasWidth, 800),
+      height: Math.max(canvasHeight, 600),
+      deviceScaleFactor: 1
+    });
+    
+    await page.setContent(templateHtml, { waitUntil: 'networkidle0' });
+    
+    const renderResult = await page.evaluate(() => {
+      return (window as any).renderShapes();
+    });
+    
+    if (!renderResult.success) {
+      throw new Error(`Render failed: ${renderResult.error}`);
+    }
+    
+    const pngDataUrl = await page.evaluate(() => {
+      const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
+      return canvas.toDataURL('image/png');
+    });
+    
+    const pngBuffer = Buffer.from(pngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+    
+    console.log(`[HighResExport] Captured PNG buffer: ${(pngBuffer.length / 1024).toFixed(1)} KB`);
+    
+    if (format === 'png') {
+      progressCallback?.('Complete', 3, 3);
+      return {
+        success: true,
+        buffer: pngBuffer,
+        mimeType: 'image/png',
+        filename: `export-${Date.now()}.png`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    progressCallback?.('Encoding TIFF...', 2, 3);
+    
+    const tiffBuffer = await this.convertToTiff(pngBuffer, {
+      bitDepth,
+      dpi: effectiveDpi,
+      compression: compression as 'none' | 'deflate',
+      flattenToRgb: shouldFlattenToRgb,
+      matteColor: exportSettings.matteColor || '#ffffff'
+    });
+    
+    console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    progressCallback?.('Complete', 3, 3);
+    
+    return {
+      success: true,
+      buffer: tiffBuffer,
+      mimeType: 'image/tiff',
+      filename: `export-${Date.now()}.tiff`,
+      width: canvasWidth,
+      height: canvasHeight
+    };
+  }
+  
+  /**
+   * Tiled rendering for very large exports
+   * Renders each tile separately and composites them using Sharp
+   */
+  private async renderTiled(
+    page: Page,
+    request: HighResExportRequest,
+    tilePlan: TilePlan,
+    renderConfig: {
+      canvasWidth: number;
+      canvasHeight: number;
+      effectiveDpi: number;
+      bgColor: string;
+      bleedPx: number;
+      printMarksGutterPx: number;
+      printExpansion: number;
+      scale: number;
+      shouldFlattenToRgb: boolean;
+    },
+    progressCallback?: TileProgressCallback,
+    abortSignal?: AbortSignal
+  ): Promise<HighResExportResult> {
+    const { shapes, groups = [], artboard, exportSettings } = request;
+    const { format = 'tiff', bitDepth = 16, compression = 'none' } = exportSettings;
+    const { canvasWidth, canvasHeight, effectiveDpi, bgColor, bleedPx, printMarksGutterPx, printExpansion, scale, shouldFlattenToRgb } = renderConfig;
+    
+    // Calculate total steps for progress: 1 (prep) + tiles + 1 (stitch) + 1 (encode)
+    const totalSteps = 1 + tilePlan.totalTiles + 1 + 1;
+    let currentStep = 0;
+    
+    // Phase 1: Preparing tiles
+    progressCallback?.(`Preparing tiles (${tilePlan.cols}x${tilePlan.rows} grid)...`, ++currentStep, totalSteps);
+    console.log(`[HighResExport] Starting tiled render: ${tilePlan.totalTiles} tiles`);
+    
+    // Create base canvas for compositing with Sharp
+    // Parse background color for Sharp
+    let sharpBackground: { r: number; g: number; b: number; alpha?: number };
+    if (bgColor === 'transparent') {
+      sharpBackground = { r: 0, g: 0, b: 0, alpha: 0 };
+    } else {
+      const hexMatch = bgColor.match(/^#?([0-9a-fA-F]{6})$/);
+      sharpBackground = {
+        r: hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255,
+        g: hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255,
+        b: hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255
+      };
+    }
+    
+    // Create the full-size canvas as a Sharp instance
+    const channels = shouldFlattenToRgb ? 3 : 4;
+    let compositeImage = sharp({
+      create: {
+        width: canvasWidth,
+        height: canvasHeight,
+        channels: channels as 3 | 4,
+        background: sharpBackground
+      }
+    });
+    
+    // Collect tile buffers for compositing
+    const compositeInputs: Array<{ input: Buffer; left: number; top: number }> = [];
+    
+    // Phase 2: Render each tile
+    for (const tile of tilePlan.tiles) {
+      // Check for abort
+      if (abortSignal?.aborted) {
+        console.log('[HighResExport] Tiled export cancelled');
+        return { success: false, error: 'Export cancelled' };
+      }
+      
+      progressCallback?.(`Rendering tile ${tile.index + 1} of ${tilePlan.totalTiles}...`, ++currentStep, totalSteps);
+      console.log(`[HighResExport] Rendering tile ${tile.index + 1}/${tilePlan.totalTiles} at (${tile.x}, ${tile.y}) size ${tile.width}x${tile.height}`);
+      
+      // Generate HTML for this tile with offset translation
+      const tileRenderData = {
+        shapes,
+        groups,
+        artboard: {
+          ...artboard,
+          printConfig: artboard.printConfig
+        },
+        exportSettings: {
+          ...exportSettings,
+          dpi: effectiveDpi,
+          bleedPx,
+          printMarksGutterPx,
+          printExpansion,
+          backgroundColor: bgColor
+        },
+        canvasWidth: tile.width,
+        canvasHeight: tile.height,
+        scale,
+        // Tile offset for translation
+        tileOffsetX: tile.x,
+        tileOffsetY: tile.y,
+        fullCanvasWidth: canvasWidth,
+        fullCanvasHeight: canvasHeight
+      };
+      
+      const tileHtml = this.generateTileRendererHtml(tileRenderData);
+      
+      await page.setViewport({
+        width: Math.max(tile.width, 800),
+        height: Math.max(tile.height, 600),
+        deviceScaleFactor: 1
+      });
+      
+      await page.setContent(tileHtml, { waitUntil: 'networkidle0' });
+      
+      const tileRenderResult = await page.evaluate(() => {
+        return (window as any).renderShapes();
+      });
+      
+      if (!tileRenderResult.success) {
+        throw new Error(`Tile ${tile.index + 1} render failed: ${tileRenderResult.error}`);
+      }
+      
+      const tilePngDataUrl = await page.evaluate(() => {
+        const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
+        return canvas.toDataURL('image/png');
+      });
+      
+      const tilePngBuffer = Buffer.from(tilePngDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+      console.log(`[HighResExport] Tile ${tile.index + 1} captured: ${(tilePngBuffer.length / 1024).toFixed(1)} KB`);
+      
+      // Add to composite inputs
+      compositeInputs.push({
+        input: tilePngBuffer,
+        left: tile.x,
+        top: tile.y
+      });
+    }
+    
+    // Check for abort before stitching
+    if (abortSignal?.aborted) {
+      console.log('[HighResExport] Tiled export cancelled before stitching');
+      return { success: false, error: 'Export cancelled' };
+    }
+    
+    // Phase 3: Stitch tiles together
+    progressCallback?.('Stitching tiles...', ++currentStep, totalSteps);
+    console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
+    
+    // Composite all tiles onto the base canvas
+    const stitchedBuffer = await compositeImage
+      .composite(compositeInputs)
+      .png()
+      .toBuffer();
+    
+    // Clear composite inputs to free memory
+    compositeInputs.length = 0;
+    
+    console.log(`[HighResExport] Stitched image: ${(stitchedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    if (format === 'png') {
+      progressCallback?.('Complete', totalSteps, totalSteps);
+      return {
+        success: true,
+        buffer: stitchedBuffer,
+        mimeType: 'image/png',
+        filename: `export-${Date.now()}.png`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    // Phase 4: Encode to TIFF
+    progressCallback?.('Encoding final TIFF...', ++currentStep, totalSteps);
+    
+    const tiffBuffer = await this.convertToTiff(stitchedBuffer, {
+      bitDepth,
+      dpi: effectiveDpi,
+      compression: compression as 'none' | 'deflate',
+      flattenToRgb: shouldFlattenToRgb,
+      matteColor: exportSettings.matteColor || '#ffffff'
+    });
+    
+    console.log(`[HighResExport] Final TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    progressCallback?.('Complete', totalSteps, totalSteps);
+    
+    return {
+      success: true,
+      buffer: tiffBuffer,
+      mimeType: 'image/tiff',
+      filename: `export-${Date.now()}.tiff`,
+      width: canvasWidth,
+      height: canvasHeight
+    };
+  }
+  
+  /**
+   * Generate HTML for rendering a single tile with offset translation
+   */
+  private generateTileRendererHtml(data: any): string {
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight } = data;
+    const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
+    
+    // Add tile offset to the render data for translation
+    const tileData = {
+      ...data,
+      tileOffsetX,
+      tileOffsetY,
+      fullCanvasWidth,
+      fullCanvasHeight
+    };
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tile Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+    #exportCanvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+  <script>
+    const renderData = ${JSON.stringify(tileData)};
+    
+    window.renderShapes = function() {
+      try {
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Apply tile offset translation (negative to shift content into view)
+        ctx.translate(-${tileOffsetX}, -${tileOffsetY});
+        
+        // Fill background if not transparent
+        if ('${backgroundColor}' !== 'transparent') {
+          ctx.fillStyle = '${backgroundColor}';
+          ctx.fillRect(${tileOffsetX}, ${tileOffsetY}, ${canvasWidth}, ${canvasHeight});
+        }
+        
+        const shapes = renderData.shapes || [];
+        const scale = renderData.scale || 1;
+        const printExpansion = renderData.exportSettings?.printExpansion || 0;
+        
+        // Render each shape with proper transforms
+        shapes.forEach((shapeData, index) => {
+          ctx.save();
+          
+          // Apply shape transforms
+          const x = (shapeData.x + printExpansion) * scale;
+          const y = (shapeData.y + printExpansion) * scale;
+          const rotation = shapeData.rotation || 0;
+          
+          ctx.translate(x, y);
+          if (rotation !== 0) {
+            ctx.rotate(rotation * Math.PI / 180);
+          }
+          
+          // Set fill style
+          ctx.fillStyle = shapeData.fillColor || '#000000';
+          ctx.globalAlpha = shapeData.fillOpacity !== undefined ? shapeData.fillOpacity : 1;
+          
+          // Draw based on shape type
+          const type = shapeData.type;
+          const w = (shapeData.width || 0) * scale;
+          const h = (shapeData.height || 0) * scale;
+          const r = (shapeData.radius || 0) * scale;
+          
+          ctx.beginPath();
+          
+          if (type === 'rectangle' || type === 'roundedRectangle') {
+            const cornerRadius = (shapeData.cornerRadius || 0) * scale;
+            if (cornerRadius > 0) {
+              ctx.roundRect(-w/2, -h/2, w, h, cornerRadius);
+            } else {
+              ctx.rect(-w/2, -h/2, w, h);
+            }
+          } else if (type === 'ellipse' || type === 'circle') {
+            const rx = w / 2;
+            const ry = h / 2 || rx;
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+          } else if (type === 'triangle') {
+            ctx.moveTo(0, -h/2);
+            ctx.lineTo(w/2, h/2);
+            ctx.lineTo(-w/2, h/2);
+            ctx.closePath();
+          } else if (type === 'polygon' || type === 'star') {
+            const sides = shapeData.sides || 5;
+            const innerRadius = (shapeData.innerRadius || r * 0.5) * scale;
+            const outerRadius = r;
+            
+            if (type === 'star') {
+              for (let i = 0; i < sides * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI / sides) - Math.PI / 2;
+                const px = Math.cos(angle) * radius;
+                const py = Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+            } else {
+              for (let i = 0; i < sides; i++) {
+                const angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
+                const px = Math.cos(angle) * outerRadius;
+                const py = Math.sin(angle) * outerRadius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+              }
+            }
+            ctx.closePath();
+          } else {
+            // Default rectangle fallback
+            ctx.rect(-w/2, -h/2, w, h);
+          }
+          
+          ctx.fill();
+          
+          // Draw stroke if present
+          if (shapeData.strokeWidth && shapeData.strokeColor) {
+            ctx.strokeStyle = shapeData.strokeColor;
+            ctx.lineWidth = shapeData.strokeWidth * scale;
+            ctx.globalAlpha = shapeData.strokeOpacity !== undefined ? shapeData.strokeOpacity : 1;
+            ctx.stroke();
+          }
+          
+          ctx.restore();
+        });
+        
+        return { success: true, shapesRendered: shapes.length };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+  </script>
+</body>
+</html>`;
+  }
+  
+  private async convertToTiff(pngBuffer: Buffer, options: { 
+    bitDepth: 8 | 16; 
+    dpi: number; 
+    compression?: 'none' | 'deflate';
+    flattenToRgb?: boolean;
+    matteColor?: string;
+  }): Promise<Buffer> {
+    const { bitDepth, dpi, compression = 'none', flattenToRgb = false, matteColor = '#ffffff' } = options;
+    
+    let pipeline = sharp(pngBuffer);
+    
+    if (flattenToRgb) {
+      const hexMatch = matteColor.match(/^#?([0-9a-fA-F]{6})$/);
+      const r = hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255;
+      const g = hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255;
+      const b = hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255;
+      
+      pipeline = pipeline.flatten({ background: { r, g, b } });
+      console.log(`[HighResExport] Flattening to RGB with matte color: ${matteColor} (${r}, ${g}, ${b})`);
+    }
+    
+    if (bitDepth === 16) {
+      pipeline = pipeline.toColourspace('rgb16');
+    }
+    
+    // Map compression setting to Sharp's TIFF compression options
+    // Sharp supports: 'none', 'jpeg', 'deflate', 'packbits', 'ccittfax4', 'lzw', 'webp', 'zstd', 'jp2k'
+    const tiffCompression = compression === 'deflate' ? 'deflate' : 'none';
+    
+    const tiffBuffer = await pipeline
+      .withMetadata({
+        density: dpi
+      })
+      .tiff({
+        compression: tiffCompression,
+        quality: 100
+      })
+      .toBuffer();
+    
+    return tiffBuffer;
+  }
+  
+  private generateRendererHtml(data: any): string {
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale } = data;
+    const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>High-Res Shape Renderer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; overflow: hidden; }
+    #exportCanvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+  
+  <script>
+    const RENDER_DATA = ${JSON.stringify({ shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printMarksGutterPx, printExpansion, backgroundColor })};
+    
+    function drawPolygon(ctx, points) {
+      if (!points || points.length === 0) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+    }
+    
+    function drawLine(ctx, points) {
+      if (!points || points.length < 2) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+    }
+    
+    function drawSmoothSpline(ctx, points, controlPoints) {
+      if (!points || points.length < 2) return;
+      
+      if (controlPoints && controlPoints.length >= (points.length - 1) * 2) {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp1 = controlPoints[i * 2];
+          const cp2 = controlPoints[i * 2 + 1];
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, points[i + 1].x, points[i + 1].y);
+        }
+      } else {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+      }
+    }
+    
+    // Draw spline-circle and spline-ellipse using 4-segment Bézier curves
+    function drawSplineCircle(ctx, points, controlPoints, closed) {
+      if (!points || points.length < 4) return;
+      if (!controlPoints || controlPoints.length < 8) {
+        // Fallback to polygon if no control points
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      // Four-segment Bézier curve (circle/ellipse approximation)
+      ctx.moveTo(points[0].x, points[0].y);
+      
+      // Draw four Bézier segments
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      
+      if (closed !== false) {
+        ctx.closePath();
+      }
+    }
+    
+    // Draw spline-ring (donut shape) with inner and outer rings
+    function drawSplineRing(ctx, points, controlPoints) {
+      if (!points || points.length < 8) return;
+      if (!controlPoints || controlPoints.length < 16) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      // Outer ring - four Bézier segments
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+      
+      // Inner ring - four Bézier segments (reverse winding for hole)
+      ctx.moveTo(points[4].x, points[4].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[4 + ((i + 1) % 4)];
+        const cp1 = controlPoints[8 + i * 2];
+        const cp2 = controlPoints[8 + i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+    }
+    
+    function renderShape(ctx, shape) {
+      if (!shape.points || shape.points.length === 0) return;
+      
+      ctx.save();
+      
+      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+      
+      // Translate shape relative to artboard position
+      const artboardX = RENDER_DATA.artboard.x || 0;
+      const artboardY = RENDER_DATA.artboard.y || 0;
+      ctx.translate(shape.transform.x - artboardX, shape.transform.y - artboardY);
+      ctx.rotate((shape.transform.rotation || 0) * Math.PI / 180);
+      ctx.scale(shape.transform.scaleX || 1, shape.transform.scaleY || 1);
+      ctx.transform(1, shape.transform.skewX || 0, shape.transform.skewY || 0, 1, 0, 0);
+      
+      if (shape.properties.blurRadius > 0) {
+        ctx.filter = 'blur(' + shape.properties.blurRadius + 'px)';
+      }
+      
+      ctx.beginPath();
+      
+      const shapeType = shape.type;
+      if (shapeType === 'line' || shapeType === 'line-vector') {
+        drawLine(ctx, shape.points);
+      } else if (shapeType === 'spline-circle' || shapeType === 'spline-ellipse') {
+        drawSplineCircle(ctx, shape.points, shape.controlPoints, shape.closed);
+      } else if (shapeType === 'spline-ring') {
+        drawSplineRing(ctx, shape.points, shape.controlPoints);
+      } else if (shapeType === 'bezier' || shapeType === 'smooth-spline' || shapeType === 'cubic') {
+        drawSmoothSpline(ctx, shape.points, shape.controlPoints);
+        if (shape.closed) ctx.closePath();
+      } else {
+        drawPolygon(ctx, shape.points);
+      }
+      
+      if (shapeType !== 'line' && shapeType !== 'line-vector' && shape.properties.fillColor !== 'none') {
+        ctx.globalAlpha = shape.properties.fillOpacity || 1;
+        
+        if (shape.properties.gradient) {
+          const bounds = getShapeBounds(shape.points);
+          let gradient;
+          const gradientType = shape.properties.gradient.type;
+          
+          if (gradientType === 'conic') {
+            // Conic gradient support with center positioning
+            const conicCenterXPercent = shape.properties.gradient.conicCenterX ?? 50;
+            const conicCenterYPercent = shape.properties.gradient.conicCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * conicCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * conicCenterYPercent / 100);
+            const startAngle = (shape.properties.gradient.conicAngle || 0);
+            gradient = ctx.createConicGradient(startAngle, cx, cy);
+          } else if (gradientType === 'radial') {
+            // Radial gradient with center positioning
+            const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
+            const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * radialCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * radialCenterYPercent / 100);
+            const radius = Math.max(bounds.width, bounds.height) / 2;
+            gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          } else {
+            // Linear gradient (default)
+            const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const length = Math.max(bounds.width, bounds.height) / 2;
+            const x1 = cx - Math.cos(angle) * length;
+            const y1 = cy - Math.sin(angle) * length;
+            const x2 = cx + Math.cos(angle) * length;
+            const y2 = cy + Math.sin(angle) * length;
+            gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+          }
+          
+          shape.properties.gradient.stops.forEach(function(stop) {
+            gradient.addColorStop(stop.offset, stop.color);
+          });
+          
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = shape.properties.fillColor;
+        }
+        // Use evenodd fill rule for spline-ring to create proper hole
+        if (shapeType === 'spline-ring') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
+      }
+      
+      if (shape.properties.strokeColor !== 'none' && shape.properties.strokeWidth > 0) {
+        ctx.globalAlpha = shape.properties.strokeOpacity || 1;
+        ctx.strokeStyle = shape.properties.strokeColor;
+        ctx.lineWidth = shape.properties.strokeWidth;
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    }
+    
+    function getShapeBounds(points) {
+      if (!points || points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      points.forEach(function(p) {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+    
+    function renderPrintMarks(ctx, x, y, width, height, bleedPx, config) {
+      if (!config.cropMarks && !config.registrationMarks) return;
+      
+      ctx.save();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 0.5;
+      
+      const markLength = config.markLength || 20;
+      const markOffset = config.markOffset || 5;
+      
+      if (config.cropMarks) {
+        const corners = [
+          { x: x - bleedPx, y: y - bleedPx },
+          { x: x + width + bleedPx, y: y - bleedPx },
+          { x: x + width + bleedPx, y: y + height + bleedPx },
+          { x: x - bleedPx, y: y + height + bleedPx }
+        ];
+        
+        corners.forEach(function(corner, i) {
+          ctx.beginPath();
+          if (i === 0) {
+            ctx.moveTo(corner.x - markOffset - markLength, corner.y);
+            ctx.lineTo(corner.x - markOffset, corner.y);
+            ctx.moveTo(corner.x, corner.y - markOffset - markLength);
+            ctx.lineTo(corner.x, corner.y - markOffset);
+          } else if (i === 1) {
+            ctx.moveTo(corner.x + markOffset, corner.y);
+            ctx.lineTo(corner.x + markOffset + markLength, corner.y);
+            ctx.moveTo(corner.x, corner.y - markOffset - markLength);
+            ctx.lineTo(corner.x, corner.y - markOffset);
+          } else if (i === 2) {
+            ctx.moveTo(corner.x + markOffset, corner.y);
+            ctx.lineTo(corner.x + markOffset + markLength, corner.y);
+            ctx.moveTo(corner.x, corner.y + markOffset);
+            ctx.lineTo(corner.x, corner.y + markOffset + markLength);
+          } else {
+            ctx.moveTo(corner.x - markOffset - markLength, corner.y);
+            ctx.lineTo(corner.x - markOffset, corner.y);
+            ctx.moveTo(corner.x, corner.y + markOffset);
+            ctx.lineTo(corner.x, corner.y + markOffset + markLength);
+          }
+          ctx.stroke();
+        });
+      }
+      
+      if (config.registrationMarks) {
+        const regSize = 8;
+        const positions = [
+          { x: x + width / 2, y: y - bleedPx - markOffset - regSize },
+          { x: x + width / 2, y: y + height + bleedPx + markOffset + regSize },
+          { x: x - bleedPx - markOffset - regSize, y: y + height / 2 },
+          { x: x + width + bleedPx + markOffset + regSize, y: y + height / 2 }
+        ];
+        
+        positions.forEach(function(pos) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, regSize / 2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(pos.x - regSize, pos.y);
+          ctx.lineTo(pos.x + regSize, pos.y);
+          ctx.moveTo(pos.x, pos.y - regSize);
+          ctx.lineTo(pos.x, pos.y + regSize);
+          ctx.stroke();
+        });
+      }
+      
+      ctx.restore();
+    }
+    
+    window.renderShapes = function() {
+      try {
+        const canvas = document.getElementById('exportCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, bleedPx, printExpansion, backgroundColor } = RENDER_DATA;
+        
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        if (backgroundColor && backgroundColor !== 'transparent') {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        
+        ctx.save();
+        ctx.scale(scale, scale);
+        ctx.translate(printExpansion, printExpansion);
+        
+        const allShapes = [...shapes];
+        if (groups) {
+          groups.forEach(function(group) {
+            if (group.shapes) {
+              group.shapes.forEach(function(s) {
+                allShapes.push(s);
+              });
+            }
+          });
+        }
+        
+        allShapes.sort(function(a, b) {
+          return (a.properties.zIndex || 0) - (b.properties.zIndex || 0);
+        });
+        
+        allShapes.forEach(function(shape) {
+          renderShape(ctx, shape);
+        });
+        
+        if (artboard.printConfig && artboard.printConfig.overlays && artboard.printConfig.overlays.printMarks && artboard.printConfig.overlays.printMarks.render && exportSettings.includePrintMarks !== false) {
+          const config = artboard.printConfig.overlays.printMarks;
+          renderPrintMarks(ctx, 0, 0, artboard.width, artboard.height, bleedPx, {
+            cropMarks: config.cropMarks,
+            registrationMarks: config.registrationMarks,
+            markLength: config.markLength,
+            markOffset: config.markOffset
+          });
+        }
+        
+        ctx.restore();
+        
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    };
+  </script>
+</body>
+</html>`;
+  }
+  
+  needsServerExport(artboard: { width: number; height: number; dpi?: number }, exportSettings: any): boolean {
+    const width = artboard.width * (exportSettings.scale || 1);
+    const height = artboard.height * (exportSettings.scale || 1);
+    
+    const estimatedMemory = width * height * 4;
+    const maxBrowserPixels = 268_000_000;
+    const maxBrowserMemory = 500_000_000;
+    
+    if (estimatedMemory > maxBrowserMemory) return true;
+    if (width * height > maxBrowserPixels) return true;
+    if (exportSettings.format === 'tiff' && exportSettings.bitDepth === 16) return true;
+    
+    const dpi = exportSettings.dpi || artboard.dpi || 72;
+    if (dpi >= 300 && (width >= 3000 || height >= 3000)) return true;
+    
+    return false;
+  }
+  
+  getExportEstimate(artboard: { width: number; height: number; dpi?: number }, exportSettings: any): {
+    needsServer: boolean;
+    estimatedTime: string;
+    estimatedSize: string;
+    dimensions: { width: number; height: number };
+  } {
+    const scale = exportSettings.scale || 1;
+    const width = Math.ceil(artboard.width * scale);
+    const height = Math.ceil(artboard.height * scale);
+    const needsServer = this.needsServerExport(artboard, exportSettings);
+    
+    const pixels = width * height;
+    const bytesPerPixel = exportSettings.bitDepth === 16 ? 8 : 4;
+    const estimatedBytes = pixels * bytesPerPixel;
+    
+    let estimatedTime: string;
+    if (needsServer) {
+      const seconds = Math.ceil(2 + pixels / 5_000_000);
+      estimatedTime = seconds < 60 ? `~${seconds} seconds` : `~${Math.ceil(seconds / 60)} minutes`;
+    } else {
+      estimatedTime = '< 1 second';
+    }
+    
+    const sizeMB = estimatedBytes / 1024 / 1024;
+    const estimatedSize = sizeMB < 1 ? `~${Math.ceil(sizeMB * 1024)} KB` : `~${sizeMB.toFixed(1)} MB`;
+    
+    return {
+      needsServer,
+      estimatedTime,
+      estimatedSize,
+      dimensions: { width, height }
+    };
+  }
+}
+
+export const highResExportService = new HighResolutionExportService();

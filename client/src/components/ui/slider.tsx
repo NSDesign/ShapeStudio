@@ -15,7 +15,7 @@ const Slider = React.forwardRef<
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary slider-track">
+    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary slider-track border border-slate-600">
       <SliderPrimitive.Range className="absolute h-full bg-primary slider-range" />
     </SliderPrimitive.Track>
     {Array.isArray(props.value) ? (

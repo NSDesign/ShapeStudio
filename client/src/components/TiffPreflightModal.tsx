@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertTriangle, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertTriangle, Info, Server, Loader2, Palette } from 'lucide-react';
 
 interface TiffPreflightInfo {
   requestedCount: number;
@@ -26,6 +27,10 @@ interface TiffPreflightInfo {
   hasLowDpi: boolean;
   hasNoBleed: boolean;
   hasTransparentBackground: boolean;
+  requiresServerExport?: boolean;
+  serverExportReason?: string | null;
+  estimatedDuration?: number;
+  is16Bit?: boolean;
 }
 
 interface TiffPreflightModalProps {
@@ -34,6 +39,11 @@ interface TiffPreflightModalProps {
   preflightInfo: TiffPreflightInfo;
   onConfirm: (dontShowAgain: boolean) => void;
   onCancel: () => void;
+  isExporting?: boolean;
+  flattenToRgb?: boolean;
+  onFlattenToRgbChange?: (value: boolean) => void;
+  matteColor?: string;
+  onMatteColorChange?: (value: string) => void;
 }
 
 export default function TiffPreflightModal({
@@ -42,11 +52,17 @@ export default function TiffPreflightModal({
   preflightInfo,
   onConfirm,
   onCancel,
+  isExporting = false,
+  flattenToRgb = false,
+  onFlattenToRgbChange,
+  matteColor = '#ffffff',
+  onMatteColorChange,
 }: TiffPreflightModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const hasWarnings = preflightInfo.hasLowDpi || preflightInfo.hasNoBleed || preflightInfo.hasTransparentBackground;
-  const hasMemoryLimitation = preflightInfo.isMemoryLimited;
+  const hasMemoryLimitation = preflightInfo.isMemoryLimited && !preflightInfo.requiresServerExport;
+  const hasServerExport = preflightInfo.requiresServerExport;
   const hasCriticalIssue = hasMemoryLimitation;
 
   return (
@@ -84,6 +100,28 @@ export default function TiffPreflightModal({
                 <span className="text-slate-200">~{preflightInfo.memoryPerImageMb.toFixed(0)} MB</span>
               </div>
             </div>
+
+            {hasServerExport && (
+              <div className="p-3 bg-purple-900/30 border border-purple-500/50 rounded-lg space-y-2">
+                <div className="flex items-center gap-2 text-purple-300 font-medium text-sm">
+                  <Server className="w-4 h-4" />
+                  Server Processing Required
+                </div>
+                <p className="text-xs text-purple-200/80">
+                  {preflightInfo.serverExportReason || 'This export requires server-side processing for optimal quality.'}
+                </p>
+                {preflightInfo.is16Bit && (
+                  <p className="text-xs text-purple-200/80">
+                    16-bit TIFF output will be generated with embedded sRGB ICC profile for professional print quality.
+                  </p>
+                )}
+                {preflightInfo.estimatedDuration && (
+                  <p className="text-xs text-purple-200/60">
+                    Estimated time: ~{Math.ceil(preflightInfo.estimatedDuration / 1000)} seconds per image
+                  </p>
+                )}
+              </div>
+            )}
 
             {hasMemoryLimitation && (
               <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg space-y-2">
@@ -133,6 +171,47 @@ export default function TiffPreflightModal({
                 </ul>
               </div>
             )}
+
+            {preflightInfo.hasTransparentBackground && onFlattenToRgbChange && (
+              <div className="p-3 bg-slate-800 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
+                  <Palette className="w-4 h-4" />
+                  RGB Optimization
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="flatten-to-rgb" className="text-xs text-slate-300 cursor-pointer">
+                      Flatten to RGB (drop transparency)
+                    </Label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      ~10-20% smaller files, removes alpha channel
+                    </p>
+                  </div>
+                  <Switch
+                    id="flatten-to-rgb"
+                    checked={flattenToRgb}
+                    onCheckedChange={onFlattenToRgbChange}
+                    disabled={isExporting}
+                    className="data-[state=checked]:bg-green-600"
+                  />
+                </div>
+                {flattenToRgb && onMatteColorChange && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <Label className="text-xs text-slate-400">Matte Color:</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={matteColor}
+                        onChange={(e) => onMatteColorChange(e.target.value)}
+                        disabled={isExporting}
+                        className="w-8 h-8 rounded cursor-pointer border border-slate-600 bg-transparent"
+                      />
+                      <span className="text-xs text-slate-400 font-mono">{matteColor}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -142,6 +221,7 @@ export default function TiffPreflightModal({
               id="dont-show-again"
               checked={dontShowAgain}
               onCheckedChange={(checked) => setDontShowAgain(checked as boolean)}
+              disabled={isExporting}
               className="border-slate-500 data-[state=checked]:bg-blue-600"
             />
             <Label htmlFor="dont-show-again" className="text-xs text-slate-400 cursor-pointer">
@@ -152,17 +232,29 @@ export default function TiffPreflightModal({
             <Button
               variant="outline"
               onClick={onCancel}
+              disabled={isExporting}
               className="bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700"
             >
               Cancel
             </Button>
             <Button
               onClick={() => onConfirm(dontShowAgain)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isExporting}
+              className={hasServerExport 
+                ? "bg-purple-600 hover:bg-purple-700 text-white"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+              }
             >
-              {hasMemoryLimitation 
+              {isExporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {hasServerExport ? 'Processing...' : 'Exporting...'}
+                </>
+              ) : hasMemoryLimitation 
                 ? `Export ${preflightInfo.effectiveCount} Image${preflightInfo.effectiveCount > 1 ? 's' : ''}`
-                : 'Continue Export'
+                : hasServerExport
+                  ? 'Start Server Export'
+                  : 'Continue Export'
               }
             </Button>
           </div>
@@ -178,24 +270,52 @@ export function calculateTiffPreflightInfo(
   artboardDpi: number,
   requestedCount: number,
   bleedEnabled: boolean,
-  backgroundMode: 'transparent' | 'artboard' | 'custom'
+  backgroundMode: 'transparent' | 'artboard' | 'custom',
+  is16Bit: boolean = false,
+  scale: number = 1
 ): TiffPreflightInfo {
-  const baseDpi = 72;
-  const dpiScale = artboardDpi / baseDpi;
-  const scaledWidth = Math.round(artboardWidth * dpiScale);
-  const scaledHeight = Math.round(artboardHeight * dpiScale);
+  // Scale is applied directly to artboard dimensions (which are already in pixels)
+  // No separate dpiScale needed - the scale parameter already includes DPI adjustment
+  // when auto-scale-from-DPI is enabled (effectiveExportScale = dpi/72)
+  const scaledWidth = Math.round(artboardWidth * scale);
+  const scaledHeight = Math.round(artboardHeight * scale);
   const pixelsPerImage = scaledWidth * scaledHeight;
   const megapixelsPerImage = pixelsPerImage / 1_000_000;
-  const bytesPerImage = pixelsPerImage * 4;
+  const bytesPerPixel = is16Bit ? 8 : 4;
+  const bytesPerImage = pixelsPerImage * bytesPerPixel;
   const memoryPerImageMb = bytesPerImage / (1024 * 1024);
   
   const LIMIT_THRESHOLD_MB = 600;
+  const MAX_CANVAS_DIMENSION = 32767;
+  const MAX_CANVAS_PIXELS = 268435456;
+  const SERVER_MEMORY_THRESHOLD_MB = 500;
   const totalMemoryMb = memoryPerImageMb * requestedCount;
+  
+  let requiresServerExport = false;
+  let serverExportReason: string | null = null;
+  
+  if (scaledWidth > MAX_CANVAS_DIMENSION || scaledHeight > MAX_CANVAS_DIMENSION) {
+    requiresServerExport = true;
+    serverExportReason = `Canvas dimension ${Math.max(scaledWidth, scaledHeight)}px exceeds browser limit of ${MAX_CANVAS_DIMENSION}px`;
+  } else if (pixelsPerImage > MAX_CANVAS_PIXELS) {
+    requiresServerExport = true;
+    serverExportReason = `Total pixels (${(pixelsPerImage / 1000000).toFixed(1)}M) exceeds browser limit of ${(MAX_CANVAS_PIXELS / 1000000).toFixed(0)}M`;
+  } else if (memoryPerImageMb > SERVER_MEMORY_THRESHOLD_MB) {
+    requiresServerExport = true;
+    serverExportReason = `Estimated memory (${memoryPerImageMb.toFixed(0)}MB) exceeds browser threshold of ${SERVER_MEMORY_THRESHOLD_MB}MB`;
+  } else if (is16Bit) {
+    requiresServerExport = true;
+    serverExportReason = '16-bit TIFF requires server-side processing for proper bit depth';
+  }
+  
+  const baseDurationMs = 5000;
+  const pixelFactor = pixelsPerImage / (3000 * 4000);
+  const estimatedDuration = Math.ceil(baseDurationMs * Math.max(1, pixelFactor));
   
   let effectiveCount = requestedCount;
   let isMemoryLimited = false;
   
-  if (totalMemoryMb > LIMIT_THRESHOLD_MB && requestedCount > 1) {
+  if (!requiresServerExport && totalMemoryMb > LIMIT_THRESHOLD_MB && requestedCount > 1) {
     effectiveCount = Math.max(1, Math.floor(LIMIT_THRESHOLD_MB / memoryPerImageMb));
     isMemoryLimited = effectiveCount < requestedCount;
   }
@@ -213,5 +333,9 @@ export function calculateTiffPreflightInfo(
     hasLowDpi: artboardDpi < 300,
     hasNoBleed: !bleedEnabled,
     hasTransparentBackground: backgroundMode === 'transparent',
+    requiresServerExport,
+    serverExportReason,
+    estimatedDuration: requiresServerExport ? estimatedDuration : undefined,
+    is16Bit,
   };
 }

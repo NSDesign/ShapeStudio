@@ -17,6 +17,7 @@ export default function ShapeEditor() {
     scatterSettings,
     generationConfigSettings,
     canvasSettings,
+    updateCanvasSettings,
     artboards,
     activeArtboard,
     canvasRef,
@@ -260,20 +261,19 @@ export default function ShapeEditor() {
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
             onZoomChange={(zoomValue) => {
-              // zoomValue is already a decimal (e.g., 0.74 for 74%)
               const clamped = Math.max(0.05, Math.min(5, zoomValue));
               const canvasElem = canvasRef.current;
               if (canvasElem) {
                 const centerX = canvasElem.clientWidth / 2;
                 const centerY = canvasElem.clientHeight / 2;
-                const oldZoom = canvasSettings.zoom < 0.05 ? 1 : canvasSettings.zoom;
+                const oldZoom = canvasSettings.zoom || 1;
                 const scale = clamped / oldZoom;
                 const newPanX = canvasSettings.panX * scale - (centerX * (scale - 1));
                 const newPanY = canvasSettings.panY * scale - (centerY * (scale - 1));
-                // Use the updateCanvasSettings if it exists in useShapeEditor
-                // For now, we'll create a callback inline
+                updateCanvasSettings({ zoom: clamped, panX: newPanX, panY: newPanY });
+              } else {
+                updateCanvasSettings({ zoom: clamped });
               }
-              // Direct zoom update - look for updateCanvasSettings from hook
             }}
             onResetView={resetView}
             onFitToArtboard={fitToArtboard}
