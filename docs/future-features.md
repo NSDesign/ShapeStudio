@@ -19,7 +19,7 @@ This document outlines complex features that have been identified for future dev
 | **Grid Offset Presets (Phase 5)** | ✅ Implemented | [Section 5](#phase-5-grid-offset-presets--completed) |
 | **Grid Offset Value Modes (Phase 6)** | ✅ Implemented | [Section 5](#phase-6-grid-offset-value-modes--completed) |
 | **Future Shape Masking Filters (Phase 7)** | 📋 Planned | [Section 5](#phase-7-future-shape-masking-filter-types--future) |
-| **Echo/Motion Trails** | ❌ Not Implemented | [Section 6](#6-echomotion-trails) |
+| **Echo/Spread Effect** | ❌ Not Implemented | [Section 6](#6-echospread-effect) |
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
@@ -1975,357 +1975,145 @@ function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: n
 
 ---
 
-## 6. Echo/Motion Trails ❌ NOT IMPLEMENTED
+## 6. Echo/Spread Effect ❌ NOT IMPLEMENTED
 
 ### Overview
-A temporal/instancing effect system that creates multiple copies of shapes with progressive visual changes, producing motion blur trails, echo patterns, depth illusions, and kinetic effects. Unlike Shape Effects (blur, shadow, glow) which modify individual shape appearance, Echo/Motion Trails creates deliberate multi-copy arrangements with controlled property variations per echo.
+A controlled layering system that creates deliberate position offsets between repetitions of shape sets, producing visual effects like motion blur trails, drop shadows, or echo patterns.
 
 ### Current State
 Shape Set repetitions are currently positioned identically—each repetition overlays exactly on top of previous instances. Users cannot create predictable offset patterns between repetitions without manually creating separate sets with different positions.
 
-### Relationship to Other Features
-- **Separate from Shape Effects:** Echo/Motion Trails is a temporal/instancing effect, not a per-shape shading effect. It can stack with Shape Effects (e.g., each echo copy can have blur applied).
-- **Complements Set Repetition Index Control:** While Set Repetition Index Control modifies properties based on repetition index, Echo/Motion Trails specifically creates visual trails with position offsets and progressive fading.
-- **Works at Shape or Set Level:** Can operate on individual shapes (per shapeIndex) or entire sets (per setRepIndex) for different creative results.
+### Proposed Feature
 
----
+#### Core Functionality
+1. **Echo/Spread Toggle**
+   - Enable/disable echo effect per Shape Set
+   - When enabled, each repetition is positioned at a calculated offset from the base position
+   - Works in conjunction with existing repetition settings (fixed count, range)
 
-### Configuration Architecture
+2. **Offset Configuration**
+   - **X Offset per Instance:** Horizontal displacement per repetition (e.g., +5px)
+   - **Y Offset per Instance:** Vertical displacement per repetition (e.g., +5px)
+   - **Cumulative vs. Fixed:** Option for cumulative offsets (1st at 0, 2nd at +5, 3rd at +10) or fixed offset from base
+   - **Direction Modes:** 
+     - Linear (consistent direction)
+     - Radial (spreading outward from center)
+     - Random (controlled scatter around base position)
 
-#### Scope and Driver System
+3. **Visual Result Examples**
+   - **Motion Trail:** 5 repetitions with offset (10,0) creates horizontal trail effect
+   - **Drop Shadow Stack:** 5 repetitions with offset (2,2) creates depth illusion
+   - **Radial Echo:** 8 repetitions spreading outward in circular pattern
+   - **Cascade:** Repetitions stacking diagonally like cards
 
-| Parameter | Options | Description |
-|-----------|---------|-------------|
-| **scope** | `set` / `shape` / `both` | Whether echoes apply to entire set repetitions or individual shapes |
-| **driver** | `shapeIndex` / `setRepIndex` / `combined` | Which index drives the echo offset calculation |
+4. **Additional Transform Options**
+   - **Opacity Fade:** Each repetition slightly more transparent
+   - **Scale Reduction:** Each repetition slightly smaller
+   - **Rotation Increment:** Each repetition rotated by N degrees
+   - **Color Shift:** Gradual hue/saturation shift across repetitions
 
-- **Set Scope:** Echoes entire set repetitions—useful for simple motion trails of complete compositions
-- **Shape Scope:** Echoes individual shapes—enables per-shape trails with probability/filters for fine-grained control
-- **Combined Driver:** Uses both indices for complex layered effects
+#### Technical Requirements
 
----
-
-### Offset/Direction Modes
-
-#### Mode 1: Fixed Vector
-User defines angle + distance per echo. Offsets accumulate (echo 1 at distance, echo 2 at 2×distance, etc.).
-
-```typescript
-mode: 'fixed-vector';
-angle: number;              // Direction in degrees (0-360)
-distancePerEcho: number;    // Pixels per echo step
-```
-
-**Use Case:** Consistent directional trails (motion blur, drop shadow stacks)
-
-#### Mode 2: Auto-Motion
-Derives direction from the delta between successive shapes (by shapeIndex or setRepIndex). Creates "follow the path" motion blur without manual angle configuration.
-
-```typescript
-mode: 'auto-motion';
-distancePerEcho: number;    // Magnitude of offset per echo
-fallbackAngle?: number;     // Used when no motion delta detected (default: 0)
-```
-
-**Use Case:** Automatic motion trails that follow incremental position changes in the generation config
-
-#### Mode 3: Absolute Position
-All echoes target a fixed position (no accumulation). Each echo moves toward the target with progressive fade/scale.
-
-```typescript
-mode: 'absolute-position';
-target: { x: number; y: number };  // Fixed target coordinates
-```
-
-**Use Case:** Converging/diverging effects, gravity-like pulls toward a point
-
----
-
-### Range-Based Jitter Modifier
-
-Jitter adds randomness on top of any direction mode. Uses min/max range for consistency with other system properties.
-
-```typescript
-jitter?: {
-  distance?: { min: number; max: number };  // Random ± variation to distance per echo
-  angle?: { min: number; max: number };     // Random ± variation to angle per echo
-};
-```
-
-**Behavior:**
-- Per-echo random sampling between min and max values
-- If omitted, no jitter applied
-- Layers on top of fixed-vector, auto-motion, or absolute-position modes
-- Creates organic, less mechanical echo patterns
-
----
-
-### Per-Echo Effects
-
-Each echo copy receives progressive visual modifications:
-
-| Effect | Parameters | Description |
-|--------|------------|-------------|
-| **Opacity** | `start`, `falloff`, `min?` | Each echo fades by falloff amount; stops at min |
-| **Blur** | `start`, `delta`, `max?` | Each echo gains blur; caps at max |
-| **Scale** | `start`, `delta`, `min?`, `max?` | Each echo shrinks/grows by delta |
-| **Rotation** | `delta` | Each echo rotates by delta degrees |
-| **Color Shift** | `hue`, `saturation`, `lightness` | Progressive color tinting per echo |
-
----
-
-### Apply-To Filters
-
-Control which shapes receive the echo effect:
-
-```typescript
-applyTo?: {
-  shapeTypes?: ShapeType[];           // Only these shape types
-  indices?: number[];                 // Specific shape indices
-  selector?: 'all' | 'even' | 'odd' | 'step';  // Index-based selection
-  step?: number;                      // For 'step' selector: every Nth shape
-  probability?: number;               // 0-100% chance per shape
-};
-```
-
----
-
-### Complete TypeScript Schema
-
+**Schema Extensions:**
 ```typescript
 interface EchoSpreadConfig {
   enabled: boolean;
+  mode: 'linear' | 'radial' | 'random';
   
-  // Scope and Driver
-  scope: 'set' | 'shape' | 'both';
-  driver: 'shapeIndex' | 'setRepIndex' | 'combined';
-  count: number;  // Number of echo copies (1-20)
+  // Linear/Radial mode
+  offsetX: number;           // Pixels per repetition in X
+  offsetY: number;           // Pixels per repetition in Y
+  cumulative: boolean;       // true = offsets accumulate, false = fixed from base
   
-  // Direction Mode
-  mode: 'fixed-vector' | 'auto-motion' | 'absolute-position';
+  // Radial mode
+  radialStartAngle: number;  // Starting angle for radial spread (degrees)
+  radialSpacing: number;     // Distance per repetition (pixels)
   
-  // Fixed Vector mode
-  angle?: number;              // Degrees (0-360)
-  distancePerEcho?: number;    // Pixels per echo
+  // Random mode
+  randomRangeX: [number, number];  // Min/max X scatter
+  randomRangeY: [number, number];  // Min/max Y scatter
   
-  // Auto-Motion mode
-  fallbackAngle?: number;      // When no delta detected (degrees)
-  
-  // Absolute Position mode
-  target?: { x: number; y: number };
-  
-  // Jitter (range-based modifier)
-  jitter?: {
-    distance?: { min: number; max: number };
-    angle?: { min: number; max: number };
-  };
-  
-  // Per-Echo Effects
-  opacity: {
-    start: number;      // Initial opacity (0-1)
-    falloff: number;    // Reduction per echo (0-1)
-    min?: number;       // Minimum opacity floor
-  };
-  blur: {
-    start: number;      // Initial blur radius (px)
-    delta: number;      // Increase per echo (px)
-    max?: number;       // Maximum blur cap
-  };
-  scale: {
-    start: number;      // Initial scale multiplier (1.0 = 100%)
-    delta: number;      // Change per echo (e.g., -0.1 for shrinking)
-    min?: number;       // Minimum scale
-    max?: number;       // Maximum scale
-  };
-  rotationDelta?: number;  // Degrees per echo
-  colorShift?: {
-    hue?: number;          // Hue shift per echo (degrees)
-    saturation?: number;   // Saturation change per echo
-    lightness?: number;    // Lightness change per echo
-  };
-  
-  // Filters
-  applyTo?: {
-    shapeTypes?: ShapeType[];
-    indices?: number[];
-    selector?: 'all' | 'even' | 'odd' | 'step';
-    step?: number;
-    probability?: number;
-  };
+  // Additional transforms
+  opacityFade: boolean;
+  opacityStep: number;       // Opacity reduction per repetition (e.g., 0.1)
+  scaleReduction: boolean;
+  scaleStep: number;         // Scale reduction per repetition (e.g., 0.95)
+  rotationIncrement: boolean;
+  rotationStep: number;      // Rotation per repetition (degrees)
 }
 ```
 
----
-
-### Rendering Logic
-
+**Generation Logic:**
 ```typescript
-function generateEchoes(
-  shape: Shape,
-  shapeIndex: number,
-  setRepIndex: number,
-  config: EchoSpreadConfig,
-  prevShapePosition?: { x: number; y: number }
+function applyEchoSpread(
+  baseShapes: Shape[],
+  repetitionIndex: number,
+  config: EchoSpreadConfig
 ): Shape[] {
-  if (!config.enabled) return [shape];
+  if (!config.enabled) return baseShapes;
   
-  // Check filters
-  if (!shouldApplyEcho(shape, shapeIndex, config.applyTo)) {
-    return [shape];
-  }
+  const offsetMultiplier = config.cumulative ? repetitionIndex : 1;
   
-  const echoes: Shape[] = [];
-  
-  // Determine base direction
-  let baseAngle: number;
-  let baseDistance = config.distancePerEcho ?? 10;
-  
-  switch (config.mode) {
-    case 'fixed-vector':
-      baseAngle = config.angle ?? 0;
-      break;
-    case 'auto-motion':
-      if (prevShapePosition) {
-        const dx = shape.x - prevShapePosition.x;
-        const dy = shape.y - prevShapePosition.y;
-        baseAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-      } else {
-        baseAngle = config.fallbackAngle ?? 0;
-      }
-      break;
-    case 'absolute-position':
-      // Direction toward target
-      const tx = (config.target?.x ?? 0) - shape.x;
-      const ty = (config.target?.y ?? 0) - shape.y;
-      baseAngle = Math.atan2(ty, tx) * (180 / Math.PI);
-      baseDistance = Math.sqrt(tx * tx + ty * ty) / config.count;
-      break;
-  }
-  
-  // Generate echo copies
-  for (let i = 0; i < config.count; i++) {
-    const echoIndex = i + 1;
+  return baseShapes.map(shape => {
+    const offsetShape = { ...shape };
     
-    // Apply jitter
-    let angle = baseAngle;
-    let distance = baseDistance * echoIndex;
-    
-    if (config.jitter) {
-      if (config.jitter.angle) {
-        angle += randomInRange(config.jitter.angle.min, config.jitter.angle.max);
-      }
-      if (config.jitter.distance) {
-        distance += randomInRange(config.jitter.distance.min, config.jitter.distance.max);
-      }
+    // Apply position offset
+    if (config.mode === 'linear') {
+      offsetShape.transform.x += config.offsetX * offsetMultiplier;
+      offsetShape.transform.y += config.offsetY * offsetMultiplier;
+    } else if (config.mode === 'radial') {
+      const angle = config.radialStartAngle + (360 / repetitionIndex);
+      const distance = config.radialSpacing * repetitionIndex;
+      offsetShape.transform.x += Math.cos(angle * Math.PI / 180) * distance;
+      offsetShape.transform.y += Math.sin(angle * Math.PI / 180) * distance;
     }
     
-    // Calculate position
-    const offsetX = Math.cos(angle * Math.PI / 180) * distance;
-    const offsetY = Math.sin(angle * Math.PI / 180) * distance;
+    // Apply additional transforms
+    if (config.opacityFade) {
+      offsetShape.opacity *= Math.pow(1 - config.opacityStep, repetitionIndex);
+    }
+    if (config.scaleReduction) {
+      const scaleFactor = Math.pow(config.scaleStep, repetitionIndex);
+      offsetShape.width *= scaleFactor;
+      offsetShape.height *= scaleFactor;
+    }
+    if (config.rotationIncrement) {
+      offsetShape.rotation += config.rotationStep * repetitionIndex;
+    }
     
-    // Calculate per-echo effects
-    const opacity = Math.max(
-      config.opacity.min ?? 0,
-      config.opacity.start - (config.opacity.falloff * echoIndex)
-    );
-    const blur = Math.min(
-      config.blur.max ?? 100,
-      config.blur.start + (config.blur.delta * echoIndex)
-    );
-    const scale = clamp(
-      config.scale.start + (config.scale.delta * echoIndex),
-      config.scale.min ?? 0.1,
-      config.scale.max ?? 10
-    );
-    const rotation = shape.rotation + ((config.rotationDelta ?? 0) * echoIndex);
-    
-    echoes.push({
-      ...shape,
-      x: shape.x + offsetX,
-      y: shape.y + offsetY,
-      opacity,
-      blur,
-      width: shape.width * scale,
-      height: shape.height * scale,
-      rotation,
-      // Apply color shift if configured
-      fill: config.colorShift 
-        ? shiftColor(shape.fill, config.colorShift, echoIndex)
-        : shape.fill,
-    });
-  }
-  
-  // Return echoes first (behind), then original shape (on top)
-  return [...echoes.reverse(), shape];
+    return offsetShape;
+  });
 }
 ```
 
----
+#### UI/UX Design
 
-### UI/UX Design
+**Location:** New "Echo/Spread" section in Set-level configuration (alongside Repetition settings)
 
-#### Location
-New "Echo / Motion Trails" section in BatchConfigDialog, positioned after Shape Effects section. Also accessible via Sets Manager for per-set overrides.
+**Controls:**
+1. **Enable Toggle:** Checkbox to activate echo effect
+2. **Mode Selector:** Dropdown (Linear/Radial/Random)
+3. **Offset Inputs:** X/Y input fields with unit labels
+4. **Cumulative Toggle:** Checkbox for cumulative vs. fixed offset
+5. **Additional Effects:** Collapsible section with opacity/scale/rotation sliders
+6. **Preview:** Real-time preview showing echo pattern on canvas
 
-#### Tab Structure
-| Tab | Purpose |
-|-----|---------|
-| **Basic** | Set-level trails with simple controls (count, direction, fade) |
-| **Advanced** | Shape-level control with filters, jitter, all per-echo effects |
+**Visual Indicators:**
+- Badge showing "Echo: 5 steps" or similar summary
+- Ghost preview lines showing offset direction
 
-#### Control Groupings
+#### Use Cases
+1. **Depth Simulation:** Create 3D-like depth by stacking slightly offset copies
+2. **Vintage Print Effect:** Simulate old print registration errors
+3. **Neon Glow Trails:** Create glowing trail effects behind shapes
+4. **Kinetic Typography:** Suggest motion through positioned repetitions
+5. **Layered Shadows:** Build complex shadow effects with controlled falloff
 
-**Direction Group:**
-- Mode selector: Fixed Vector / Auto-Motion / Absolute Position
-- Angle input (for Fixed Vector)
-- Distance per echo slider
-- Jitter toggles and range inputs
-
-**Effects Group:**
-- Opacity: Start slider, Falloff slider, Min input
-- Blur: Start, Delta, Max inputs
-- Scale: Start, Delta, Min/Max inputs
-- Rotation: Delta input
-- Color Shift: Hue/Sat/Light sliders
-
-**Filters Group:**
-- Scope selector: Set / Shape / Both
-- Driver selector: Shape Index / Set Rep Index / Combined
-- Shape type multi-select
-- Probability slider
-- Index selector (all/even/odd/step)
-
-#### Visual Indicators
-- Badge: "Echo: 5 copies @ 45°" summary
-- Ghost preview lines showing echo direction on canvas
-- Count indicator with echo pattern thumbnail
-
----
-
-### Use Cases
-
-1. **Motion Blur Trails:** Auto-motion mode following position increments creates realistic motion blur
-2. **Drop Shadow Stacks:** Fixed vector at 45° with opacity fade simulates layered shadows
-3. **Neon Glow Trails:** Blur + opacity fade creates glowing trail effects
-4. **Vintage Print Misregistration:** Small jitter + color shift simulates CMYK registration errors
-5. **Kinetic Typography:** Suggest motion through positioned echo copies
-6. **Depth Cascade:** Scale reduction + opacity fade creates receding perspective
-7. **Radial Burst:** Multiple echoes with rotation delta creates starburst patterns
-8. **Gravity Effects:** Absolute position mode pulls echoes toward a focal point
-
----
-
-### Implementation Phases
-
-| Phase | Features | Priority |
-|-------|----------|----------|
-| **Phase 1** | Core: Fixed-vector mode, count, distance, opacity fade | High |
-| **Phase 2** | Auto-motion mode with delta detection, fallback angle | High |
-| **Phase 3** | Per-echo blur, scale, rotation effects | Medium |
-| **Phase 4** | Range-based jitter modifier | Medium |
-| **Phase 5** | Apply-to filters (shape types, indices, probability) | Medium |
-| **Phase 6** | Color shift per echo, absolute-position mode | Low |
-| **Phase 7** | Scope/driver options (shape vs set level) | Low |
+#### Implementation Phases
+1. **Phase 1:** Basic linear offset with X/Y controls and cumulative option
+2. **Phase 2:** Radial and random modes
+3. **Phase 3:** Additional transforms (opacity, scale, rotation)
+4. **Phase 4:** Advanced color shifting and blend mode variations
 
 ---
 
