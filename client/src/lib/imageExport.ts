@@ -160,35 +160,18 @@ export class ImageExporter {
     }
     
     // Calculate print marks gutter (if render is enabled)
-    // Mark length and offset use the same unified overlayUnit, or percentage of artboard/content
+    // Mark length and offset use the same unified overlayUnit
     if (config.overlays.printMarks.render) {
-      const scaleMode = config.overlays.printMarks.scaleMode || 'none';
-      
-      let markLengthPx: number;
-      let markOffsetPx: number;
-      
-      if (scaleMode === 'percent') {
-        // Percentage mode: values are percentages of the smaller dimension
-        // Use artboardBounds if available, otherwise fall back to computed content bounds
-        const refWidth = artboardBounds?.width ?? (maxX - minX);
-        const refHeight = artboardBounds?.height ?? (maxY - minY);
-        const minDimension = Math.min(refWidth, refHeight);
-        markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
-        markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
-      } else {
-        // Default mode: convert from unified unit to pixels
-        markLengthPx = convertPrintUnitToPixels(
-          config.overlays.printMarks.markLength,
-          overlayUnit,
-          effectiveDpi
-        );
-        markOffsetPx = convertPrintUnitToPixels(
-          config.overlays.printMarks.markOffset,
-          overlayUnit,
-          effectiveDpi
-        );
-      }
-      
+      const markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        overlayUnit,
+        effectiveDpi
+      );
+      const markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        overlayUnit,
+        effectiveDpi
+      );
       printMarksGutterPx = markLengthPx + markOffsetPx + 5;
     }
     
@@ -318,31 +301,19 @@ export class ImageExporter {
       });
     }
     
-    // Render print marks if enabled (only for artboard exports with defined bounds)
+    // Render print marks if enabled
     if (config.overlays.printMarks.render && artboardBounds) {
-      const scaleMode = config.overlays.printMarks.scaleMode || 'none';
-      
-      let markLengthPx: number;
-      let markOffsetPx: number;
-      
-      if (scaleMode === 'percent') {
-        // Percentage mode: values are percentages of the smaller artboard dimension
-        const minDimension = Math.min(artboardBounds.width, artboardBounds.height);
-        markLengthPx = (config.overlays.printMarks.markLength / 100) * minDimension;
-        markOffsetPx = (config.overlays.printMarks.markOffset / 100) * minDimension;
-      } else {
-        // Default mode: convert from unified unit to pixels using unified overlayUnit
-        markLengthPx = convertPrintUnitToPixels(
-          config.overlays.printMarks.markLength,
-          overlayUnit,
-          effectiveDpi
-        );
-        markOffsetPx = convertPrintUnitToPixels(
-          config.overlays.printMarks.markOffset,
-          overlayUnit,
-          effectiveDpi
-        );
-      }
+      // Convert mark dimensions to pixels using unified overlayUnit
+      const markLengthPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markLength,
+        overlayUnit,
+        effectiveDpi
+      );
+      const markOffsetPx = convertPrintUnitToPixels(
+        config.overlays.printMarks.markOffset,
+        overlayUnit,
+        effectiveDpi
+      );
       
       this.renderPrintMarks(
         artboardBounds.x,
