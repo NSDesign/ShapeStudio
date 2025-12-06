@@ -13,10 +13,13 @@ import type {
   EchoBlurConfig, 
   EchoScaleConfig,
   EchoRotationConfig,
+  EchoColorShiftConfig,
   EchoJitterConfig,
   EchoPerEffectJitterConfig,
   EchoFixedVectorConfig,
-  EchoAutoMotionConfig
+  EchoAutoMotionConfig,
+  EchoAbsolutePositionConfig,
+  EchoApplyToConfig
 } from './schema';
 
 // Default per-effect jitter config (safe fallback)
@@ -115,6 +118,10 @@ export interface EchoTransform {
   blur: number;             // Blur radius in pixels
   scale: number;            // Scale factor (1.0 = 100%)
   rotation: number;         // Additional rotation in degrees
+  // Color shift values (Project B)
+  hueShift: number;         // Hue shift in degrees (additive)
+  saturationShift: number;  // Saturation shift percentage (additive)
+  lightnessShift: number;   // Lightness shift percentage (additive)
 }
 
 /**
@@ -125,6 +132,16 @@ export interface AutoMotionContext {
   prevY?: number;           // Previous set repetition Y position
   currentX: number;         // Current set repetition X position
   currentY: number;         // Current set repetition Y position
+}
+
+/**
+ * Context for absolute-position mode - target coordinates and artboard dimensions
+ */
+export interface AbsolutePositionContext {
+  shapeX: number;           // Current shape X position
+  shapeY: number;           // Current shape Y position
+  artboardWidth: number;    // Artboard width for center calculation
+  artboardHeight: number;   // Artboard height for center calculation
 }
 
 /**
@@ -140,18 +157,121 @@ function seededRandom(seed: number): () => number {
 }
 
 /**
+ * Check if a shape should receive echo effects based on ApplyTo filter config
+ * 
+ * @param shapeIndex - Index of the shape in the set (0-based)
+ * @param shapeType - Type of the shape (e.g., 'circle', 'square')
+ * @param applyTo - ApplyTo filter configuration
+ * @returns true if the shape should receive echoes, false otherwise
+ */
+export function shouldApplyEchoToShape(
+  shapeIndex: number,
+  shapeType: string,
+  applyTo?: EchoApplyToConfig
+): boolean {
+  // If applyTo is not defined or not enabled, apply to all shapes
+  if (!applyTo || !applyTo.enabled) {
+    return true;
+  }
+  
+  // Check shape type filter
+  if (applyTo.shapeTypes && applyTo.shapeTypes.length > 0) {
+    if (!applyTo.shapeTypes.includes(shapeType)) {
+      return false;
+    }
+  }
+  
+  // Check specific indices filter
+  if (applyTo.indices && applyTo.indices.length > 0) {
+    if (!applyTo.indices.includes(shapeIndex)) {
+      return false;
+    }
+  }
+  
+  // Check selector mode
+  const selector = applyTo.selector ?? 'all';
+  switch (selector) {
+    case 'all':
+      // No filtering by index
+      break;
+    case 'even':
+      if (shapeIndex % 2 !== 0) {
+        return false;
+      }
+      break;
+    case 'odd':
+      if (shapeIndex % 2 === 0) {
+        return false;
+      }
+      break;
+    case 'step':
+      const step = applyTo.indexStep ?? 2;
+      if (shapeIndex % step !== 0) {
+        return false;
+      }
+      break;
+  }
+  
+  // Check probability filter
+  const probability = applyTo.probability ?? 100;
+  if (probability < 100) {
+    const randomValue = Math.random() * 100;
+    if (randomValue > probability) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
  * Calculate echo direction angle based on direction mode
  * 
  * @param config - Echo spread configuration
  * @param autoMotionContext - Optional context for auto-motion mode (set position deltas)
+ * @param absolutePositionContext - Optional context for absolute-position mode (shape and artboard)
  * @returns Direction angle in degrees (0-360)
  */
 export function calculateEchoDirection(
   config: EchoSpreadConfig,
-  autoMotionContext?: AutoMotionContext
+  autoMotionContext?: AutoMotionContext,
+  absolutePositionContext?: AbsolutePositionContext
 ): number {
   if (config.directionMode === 'fixed-vector') {
     return config.fixedVector.angle;
+  }
+  
+  // Absolute-position mode: direction toward or away from target
+  if (config.directionMode === 'absolute-position' && absolutePositionContext) {
+    const absConfig = config.absolutePosition ?? {
+      targetX: 0,
+      targetY: 0,
+      useArtboardCenter: true,
+      mode: 'converge'
+    };
+    
+    // Determine target coordinates
+    let targetX = absConfig.targetX;
+    let targetY = absConfig.targetY;
+    
+    if (absConfig.useArtboardCenter) {
+      targetX = absolutePositionContext.artboardWidth / 2;
+      targetY = absolutePositionContext.artboardHeight / 2;
+    }
+    
+    // Calculate direction from shape to target
+    const dx = targetX - absolutePositionContext.shapeX;
+    const dy = targetY - absolutePositionContext.shapeY;
+    
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    // Diverge mode: reverse direction (away from target)
+    if (absConfig.mode === 'diverge') {
+      angle = (angle + 180) % 360;
+    }
+    
+    if (angle < 0) angle += 360;
+    return angle;
   }
   
   // Auto-motion mode: derive direction from position deltas
@@ -178,12 +298,25 @@ export function calculateEchoDirection(
 
 /**
  * Calculate distance between echo copies based on direction mode
+ * 
+ * @param config - Echo spread configuration
+ * @param autoMotionContext - Optional context for auto-motion mode
+ * @param absolutePositionContext - Optional context for absolute-position mode
+ * @returns Distance in pixels between each echo
  */
 export function calculateEchoDistance(
   config: EchoSpreadConfig,
-  autoMotionContext?: AutoMotionContext
+  autoMotionContext?: AutoMotionContext,
+  absolutePositionContext?: AbsolutePositionContext
 ): number {
   if (config.directionMode === 'fixed-vector') {
+    return config.fixedVector.distance;
+  }
+  
+  // Absolute-position mode: use fixed distance toward target
+  if (config.directionMode === 'absolute-position') {
+    // Use fixed vector distance as the per-echo distance
+    // This gives consistent spacing regardless of shape position
     return config.fixedVector.distance;
   }
   
@@ -292,6 +425,41 @@ export function calculateEchoRotation(
   );
 }
 
+// Default color shift config (safe fallback for legacy configs)
+const DEFAULT_COLOR_SHIFT_CONFIG: EchoColorShiftConfig = {
+  enabled: false,
+  hueDelta: 0,
+  saturationDelta: 0,
+  lightnessDelta: 0,
+  jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
+};
+
+/**
+ * Calculate color shift values for a specific echo index
+ * Returns hue, saturation, and lightness shift values
+ * 
+ * @param colorShiftConfig - Color shift configuration
+ * @param echoIndex - 0-based echo index
+ * @returns Object with hueShift, saturationShift, lightnessShift values
+ */
+export function calculateEchoColorShift(
+  colorShiftConfig: EchoColorShiftConfig | undefined,
+  echoIndex: number
+): { hueShift: number; saturationShift: number; lightnessShift: number } {
+  const config = colorShiftConfig ?? DEFAULT_COLOR_SHIFT_CONFIG;
+  
+  if (!config.enabled) {
+    return { hueShift: 0, saturationShift: 0, lightnessShift: 0 };
+  }
+  
+  // Each echo accumulates delta values
+  const hueShift = config.hueDelta * (echoIndex + 1);
+  const saturationShift = config.saturationDelta * (echoIndex + 1);
+  const lightnessShift = config.lightnessDelta * (echoIndex + 1);
+  
+  return { hueShift, saturationShift, lightnessShift };
+}
+
 /**
  * Apply per-effect jitter to a calculated effect value
  * Uses deterministic seeded random for reproducibility
@@ -381,17 +549,19 @@ export function applyJitter(
 }
 
 /**
- * Calculate all echo transforms for a set repetition
+ * Calculate all echo transforms for a set repetition or shape
  * 
  * @param config - Echo spread configuration
- * @param setRepIndex - Set repetition index (0-based)
+ * @param setRepIndex - Set repetition index or shape index (0-based), used for seeding
  * @param autoMotionContext - Optional context for auto-motion direction detection
+ * @param absolutePositionContext - Optional context for absolute-position mode
  * @returns Array of echo transforms, one per echo copy
  */
 export function calculateEchoTransforms(
   config: EchoSpreadConfig,
   setRepIndex: number,
-  autoMotionContext?: AutoMotionContext
+  autoMotionContext?: AutoMotionContext,
+  absolutePositionContext?: AbsolutePositionContext
 ): EchoTransform[] {
   if (!config.enabled || config.echoCount <= 0) {
     return [];
@@ -400,8 +570,8 @@ export function calculateEchoTransforms(
   const echoes: EchoTransform[] = [];
   
   // Calculate base direction and distance
-  const baseAngle = calculateEchoDirection(config, autoMotionContext);
-  const baseDistance = calculateEchoDistance(config, autoMotionContext);
+  const baseAngle = calculateEchoDirection(config, autoMotionContext, absolutePositionContext);
+  const baseDistance = calculateEchoDistance(config, autoMotionContext, absolutePositionContext);
   
   for (let i = 0; i < config.echoCount; i++) {
     // Create deterministic seeds based on set rep index, echo index, and effect type
@@ -445,6 +615,12 @@ export function calculateEchoTransforms(
     let rotation = calculateEchoRotation(rotationConfig, i);
     rotation = applyPerEffectJitter(rotationConfig.jitter, rotation, rotationSeed);
     
+    // Calculate color shift values
+    const colorShiftSeed = baseSeed + 5;
+    const colorShift = calculateEchoColorShift(config.colorShift, i);
+    const colorShiftJitter = getPerEffectJitter(config.colorShift?.jitter);
+    const hueShift = applyPerEffectJitter(colorShiftJitter, colorShift.hueShift, colorShiftSeed);
+    
     echoes.push({
       echoIndex: i,
       offsetX,
@@ -452,7 +628,10 @@ export function calculateEchoTransforms(
       opacity,
       blur,
       scale,
-      rotation
+      rotation,
+      hueShift,
+      saturationShift: colorShift.saturationShift,
+      lightnessShift: colorShift.lightnessShift
     });
   }
   

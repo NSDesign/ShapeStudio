@@ -19,7 +19,7 @@ import {
 import { generateColor, generateGradientColors } from '../lib/hslColor';
 import { getEffectiveTranslateRange, recalculateGridForArtboard } from '../lib/artboardUtils';
 import { validateArtboardDimensions } from '../lib/artboardPresets';
-import { calculateEchoTransforms, isEchoEnabled, type AutoMotionContext, type EchoTransform } from '@shared/echoUtils';
+import { calculateEchoTransforms, isEchoEnabled, shouldApplyEchoToShape, type AutoMotionContext, type AbsolutePositionContext, type EchoTransform } from '@shared/echoUtils';
 import { DEFAULT_ECHO_SPREAD_CONFIG } from '@shared/schema';
 
 // Interface for overriding UI state during generation (used for generation sets)
@@ -3581,10 +3581,13 @@ export const useShapeEditor = () => {
             }
           }
 
-          // Echo/Motion Trails generation (Project A: Set-Level)
+          // Echo/Motion Trails generation (Project A: Set-Level, Project B: Shape-Level)
           const echoConfig = set.batchConfig?.echoSpread ?? DEFAULT_ECHO_SPREAD_CONFIG;
           if (isEchoEnabled(echoConfig)) {
-            // Calculate set centroid for auto-motion mode
+            const echoScope = echoConfig.scope ?? 'set';
+            const echoDriver = echoConfig.driver ?? 'setRepIndex';
+            
+            // Calculate set centroid for auto-motion mode (used for set-level)
             let setCentroidX = 0, setCentroidY = 0;
             if (setShapes.length > 0) {
               setShapes.forEach(shape => {
@@ -3595,71 +3598,322 @@ export const useShapeEditor = () => {
               setCentroidY /= setShapes.length;
             }
             
-            // Build auto-motion context from previous repetition position
-            const autoMotionContext: AutoMotionContext | undefined = repIndex > 0 && 
-              (window as any).__prevSetCentroid ? {
-                prevX: (window as any).__prevSetCentroid.x,
-                prevY: (window as any).__prevSetCentroid.y,
-                currentX: setCentroidX,
-                currentY: setCentroidY
-              } : undefined;
+            const echoShapes: Shape[] = [];
             
-            // Store current centroid for next repetition
-            (window as any).__prevSetCentroid = { x: setCentroidX, y: setCentroidY };
-            
-            // Calculate echo transforms using shared utility
-            const echoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContext);
-            
-            if (echoTransforms.length > 0) {
-              console.log(`👻 [ECHO] Generating ${echoTransforms.length} echo copies for ${setShapes.length} shapes in set "${set.name}"`);
+            if (echoScope === 'set') {
+              // SET-LEVEL: Use setRepIndex as driver, same echoes for all shapes in set
+              const autoMotionContext: AutoMotionContext | undefined = repIndex > 0 && 
+                (window as any).__prevSetCentroid ? {
+                  prevX: (window as any).__prevSetCentroid.x,
+                  prevY: (window as any).__prevSetCentroid.y,
+                  currentX: setCentroidX,
+                  currentY: setCentroidY
+                } : undefined;
               
-              const echoShapes: Shape[] = [];
+              (window as any).__prevSetCentroid = { x: setCentroidX, y: setCentroidY };
               
-              // Create echo copies for each original shape
+              // Build absolute position context for set-level (use set centroid as shape position)
+              const absolutePositionContext: AbsolutePositionContext | undefined = 
+                echoConfig.directionMode === 'absolute-position' ? {
+                  shapeX: setCentroidX,
+                  shapeY: setCentroidY,
+                  artboardWidth: artboardDimensions.width,
+                  artboardHeight: artboardDimensions.height
+                } : undefined;
+              
+              const echoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContext, absolutePositionContext);
+              
+              if (echoTransforms.length > 0) {
+                console.log(`👻 [ECHO SET] Generating ${echoTransforms.length} echo copies for ${setShapes.length} shapes (set-level)`);
+                
+                setShapes.forEach((originalShape, shapeIdx) => {
+                  echoTransforms.forEach((echo, echoIdx) => {
+                    const echoShape = originalShape.clone();
+                    
+                    (echoShape as any)._isEcho = true;
+                    (echoShape as any)._echoIndex = echoIdx;
+                    (echoShape as any)._sourceShapeId = originalShape.id;
+                    (echoShape as any)._echoScope = 'set';
+                    
+                    echoShape.transform.x += echo.offsetX;
+                    echoShape.transform.y += echo.offsetY;
+                    echoShape.properties.fillOpacity *= echo.opacity;
+                    echoShape.properties.strokeOpacity *= echo.opacity;
+                    
+                    if (echo.scale !== 1.0) {
+                      echoShape.transform.scaleX *= echo.scale;
+                      echoShape.transform.scaleY *= echo.scale;
+                    }
+                    if (echo.rotation !== 0) {
+                      echoShape.transform.rotation += echo.rotation;
+                    }
+                    if (echo.blur > 0) {
+                      echoShape.properties.blurRadius = echo.blur;
+                    }
+                    
+                    // Apply color shift if any shift values are non-zero
+                    if (echo.hueShift !== 0 || echo.saturationShift !== 0 || echo.lightnessShift !== 0) {
+                      const colorShift = { 
+                        enabled: true, 
+                        hue: echo.hueShift, 
+                        saturation: echo.saturationShift, 
+                        lightness: echo.lightnessShift 
+                      };
+                      if (echoShape.properties.fillColor && echoShape.properties.fillColor !== 'none') {
+                        echoShape.properties.fillColor = ColorUtils.applyHSLShift(echoShape.properties.fillColor, colorShift);
+                      }
+                      if (echoShape.properties.strokeColor && echoShape.properties.strokeColor !== 'none') {
+                        echoShape.properties.strokeColor = ColorUtils.applyHSLShift(echoShape.properties.strokeColor, colorShift);
+                      }
+                    }
+                    
+                    echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
+                    echoShapes.push(echoShape);
+                  });
+                });
+              }
+            } else if (echoScope === 'shape') {
+              // SHAPE-LEVEL: Each shape gets its own echo transforms based on shapeIndex
+              console.log(`👻 [ECHO SHAPE] Generating shape-level echoes for ${setShapes.length} shapes`);
+              
               setShapes.forEach((originalShape, shapeIdx) => {
+                // Check ApplyTo filter - skip shapes that don't match the filter
+                if (!shouldApplyEchoToShape(shapeIdx, originalShape.type, echoConfig.applyTo)) {
+                  return; // Skip this shape
+                }
+                
+                // For shape-level, use the appropriate driver
+                const driverIndex = echoDriver === 'combined' 
+                  ? shapeIdx + (repIndex * setShapes.length)
+                  : (echoDriver === 'shapeIndex' ? shapeIdx : repIndex);
+                
+                // Build auto-motion context for this specific shape (relative to previous shape)
+                let autoMotionContext: AutoMotionContext | undefined;
+                if (shapeIdx > 0 && echoConfig.directionMode === 'auto-motion') {
+                  const prevShape = setShapes[shapeIdx - 1];
+                  autoMotionContext = {
+                    prevX: prevShape.transform.x,
+                    prevY: prevShape.transform.y,
+                    currentX: originalShape.transform.x,
+                    currentY: originalShape.transform.y
+                  };
+                }
+                
+                // Build absolute position context for this shape
+                const absolutePositionContext: AbsolutePositionContext | undefined = 
+                  echoConfig.directionMode === 'absolute-position' ? {
+                    shapeX: originalShape.transform.x,
+                    shapeY: originalShape.transform.y,
+                    artboardWidth: artboardDimensions.width,
+                    artboardHeight: artboardDimensions.height
+                  } : undefined;
+                
+                const echoTransforms = calculateEchoTransforms(echoConfig, driverIndex, autoMotionContext, absolutePositionContext);
+                
                 echoTransforms.forEach((echo, echoIdx) => {
-                  // Clone the original shape for this echo
                   const echoShape = originalShape.clone();
                   
-                  // Mark as echo shape for potential filtering/identification
                   (echoShape as any)._isEcho = true;
                   (echoShape as any)._echoIndex = echoIdx;
                   (echoShape as any)._sourceShapeId = originalShape.id;
+                  (echoShape as any)._echoScope = 'shape';
                   
-                  // Apply position offset
                   echoShape.transform.x += echo.offsetX;
                   echoShape.transform.y += echo.offsetY;
-                  
-                  // Apply opacity (multiply with existing opacity)
                   echoShape.properties.fillOpacity *= echo.opacity;
                   echoShape.properties.strokeOpacity *= echo.opacity;
                   
-                  // Apply scale
                   if (echo.scale !== 1.0) {
                     echoShape.transform.scaleX *= echo.scale;
                     echoShape.transform.scaleY *= echo.scale;
                   }
-                  
-                  // Apply rotation
                   if (echo.rotation !== 0) {
                     echoShape.transform.rotation += echo.rotation;
                   }
-                  
-                  // Apply blur to shape properties (uses existing canvas blur system)
                   if (echo.blur > 0) {
                     echoShape.properties.blurRadius = echo.blur;
                   }
                   
-                  // Adjust z-index to render behind original (echoes are behind)
-                  // Each echo is progressively further behind
-                  echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
+                  // Apply color shift if any shift values are non-zero
+                  if (echo.hueShift !== 0 || echo.saturationShift !== 0 || echo.lightnessShift !== 0) {
+                    const colorShift = { 
+                      enabled: true, 
+                      hue: echo.hueShift, 
+                      saturation: echo.saturationShift, 
+                      lightness: echo.lightnessShift 
+                    };
+                    if (echoShape.properties.fillColor && echoShape.properties.fillColor !== 'none') {
+                      echoShape.properties.fillColor = ColorUtils.applyHSLShift(echoShape.properties.fillColor, colorShift);
+                    }
+                    if (echoShape.properties.strokeColor && echoShape.properties.strokeColor !== 'none') {
+                      echoShape.properties.strokeColor = ColorUtils.applyHSLShift(echoShape.properties.strokeColor, colorShift);
+                    }
+                  }
                   
+                  echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
                   echoShapes.push(echoShape);
                 });
               });
               
-              console.log(`👻 [ECHO] Created ${echoShapes.length} total echo shapes`);
+              console.log(`👻 [ECHO SHAPE] Created ${echoShapes.length} total echo shapes`);
+            } else if (echoScope === 'both') {
+              // BOTH SCOPE: Generate both set-level and shape-level echoes
+              console.log(`👻 [ECHO BOTH] Generating combined set+shape level echoes`);
               
+              // Phase 1: Set-level echoes (same transforms for all shapes in set)
+              const autoMotionContextSet: AutoMotionContext | undefined = repIndex > 0 && 
+                (window as any).__prevSetCentroid ? {
+                  prevX: (window as any).__prevSetCentroid.x,
+                  prevY: (window as any).__prevSetCentroid.y,
+                  currentX: setCentroidX,
+                  currentY: setCentroidY
+                } : undefined;
+              
+              (window as any).__prevSetCentroid = { x: setCentroidX, y: setCentroidY };
+              
+              const absolutePositionContextSet: AbsolutePositionContext | undefined = 
+                echoConfig.directionMode === 'absolute-position' ? {
+                  shapeX: setCentroidX,
+                  shapeY: setCentroidY,
+                  artboardWidth: artboardDimensions.width,
+                  artboardHeight: artboardDimensions.height
+                } : undefined;
+              
+              const setEchoTransforms = calculateEchoTransforms(echoConfig, repIndex, autoMotionContextSet, absolutePositionContextSet);
+              
+              if (setEchoTransforms.length > 0) {
+                console.log(`👻 [ECHO BOTH-SET] Generating ${setEchoTransforms.length} set-level echoes`);
+                
+                setShapes.forEach((originalShape, shapeIdx) => {
+                  setEchoTransforms.forEach((echo, echoIdx) => {
+                    const echoShape = originalShape.clone();
+                    
+                    (echoShape as any)._isEcho = true;
+                    (echoShape as any)._echoIndex = echoIdx;
+                    (echoShape as any)._sourceShapeId = originalShape.id;
+                    (echoShape as any)._echoScope = 'both-set';
+                    
+                    echoShape.transform.x += echo.offsetX;
+                    echoShape.transform.y += echo.offsetY;
+                    echoShape.properties.fillOpacity *= echo.opacity;
+                    echoShape.properties.strokeOpacity *= echo.opacity;
+                    
+                    if (echo.scale !== 1.0) {
+                      echoShape.transform.scaleX *= echo.scale;
+                      echoShape.transform.scaleY *= echo.scale;
+                    }
+                    if (echo.rotation !== 0) {
+                      echoShape.transform.rotation += echo.rotation;
+                    }
+                    if (echo.blur > 0) {
+                      echoShape.properties.blurRadius = echo.blur;
+                    }
+                    
+                    if (echo.hueShift !== 0 || echo.saturationShift !== 0 || echo.lightnessShift !== 0) {
+                      const colorShift = { 
+                        enabled: true, 
+                        hue: echo.hueShift, 
+                        saturation: echo.saturationShift, 
+                        lightness: echo.lightnessShift 
+                      };
+                      if (echoShape.properties.fillColor && echoShape.properties.fillColor !== 'none') {
+                        echoShape.properties.fillColor = ColorUtils.applyHSLShift(echoShape.properties.fillColor, colorShift);
+                      }
+                      if (echoShape.properties.strokeColor && echoShape.properties.strokeColor !== 'none') {
+                        echoShape.properties.strokeColor = ColorUtils.applyHSLShift(echoShape.properties.strokeColor, colorShift);
+                      }
+                    }
+                    
+                    echoShape.properties.zIndex -= (echoIdx + 1) * 0.1;
+                    echoShapes.push(echoShape);
+                  });
+                });
+              }
+              
+              // Phase 2: Shape-level echoes (per-shape individual echoes)
+              console.log(`👻 [ECHO BOTH-SHAPE] Generating shape-level echoes for ${setShapes.length} shapes`);
+              
+              setShapes.forEach((originalShape, shapeIdx) => {
+                if (!shouldApplyEchoToShape(shapeIdx, originalShape.type, echoConfig.applyTo)) {
+                  return;
+                }
+                
+                // For combined driver, use both indices
+                const driverIndex = echoDriver === 'combined' 
+                  ? shapeIdx + (repIndex * setShapes.length)
+                  : (echoDriver === 'shapeIndex' ? shapeIdx : repIndex);
+                
+                let autoMotionContextShape: AutoMotionContext | undefined;
+                if (shapeIdx > 0 && echoConfig.directionMode === 'auto-motion') {
+                  const prevShape = setShapes[shapeIdx - 1];
+                  autoMotionContextShape = {
+                    prevX: prevShape.transform.x,
+                    prevY: prevShape.transform.y,
+                    currentX: originalShape.transform.x,
+                    currentY: originalShape.transform.y
+                  };
+                }
+                
+                const absolutePositionContextShape: AbsolutePositionContext | undefined = 
+                  echoConfig.directionMode === 'absolute-position' ? {
+                    shapeX: originalShape.transform.x,
+                    shapeY: originalShape.transform.y,
+                    artboardWidth: artboardDimensions.width,
+                    artboardHeight: artboardDimensions.height
+                  } : undefined;
+                
+                const shapeEchoTransforms = calculateEchoTransforms(echoConfig, driverIndex, autoMotionContextShape, absolutePositionContextShape);
+                
+                shapeEchoTransforms.forEach((echo, echoIdx) => {
+                  const echoShape = originalShape.clone();
+                  
+                  (echoShape as any)._isEcho = true;
+                  (echoShape as any)._echoIndex = echoIdx;
+                  (echoShape as any)._sourceShapeId = originalShape.id;
+                  (echoShape as any)._echoScope = 'both-shape';
+                  
+                  echoShape.transform.x += echo.offsetX;
+                  echoShape.transform.y += echo.offsetY;
+                  echoShape.properties.fillOpacity *= echo.opacity;
+                  echoShape.properties.strokeOpacity *= echo.opacity;
+                  
+                  if (echo.scale !== 1.0) {
+                    echoShape.transform.scaleX *= echo.scale;
+                    echoShape.transform.scaleY *= echo.scale;
+                  }
+                  if (echo.rotation !== 0) {
+                    echoShape.transform.rotation += echo.rotation;
+                  }
+                  if (echo.blur > 0) {
+                    echoShape.properties.blurRadius = echo.blur;
+                  }
+                  
+                  if (echo.hueShift !== 0 || echo.saturationShift !== 0 || echo.lightnessShift !== 0) {
+                    const colorShift = { 
+                      enabled: true, 
+                      hue: echo.hueShift, 
+                      saturation: echo.saturationShift, 
+                      lightness: echo.lightnessShift 
+                    };
+                    if (echoShape.properties.fillColor && echoShape.properties.fillColor !== 'none') {
+                      echoShape.properties.fillColor = ColorUtils.applyHSLShift(echoShape.properties.fillColor, colorShift);
+                    }
+                    if (echoShape.properties.strokeColor && echoShape.properties.strokeColor !== 'none') {
+                      echoShape.properties.strokeColor = ColorUtils.applyHSLShift(echoShape.properties.strokeColor, colorShift);
+                    }
+                  }
+                  
+                  // Shape-level echoes have lower z-index offset to layer behind set-level
+                  echoShape.properties.zIndex -= (echoIdx + 1) * 0.05;
+                  echoShapes.push(echoShape);
+                });
+              });
+              
+              console.log(`👻 [ECHO BOTH] Created ${echoShapes.length} total echo shapes`);
+            }
+            
+            if (echoShapes.length > 0) {
+              console.log(`👻 [ECHO] Total echo shapes: ${echoShapes.length}`);
               // Insert echoes BEFORE original shapes (render behind)
               setShapes.unshift(...echoShapes);
             }

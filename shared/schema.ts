@@ -680,7 +680,7 @@ export const DEFAULT_CELL_CONSTRAINTS: CellConstraintsConfig = {
 // Project A: Set-Level only (scope locked to 'set', driver is setRepIndex)
 
 // Echo direction mode - how the echo direction is determined
-export type EchoDirectionMode = 'fixed-vector' | 'auto-motion';
+export type EchoDirectionMode = 'fixed-vector' | 'auto-motion' | 'absolute-position';
 
 // Echo scope - which level echoes apply to (Project A: only 'set' is enabled)
 export type EchoScope = 'set' | 'shape' | 'both';
@@ -745,6 +745,15 @@ export interface EchoJitterConfig {
   angleRange: number;        // 0-180° - random angle variation
 }
 
+// Per-echo color shift settings (Project B: color progression)
+export interface EchoColorShiftConfig {
+  enabled: boolean;
+  hueDelta: number;          // -180 to +180° - hue change per echo
+  saturationDelta: number;   // -50 to +50% - saturation change per echo
+  lightnessDelta: number;    // -50 to +50% - lightness change per echo
+  jitter: EchoPerEffectJitterConfig; // Color-specific jitter (applied to hue)
+}
+
 // Fixed-vector mode settings
 export interface EchoFixedVectorConfig {
   angle: number;             // 0-360° - direction of echoes
@@ -756,6 +765,37 @@ export interface EchoAutoMotionConfig {
   fallbackAngle: number;     // 0-360° - angle when no motion detected
   distanceMultiplier: number; // 0.1-5.0 - multiplier for detected motion
 }
+
+// Absolute-position mode settings (Project B: converging/diverging effects)
+export interface EchoAbsolutePositionConfig {
+  targetX: number;           // Target X coordinate
+  targetY: number;           // Target Y coordinate
+  useArtboardCenter: boolean; // Use artboard center as target (default: true)
+  mode: 'converge' | 'diverge'; // Converge toward target or diverge away from it
+}
+
+// Echo ApplyTo filter selector mode
+export type EchoApplyToSelector = 'all' | 'even' | 'odd' | 'step';
+
+// Echo ApplyTo filter configuration (Project B: shape filtering for echoes)
+export interface EchoApplyToConfig {
+  enabled: boolean;
+  shapeTypes?: string[];      // Only apply to these shape types (if empty/undefined, apply to all)
+  indices?: number[];         // Specific shape indices to apply to
+  selector: EchoApplyToSelector;  // Index-based selection mode
+  indexStep?: number;         // Step interval when selector='step' (default: 2)
+  probability?: number;       // 0-100 probability of applying to each matching shape
+}
+
+// Default ApplyTo config (apply to all)
+export const DEFAULT_ECHO_APPLY_TO_CONFIG: EchoApplyToConfig = {
+  enabled: false,
+  shapeTypes: [],
+  indices: [],
+  selector: 'all',
+  indexStep: 2,
+  probability: 100
+};
 
 // Main Echo/Motion Trails configuration
 export interface EchoSpreadConfig {
@@ -774,15 +814,20 @@ export interface EchoSpreadConfig {
   directionMode: EchoDirectionMode;
   fixedVector: EchoFixedVectorConfig;
   autoMotion: EchoAutoMotionConfig;
+  absolutePosition?: EchoAbsolutePositionConfig;
   
   // Per-echo effects
   opacity: EchoOpacityConfig;
   blur: EchoBlurConfig;
   scale: EchoScaleConfig;
   rotation: EchoRotationConfig;
+  colorShift?: EchoColorShiftConfig; // Optional color progression (Project B)
   
   // Jitter for organic variation (position/direction)
   jitter: EchoJitterConfig;
+  
+  // ApplyTo filters (Project B: shape-level filtering)
+  applyTo?: EchoApplyToConfig;
 }
 
 // Default per-effect jitter config
@@ -812,6 +857,12 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
   autoMotion: {
     fallbackAngle: 225,
     distanceMultiplier: 1.0
+  },
+  absolutePosition: {
+    targetX: 0,
+    targetY: 0,
+    useArtboardCenter: true,
+    mode: 'converge'
   },
   
   opacity: {
@@ -843,12 +894,21 @@ export const DEFAULT_ECHO_SPREAD_CONFIG: EchoSpreadConfig = {
     maxRotation: 360,
     jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
   },
+  colorShift: {
+    enabled: false,
+    hueDelta: 0,
+    saturationDelta: 0,
+    lightnessDelta: 0,
+    jitter: { enabled: false, mode: 'fixed', fixedAmount: 0, rangeMin: 0, rangeMax: 0 }
+  },
   
   jitter: {
     enabled: false,
     distanceRange: 0,
     angleRange: 0
-  }
+  },
+  
+  applyTo: DEFAULT_ECHO_APPLY_TO_CONFIG
 };
 
 export interface BatchConfigSettings {
@@ -3051,7 +3111,7 @@ export const BatchConfigSettingsSchema = z.object({
     scope: z.enum(['set', 'shape', 'both']),
     driver: z.enum(['setRepIndex', 'shapeIndex', 'combined']),
     echoCount: z.number().min(1).max(20),
-    directionMode: z.enum(['fixed-vector', 'auto-motion']),
+    directionMode: z.enum(['fixed-vector', 'auto-motion', 'absolute-position']),
     fixedVector: z.object({
       angle: z.number().min(0).max(360),
       distance: z.number().min(0).max(500)
@@ -3060,6 +3120,12 @@ export const BatchConfigSettingsSchema = z.object({
       fallbackAngle: z.number().min(0).max(360),
       distanceMultiplier: z.number().min(0.1).max(5)
     }),
+    absolutePosition: z.object({
+      targetX: z.number(),
+      targetY: z.number(),
+      useArtboardCenter: z.boolean(),
+      mode: z.enum(['converge', 'diverge'])
+    }).optional(),
     opacity: z.object({
       startOpacity: z.number().min(0).max(100),
       falloffRate: z.number().min(0).max(100),
@@ -3101,11 +3167,29 @@ export const BatchConfigSettingsSchema = z.object({
         range: z.number().min(0).max(180)
       })
     }),
+    colorShift: z.object({
+      enabled: z.boolean(),
+      hueDelta: z.number().min(-180).max(180),
+      saturationDelta: z.number().min(-50).max(50),
+      lightnessDelta: z.number().min(-50).max(50),
+      jitter: z.object({
+        enabled: z.boolean(),
+        range: z.number().min(0).max(180)
+      })
+    }).optional(),
     jitter: z.object({
       enabled: z.boolean(),
       distanceRange: z.number().min(0).max(100),
       angleRange: z.number().min(0).max(180)
-    })
+    }),
+    applyTo: z.object({
+      enabled: z.boolean(),
+      shapeTypes: z.array(z.string()).optional(),
+      indices: z.array(z.number()).optional(),
+      selector: z.enum(['all', 'even', 'odd', 'step']),
+      indexStep: z.number().min(1).max(100).optional(),
+      probability: z.number().min(0).max(100).optional()
+    }).optional()
   }),
   
   // Color harmony

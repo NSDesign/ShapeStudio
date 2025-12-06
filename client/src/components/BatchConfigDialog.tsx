@@ -8015,7 +8015,10 @@ export default function BatchConfigDialog({
                   </div>
                   <span className="text-xs text-slate-400">
                     {currentSettings.echoSpread?.enabled 
-                      ? `${currentSettings.echoSpread?.echoCount ?? 3} echoes • ${currentSettings.echoSpread?.directionMode === 'fixed-vector' ? 'Fixed' : 'Auto'}` 
+                      ? `${currentSettings.echoSpread?.echoCount ?? 3} echoes • ${
+                          currentSettings.echoSpread?.directionMode === 'fixed-vector' ? 'Fixed' : 
+                          currentSettings.echoSpread?.directionMode === 'auto-motion' ? 'Auto' : 
+                          'Absolute'}` 
                       : 'Disabled'}
                   </span>
                 </div>
@@ -8037,11 +8040,9 @@ export default function BatchConfigDialog({
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="set" className="text-slate-200 hover:bg-slate-700">Set Level</SelectItem>
-                            <SelectItem value="shape" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
-                              Shape Level (Coming Soon)
-                            </SelectItem>
-                            <SelectItem value="both" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
-                              Both (Coming Soon)
+                            <SelectItem value="shape" className="text-slate-200 hover:bg-slate-700">Shape Level</SelectItem>
+                            <SelectItem value="both" className="text-slate-200 hover:bg-slate-700">
+                              Both (Set + Shape)
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -8059,11 +8060,9 @@ export default function BatchConfigDialog({
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="setRepIndex" className="text-slate-200 hover:bg-slate-700">Set Rep Index</SelectItem>
-                            <SelectItem value="shapeIndex" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
-                              Shape Index (Coming Soon)
-                            </SelectItem>
-                            <SelectItem value="combined" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
-                              Combined (Coming Soon)
+                            <SelectItem value="shapeIndex" className="text-slate-200 hover:bg-slate-700">Shape Index</SelectItem>
+                            <SelectItem value="combined" className="text-slate-200 hover:bg-slate-700">
+                              Combined (Shape + Set)
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -8125,6 +8124,121 @@ export default function BatchConfigDialog({
                       </div>
                     )}
 
+                    {/* ApplyTo Filters (Shape-Level only) */}
+                    {(currentSettings.echoSpread?.scope === 'shape') && (
+                      <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-cyan-600/30">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.applyTo?.enabled ?? false}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  applyTo: { 
+                                    enabled: checked as boolean,
+                                    selector: currentSettings.echoSpread?.applyTo?.selector ?? 'all',
+                                    indexStep: currentSettings.echoSpread?.applyTo?.indexStep ?? 2,
+                                    probability: currentSettings.echoSpread?.applyTo?.probability ?? 100
+                                  } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-applyto-enabled"
+                            />
+                            <Label className="text-xs font-medium text-cyan-400">Shape Filters</Label>
+                          </div>
+                          <span className="text-xs text-slate-400">
+                            {currentSettings.echoSpread?.applyTo?.enabled 
+                              ? `${currentSettings.echoSpread?.applyTo?.selector ?? 'all'} • ${currentSettings.echoSpread?.applyTo?.probability ?? 100}%` 
+                              : 'Apply to all'}
+                          </span>
+                        </div>
+                        
+                        {currentSettings.echoSpread?.applyTo?.enabled && (
+                          <div className="space-y-3">
+                            {/* Selector Mode */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Selector</Label>
+                                <Select 
+                                  value={currentSettings.echoSpread?.applyTo?.selector ?? 'all'} 
+                                  onValueChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      applyTo: { 
+                                        enabled: currentSettings.echoSpread?.applyTo?.enabled ?? false,
+                                        selector: value as 'all' | 'even' | 'odd' | 'step',
+                                        indexStep: currentSettings.echoSpread?.applyTo?.indexStep ?? 2,
+                                        probability: currentSettings.echoSpread?.applyTo?.probability ?? 100
+                                      } 
+                                    } 
+                                  })}
+                                >
+                                  <SelectTrigger className="h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-applyto-selector">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="all" className="text-slate-200 hover:bg-slate-700">All Shapes</SelectItem>
+                                    <SelectItem value="even" className="text-slate-200 hover:bg-slate-700">Even Indices</SelectItem>
+                                    <SelectItem value="odd" className="text-slate-200 hover:bg-slate-700">Odd Indices</SelectItem>
+                                    <SelectItem value="step" className="text-slate-200 hover:bg-slate-700">Step Interval</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {currentSettings.echoSpread?.applyTo?.selector === 'step' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Step</Label>
+                                  <NumericInput
+                                    value={currentSettings.echoSpread?.applyTo?.indexStep ?? 2}
+                                    onChange={(value) => handleSettingsUpdate({ 
+                                      echoSpread: { 
+                                        ...currentSettings.echoSpread, 
+                                        applyTo: { 
+                                          enabled: currentSettings.echoSpread?.applyTo?.enabled ?? false,
+                                          selector: currentSettings.echoSpread?.applyTo?.selector ?? 'step',
+                                          indexStep: Math.max(1, Math.min(100, value)),
+                                          probability: currentSettings.echoSpread?.applyTo?.probability ?? 100
+                                        } 
+                                      } 
+                                    })}
+                                    min={1}
+                                    max={100}
+                                    step={1}
+                                    className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-echo-applyto-step"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Probability */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-slate-400">Probability ({currentSettings.echoSpread?.applyTo?.probability ?? 100}%)</Label>
+                              <Slider
+                                value={[currentSettings.echoSpread?.applyTo?.probability ?? 100]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    applyTo: { 
+                                      enabled: currentSettings.echoSpread?.applyTo?.enabled ?? false,
+                                      selector: currentSettings.echoSpread?.applyTo?.selector ?? 'all',
+                                      indexStep: currentSettings.echoSpread?.applyTo?.indexStep ?? 2,
+                                      probability: value
+                                    } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Echo Count & Direction Mode */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
@@ -8167,6 +8281,7 @@ export default function BatchConfigDialog({
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                             <SelectItem value="fixed-vector" className="text-slate-200 hover:bg-slate-700">Fixed Vector</SelectItem>
                             <SelectItem value="auto-motion" className="text-slate-200 hover:bg-slate-700">Auto Motion</SelectItem>
+                            <SelectItem value="absolute-position" className="text-slate-200 hover:bg-slate-700">Absolute Position</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -8316,6 +8431,138 @@ export default function BatchConfigDialog({
                           </div>
                         </div>
                         <p className="text-xs text-slate-500">Direction derived from set position changes. Fallback used when no motion detected.</p>
+                      </div>
+                    )}
+
+                    {/* Absolute Position Controls */}
+                    {currentSettings.echoSpread?.directionMode === 'absolute-position' && (
+                      <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                        <Label className="text-xs font-medium text-slate-300">Absolute Position Settings</Label>
+                        
+                        {/* Mode: Converge/Diverge */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Effect Mode</Label>
+                            <Select 
+                              value={currentSettings.echoSpread?.absolutePosition?.mode ?? 'converge'} 
+                              onValueChange={(value) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  absolutePosition: { 
+                                    ...currentSettings.echoSpread?.absolutePosition, 
+                                    mode: value as 'converge' | 'diverge' 
+                                  } 
+                                } 
+                              })}
+                            >
+                              <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-abs-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="converge" className="text-slate-200 hover:bg-slate-700">Converge (toward target)</SelectItem>
+                                <SelectItem value="diverge" className="text-slate-200 hover:bg-slate-700">Diverge (away from target)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-slate-400">Distance per Echo</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.fixedVector?.distance ?? 20}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, distance: Math.max(0, Math.min(500, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={500}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                data-testid="input-echo-abs-distance"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.fixedVector?.distance ?? 20]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, distance: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={500}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Target: Use Artboard Center or Custom */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={currentSettings.echoSpread?.absolutePosition?.useArtboardCenter ?? true}
+                              onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  absolutePosition: { 
+                                    ...currentSettings.echoSpread?.absolutePosition, 
+                                    useArtboardCenter: checked as boolean 
+                                  } 
+                                } 
+                              })}
+                              className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                              data-testid="checkbox-echo-use-artboard-center"
+                            />
+                            <Label className="text-xs text-slate-400">Use Artboard Center</Label>
+                          </div>
+                          
+                          {!currentSettings.echoSpread?.absolutePosition?.useArtboardCenter && (
+                            <div className="grid grid-cols-2 gap-3 mt-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Target X</Label>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.absolutePosition?.targetX ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      absolutePosition: { 
+                                        ...currentSettings.echoSpread?.absolutePosition, 
+                                        targetX: value 
+                                      } 
+                                    } 
+                                  })}
+                                  className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-target-x"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-400">Target Y</Label>
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.absolutePosition?.targetY ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      absolutePosition: { 
+                                        ...currentSettings.echoSpread?.absolutePosition, 
+                                        targetY: value 
+                                      } 
+                                    } 
+                                  })}
+                                  className="h-8 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-target-y"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <p className="text-xs text-slate-500">
+                          {currentSettings.echoSpread?.absolutePosition?.mode === 'converge' 
+                            ? 'Echoes trail toward the target point (gravity effect).' 
+                            : 'Echoes trail away from the target point (explosion effect).'}
+                        </p>
                       </div>
                     )}
 
@@ -9234,6 +9481,125 @@ export default function BatchConfigDialog({
                               </div>
                             )}
                           </>
+                        )}
+                      </div>
+                      
+                      {/* Color Shift Controls */}
+                      <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.colorShift?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                colorShift: { ...currentSettings.echoSpread?.colorShift, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-colorshift-enabled"
+                          />
+                          <Label className="text-xs text-slate-400">Color Shift</Label>
+                        </div>
+                        {currentSettings.echoSpread?.colorShift?.enabled && (
+                          <div className="space-y-2 mt-2">
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Hue Delta (°)</span>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.colorShift?.hueDelta ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, hueDelta: Math.max(-180, Math.min(180, value)) } 
+                                    } 
+                                  })}
+                                  min={-180}
+                                  max={180}
+                                  step={5}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-colorshift-hue"
+                                />
+                                <Slider
+                                  value={[currentSettings.echoSpread?.colorShift?.hueDelta ?? 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, hueDelta: value } 
+                                    } 
+                                  })}
+                                  min={-180}
+                                  max={180}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Saturation Delta (%)</span>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.colorShift?.saturationDelta ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, saturationDelta: Math.max(-50, Math.min(50, value)) } 
+                                    } 
+                                  })}
+                                  min={-50}
+                                  max={50}
+                                  step={5}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-colorshift-saturation"
+                                />
+                                <Slider
+                                  value={[currentSettings.echoSpread?.colorShift?.saturationDelta ?? 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, saturationDelta: value } 
+                                    } 
+                                  })}
+                                  min={-50}
+                                  max={50}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Lightness Delta (%)</span>
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.echoSpread?.colorShift?.lightnessDelta ?? 0}
+                                  onChange={(value) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, lightnessDelta: Math.max(-50, Math.min(50, value)) } 
+                                    } 
+                                  })}
+                                  min={-50}
+                                  max={50}
+                                  step={5}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                  data-testid="input-echo-colorshift-lightness"
+                                />
+                                <Slider
+                                  value={[currentSettings.echoSpread?.colorShift?.lightnessDelta ?? 0]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ 
+                                    echoSpread: { 
+                                      ...currentSettings.echoSpread, 
+                                      colorShift: { ...currentSettings.echoSpread?.colorShift, lightnessDelta: value } 
+                                    } 
+                                  })}
+                                  min={-50}
+                                  max={50}
+                                  step={5}
+                                  className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                                />
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Progressive color changes per echo (e.g., Hue +30° creates rainbow effect)</p>
+                          </div>
                         )}
                       </div>
                     </div>

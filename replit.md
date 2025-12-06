@@ -62,7 +62,15 @@ Preferred communication style: Simple, everyday language.
 - **Export Render Mode Selector**: UI control for choosing rendering pipeline with Auto/Client/Server options.
 - **Tiled Export System**: Server-side tiled rendering pipeline for very large print files, with auto-detection, tile planning, rendering, sequential composite, metadata preservation, progress integration, and error handling.
 - **SSE Streaming for Server Exports**: Real-time progress streaming via Server-Sent Events for high-resolution exports, including endpoints for initiation, streaming, download, cancellation, and client integration with typed callbacks.
-- **Echo/Motion Trails System (Project A: Set-Level) ✅ Complete**: Creates motion trail effects behind shapes with configurable direction modes (fixed-vector, auto-motion), per-echo effects (opacity falloff, blur progression, scale delta, rotation with start/min/max clamp), per-effect jitter for organic variation on each effect independently, and position jitter for angle/distance variation. Schema v2 includes full rotation config (enabled, startRotation, rotationDelta, minRotation, maxRotation) and per-effect jitter (enabled, range) on all effects. Uses shared echoUtils.ts with safe defaults for backward compatibility with v1 configs. Includes client/server parity via batchConfigProcessor.ts for batch exports. Project B (Shape-Level) planned for future with syncBothScopes toggle ready.
+- **Echo/Motion Trails System ✅ Complete (Project A + B)**: Creates motion trail effects behind shapes with full feature set:
+  - **Scope Options**: Set-level (same echoes for all shapes), Shape-level (per-shape individual echoes), Both (combined set + shape echoes)
+  - **Driver Options**: setRepIndex (set repetition based), shapeIndex (individual shape based), Combined (uses both indices for complex layered effects)
+  - **Direction Modes**: Fixed-vector, Auto-motion, Absolute-position (echoes converge/diverge from fixed coordinates including artboard center)
+  - **Per-Echo Effects**: Opacity falloff, blur progression, scale delta, rotation with start/min/max clamp
+  - **Color Shift**: Progressive HSL (hue/saturation/lightness) changes per echo for gradient/rainbow effects
+  - **ApplyTo Filters**: Shape type filtering, index selectors (all/even/odd/step), probability-based application
+  - **Jitter Systems**: Per-effect jitter for organic variation, position jitter for angle/distance randomization
+  - Uses shared echoUtils.ts with safe defaults for backward compatibility. Full client/server parity via batchConfigProcessor.ts for batch exports.
 - **Shape Selection Groups (Planned)**: Future abstraction for unifying filtering logic across various features.
 
 ### System Design Choices
