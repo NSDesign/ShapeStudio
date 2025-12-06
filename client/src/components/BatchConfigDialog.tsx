@@ -8490,7 +8490,7 @@ export default function BatchConfigDialog({
                                 <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent style={{ zIndex: 10002 }}>
                                   <SelectItem value="fixed">Fixed</SelectItem>
                                   <SelectItem value="range">Range</SelectItem>
                                 </SelectContent>
@@ -8730,7 +8730,7 @@ export default function BatchConfigDialog({
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent style={{ zIndex: 10002 }}>
                                       <SelectItem value="fixed">Fixed</SelectItem>
                                       <SelectItem value="range">Range</SelectItem>
                                     </SelectContent>
@@ -8955,7 +8955,7 @@ export default function BatchConfigDialog({
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent style={{ zIndex: 10002 }}>
                                       <SelectItem value="fixed">Fixed</SelectItem>
                                       <SelectItem value="range">Range</SelectItem>
                                     </SelectContent>
@@ -9180,7 +9180,7 @@ export default function BatchConfigDialog({
                                     <SelectTrigger className="h-7 w-24 bg-slate-800 border-slate-600 text-xs">
                                       <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent style={{ zIndex: 10002 }}>
                                       <SelectItem value="fixed">Fixed</SelectItem>
                                       <SelectItem value="range">Range</SelectItem>
                                     </SelectContent>

@@ -19,6 +19,9 @@ Preferred communication style: Simple, everyday language.
 - **UI Color Standardization**: Consistent color schemes for UI elements.
 - **Artboard Sync**: Automatic selection of new artboards; functional state updates for deletion.
 
+### Known UI Gotchas
+- **Dialog Dropdown Z-Index**: All `<SelectContent>` elements inside dialogs (especially BatchConfigDialog) MUST include `style={{ zIndex: 10002 }}` to ensure dropdowns appear above the dialog overlay. Without this, dropdowns open behind the dialog and appear unresponsive. This applies to ALL future Select components added to dialogs.
+
 ### Technical Implementations
 - **Frontend**: React 18, TypeScript, Vite, Shadcn/ui, Radix UI, Tailwind CSS, custom React hooks.
 - **Backend**: Node.js with Express.js, TypeScript, RESTful API.
