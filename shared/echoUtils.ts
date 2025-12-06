@@ -19,6 +19,57 @@ import type {
   EchoAutoMotionConfig
 } from './schema';
 
+// Default per-effect jitter config (safe fallback)
+const DEFAULT_PER_EFFECT_JITTER: EchoPerEffectJitterConfig = {
+  enabled: false,
+  range: 0
+};
+
+// Default rotation config (safe fallback for legacy configs)
+const DEFAULT_ROTATION_CONFIG: EchoRotationConfig = {
+  enabled: false,
+  startRotation: 0,
+  rotationDelta: 0,
+  minRotation: -360,
+  maxRotation: 360,
+  jitter: { enabled: false, range: 0 }
+};
+
+/**
+ * Get per-effect jitter config with safe defaults
+ * Handles legacy configs that don't have the jitter property
+ */
+function getPerEffectJitter(jitter: EchoPerEffectJitterConfig | undefined): EchoPerEffectJitterConfig {
+  return jitter ?? DEFAULT_PER_EFFECT_JITTER;
+}
+
+/**
+ * Get rotation config with safe defaults
+ * Handles legacy configs (v1) that don't have the rotation object
+ */
+function getRotationConfig(rotation: EchoRotationConfig | undefined, legacyRotationDelta?: number): EchoRotationConfig {
+  if (rotation) {
+    return {
+      ...rotation,
+      jitter: getPerEffectJitter(rotation.jitter)
+    };
+  }
+  
+  // Handle v1 legacy config with rotationDelta as a direct property
+  if (legacyRotationDelta !== undefined && legacyRotationDelta !== 0) {
+    return {
+      enabled: true,
+      startRotation: 0,
+      rotationDelta: legacyRotationDelta,
+      minRotation: -360,
+      maxRotation: 360,
+      jitter: DEFAULT_PER_EFFECT_JITTER
+    };
+  }
+  
+  return DEFAULT_ROTATION_CONFIG;
+}
+
 /**
  * Result of echo transform calculation for a single echo instance
  */
@@ -313,19 +364,24 @@ export function calculateEchoTransforms(
     const offsetX = Math.cos(angleRad) * cumulativeDistance;
     const offsetY = Math.sin(angleRad) * cumulativeDistance;
     
-    // Calculate per-echo effects with per-effect jitter
+    // Calculate per-echo effects with per-effect jitter (using safe defaults for legacy configs)
+    const opacityJitter = getPerEffectJitter(config.opacity?.jitter);
     let opacity = calculateEchoOpacity(config.opacity, i, config.echoCount);
-    opacity = Math.max(0, Math.min(1, applyPerEffectJitter(config.opacity.jitter, opacity, opacitySeed)));
+    opacity = Math.max(0, Math.min(1, applyPerEffectJitter(opacityJitter, opacity, opacitySeed)));
     
+    const blurJitter = getPerEffectJitter(config.blur?.jitter);
     let blur = calculateEchoBlur(config.blur, i);
-    blur = Math.max(0, applyPerEffectJitter(config.blur.jitter, blur, blurSeed));
+    blur = Math.max(0, applyPerEffectJitter(blurJitter, blur, blurSeed));
     
+    const scaleJitter = getPerEffectJitter(config.scale?.jitter);
     let scale = calculateEchoScale(config.scale, i);
-    const scaleJitterAmount = applyPerEffectJitter(config.scale.jitter, 0, scaleSeed) / 100; // Convert percentage jitter to scale factor
+    const scaleJitterAmount = applyPerEffectJitter(scaleJitter, 0, scaleSeed) / 100; // Convert percentage jitter to scale factor
     scale = Math.max(0.01, scale + scaleJitterAmount);
     
-    let rotation = calculateEchoRotation(config.rotation, i);
-    rotation = applyPerEffectJitter(config.rotation.jitter, rotation, rotationSeed);
+    // Handle rotation with legacy support (v1 had rotationDelta as direct property)
+    const rotationConfig = getRotationConfig(config.rotation, (config as any).rotationDelta);
+    let rotation = calculateEchoRotation(rotationConfig, i);
+    rotation = applyPerEffectJitter(rotationConfig.jitter, rotation, rotationSeed);
     
     echoes.push({
       echoIndex: i,
