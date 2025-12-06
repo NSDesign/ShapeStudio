@@ -111,7 +111,7 @@ export function useGenerationSets({
         composite: false
       }
     };
-  }, [generationSets.length]);
+  }, [generationSets]);
 
   // Generate unique set name with auto-increment using shared utility
   const generateUniqueSetName = useCallback((baseName?: string): string => {

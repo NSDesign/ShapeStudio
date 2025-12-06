@@ -129,6 +129,25 @@ export default function BatchConfigDialog({
     return getAvailableShapeSpecificSortOptions(shapeTypes);
   }, [generationSets, currentGenerationSetId]);
 
+  // Calculate effective repetitions for current set to enable/disable echo driver options
+  const effectiveRepetitions = React.useMemo(() => {
+    const currentSet = generationSets.find(set => set.id === currentGenerationSetId);
+    if (!currentSet) return 0;
+    
+    // Check repetition mode - 'use-global' means we'd need global settings which we don't have here
+    // For 'fixed' mode, use repetitionValue; for 'range' mode, use max of range
+    if (currentSet.repetitionMode === 'fixed') {
+      return currentSet.repetitionValue ?? 0;
+    } else if (currentSet.repetitionMode === 'range') {
+      return currentSet.repetitionRange?.[1] ?? 0;
+    }
+    // For 'use-global', we can't determine here - assume it might have repetitions
+    return 1; // Conservative: don't disable for use-global mode
+  }, [generationSets, currentGenerationSetId]);
+
+  // Determine if Set Rep Index driver should be disabled
+  const isSetRepIndexDisabled = effectiveRepetitions <= 1;
+
   // Sync with external control
   useEffect(() => {
     if (controlledIsOpen !== undefined) {
@@ -8074,7 +8093,13 @@ export default function BatchConfigDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                            <SelectItem value="setRepIndex" className="text-slate-200 hover:bg-slate-700">Set Rep Index</SelectItem>
+                            <SelectItem 
+                              value="setRepIndex" 
+                              className={`text-slate-200 hover:bg-slate-700 ${isSetRepIndexDisabled ? 'opacity-50' : ''}`}
+                              disabled={isSetRepIndexDisabled}
+                            >
+                              Set Rep Index {isSetRepIndexDisabled && '(needs repetitions > 1)'}
+                            </SelectItem>
                             <SelectItem value="shapeIndex" className="text-slate-200 hover:bg-slate-700">Shape Index</SelectItem>
                             <SelectItem value="combined" className="text-slate-200 hover:bg-slate-700">
                               Combined (Shape + Set)
