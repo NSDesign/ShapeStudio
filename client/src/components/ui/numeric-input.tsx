@@ -79,7 +79,7 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
+            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
             className
           )}
           {...props}
@@ -109,4 +109,123 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
 
 NumericInput.displayName = "NumericInput";
 
-export { NumericInput };
+export interface BufferedNumericInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type'> {
+  value: number | string;
+  onCommit: (value: number) => void;
+  onChange?: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  arrowVariant?: 'default' | 'orange';
+}
+
+const BufferedNumericInput = React.forwardRef<HTMLInputElement, BufferedNumericInputProps>(
+  ({ className, value, onCommit, onChange, min = -Infinity, max = Infinity, step = 1, arrowVariant = 'default', ...props }, ref) => {
+    const [localValue, setLocalValue] = React.useState(String(value));
+    const isEditingRef = React.useRef(false);
+    
+    const arrowColor = arrowVariant === 'orange' ? 'text-orange-500' : 'text-slate-300';
+    const arrowHoverBg = arrowVariant === 'orange' ? 'hover:bg-orange-900/30' : 'hover:bg-slate-600';
+
+    React.useEffect(() => {
+      if (!isEditingRef.current) {
+        setLocalValue(String(value));
+      }
+    }, [value]);
+
+    const commitValue = React.useCallback((rawValue: string) => {
+      const numValue = parseFloat(rawValue);
+      if (Number.isNaN(numValue) || rawValue === '' || rawValue.trim() === '-') {
+        setLocalValue(String(value));
+      } else {
+        const clampedValue = Math.max(min, Math.min(max, numValue));
+        setLocalValue(String(clampedValue));
+        onCommit(clampedValue);
+      }
+      isEditingRef.current = false;
+    }, [value, min, max, onCommit]);
+
+    const handleIncrement = React.useCallback(() => {
+      const currentValue = parseFloat(localValue) || 0;
+      const newValue = Math.max(min, Math.min(max, currentValue + step));
+      setLocalValue(String(newValue));
+      onCommit(newValue);
+    }, [localValue, min, max, step, onCommit]);
+
+    const handleDecrement = React.useCallback(() => {
+      const currentValue = parseFloat(localValue) || 0;
+      const newValue = Math.min(max, Math.max(min, currentValue - step));
+      setLocalValue(String(newValue));
+      onCommit(newValue);
+    }, [localValue, min, max, step, onCommit]);
+
+    const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      isEditingRef.current = true;
+      setLocalValue(newValue);
+      
+      if (onChange) {
+        const numValue = parseFloat(newValue);
+        if (!Number.isNaN(numValue) && newValue !== '' && newValue.trim() !== '-') {
+          const clampedValue = Math.max(min, Math.min(max, numValue));
+          onChange(clampedValue);
+        }
+      }
+    }, [min, max, onChange]);
+
+    const handleInputBlur = React.useCallback(() => {
+      commitValue(localValue);
+    }, [localValue, commitValue]);
+
+    const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        commitValue(localValue);
+        e.currentTarget.blur();
+      } else if (e.key === 'Escape') {
+        setLocalValue(String(value));
+        isEditingRef.current = false;
+        e.currentTarget.blur();
+      }
+    }, [localValue, value, commitValue]);
+
+    return (
+      <div className="relative flex items-center">
+        <input
+          type="number"
+          ref={ref}
+          value={localValue}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          onKeyDown={handleKeyDown}
+          className={cn(
+            "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pr-8",
+            className
+          )}
+          {...props}
+        />
+        <div className="absolute right-0 flex flex-col gap-0">
+          <button
+            type="button"
+            onClick={handleIncrement}
+            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            tabIndex={-1}
+          >
+            <ChevronUp className={cn("h-3 w-3", arrowColor)} />
+          </button>
+          <button
+            type="button"
+            onClick={handleDecrement}
+            className={cn("h-4 w-6 p-0 flex items-center justify-center bg-slate-700 border border-slate-600 rounded-sm transition-colors", arrowHoverBg)}
+            tabIndex={-1}
+          >
+            <ChevronDown className={cn("h-3 w-3", arrowColor)} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+);
+
+BufferedNumericInput.displayName = "BufferedNumericInput";
+
+export { NumericInput, BufferedNumericInput };

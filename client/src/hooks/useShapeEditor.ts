@@ -483,6 +483,7 @@ export const useShapeEditor = () => {
               markOffset: appSettingsDefaults.printMarksMarkOffset ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.markOffset,
               display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
               render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
+              scaleMode: appSettingsDefaults.printMarksScaleMode ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.scaleMode,
             },
             background: DEFAULT_PRINT_CONFIG.overlays.background,
           },

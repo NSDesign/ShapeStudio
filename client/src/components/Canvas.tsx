@@ -389,9 +389,24 @@ export default function Canvas({
           const bleedPx = printConfig.overlays.bleed.amount > 0 
             ? convertPrintUnitToPixels(printConfig.overlays.bleed.amount, overlayUnit, artboardDpi)
             : 0;
-          // Convert mark length and offset from unified unit to pixels
-          const markLengthPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
-          const markOffsetPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+          
+          // Calculate mark length and offset based on scale mode
+          const scaleMode = printConfig.overlays.printMarks.scaleMode || 'none';
+          const minDimension = Math.min(currentArtboard.width, currentArtboard.height);
+          
+          let markLengthPx: number;
+          let markOffsetPx: number;
+          
+          if (scaleMode === 'percent') {
+            // Percentage mode: values are percentages of the smaller artboard dimension
+            markLengthPx = (printConfig.overlays.printMarks.markLength / 100) * minDimension;
+            markOffsetPx = (printConfig.overlays.printMarks.markOffset / 100) * minDimension;
+          } else {
+            // Default mode: convert from unified unit to pixels
+            markLengthPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
+            markOffsetPx = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+          }
+          
           const markLength = markLengthPx / effectiveZoom;
           const markOffset = markOffsetPx / effectiveZoom;
           const markStroke = 1 / effectiveZoom;
@@ -475,8 +490,20 @@ export default function Canvas({
           // Marks are drawn with lengths/offsets scaled by 1/effectiveZoom, so we need to match
           let printMarksGutter = 0;
           if (printConfig.overlays.printMarks.display) {
-            const markLengthPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
-            const markOffsetPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+            const scaleMode = printConfig.overlays.printMarks.scaleMode || 'none';
+            const minDimension = Math.min(currentArtboard.width, currentArtboard.height);
+            
+            let markLengthPxInfo: number;
+            let markOffsetPxInfo: number;
+            
+            if (scaleMode === 'percent') {
+              markLengthPxInfo = (printConfig.overlays.printMarks.markLength / 100) * minDimension;
+              markOffsetPxInfo = (printConfig.overlays.printMarks.markOffset / 100) * minDimension;
+            } else {
+              markLengthPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markLength, overlayUnit, artboardDpi);
+              markOffsetPxInfo = convertPrintUnitToPixels(printConfig.overlays.printMarks.markOffset, overlayUnit, artboardDpi);
+            }
+            
             // Registration marks use 8px base size scaled by zoom
             const regMarkSizeBase = printConfig.overlays.printMarks.registrationMarks ? 8 : 0;
             // Scale gutter to match drawn mark dimensions (marks are drawn at 1/effectiveZoom scale)

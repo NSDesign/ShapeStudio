@@ -224,6 +224,7 @@ export interface AppSettingsDefaults {
   printMarksMarkOffset: number;
   printMarksDisplay: boolean;
   printMarksRender: boolean;
+  printMarksScaleMode?: PrintMarksScaleMode;  // 'none' = use overlayUnit, 'percent' = scale relative to artboard
 }
 
 // Default app settings
@@ -265,6 +266,7 @@ export const DEFAULT_APP_SETTINGS: AppSettingsDefaults = {
   printMarksMarkOffset: 3,
   printMarksDisplay: false,
   printMarksRender: false,
+  printMarksScaleMode: 'none',
 };
 
 // User preferences schemas
@@ -404,14 +406,18 @@ export interface SafeZoneSettings {
   color: string;     // Display color (default: magenta #FF00FF)
 }
 
+// Print marks scale mode - controls how mark dimensions scale with artboard
+export type PrintMarksScaleMode = 'none' | 'percent';
+
 // Print marks settings
 export interface PrintMarksSettings {
   display: boolean;  // Show on canvas
   render: boolean;   // Include in export
   cropMarks: boolean;
   registrationMarks: boolean;
-  markLength: number;  // Length of crop marks (uses unified overlayUnit)
-  markOffset: number;  // Offset from bleed edge (uses unified overlayUnit)
+  markLength: number;  // Length of crop marks (uses unified overlayUnit, or percentage if scaleMode is 'percent')
+  markOffset: number;  // Offset from bleed edge (uses unified overlayUnit, or percentage if scaleMode is 'percent')
+  scaleMode?: PrintMarksScaleMode;  // 'none' = use overlayUnit, 'percent' = scale relative to artboard size
 }
 
 // Background settings for export
@@ -463,6 +469,7 @@ export const DEFAULT_PRINT_CONFIG: PrintConfig = {
       registrationMarks: true,
       markLength: 12,
       markOffset: 3,
+      scaleMode: 'none',
     },
     background: {
       mode: 'artboard',
@@ -495,13 +502,16 @@ export const SafeZoneSettingsSchema = z.object({
   color: z.string(),
 });
 
+export const PrintMarksScaleModeSchema = z.enum(['none', 'percent']);
+
 export const PrintMarksSettingsSchema = z.object({
   display: z.boolean(),
   render: z.boolean(),
   cropMarks: z.boolean(),
   registrationMarks: z.boolean(),
-  markLength: z.number().min(1).max(100),
+  markLength: z.number().min(0).max(100),  // Allow 0-100 for percentage mode
   markOffset: z.number().min(0).max(50),
+  scaleMode: PrintMarksScaleModeSchema.optional(),
 });
 
 export const BackgroundExportSettingsSchema = z.object({

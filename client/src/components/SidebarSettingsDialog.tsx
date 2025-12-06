@@ -366,7 +366,7 @@ export default function SidebarSettingsDialog({ children }: SidebarSettingsDialo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[90vh] bg-slate-900 border-slate-700 text-slate-100 rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-100 flex items-center gap-2">
             <Settings className="w-5 h-5" />
