@@ -7897,6 +7897,616 @@ export default function BatchConfigDialog({
                 )}
               </div>
 
+              {/* Echo/Motion Trails Section */}
+              <div className="space-y-3 border border-slate-600 rounded-lg p-3 bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={currentSettings.echoSpread?.enabled ?? false}
+                      onCheckedChange={(checked) => handleSettingsUpdate({ 
+                        echoSpread: { ...currentSettings.echoSpread, enabled: checked as boolean } 
+                      })}
+                      className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                      data-testid="checkbox-echo-enabled"
+                    />
+                    <Label className="text-sm font-medium text-slate-200">Echo/Motion Trails</Label>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {currentSettings.echoSpread?.enabled 
+                      ? `${currentSettings.echoSpread?.echoCount ?? 3} echoes • ${currentSettings.echoSpread?.directionMode === 'fixed-vector' ? 'Fixed' : 'Auto'}` 
+                      : 'Disabled'}
+                  </span>
+                </div>
+                
+                {currentSettings.echoSpread?.enabled && (
+                  <div className="space-y-4 mt-3">
+                    {/* Scope & Driver Row - with future options disabled */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-400">Scope</Label>
+                        <Select 
+                          value={currentSettings.echoSpread?.scope ?? 'set'} 
+                          onValueChange={(value) => handleSettingsUpdate({ 
+                            echoSpread: { ...currentSettings.echoSpread, scope: value as any } 
+                          })}
+                        >
+                          <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-scope">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="set" className="text-slate-200 hover:bg-slate-700">Set Level</SelectItem>
+                            <SelectItem value="shape" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
+                              Shape Level (Coming Soon)
+                            </SelectItem>
+                            <SelectItem value="both" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
+                              Both (Coming Soon)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-400">Driver</Label>
+                        <Select 
+                          value={currentSettings.echoSpread?.driver ?? 'setRepIndex'} 
+                          onValueChange={(value) => handleSettingsUpdate({ 
+                            echoSpread: { ...currentSettings.echoSpread, driver: value as any } 
+                          })}
+                        >
+                          <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-driver">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="setRepIndex" className="text-slate-200 hover:bg-slate-700">Set Rep Index</SelectItem>
+                            <SelectItem value="shapeIndex" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
+                              Shape Index (Coming Soon)
+                            </SelectItem>
+                            <SelectItem value="combined" disabled className="text-slate-500 cursor-not-allowed" title="Coming in future update">
+                              Combined (Coming Soon)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Echo Count & Direction Mode */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">Echo Count</Label>
+                        <div className="flex items-center gap-2">
+                          <NumericInput
+                            value={currentSettings.echoSpread?.echoCount ?? 3}
+                            onChange={(value) => handleSettingsUpdate({ 
+                              echoSpread: { ...currentSettings.echoSpread, echoCount: Math.max(1, Math.min(20, value)) } 
+                            })}
+                            min={1}
+                            max={20}
+                            step={1}
+                            className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                            data-testid="input-echo-count"
+                          />
+                          <Slider
+                            value={[currentSettings.echoSpread?.echoCount ?? 3]}
+                            onValueChange={([value]) => handleSettingsUpdate({ 
+                              echoSpread: { ...currentSettings.echoSpread, echoCount: value } 
+                            })}
+                            min={1}
+                            max={20}
+                            step={1}
+                            className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-400">Direction Mode</Label>
+                        <Select 
+                          value={currentSettings.echoSpread?.directionMode ?? 'fixed-vector'} 
+                          onValueChange={(value) => handleSettingsUpdate({ 
+                            echoSpread: { ...currentSettings.echoSpread, directionMode: value as any } 
+                          })}
+                        >
+                          <SelectTrigger className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs" data-testid="select-echo-direction-mode">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                            <SelectItem value="fixed-vector" className="text-slate-200 hover:bg-slate-700">Fixed Vector</SelectItem>
+                            <SelectItem value="auto-motion" className="text-slate-200 hover:bg-slate-700">Auto Motion</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Fixed Vector Controls */}
+                    {currentSettings.echoSpread?.directionMode === 'fixed-vector' && (
+                      <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                        <Label className="text-xs font-medium text-slate-300">Fixed Vector Settings</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Angle (0-360°)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.fixedVector?.angle ?? 45}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, angle: Math.max(0, Math.min(360, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-angle"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.fixedVector?.angle ?? 45]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, angle: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Distance (px)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.fixedVector?.distance ?? 20}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, distance: Math.max(0, Math.min(500, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={500}
+                                step={1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-distance"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.fixedVector?.distance ?? 20]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    fixedVector: { ...currentSettings.echoSpread?.fixedVector, distance: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={500}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Auto Motion Controls */}
+                    {currentSettings.echoSpread?.directionMode === 'auto-motion' && (
+                      <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                        <Label className="text-xs font-medium text-slate-300">Auto Motion Settings</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Fallback Angle</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.autoMotion?.fallbackAngle ?? 45}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    autoMotion: { ...currentSettings.echoSpread?.autoMotion, fallbackAngle: Math.max(0, Math.min(360, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-fallback-angle"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.autoMotion?.fallbackAngle ?? 45]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    autoMotion: { ...currentSettings.echoSpread?.autoMotion, fallbackAngle: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={360}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Distance Multiplier</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.autoMotion?.distanceMultiplier ?? 1.0}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    autoMotion: { ...currentSettings.echoSpread?.autoMotion, distanceMultiplier: Math.max(0.1, Math.min(5, value)) } 
+                                  } 
+                                })}
+                                min={0.1}
+                                max={5}
+                                step={0.1}
+                                className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-distance-multiplier"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.autoMotion?.distanceMultiplier ?? 1.0]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    autoMotion: { ...currentSettings.echoSpread?.autoMotion, distanceMultiplier: value } 
+                                  } 
+                                })}
+                                min={0.1}
+                                max={5}
+                                step={0.1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500">Direction derived from set position changes. Fallback used when no motion detected.</p>
+                      </div>
+                    )}
+
+                    {/* Per-Echo Effects */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <Label className="text-xs font-medium text-slate-300">Per-Echo Effects</Label>
+                      
+                      {/* Opacity Controls */}
+                      <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                        <Label className="text-xs text-slate-400">Opacity</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <span className="text-xs text-slate-500">Start %</span>
+                            <NumericInput
+                              value={currentSettings.echoSpread?.opacity?.startOpacity ?? 80}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  opacity: { ...currentSettings.echoSpread?.opacity, startOpacity: Math.max(0, Math.min(100, value)) } 
+                                } 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-echo-opacity-start"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-xs text-slate-500">Falloff %</span>
+                            <NumericInput
+                              value={currentSettings.echoSpread?.opacity?.falloffRate ?? 25}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  opacity: { ...currentSettings.echoSpread?.opacity, falloffRate: Math.max(0, Math.min(100, value)) } 
+                                } 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-echo-opacity-falloff"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-xs text-slate-500">Min %</span>
+                            <NumericInput
+                              value={currentSettings.echoSpread?.opacity?.minOpacity ?? 5}
+                              onChange={(value) => handleSettingsUpdate({ 
+                                echoSpread: { 
+                                  ...currentSettings.echoSpread, 
+                                  opacity: { ...currentSettings.echoSpread?.opacity, minOpacity: Math.max(0, Math.min(100, value)) } 
+                                } 
+                              })}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                              data-testid="input-echo-opacity-min"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Blur Controls */}
+                      <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-slate-400">Blur</Label>
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.blur?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                blur: { ...currentSettings.echoSpread?.blur, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-blur-enabled"
+                          />
+                        </div>
+                        {currentSettings.echoSpread?.blur?.enabled && (
+                          <div className="grid grid-cols-3 gap-2 mt-2">
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Start px</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.blur?.startBlur ?? 0}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    blur: { ...currentSettings.echoSpread?.blur, startBlur: Math.max(0, Math.min(50, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={50}
+                                step={1}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-blur-start"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Delta px</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.blur?.blurDelta ?? 2}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    blur: { ...currentSettings.echoSpread?.blur, blurDelta: Math.max(0, Math.min(20, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={20}
+                                step={0.5}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-blur-delta"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Max px</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.blur?.maxBlur ?? 20}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    blur: { ...currentSettings.echoSpread?.blur, maxBlur: Math.max(0, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={1}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-blur-max"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Scale Controls */}
+                      <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-slate-400">Scale</Label>
+                          <Checkbox
+                            checked={currentSettings.echoSpread?.scale?.enabled ?? false}
+                            onCheckedChange={(checked) => handleSettingsUpdate({ 
+                              echoSpread: { 
+                                ...currentSettings.echoSpread, 
+                                scale: { ...currentSettings.echoSpread?.scale, enabled: checked as boolean } 
+                              } 
+                            })}
+                            className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                            data-testid="checkbox-echo-scale-enabled"
+                          />
+                        </div>
+                        {currentSettings.echoSpread?.scale?.enabled && (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Start %</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.scale?.startScale ?? 100}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { ...currentSettings.echoSpread?.scale, startScale: Math.max(10, Math.min(200, value)) } 
+                                  } 
+                                })}
+                                min={10}
+                                max={200}
+                                step={5}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-scale-start"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Delta %</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.scale?.scaleDelta ?? -10}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { ...currentSettings.echoSpread?.scale, scaleDelta: Math.max(-50, Math.min(50, value)) } 
+                                  } 
+                                })}
+                                min={-50}
+                                max={50}
+                                step={5}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-scale-delta"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Min %</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.scale?.minScale ?? 10}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { ...currentSettings.echoSpread?.scale, minScale: Math.max(1, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={1}
+                                max={100}
+                                step={5}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-scale-min"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-xs text-slate-500">Max %</span>
+                              <NumericInput
+                                value={currentSettings.echoSpread?.scale?.maxScale ?? 200}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    scale: { ...currentSettings.echoSpread?.scale, maxScale: Math.max(100, Math.min(500, value)) } 
+                                  } 
+                                })}
+                                min={100}
+                                max={500}
+                                step={10}
+                                className="h-7 w-full bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-scale-max"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Rotation Delta */}
+                      <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                        <Label className="text-xs text-slate-400">Rotation Delta (per echo)</Label>
+                        <div className="flex items-center gap-2">
+                          <NumericInput
+                            value={currentSettings.echoSpread?.rotationDelta ?? 0}
+                            onChange={(value) => handleSettingsUpdate({ 
+                              echoSpread: { ...currentSettings.echoSpread, rotationDelta: Math.max(-180, Math.min(180, value)) } 
+                            })}
+                            min={-180}
+                            max={180}
+                            step={5}
+                            className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                            data-testid="input-echo-rotation-delta"
+                          />
+                          <Slider
+                            value={[currentSettings.echoSpread?.rotationDelta ?? 0]}
+                            onValueChange={([value]) => handleSettingsUpdate({ 
+                              echoSpread: { ...currentSettings.echoSpread, rotationDelta: value } 
+                            })}
+                            min={-180}
+                            max={180}
+                            step={5}
+                            className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                          />
+                          <span className="text-xs text-slate-400 w-8">{currentSettings.echoSpread?.rotationDelta ?? 0}°</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Jitter Controls */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-medium text-slate-300">Jitter</Label>
+                        <Checkbox
+                          checked={currentSettings.echoSpread?.jitter?.enabled ?? false}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ 
+                            echoSpread: { 
+                              ...currentSettings.echoSpread, 
+                              jitter: { ...currentSettings.echoSpread?.jitter, enabled: checked as boolean } 
+                            } 
+                          })}
+                          className="border-slate-500 data-[state=checked]:bg-cyan-600"
+                          data-testid="checkbox-echo-jitter-enabled"
+                        />
+                      </div>
+                      {currentSettings.echoSpread?.jitter?.enabled && (
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Distance Range (±px)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.jitter?.distanceRange ?? 10}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    jitter: { ...currentSettings.echoSpread?.jitter, distanceRange: Math.max(0, Math.min(100, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={1}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-jitter-distance"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.jitter?.distanceRange ?? 10]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    jitter: { ...currentSettings.echoSpread?.jitter, distanceRange: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={100}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs text-slate-400">Angle Range (±°)</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.echoSpread?.jitter?.angleRange ?? 15}
+                                onChange={(value) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    jitter: { ...currentSettings.echoSpread?.jitter, angleRange: Math.max(0, Math.min(180, value)) } 
+                                  } 
+                                })}
+                                min={0}
+                                max={180}
+                                step={1}
+                                className="h-7 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-echo-jitter-angle"
+                              />
+                              <Slider
+                                value={[currentSettings.echoSpread?.jitter?.angleRange ?? 15]}
+                                onValueChange={([value]) => handleSettingsUpdate({ 
+                                  echoSpread: { 
+                                    ...currentSettings.echoSpread, 
+                                    jitter: { ...currentSettings.echoSpread?.jitter, angleRange: value } 
+                                  } 
+                                })}
+                                min={0}
+                                max={180}
+                                step={1}
+                                className="flex-1 [&_[role=slider]]:bg-cyan-600"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-500">Adds randomization to echo positions for organic feel</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Color Harmony */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
