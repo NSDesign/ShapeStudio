@@ -96,6 +96,11 @@ Preferred communication style: Simple, everyday language.
     - "Stitching tiles..."
     - "Encoding final TIFF..."
   - **Error Handling**: Aborts on tile failure, surfaces error in progress, cleans up buffers; honors AbortSignal for cancellation
+- **SSE Streaming for Server Exports**: Real-time progress streaming via Server-Sent Events for high-resolution exports:
+  - **Endpoints**: POST `/api/export/highres/start` (init), GET `/api/export/highres/stream` (SSE), GET `/api/export/highres/download/:id` (file), DELETE `/api/export/highres/:id` (cancel)
+  - **Event Types**: phase (preparing/rendering/stitching/encoding), tile (index/total/step), progress (pct/status/eta), complete (url/filename/size), error, heartbeat
+  - **Client Integration**: `executeServerExportWithSSE()` in `client/src/lib/imageExport.ts` with typed callbacks
+  - **Benefits**: Real-time tile progress, cancellation support, better UX for long-running exports
 
 ### System Design Choices
 - **Data Flow**: User interaction -> State updates -> Shape generation -> Canvas rendering -> Export pipeline.

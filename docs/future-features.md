@@ -23,7 +23,8 @@ This document outlines complex features that have been identified for future dev
 | **Advanced Multi-Filter System** | ❌ Not Implemented | [Section 7](#7-advanced-multi-filter-system-for-shape-sets) |
 | **Shape Effects - Blur** | ✅ Implemented | [Section 8](#8-shape-effects) |
 | **Shape Effects - Shadow/Glow** | 📋 Planned | [Section 8](#8-shape-effects) |
-| **Server-Side High-Resolution Export** | ✅ Complete - Testing | [Section 9](#9-server-side-high-resolution-export) |
+| **Server-Side High-Resolution Export** | ✅ Complete | [Section 9](#9-server-side-high-resolution-export) |
+| **SSE Streaming for Export Progress** | ✅ Implemented | [Section 9.1](#91-sse-streaming-for-real-time-tile-progress-updates--implemented) |
 
 ### Status Legend
 - ✅ **Implemented**: Feature is fully functional in the codebase
@@ -3005,52 +3006,74 @@ Located in `server/validation/` (isolated, can be deleted after implementation):
 - Each image processed sequentially with memory cleanup
 - Existing batch progress UI shows server processing status
 
-### Future Enhancements (Planned)
+### Implemented Enhancements
 
-#### 9.1 SSE Streaming for Real-Time Tile Progress Updates 📋 PLANNED
+#### 9.1 SSE Streaming for Real-Time Tile Progress Updates ✅ IMPLEMENTED
 
-**Problem:** Currently, server-side exports use synchronous HTTP requests. For very large exports that use tiled rendering (A0+ at 600+ DPI), the client waits for the complete response with only a generic "Server processing..." message displayed. The tile progress (e.g., "Rendering tile 3 of 12...") is only logged on the server console.
+**Implementation Date:** December 6, 2025
 
-**Proposed Solution:** Implement Server-Sent Events (SSE) streaming endpoint for real-time progress updates:
+**Overview:** Server-Sent Events (SSE) streaming for real-time progress updates during high-resolution exports, especially for very large exports that use tiled rendering (A0+ at 600+ DPI).
 
+**Architecture:**
+1. **Start Endpoint** (`POST /api/export/highres/start`): Initiates export session, returns `exportId` and stream URLs
+2. **Stream Endpoint** (`GET /api/export/highres/stream`): SSE connection for real-time progress events
+3. **Download Endpoint** (`GET /api/export/highres/download/:exportId`): Retrieves completed export file
+4. **Cancel Endpoint** (`DELETE /api/export/highres/:exportId`): Cancels ongoing export
+
+**Event Types:**
 ```typescript
-// New SSE endpoint
-app.get('/api/export/high-resolution/stream/:exportId', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  
-  // Stream progress events
-  const progressHandler = (phase: string, current: number, total: number) => {
-    res.write(`data: ${JSON.stringify({ phase, current, total })}\n\n`);
-  };
-  
-  // When complete, send final event with download URL
-  res.write(`data: ${JSON.stringify({ complete: true, downloadUrl: '/api/export/download/...' })}\n\n`);
-});
+// Phase events - major processing stages
+{ type: 'phase', phase: 'preparing' | 'rendering' | 'stitching' | 'encoding', message: string }
+
+// Tile events - individual tile progress for tiled exports
+{ type: 'tile', tileIndex: number, totalTiles: number, step: 'render' | 'stitch', progressPct: number }
+
+// Progress events - overall progress updates
+{ type: 'progress', progressPct: number, status: string, estimatedSecondsRemaining?: number }
+
+// Complete event - export finished successfully
+{ type: 'complete', downloadUrl: string, filename: string, sizeBytes: number }
+
+// Error event - export failed
+{ type: 'error', message: string }
+
+// Heartbeat event - keep connection alive
+{ type: 'heartbeat' }
 ```
 
-**Client Integration:**
+**Client Implementation:**
 ```typescript
-const eventSource = new EventSource(`/api/export/high-resolution/stream/${exportId}`);
-eventSource.onmessage = (event) => {
-  const { phase, current, total, complete, downloadUrl } = JSON.parse(event.data);
-  if (complete) {
-    // Trigger download
-  } else {
-    // Update progress overlay with tile phase
-    setStatus(phase); // "Rendering tile 3 of 12..."
-    setProgress(current);
-    setTotalSteps(total);
-  }
-};
+import { executeServerExportWithSSE } from '@/lib/imageExport';
+
+const result = await executeServerExportWithSSE(
+  request,
+  {
+    onPhase: (phase, message) => setStatus(message),
+    onTile: (tileIndex, totalTiles, step, progressPct) => {
+      setStatus(`${step === 'render' ? 'Rendering' : 'Stitching'} tile ${tileIndex} of ${totalTiles}...`);
+      setProgress(progressPct);
+    },
+    onProgress: (progressPct, status, estimatedRemaining) => {
+      setProgress(progressPct);
+      setStatus(status);
+    },
+    onComplete: (downloadUrl, filename, sizeBytes) => {
+      // Download handled automatically
+    },
+    onError: (message) => setError(message)
+  },
+  abortController.signal
+);
 ```
 
 **Benefits:**
-- Real-time tile progress updates visible in the client
+- Real-time tile progress updates visible in the client UI
 - Better UX for long-running exports (minutes for very large prints)
-- Ability to show detailed phase information (Preparing tiles, Rendering, Stitching, Encoding)
-- Natural integration with existing ExportProgressOverlay component
+- Detailed phase information (Preparing tiles, Rendering, Stitching, Encoding)
+- Seamless integration with ExportProgressOverlay component
+- Cancellation support via AbortController
+
+### Future Enhancements (Planned)
 
 #### 9.2 Estimated Time Display in Progress Overlay 📋 PLANNED
 
@@ -3117,4 +3140,4 @@ interface ExportProgressOverlayProps {
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: December 5, 2025
+Last updated: December 6, 2025
