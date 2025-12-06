@@ -1982,6 +1982,17 @@ function applyOffsetPreset(preset: string, gridSpacingX: number, gridSpacingY: n
 ### Overview
 A temporal/instancing effect system that creates multiple copies of shapes with progressive visual changes, producing motion blur trails, echo patterns, depth illusions, and kinetic effects. Unlike Shape Effects (blur, shadow, glow) which modify individual shape appearance, Echo/Motion Trails creates deliberate multi-copy arrangements with controlled property variations per echo.
 
+**Key Distinction from Shape Effects:**
+- **Shape Effects**: Per-shape visual filters applied to a single shape instance (e.g., blur, drop shadow, glow)
+- **Echo/Motion Trails**: Creates multiple distinct shape *instances* with controlled property variations between each echo copy
+
+**Quick Example:** 5 echoes with offset (5,5) and 20% opacity falloff would create:
+- Echo 1: (5,5), 80% opacity
+- Echo 2: (10,10), 60% opacity
+- Echo 3: (15,15), 40% opacity
+- Echo 4: (20,20), 20% opacity
+- Original: (0,0), 100% opacity (rendered on top)
+
 ### Current State
 Shape Set repetitions are currently positioned identically—each repetition overlays exactly on top of previous instances. Users cannot create predictable offset patterns between repetitions without manually creating separate sets with different positions.
 
