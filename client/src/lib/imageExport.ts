@@ -951,14 +951,30 @@ export async function downloadSSEExportFile(downloadUrl: string): Promise<Blob> 
 }
 
 /**
+ * Result type for SSE export - returns download URL instead of blob
+ * to avoid memory issues with large files (900MB+)
+ */
+export interface SSEExportResult {
+  success: boolean;
+  downloadUrl?: string;
+  filename?: string;
+  sizeBytes?: number;
+  error?: string;
+}
+
+/**
  * Execute server export with SSE streaming for real-time progress updates
  * This is the main function to use for SSE-based exports
+ * 
+ * Returns the download URL instead of blob to avoid memory issues
+ * with large files. The caller should use direct navigation or
+ * anchor download to let the browser stream the file to disk.
  */
 export function executeServerExportWithSSE(
   request: ServerExportRequest,
   callbacks: SSEExportCallbacks,
   abortSignal?: AbortSignal
-): Promise<{ success: boolean; blob?: Blob; error?: string }> {
+): Promise<SSEExportResult> {
   return new Promise(async (resolve) => {
     let eventSource: EventSource | null = null;
     let exportSession: SSEExportSession | null = null;
@@ -1010,19 +1026,24 @@ export function executeServerExportWithSSE(
                 eventSource = null;
               }
               
-              // Notify completion
-              callbacks.onComplete?.(data.downloadUrl, data.filename, data.sizeBytes || 0);
-              
-              // Download the file
-              try {
-                const blob = await downloadSSEExportFile(data.downloadUrl);
-                resolve({ success: true, blob });
-              } catch (downloadError) {
-                resolve({ 
-                  success: false, 
-                  error: `Download failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}` 
-                });
+              // Validate that we have a download URL
+              if (!data.downloadUrl) {
+                callbacks.onError?.('Export completed but no download URL received');
+                resolve({ success: false, error: 'No download URL in complete event' });
+                break;
               }
+              
+              // Notify completion with download info
+              callbacks.onComplete?.(data.downloadUrl, data.filename || 'export.tiff', data.sizeBytes || 0);
+              
+              // Return download URL directly instead of fetching blob
+              // This avoids memory issues with 900MB+ files
+              resolve({ 
+                success: true, 
+                downloadUrl: data.downloadUrl,
+                filename: data.filename || 'export.tiff',
+                sizeBytes: data.sizeBytes || 0
+              });
               break;
               
             case 'error':

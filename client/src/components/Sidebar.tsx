@@ -1651,8 +1651,8 @@ export default function Sidebar({
   
   // Reset export overlay state
   const resetExportOverlay = useCallback(() => {
-    // Revoke the blob URL to free memory
-    if (exportDownloadUrlGlobal) {
+    // Only revoke blob URLs (starts with 'blob:'), not server URLs
+    if (exportDownloadUrlGlobal && exportDownloadUrlGlobal.startsWith('blob:')) {
       URL.revokeObjectURL(exportDownloadUrlGlobal);
     }
     setShowExportProgressOverlay(false);
@@ -4545,19 +4545,19 @@ export default function Sidebar({
           exportAbortControllerGlobalRef.current?.signal
         );
         
-        if (result.success && result.blob) {
-          // Get the actual filename from the result (may be compressed archive)
-          const timestamp = Date.now();
-          const compressionSettings = compressionSettingsRef.current;
-          const isCompressed = compressionSettings.enabled && compressionSettings.format !== 'none';
-          const extension = isCompressed ? compressionSettings.format : 'tiff';
-          const filename = `export-${timestamp}.${extension}`;
+        if (result.success && result.downloadUrl) {
+          // Use the actual filename and size from server response
+          const filename = result.filename || 'export.tiff';
+          const sizeBytes = result.sizeBytes || 0;
           
-          // Create blob URL for user-triggered download (don't auto-download)
-          const url = URL.createObjectURL(result.blob);
+          // Format size string - show "size unknown" if 0 bytes
+          const sizeDisplay = sizeBytes > 0 
+            ? `${(sizeBytes / 1024 / 1024).toFixed(2)} MB`
+            : 'size pending';
           
-          // Store download info for the overlay to display download button
-          setExportDownloadUrlGlobal(url);
+          // Use server download URL directly - avoids loading 900MB+ into browser memory
+          // Browser will stream file to disk when user clicks the download link
+          setExportDownloadUrlGlobal(result.downloadUrl);
           setExportDownloadFilenameGlobal(filename);
           
           setBatchProgress(100);
@@ -4565,9 +4565,9 @@ export default function Sidebar({
           setExportProgressGlobal(100);
           setExportStatusGlobal('Ready to save!');
           setExportIsCompleteGlobal(true);
-          setExportResultMessageGlobal(`✅ ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB) - Tap "Save File" to download`);
+          setExportResultMessageGlobal(`✅ ${filename} (${sizeDisplay}) - Tap "Save File" to download`);
           stopElapsedTimeTrackingGlobal();
-          console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
+          console.log(`✅ SERVER EXPORT: Complete - ${filename} (${sizeDisplay})`);
           
           // Don't auto-close - let user click save button
           setIsServerExportingGlobal(false);
