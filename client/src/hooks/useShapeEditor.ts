@@ -49,7 +49,7 @@ export interface GenerationContextOverrides {
 
 export const useShapeEditor = () => {
   // Get user preferences for app settings persistence
-  const { exportSettings, appSettingsDefaults, saveAppSettings } = useUserPreferences();
+  const { exportSettings, appSettingsDefaults, saveAppSettings, debouncedSaveAppSettings } = useUserPreferences();
   
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [groups, setGroups] = useState<ShapeGroupClass[]>([]);
@@ -544,20 +544,16 @@ export const useShapeEditor = () => {
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSettings.current) return;
     
-    const timeoutId = setTimeout(() => {
-      const activeAb = artboards.find(ab => ab.id === activeArtboard);
-      if (!activeAb) return;
-      
-      saveAppSettings.mutate({
-        ...appSettingsDefaults,
-        canvasPanX: canvasSettings.panX,
-        canvasPanY: canvasSettings.panY,
-        canvasZoom: canvasSettings.zoom,
-      });
-    }, 1000);
+    const activeAb = artboards.find(ab => ab.id === activeArtboard);
+    if (!activeAb) return;
     
-    return () => clearTimeout(timeoutId);
-  }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom]);
+    // Use debounced save to batch with other setting updates
+    debouncedSaveAppSettings({
+      canvasPanX: canvasSettings.panX,
+      canvasPanY: canvasSettings.panY,
+      canvasZoom: canvasSettings.zoom,
+    });
+  }, [canvasSettings.panX, canvasSettings.panY, canvasSettings.zoom, debouncedSaveAppSettings]);
 
   // Save all artboards when artboards or active artboard changes (debounced)
   // This includes print configuration as it's part of artboard settings
@@ -593,59 +589,51 @@ export const useShapeEditor = () => {
       printConfig: ab.printConfig,
     }));
     
-    const timeoutId = setTimeout(() => {
-      saveAppSettings.mutate({
-        ...appSettingsDefaults,
-        // New multi-artboard persistence
-        savedArtboards,
-        activeArtboardId: activeArtboard,
-        // Legacy fields (for backward compatibility)
-        artboardName: activeAb.name,
-        artboardWidth: activeAb.width,
-        artboardHeight: activeAb.height,
-        artboardDpi: activeAb.dpi ?? 72,
-        artboardUnitType: activeAb.unitType ?? 'pixels',
-        artboardBackgroundColor: activeAb.backgroundColor ?? '#ffffff',
-        artboardGridColor: activeAb.gridColor ?? '#cccccc',
-        artboardDisplayGrid: activeAb.displayGrid ?? false,
-        artboardDisplayBorder: activeAb.displayBorder ?? true,
-        artboardDisplayName: activeAb.displayName ?? true,
-        artboardDisplayDimensions: activeAb.displayDimensions ?? false,
-        artboardDisplayResolution: activeAb.displayResolution ?? false,
-        printOverlayUnit: printConfig.overlays.overlayUnit || 'pixels',
-        printBleedAmount: printConfig.overlays.bleed.amount,
-        printBleedDisplay: printConfig.overlays.bleed.display,
-        printBleedRender: printConfig.overlays.bleed.render,
-        printBleedColor: printConfig.overlays.bleed.color || '#00FFFF',
-        printSafeZoneAmount: printConfig.overlays.safeZone.amount,
-        printSafeZoneDisplay: printConfig.overlays.safeZone.display,
-        printSafeZoneColor: printConfig.overlays.safeZone.color || '#FF00FF',
-        printMarksCropMarks: printConfig.overlays.printMarks.cropMarks,
-        printMarksRegistrationMarks: printConfig.overlays.printMarks.registrationMarks,
-        printMarksMarkLength: printConfig.overlays.printMarks.markLength,
-        printMarksMarkOffset: printConfig.overlays.printMarks.markOffset,
-        printMarksDisplay: printConfig.overlays.printMarks.display,
-        printMarksRender: printConfig.overlays.printMarks.render,
-      });
-    }, 1000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [artboards, activeArtboard]);
+    // Use debounced save to batch with other setting updates
+    debouncedSaveAppSettings({
+      // New multi-artboard persistence
+      savedArtboards,
+      activeArtboardId: activeArtboard,
+      // Legacy fields (for backward compatibility)
+      artboardName: activeAb.name,
+      artboardWidth: activeAb.width,
+      artboardHeight: activeAb.height,
+      artboardDpi: activeAb.dpi ?? 72,
+      artboardUnitType: activeAb.unitType ?? 'pixels',
+      artboardBackgroundColor: activeAb.backgroundColor ?? '#ffffff',
+      artboardGridColor: activeAb.gridColor ?? '#cccccc',
+      artboardDisplayGrid: activeAb.displayGrid ?? false,
+      artboardDisplayBorder: activeAb.displayBorder ?? true,
+      artboardDisplayName: activeAb.displayName ?? true,
+      artboardDisplayDimensions: activeAb.displayDimensions ?? false,
+      artboardDisplayResolution: activeAb.displayResolution ?? false,
+      printOverlayUnit: printConfig.overlays.overlayUnit || 'pixels',
+      printBleedAmount: printConfig.overlays.bleed.amount,
+      printBleedDisplay: printConfig.overlays.bleed.display,
+      printBleedRender: printConfig.overlays.bleed.render,
+      printBleedColor: printConfig.overlays.bleed.color || '#00FFFF',
+      printSafeZoneAmount: printConfig.overlays.safeZone.amount,
+      printSafeZoneDisplay: printConfig.overlays.safeZone.display,
+      printSafeZoneColor: printConfig.overlays.safeZone.color || '#FF00FF',
+      printMarksCropMarks: printConfig.overlays.printMarks.cropMarks,
+      printMarksRegistrationMarks: printConfig.overlays.printMarks.registrationMarks,
+      printMarksMarkLength: printConfig.overlays.printMarks.markLength,
+      printMarksMarkOffset: printConfig.overlays.printMarks.markOffset,
+      printMarksDisplay: printConfig.overlays.printMarks.display,
+      printMarksRender: printConfig.overlays.printMarks.render,
+    });
+  }, [artboards, activeArtboard, debouncedSaveAppSettings]);
 
   // Save UI visibility settings when they change (debounced)
   useEffect(() => {
     if (!appSettingsDefaults || !hasRestoredSettings.current) return;
     
-    const timeoutId = setTimeout(() => {
-      saveAppSettings.mutate({
-        ...appSettingsDefaults,
-        showMultiSelectButton,
-        showSelectedCount,
-      });
-    }, 1000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [showMultiSelectButton, showSelectedCount]);
+    // Use debounced save to batch with other setting updates
+    debouncedSaveAppSettings({
+      showMultiSelectButton,
+      showSelectedCount,
+    });
+  }, [showMultiSelectButton, showSelectedCount, debouncedSaveAppSettings]);
 
   const updateScatterSettings = useCallback((updates: Partial<ScatterSettings>) => {
     setScatterSettings(prev => ({ ...prev, ...updates }));

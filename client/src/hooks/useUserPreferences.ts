@@ -1,7 +1,10 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useRef, useCallback, useMemo } from 'react';
 import type { UserPreferences, SidebarSectionConfig, ExportSettingsConfig, AppSettingsDefaults } from '@shared/schema';
 import { DEFAULT_SIDEBAR_SECTIONS, DEFAULT_EXPORT_SETTINGS, DEFAULT_APP_SETTINGS } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+
+const DEBOUNCE_MS = 1000;
 
 export function useUserPreferences() {
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
@@ -9,6 +12,12 @@ export function useUserPreferences() {
     retry: 2,
     staleTime: 0, // Always refetch when invalidated
   });
+
+  // Refs for debouncing - accumulate updates and batch them
+  const appSettingsPendingRef = useRef<Partial<AppSettingsDefaults> | null>(null);
+  const appSettingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const exportSettingsPendingRef = useRef<Partial<ExportSettingsConfig> | null>(null);
+  const exportSettingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Normalize sidebar sections from old boolean format to new object format
   const normalizeSidebarSections = (sections: any): SidebarSectionConfig => {
@@ -183,6 +192,70 @@ export function useUserPreferences() {
     },
   });
 
+  // Track last saved values to prevent redundant saves
+  const lastSavedAppSettingsRef = useRef<string>('');
+
+  // Debounced save for app settings - batches multiple updates into one API call
+  const debouncedSaveAppSettings = useCallback((updates: Partial<AppSettingsDefaults>) => {
+    // Accumulate updates
+    appSettingsPendingRef.current = {
+      ...appSettingsPendingRef.current,
+      ...updates,
+    };
+
+    // Clear existing timeout
+    if (appSettingsTimeoutRef.current) {
+      clearTimeout(appSettingsTimeoutRef.current);
+    }
+
+    // Set new timeout
+    appSettingsTimeoutRef.current = setTimeout(() => {
+      const pending = appSettingsPendingRef.current;
+      if (pending) {
+        // Get current settings from cache
+        const currentData = queryClient.getQueryData<UserPreferences>(['/api/user/preferences']);
+        const currentSettings = currentData?.appSettingsDefaults as AppSettingsDefaults || {};
+        
+        const merged = {
+          ...currentSettings,
+          ...pending,
+        } as AppSettingsDefaults;
+        
+        // Only save if values have actually changed
+        const mergedJson = JSON.stringify(merged);
+        if (mergedJson !== lastSavedAppSettingsRef.current) {
+          lastSavedAppSettingsRef.current = mergedJson;
+          saveAppSettings.mutate(merged);
+        }
+        
+        appSettingsPendingRef.current = null;
+      }
+    }, DEBOUNCE_MS);
+  }, [saveAppSettings]);
+
+  // Debounced save for export settings - batches multiple updates into one API call
+  const debouncedUpdateExportSettings = useCallback((updates: Partial<ExportSettingsConfig>) => {
+    // Accumulate updates
+    exportSettingsPendingRef.current = {
+      ...exportSettingsPendingRef.current,
+      ...updates,
+    };
+
+    // Clear existing timeout
+    if (exportSettingsTimeoutRef.current) {
+      clearTimeout(exportSettingsTimeoutRef.current);
+    }
+
+    // Set new timeout
+    exportSettingsTimeoutRef.current = setTimeout(() => {
+      const pending = exportSettingsPendingRef.current;
+      if (pending) {
+        updateExportSettings.mutate(pending);
+        exportSettingsPendingRef.current = null;
+      }
+    }, DEBOUNCE_MS);
+  }, [updateExportSettings]);
+
   return {
     preferences,
     sidebarSections,
@@ -195,6 +268,9 @@ export function useUserPreferences() {
     updateSidebarSections,
     saveAppSettings,
     updateSkipLoadDialog,
+    // Debounced versions that batch multiple updates
+    debouncedSaveAppSettings,
+    debouncedUpdateExportSettings,
   };
 }
 
