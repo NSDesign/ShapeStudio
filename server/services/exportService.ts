@@ -1963,12 +1963,10 @@ async function compressBuffer(
     
     if (settings.format === '7z') {
       const archivePath = path.join(workDir, `${baseName}.7z`);
-      const compressionMethod = `=LZMA2:d=${getLzma2DictSize(settings.level)}`;
       
       await new Promise<void>((resolve, reject) => {
         createArchive(archivePath, inputPath, {
-          mx: settings.level,
-          m0: compressionMethod
+          $raw: [`-mx=${settings.level}`, `-m0=LZMA2:d=${getLzma2DictSize(settings.level)}`]
         })
           .then(() => resolve())
           .catch((err: Error) => reject(err));
