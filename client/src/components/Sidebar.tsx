@@ -1611,6 +1611,8 @@ export default function Sidebar({
   const [exportIsErrorGlobal, setExportIsErrorGlobal] = useState(false);
   const [exportResultMessageGlobal, setExportResultMessageGlobal] = useState('');
   const [exportEstimatedTimeGlobal, setExportEstimatedTimeGlobal] = useState<number | undefined>(undefined);
+  const [exportDownloadUrlGlobal, setExportDownloadUrlGlobal] = useState<string | undefined>(undefined);
+  const [exportDownloadFilenameGlobal, setExportDownloadFilenameGlobal] = useState<string | undefined>(undefined);
   const exportStartTimeGlobalRef = useRef<number | null>(null);
   const elapsedTimeIntervalGlobalRef = useRef<NodeJS.Timeout | null>(null);
   const exportAbortControllerGlobalRef = useRef<AbortController | null>(null);
@@ -1649,6 +1651,10 @@ export default function Sidebar({
   
   // Reset export overlay state
   const resetExportOverlay = useCallback(() => {
+    // Revoke the blob URL to free memory
+    if (exportDownloadUrlGlobal) {
+      URL.revokeObjectURL(exportDownloadUrlGlobal);
+    }
     setShowExportProgressOverlay(false);
     setExportProgressGlobal(0);
     setExportTotalStepsGlobal(0);
@@ -1659,7 +1665,9 @@ export default function Sidebar({
     setExportIsErrorGlobal(false);
     setExportResultMessageGlobal('');
     setIsServerExportingGlobal(false);
-  }, []);
+    setExportDownloadUrlGlobal(undefined);
+    setExportDownloadFilenameGlobal(undefined);
+  }, [exportDownloadUrlGlobal]);
   
   // Global repetition settings for generation sets
   const [globalRepetitionMode, setGlobalRepetitionMode] = useState<'fixed' | 'range'>('fixed');
@@ -4489,6 +4497,7 @@ export default function Sidebar({
         setExportStatusGlobal('Connecting to server...');
         
         console.log(`🖥️ SERVER EXPORT: Starting SSE high-resolution export ${artboardWidth}×${artboardHeight} @ ${artboardDpi} DPI`);
+        console.log(`🗜️ SERVER EXPORT: Compression settings:`, JSON.stringify(request.archiveCompression));
         
         // Use SSE streaming for real-time progress updates
         const result = await executeServerExportWithSSE(
@@ -4537,30 +4546,33 @@ export default function Sidebar({
         );
         
         if (result.success && result.blob) {
-          // Download the file
+          // Get the actual filename from the result (may be compressed archive)
           const timestamp = Date.now();
-          const filename = `export-${timestamp}.tiff`;
+          const compressionSettings = compressionSettingsRef.current;
+          const isCompressed = compressionSettings.enabled && compressionSettings.format !== 'none';
+          const extension = isCompressed ? compressionSettings.format : 'tiff';
+          const filename = `export-${timestamp}.${extension}`;
+          
+          // Create blob URL for user-triggered download (don't auto-download)
           const url = URL.createObjectURL(result.blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          link.click();
-          URL.revokeObjectURL(url);
+          
+          // Store download info for the overlay to display download button
+          setExportDownloadUrlGlobal(url);
+          setExportDownloadFilenameGlobal(filename);
           
           setBatchProgress(100);
-          setBatchStatus('Export complete!');
+          setBatchStatus('Ready to save!');
           setExportProgressGlobal(100);
-          setExportStatusGlobal('Export complete!');
+          setExportStatusGlobal('Ready to save!');
           setExportIsCompleteGlobal(true);
-          setExportResultMessageGlobal(`✅ Exported ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
+          setExportResultMessageGlobal(`✅ ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB) - Tap "Save File" to download`);
           stopElapsedTimeTrackingGlobal();
           console.log(`✅ SERVER EXPORT: Complete - ${filename} (${(result.blob.size / 1024 / 1024).toFixed(2)} MB)`);
           
-          setTimeout(() => {
-            setIsServerExportingGlobal(false);
-            setBatchProgress(0);
-            setBatchStatus('');
-          }, 2000);
+          // Don't auto-close - let user click save button
+          setIsServerExportingGlobal(false);
+          setBatchProgress(0);
+          setBatchStatus('');
         } else {
           throw new Error(result.error || 'Export failed');
         }
@@ -8983,6 +8995,11 @@ export default function Sidebar({
         isComplete={exportIsCompleteGlobal}
         isError={exportIsErrorGlobal}
         resultMessage={exportResultMessageGlobal}
+        downloadUrl={exportDownloadUrlGlobal}
+        downloadFilename={exportDownloadFilenameGlobal}
+        onDownloadComplete={() => {
+          console.log('📥 User downloaded file:', exportDownloadFilenameGlobal);
+        }}
       />
     </div>
   );

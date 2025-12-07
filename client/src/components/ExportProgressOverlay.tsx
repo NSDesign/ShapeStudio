@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, Loader2, Server, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Loader2, Server, Clock, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 
 interface ExportProgressOverlayProps {
   open: boolean;
@@ -16,6 +16,9 @@ interface ExportProgressOverlayProps {
   isComplete?: boolean;
   isError?: boolean;
   resultMessage?: string;
+  downloadUrl?: string;
+  downloadFilename?: string;
+  onDownloadComplete?: () => void;
 }
 
 function formatElapsedTime(seconds: number): string {
@@ -36,7 +39,10 @@ export default function ExportProgressOverlay({
   onCancel,
   isComplete = false,
   isError = false,
-  resultMessage
+  resultMessage,
+  downloadUrl,
+  downloadFilename,
+  onDownloadComplete
 }: ExportProgressOverlayProps) {
   const progressPercent = totalSteps > 0 ? Math.round((progress / totalSteps) * 100) : 0;
   const canClose = isComplete || isError;
@@ -128,13 +134,35 @@ export default function ExportProgressOverlay({
             </Button>
           )}
 
+          {isComplete && downloadUrl && (
+            <a
+              href={downloadUrl}
+              download={downloadFilename || 'export.tiff'}
+              onClick={() => {
+                onDownloadComplete?.();
+              }}
+              className="w-full"
+            >
+              <Button
+                className="w-full bg-green-600 hover:bg-green-500 text-white gap-2"
+                data-testid="download-export-button"
+              >
+                <Download className="w-4 h-4" />
+                Save File
+              </Button>
+            </a>
+          )}
+
           {canClose && (
             <Button
               onClick={() => onOpenChange(false)}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+              variant={isComplete && downloadUrl ? "outline" : "default"}
+              className={isComplete && downloadUrl 
+                ? "w-full border-slate-600 text-slate-300 hover:bg-slate-700" 
+                : "w-full bg-slate-700 hover:bg-slate-600 text-white"}
               data-testid="dismiss-export-button"
             >
-              Dismiss
+              {isComplete && downloadUrl ? 'Close' : 'Dismiss'}
             </Button>
           )}
         </div>

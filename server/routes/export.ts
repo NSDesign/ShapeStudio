@@ -36,7 +36,12 @@ const HighResExportSchema = z.object({
     includePrintMarks: z.boolean().default(true),
     backgroundColor: z.string().optional(),
     backgroundMode: z.enum(['transparent', 'artboard', 'custom']).default('transparent')
-  })
+  }),
+  archiveCompression: z.object({
+    enabled: z.boolean(),
+    format: z.enum(['none', 'zip', '7z']),
+    level: z.union([z.literal(1), z.literal(3), z.literal(5), z.literal(7), z.literal(9)])
+  }).optional()
 });
 
 // Validation schemas
