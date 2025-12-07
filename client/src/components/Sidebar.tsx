@@ -13,7 +13,7 @@ import { executeServerExport, executeServerExportWithSSE, fetchServerExportEstim
 import { Button } from '@/components/ui/button';
 import BatchConfigDialog from './BatchConfigDialog';
 import { SetsManagerDialog } from './SetsManagerDialog';
-import TiffPreflightModal, { calculateTiffPreflightInfo } from './TiffPreflightModal';
+import TiffPreflightModal, { calculateTiffPreflightInfo, CompressionSettings, DEFAULT_COMPRESSION_SETTINGS } from './TiffPreflightModal';
 import ExportProgressOverlay from './ExportProgressOverlay';
 import { BatchConfigSettings, EnhancedBatchConfig, GenerationSet, ShapeCountMode, SupportedShapeType, SidebarSectionConfig, DEFAULT_PRINT_CONFIG, PrintConfig, PrintUnitType, BackgroundMode, PrintMarksScaleMode } from '@shared/schema';
 import type { CurrentUIState } from '@/hooks/useGenerationSets';
@@ -1598,6 +1598,7 @@ export default function Sidebar({
   const [isTiffPreflightOpen, setIsTiffPreflightOpen] = useState(false);
   const [pendingTiffExport, setPendingTiffExport] = useState<boolean>(false);
   const pendingTiffExportRef = useRef<(() => void) | null>(null);
+  const compressionSettingsRef = useRef<CompressionSettings>(DEFAULT_COMPRESSION_SETTINGS);
   const [isServerExportingGlobal, setIsServerExportingGlobal] = useState(false);
   
   // Export progress overlay state (lifted to component level for global visibility)
@@ -3257,9 +3258,13 @@ export default function Sidebar({
   }, [artboards, activeArtboard, exportMode, selectedArtboardForExport, exportAllImages, exportBatchCount, selectedImageIndices, exportSettings.exportBackgroundMode, exportSettings.tiffBitDepth, effectiveExportScale]);
   
   // Handle TIFF pre-flight modal confirmation
-  const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean) => {
+  const handleTiffPreflightConfirm = useCallback((dontShowAgain: boolean, compressionSettings?: CompressionSettings) => {
     if (dontShowAgain) {
       updateExportSettings.mutate({ skipTiffPreflightModal: true });
+    }
+    // Store compression settings for use in server export
+    if (compressionSettings) {
+      compressionSettingsRef.current = compressionSettings;
     }
     setIsTiffPreflightOpen(false);
     // Trigger the pending export
@@ -4445,6 +4450,9 @@ export default function Sidebar({
         const artboardX = targetArtboard?.x ?? backgroundArtboard?.x ?? 0;
         const artboardY = targetArtboard?.y ?? backgroundArtboard?.y ?? 0;
         
+        // Get compression settings from the modal
+        const compressionSettings = compressionSettingsRef.current;
+        
         const request: ServerExportRequest = {
           shapes: serializedShapes,
           groups: serializedGroups,
@@ -4467,7 +4475,12 @@ export default function Sidebar({
             backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
             backgroundMode: bgMode,
             compression: exportSettings.tiffCompression ?? 'none'
-          }
+          },
+          archiveCompression: compressionSettings.enabled ? {
+            enabled: true,
+            format: compressionSettings.format,
+            level: compressionSettings.level
+          } : undefined
         };
         
         setBatchProgress(15);
@@ -8950,6 +8963,8 @@ export default function Sidebar({
         onFlattenToRgbChange={(value) => updateExportSettings.mutate({ flattenToRgb: value })}
         matteColor={exportSettings.matteColor || '#ffffff'}
         onMatteColorChange={(value) => updateExportSettings.mutate({ matteColor: value })}
+        compressionSettings={compressionSettingsRef.current}
+        onCompressionSettingsChange={(settings) => { compressionSettingsRef.current = settings; }}
       />
       
       {/* Export Progress Overlay - Always visible during export */}

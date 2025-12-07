@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -95,6 +95,13 @@ export default function TiffPreflightModal({
 }: TiffPreflightModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [localCompression, setLocalCompression] = useState<CompressionSettings>(compressionSettings);
+  
+  // Sync local state with incoming prop when modal opens
+  useEffect(() => {
+    if (open) {
+      setLocalCompression(compressionSettings);
+    }
+  }, [open, compressionSettings]);
   
   const updateCompression = (updates: Partial<CompressionSettings>) => {
     const newSettings = { ...localCompression, ...updates };
