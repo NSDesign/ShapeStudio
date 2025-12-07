@@ -30,6 +30,7 @@ const HighResExportSchema = z.object({
   exportSettings: z.object({
     format: z.enum(['tiff', 'png']).default('tiff'),
     bitDepth: z.union([z.literal(8), z.literal(16)]).default(16),
+    compression: z.enum(['none', 'deflate']).default('none'),
     dpi: z.number().optional(),
     scale: z.number().min(0.1).max(10).default(1),
     includeBleed: z.boolean().default(true),
