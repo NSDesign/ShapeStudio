@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -45,15 +44,8 @@ export default function ExportProgressOverlay({
   downloadFilename,
   onDownloadComplete
 }: ExportProgressOverlayProps) {
-  const [isSaving, setIsSaving] = useState(false);
   const progressPercent = totalSteps > 0 ? Math.round((progress / totalSteps) * 100) : 0;
   const canClose = isComplete || isError;
-  
-  useEffect(() => {
-    if (!open || !isComplete) {
-      setIsSaving(false);
-    }
-  }, [open, isComplete]);
   
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
@@ -147,30 +139,16 @@ export default function ExportProgressOverlay({
               href={downloadUrl}
               download={downloadFilename || 'export.tiff'}
               onClick={() => {
-                setIsSaving(true);
                 onDownloadComplete?.();
               }}
               className="w-full"
             >
               <Button
-                className={`w-full gap-2 ${
-                  isSaving 
-                    ? 'bg-red-600 hover:bg-red-500 text-white' 
-                    : 'bg-blue-600 hover:bg-blue-500 text-white'
-                }`}
+                className="w-full gap-2 bg-blue-600 hover:bg-blue-500 text-white"
                 data-testid="download-export-button"
               >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving file...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Save File
-                  </>
-                )}
+                <Download className="w-4 h-4" />
+                Save File
               </Button>
             </a>
           )}

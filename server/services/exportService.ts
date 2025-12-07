@@ -17,7 +17,7 @@ import {
 } from '../../shared/schema';
 import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
-import { createArchive } from 'node-7z-archive';
+import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -1965,11 +1965,33 @@ async function compressBuffer(
       const archivePath = path.join(workDir, `${baseName}.7z`);
       
       await new Promise<void>((resolve, reject) => {
-        createArchive(archivePath, inputPath, {
-          $raw: [`-mx=${settings.level}`, `-m0=LZMA2:d=${getLzma2DictSize(settings.level)}`]
-        })
-          .then(() => resolve())
-          .catch((err: Error) => reject(err));
+        const args = [
+          'a',
+          archivePath,
+          inputPath,
+          `-mx=${settings.level}`,
+          `-m0=LZMA2:d=${getLzma2DictSize(settings.level)}`,
+          '-y'
+        ];
+        
+        console.log(`[Compression] Running: 7z ${args.join(' ')}`);
+        
+        const proc = spawn('7z', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+        
+        let stderr = '';
+        proc.stderr?.on('data', (data) => { stderr += data.toString(); });
+        
+        proc.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`7z exited with code ${code}: ${stderr}`));
+          }
+        });
+        
+        proc.on('error', (err) => {
+          reject(new Error(`Failed to spawn 7z: ${err.message}`));
+        });
       });
       
       const compressedBuffer = fs.readFileSync(archivePath);
