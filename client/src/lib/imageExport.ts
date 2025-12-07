@@ -662,6 +662,15 @@ export interface ServerExportEstimate {
   memoryRequiredMB: number;
 }
 
+export type ArchiveCompressionFormat = 'none' | 'zip' | '7z';
+export type ArchiveCompressionLevel = 1 | 3 | 5 | 7 | 9;
+
+export interface ArchiveCompressionSettings {
+  enabled: boolean;
+  format: ArchiveCompressionFormat;
+  level: ArchiveCompressionLevel;
+}
+
 export interface ServerExportRequest {
   shapes: any[];
   groups: any[];
@@ -685,6 +694,7 @@ export interface ServerExportRequest {
     backgroundMode?: ExportBackgroundMode;
     compression?: TiffCompression;
   };
+  archiveCompression?: ArchiveCompressionSettings;
 }
 
 // Browser canvas limits

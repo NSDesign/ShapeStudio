@@ -12,7 +12,38 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
-import { AlertTriangle, Info, Server, Loader2, Palette } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertTriangle, Info, Server, Loader2, Palette, Archive } from 'lucide-react';
+
+export type CompressionFormat = 'none' | 'zip' | '7z';
+export type CompressionLevel = 1 | 3 | 5 | 7 | 9;
+
+export interface CompressionSettings {
+  enabled: boolean;
+  format: CompressionFormat;
+  level: CompressionLevel;
+}
+
+export const DEFAULT_COMPRESSION_SETTINGS: CompressionSettings = {
+  enabled: false,
+  format: '7z',
+  level: 5,
+};
+
+const COMPRESSION_LEVEL_LABELS: Record<CompressionLevel, string> = {
+  1: 'Fastest',
+  3: 'Fast',
+  5: 'Normal',
+  7: 'Maximum',
+  9: 'Ultra',
+};
 
 interface TiffPreflightInfo {
   requestedCount: number;
@@ -37,13 +68,15 @@ interface TiffPreflightModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preflightInfo: TiffPreflightInfo;
-  onConfirm: (dontShowAgain: boolean) => void;
+  onConfirm: (dontShowAgain: boolean, compressionSettings?: CompressionSettings) => void;
   onCancel: () => void;
   isExporting?: boolean;
   flattenToRgb?: boolean;
   onFlattenToRgbChange?: (value: boolean) => void;
   matteColor?: string;
   onMatteColorChange?: (value: string) => void;
+  compressionSettings?: CompressionSettings;
+  onCompressionSettingsChange?: (settings: CompressionSettings) => void;
 }
 
 export default function TiffPreflightModal({
@@ -57,8 +90,17 @@ export default function TiffPreflightModal({
   onFlattenToRgbChange,
   matteColor = '#ffffff',
   onMatteColorChange,
+  compressionSettings = DEFAULT_COMPRESSION_SETTINGS,
+  onCompressionSettingsChange,
 }: TiffPreflightModalProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [localCompression, setLocalCompression] = useState<CompressionSettings>(compressionSettings);
+  
+  const updateCompression = (updates: Partial<CompressionSettings>) => {
+    const newSettings = { ...localCompression, ...updates };
+    setLocalCompression(newSettings);
+    onCompressionSettingsChange?.(newSettings);
+  };
 
   const hasWarnings = preflightInfo.hasLowDpi || preflightInfo.hasNoBleed || preflightInfo.hasTransparentBackground;
   const hasMemoryLimitation = preflightInfo.isMemoryLimited && !preflightInfo.requiresServerExport;
@@ -212,6 +254,96 @@ export default function TiffPreflightModal({
                 )}
               </div>
             )}
+
+            {hasServerExport && (
+              <div className="p-3 bg-slate-800 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
+                  <Archive className="w-4 h-4" />
+                  Download Compression
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="enable-compression" className="text-xs text-slate-300 cursor-pointer">
+                      Compress file before download
+                    </Label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Reduces download size by 30-70% (larger files benefit most)
+                    </p>
+                  </div>
+                  <Switch
+                    id="enable-compression"
+                    checked={localCompression.enabled}
+                    onCheckedChange={(checked) => updateCompression({ enabled: checked })}
+                    disabled={isExporting}
+                    className="data-[state=checked]:bg-green-600"
+                    data-testid="switch-compression-enabled"
+                  />
+                </div>
+                
+                {localCompression.enabled && (
+                  <div className="space-y-3 pt-2 border-t border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs text-slate-400 w-16">Format:</Label>
+                      <Select
+                        value={localCompression.format}
+                        onValueChange={(value: CompressionFormat) => updateCompression({ format: value })}
+                        disabled={isExporting}
+                      >
+                        <SelectTrigger 
+                          className="h-8 bg-slate-700 border-slate-600 text-slate-200 text-xs flex-1"
+                          data-testid="select-compression-format"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600">
+                          <SelectItem value="7z" className="text-slate-200 hover:bg-slate-700">
+                            7z (Best compression)
+                          </SelectItem>
+                          <SelectItem value="zip" className="text-slate-200 hover:bg-slate-700">
+                            ZIP (Most compatible)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-slate-400">Level:</Label>
+                        <span className="text-xs text-slate-300 font-medium">
+                          {COMPRESSION_LEVEL_LABELS[localCompression.level]} ({localCompression.level})
+                        </span>
+                      </div>
+                      <Slider
+                        value={[localCompression.level]}
+                        onValueChange={([value]) => {
+                          const levels: CompressionLevel[] = [1, 3, 5, 7, 9];
+                          const closest = levels.reduce((prev, curr) => 
+                            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+                          );
+                          updateCompression({ level: closest });
+                        }}
+                        min={1}
+                        max={9}
+                        step={2}
+                        disabled={isExporting}
+                        className="w-full"
+                        data-testid="slider-compression-level"
+                      />
+                      <div className="flex justify-between text-[10px] text-slate-500">
+                        <span>Fastest</span>
+                        <span>Best</span>
+                      </div>
+                    </div>
+                    
+                    {localCompression.format === '7z' && localCompression.level >= 7 && (
+                      <p className="text-[10px] text-amber-400/80">
+                        High compression levels may increase processing time significantly
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -238,12 +370,13 @@ export default function TiffPreflightModal({
               Cancel
             </Button>
             <Button
-              onClick={() => onConfirm(dontShowAgain)}
+              onClick={() => onConfirm(dontShowAgain, hasServerExport ? localCompression : undefined)}
               disabled={isExporting}
               className={hasServerExport 
                 ? "bg-purple-600 hover:bg-purple-700 text-white"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
               }
+              data-testid="button-confirm-export"
             >
               {isExporting ? (
                 <>

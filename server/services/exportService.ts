@@ -17,8 +17,10 @@ import {
 } from '../../shared/schema';
 import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
+import { createArchive } from 'node-7z-archive';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import { createCanvas, Canvas as NodeCanvas } from 'canvas';
@@ -1854,6 +1856,15 @@ export class ExportService {
  * Produces 16-bit TIFF with sRGB ICC profiles for professional print quality.
  */
 
+export type ArchiveCompressionFormat = 'none' | 'zip' | '7z';
+export type ArchiveCompressionLevel = 1 | 3 | 5 | 7 | 9;
+
+export interface ArchiveCompressionSettings {
+  enabled: boolean;
+  format: ArchiveCompressionFormat;
+  level: ArchiveCompressionLevel;
+}
+
 export interface HighResExportRequest {
   shapes: any[];
   groups?: any[];
@@ -1879,6 +1890,7 @@ export interface HighResExportRequest {
     flattenToRgb?: boolean;
     matteColor?: string;
   };
+  archiveCompression?: ArchiveCompressionSettings;
 }
 
 export interface HighResExportResult {
@@ -1920,6 +1932,95 @@ function findChromiumPath(): string {
   }
   
   throw new Error('Chromium not found. Please install Chromium via replit.nix');
+}
+
+/**
+ * Compress a buffer using 7z or ZIP format
+ * Returns compressed buffer, new filename, and MIME type
+ */
+async function compressBuffer(
+  buffer: Buffer,
+  originalFilename: string,
+  settings: ArchiveCompressionSettings
+): Promise<{ buffer: Buffer; filename: string; mimeType: string }> {
+  if (!settings.enabled || settings.format === 'none') {
+    const ext = originalFilename.split('.').pop() || 'bin';
+    const mimeType = ext === 'tiff' ? 'image/tiff' : ext === 'png' ? 'image/png' : 'application/octet-stream';
+    return { buffer, filename: originalFilename, mimeType };
+  }
+  
+  const tempDir = os.tmpdir();
+  const sessionId = `compress_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const workDir = path.join(tempDir, sessionId);
+  
+  try {
+    fs.mkdirSync(workDir, { recursive: true });
+    
+    const inputPath = path.join(workDir, originalFilename);
+    fs.writeFileSync(inputPath, buffer);
+    
+    const baseName = originalFilename.replace(/\.[^.]+$/, '');
+    
+    if (settings.format === '7z') {
+      const archivePath = path.join(workDir, `${baseName}.7z`);
+      const compressionMethod = `=LZMA2:d=${getLzma2DictSize(settings.level)}`;
+      
+      await new Promise<void>((resolve, reject) => {
+        createArchive(archivePath, inputPath, {
+          mx: settings.level,
+          m0: compressionMethod
+        })
+          .then(() => resolve())
+          .catch((err: Error) => reject(err));
+      });
+      
+      const compressedBuffer = fs.readFileSync(archivePath);
+      console.log(`[Compression] 7z: ${(buffer.length / 1024 / 1024).toFixed(2)}MB -> ${(compressedBuffer.length / 1024 / 1024).toFixed(2)}MB (${((1 - compressedBuffer.length / buffer.length) * 100).toFixed(1)}% reduction)`);
+      
+      return {
+        buffer: compressedBuffer,
+        filename: `${baseName}.7z`,
+        mimeType: 'application/x-7z-compressed'
+      };
+    } else {
+      const zip = new JSZip();
+      zip.file(originalFilename, buffer, {
+        compression: 'DEFLATE',
+        compressionOptions: { level: Math.min(9, settings.level) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
+      });
+      
+      const compressedBuffer = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: { level: Math.min(9, settings.level) }
+      });
+      
+      console.log(`[Compression] ZIP: ${(buffer.length / 1024 / 1024).toFixed(2)}MB -> ${(compressedBuffer.length / 1024 / 1024).toFixed(2)}MB (${((1 - compressedBuffer.length / buffer.length) * 100).toFixed(1)}% reduction)`);
+      
+      return {
+        buffer: compressedBuffer,
+        filename: `${baseName}.zip`,
+        mimeType: 'application/zip'
+      };
+    }
+  } finally {
+    try {
+      fs.rmSync(workDir, { recursive: true, force: true });
+    } catch (e) {
+      console.warn('[Compression] Failed to clean up temp dir:', e);
+    }
+  }
+}
+
+function getLzma2DictSize(level: ArchiveCompressionLevel): string {
+  switch (level) {
+    case 1: return '64k';
+    case 3: return '1m';
+    case 5: return '8m';
+    case 7: return '32m';
+    case 9: return '64m';
+    default: return '8m';
+  }
 }
 
 function convertUnitToPixels(value: number, unit: string, dpi: number): number {
@@ -2272,29 +2373,58 @@ export class HighResolutionExportService {
       );
       
       if (result.success && result.buffer) {
+        const originalFilename = result.filename || `export-${exportId}.${request.exportSettings.format || 'tiff'}`;
+        let finalBuffer = result.buffer;
+        let finalFilename = originalFilename;
+        let finalMimeType = result.mimeType || 'image/tiff';
+        
+        // Apply compression if requested
+        if (request.archiveCompression?.enabled && request.archiveCompression.format !== 'none') {
+          onProgress({
+            type: 'phase',
+            phase: 'compressing',
+            message: `Compressing with ${request.archiveCompression.format.toUpperCase()}...`,
+            timestamp: Date.now()
+          });
+          
+          try {
+            const compressed = await compressBuffer(
+              result.buffer,
+              originalFilename,
+              request.archiveCompression
+            );
+            finalBuffer = compressed.buffer;
+            finalFilename = compressed.filename;
+            finalMimeType = compressed.mimeType;
+            
+            console.log(`[SSE Export] Compressed: ${originalFilename} -> ${finalFilename}`);
+          } catch (compressError) {
+            console.error('[SSE Export] Compression failed, using original file:', compressError);
+          }
+        }
+        
         // Store the file for download
-        const filename = result.filename || `export-${exportId}.${request.exportSettings.format || 'tiff'}`;
-        this.storeExportFile(exportId, result.buffer, filename, result.mimeType || 'image/tiff');
+        this.storeExportFile(exportId, finalBuffer, finalFilename, finalMimeType);
         
         // Update session
         session.status = 'completed';
-        session.filename = filename;
+        session.filename = finalFilename;
         session.downloadUrl = `/api/export/highres/download/${exportId}`;
         session.dimensions = { width: result.width || width, height: result.height || height };
-        session.sizeBytes = result.buffer.length;
+        session.sizeBytes = finalBuffer.length;
         
         // Emit completion event
         onProgress({
           type: 'complete',
           downloadUrl: session.downloadUrl,
-          filename,
-          contentType: result.mimeType || 'image/tiff',
-          sizeBytes: result.buffer.length,
+          filename: finalFilename,
+          contentType: finalMimeType,
+          sizeBytes: finalBuffer.length,
           dimensions: session.dimensions,
           timestamp: Date.now()
         });
         
-        console.log(`[SSE Export] Completed: ${exportId} - ${filename}`);
+        console.log(`[SSE Export] Completed: ${exportId} - ${finalFilename}`);
       } else {
         session.status = 'error';
         session.error = result.error || 'Export failed';

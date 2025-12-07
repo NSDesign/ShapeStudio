@@ -3684,7 +3684,7 @@ export function migrateBatchConfigSettings(settings: Partial<BatchConfigSettings
 /**
  * SSE Export Phase - high-level export phases
  */
-export type SSEExportPhase = 'preparing' | 'rendering' | 'rendering-tiles' | 'stitching' | 'encoding' | 'finalizing';
+export type SSEExportPhase = 'preparing' | 'rendering' | 'rendering-tiles' | 'stitching' | 'encoding' | 'compressing' | 'finalizing';
 
 /**
  * SSE Event Types for export progress streaming
