@@ -290,6 +290,45 @@ export interface ShapeProperties {
     lightness: number;
     enabled: boolean;
   };
+  // Drop Shadow effect
+  dropShadow?: {
+    enabled: boolean;
+    offsetX: number;
+    offsetY: number;
+    blur: number;
+    spread: number;
+    color: string; // Computed color (from auto or custom)
+    opacity: number; // 0-100
+    blendMode: 'multiply' | 'darken' | 'overlay';
+  };
+  // Outer Glow effect
+  outerGlow?: {
+    enabled: boolean;
+    blur: number;
+    spread: number;
+    color: string; // Computed color (from auto or custom)
+    opacity: number; // 0-100
+    blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter';
+  };
+  // Inner Shadow effect
+  innerShadow?: {
+    enabled: boolean;
+    offsetX: number;
+    offsetY: number;
+    blur: number;
+    color: string; // Computed color (from auto or custom)
+    opacity: number; // 0-100
+    blendMode: 'multiply' | 'darken' | 'overlay';
+  };
+  // Inner Glow effect
+  innerGlow?: {
+    enabled: boolean;
+    blur: number;
+    spread: number;
+    color: string; // Computed color (from auto or custom)
+    opacity: number; // 0-100
+    blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter';
+  };
 }
 
 export type ShapeType = 

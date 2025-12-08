@@ -1788,6 +1788,347 @@ export const useShapeEditor = () => {
     }
   };
 
+  // Helper function to derive effect color from shape color
+  const deriveEffectColor = (baseColor: string, mode: 'darken' | 'lighten', amount: number = 30): string => {
+    // Guard against invalid inputs - return fallback for non-hex colors
+    if (!baseColor || baseColor === 'none' || baseColor === 'transparent') {
+      return mode === 'darken' ? '#000000' : '#ffffff';
+    }
+    
+    // Only handle hex colors - return fallback for other formats (gradients, named colors, etc.)
+    const hexMatch = baseColor.match(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);
+    if (!hexMatch) {
+      return mode === 'darken' ? '#000000' : '#ffffff';
+    }
+    
+    // Parse hex color to RGB (handle both 3 and 6 digit hex)
+    let hex = hexMatch[1];
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Convert to HSL
+    const rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
+    const max = Math.max(rNorm, gNorm, bNorm);
+    const min = Math.min(rNorm, gNorm, bNorm);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case rNorm: h = ((gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0)) / 6; break;
+        case gNorm: h = ((bNorm - rNorm) / d + 2) / 6; break;
+        case bNorm: h = ((rNorm - gNorm) / d + 4) / 6; break;
+      }
+    }
+    
+    // Adjust lightness
+    if (mode === 'darken') {
+      l = Math.max(0, l - amount / 100);
+    } else {
+      l = Math.min(1, l + amount / 100);
+    }
+    
+    // Convert back to RGB
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const newR = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+    const newG = Math.round(hue2rgb(p, q, h) * 255);
+    const newB = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+    
+    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+  };
+
+  // Helper function to calculate drop shadow properties
+  const calculateDropShadow = (
+    settings: BatchConfigSettings, 
+    shapeIndex: number,
+    shapeFillColor: string
+  ): { enabled: boolean; offsetX: number; offsetY: number; blur: number; spread: number; color: string; opacity: number; blendMode: 'multiply' | 'darken' | 'overlay' } | undefined => {
+    if (!settings.dropShadowEnabled) return undefined;
+    
+    // Apply probability check
+    if (Math.random() * 100 > settings.dropShadowProbability) return undefined;
+    
+    // Calculate offset X based on mode
+    let offsetX = 0;
+    switch (settings.dropShadowOffsetXMode) {
+      case 'range':
+        const [minX, maxX] = settings.dropShadowOffsetXRange;
+        offsetX = minX + Math.random() * (maxX - minX);
+        break;
+      case 'define':
+        offsetX = settings.dropShadowOffsetX;
+        break;
+      case 'incremental':
+        offsetX = settings.dropShadowOffsetXStartValue + (shapeIndex * settings.dropShadowOffsetXIncrement);
+        break;
+    }
+    
+    // Calculate offset Y based on mode
+    let offsetY = 0;
+    switch (settings.dropShadowOffsetYMode) {
+      case 'range':
+        const [minY, maxY] = settings.dropShadowOffsetYRange;
+        offsetY = minY + Math.random() * (maxY - minY);
+        break;
+      case 'define':
+        offsetY = settings.dropShadowOffsetY;
+        break;
+      case 'incremental':
+        offsetY = settings.dropShadowOffsetYStartValue + (shapeIndex * settings.dropShadowOffsetYIncrement);
+        break;
+    }
+    
+    // Calculate blur based on mode
+    let blur = 0;
+    switch (settings.dropShadowBlurMode) {
+      case 'range':
+        const [minBlur, maxBlur] = settings.dropShadowBlurRange;
+        blur = minBlur + Math.random() * (maxBlur - minBlur);
+        break;
+      case 'define':
+        blur = settings.dropShadowBlur;
+        break;
+      case 'incremental':
+        blur = settings.dropShadowBlurStartValue + (shapeIndex * settings.dropShadowBlurIncrement);
+        break;
+    }
+    
+    // Calculate spread based on mode
+    let spread = 0;
+    switch (settings.dropShadowSpreadMode) {
+      case 'range':
+        const [minSpread, maxSpread] = settings.dropShadowSpreadRange;
+        spread = minSpread + Math.random() * (maxSpread - minSpread);
+        break;
+      case 'define':
+        spread = settings.dropShadowSpread;
+        break;
+      case 'incremental':
+        spread = settings.dropShadowSpreadStartValue + (shapeIndex * settings.dropShadowSpreadIncrement);
+        break;
+    }
+    
+    // Calculate color (auto or custom)
+    let color = settings.dropShadowCustomColor;
+    if (settings.dropShadowColorMode === 'auto' && shapeFillColor && shapeFillColor !== 'none') {
+      color = deriveEffectColor(shapeFillColor, 'darken', settings.dropShadowColorDarken);
+    }
+    
+    return {
+      enabled: true,
+      offsetX,
+      offsetY,
+      blur,
+      spread,
+      color,
+      opacity: settings.dropShadowOpacity,
+      blendMode: settings.dropShadowBlendMode
+    };
+  };
+
+  // Helper function to calculate outer glow properties
+  const calculateOuterGlow = (
+    settings: BatchConfigSettings, 
+    shapeIndex: number,
+    shapeFillColor: string
+  ): { enabled: boolean; blur: number; spread: number; color: string; opacity: number; blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter' } | undefined => {
+    if (!settings.outerGlowEnabled) return undefined;
+    
+    // Apply probability check
+    if (Math.random() * 100 > settings.outerGlowProbability) return undefined;
+    
+    // Calculate blur based on mode
+    let blur = 0;
+    switch (settings.outerGlowBlurMode) {
+      case 'range':
+        const [minBlur, maxBlur] = settings.outerGlowBlurRange;
+        blur = minBlur + Math.random() * (maxBlur - minBlur);
+        break;
+      case 'define':
+        blur = settings.outerGlowBlur;
+        break;
+      case 'incremental':
+        blur = settings.outerGlowBlurStartValue + (shapeIndex * settings.outerGlowBlurIncrement);
+        break;
+    }
+    
+    // Calculate spread based on mode
+    let spread = 0;
+    switch (settings.outerGlowSpreadMode) {
+      case 'range':
+        const [minSpread, maxSpread] = settings.outerGlowSpreadRange;
+        spread = minSpread + Math.random() * (maxSpread - minSpread);
+        break;
+      case 'define':
+        spread = settings.outerGlowSpread;
+        break;
+      case 'incremental':
+        spread = settings.outerGlowSpreadStartValue + (shapeIndex * settings.outerGlowSpreadIncrement);
+        break;
+    }
+    
+    // Calculate color (auto or custom)
+    let color = settings.outerGlowCustomColor;
+    if (settings.outerGlowColorMode === 'auto' && shapeFillColor && shapeFillColor !== 'none') {
+      // For glows, boost saturation instead of just lightening
+      color = deriveEffectColor(shapeFillColor, 'lighten', settings.outerGlowColorSaturate);
+    }
+    
+    return {
+      enabled: true,
+      blur,
+      spread,
+      color,
+      opacity: settings.outerGlowOpacity,
+      blendMode: settings.outerGlowBlendMode
+    };
+  };
+
+  // Helper function to calculate inner shadow properties
+  const calculateInnerShadow = (
+    settings: BatchConfigSettings, 
+    shapeIndex: number,
+    shapeFillColor: string
+  ): { enabled: boolean; offsetX: number; offsetY: number; blur: number; color: string; opacity: number; blendMode: 'multiply' | 'darken' | 'overlay' } | undefined => {
+    if (!settings.innerShadowEnabled) return undefined;
+    
+    // Apply probability check
+    if (Math.random() * 100 > settings.innerShadowProbability) return undefined;
+    
+    // Calculate offset X based on mode
+    let offsetX = 0;
+    switch (settings.innerShadowOffsetXMode) {
+      case 'range':
+        const [minX, maxX] = settings.innerShadowOffsetXRange;
+        offsetX = minX + Math.random() * (maxX - minX);
+        break;
+      case 'define':
+        offsetX = settings.innerShadowOffsetX;
+        break;
+      case 'incremental':
+        offsetX = settings.innerShadowOffsetXStartValue + (shapeIndex * settings.innerShadowOffsetXIncrement);
+        break;
+    }
+    
+    // Calculate offset Y based on mode
+    let offsetY = 0;
+    switch (settings.innerShadowOffsetYMode) {
+      case 'range':
+        const [minY, maxY] = settings.innerShadowOffsetYRange;
+        offsetY = minY + Math.random() * (maxY - minY);
+        break;
+      case 'define':
+        offsetY = settings.innerShadowOffsetY;
+        break;
+      case 'incremental':
+        offsetY = settings.innerShadowOffsetYStartValue + (shapeIndex * settings.innerShadowOffsetYIncrement);
+        break;
+    }
+    
+    // Calculate blur based on mode
+    let blur = 0;
+    switch (settings.innerShadowBlurMode) {
+      case 'range':
+        const [minBlur, maxBlur] = settings.innerShadowBlurRange;
+        blur = minBlur + Math.random() * (maxBlur - minBlur);
+        break;
+      case 'define':
+        blur = settings.innerShadowBlur;
+        break;
+      case 'incremental':
+        blur = settings.innerShadowBlurStartValue + (shapeIndex * settings.innerShadowBlurIncrement);
+        break;
+    }
+    
+    // Calculate color (auto or custom)
+    let color = settings.innerShadowCustomColor;
+    if (settings.innerShadowColorMode === 'auto' && shapeFillColor && shapeFillColor !== 'none') {
+      color = deriveEffectColor(shapeFillColor, 'darken', settings.innerShadowColorDarken);
+    }
+    
+    return {
+      enabled: true,
+      offsetX,
+      offsetY,
+      blur,
+      color,
+      opacity: settings.innerShadowOpacity,
+      blendMode: settings.innerShadowBlendMode
+    };
+  };
+
+  // Helper function to calculate inner glow properties
+  const calculateInnerGlow = (
+    settings: BatchConfigSettings, 
+    shapeIndex: number,
+    shapeFillColor: string
+  ): { enabled: boolean; blur: number; spread: number; color: string; opacity: number; blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter' } | undefined => {
+    if (!settings.innerGlowEnabled) return undefined;
+    
+    // Apply probability check
+    if (Math.random() * 100 > settings.innerGlowProbability) return undefined;
+    
+    // Calculate blur based on mode
+    let blur = 0;
+    switch (settings.innerGlowBlurMode) {
+      case 'range':
+        const [minBlur, maxBlur] = settings.innerGlowBlurRange;
+        blur = minBlur + Math.random() * (maxBlur - minBlur);
+        break;
+      case 'define':
+        blur = settings.innerGlowBlur;
+        break;
+      case 'incremental':
+        blur = settings.innerGlowBlurStartValue + (shapeIndex * settings.innerGlowBlurIncrement);
+        break;
+    }
+    
+    // Calculate spread based on mode
+    let spread = 0;
+    switch (settings.innerGlowSpreadMode) {
+      case 'range':
+        const [minSpread, maxSpread] = settings.innerGlowSpreadRange;
+        spread = minSpread + Math.random() * (maxSpread - minSpread);
+        break;
+      case 'define':
+        spread = settings.innerGlowSpread;
+        break;
+      case 'incremental':
+        spread = settings.innerGlowSpreadStartValue + (shapeIndex * settings.innerGlowSpreadIncrement);
+        break;
+    }
+    
+    // Calculate color (auto or custom)
+    let color = settings.innerGlowCustomColor;
+    if (settings.innerGlowColorMode === 'auto' && shapeFillColor && shapeFillColor !== 'none') {
+      color = deriveEffectColor(shapeFillColor, 'lighten', settings.innerGlowColorSaturate);
+    }
+    
+    return {
+      enabled: true,
+      blur,
+      spread,
+      color,
+      opacity: settings.innerGlowOpacity,
+      blendMode: settings.innerGlowBlendMode
+    };
+  };
+
   // Helper function to calculate stroke width based on mode
   const calculateStrokeWidth = (settings: BatchConfigSettings, shapeIndex: number): number => {
     // Short-circuit if strokeWidthEnabled is false
@@ -2463,6 +2804,26 @@ export const useShapeEditor = () => {
         } else {
           // Shape Effects or Blur section disabled - ensure no blur
           shape.properties.blurRadius = 0;
+        }
+
+        // Handle shape effects (drop shadow, outer glow, inner shadow, inner glow)
+        // Get the shape's fill color for auto-color mode
+        const shapeFillColor = typeof shape.properties.fillColor === 'string' && shape.properties.fillColor !== 'none' 
+          ? shape.properties.fillColor 
+          : '#808080'; // Fallback for auto-color mode
+        
+        if (effectiveBatchConfig.shapeEffectsEnabled) {
+          // Calculate and apply Drop Shadow
+          shape.properties.dropShadow = calculateDropShadow(effectiveBatchConfig, index, shapeFillColor);
+          
+          // Calculate and apply Outer Glow
+          shape.properties.outerGlow = calculateOuterGlow(effectiveBatchConfig, index, shapeFillColor);
+          
+          // Calculate and apply Inner Shadow
+          shape.properties.innerShadow = calculateInnerShadow(effectiveBatchConfig, index, shapeFillColor);
+          
+          // Calculate and apply Inner Glow
+          shape.properties.innerGlow = calculateInnerGlow(effectiveBatchConfig, index, shapeFillColor);
         }
 
         // Apply shape transforms if enabled

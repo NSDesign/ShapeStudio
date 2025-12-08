@@ -1245,6 +1245,97 @@ export interface BatchConfigSettings {
   blurModulationEnabled: boolean; // Enable modulation
   blurModulationValue: number; // Modulation value
   
+  // Drop Shadow Properties
+  dropShadowEnabled: boolean;
+  dropShadowProbability: number; // 0-100%
+  dropShadowColorMode: 'auto' | 'custom'; // auto = derive from shape color
+  dropShadowCustomColor: string; // Custom color when colorMode is 'custom'
+  dropShadowColorDarken: number; // For auto mode - how much to darken (0-100%)
+  dropShadowBlendMode: 'multiply' | 'darken' | 'overlay'; // Blend modes for shadows
+  dropShadowOffsetXMode: 'range' | 'define' | 'incremental';
+  dropShadowOffsetX: number; // Fixed value
+  dropShadowOffsetXRange: [number, number]; // Range mode
+  dropShadowOffsetXStartValue: number; // Incremental mode
+  dropShadowOffsetXIncrement: number;
+  dropShadowOffsetYMode: 'range' | 'define' | 'incremental';
+  dropShadowOffsetY: number; // Fixed value
+  dropShadowOffsetYRange: [number, number]; // Range mode
+  dropShadowOffsetYStartValue: number; // Incremental mode
+  dropShadowOffsetYIncrement: number;
+  dropShadowBlurMode: 'range' | 'define' | 'incremental';
+  dropShadowBlur: number; // Fixed value
+  dropShadowBlurRange: [number, number]; // Range mode
+  dropShadowBlurStartValue: number; // Incremental mode
+  dropShadowBlurIncrement: number;
+  dropShadowSpreadMode: 'range' | 'define' | 'incremental';
+  dropShadowSpread: number; // Fixed value
+  dropShadowSpreadRange: [number, number]; // Range mode
+  dropShadowSpreadStartValue: number; // Incremental mode
+  dropShadowSpreadIncrement: number;
+  dropShadowOpacity: number; // 0-100%
+  
+  // Outer Glow Properties
+  outerGlowEnabled: boolean;
+  outerGlowProbability: number; // 0-100%
+  outerGlowColorMode: 'auto' | 'custom'; // auto = derive from shape color
+  outerGlowCustomColor: string; // Custom color when colorMode is 'custom'
+  outerGlowColorSaturate: number; // For auto mode - boost saturation (0-100%)
+  outerGlowBlendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter'; // Blend modes for glows
+  outerGlowBlurMode: 'range' | 'define' | 'incremental';
+  outerGlowBlur: number; // Fixed value
+  outerGlowBlurRange: [number, number]; // Range mode
+  outerGlowBlurStartValue: number; // Incremental mode
+  outerGlowBlurIncrement: number;
+  outerGlowSpreadMode: 'range' | 'define' | 'incremental';
+  outerGlowSpread: number; // Fixed value
+  outerGlowSpreadRange: [number, number]; // Range mode
+  outerGlowSpreadStartValue: number; // Incremental mode
+  outerGlowSpreadIncrement: number;
+  outerGlowOpacity: number; // 0-100%
+  
+  // Inner Shadow Properties
+  innerShadowEnabled: boolean;
+  innerShadowProbability: number; // 0-100%
+  innerShadowColorMode: 'auto' | 'custom'; // auto = derive from shape color
+  innerShadowCustomColor: string; // Custom color when colorMode is 'custom'
+  innerShadowColorDarken: number; // For auto mode - how much to darken (0-100%)
+  innerShadowBlendMode: 'multiply' | 'darken' | 'overlay'; // Blend modes for shadows
+  innerShadowOffsetXMode: 'range' | 'define' | 'incremental';
+  innerShadowOffsetX: number; // Fixed value
+  innerShadowOffsetXRange: [number, number]; // Range mode
+  innerShadowOffsetXStartValue: number; // Incremental mode
+  innerShadowOffsetXIncrement: number;
+  innerShadowOffsetYMode: 'range' | 'define' | 'incremental';
+  innerShadowOffsetY: number; // Fixed value
+  innerShadowOffsetYRange: [number, number]; // Range mode
+  innerShadowOffsetYStartValue: number; // Incremental mode
+  innerShadowOffsetYIncrement: number;
+  innerShadowBlurMode: 'range' | 'define' | 'incremental';
+  innerShadowBlur: number; // Fixed value
+  innerShadowBlurRange: [number, number]; // Range mode
+  innerShadowBlurStartValue: number; // Incremental mode
+  innerShadowBlurIncrement: number;
+  innerShadowOpacity: number; // 0-100%
+  
+  // Inner Glow Properties
+  innerGlowEnabled: boolean;
+  innerGlowProbability: number; // 0-100%
+  innerGlowColorMode: 'auto' | 'custom'; // auto = derive from shape color
+  innerGlowCustomColor: string; // Custom color when colorMode is 'custom'
+  innerGlowColorSaturate: number; // For auto mode - boost saturation (0-100%)
+  innerGlowBlendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter'; // Blend modes for glows
+  innerGlowBlurMode: 'range' | 'define' | 'incremental';
+  innerGlowBlur: number; // Fixed value
+  innerGlowBlurRange: [number, number]; // Range mode
+  innerGlowBlurStartValue: number; // Incremental mode
+  innerGlowBlurIncrement: number;
+  innerGlowSpreadMode: 'range' | 'define' | 'incremental';
+  innerGlowSpread: number; // Fixed value
+  innerGlowSpreadRange: [number, number]; // Range mode
+  innerGlowSpreadStartValue: number; // Incremental mode
+  innerGlowSpreadIncrement: number;
+  innerGlowOpacity: number; // 0-100%
+  
   // Stroke Properties  
   strokeEnabled: boolean;
   strokeProbability: number; // 0-100%
@@ -1824,6 +1915,97 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   blurIncrement: 1,
   blurModulationEnabled: false,
   blurModulationValue: 20,
+  
+  // Drop Shadow Properties
+  dropShadowEnabled: false,
+  dropShadowProbability: 100,
+  dropShadowColorMode: 'auto',
+  dropShadowCustomColor: '#000000',
+  dropShadowColorDarken: 50,
+  dropShadowBlendMode: 'multiply',
+  dropShadowOffsetXMode: 'define',
+  dropShadowOffsetX: 4,
+  dropShadowOffsetXRange: [2, 8],
+  dropShadowOffsetXStartValue: 2,
+  dropShadowOffsetXIncrement: 1,
+  dropShadowOffsetYMode: 'define',
+  dropShadowOffsetY: 4,
+  dropShadowOffsetYRange: [2, 8],
+  dropShadowOffsetYStartValue: 2,
+  dropShadowOffsetYIncrement: 1,
+  dropShadowBlurMode: 'define',
+  dropShadowBlur: 6,
+  dropShadowBlurRange: [2, 12],
+  dropShadowBlurStartValue: 2,
+  dropShadowBlurIncrement: 1,
+  dropShadowSpreadMode: 'define',
+  dropShadowSpread: 0,
+  dropShadowSpreadRange: [0, 10],
+  dropShadowSpreadStartValue: 0,
+  dropShadowSpreadIncrement: 1,
+  dropShadowOpacity: 50,
+  
+  // Outer Glow Properties
+  outerGlowEnabled: false,
+  outerGlowProbability: 100,
+  outerGlowColorMode: 'auto',
+  outerGlowCustomColor: '#ffffff',
+  outerGlowColorSaturate: 20,
+  outerGlowBlendMode: 'screen',
+  outerGlowBlurMode: 'define',
+  outerGlowBlur: 10,
+  outerGlowBlurRange: [5, 20],
+  outerGlowBlurStartValue: 5,
+  outerGlowBlurIncrement: 2,
+  outerGlowSpreadMode: 'define',
+  outerGlowSpread: 0,
+  outerGlowSpreadRange: [0, 10],
+  outerGlowSpreadStartValue: 0,
+  outerGlowSpreadIncrement: 1,
+  outerGlowOpacity: 75,
+  
+  // Inner Shadow Properties
+  innerShadowEnabled: false,
+  innerShadowProbability: 100,
+  innerShadowColorMode: 'auto',
+  innerShadowCustomColor: '#000000',
+  innerShadowColorDarken: 50,
+  innerShadowBlendMode: 'multiply',
+  innerShadowOffsetXMode: 'define',
+  innerShadowOffsetX: 2,
+  innerShadowOffsetXRange: [1, 5],
+  innerShadowOffsetXStartValue: 1,
+  innerShadowOffsetXIncrement: 1,
+  innerShadowOffsetYMode: 'define',
+  innerShadowOffsetY: 2,
+  innerShadowOffsetYRange: [1, 5],
+  innerShadowOffsetYStartValue: 1,
+  innerShadowOffsetYIncrement: 1,
+  innerShadowBlurMode: 'define',
+  innerShadowBlur: 4,
+  innerShadowBlurRange: [2, 8],
+  innerShadowBlurStartValue: 2,
+  innerShadowBlurIncrement: 1,
+  innerShadowOpacity: 50,
+  
+  // Inner Glow Properties
+  innerGlowEnabled: false,
+  innerGlowProbability: 100,
+  innerGlowColorMode: 'auto',
+  innerGlowCustomColor: '#ffffff',
+  innerGlowColorSaturate: 20,
+  innerGlowBlendMode: 'screen',
+  innerGlowBlurMode: 'define',
+  innerGlowBlur: 8,
+  innerGlowBlurRange: [4, 16],
+  innerGlowBlurStartValue: 4,
+  innerGlowBlurIncrement: 2,
+  innerGlowSpreadMode: 'define',
+  innerGlowSpread: 0,
+  innerGlowSpreadRange: [0, 8],
+  innerGlowSpreadStartValue: 0,
+  innerGlowSpreadIncrement: 1,
+  innerGlowOpacity: 75,
   
   // Stroke Properties
   strokeEnabled: true,
@@ -2931,6 +3113,97 @@ export const BatchConfigSettingsSchema = z.object({
   blurIncrement: z.number(),
   blurModulationEnabled: z.boolean(),
   blurModulationValue: z.number(),
+  
+  // Drop Shadow properties
+  dropShadowEnabled: z.boolean(),
+  dropShadowProbability: z.number(),
+  dropShadowColorMode: z.enum(['auto', 'custom']),
+  dropShadowCustomColor: z.string(),
+  dropShadowColorDarken: z.number(),
+  dropShadowBlendMode: z.enum(['multiply', 'darken', 'overlay']),
+  dropShadowOffsetXMode: z.enum(['range', 'define', 'incremental']),
+  dropShadowOffsetX: z.number(),
+  dropShadowOffsetXRange: z.tuple([z.number(), z.number()]),
+  dropShadowOffsetXStartValue: z.number(),
+  dropShadowOffsetXIncrement: z.number(),
+  dropShadowOffsetYMode: z.enum(['range', 'define', 'incremental']),
+  dropShadowOffsetY: z.number(),
+  dropShadowOffsetYRange: z.tuple([z.number(), z.number()]),
+  dropShadowOffsetYStartValue: z.number(),
+  dropShadowOffsetYIncrement: z.number(),
+  dropShadowBlurMode: z.enum(['range', 'define', 'incremental']),
+  dropShadowBlur: z.number(),
+  dropShadowBlurRange: z.tuple([z.number(), z.number()]),
+  dropShadowBlurStartValue: z.number(),
+  dropShadowBlurIncrement: z.number(),
+  dropShadowSpreadMode: z.enum(['range', 'define', 'incremental']),
+  dropShadowSpread: z.number(),
+  dropShadowSpreadRange: z.tuple([z.number(), z.number()]),
+  dropShadowSpreadStartValue: z.number(),
+  dropShadowSpreadIncrement: z.number(),
+  dropShadowOpacity: z.number(),
+  
+  // Outer Glow properties
+  outerGlowEnabled: z.boolean(),
+  outerGlowProbability: z.number(),
+  outerGlowColorMode: z.enum(['auto', 'custom']),
+  outerGlowCustomColor: z.string(),
+  outerGlowColorSaturate: z.number(),
+  outerGlowBlendMode: z.enum(['screen', 'add', 'soft-light', 'color-dodge', 'lighter']),
+  outerGlowBlurMode: z.enum(['range', 'define', 'incremental']),
+  outerGlowBlur: z.number(),
+  outerGlowBlurRange: z.tuple([z.number(), z.number()]),
+  outerGlowBlurStartValue: z.number(),
+  outerGlowBlurIncrement: z.number(),
+  outerGlowSpreadMode: z.enum(['range', 'define', 'incremental']),
+  outerGlowSpread: z.number(),
+  outerGlowSpreadRange: z.tuple([z.number(), z.number()]),
+  outerGlowSpreadStartValue: z.number(),
+  outerGlowSpreadIncrement: z.number(),
+  outerGlowOpacity: z.number(),
+  
+  // Inner Shadow properties
+  innerShadowEnabled: z.boolean(),
+  innerShadowProbability: z.number(),
+  innerShadowColorMode: z.enum(['auto', 'custom']),
+  innerShadowCustomColor: z.string(),
+  innerShadowColorDarken: z.number(),
+  innerShadowBlendMode: z.enum(['multiply', 'darken', 'overlay']),
+  innerShadowOffsetXMode: z.enum(['range', 'define', 'incremental']),
+  innerShadowOffsetX: z.number(),
+  innerShadowOffsetXRange: z.tuple([z.number(), z.number()]),
+  innerShadowOffsetXStartValue: z.number(),
+  innerShadowOffsetXIncrement: z.number(),
+  innerShadowOffsetYMode: z.enum(['range', 'define', 'incremental']),
+  innerShadowOffsetY: z.number(),
+  innerShadowOffsetYRange: z.tuple([z.number(), z.number()]),
+  innerShadowOffsetYStartValue: z.number(),
+  innerShadowOffsetYIncrement: z.number(),
+  innerShadowBlurMode: z.enum(['range', 'define', 'incremental']),
+  innerShadowBlur: z.number(),
+  innerShadowBlurRange: z.tuple([z.number(), z.number()]),
+  innerShadowBlurStartValue: z.number(),
+  innerShadowBlurIncrement: z.number(),
+  innerShadowOpacity: z.number(),
+  
+  // Inner Glow properties
+  innerGlowEnabled: z.boolean(),
+  innerGlowProbability: z.number(),
+  innerGlowColorMode: z.enum(['auto', 'custom']),
+  innerGlowCustomColor: z.string(),
+  innerGlowColorSaturate: z.number(),
+  innerGlowBlendMode: z.enum(['screen', 'add', 'soft-light', 'color-dodge', 'lighter']),
+  innerGlowBlurMode: z.enum(['range', 'define', 'incremental']),
+  innerGlowBlur: z.number(),
+  innerGlowBlurRange: z.tuple([z.number(), z.number()]),
+  innerGlowBlurStartValue: z.number(),
+  innerGlowBlurIncrement: z.number(),
+  innerGlowSpreadMode: z.enum(['range', 'define', 'incremental']),
+  innerGlowSpread: z.number(),
+  innerGlowSpreadRange: z.tuple([z.number(), z.number()]),
+  innerGlowSpreadStartValue: z.number(),
+  innerGlowSpreadIncrement: z.number(),
+  innerGlowOpacity: z.number(),
   
   // Stroke properties
   strokeEnabled: z.boolean(),

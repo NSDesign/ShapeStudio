@@ -1710,9 +1710,11 @@ export class Shape {
     ctx.scale(this.transform.scaleX, this.transform.scaleY);
     ctx.transform(1, this.transform.skewX, this.transform.skewY, 1, 0, 0);
     
-    // Check if blur should be applied
-    if (this.properties.blurRadius > 0) {
-      this.renderWithCanvasBlur(ctx);
+    // Check if any effects need to be applied
+    const hasEffects = this.hasAnyEffect();
+    
+    if (hasEffects || this.properties.blurRadius > 0) {
+      this.renderWithEffects(ctx);
     } else {
       // Draw shape normally
       this.drawShape(ctx);
@@ -1730,6 +1732,445 @@ export class Shape {
     }
     
     ctx.restore();
+  }
+
+  private hasAnyEffect(): boolean {
+    return !!(
+      this.properties.dropShadow?.enabled ||
+      this.properties.outerGlow?.enabled ||
+      this.properties.innerShadow?.enabled ||
+      this.properties.innerGlow?.enabled
+    );
+  }
+
+  private renderWithEffects(ctx: CanvasRenderingContext2D): void {
+    const bounds = this.getBounds();
+    const blurRadius = Math.max(0, Math.min(20, this.properties.blurRadius));
+    
+    // Calculate maximum effect expansion needed
+    let maxExpansion = blurRadius * 2;
+    if (this.properties.dropShadow?.enabled) {
+      const ds = this.properties.dropShadow;
+      maxExpansion = Math.max(maxExpansion, Math.abs(ds.offsetX) + ds.blur + ds.spread + 10);
+      maxExpansion = Math.max(maxExpansion, Math.abs(ds.offsetY) + ds.blur + ds.spread + 10);
+    }
+    if (this.properties.outerGlow?.enabled) {
+      const og = this.properties.outerGlow;
+      maxExpansion = Math.max(maxExpansion, og.blur + og.spread + 10);
+    }
+    
+    const expandedBounds = {
+      x: bounds.x - maxExpansion,
+      y: bounds.y - maxExpansion,
+      width: bounds.width + maxExpansion * 2,
+      height: bounds.height + maxExpansion * 2
+    };
+    
+    // Create main compositing canvas
+    const compositeCanvas = document.createElement('canvas');
+    const compositeCtx = compositeCanvas.getContext('2d')!;
+    compositeCanvas.width = expandedBounds.width;
+    compositeCanvas.height = expandedBounds.height;
+    compositeCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    
+    // 1. Render Drop Shadow (beneath everything)
+    if (this.properties.dropShadow?.enabled) {
+      this.renderDropShadow(compositeCtx, expandedBounds);
+    }
+    
+    // 2. Render Outer Glow (beneath shape, above shadow)
+    if (this.properties.outerGlow?.enabled) {
+      this.renderOuterGlow(compositeCtx, expandedBounds);
+    }
+    
+    // 3. Draw the main shape (with blur if needed - blur only affects shape, not inner effects)
+    if (blurRadius > 0) {
+      // Create separate canvas for shape with blur
+      const shapeCanvas = document.createElement('canvas');
+      const shapeCtx = shapeCanvas.getContext('2d')!;
+      shapeCanvas.width = expandedBounds.width;
+      shapeCanvas.height = expandedBounds.height;
+      shapeCtx.translate(-expandedBounds.x, -expandedBounds.y);
+      
+      // Draw shape on separate canvas
+      shapeCtx.save();
+      this.drawShape(shapeCtx);
+      shapeCtx.restore();
+      
+      // Apply blur to shape only
+      const blurredData = this.applyGaussianBlur(shapeCtx, shapeCanvas.width, shapeCanvas.height, blurRadius);
+      shapeCtx.putImageData(blurredData, 0, 0);
+      
+      // Composite blurred shape
+      compositeCtx.save();
+      compositeCtx.translate(expandedBounds.x, expandedBounds.y);
+      compositeCtx.drawImage(shapeCanvas, 0, 0);
+      compositeCtx.restore();
+    } else {
+      // Draw shape directly without blur
+      compositeCtx.save();
+      this.drawShape(compositeCtx);
+      compositeCtx.restore();
+    }
+    
+    // 4. Render Inner Shadow (inside shape, crisp on top of possibly blurred shape)
+    if (this.properties.innerShadow?.enabled) {
+      this.renderInnerShadow(compositeCtx, expandedBounds);
+    }
+    
+    // 5. Render Inner Glow (inside shape, crisp on top of everything)
+    if (this.properties.innerGlow?.enabled) {
+      this.renderInnerGlow(compositeCtx, expandedBounds);
+    }
+    
+    // Draw final composite to main canvas
+    ctx.drawImage(compositeCanvas, expandedBounds.x, expandedBounds.y);
+  }
+
+  private renderDropShadow(ctx: CanvasRenderingContext2D, expandedBounds: { x: number; y: number; width: number; height: number }): void {
+    const shadow = this.properties.dropShadow!;
+    const blurRadius = Math.max(1, Math.min(30, shadow.blur));
+    
+    // Create shadow canvas
+    const shadowCanvas = document.createElement('canvas');
+    const shadowCtx = shadowCanvas.getContext('2d')!;
+    shadowCanvas.width = expandedBounds.width;
+    shadowCanvas.height = expandedBounds.height;
+    
+    // Translate and offset for shadow position
+    shadowCtx.translate(-expandedBounds.x + shadow.offsetX, -expandedBounds.y + shadow.offsetY);
+    
+    // Draw shape silhouette for shadow
+    shadowCtx.save();
+    this.drawShapePath(shadowCtx);
+    shadowCtx.fillStyle = shadow.color;
+    shadowCtx.globalAlpha = shadow.opacity / 100;
+    shadowCtx.fill();
+    shadowCtx.restore();
+    
+    // Apply spread by scaling if needed
+    if (shadow.spread > 0) {
+      // Spread is handled by expanding the shape slightly - simplified for now
+    }
+    
+    // Apply blur to shadow
+    if (blurRadius > 1) {
+      const blurredData = this.applyGaussianBlur(shadowCtx, shadowCanvas.width, shadowCanvas.height, blurRadius);
+      shadowCtx.putImageData(blurredData, 0, 0);
+    }
+    
+    // Composite shadow to main canvas with blend mode
+    ctx.save();
+    ctx.translate(expandedBounds.x, expandedBounds.y);
+    ctx.globalCompositeOperation = shadow.blendMode;
+    ctx.drawImage(shadowCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  private renderOuterGlow(ctx: CanvasRenderingContext2D, expandedBounds: { x: number; y: number; width: number; height: number }): void {
+    const glow = this.properties.outerGlow!;
+    const blurRadius = Math.max(1, Math.min(30, glow.blur));
+    
+    // Create glow canvas
+    const glowCanvas = document.createElement('canvas');
+    const glowCtx = glowCanvas.getContext('2d')!;
+    glowCanvas.width = expandedBounds.width;
+    glowCanvas.height = expandedBounds.height;
+    glowCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    
+    // Draw shape silhouette for glow
+    glowCtx.save();
+    this.drawShapePath(glowCtx);
+    glowCtx.fillStyle = glow.color;
+    glowCtx.globalAlpha = glow.opacity / 100;
+    glowCtx.fill();
+    glowCtx.restore();
+    
+    // Apply blur to create glow effect
+    if (blurRadius > 1) {
+      const blurredData = this.applyGaussianBlur(glowCtx, glowCanvas.width, glowCanvas.height, blurRadius);
+      glowCtx.putImageData(blurredData, 0, 0);
+    }
+    
+    // Composite glow to main canvas with blend mode
+    ctx.save();
+    ctx.translate(expandedBounds.x, expandedBounds.y);
+    // Map blend modes - 'add' is not a valid canvas composite operation, use 'lighter'
+    const blendMode = glow.blendMode === 'add' ? 'lighter' : glow.blendMode;
+    ctx.globalCompositeOperation = blendMode as GlobalCompositeOperation;
+    ctx.drawImage(glowCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  private renderInnerShadow(ctx: CanvasRenderingContext2D, expandedBounds: { x: number; y: number; width: number; height: number }): void {
+    const shadow = this.properties.innerShadow!;
+    const blurRadius = Math.max(1, Math.min(20, shadow.blur));
+    
+    // Create inner shadow using inverted shape masking
+    const shadowCanvas = document.createElement('canvas');
+    const shadowCtx = shadowCanvas.getContext('2d')!;
+    shadowCanvas.width = expandedBounds.width;
+    shadowCanvas.height = expandedBounds.height;
+    shadowCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    
+    // Fill entire canvas with shadow color
+    shadowCtx.save();
+    shadowCtx.fillStyle = shadow.color;
+    shadowCtx.globalAlpha = shadow.opacity / 100;
+    shadowCtx.translate(shadow.offsetX, shadow.offsetY);
+    
+    // Draw inverted shape (everything except shape area)
+    shadowCtx.fillRect(
+      expandedBounds.x - shadow.offsetX - blurRadius * 2, 
+      expandedBounds.y - shadow.offsetY - blurRadius * 2, 
+      expandedBounds.width + blurRadius * 4, 
+      expandedBounds.height + blurRadius * 4
+    );
+    
+    // Cut out the shape area
+    shadowCtx.globalCompositeOperation = 'destination-out';
+    this.drawShapePath(shadowCtx);
+    shadowCtx.fill();
+    shadowCtx.restore();
+    
+    // Apply blur
+    if (blurRadius > 1) {
+      const blurredData = this.applyGaussianBlur(shadowCtx, shadowCanvas.width, shadowCanvas.height, blurRadius);
+      shadowCtx.putImageData(blurredData, 0, 0);
+    }
+    
+    // Mask to only show inside shape
+    const maskCanvas = document.createElement('canvas');
+    const maskCtx = maskCanvas.getContext('2d')!;
+    maskCanvas.width = expandedBounds.width;
+    maskCanvas.height = expandedBounds.height;
+    maskCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    this.drawShapePath(maskCtx);
+    maskCtx.fillStyle = '#ffffff';
+    maskCtx.fill();
+    
+    // Apply mask
+    shadowCtx.save();
+    shadowCtx.translate(expandedBounds.x, expandedBounds.y);
+    shadowCtx.globalCompositeOperation = 'destination-in';
+    shadowCtx.drawImage(maskCanvas, 0, 0);
+    shadowCtx.restore();
+    
+    // Composite to main canvas
+    ctx.save();
+    ctx.translate(expandedBounds.x, expandedBounds.y);
+    ctx.globalCompositeOperation = shadow.blendMode;
+    ctx.drawImage(shadowCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  private renderInnerGlow(ctx: CanvasRenderingContext2D, expandedBounds: { x: number; y: number; width: number; height: number }): void {
+    const glow = this.properties.innerGlow!;
+    const blurRadius = Math.max(1, Math.min(20, glow.blur));
+    
+    // Create inner glow using edge detection
+    const glowCanvas = document.createElement('canvas');
+    const glowCtx = glowCanvas.getContext('2d')!;
+    glowCanvas.width = expandedBounds.width;
+    glowCanvas.height = expandedBounds.height;
+    glowCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    
+    // Draw shape outline (stroke) for glow source
+    glowCtx.save();
+    this.drawShapePath(glowCtx);
+    glowCtx.strokeStyle = glow.color;
+    glowCtx.lineWidth = blurRadius * 2;
+    glowCtx.globalAlpha = glow.opacity / 100;
+    glowCtx.stroke();
+    glowCtx.restore();
+    
+    // Apply blur to create glow effect
+    if (blurRadius > 1) {
+      const blurredData = this.applyGaussianBlur(glowCtx, glowCanvas.width, glowCanvas.height, blurRadius);
+      glowCtx.putImageData(blurredData, 0, 0);
+    }
+    
+    // Mask to only show inside shape
+    const maskCanvas = document.createElement('canvas');
+    const maskCtx = maskCanvas.getContext('2d')!;
+    maskCanvas.width = expandedBounds.width;
+    maskCanvas.height = expandedBounds.height;
+    maskCtx.translate(-expandedBounds.x, -expandedBounds.y);
+    this.drawShapePath(maskCtx);
+    maskCtx.fillStyle = '#ffffff';
+    maskCtx.fill();
+    
+    // Apply mask
+    glowCtx.save();
+    glowCtx.translate(expandedBounds.x, expandedBounds.y);
+    glowCtx.globalCompositeOperation = 'destination-in';
+    glowCtx.drawImage(maskCanvas, 0, 0);
+    glowCtx.restore();
+    
+    // Composite to main canvas
+    ctx.save();
+    ctx.translate(expandedBounds.x, expandedBounds.y);
+    // Map blend modes - 'add' is not a valid canvas composite operation, use 'lighter'
+    const blendMode = glow.blendMode === 'add' ? 'lighter' : glow.blendMode;
+    ctx.globalCompositeOperation = blendMode as GlobalCompositeOperation;
+    ctx.drawImage(glowCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  private drawShapePath(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    
+    switch (this.type) {
+      case 'rectangle':
+      case 'square':
+        this.drawPolygonPath(ctx);
+        break;
+      case 'rounded-rectangle':
+      case 'rounded-square':
+        if (this.renderType === 'roundRect' && this.cornerRadius) {
+          this.drawRoundedRectanglePath(ctx);
+        } else {
+          this.drawPolygonPath(ctx);
+        }
+        break;
+      case 'circle':
+      case 'ellipse':
+      case 'spline-circle':
+      case 'spline-ellipse':
+        this.drawPolygonPath(ctx);
+        break;
+      case 'polygon':
+      case 'triangle':
+      case 'right-triangle':
+      case 'trapezoid':
+      case 'pentagon':
+      case 'hexagon':
+      case 'rhombus':
+      case 'parallelogram':
+      case 'kite':
+      case 'semicircle':
+      case 'heart':
+      case 'arrow':
+      case 'cross':
+        this.drawPolygonPath(ctx);
+        break;
+      case 'star':
+        this.drawPolygonPath(ctx);
+        break;
+      case 'ring':
+      case 'spline-ring':
+        this.drawRingPath(ctx);
+        break;
+      case 'line':
+      case 'line-vector':
+        this.drawLinePath(ctx);
+        break;
+      case 'bezier':
+      case 'cubic':
+      case 'smooth-spline':
+        this.drawBezierPath(ctx);
+        break;
+      case 'chunk':
+      case 'blob':
+        this.drawPolygonPath(ctx);
+        break;
+      default:
+        this.drawPolygonPath(ctx);
+    }
+  }
+
+  private drawPolygonPath(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 2) return;
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    for (let i = 1; i < this.points.length; i++) {
+      ctx.lineTo(this.points[i].x, this.points[i].y);
+    }
+    if (this.closed) {
+      ctx.closePath();
+    }
+  }
+
+  private drawRoundedRectanglePath(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 4) return;
+    const minX = Math.min(...this.points.map(p => p.x));
+    const maxX = Math.max(...this.points.map(p => p.x));
+    const minY = Math.min(...this.points.map(p => p.y));
+    const maxY = Math.max(...this.points.map(p => p.y));
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const radius = Math.min(this.cornerRadius || 0, width / 2, height / 2);
+    ctx.roundRect(minX, minY, width, height, radius);
+  }
+
+  private drawRingPath(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length === 0) return;
+    const outerCount = Math.ceil(this.points.length / 2);
+    
+    // Draw outer path
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    for (let i = 1; i < outerCount; i++) {
+      ctx.lineTo(this.points[i].x, this.points[i].y);
+    }
+    ctx.closePath();
+    
+    // Draw inner path (reverse winding)
+    if (this.points.length > outerCount) {
+      ctx.moveTo(this.points[outerCount].x, this.points[outerCount].y);
+      for (let i = this.points.length - 1; i >= outerCount; i--) {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
+      }
+      ctx.closePath();
+    }
+  }
+
+  private drawLinePath(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 2) return;
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    for (let i = 1; i < this.points.length; i++) {
+      ctx.lineTo(this.points[i].x, this.points[i].y);
+    }
+  }
+
+  private drawBezierPath(ctx: CanvasRenderingContext2D): void {
+    if (!this.points || this.points.length < 2) return;
+    
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    
+    if (this.tangentHandles && this.tangentHandles.length >= this.points.length) {
+      for (let i = 0; i < this.points.length - 1; i++) {
+        const p0 = this.points[i];
+        const p1 = this.points[i + 1];
+        const h0 = this.tangentHandles[i];
+        const h1 = this.tangentHandles[i + 1];
+        
+        ctx.bezierCurveTo(
+          p0.x + h0.out.x, p0.y + h0.out.y,
+          p1.x + h1.in.x, p1.y + h1.in.y,
+          p1.x, p1.y
+        );
+      }
+      
+      if (this.closed && this.points.length > 2) {
+        const lastIdx = this.points.length - 1;
+        const lastPoint = this.points[lastIdx];
+        const firstPoint = this.points[0];
+        const lastHandle = this.tangentHandles[lastIdx];
+        const firstHandle = this.tangentHandles[0];
+        
+        ctx.bezierCurveTo(
+          lastPoint.x + lastHandle.out.x, lastPoint.y + lastHandle.out.y,
+          firstPoint.x + firstHandle.in.x, firstPoint.y + firstHandle.in.y,
+          firstPoint.x, firstPoint.y
+        );
+      }
+    } else {
+      for (let i = 1; i < this.points.length; i++) {
+        ctx.lineTo(this.points[i].x, this.points[i].y);
+      }
+      if (this.closed) {
+        ctx.closePath();
+      }
+    }
   }
 
   private renderWithCanvasBlur(ctx: CanvasRenderingContext2D): void {
