@@ -2542,7 +2542,14 @@ export class HighResolutionExportService {
           duration: Date.now() - startTime
         };
       } finally {
-        await page.close();
+        // Page may already be closed by renderTiled during page recycling for memory management
+        // Wrap in try-catch to handle this gracefully
+        try {
+          await page.close();
+        } catch (closeError) {
+          // Expected when renderTiled recycled the page - not an error
+          console.log('[HighResExport] Page already closed (expected for tiled exports with page recycling)');
+        }
       }
     } catch (error) {
       console.error('[HighResExport] Export failed:', error);
