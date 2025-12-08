@@ -3197,8 +3197,16 @@ export class HighResolutionExportService {
         const canvas = document.getElementById('exportCanvas');
         const ctx = canvas.getContext('2d');
         
-        const scale = RENDER_DATA.scale || 1;
         const printExpansion = RENDER_DATA.exportSettings?.printExpansion || 0;
+        const artboardWidth = RENDER_DATA.artboard?.width || 1;
+        const artboardHeight = RENDER_DATA.artboard?.height || 1;
+        const fullCanvasWidth = RENDER_DATA.fullCanvasWidth || ${canvasWidth};
+        const fullCanvasHeight = RENDER_DATA.fullCanvasHeight || ${canvasHeight};
+        
+        // Calculate the actual DPI scale from canvas dimensions
+        // The full canvas was sized as: (artboard + 2*printExpansion) * scale
+        // So: scale = fullCanvasWidth / (artboardWidth + 2*printExpansion)
+        const scale = fullCanvasWidth / (artboardWidth + 2 * printExpansion);
         
         // Fill background first if not transparent (in pixel coordinates before transform)
         const bgColor = RENDER_DATA.exportSettings?.backgroundColor || 'transparent';
@@ -3209,16 +3217,24 @@ export class HighResolutionExportService {
         
         // Apply transforms in correct order:
         // 1. Translate by negative tile offset (shift the full canvas so this tile portion is visible)
-        // 2. Scale by export scale (DPI ratio)
-        // 3. Translate by print expansion (for bleed/print marks)
+        // 2. Scale by DPI scale (calculated from canvas/artboard ratio)
+        // 3. Translate by print expansion (for bleed/print marks in artboard coords)
         ctx.translate(-TILE_OFFSET_X, -TILE_OFFSET_Y);
         ctx.scale(scale, scale);
         ctx.translate(printExpansion, printExpansion);
         
         const shapes = RENDER_DATA.shapes || [];
         
-        // Debug: Log shape count and first shape structure
+        // Debug: Log scale calculation and shape info
         const debugInfo = {
+          calculatedScale: scale,
+          fullCanvasWidth: fullCanvasWidth,
+          fullCanvasHeight: fullCanvasHeight,
+          artboardWidth: artboardWidth,
+          artboardHeight: artboardHeight,
+          printExpansion: printExpansion,
+          tileOffsetX: TILE_OFFSET_X,
+          tileOffsetY: TILE_OFFSET_Y,
           shapeCount: shapes.length,
           firstShapeKeys: shapes.length > 0 ? Object.keys(shapes[0]) : [],
           firstShapeTransform: shapes.length > 0 ? shapes[0].transform : null,
