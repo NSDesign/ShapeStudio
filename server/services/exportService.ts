@@ -2185,8 +2185,47 @@ export class HighResolutionExportService {
   private sseExportSessions = new Map<string, SSEExportSessionData>();
   private exportFiles = new Map<string, { buffer: Buffer; filename: string; mimeType: string }>();
   
+  /**
+   * Check if the browser is healthy and can create new pages
+   */
+  private async isBrowserHealthy(): Promise<boolean> {
+    if (!this.browser) return false;
+    
+    try {
+      // Try to get browser version - this will fail if browser is disconnected
+      await this.browser.version();
+      return true;
+    } catch {
+      console.log('[HighResExport] Browser health check failed - browser is unhealthy');
+      return false;
+    }
+  }
+  
+  /**
+   * Force close the browser, handling cases where it may be disconnected
+   */
+  private async forceCloseBrowser(): Promise<void> {
+    if (this.browser) {
+      try {
+        await this.browser.close();
+      } catch (error) {
+        console.log('[HighResExport] Browser was already disconnected, clearing reference');
+      }
+      this.browser = null;
+    }
+  }
+  
   async initialize(): Promise<void> {
-    if (this.browser) return;
+    // Check if existing browser is healthy
+    if (this.browser) {
+      const healthy = await this.isBrowserHealthy();
+      if (healthy) {
+        return; // Browser is fine, no need to reinitialize
+      }
+      // Browser is unhealthy, force close and reinitialize
+      console.log('[HighResExport] Existing browser is unhealthy, reinitializing...');
+      await this.forceCloseBrowser();
+    }
     
     const executablePath = findChromiumPath();
     console.log(`[HighResExport] Launching browser from: ${executablePath}`);
@@ -2202,7 +2241,16 @@ export class HighResolutionExportService {
         '--no-first-run',
         '--no-zygote',
         '--single-process',
-        '--disable-extensions'
+        '--disable-extensions',
+        // Additional memory management flags
+        '--js-flags=--max-old-space-size=4096',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--disable-translate',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-default-browser-check'
       ]
     });
     
@@ -2210,11 +2258,8 @@ export class HighResolutionExportService {
   }
   
   async shutdown(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      console.log('[HighResExport] Browser closed');
-    }
+    await this.forceCloseBrowser();
+    console.log('[HighResExport] Browser closed');
   }
   
   // ===== SSE EXPORT SESSION MANAGEMENT =====
@@ -2673,6 +2718,7 @@ export class HighResolutionExportService {
   /**
    * Tiled rendering for very large exports
    * Renders each tile separately and composites them using Sharp
+   * Note: This function now manages its own page lifecycle to handle memory pressure better
    */
   private async renderTiled(
     page: Page,
@@ -2699,6 +2745,11 @@ export class HighResolutionExportService {
     // Calculate total steps for progress: 1 (prep) + tiles + 1 (stitch) + 1 (encode)
     const totalSteps = 1 + tilePlan.totalTiles + 1 + 1;
     let currentStep = 0;
+    
+    // For tiled rendering, we'll manage pages per-tile to handle memory pressure
+    // Close the passed-in page immediately - we'll create fresh pages per tile
+    let currentPage: Page = page;
+    const TILES_BEFORE_PAGE_REFRESH = 3; // Recreate page every N tiles to prevent memory buildup
     
     // Phase 1: Preparing tiles
     progressCallback?.(`Preparing tiles (${tilePlan.cols}x${tilePlan.rows} grid)...`, ++currentStep, totalSteps);
@@ -2740,7 +2791,36 @@ export class HighResolutionExportService {
       // Check for abort
       if (abortSignal?.aborted) {
         console.log('[HighResExport] Tiled export cancelled');
+        // Clean up current page if it's different from original
+        if (currentPage !== page) {
+          try { await currentPage.close(); } catch { /* ignore */ }
+        }
         return { success: false, error: 'Export cancelled' };
+      }
+      
+      // Refresh the page every N tiles to prevent memory buildup
+      // This creates a fresh page context and releases memory from previous renders
+      if (tile.index > 0 && tile.index % TILES_BEFORE_PAGE_REFRESH === 0) {
+        console.log(`[HighResExport] Refreshing page after ${tile.index} tiles to manage memory`);
+        try {
+          await currentPage.close();
+        } catch {
+          console.log('[HighResExport] Previous page already closed');
+        }
+        
+        // Check browser health and reinitialize if needed
+        if (!await this.isBrowserHealthy()) {
+          console.log('[HighResExport] Browser became unhealthy, reinitializing...');
+          await this.forceCloseBrowser();
+          await this.initialize();
+        }
+        
+        if (!this.browser) {
+          throw new Error('Browser not available after reinitialization');
+        }
+        
+        currentPage = await this.browser.newPage();
+        console.log('[HighResExport] Created fresh page for remaining tiles');
       }
       
       progressCallback?.(`Rendering tile ${tile.index + 1} of ${tilePlan.totalTiles}...`, ++currentStep, totalSteps);
@@ -2774,15 +2854,15 @@ export class HighResolutionExportService {
       
       const tileHtml = this.generateTileRendererHtml(tileRenderData);
       
-      await page.setViewport({
+      await currentPage.setViewport({
         width: Math.max(tile.width, 800),
         height: Math.max(tile.height, 600),
         deviceScaleFactor: 1
       });
       
-      await page.setContent(tileHtml, { waitUntil: 'networkidle0' });
+      await currentPage.setContent(tileHtml, { waitUntil: 'networkidle0' });
       
-      const tileRenderResult = await page.evaluate(() => {
+      const tileRenderResult = await currentPage.evaluate(() => {
         return (window as any).renderShapes();
       });
       
@@ -2792,10 +2872,14 @@ export class HighResolutionExportService {
       }
       
       if (!tileRenderResult.success) {
+        // Clean up page before throwing
+        if (currentPage !== page) {
+          try { await currentPage.close(); } catch { /* ignore */ }
+        }
         throw new Error(`Tile ${tile.index + 1} render failed: ${tileRenderResult.error}`);
       }
       
-      const tilePngDataUrl = await page.evaluate(() => {
+      const tilePngDataUrl = await currentPage.evaluate(() => {
         const canvas = document.getElementById('exportCanvas') as HTMLCanvasElement;
         return canvas.toDataURL('image/png');
       });
@@ -2816,6 +2900,11 @@ export class HighResolutionExportService {
         left: tile.x,
         top: tile.y
       });
+    }
+    
+    // Close the current page after all tiles are done (if it's different from original)
+    if (currentPage !== page) {
+      try { await currentPage.close(); } catch { /* ignore */ }
     }
     
     // Check for abort before stitching
