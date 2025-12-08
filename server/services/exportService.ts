@@ -3197,15 +3197,23 @@ export class HighResolutionExportService {
         const canvas = document.getElementById('exportCanvas');
         const ctx = canvas.getContext('2d');
         
-        // Apply tile offset translation (negative to shift content into view)
-        ctx.translate(-TILE_OFFSET_X, -TILE_OFFSET_Y);
+        const scale = RENDER_DATA.scale || 1;
+        const printExpansion = RENDER_DATA.exportSettings?.printExpansion || 0;
         
-        // Fill background if not transparent
+        // Fill background first if not transparent (in pixel coordinates before transform)
         const bgColor = RENDER_DATA.exportSettings?.backgroundColor || 'transparent';
         if (bgColor !== 'transparent') {
           ctx.fillStyle = bgColor;
-          ctx.fillRect(TILE_OFFSET_X, TILE_OFFSET_Y, ${canvasWidth}, ${canvasHeight});
+          ctx.fillRect(0, 0, ${canvasWidth}, ${canvasHeight});
         }
+        
+        // Apply transforms in correct order:
+        // 1. Translate by negative tile offset (shift the full canvas so this tile portion is visible)
+        // 2. Scale by export scale (DPI ratio)
+        // 3. Translate by print expansion (for bleed/print marks)
+        ctx.translate(-TILE_OFFSET_X, -TILE_OFFSET_Y);
+        ctx.scale(scale, scale);
+        ctx.translate(printExpansion, printExpansion);
         
         const shapes = RENDER_DATA.shapes || [];
         
