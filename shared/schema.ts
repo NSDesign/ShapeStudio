@@ -350,6 +350,11 @@ export type CompositingOperation =
   | 'copy'           // Replace with new
   | 'xor';           // Keep where they don't overlap
 
+// Incremental Index Driver - determines which index to use for incremental calculations
+// shapeIndex: Uses the shape's index within the generation (0, 1, 2, ...)
+// setRepIndex: Uses the set's repetition index across batch generations (0, 1, 2, ...)
+export type IncrementalIndexDriver = 'shapeIndex' | 'setRepIndex';
+
 // Set transform configuration
 export interface SetTransform {
   x: number;                    // X position offset
@@ -1041,6 +1046,7 @@ export interface BatchConfigSettings {
   widthModulationValue: number; // Modulation value for width
   heightModulationEnabled: boolean; // Enable modulation for height
   heightModulationValue: number; // Modulation value for height
+  sizeIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for width/height incremental mode
   
   // Size Constraints
   minimumSize: number; // absolute minimum size to prevent invisible shapes
@@ -1073,6 +1079,7 @@ export interface BatchConfigSettings {
   xPositionModulationValue: number; // Modulation value for X position (used for pixel-value and shape-count modes)
   yPositionModulationMode: 'off' | 'grid-row' | 'pixel-value' | 'shape-count'; // Modulation mode for Y position
   yPositionModulationValue: number; // Modulation value for Y position (used for pixel-value and shape-count modes)
+  positionIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for position incremental mode
   
   // Rectangle-specific Properties
   rectangleCornerRadiusMode: 'range' | 'define' | 'incremental';
@@ -1082,6 +1089,7 @@ export interface BatchConfigSettings {
   rectangleCornerRadiusIncrement: number;
   rectangleCornerRadiusModulationEnabled: boolean;
   rectangleCornerRadiusModulationValue: number;
+  rectangleCornerRadiusIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for corner radius incremental mode
   
   // Star-specific Properties
   starInnerRadiusMode: 'range' | 'define' | 'incremental';
@@ -1091,6 +1099,7 @@ export interface BatchConfigSettings {
   starInnerRadiusIncrement: number;
   starInnerRadiusModulationEnabled: boolean;
   starInnerRadiusModulationValue: number;
+  starInnerRadiusIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for star inner radius incremental mode
   
   // Ring-specific Properties
   ringInnerRadiusMode: 'range' | 'define' | 'incremental';
@@ -1100,6 +1109,7 @@ export interface BatchConfigSettings {
   ringInnerRadiusIncrement: number;
   ringInnerRadiusModulationEnabled: boolean;
   ringInnerRadiusModulationValue: number;
+  ringInnerRadiusIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for ring inner radius incremental mode
   
   // Fill Properties - Controls solid vs gradient vs pattern
   fillEnabled: boolean;
@@ -1223,6 +1233,7 @@ export interface BatchConfigSettings {
   fillGradientConicCenterYIncrement: number; // Incremental mode step
   fillGradientConicCenterYModulationEnabled: boolean; // Enable modulation
   fillGradientConicCenterYModulationValue: number; // Modulation value
+  gradientCenterIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for gradient center incremental modes (radial/conic)
   
   // Fill Opacity Settings
   fillOpacityEnabled: boolean;
@@ -1233,6 +1244,7 @@ export interface BatchConfigSettings {
   fillOpacityIncrement: number; // For incremental mode
   fillOpacityModulationEnabled: boolean; // Enable modulation
   fillOpacityModulationValue: number; // Modulation value
+  fillOpacityIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for fill opacity incremental mode
   
   // Blur Properties
   blurEnabled: boolean;
@@ -1244,6 +1256,7 @@ export interface BatchConfigSettings {
   blurIncrement: number; // For incremental mode
   blurModulationEnabled: boolean; // Enable modulation
   blurModulationValue: number; // Modulation value
+  blurIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for blur incremental mode
   
   // Drop Shadow Properties
   dropShadowEnabled: boolean;
@@ -1273,6 +1286,7 @@ export interface BatchConfigSettings {
   dropShadowSpreadStartValue: number; // Incremental mode
   dropShadowSpreadIncrement: number;
   dropShadowOpacity: number; // 0-100%
+  dropShadowIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for all drop shadow incremental properties
   
   // Outer Glow Properties
   outerGlowEnabled: boolean;
@@ -1292,6 +1306,7 @@ export interface BatchConfigSettings {
   outerGlowSpreadStartValue: number; // Incremental mode
   outerGlowSpreadIncrement: number;
   outerGlowOpacity: number; // 0-100%
+  outerGlowIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for all outer glow incremental properties
   
   // Inner Shadow Properties
   innerShadowEnabled: boolean;
@@ -1316,6 +1331,7 @@ export interface BatchConfigSettings {
   innerShadowBlurStartValue: number; // Incremental mode
   innerShadowBlurIncrement: number;
   innerShadowOpacity: number; // 0-100%
+  innerShadowIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for all inner shadow incremental properties
   
   // Inner Glow Properties
   innerGlowEnabled: boolean;
@@ -1335,6 +1351,7 @@ export interface BatchConfigSettings {
   innerGlowSpreadStartValue: number; // Incremental mode
   innerGlowSpreadIncrement: number;
   innerGlowOpacity: number; // 0-100%
+  innerGlowIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for all inner glow incremental properties
   
   // Stroke Properties  
   strokeEnabled: boolean;
@@ -1370,6 +1387,7 @@ export interface BatchConfigSettings {
   strokeWidthIncrement: number; // For incremental mode
   strokeWidthModulationEnabled: boolean; // Enable modulation
   strokeWidthModulationValue: number; // Modulation value
+  strokeIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for stroke opacity/width incremental modes
   
   // Polygon Shape Properties
   polygonPropertiesEnabled: boolean;
@@ -1380,6 +1398,7 @@ export interface BatchConfigSettings {
   segmentCountIncrement: number;
   segmentCountModulationEnabled: boolean;
   segmentCountModulationValue: number;
+  polygonIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for polygon segment count incremental mode
   
   // Line Properties
   linePropertiesEnabled: boolean;
@@ -1398,6 +1417,7 @@ export interface BatchConfigSettings {
   pointPositionIncrement: number;
   pointPositionModulationEnabled: boolean;
   pointPositionModulationValue: number;
+  lineIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for line point count/position incremental modes
   
   // Spline Curve Properties
   splinePropertiesEnabled: boolean;
@@ -1424,6 +1444,7 @@ export interface BatchConfigSettings {
   splineControlPointIncrement: number;
   splineControlPointModulationEnabled: boolean;
   splineControlPointModulationValue: number;
+  splineIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for spline point/control incremental modes
   
   // Shape Transforms
   transformsEnabled: boolean;
@@ -1495,6 +1516,7 @@ export interface BatchConfigSettings {
   rotationStartValue: number; // Starting rotation value for incremental mode
   rotationModulation: number; // Modulation value (e.g., 360 for full circle reset)
   rotationModulationEnabled: boolean; // Toggle to enable/disable modulation
+  setTransformIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for set transform incremental modes (position, scale, rotation)
   
   // Transform Randomization Scaling (0-100%)
   scaleRandomizationScale: number; // Scale for scale randomization  
@@ -1525,6 +1547,7 @@ export interface BatchConfigSettings {
   transformOriginYIncrement: number;
   transformOriginYModulationEnabled: boolean;
   transformOriginYModulationValue: number;
+  transformOriginIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for transform origin incremental mode
   
   // Predefined anchor points (for predefined-artboard and current-shape modes)
   transformOriginPredefined: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -1712,6 +1735,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   widthModulationValue: 500,
   heightModulationEnabled: false,
   heightModulationValue: 500,
+  sizeIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for size incremental
   
   // Size Constraints
   minimumSize: 10, // Minimum size to prevent invisible shapes
@@ -1744,6 +1768,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   xPositionModulationValue: 200,
   yPositionModulationMode: 'off',
   yPositionModulationValue: 200,
+  positionIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for position incremental
   
   // Rectangle-specific Properties
   rectangleCornerRadiusMode: 'range',
@@ -1753,6 +1778,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   rectangleCornerRadiusIncrement: 2,
   rectangleCornerRadiusModulationEnabled: false,
   rectangleCornerRadiusModulationValue: 50,
+  rectangleCornerRadiusIncrementalIndexDriver: 'shapeIndex', // Default: use shape index
   
   // Star-specific Properties
   starInnerRadiusMode: 'range',
@@ -1762,6 +1788,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   starInnerRadiusIncrement: 0.05,
   starInnerRadiusModulationEnabled: false,
   starInnerRadiusModulationValue: 1.0,
+  starInnerRadiusIncrementalIndexDriver: 'shapeIndex', // Default: use shape index
   
   // Ring-specific Properties
   ringInnerRadiusMode: 'range',
@@ -1771,6 +1798,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   ringInnerRadiusIncrement: 0.05,
   ringInnerRadiusModulationEnabled: false,
   ringInnerRadiusModulationValue: 1.0,
+  ringInnerRadiusIncrementalIndexDriver: 'shapeIndex', // Default: use shape index
   
   // Fill Properties
   fillEnabled: true,
@@ -1894,6 +1922,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillGradientConicCenterYIncrement: 10,
   fillGradientConicCenterYModulationEnabled: false,
   fillGradientConicCenterYModulationValue: 100,
+  gradientCenterIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for gradient center incremental
   
   // Fill Opacity Settings
   fillOpacityEnabled: true,
@@ -1904,6 +1933,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   fillOpacityIncrement: 5,
   fillOpacityModulationEnabled: false,
   fillOpacityModulationValue: 100,
+  fillOpacityIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for fill opacity incremental
   
   // Blur Properties
   blurEnabled: false,
@@ -1915,6 +1945,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   blurIncrement: 1,
   blurModulationEnabled: false,
   blurModulationValue: 20,
+  blurIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for blur incremental
   
   // Drop Shadow Properties
   dropShadowEnabled: false,
@@ -1944,6 +1975,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   dropShadowSpreadStartValue: 0,
   dropShadowSpreadIncrement: 1,
   dropShadowOpacity: 50,
+  dropShadowIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for drop shadow incremental
   
   // Outer Glow Properties
   outerGlowEnabled: false,
@@ -1963,6 +1995,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   outerGlowSpreadStartValue: 0,
   outerGlowSpreadIncrement: 1,
   outerGlowOpacity: 75,
+  outerGlowIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for outer glow incremental
   
   // Inner Shadow Properties
   innerShadowEnabled: false,
@@ -1987,6 +2020,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   innerShadowBlurStartValue: 2,
   innerShadowBlurIncrement: 1,
   innerShadowOpacity: 50,
+  innerShadowIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for inner shadow incremental
   
   // Inner Glow Properties
   innerGlowEnabled: false,
@@ -2006,6 +2040,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   innerGlowSpreadStartValue: 0,
   innerGlowSpreadIncrement: 1,
   innerGlowOpacity: 75,
+  innerGlowIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for inner glow incremental
   
   // Stroke Properties
   strokeEnabled: true,
@@ -2041,6 +2076,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   strokeWidthIncrement: 0.5,
   strokeWidthModulationEnabled: false,
   strokeWidthModulationValue: 10,
+  strokeIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for stroke incremental
   
   // Polygon Shape Properties
   polygonPropertiesEnabled: false,
@@ -2051,6 +2087,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   segmentCountIncrement: 1,
   segmentCountModulationEnabled: false,
   segmentCountModulationValue: 20,
+  polygonIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for polygon incremental
   
   // Line Properties
   linePropertiesEnabled: false,
@@ -2069,6 +2106,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   pointPositionIncrement: 10,
   pointPositionModulationEnabled: false,
   pointPositionModulationValue: 200,
+  lineIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for line incremental
   
   // Spline Curve Properties
   splinePropertiesEnabled: false,
@@ -2095,6 +2133,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   splineControlPointIncrement: 5,
   splineControlPointModulationEnabled: false,
   splineControlPointModulationValue: 100,
+  splineIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for spline incremental
   
   // Shape Transforms
   transformsEnabled: false,
@@ -2162,6 +2201,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   rotationStartValue: 0,
   rotationModulation: 360,
   rotationModulationEnabled: false,
+  setTransformIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for set transform incremental
   
   // Transform Randomization Scaling (0-100%)
   scaleRandomizationScale: 50,
@@ -2192,6 +2232,7 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   transformOriginYIncrement: 10,
   transformOriginYModulationEnabled: false,
   transformOriginYModulationValue: 100,
+  transformOriginIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for transform origin incremental
   
   // Predefined anchor points
   transformOriginPredefined: 'center',
@@ -2675,6 +2716,8 @@ export const CompositingOperationSchema = z.enum([
   'lighter', 'copy', 'xor'
 ]);
 
+export const IncrementalIndexDriverSchema = z.enum(['shapeIndex', 'setRepIndex']);
+
 export const SetTransformSchema = z.object({
   x: z.number(),
   y: z.number(),
@@ -2931,6 +2974,7 @@ export const BatchConfigSettingsSchema = z.object({
   widthModulationValue: z.number(),
   heightModulationEnabled: z.boolean(),
   heightModulationValue: z.number(),
+  sizeIncrementalIndexDriver: IncrementalIndexDriverSchema,
   minimumSize: z.number(),
   maximumSize: z.number(),
   
@@ -2953,6 +2997,7 @@ export const BatchConfigSettingsSchema = z.object({
   xPositionModulationValue: z.number(),
   yPositionModulationMode: z.enum(['off', 'grid-row', 'pixel-value', 'shape-count']),
   yPositionModulationValue: z.number(),
+  positionIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Shape-specific properties
   rectangleCornerRadiusMode: z.enum(['range', 'define', 'incremental']),
@@ -2962,6 +3007,7 @@ export const BatchConfigSettingsSchema = z.object({
   rectangleCornerRadiusIncrement: z.number(),
   rectangleCornerRadiusModulationEnabled: z.boolean(),
   rectangleCornerRadiusModulationValue: z.number(),
+  rectangleCornerRadiusIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   starInnerRadiusMode: z.enum(['range', 'define', 'incremental']),
   starInnerRadiusRange: z.tuple([z.number(), z.number()]),
@@ -2970,6 +3016,7 @@ export const BatchConfigSettingsSchema = z.object({
   starInnerRadiusIncrement: z.number(),
   starInnerRadiusModulationEnabled: z.boolean(),
   starInnerRadiusModulationValue: z.number(),
+  starInnerRadiusIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   ringInnerRadiusMode: z.enum(['range', 'define', 'incremental']),
   ringInnerRadiusRange: z.tuple([z.number(), z.number()]),
@@ -2978,6 +3025,7 @@ export const BatchConfigSettingsSchema = z.object({
   ringInnerRadiusIncrement: z.number(),
   ringInnerRadiusModulationEnabled: z.boolean(),
   ringInnerRadiusModulationValue: z.number(),
+  ringInnerRadiusIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Fill properties
   fillEnabled: z.boolean(),
@@ -3092,6 +3140,7 @@ export const BatchConfigSettingsSchema = z.object({
   fillGradientConicCenterYIncrement: z.number(),
   fillGradientConicCenterYModulationEnabled: z.boolean(),
   fillGradientConicCenterYModulationValue: z.number(),
+  gradientCenterIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Fill opacity
   fillOpacityEnabled: z.boolean(),
@@ -3102,6 +3151,7 @@ export const BatchConfigSettingsSchema = z.object({
   fillOpacityIncrement: z.number(),
   fillOpacityModulationEnabled: z.boolean(),
   fillOpacityModulationValue: z.number(),
+  fillOpacityIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Blur properties
   blurEnabled: z.boolean(),
@@ -3113,6 +3163,7 @@ export const BatchConfigSettingsSchema = z.object({
   blurIncrement: z.number(),
   blurModulationEnabled: z.boolean(),
   blurModulationValue: z.number(),
+  blurIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Drop Shadow properties
   dropShadowEnabled: z.boolean(),
@@ -3142,6 +3193,7 @@ export const BatchConfigSettingsSchema = z.object({
   dropShadowSpreadStartValue: z.number(),
   dropShadowSpreadIncrement: z.number(),
   dropShadowOpacity: z.number(),
+  dropShadowIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Outer Glow properties
   outerGlowEnabled: z.boolean(),
@@ -3161,6 +3213,7 @@ export const BatchConfigSettingsSchema = z.object({
   outerGlowSpreadStartValue: z.number(),
   outerGlowSpreadIncrement: z.number(),
   outerGlowOpacity: z.number(),
+  outerGlowIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Inner Shadow properties
   innerShadowEnabled: z.boolean(),
@@ -3185,6 +3238,7 @@ export const BatchConfigSettingsSchema = z.object({
   innerShadowBlurStartValue: z.number(),
   innerShadowBlurIncrement: z.number(),
   innerShadowOpacity: z.number(),
+  innerShadowIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Inner Glow properties
   innerGlowEnabled: z.boolean(),
@@ -3204,6 +3258,7 @@ export const BatchConfigSettingsSchema = z.object({
   innerGlowSpreadStartValue: z.number(),
   innerGlowSpreadIncrement: z.number(),
   innerGlowOpacity: z.number(),
+  innerGlowIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Stroke properties
   strokeEnabled: z.boolean(),
@@ -3232,6 +3287,7 @@ export const BatchConfigSettingsSchema = z.object({
   strokeWidthIncrement: z.number(),
   strokeWidthModulationEnabled: z.boolean(),
   strokeWidthModulationValue: z.number(),
+  strokeIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Shape-specific properties
   polygonPropertiesEnabled: z.boolean(),
@@ -3242,6 +3298,7 @@ export const BatchConfigSettingsSchema = z.object({
   segmentCountIncrement: z.number(),
   segmentCountModulationEnabled: z.boolean(),
   segmentCountModulationValue: z.number(),
+  polygonIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   linePropertiesEnabled: z.boolean(),
   pointCountMode: z.enum(['range', 'define', 'incremental']),
@@ -3258,6 +3315,7 @@ export const BatchConfigSettingsSchema = z.object({
   pointPositionIncrement: z.number(),
   pointPositionModulationEnabled: z.boolean(),
   pointPositionModulationValue: z.number(),
+  lineIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   splinePropertiesEnabled: z.boolean(),
   splinePointCountMode: z.enum(['range', 'define', 'incremental']),
@@ -3281,6 +3339,7 @@ export const BatchConfigSettingsSchema = z.object({
   splineControlPointIncrement: z.number(),
   splineControlPointModulationEnabled: z.boolean(),
   splineControlPointModulationValue: z.number(),
+  splineIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Transform properties
   transformsEnabled: z.boolean(),
@@ -3345,6 +3404,7 @@ export const BatchConfigSettingsSchema = z.object({
   rotationStartValue: z.number(),
   rotationModulation: z.number(),
   rotationModulationEnabled: z.boolean(),
+  setTransformIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   scaleRandomizationScale: z.number(),
   rotationRandomizationScale: z.number(),
@@ -3374,6 +3434,7 @@ export const BatchConfigSettingsSchema = z.object({
   transformOriginYIncrement: z.number(),
   transformOriginYModulationEnabled: z.boolean(),
   transformOriginYModulationValue: z.number(),
+  transformOriginIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Predefined anchor points
   transformOriginPredefined: z.enum(['center', 'top-left', 'top-center', 'top-right', 'center-left', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right']),

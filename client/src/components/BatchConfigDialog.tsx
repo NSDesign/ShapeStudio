@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Settings, RotateCcw, X, ChevronDown, AlertTriangle, CheckCircle, AlertCircle, Plus, Minus, Info, Layers } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig, migrateEchoJitter } from '@shared/schema';
+import { BatchConfigSettings, defaultBatchConfigSettings, BlendMode, ShapeCountMode, SupportedShapeType, GenerationSet, DEFAULT_GRID_OFFSETS, GridOffsetsConfig, DEFAULT_SHAPE_MASKING, ShapeMaskingConfig, DEFAULT_CELL_CONSTRAINTS, CellConstraintsConfig, migrateEchoJitter, IncrementalIndexDriver } from '@shared/schema';
 import { ScatterSettings, ShapeType, Artboard, getAvailableShapeSpecificSortOptions } from '@/lib/shapeTypes';
 import { GenerationSetsDropdown } from './GenerationSetsDropdown';
 import ApiCallGenerator from './ApiCallGenerator';
@@ -22,6 +22,29 @@ import type { CurrentUIState } from '@/hooks/useGenerationSets';
 
 // Use defaultSettings from shared schema
 const defaultSettings = defaultBatchConfigSettings;
+
+interface IndexDriverSelectProps {
+  value: IncrementalIndexDriver;
+  onChange: (value: IncrementalIndexDriver) => void;
+  testId?: string;
+}
+
+function IndexDriverSelect({ value, onChange, testId }: IndexDriverSelectProps) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-slate-700/50 rounded mt-2">
+      <Label className="text-xs text-slate-400 whitespace-nowrap">Index Driver:</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-7 w-36 bg-slate-800 border-slate-600 text-slate-200 text-xs" data-testid={testId || "select-index-driver"}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent style={{ zIndex: 10002 }}>
+          <SelectItem value="shapeIndex">Shape Index</SelectItem>
+          <SelectItem value="setRepIndex">Set Rep Index</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 interface BatchConfigDialogProps {
   settings: BatchConfigSettings;
@@ -2829,6 +2852,11 @@ function BatchConfigDialogInner({
                                     />
                                     <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
+                                  <IndexDriverSelect
+                                    value={currentSettings.sizeIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ sizeIncrementalIndexDriver: value })}
+                                    testId="select-size-index-driver"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -3207,6 +3235,11 @@ function BatchConfigDialogInner({
                                       />
                                     </div>
                                   )}
+                                  <IndexDriverSelect
+                                    value={currentSettings.positionIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ positionIncrementalIndexDriver: value })}
+                                    testId="select-position-index-driver"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -6716,6 +6749,11 @@ function BatchConfigDialogInner({
                                   sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
                                 />
                               </div>
+                              <IndexDriverSelect
+                                value={currentSettings.setTransformIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
+                                testId="select-scale-x-index-driver"
+                              />
                             </div>
                           )}
                         </div>
@@ -7034,6 +7072,11 @@ function BatchConfigDialogInner({
                               />
                             </div>
                           )}
+                          <IndexDriverSelect
+                            value={currentSettings.setTransformIncrementalIndexDriver}
+                            onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
+                            testId="select-rotation-index-driver"
+                          />
                         </div>
                       )}
                     </div>
@@ -7474,6 +7517,11 @@ function BatchConfigDialogInner({
                                   )}
                                 </div>
                               </div>
+                              <IndexDriverSelect
+                                value={currentSettings.transformOriginIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ transformOriginIncrementalIndexDriver: value })}
+                                testId="select-transform-origin-index-driver"
+                              />
                             </div>
                           )}
                         </div>
@@ -8011,6 +8059,11 @@ function BatchConfigDialogInner({
                                   </div>
                                 </div>
                               )}
+                              <IndexDriverSelect
+                                value={currentSettings.blurIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ blurIncrementalIndexDriver: value })}
+                                testId="select-blur-index-driver"
+                              />
                               <p className="text-xs text-slate-500">Progressive blur: start + (index × increment), wraps at modulation value</p>
                             </div>
                           )}
@@ -8073,8 +8126,16 @@ function BatchConfigDialogInner({
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                               </SelectContent>
                             </Select>
+                            {currentSettings.dropShadowBlurMode === 'incremental' && (
+                              <IndexDriverSelect
+                                value={currentSettings.dropShadowIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ dropShadowIncrementalIndexDriver: value })}
+                                testId="select-drop-shadow-index-driver"
+                              />
+                            )}
                           </div>
 
                           {/* Drop Shadow Offset */}
@@ -8333,8 +8394,16 @@ function BatchConfigDialogInner({
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                               </SelectContent>
                             </Select>
+                            {currentSettings.outerGlowBlurMode === 'incremental' && (
+                              <IndexDriverSelect
+                                value={currentSettings.outerGlowIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ outerGlowIncrementalIndexDriver: value })}
+                                testId="select-outer-glow-index-driver"
+                              />
+                            )}
                           </div>
 
                           {/* Outer Glow Blur */}
@@ -8519,8 +8588,16 @@ function BatchConfigDialogInner({
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                               </SelectContent>
                             </Select>
+                            {currentSettings.innerShadowBlurMode === 'incremental' && (
+                              <IndexDriverSelect
+                                value={currentSettings.innerShadowIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ innerShadowIncrementalIndexDriver: value })}
+                                testId="select-inner-shadow-index-driver"
+                              />
+                            )}
                           </div>
 
                           {/* Inner Shadow Offset */}
@@ -8779,8 +8856,16 @@ function BatchConfigDialogInner({
                               <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
                                 <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
                                 <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                               </SelectContent>
                             </Select>
+                            {currentSettings.innerGlowBlurMode === 'incremental' && (
+                              <IndexDriverSelect
+                                value={currentSettings.innerGlowIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ innerGlowIncrementalIndexDriver: value })}
+                                testId="select-inner-glow-index-driver"
+                              />
+                            )}
                           </div>
 
                           {/* Inner Glow Blur */}
