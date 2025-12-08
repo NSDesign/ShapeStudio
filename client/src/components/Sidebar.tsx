@@ -4408,6 +4408,8 @@ export default function Sidebar({
         // This mirrors the client-side export logic
         let shapesToExport: Shape[] = [];
         
+        console.log(`🔍 SERVER EXPORT DEBUG: shapes prop has ${shapes.length} shapes, exportMode=${exportMode}`);
+        
         if (exportMode === 'artboard' || exportMode === 'all') {
           // Export all shapes - same behavior as client batch export
           shapesToExport = shapes;
@@ -4418,6 +4420,8 @@ export default function Sidebar({
           // Default to all shapes
           shapesToExport = shapes;
         }
+        
+        console.log(`🔍 SERVER EXPORT DEBUG: shapesToExport has ${shapesToExport.length} shapes after mode selection`);
         
         // Serialize shapes with full data for server rendering (matching projectManager format)
         const serializeShape = (shape: Shape) => ({
@@ -4442,6 +4446,11 @@ export default function Sidebar({
         });
         
         const serializedShapes = shapesToExport.map(serializeShape);
+        
+        console.log(`🔍 SERVER EXPORT DEBUG: serializedShapes has ${serializedShapes.length} entries`);
+        if (serializedShapes.length > 0) {
+          console.log(`🔍 SERVER EXPORT DEBUG: First shape:`, JSON.stringify(serializedShapes[0]).substring(0, 500));
+        }
         
         // Serialize groups - include all groups that contain any of the shapes being exported
         // Use all available groups, not just selectedGroups
