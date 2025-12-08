@@ -3250,42 +3250,57 @@ function BatchConfigDialogInner({
                                       />
                                     </div>
                                   </div>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.incrementalResetPerBatch}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-400">Reset per batch</Label>
-                                    </div>
-                                    <Select value={currentSettings.xPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ xPositionModulationMode: value as any })}>
-                                      <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                        <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">No Modulation</SelectItem>
-                                        <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
-                                        <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
-                                        <SelectItem value="grid-col" className="text-slate-200 hover:bg-slate-700">Grid Col</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.incrementalResetPerBatch}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
-                                  {(currentSettings.xPositionModulationMode === 'pixel-value' || currentSettings.xPositionModulationMode === 'shape-count') && (
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">
-                                        {currentSettings.xPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
-                                      </Label>
-                                      <BufferedSliderWithNumericInput
-                                        value={currentSettings.xPositionModulationValue}
-                                        onValueCommit={(value) => handleSettingsUpdate({ xPositionModulationValue: value })}
-                                        min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                        max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                        step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                        layout="inline"
-                                        inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
-                                      />
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.xPositionModulationMode !== 'off'}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                        xPositionModulationMode: checked ? 'grid-col' : 'off' 
+                                      })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      data-testid="checkbox-x-position-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.xPositionModulationMode !== 'off' && (
+                                    <div className="space-y-2 ml-4">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-xs text-slate-400">Mode</Label>
+                                        <Select value={currentSettings.xPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ xPositionModulationMode: value as any })}>
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="grid-col" className="text-slate-200 hover:bg-slate-700">Grid Col</SelectItem>
+                                            <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                            <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Index Count</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      {(currentSettings.xPositionModulationMode === 'pixel-value' || currentSettings.xPositionModulationMode === 'shape-count') && (
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">
+                                            Wrap at {currentSettings.xPositionModulationMode === 'pixel-value' ? '(px)' : '(count)'}
+                                          </Label>
+                                          <BufferedSliderWithNumericInput
+                                            value={currentSettings.xPositionModulationValue}
+                                            onValueCommit={(value) => handleSettingsUpdate({ xPositionModulationValue: value })}
+                                            min={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                            max={currentSettings.xPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                            step={currentSettings.xPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                            layout="inline"
+                                            inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   <IndexDriverSelect
@@ -3465,42 +3480,57 @@ function BatchConfigDialogInner({
                                       />
                                     </div>
                                   </div>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        checked={currentSettings.incrementalResetPerBatch}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
-                                        className="border-slate-500 data-[state=checked]:bg-blue-600"
-                                      />
-                                      <Label className="text-xs text-slate-400">Reset per batch</Label>
-                                    </div>
-                                    <Select value={currentSettings.yPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ yPositionModulationMode: value as any })}>
-                                      <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                                        <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">No Modulation</SelectItem>
-                                        <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
-                                        <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
-                                        <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.incrementalResetPerBatch}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ incrementalResetPerBatch: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                    />
+                                    <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
-                                  {(currentSettings.yPositionModulationMode === 'pixel-value' || currentSettings.yPositionModulationMode === 'shape-count') && (
-                                    <div className="space-y-1">
-                                      <Label className="text-xs text-slate-400">
-                                        {currentSettings.yPositionModulationMode === 'pixel-value' ? 'Modulation (px)' : 'Shape Count'}
-                                      </Label>
-                                      <BufferedSliderWithNumericInput
-                                        value={currentSettings.yPositionModulationValue}
-                                        onValueCommit={(value) => handleSettingsUpdate({ yPositionModulationValue: value })}
-                                        min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                        max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
-                                        step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
-                                        layout="inline"
-                                        inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
-                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
-                                      />
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.yPositionModulationMode !== 'off'}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ 
+                                        yPositionModulationMode: checked ? 'grid-row' : 'off' 
+                                      })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      data-testid="checkbox-y-position-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.yPositionModulationMode !== 'off' && (
+                                    <div className="space-y-2 ml-4">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-xs text-slate-400">Mode</Label>
+                                        <Select value={currentSettings.yPositionModulationMode} onValueChange={(value) => handleSettingsUpdate({ yPositionModulationMode: value as any })}>
+                                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-800 border-slate-600 text-slate-200">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                            <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                            <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
+                                            <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Index Count</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      {(currentSettings.yPositionModulationMode === 'pixel-value' || currentSettings.yPositionModulationMode === 'shape-count') && (
+                                        <div className="space-y-1">
+                                          <Label className="text-xs text-slate-400">
+                                            Wrap at {currentSettings.yPositionModulationMode === 'pixel-value' ? '(px)' : '(count)'}
+                                          </Label>
+                                          <BufferedSliderWithNumericInput
+                                            value={currentSettings.yPositionModulationValue}
+                                            onValueCommit={(value) => handleSettingsUpdate({ yPositionModulationValue: value })}
+                                            min={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                            max={currentSettings.yPositionModulationMode === 'pixel-value' ? 1500 : 50}
+                                            step={currentSettings.yPositionModulationMode === 'pixel-value' ? 50 : 1}
+                                            layout="inline"
+                                            inputClassName="h-8 w-20 bg-slate-800 border-slate-600 text-slate-200"
+                                            sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   <IndexDriverSelect
@@ -5336,24 +5366,30 @@ function BatchConfigDialogInner({
                                                     className="[&_[role=slider]]:bg-amber-600"
                                                   />
                                                 </div>
-                                                <div className="flex items-center gap-1 pt-1">
+                                                <div className="flex items-center space-x-2">
                                                   <Checkbox
                                                     checked={currentSettings.fillGradientConicAngleModulationEnabled ?? false}
                                                     onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicAngleModulationEnabled: checked as boolean })}
-                                                    className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                                    className="border-slate-500 data-[state=checked]:bg-amber-600"
+                                                    data-testid="checkbox-conic-angle-modulation"
                                                   />
-                                                  <Label className="text-xs text-slate-400">Modulation</Label>
-                                                  {currentSettings.fillGradientConicAngleModulationEnabled && (
-                                                    <NumericInput
+                                                  <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                                                </div>
+                                                {currentSettings.fillGradientConicAngleModulationEnabled && (
+                                                  <div className="space-y-1">
+                                                    <Label className="text-xs text-slate-400">Wrap at (°)</Label>
+                                                    <BufferedSliderWithNumericInput
                                                       value={currentSettings.fillGradientConicAngleModulationValue ?? 360}
-                                                      onChange={(value) => handleSettingsUpdate({ fillGradientConicAngleModulationValue: value })}
+                                                      onValueCommit={(value) => handleSettingsUpdate({ fillGradientConicAngleModulationValue: value })}
                                                       min={30}
                                                       max={360}
                                                       step={15}
-                                                      className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                                      layout="inline"
+                                                      inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                                      sliderClassName="flex-1 [&_[role=slider]]:bg-amber-600"
                                                     />
-                                                  )}
-                                                </div>
+                                                  </div>
+                                                )}
                                                 <IndexDriverSelect
                                                   value={currentSettings.gradientCenterIncrementalIndexDriver}
                                                   onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
