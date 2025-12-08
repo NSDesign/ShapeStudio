@@ -7783,26 +7783,14 @@ function BatchConfigDialogInner({
                   <div className="space-y-4 mt-3">
                     {/* Blur Subsection */}
                     <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            checked={currentSettings.blurEnabled}
-                            onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
-                            className="border-slate-500 data-[state=checked]:bg-purple-600"
-                            data-testid="checkbox-blur-enabled"
-                          />
-                          <Label className="text-sm font-medium text-slate-200">Blur</Label>
-                        </div>
-                        <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
-                          <SelectTrigger className="h-7 w-28 text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-blur-mode">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
-                            <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                            <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define</SelectItem>
-                            <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.blurEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ blurEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-purple-600"
+                          data-testid="checkbox-blur-enabled"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Blur</Label>
                       </div>
 
                       {currentSettings.blurEnabled && (
@@ -7830,6 +7818,21 @@ function BatchConfigDialogInner({
                               />
                             </div>
                             <p className="text-xs text-slate-500">{currentSettings.blurProbability}% of shapes will have blur applied</p>
+                          </div>
+
+                          {/* Blur Mode Selector */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Mode</Label>
+                            <Select value={currentSettings.blurMode} onValueChange={(value) => handleSettingsUpdate({ blurMode: value as any })}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-blur-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                                <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
 
                           {currentSettings.blurMode === 'define' && (
@@ -8011,6 +8014,899 @@ function BatchConfigDialogInner({
                               <p className="text-xs text-slate-500">Progressive blur: start + (index × increment), wraps at modulation value</p>
                             </div>
                           )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Drop Shadow Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.dropShadowEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ dropShadowEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-orange-600"
+                          data-testid="checkbox-drop-shadow-enabled"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Drop Shadow</Label>
+                      </div>
+
+                      {currentSettings.dropShadowEnabled && (
+                        <div className="space-y-3 mt-2">
+                          {/* Drop Shadow Probability */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Probability</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.dropShadowProbability}
+                                onChange={(value) => handleSettingsUpdate({ dropShadowProbability: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-drop-shadow-probability"
+                              />
+                              <Slider
+                                value={[currentSettings.dropShadowProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ dropShadowProbability: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Drop Shadow Mode Selector */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Mode</Label>
+                            <Select value={currentSettings.dropShadowBlurMode} onValueChange={(value) => {
+                              handleSettingsUpdate({ 
+                                dropShadowBlurMode: value as any,
+                                dropShadowOffsetXMode: value as any,
+                                dropShadowOffsetYMode: value as any,
+                                dropShadowSpreadMode: value as any
+                              });
+                            }}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-drop-shadow-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Drop Shadow Offset */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Offset (X, Y)</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {currentSettings.dropShadowBlurMode === 'define' ? (
+                                <>
+                                  <NumericInput
+                                    value={currentSettings.dropShadowOffsetX}
+                                    onChange={(value) => handleSettingsUpdate({ dropShadowOffsetX: value })}
+                                    min={-50}
+                                    max={50}
+                                    step={1}
+                                    className="h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-drop-shadow-offset-x"
+                                  />
+                                  <NumericInput
+                                    value={currentSettings.dropShadowOffsetY}
+                                    onChange={(value) => handleSettingsUpdate({ dropShadowOffsetY: value })}
+                                    min={-50}
+                                    max={50}
+                                    step={1}
+                                    className="h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-drop-shadow-offset-y"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">X Range</Label>
+                                    <div className="flex items-center gap-1">
+                                      <NumericInput
+                                        value={currentSettings.dropShadowOffsetXRange?.[0] ?? 2}
+                                        onChange={(value) => handleSettingsUpdate({ dropShadowOffsetXRange: [value, currentSettings.dropShadowOffsetXRange?.[1] ?? 10] })}
+                                        min={-50}
+                                        max={50}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                      <span className="text-xs text-slate-400">to</span>
+                                      <NumericInput
+                                        value={currentSettings.dropShadowOffsetXRange?.[1] ?? 10}
+                                        onChange={(value) => handleSettingsUpdate({ dropShadowOffsetXRange: [currentSettings.dropShadowOffsetXRange?.[0] ?? 2, value] })}
+                                        min={-50}
+                                        max={50}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Y Range</Label>
+                                    <div className="flex items-center gap-1">
+                                      <NumericInput
+                                        value={currentSettings.dropShadowOffsetYRange?.[0] ?? 2}
+                                        onChange={(value) => handleSettingsUpdate({ dropShadowOffsetYRange: [value, currentSettings.dropShadowOffsetYRange?.[1] ?? 10] })}
+                                        min={-50}
+                                        max={50}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                      <span className="text-xs text-slate-400">to</span>
+                                      <NumericInput
+                                        value={currentSettings.dropShadowOffsetYRange?.[1] ?? 10}
+                                        onChange={(value) => handleSettingsUpdate({ dropShadowOffsetYRange: [currentSettings.dropShadowOffsetYRange?.[0] ?? 2, value] })}
+                                        min={-50}
+                                        max={50}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Drop Shadow Blur */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blur Radius</Label>
+                            {currentSettings.dropShadowBlurMode === 'define' ? (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.dropShadowBlur}
+                                  onChange={(value) => handleSettingsUpdate({ dropShadowBlur: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-drop-shadow-blur"
+                                />
+                                <Slider
+                                  value={[currentSettings.dropShadowBlur]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ dropShadowBlur: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.dropShadowBlurRange?.[0] ?? 5}
+                                  onChange={(value) => handleSettingsUpdate({ dropShadowBlurRange: [value, currentSettings.dropShadowBlurRange?.[1] ?? 15] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                                <Slider
+                                  value={currentSettings.dropShadowBlurRange || [5, 15]}
+                                  onValueChange={(value) => handleSettingsUpdate({ dropShadowBlurRange: value as [number, number] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-orange-600"
+                                />
+                                <NumericInput
+                                  value={currentSettings.dropShadowBlurRange?.[1] ?? 15}
+                                  onChange={(value) => handleSettingsUpdate({ dropShadowBlurRange: [currentSettings.dropShadowBlurRange?.[0] ?? 5, value] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Drop Shadow Color */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Color</Label>
+                              <Select value={currentSettings.dropShadowColorMode} onValueChange={(value) => handleSettingsUpdate({ dropShadowColorMode: value as any })}>
+                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                  <SelectItem value="custom" className="text-slate-200 hover:bg-slate-700">Custom</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {currentSettings.dropShadowColorMode === 'custom' && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={currentSettings.dropShadowCustomColor}
+                                  onChange={(e) => handleSettingsUpdate({ dropShadowCustomColor: e.target.value })}
+                                  className="h-8 w-8 rounded border border-slate-600 cursor-pointer"
+                                  data-testid="input-drop-shadow-color"
+                                />
+                                <span className="text-xs text-slate-400">{currentSettings.dropShadowCustomColor}</span>
+                              </div>
+                            )}
+                            {currentSettings.dropShadowColorMode === 'auto' && (
+                              <p className="text-xs text-slate-500">Color derived from shape fill (darkened)</p>
+                            )}
+                          </div>
+
+                          {/* Drop Shadow Opacity */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Opacity</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.dropShadowOpacity}
+                                onChange={(value) => handleSettingsUpdate({ dropShadowOpacity: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-drop-shadow-opacity"
+                              />
+                              <Slider
+                                value={[currentSettings.dropShadowOpacity]}
+                                onValueChange={([value]) => handleSettingsUpdate({ dropShadowOpacity: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-orange-600"
+                              />
+                              <span className="text-xs text-slate-400">{currentSettings.dropShadowOpacity}%</span>
+                            </div>
+                          </div>
+
+                          {/* Drop Shadow Blend Mode */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blend Mode</Label>
+                            <Select value={currentSettings.dropShadowBlendMode} onValueChange={(value) => handleSettingsUpdate({ dropShadowBlendMode: value as any })}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-drop-shadow-blend-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="multiply" className="text-slate-200 hover:bg-slate-700">Multiply</SelectItem>
+                                <SelectItem value="darken" className="text-slate-200 hover:bg-slate-700">Darken</SelectItem>
+                                <SelectItem value="overlay" className="text-slate-200 hover:bg-slate-700">Overlay</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Outer Glow Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.outerGlowEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ outerGlowEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-yellow-500"
+                          data-testid="checkbox-outer-glow-enabled"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Outer Glow</Label>
+                      </div>
+
+                      {currentSettings.outerGlowEnabled && (
+                        <div className="space-y-3 mt-2">
+                          {/* Outer Glow Probability */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Probability</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.outerGlowProbability}
+                                onChange={(value) => handleSettingsUpdate({ outerGlowProbability: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-outer-glow-probability"
+                              />
+                              <Slider
+                                value={[currentSettings.outerGlowProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ outerGlowProbability: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-yellow-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Outer Glow Mode Selector */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Mode</Label>
+                            <Select value={currentSettings.outerGlowBlurMode} onValueChange={(value) => {
+                              handleSettingsUpdate({ 
+                                outerGlowBlurMode: value as any,
+                                outerGlowSpreadMode: value as any,
+                              });
+                            }}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-outer-glow-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Outer Glow Blur */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blur Radius</Label>
+                            {currentSettings.outerGlowBlurMode === 'define' ? (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.outerGlowBlur}
+                                  onChange={(value) => handleSettingsUpdate({ outerGlowBlur: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-outer-glow-blur"
+                                />
+                                <Slider
+                                  value={[currentSettings.outerGlowBlur]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ outerGlowBlur: value })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-yellow-500"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.outerGlowBlurRange?.[0] ?? 5}
+                                  onChange={(value) => handleSettingsUpdate({ outerGlowBlurRange: [value, currentSettings.outerGlowBlurRange?.[1] ?? 20] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                                <Slider
+                                  value={currentSettings.outerGlowBlurRange || [5, 20]}
+                                  onValueChange={(value) => handleSettingsUpdate({ outerGlowBlurRange: value as [number, number] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-yellow-500"
+                                />
+                                <NumericInput
+                                  value={currentSettings.outerGlowBlurRange?.[1] ?? 20}
+                                  onChange={(value) => handleSettingsUpdate({ outerGlowBlurRange: [currentSettings.outerGlowBlurRange?.[0] ?? 5, value] })}
+                                  min={0}
+                                  max={50}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Outer Glow Color */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Color</Label>
+                              <Select value={currentSettings.outerGlowColorMode} onValueChange={(value) => handleSettingsUpdate({ outerGlowColorMode: value as any })}>
+                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                  <SelectItem value="custom" className="text-slate-200 hover:bg-slate-700">Custom</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {currentSettings.outerGlowColorMode === 'custom' && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={currentSettings.outerGlowCustomColor}
+                                  onChange={(e) => handleSettingsUpdate({ outerGlowCustomColor: e.target.value })}
+                                  className="h-8 w-8 rounded border border-slate-600 cursor-pointer"
+                                  data-testid="input-outer-glow-color"
+                                />
+                                <span className="text-xs text-slate-400">{currentSettings.outerGlowCustomColor}</span>
+                              </div>
+                            )}
+                            {currentSettings.outerGlowColorMode === 'auto' && (
+                              <p className="text-xs text-slate-500">Color derived from shape fill (lightened)</p>
+                            )}
+                          </div>
+
+                          {/* Outer Glow Opacity */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Opacity</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.outerGlowOpacity}
+                                onChange={(value) => handleSettingsUpdate({ outerGlowOpacity: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-outer-glow-opacity"
+                              />
+                              <Slider
+                                value={[currentSettings.outerGlowOpacity]}
+                                onValueChange={([value]) => handleSettingsUpdate({ outerGlowOpacity: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-yellow-500"
+                              />
+                              <span className="text-xs text-slate-400">{currentSettings.outerGlowOpacity}%</span>
+                            </div>
+                          </div>
+
+                          {/* Outer Glow Blend Mode */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blend Mode</Label>
+                            <Select value={currentSettings.outerGlowBlendMode} onValueChange={(value) => handleSettingsUpdate({ outerGlowBlendMode: value as any })}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-outer-glow-blend-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="screen" className="text-slate-200 hover:bg-slate-700">Screen</SelectItem>
+                                <SelectItem value="lighter" className="text-slate-200 hover:bg-slate-700">Add (Lighter)</SelectItem>
+                                <SelectItem value="soft-light" className="text-slate-200 hover:bg-slate-700">Soft Light</SelectItem>
+                                <SelectItem value="color-dodge" className="text-slate-200 hover:bg-slate-700">Color Dodge</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Inner Shadow Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.innerShadowEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ innerShadowEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-red-600"
+                          data-testid="checkbox-inner-shadow-enabled"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Inner Shadow</Label>
+                      </div>
+
+                      {currentSettings.innerShadowEnabled && (
+                        <div className="space-y-3 mt-2">
+                          {/* Inner Shadow Probability */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Probability</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.innerShadowProbability}
+                                onChange={(value) => handleSettingsUpdate({ innerShadowProbability: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-inner-shadow-probability"
+                              />
+                              <Slider
+                                value={[currentSettings.innerShadowProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ innerShadowProbability: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-red-600"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Inner Shadow Mode Selector */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Mode</Label>
+                            <Select value={currentSettings.innerShadowBlurMode} onValueChange={(value) => {
+                              handleSettingsUpdate({ 
+                                innerShadowBlurMode: value as any,
+                                innerShadowOffsetXMode: value as any,
+                                innerShadowOffsetYMode: value as any,
+                              });
+                            }}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-inner-shadow-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Inner Shadow Offset */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Offset (X, Y)</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {currentSettings.innerShadowBlurMode === 'define' ? (
+                                <>
+                                  <NumericInput
+                                    value={currentSettings.innerShadowOffsetX}
+                                    onChange={(value) => handleSettingsUpdate({ innerShadowOffsetX: value })}
+                                    min={-30}
+                                    max={30}
+                                    step={1}
+                                    className="h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-inner-shadow-offset-x"
+                                  />
+                                  <NumericInput
+                                    value={currentSettings.innerShadowOffsetY}
+                                    onChange={(value) => handleSettingsUpdate({ innerShadowOffsetY: value })}
+                                    min={-30}
+                                    max={30}
+                                    step={1}
+                                    className="h-8 bg-slate-800 border-slate-600 text-slate-200 text-xs px-2"
+                                    data-testid="input-inner-shadow-offset-y"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">X Range</Label>
+                                    <div className="flex items-center gap-1">
+                                      <NumericInput
+                                        value={currentSettings.innerShadowOffsetXRange?.[0] ?? 1}
+                                        onChange={(value) => handleSettingsUpdate({ innerShadowOffsetXRange: [value, currentSettings.innerShadowOffsetXRange?.[1] ?? 5] })}
+                                        min={-30}
+                                        max={30}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                      <span className="text-xs text-slate-400">to</span>
+                                      <NumericInput
+                                        value={currentSettings.innerShadowOffsetXRange?.[1] ?? 5}
+                                        onChange={(value) => handleSettingsUpdate({ innerShadowOffsetXRange: [currentSettings.innerShadowOffsetXRange?.[0] ?? 1, value] })}
+                                        min={-30}
+                                        max={30}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-400">Y Range</Label>
+                                    <div className="flex items-center gap-1">
+                                      <NumericInput
+                                        value={currentSettings.innerShadowOffsetYRange?.[0] ?? 1}
+                                        onChange={(value) => handleSettingsUpdate({ innerShadowOffsetYRange: [value, currentSettings.innerShadowOffsetYRange?.[1] ?? 5] })}
+                                        min={-30}
+                                        max={30}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                      <span className="text-xs text-slate-400">to</span>
+                                      <NumericInput
+                                        value={currentSettings.innerShadowOffsetYRange?.[1] ?? 5}
+                                        onChange={(value) => handleSettingsUpdate({ innerShadowOffsetYRange: [currentSettings.innerShadowOffsetYRange?.[0] ?? 1, value] })}
+                                        min={-30}
+                                        max={30}
+                                        step={1}
+                                        className="h-7 w-12 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                      />
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Inner Shadow Blur */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blur Radius</Label>
+                            {currentSettings.innerShadowBlurMode === 'define' ? (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.innerShadowBlur}
+                                  onChange={(value) => handleSettingsUpdate({ innerShadowBlur: value })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-inner-shadow-blur"
+                                />
+                                <Slider
+                                  value={[currentSettings.innerShadowBlur]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ innerShadowBlur: value })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-red-600"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.innerShadowBlurRange?.[0] ?? 3}
+                                  onChange={(value) => handleSettingsUpdate({ innerShadowBlurRange: [value, currentSettings.innerShadowBlurRange?.[1] ?? 10] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                                <Slider
+                                  value={currentSettings.innerShadowBlurRange || [3, 10]}
+                                  onValueChange={(value) => handleSettingsUpdate({ innerShadowBlurRange: value as [number, number] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-red-600"
+                                />
+                                <NumericInput
+                                  value={currentSettings.innerShadowBlurRange?.[1] ?? 10}
+                                  onChange={(value) => handleSettingsUpdate({ innerShadowBlurRange: [currentSettings.innerShadowBlurRange?.[0] ?? 3, value] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Inner Shadow Color */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Color</Label>
+                              <Select value={currentSettings.innerShadowColorMode} onValueChange={(value) => handleSettingsUpdate({ innerShadowColorMode: value as any })}>
+                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                  <SelectItem value="custom" className="text-slate-200 hover:bg-slate-700">Custom</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {currentSettings.innerShadowColorMode === 'custom' && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={currentSettings.innerShadowCustomColor}
+                                  onChange={(e) => handleSettingsUpdate({ innerShadowCustomColor: e.target.value })}
+                                  className="h-8 w-8 rounded border border-slate-600 cursor-pointer"
+                                  data-testid="input-inner-shadow-color"
+                                />
+                                <span className="text-xs text-slate-400">{currentSettings.innerShadowCustomColor}</span>
+                              </div>
+                            )}
+                            {currentSettings.innerShadowColorMode === 'auto' && (
+                              <p className="text-xs text-slate-500">Color derived from shape fill (darkened)</p>
+                            )}
+                          </div>
+
+                          {/* Inner Shadow Opacity */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Opacity</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.innerShadowOpacity}
+                                onChange={(value) => handleSettingsUpdate({ innerShadowOpacity: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-inner-shadow-opacity"
+                              />
+                              <Slider
+                                value={[currentSettings.innerShadowOpacity]}
+                                onValueChange={([value]) => handleSettingsUpdate({ innerShadowOpacity: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-red-600"
+                              />
+                              <span className="text-xs text-slate-400">{currentSettings.innerShadowOpacity}%</span>
+                            </div>
+                          </div>
+
+                          {/* Inner Shadow Blend Mode */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blend Mode</Label>
+                            <Select value={currentSettings.innerShadowBlendMode} onValueChange={(value) => handleSettingsUpdate({ innerShadowBlendMode: value as any })}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-inner-shadow-blend-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="multiply" className="text-slate-200 hover:bg-slate-700">Multiply</SelectItem>
+                                <SelectItem value="darken" className="text-slate-200 hover:bg-slate-700">Darken</SelectItem>
+                                <SelectItem value="overlay" className="text-slate-200 hover:bg-slate-700">Overlay</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Inner Glow Subsection */}
+                    <div className="space-y-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          checked={currentSettings.innerGlowEnabled}
+                          onCheckedChange={(checked) => handleSettingsUpdate({ innerGlowEnabled: checked as boolean })}
+                          className="border-slate-500 data-[state=checked]:bg-pink-500"
+                          data-testid="checkbox-inner-glow-enabled"
+                        />
+                        <Label className="text-sm font-medium text-slate-200">Inner Glow</Label>
+                      </div>
+
+                      {currentSettings.innerGlowEnabled && (
+                        <div className="space-y-3 mt-2">
+                          {/* Inner Glow Probability */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Probability</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.innerGlowProbability}
+                                onChange={(value) => handleSettingsUpdate({ innerGlowProbability: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-inner-glow-probability"
+                              />
+                              <Slider
+                                value={[currentSettings.innerGlowProbability]}
+                                onValueChange={([value]) => handleSettingsUpdate({ innerGlowProbability: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-pink-500"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Inner Glow Mode Selector */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Mode</Label>
+                            <Select value={currentSettings.innerGlowBlurMode} onValueChange={(value) => {
+                              handleSettingsUpdate({ 
+                                innerGlowBlurMode: value as any,
+                                innerGlowSpreadMode: value as any,
+                              });
+                            }}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-inner-glow-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="define" className="text-slate-200 hover:bg-slate-700">Define (Fixed)</SelectItem>
+                                <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range (Random)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Inner Glow Blur */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blur Radius</Label>
+                            {currentSettings.innerGlowBlurMode === 'define' ? (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.innerGlowBlur}
+                                  onChange={(value) => handleSettingsUpdate({ innerGlowBlur: value })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                  data-testid="input-inner-glow-blur"
+                                />
+                                <Slider
+                                  value={[currentSettings.innerGlowBlur]}
+                                  onValueChange={([value]) => handleSettingsUpdate({ innerGlowBlur: value })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-pink-500"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <NumericInput
+                                  value={currentSettings.innerGlowBlurRange?.[0] ?? 3}
+                                  onChange={(value) => handleSettingsUpdate({ innerGlowBlurRange: [value, currentSettings.innerGlowBlurRange?.[1] ?? 15] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                                <Slider
+                                  value={currentSettings.innerGlowBlurRange || [3, 15]}
+                                  onValueChange={(value) => handleSettingsUpdate({ innerGlowBlurRange: value as [number, number] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="flex-1 [&_[role=slider]]:bg-pink-500"
+                                />
+                                <NumericInput
+                                  value={currentSettings.innerGlowBlurRange?.[1] ?? 15}
+                                  onChange={(value) => handleSettingsUpdate({ innerGlowBlurRange: [currentSettings.innerGlowBlurRange?.[0] ?? 3, value] })}
+                                  min={0}
+                                  max={30}
+                                  step={1}
+                                  className="h-8 w-14 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Inner Glow Color */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-medium text-slate-300">Color</Label>
+                              <Select value={currentSettings.innerGlowColorMode} onValueChange={(value) => handleSettingsUpdate({ innerGlowColorMode: value as any })}>
+                                <SelectTrigger className="h-6 w-20 text-xs bg-slate-700 border-slate-600 text-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                  <SelectItem value="auto" className="text-slate-200 hover:bg-slate-700">Auto</SelectItem>
+                                  <SelectItem value="custom" className="text-slate-200 hover:bg-slate-700">Custom</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {currentSettings.innerGlowColorMode === 'custom' && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={currentSettings.innerGlowCustomColor}
+                                  onChange={(e) => handleSettingsUpdate({ innerGlowCustomColor: e.target.value })}
+                                  className="h-8 w-8 rounded border border-slate-600 cursor-pointer"
+                                  data-testid="input-inner-glow-color"
+                                />
+                                <span className="text-xs text-slate-400">{currentSettings.innerGlowCustomColor}</span>
+                              </div>
+                            )}
+                            {currentSettings.innerGlowColorMode === 'auto' && (
+                              <p className="text-xs text-slate-500">Color derived from shape fill (lightened)</p>
+                            )}
+                          </div>
+
+                          {/* Inner Glow Opacity */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Opacity</Label>
+                            <div className="flex items-center gap-2">
+                              <NumericInput
+                                value={currentSettings.innerGlowOpacity}
+                                onChange={(value) => handleSettingsUpdate({ innerGlowOpacity: Math.max(0, Math.min(100, value)) })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
+                                data-testid="input-inner-glow-opacity"
+                              />
+                              <Slider
+                                value={[currentSettings.innerGlowOpacity]}
+                                onValueChange={([value]) => handleSettingsUpdate({ innerGlowOpacity: value })}
+                                min={0}
+                                max={100}
+                                step={5}
+                                className="flex-1 [&_[role=slider]]:bg-pink-500"
+                              />
+                              <span className="text-xs text-slate-400">{currentSettings.innerGlowOpacity}%</span>
+                            </div>
+                          </div>
+
+                          {/* Inner Glow Blend Mode */}
+                          <div className="space-y-2 p-2 bg-slate-800/50 rounded">
+                            <Label className="text-xs font-medium text-slate-300">Blend Mode</Label>
+                            <Select value={currentSettings.innerGlowBlendMode} onValueChange={(value) => handleSettingsUpdate({ innerGlowBlendMode: value as any })}>
+                              <SelectTrigger className="h-8 w-full text-xs bg-slate-700 border-slate-600 text-slate-200" data-testid="select-inner-glow-blend-mode">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10002 }}>
+                                <SelectItem value="screen" className="text-slate-200 hover:bg-slate-700">Screen</SelectItem>
+                                <SelectItem value="lighter" className="text-slate-200 hover:bg-slate-700">Add (Lighter)</SelectItem>
+                                <SelectItem value="soft-light" className="text-slate-200 hover:bg-slate-700">Soft Light</SelectItem>
+                                <SelectItem value="color-dodge" className="text-slate-200 hover:bg-slate-700">Color Dodge</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       )}
                     </div>
