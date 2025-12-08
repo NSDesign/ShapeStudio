@@ -4400,28 +4400,157 @@ export default function Sidebar({
         }
         
         setExportProgressGlobal(10);
-        setExportStatusGlobal('Preparing server export...');
+        setExportStatusGlobal('Generating shapes for export...');
         setBatchProgress(10);
-        setBatchStatus('Processing on server...');
+        setBatchStatus('Generating shapes...');
         
         // Determine which shapes to export based on export mode
-        // This mirrors the client-side export logic
+        // For server exports, we DYNAMICALLY GENERATE shapes like the batch export does
+        // because the canvas may be empty if the user hasn't generated shapes manually
         let shapesToExport: Shape[] = [];
         
-        console.log(`🔍 SERVER EXPORT DEBUG: shapes prop has ${shapes.length} shapes, exportMode=${exportMode}`);
+        console.log(`🔍 SERVER EXPORT DEBUG: existing shapes prop has ${shapes.length} shapes, exportMode=${exportMode}`);
         
-        if (exportMode === 'artboard' || exportMode === 'all') {
-          // Export all shapes - same behavior as client batch export
-          shapesToExport = shapes;
-        } else if (exportMode === 'selection') {
-          // Export only selected shapes
+        if (exportMode === 'selection' && selectedShapes.length > 0) {
+          // Export only selected shapes - use existing selection
           shapesToExport = selectedShapes;
+          console.log(`🔍 SERVER EXPORT: Using ${selectedShapes.length} selected shapes`);
         } else {
-          // Default to all shapes
-          shapesToExport = shapes;
+          // For artboard/all modes - dynamically generate shapes like batch export does
+          // This mirrors the batch export logic to ensure shapes are always generated
+          const generationBounds = {
+            x: targetArtboard?.x ?? 0,
+            y: targetArtboard?.y ?? 0,
+            width: artboardWidth,
+            height: artboardHeight
+          };
+          
+          // Determine generation settings
+          let generationCallsCount: number;
+          
+          if (exportSettings.generationSetsEnabled && generationSets && generationSets.length > 0) {
+            generationCallsCount = 1;
+            console.log(`🔢 SERVER EXPORT: Shape Sets mode - each set runs once`);
+          } else {
+            if (generationConfigSettings?.generationCountMode === 'fixed') {
+              generationCallsCount = generationConfigSettings?.generationCountDefine || 5;
+            } else if (generationConfigSettings?.generationCountMode === 'range') {
+              generationCallsCount = Math.floor(Math.random() * (exportShapeCountRange[1] - exportShapeCountRange[0] + 1)) + exportShapeCountRange[0];
+            } else {
+              generationCallsCount = 5;
+            }
+            console.log(`🔢 SERVER EXPORT: Using ${generationCallsCount} generation calls`);
+          }
+          
+          // Generate shapes using the same logic as batch export
+          if (exportSettings.generationSetsEnabled && generationSets && generationSets.length > 0) {
+            const enabledSets = generationSets
+              .filter(set => set.enabled)
+              .sort((a, b) => a.generationOrder - b.generationOrder);
+            
+            if (enabledSets.length > 0) {
+              console.log(`🎯 SERVER EXPORT: Using ${enabledSets.length} enabled shape sets`);
+              
+              for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
+                for (let setIndex = 0; setIndex < enabledSets.length; setIndex++) {
+                  const set = enabledSets[setIndex];
+                  
+                  // Calculate repetition count
+                  const useSetRepetition = set.repetitionMode && set.repetitionMode !== 'use-global';
+                  let repetitionCount = 0;
+                  
+                  if (useSetRepetition) {
+                    if (set.repetitionMode === 'fixed') {
+                      repetitionCount = set.repetitionValue || 0;
+                    } else if (set.repetitionMode === 'range' && set.repetitionRange) {
+                      const [min, max] = set.repetitionRange;
+                      repetitionCount = Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+                  } else {
+                    if (globalRepetitionMode === 'fixed') {
+                      repetitionCount = globalRepetitionValue;
+                    } else {
+                      const [min, max] = globalRepetitionRange;
+                      repetitionCount = Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+                  }
+                  
+                  const totalReps = Math.max(1, repetitionCount);
+                  
+                  for (let repIndex = 0; repIndex < totalReps; repIndex++) {
+                    // Calculate shape count
+                    let shapesFromThisCall: number;
+                    const isFixedMode = set.shapeCountMode === ShapeCountMode.FIXED || String(set.shapeCountMode).toLowerCase() === 'fixed';
+                    if (isFixedMode) {
+                      shapesFromThisCall = set.shapeCountFixed || 10;
+                    } else {
+                      shapesFromThisCall = Math.floor(Math.random() * (set.shapeCountRange[1] - set.shapeCountRange[0] + 1)) + set.shapeCountRange[0];
+                    }
+                    
+                    const overrides = {
+                      enabledShapeTypes: new Set(set.enabledShapeTypes as ShapeType[]),
+                      batchConfig: set.batchConfig,
+                      scatterSettings: {
+                        shapeCountMode: set.shapeCountMode,
+                        fixedShapeCount: set.shapeCountFixed,
+                        minCount: set.shapeCountRange[0],
+                        maxCount: set.shapeCountRange[1],
+                        shapeSpecific: set.shapeSpecificProperties
+                      },
+                      setTransform: set.setTransform,
+                      artboardAlignment: set.artboardAlignment
+                    };
+                    
+                    const newShapes = onGenerateShapesWithBatchConfig(
+                      shapesFromThisCall,
+                      generationBounds,
+                      true,
+                      callIndex * 1000 + setIndex,
+                      set.shapeSpecificProperties,
+                      overrides
+                    );
+                    
+                    // Apply z-index offset
+                    newShapes.forEach(shape => {
+                      shape.properties.zIndex += set.generationOrder * 1000;
+                    });
+                    
+                    // Apply visibility/opacity
+                    if (set.setVisibility) {
+                      if (!set.setVisibility.visible) continue;
+                      if (set.setVisibility.opacity !== undefined && set.setVisibility.opacity < 1.0) {
+                        const variance = set.setVisibility.opacityVariance || 0;
+                        newShapes.forEach(shape => {
+                          const randomVariance = (Math.random() - 0.5) * 2 * variance;
+                          const finalOpacity = Math.max(0, Math.min(1, set.setVisibility.opacity + randomVariance));
+                          shape.properties.fillOpacity *= finalOpacity;
+                          shape.properties.strokeOpacity *= finalOpacity;
+                        });
+                      }
+                    }
+                    
+                    shapesToExport.push(...newShapes);
+                  }
+                }
+              }
+            }
+          } else {
+            // No generation sets - use current UI state
+            console.log(`🎯 SERVER EXPORT: Using current UI state for shape generation`);
+            for (let callIndex = 0; callIndex < generationCallsCount; callIndex++) {
+              let shapesFromThisCall: number;
+              if (scatterSettings.shapeCountMode === 'fixed') {
+                shapesFromThisCall = scatterSettings.fixedShapeCount || 10;
+              } else {
+                shapesFromThisCall = Math.floor(Math.random() * (scatterSettings.maxCount - scatterSettings.minCount + 1)) + scatterSettings.minCount;
+              }
+              const newShapes = onGenerateShapesWithBatchConfig(shapesFromThisCall, generationBounds, true, callIndex * 1000);
+              shapesToExport.push(...newShapes);
+            }
+          }
         }
         
-        console.log(`🔍 SERVER EXPORT DEBUG: shapesToExport has ${shapesToExport.length} shapes after mode selection`);
+        console.log(`🔍 SERVER EXPORT DEBUG: Generated ${shapesToExport.length} shapes for server export`);
         
         // Serialize shapes with full data for server rendering (matching projectManager format)
         const serializeShape = (shape: Shape) => ({
