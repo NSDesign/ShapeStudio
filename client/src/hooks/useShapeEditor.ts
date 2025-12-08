@@ -20,13 +20,15 @@ import { generateColor, generateGradientColors } from '../lib/hslColor';
 import { getEffectiveTranslateRange, recalculateGridForArtboard } from '../lib/artboardUtils';
 import { validateArtboardDimensions } from '../lib/artboardPresets';
 import { calculateEchoTransforms, isEchoEnabled, shouldApplyEchoToShape, type AutoMotionContext, type AbsolutePositionContext, type EchoTransform } from '@shared/echoUtils';
-import { DEFAULT_ECHO_SPREAD_CONFIG } from '@shared/schema';
+import { DEFAULT_ECHO_SPREAD_CONFIG, IncrementalIndexDriver } from '@shared/schema';
+import { calculateIncrementalValue, IncrementalConfig, IncrementalContext } from '@shared/incrementalUtils';
 
 // Interface for overriding UI state during generation (used for generation sets)
 export interface GenerationContextOverrides {
   enabledShapeTypes?: Set<ShapeType>;
   batchConfig?: BatchConfigSettings;
   scatterSettings?: Partial<ScatterSettings>;
+  setRepIndex?: number;  // Set repetition index for Index Driver feature
   setTransform?: {
     x: number;
     y: number;
@@ -1584,7 +1586,7 @@ export const useShapeEditor = () => {
   };
 
   // Helper functions for enhanced position calculation
-  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+  const calculatePositionX = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number, setRepIndex: number = 0): number => {
     // If properties are disabled or Position sub-section is disabled, return 0 (no position offset from shape properties)
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesPositionEnabled) {
       return 0;
@@ -1603,16 +1605,19 @@ export const useShapeEditor = () => {
         return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).x;
 
       case 'incremental':
-        // Use actual shape index, with optional reset per batch
-        const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        let value = settings.xPositionStartValue + (effectiveIndex * settings.xPositionIncrement);
+        // Use Index Driver to select which index to use for incremental calculation
+        const driver = settings.positionIncrementalIndexDriver || 'shapeIndex';
+        const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
+        // Apply reset per batch if enabled
+        const adjustedIndex = settings.incrementalResetPerBatch ? effectiveIndex : (effectiveIndex + lastIncrementalIndex);
+        let value = settings.xPositionStartValue + (adjustedIndex * settings.xPositionIncrement);
         
         // Apply modulation based on mode
         if (settings.xPositionModulationMode === 'pixel-value' && settings.xPositionModulationValue > 0) {
           value = value % settings.xPositionModulationValue;
         } else if (settings.xPositionModulationMode === 'shape-count' && settings.xPositionModulationValue > 0) {
           // Modulate by shape count (e.g., every 3 shapes resets)
-          const moduloIndex = effectiveIndex % settings.xPositionModulationValue;
+          const moduloIndex = adjustedIndex % settings.xPositionModulationValue;
           value = settings.xPositionStartValue + (moduloIndex * settings.xPositionIncrement);
         }
         // Note: grid-row mode will be implemented in later task when refactoring to use grid cell index
@@ -1625,7 +1630,7 @@ export const useShapeEditor = () => {
   };
 
   // Helper functions for enhanced width/height calculation
-  const calculateWidth = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+  const calculateWidth = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number, setRepIndex: number = 0): number => {
     // If properties are disabled or Dimensions sub-section is disabled, use fallback to deterministic default size
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesDimensionsEnabled) {
       return 100; // Deterministic fallback size
@@ -1648,14 +1653,16 @@ export const useShapeEditor = () => {
         break;
 
       case 'incremental':
-        // Use actual shape index, with optional reset per batch
-        const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        baseWidth = settings.widthStartValue + (effectiveIndex * settings.widthIncrement);
-        
-        // Apply modulation if enabled
-        if (settings.widthModulationEnabled && settings.widthModulationValue > 0) {
-          baseWidth = baseWidth % settings.widthModulationValue;
-        }
+        // Use Index Driver to select which index to use for incremental calculation
+        const driver = settings.sizeIncrementalIndexDriver || 'shapeIndex';
+        const context: IncrementalContext = { shapeIndex, setRepIndex };
+        const config: IncrementalConfig = {
+          startValue: settings.widthStartValue,
+          increment: settings.widthIncrement,
+          modulationEnabled: settings.widthModulationEnabled,
+          modulationValue: settings.widthModulationValue
+        };
+        baseWidth = calculateIncrementalValue(config, driver, context);
         break;
 
       default:
@@ -1666,7 +1673,7 @@ export const useShapeEditor = () => {
     return Math.max(10, Math.min(1000, baseWidth));
   };
 
-  const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+  const calculateHeight = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number, setRepIndex: number = 0): number => {
     // If properties are disabled or Dimensions sub-section is disabled, use fallback to deterministic default size
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesDimensionsEnabled) {
       return 100; // Deterministic fallback size
@@ -1689,14 +1696,16 @@ export const useShapeEditor = () => {
         break;
 
       case 'incremental':
-        // Use actual shape index, with optional reset per batch
-        const effectiveIndex = settings.sizeIncrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        baseHeight = settings.heightStartValue + (effectiveIndex * settings.heightIncrement);
-        
-        // Apply modulation if enabled
-        if (settings.heightModulationEnabled && settings.heightModulationValue > 0) {
-          baseHeight = baseHeight % settings.heightModulationValue;
-        }
+        // Use Index Driver to select which index to use for incremental calculation
+        const driver = settings.sizeIncrementalIndexDriver || 'shapeIndex';
+        const context: IncrementalContext = { shapeIndex, setRepIndex };
+        const config: IncrementalConfig = {
+          startValue: settings.heightStartValue,
+          increment: settings.heightIncrement,
+          modulationEnabled: settings.heightModulationEnabled,
+          modulationValue: settings.heightModulationValue
+        };
+        baseHeight = calculateIncrementalValue(config, driver, context);
         break;
 
       default:
@@ -1726,7 +1735,7 @@ export const useShapeEditor = () => {
 
 
 
-  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number): number => {
+  const calculatePositionY = (settings: BatchConfigSettings, shapeIndex: number, artboardWidth: number, artboardHeight: number, batchSize: number, setRepIndex: number = 0): number => {
     // If properties are disabled or Position sub-section is disabled, return 0 (no position offset from shape properties)
     if (!settings.propertiesEnabled || !settings.shapePropertiesEnabled || !settings.shapePropertiesPositionEnabled) {
       return 0;
@@ -1745,16 +1754,19 @@ export const useShapeEditor = () => {
         return calculateDirectionalPosition(settings, shapeIndex, artboardWidth, artboardHeight, batchSize).y;
 
       case 'incremental':
-        // Use actual shape index, with optional reset per batch
-        const effectiveIndex = settings.incrementalResetPerBatch ? shapeIndex : (shapeIndex + lastIncrementalIndex);
-        let value = settings.yPositionStartValue + (effectiveIndex * settings.yPositionIncrement);
+        // Use Index Driver to select which index to use for incremental calculation
+        const driver = settings.positionIncrementalIndexDriver || 'shapeIndex';
+        const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
+        // Apply reset per batch if enabled
+        const adjustedIndex = settings.incrementalResetPerBatch ? effectiveIndex : (effectiveIndex + lastIncrementalIndex);
+        let value = settings.yPositionStartValue + (adjustedIndex * settings.yPositionIncrement);
         
         // Apply modulation based on mode
         if (settings.yPositionModulationMode === 'pixel-value' && settings.yPositionModulationValue > 0) {
           value = value % settings.yPositionModulationValue;
         } else if (settings.yPositionModulationMode === 'shape-count' && settings.yPositionModulationValue > 0) {
           // Modulate by shape count (e.g., every 3 shapes resets)
-          const moduloIndex = effectiveIndex % settings.yPositionModulationValue;
+          const moduloIndex = adjustedIndex % settings.yPositionModulationValue;
           value = settings.yPositionStartValue + (moduloIndex * settings.yPositionIncrement);
         }
         // Note: grid-row mode will be implemented in later task when refactoring to use grid cell index
@@ -1767,7 +1779,7 @@ export const useShapeEditor = () => {
   };
 
   // Helper function to calculate blur radius based on mode
-  const calculateBlur = (settings: BatchConfigSettings, shapeIndex: number): number => {
+  const calculateBlur = (settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number => {
     switch (settings.blurMode) {
       case 'range':
         const [minBlur, maxBlur] = settings.blurRange;
@@ -1777,11 +1789,16 @@ export const useShapeEditor = () => {
         return settings.blurDefine;
       
       case 'incremental':
-        let incrementAmount = (settings.blurIncrement || 0) * shapeIndex;
-        if (settings.blurModulationEnabled && settings.blurModulationValue > 0) {
-          incrementAmount = incrementAmount % settings.blurModulationValue;
-        }
-        return settings.blurStartValue + incrementAmount;
+        // Use Index Driver to select which index to use for incremental calculation
+        const driver = settings.blurIncrementalIndexDriver || 'shapeIndex';
+        const context: IncrementalContext = { shapeIndex, setRepIndex };
+        const config: IncrementalConfig = {
+          startValue: settings.blurStartValue,
+          increment: settings.blurIncrement || 0,
+          modulationEnabled: settings.blurModulationEnabled,
+          modulationValue: settings.blurModulationValue
+        };
+        return calculateIncrementalValue(config, driver, context);
       
       default:
         return 0;
@@ -1856,12 +1873,17 @@ export const useShapeEditor = () => {
   const calculateDropShadow = (
     settings: BatchConfigSettings, 
     shapeIndex: number,
+    setRepIndex: number,
     shapeFillColor: string
   ): { enabled: boolean; offsetX: number; offsetY: number; blur: number; spread: number; color: string; opacity: number; blendMode: 'multiply' | 'darken' | 'overlay' } | undefined => {
     if (!settings.dropShadowEnabled) return undefined;
     
     // Apply probability check
     if (Math.random() * 100 > settings.dropShadowProbability) return undefined;
+    
+    // Get the effective index based on Index Driver setting
+    const driver = settings.dropShadowIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     // Calculate offset X based on mode
     let offsetX = 0;
@@ -1874,7 +1896,7 @@ export const useShapeEditor = () => {
         offsetX = settings.dropShadowOffsetX;
         break;
       case 'incremental':
-        offsetX = settings.dropShadowOffsetXStartValue + (shapeIndex * settings.dropShadowOffsetXIncrement);
+        offsetX = settings.dropShadowOffsetXStartValue + (effectiveIndex * settings.dropShadowOffsetXIncrement);
         break;
     }
     
@@ -1889,7 +1911,7 @@ export const useShapeEditor = () => {
         offsetY = settings.dropShadowOffsetY;
         break;
       case 'incremental':
-        offsetY = settings.dropShadowOffsetYStartValue + (shapeIndex * settings.dropShadowOffsetYIncrement);
+        offsetY = settings.dropShadowOffsetYStartValue + (effectiveIndex * settings.dropShadowOffsetYIncrement);
         break;
     }
     
@@ -1904,7 +1926,7 @@ export const useShapeEditor = () => {
         blur = settings.dropShadowBlur;
         break;
       case 'incremental':
-        blur = settings.dropShadowBlurStartValue + (shapeIndex * settings.dropShadowBlurIncrement);
+        blur = settings.dropShadowBlurStartValue + (effectiveIndex * settings.dropShadowBlurIncrement);
         break;
     }
     
@@ -1919,7 +1941,7 @@ export const useShapeEditor = () => {
         spread = settings.dropShadowSpread;
         break;
       case 'incremental':
-        spread = settings.dropShadowSpreadStartValue + (shapeIndex * settings.dropShadowSpreadIncrement);
+        spread = settings.dropShadowSpreadStartValue + (effectiveIndex * settings.dropShadowSpreadIncrement);
         break;
     }
     
@@ -1945,12 +1967,17 @@ export const useShapeEditor = () => {
   const calculateOuterGlow = (
     settings: BatchConfigSettings, 
     shapeIndex: number,
+    setRepIndex: number,
     shapeFillColor: string
   ): { enabled: boolean; blur: number; spread: number; color: string; opacity: number; blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter' } | undefined => {
     if (!settings.outerGlowEnabled) return undefined;
     
     // Apply probability check
     if (Math.random() * 100 > settings.outerGlowProbability) return undefined;
+    
+    // Get the effective index based on Index Driver setting
+    const driver = settings.outerGlowIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     // Calculate blur based on mode
     let blur = 0;
@@ -1963,7 +1990,7 @@ export const useShapeEditor = () => {
         blur = settings.outerGlowBlur;
         break;
       case 'incremental':
-        blur = settings.outerGlowBlurStartValue + (shapeIndex * settings.outerGlowBlurIncrement);
+        blur = settings.outerGlowBlurStartValue + (effectiveIndex * settings.outerGlowBlurIncrement);
         break;
     }
     
@@ -1978,7 +2005,7 @@ export const useShapeEditor = () => {
         spread = settings.outerGlowSpread;
         break;
       case 'incremental':
-        spread = settings.outerGlowSpreadStartValue + (shapeIndex * settings.outerGlowSpreadIncrement);
+        spread = settings.outerGlowSpreadStartValue + (effectiveIndex * settings.outerGlowSpreadIncrement);
         break;
     }
     
@@ -2003,12 +2030,17 @@ export const useShapeEditor = () => {
   const calculateInnerShadow = (
     settings: BatchConfigSettings, 
     shapeIndex: number,
+    setRepIndex: number,
     shapeFillColor: string
   ): { enabled: boolean; offsetX: number; offsetY: number; blur: number; color: string; opacity: number; blendMode: 'multiply' | 'darken' | 'overlay' } | undefined => {
     if (!settings.innerShadowEnabled) return undefined;
     
     // Apply probability check
     if (Math.random() * 100 > settings.innerShadowProbability) return undefined;
+    
+    // Get the effective index based on Index Driver setting
+    const driver = settings.innerShadowIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     // Calculate offset X based on mode
     let offsetX = 0;
@@ -2021,7 +2053,7 @@ export const useShapeEditor = () => {
         offsetX = settings.innerShadowOffsetX;
         break;
       case 'incremental':
-        offsetX = settings.innerShadowOffsetXStartValue + (shapeIndex * settings.innerShadowOffsetXIncrement);
+        offsetX = settings.innerShadowOffsetXStartValue + (effectiveIndex * settings.innerShadowOffsetXIncrement);
         break;
     }
     
@@ -2036,7 +2068,7 @@ export const useShapeEditor = () => {
         offsetY = settings.innerShadowOffsetY;
         break;
       case 'incremental':
-        offsetY = settings.innerShadowOffsetYStartValue + (shapeIndex * settings.innerShadowOffsetYIncrement);
+        offsetY = settings.innerShadowOffsetYStartValue + (effectiveIndex * settings.innerShadowOffsetYIncrement);
         break;
     }
     
@@ -2051,7 +2083,7 @@ export const useShapeEditor = () => {
         blur = settings.innerShadowBlur;
         break;
       case 'incremental':
-        blur = settings.innerShadowBlurStartValue + (shapeIndex * settings.innerShadowBlurIncrement);
+        blur = settings.innerShadowBlurStartValue + (effectiveIndex * settings.innerShadowBlurIncrement);
         break;
     }
     
@@ -2076,12 +2108,17 @@ export const useShapeEditor = () => {
   const calculateInnerGlow = (
     settings: BatchConfigSettings, 
     shapeIndex: number,
+    setRepIndex: number,
     shapeFillColor: string
   ): { enabled: boolean; blur: number; spread: number; color: string; opacity: number; blendMode: 'screen' | 'add' | 'soft-light' | 'color-dodge' | 'lighter' } | undefined => {
     if (!settings.innerGlowEnabled) return undefined;
     
     // Apply probability check
     if (Math.random() * 100 > settings.innerGlowProbability) return undefined;
+    
+    // Get the effective index based on Index Driver setting
+    const driver = settings.innerGlowIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     // Calculate blur based on mode
     let blur = 0;
@@ -2094,7 +2131,7 @@ export const useShapeEditor = () => {
         blur = settings.innerGlowBlur;
         break;
       case 'incremental':
-        blur = settings.innerGlowBlurStartValue + (shapeIndex * settings.innerGlowBlurIncrement);
+        blur = settings.innerGlowBlurStartValue + (effectiveIndex * settings.innerGlowBlurIncrement);
         break;
     }
     
@@ -2109,7 +2146,7 @@ export const useShapeEditor = () => {
         spread = settings.innerGlowSpread;
         break;
       case 'incremental':
-        spread = settings.innerGlowSpreadStartValue + (shapeIndex * settings.innerGlowSpreadIncrement);
+        spread = settings.innerGlowSpreadStartValue + (effectiveIndex * settings.innerGlowSpreadIncrement);
         break;
     }
     
@@ -2130,11 +2167,15 @@ export const useShapeEditor = () => {
   };
 
   // Helper function to calculate stroke width based on mode
-  const calculateStrokeWidth = (settings: BatchConfigSettings, shapeIndex: number): number => {
+  const calculateStrokeWidth = (settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number): number => {
     // Short-circuit if strokeWidthEnabled is false
     if (settings.strokeWidthEnabled === false) {
       return 1; // Default stroke width when disabled
     }
+    
+    // Get the effective index based on Index Driver setting
+    const driver = settings.strokeIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     switch (settings.strokeWidthMode) {
       case 'range':
@@ -2145,7 +2186,7 @@ export const useShapeEditor = () => {
         return settings.strokeWidthDefine ?? 3;
       
       case 'incremental':
-        let incrementAmount = (settings.strokeWidthIncrement ?? 0.5) * shapeIndex;
+        let incrementAmount = (settings.strokeWidthIncrement ?? 0.5) * effectiveIndex;
         if (settings.strokeWidthModulationEnabled && settings.strokeWidthModulationValue > 0) {
           incrementAmount = incrementAmount % settings.strokeWidthModulationValue;
         }
@@ -2157,8 +2198,12 @@ export const useShapeEditor = () => {
   };
 
   // Helper function to calculate conic gradient start angle (returns radians)
-  const calculateConicAngle = (settings: BatchConfigSettings, shapeIndex: number): number => {
+  const calculateConicAngle = (settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number => {
     let angleDegrees: number;
+    
+    // Get the effective index based on Index Driver setting (uses gradient center driver)
+    const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+    const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
     
     switch (settings.fillGradientConicAngleMode) {
       case 'range':
@@ -2167,7 +2212,7 @@ export const useShapeEditor = () => {
         break;
       
       case 'incremental':
-        let incrementAmount = (settings.fillGradientConicAngleIncrement || 0) * shapeIndex;
+        let incrementAmount = (settings.fillGradientConicAngleIncrement || 0) * effectiveIndex;
         if (settings.fillGradientConicAngleModulationEnabled && settings.fillGradientConicAngleModulationValue > 0) {
           // Non-negative modulo to handle negative increments
           const m = settings.fillGradientConicAngleModulationValue;
@@ -2261,6 +2306,9 @@ export const useShapeEditor = () => {
     const effectiveScatterSettings = overrides?.scatterSettings 
       ? { ...scatterSettings, ...overrides.scatterSettings }
       : scatterSettings;
+    
+    // Get set repetition index for Index Driver feature (defaults to 0)
+    const setRepIndex = overrides?.setRepIndex ?? 0;
 
     console.log(`🔍 generateShapesWithBatchConfig: count=${count}, enabledTypes=${effectiveEnabledTypes.length}, types=${effectiveEnabledTypes.join(',')}, hasOverrides=${!!overrides}`);
     
@@ -2325,15 +2373,15 @@ export const useShapeEditor = () => {
           // For grid + incremental: Skip incremental positions here, apply after grid distribution
           // Still apply non-incremental modes (range, value, directional)
           if (!hasXIncremental) {
-            shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+            shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
           }
           if (!hasYIncremental) {
-            shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+            shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
           }
         } else {
           // Normal behavior: apply all position modes
-          shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-          shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+          shapeX += calculatePositionX(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
+          shapeY += calculatePositionY(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
         }
       }
 
@@ -2366,8 +2414,8 @@ export const useShapeEditor = () => {
 
       // Apply width/height from batch config if properties and Dimensions sub-section are enabled
       if (effectiveBatchConfig.propertiesEnabled && effectiveBatchConfig.shapePropertiesEnabled && effectiveBatchConfig.shapePropertiesDimensionsEnabled) {
-        let width = calculateWidth(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
-        let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length);
+        let width = calculateWidth(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
+        let height = calculateHeight(effectiveBatchConfig, index, canvasBounds.width, canvasBounds.height, positions.length, setRepIndex);
 
         // Calculate constrained size based on mode
         const constrainedSize = calculateConstrainedSize(effectiveBatchConfig, width, height);
@@ -2642,15 +2690,15 @@ export const useShapeEditor = () => {
             
             // Add radial-specific parameters when gradient type is radial
             if (gradientType === 'radial') {
-              gradientObj.radialCenterX = calculateRadialCenterX(effectiveBatchConfig, index);
-              gradientObj.radialCenterY = calculateRadialCenterY(effectiveBatchConfig, index);
+              gradientObj.radialCenterX = calculateRadialCenterX(effectiveBatchConfig, index, setRepIndex);
+              gradientObj.radialCenterY = calculateRadialCenterY(effectiveBatchConfig, index, setRepIndex);
             }
             
             // Add conic-specific parameters when gradient type is conic
             if (gradientType === 'conic') {
-              gradientObj.conicAngle = calculateConicAngle(effectiveBatchConfig, index);
-              gradientObj.conicCenterX = calculateConicCenterX(effectiveBatchConfig, index);
-              gradientObj.conicCenterY = calculateConicCenterY(effectiveBatchConfig, index);
+              gradientObj.conicAngle = calculateConicAngle(effectiveBatchConfig, index, setRepIndex);
+              gradientObj.conicCenterX = calculateConicCenterX(effectiveBatchConfig, index, setRepIndex);
+              gradientObj.conicCenterY = calculateConicCenterY(effectiveBatchConfig, index, setRepIndex);
             }
             
             shape.properties.gradient = gradientObj;
@@ -2729,7 +2777,7 @@ export const useShapeEditor = () => {
             // Apply stroke width using helper function that supports all modes (range/define/incremental)
             // Only if strokeWidthEnabled is true, otherwise use a default
             if (effectiveBatchConfig.strokeWidthEnabled !== false) {
-              shape.properties.strokeWidth = calculateStrokeWidth(effectiveBatchConfig, index);
+              shape.properties.strokeWidth = calculateStrokeWidth(effectiveBatchConfig, index, setRepIndex);
             } else {
               shape.properties.strokeWidth = 1; // Default stroke width when disabled
             }
@@ -2795,7 +2843,7 @@ export const useShapeEditor = () => {
           const shouldHaveBlur = Math.random() * 100 < effectiveBatchConfig.blurProbability;
           if (shouldHaveBlur) {
             // Apply blur using helper function that supports all modes (range/define/incremental)
-            shape.properties.blurRadius = calculateBlur(effectiveBatchConfig, index);
+            shape.properties.blurRadius = calculateBlur(effectiveBatchConfig, index, setRepIndex);
             console.log(`🌊 [BLUR] Shape ${index}: Applied blur radius=${shape.properties.blurRadius}px (mode: ${effectiveBatchConfig.blurMode})`);
           } else {
             shape.properties.blurRadius = 0;
@@ -2814,16 +2862,16 @@ export const useShapeEditor = () => {
         
         if (effectiveBatchConfig.shapeEffectsEnabled) {
           // Calculate and apply Drop Shadow
-          shape.properties.dropShadow = calculateDropShadow(effectiveBatchConfig, index, shapeFillColor);
+          shape.properties.dropShadow = calculateDropShadow(effectiveBatchConfig, index, setRepIndex, shapeFillColor);
           
           // Calculate and apply Outer Glow
-          shape.properties.outerGlow = calculateOuterGlow(effectiveBatchConfig, index, shapeFillColor);
+          shape.properties.outerGlow = calculateOuterGlow(effectiveBatchConfig, index, setRepIndex, shapeFillColor);
           
           // Calculate and apply Inner Shadow
-          shape.properties.innerShadow = calculateInnerShadow(effectiveBatchConfig, index, shapeFillColor);
+          shape.properties.innerShadow = calculateInnerShadow(effectiveBatchConfig, index, setRepIndex, shapeFillColor);
           
           // Calculate and apply Inner Glow
-          shape.properties.innerGlow = calculateInnerGlow(effectiveBatchConfig, index, shapeFillColor);
+          shape.properties.innerGlow = calculateInnerGlow(effectiveBatchConfig, index, setRepIndex, shapeFillColor);
         }
 
         // Apply shape transforms if enabled
@@ -2850,13 +2898,17 @@ export const useShapeEditor = () => {
               originY = yMin + Math.random() * (yMax - yMin);
             } else if (defineMode === 'incremental') {
               // Incremental mode: start + increment * index + modulation
+              // Use Index Driver to select which index to use for incremental calculation
+              const originDriver = effectiveBatchConfig.transformOriginIncrementalIndexDriver || 'shapeIndex';
+              const effectiveOriginIndex = originDriver === 'setRepIndex' ? setRepIndex : index;
+              
               const xStart = effectiveBatchConfig.transformOriginXStartValue ?? 0;
               const xIncrement = effectiveBatchConfig.transformOriginXIncrement ?? 10;
               const yStart = effectiveBatchConfig.transformOriginYStartValue ?? 0;
               const yIncrement = effectiveBatchConfig.transformOriginYIncrement ?? 10;
               
-              let xIncrementAmount = xIncrement * index;
-              let yIncrementAmount = yIncrement * index;
+              let xIncrementAmount = xIncrement * effectiveOriginIndex;
+              let yIncrementAmount = yIncrement * effectiveOriginIndex;
               
               // Apply modulation if enabled
               if (effectiveBatchConfig.transformOriginXModulationEnabled && effectiveBatchConfig.transformOriginXModulationValue > 0) {
@@ -2870,6 +2922,7 @@ export const useShapeEditor = () => {
               
               originX = xStart + xIncrementAmount;
               originY = yStart + yIncrementAmount;
+              console.log(`🎯 [TRANSFORM ORIGIN INCREMENTAL] Shape ${index} (driver=${originDriver}, idx=${effectiveOriginIndex}): origin=(${originX}, ${originY})`);
             }
           } else if (effectiveBatchConfig.transformOriginMode === 'predefined-artboard') {
             // Use predefined artboard alignment points
@@ -3057,13 +3110,17 @@ export const useShapeEditor = () => {
           } else if (effectiveBatchConfig.xTransformMode === 'value') {
             positionDeltaX = effectiveBatchConfig.xTransformValue || 0;
           } else if (effectiveBatchConfig.xTransformMode === 'incremental') {
-            let incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * index;
+            // Use Index Driver to select which index to use for incremental calculation (position/scale/rotation share setTransformIncrementalIndexDriver)
+            const posDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+            const effectivePosIndex = posDriver === 'setRepIndex' ? setRepIndex : index;
+            let incrementAmount = (effectiveBatchConfig.xTransformIncrement || 0) * effectivePosIndex;
             const startValue = effectiveBatchConfig.xTransformStartValue ?? 0;
             if (effectiveBatchConfig.xTransformModulationEnabled && effectiveBatchConfig.xTransformModulationValue > 0) {
               const m = effectiveBatchConfig.xTransformModulationValue;
               incrementAmount = ((incrementAmount % m) + m) % m;
             }
             positionDeltaX = startValue + incrementAmount;
+            console.log(`📍 [X POSITION INCREMENTAL] Shape ${index} (driver=${posDriver}, idx=${effectivePosIndex}): start=${startValue}, increment=${incrementAmount}, final=${positionDeltaX}`);
           } else if (effectiveBatchConfig.xTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const artboardWidth = artboardBounds.width;
@@ -3119,13 +3176,17 @@ export const useShapeEditor = () => {
           } else if (effectiveBatchConfig.yTransformMode === 'value') {
             positionDeltaY = effectiveBatchConfig.yTransformValue || 0;
           } else if (effectiveBatchConfig.yTransformMode === 'incremental') {
-            let incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * index;
+            // Use Index Driver to select which index to use for incremental calculation (position/scale/rotation share setTransformIncrementalIndexDriver)
+            const posDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+            const effectivePosIndex = posDriver === 'setRepIndex' ? setRepIndex : index;
+            let incrementAmount = (effectiveBatchConfig.yTransformIncrement || 0) * effectivePosIndex;
             const startValue = effectiveBatchConfig.yTransformStartValue ?? 0;
             if (effectiveBatchConfig.yTransformModulationEnabled && effectiveBatchConfig.yTransformModulationValue > 0) {
               const m = effectiveBatchConfig.yTransformModulationValue;
               incrementAmount = ((incrementAmount % m) + m) % m;
             }
             positionDeltaY = startValue + incrementAmount;
+            console.log(`📍 [Y POSITION INCREMENTAL] Shape ${index} (driver=${posDriver}, idx=${effectivePosIndex}): start=${startValue}, increment=${incrementAmount}, final=${positionDeltaY}`);
           } else if (effectiveBatchConfig.yTransformMode === 'align') {
             // Alignment mode: align shape anchor to artboard anchor
             const artboardHeight = artboardBounds.height;
@@ -3188,12 +3249,15 @@ export const useShapeEditor = () => {
               scaleX = Math.max(0.1, baseScale);
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
-              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * index;
+              // Use Index Driver to select which index to use for incremental calculation (scale/rotation share setTransformIncrementalIndexDriver)
+              const scaleDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+              const effectiveScaleIndex = scaleDriver === 'setRepIndex' ? setRepIndex : index;
+              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * effectiveScaleIndex;
               const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
               scaleY = Math.max(0.1, finalScale);
-              console.log(`📐 [SCALE INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
+              console.log(`📐 [SCALE INCREMENTAL] Shape ${index} (driver=${scaleDriver}, idx=${effectiveScaleIndex}): startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
           } else {
             if (effectiveBatchConfig.scaleXMode === 'range') {
@@ -3204,11 +3268,14 @@ export const useShapeEditor = () => {
               const baseScale = (effectiveBatchConfig.scaleXValue || 100) / 100;
               scaleX = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleXMode === 'incremental') {
-              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * index;
+              // Use Index Driver to select which index to use for incremental calculation (scale/rotation share setTransformIncrementalIndexDriver)
+              const scaleDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+              const effectiveScaleIndex = scaleDriver === 'setRepIndex' ? setRepIndex : index;
+              const incrementAmount = ((effectiveBatchConfig.scaleXIncrement || 0) / 100) * effectiveScaleIndex;
               const startScale = (effectiveBatchConfig.scaleXStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleX = Math.max(0.1, finalScale);
-              console.log(`📐 [SCALE X INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
+              console.log(`📐 [SCALE X INCREMENTAL] Shape ${index} (driver=${scaleDriver}, idx=${effectiveScaleIndex}): startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
 
             if (effectiveBatchConfig.scaleYMode === 'range') {
@@ -3219,11 +3286,14 @@ export const useShapeEditor = () => {
               const baseScale = (effectiveBatchConfig.scaleYValue || 100) / 100;
               scaleY = Math.max(0.1, baseScale);
             } else if (effectiveBatchConfig.scaleYMode === 'incremental') {
-              const incrementAmount = ((effectiveBatchConfig.scaleYIncrement || 0) / 100) * index;
+              // Use Index Driver to select which index to use for incremental calculation (scale/rotation share setTransformIncrementalIndexDriver)
+              const scaleDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+              const effectiveScaleIndex = scaleDriver === 'setRepIndex' ? setRepIndex : index;
+              const incrementAmount = ((effectiveBatchConfig.scaleYIncrement || 0) / 100) * effectiveScaleIndex;
               const startScale = (effectiveBatchConfig.scaleYStartValue ?? 100) / 100;
               const finalScale = startScale + incrementAmount;
               scaleY = Math.max(0.1, finalScale);
-              console.log(`📐 [SCALE Y INCREMENTAL] Shape ${index}: startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
+              console.log(`📐 [SCALE Y INCREMENTAL] Shape ${index} (driver=${scaleDriver}, idx=${effectiveScaleIndex}): startScale=${startScale}, increment=${incrementAmount}, finalScale=${finalScale}`);
             }
           }
 
@@ -3237,14 +3307,17 @@ export const useShapeEditor = () => {
             rotation = effectiveBatchConfig.rotationValue || 0;
             console.log(`🔄 [ENHANCED ROTATION VALUE] Shape ${index}: fixed value=${rotation}°`);
           } else if (effectiveBatchConfig.rotationMode === 'incremental') {
-            let incrementAmount = (effectiveBatchConfig.rotationIncrement || 0) * index;
+            // Use Index Driver to select which index to use for incremental calculation (scale/rotation share setTransformIncrementalIndexDriver)
+            const rotationDriver = effectiveBatchConfig.setTransformIncrementalIndexDriver || 'shapeIndex';
+            const effectiveRotIndex = rotationDriver === 'setRepIndex' ? setRepIndex : index;
+            let incrementAmount = (effectiveBatchConfig.rotationIncrement || 0) * effectiveRotIndex;
             const startValue = effectiveBatchConfig.rotationStartValue ?? 0;
             if (effectiveBatchConfig.rotationModulationEnabled && effectiveBatchConfig.rotationModulation > 0) {
               const m = effectiveBatchConfig.rotationModulation;
               incrementAmount = ((incrementAmount % m) + m) % m;
             }
             rotation = startValue + incrementAmount;
-            console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index}: start=${startValue}°, increment=${incrementAmount}°, final=${rotation}°`);
+            console.log(`🔄 [ENHANCED ROTATION INCREMENTAL] Shape ${index} (driver=${rotationDriver}, idx=${effectiveRotIndex}): start=${startValue}°, increment=${incrementAmount}°, final=${rotation}°`);
           }
 
           // Apply transforms relative to origin
@@ -3736,6 +3809,7 @@ export const useShapeEditor = () => {
               enabledShapeTypes: new Set(set.enabledShapeTypes),
               batchConfig: set.batchConfig,
               scatterSettings: {},
+              setRepIndex: repIndex,  // Pass set repetition index for Index Driver feature
               setTransform: set.setTransform,
               artboardAlignment: set.artboardAlignment
             }

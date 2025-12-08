@@ -2980,6 +2980,11 @@ function BatchConfigDialogInner({
                                     />
                                     <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
+                                  <IndexDriverSelect
+                                    value={currentSettings.sizeIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ sizeIncrementalIndexDriver: value })}
+                                    testId="select-height-index-driver"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -3450,6 +3455,11 @@ function BatchConfigDialogInner({
                                       />
                                     </div>
                                   )}
+                                  <IndexDriverSelect
+                                    value={currentSettings.positionIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ positionIncrementalIndexDriver: value })}
+                                    testId="select-y-position-index-driver"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -4594,6 +4604,11 @@ function BatchConfigDialogInner({
                                                       />
                                                     )}
                                                   </div>
+                                                  <IndexDriverSelect
+                                                    value={currentSettings.gradientCenterIncrementalIndexDriver}
+                                                    onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
+                                                    testId="select-radial-center-x-index-driver"
+                                                  />
                                                 </div>
                                               )}
                                             </div>
@@ -4736,6 +4751,11 @@ function BatchConfigDialogInner({
                                                       />
                                                     )}
                                                   </div>
+                                                  <IndexDriverSelect
+                                                    value={currentSettings.gradientCenterIncrementalIndexDriver}
+                                                    onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
+                                                    testId="select-radial-center-y-index-driver"
+                                                  />
                                                 </div>
                                               )}
                                             </div>
@@ -5010,6 +5030,11 @@ function BatchConfigDialogInner({
                                                           />
                                                         )}
                                                       </div>
+                                                      <IndexDriverSelect
+                                                        value={currentSettings.gradientCenterIncrementalIndexDriver}
+                                                        onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
+                                                        testId="select-conic-center-x-index-driver"
+                                                      />
                                                     </div>
                                                   )}
                                                 </div>
@@ -5128,6 +5153,11 @@ function BatchConfigDialogInner({
                                                           />
                                                         )}
                                                       </div>
+                                                      <IndexDriverSelect
+                                                        value={currentSettings.gradientCenterIncrementalIndexDriver}
+                                                        onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
+                                                        testId="select-conic-center-y-index-driver"
+                                                      />
                                                     </div>
                                                   )}
                                                 </div>
@@ -5276,6 +5306,11 @@ function BatchConfigDialogInner({
                                                     />
                                                   )}
                                                 </div>
+                                                <IndexDriverSelect
+                                                  value={currentSettings.gradientCenterIncrementalIndexDriver}
+                                                  onChange={(value) => handleSettingsUpdate({ gradientCenterIncrementalIndexDriver: value })}
+                                                  testId="select-conic-angle-index-driver"
+                                                />
                                               </div>
                                             )}
                                           </div>
@@ -5437,6 +5472,11 @@ function BatchConfigDialogInner({
                                     </div>
                                   )}
                                 </div>
+                                <IndexDriverSelect
+                                  value={currentSettings.fillOpacityIncrementalIndexDriver}
+                                  onChange={(value) => handleSettingsUpdate({ fillOpacityIncrementalIndexDriver: value })}
+                                  testId="select-fill-opacity-index-driver"
+                                />
                                 <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
                               </div>
                             )}
@@ -5632,6 +5672,11 @@ function BatchConfigDialogInner({
                                     </div>
                                   )}
                                 </div>
+                                <IndexDriverSelect
+                                  value={currentSettings.strokeIncrementalIndexDriver}
+                                  onChange={(value) => handleSettingsUpdate({ strokeIncrementalIndexDriver: value })}
+                                  testId="select-stroke-width-index-driver"
+                                />
                                 <p className="text-xs text-slate-500">Progressive stroke width with optional modulation wrap</p>
                               </div>
                             )}
@@ -6012,6 +6057,11 @@ function BatchConfigDialogInner({
                                     </div>
                                   )}
                                 </div>
+                                <IndexDriverSelect
+                                  value={currentSettings.strokeIncrementalIndexDriver}
+                                  onChange={(value) => handleSettingsUpdate({ strokeIncrementalIndexDriver: value })}
+                                  testId="select-stroke-opacity-index-driver"
+                                />
                                 <p className="text-xs text-slate-500">Progressive opacity with optional modulation wrap</p>
                               </div>
                             )}
@@ -6216,6 +6266,11 @@ function BatchConfigDialogInner({
                                   />
                                 </div>
                               )}
+                              <IndexDriverSelect
+                                value={currentSettings.setTransformIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
+                                testId="select-x-transform-index-driver"
+                              />
                             </div>
                           )}
                           
@@ -6456,6 +6511,11 @@ function BatchConfigDialogInner({
                                   />
                                 </div>
                               )}
+                              <IndexDriverSelect
+                                value={currentSettings.setTransformIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
+                                testId="select-y-transform-index-driver"
+                              />
                             </div>
                           )}
                           

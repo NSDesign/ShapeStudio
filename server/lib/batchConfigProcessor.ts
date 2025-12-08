@@ -372,8 +372,12 @@ function calculateStrokeWidth(settings: BatchConfigSettings, shapeIndex: number)
 /**
  * Helper function to calculate conic gradient start angle (returns radians)
  */
-function calculateConicAngle(settings: BatchConfigSettings, shapeIndex: number): number {
+function calculateConicAngle(settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number {
   let angleDegrees: number;
+  
+  // Get the effective index based on Index Driver setting (uses gradient center driver)
+  const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+  const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
   
   switch (settings.fillGradientConicAngleMode) {
     case 'range':
@@ -382,7 +386,7 @@ function calculateConicAngle(settings: BatchConfigSettings, shapeIndex: number):
       break;
     
     case 'incremental':
-      let incrementAmount = (settings.fillGradientConicAngleIncrement || 0) * shapeIndex;
+      let incrementAmount = (settings.fillGradientConicAngleIncrement || 0) * effectiveIndex;
       if (settings.fillGradientConicAngleModulationEnabled && settings.fillGradientConicAngleModulationValue > 0) {
         // Non-negative modulo to handle negative increments
         const m = settings.fillGradientConicAngleModulationValue;
@@ -476,6 +480,9 @@ export function generateShapesWithBatchConfig(
   
   console.log(`✅ [SERVER] Phase 1: Generated ${positions.length} ${anyPositioningSystemActive ? 'deterministic (0,0)' : 'random scatter'} positions`);
 
+  // Get set repetition index for Index Driver support
+  const setRepIndex = generationContext?.generationIndex ?? 0;
+  
   // Create shapes with initial positions
   const newShapes = positions.map((position, index) => {
     const randomType = enabledTypes[Math.floor(Math.random() * enabledTypes.length)];
@@ -692,15 +699,15 @@ export function generateShapesWithBatchConfig(
             
             // Add radial-specific parameters when gradient type is radial
             if (gradientType === 'radial') {
-              gradientObj.radialCenterX = calculateRadialCenterX(batchConfig, index);
-              gradientObj.radialCenterY = calculateRadialCenterY(batchConfig, index);
+              gradientObj.radialCenterX = calculateRadialCenterX(batchConfig, index, setRepIndex);
+              gradientObj.radialCenterY = calculateRadialCenterY(batchConfig, index, setRepIndex);
             }
             
             // Add conic-specific parameters when gradient type is conic
             if (gradientType === 'conic') {
-              gradientObj.conicAngle = calculateConicAngle(batchConfig, index);
-              gradientObj.conicCenterX = calculateConicCenterX(batchConfig, index);
-              gradientObj.conicCenterY = calculateConicCenterY(batchConfig, index);
+              gradientObj.conicAngle = calculateConicAngle(batchConfig, index, setRepIndex);
+              gradientObj.conicCenterX = calculateConicCenterX(batchConfig, index, setRepIndex);
+              gradientObj.conicCenterY = calculateConicCenterY(batchConfig, index, setRepIndex);
             }
             
             shape.properties.gradient = gradientObj;

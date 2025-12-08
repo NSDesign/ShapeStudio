@@ -45,8 +45,12 @@ export function calculateLinearAngle(settings: BatchConfigSettings, shapeIndex: 
   return angleDegrees;
 }
 
-export function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex: number): number {
+export function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number {
   let result: number;
+  
+  // Get the effective index based on Index Driver setting
+  const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+  const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
   
   switch (settings.fillGradientConicCenterXMode) {
     case 'range':
@@ -56,7 +60,7 @@ export function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex:
     
     case 'incremental':
       const startX = settings.fillGradientConicCenterXStartValue ?? 50;
-      const incrementX = (settings.fillGradientConicCenterXIncrement || 0) * shapeIndex;
+      const incrementX = (settings.fillGradientConicCenterXIncrement || 0) * effectiveIndex;
       result = startX + incrementX;
       
       if (settings.fillGradientConicCenterXModulationEnabled && settings.fillGradientConicCenterXModulationValue > 0) {
@@ -74,8 +78,12 @@ export function calculateConicCenterX(settings: BatchConfigSettings, shapeIndex:
   return Math.max(0, Math.min(100, result));
 }
 
-export function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex: number): number {
+export function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number {
   let result: number;
+  
+  // Get the effective index based on Index Driver setting
+  const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+  const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
   
   switch (settings.fillGradientConicCenterYMode) {
     case 'range':
@@ -85,7 +93,7 @@ export function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex:
     
     case 'incremental':
       const startY = settings.fillGradientConicCenterYStartValue ?? 50;
-      const incrementY = (settings.fillGradientConicCenterYIncrement || 0) * shapeIndex;
+      const incrementY = (settings.fillGradientConicCenterYIncrement || 0) * effectiveIndex;
       result = startY + incrementY;
       
       if (settings.fillGradientConicCenterYModulationEnabled && settings.fillGradientConicCenterYModulationValue > 0) {
@@ -103,8 +111,12 @@ export function calculateConicCenterY(settings: BatchConfigSettings, shapeIndex:
   return Math.max(0, Math.min(100, result));
 }
 
-export function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex: number): number {
+export function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number {
   let result: number;
+  
+  // Get the effective index based on Index Driver setting
+  const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+  const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
   
   switch (settings.fillGradientRadialCenterXMode) {
     case 'range':
@@ -114,7 +126,7 @@ export function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex
     
     case 'incremental':
       const startX = settings.fillGradientRadialCenterXStartValue ?? 50;
-      const incrementX = (settings.fillGradientRadialCenterXIncrement || 0) * shapeIndex;
+      const incrementX = (settings.fillGradientRadialCenterXIncrement || 0) * effectiveIndex;
       result = startX + incrementX;
       
       if (settings.fillGradientRadialCenterXModulationEnabled && settings.fillGradientRadialCenterXModulationValue > 0) {
@@ -132,8 +144,12 @@ export function calculateRadialCenterX(settings: BatchConfigSettings, shapeIndex
   return Math.max(0, Math.min(100, result));
 }
 
-export function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex: number): number {
+export function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex: number, setRepIndex: number = 0): number {
   let result: number;
+  
+  // Get the effective index based on Index Driver setting
+  const driver = settings.gradientCenterIncrementalIndexDriver || 'shapeIndex';
+  const effectiveIndex = driver === 'setRepIndex' ? setRepIndex : shapeIndex;
   
   switch (settings.fillGradientRadialCenterYMode) {
     case 'range':
@@ -143,7 +159,7 @@ export function calculateRadialCenterY(settings: BatchConfigSettings, shapeIndex
     
     case 'incremental':
       const startY = settings.fillGradientRadialCenterYStartValue ?? 50;
-      const incrementY = (settings.fillGradientRadialCenterYIncrement || 0) * shapeIndex;
+      const incrementY = (settings.fillGradientRadialCenterYIncrement || 0) * effectiveIndex;
       result = startY + incrementY;
       
       if (settings.fillGradientRadialCenterYModulationEnabled && settings.fillGradientRadialCenterYModulationValue > 0) {
