@@ -2720,13 +2720,14 @@ export class HighResolutionExportService {
     
     // Create the full-size canvas as a Sharp instance
     // Set limitInputPixels to false to allow processing very large print files (A0+ at 600 DPI)
-    const channels = shouldFlattenToRgb ? 3 : 4;
+    // IMPORTANT: Always use 4 channels (RGBA) for compositing to avoid channel mismatch issues
+    // The flatten to RGB happens in convertToTiff() if shouldFlattenToRgb is true
     let compositeImage = sharp({
       create: {
         width: canvasWidth,
         height: canvasHeight,
-        channels: channels as 3 | 4,
-        background: sharpBackground
+        channels: 4,
+        background: { ...sharpBackground, alpha: 255 }
       },
       limitInputPixels: false
     });
