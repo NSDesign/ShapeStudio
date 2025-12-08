@@ -2872,6 +2872,7 @@ export class HighResolutionExportService {
   
   /**
    * Generate HTML for rendering a single tile with offset translation
+   * Uses the same rendering logic as generateRendererHtml but with tile offset support
    */
   private generateTileRendererHtml(data: any): string {
     const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight } = data;
@@ -2900,7 +2901,194 @@ export class HighResolutionExportService {
 <body>
   <canvas id="exportCanvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
   <script>
-    const renderData = ${JSON.stringify(tileData)};
+    const RENDER_DATA = ${JSON.stringify(tileData)};
+    const TILE_OFFSET_X = ${tileOffsetX};
+    const TILE_OFFSET_Y = ${tileOffsetY};
+    
+    function drawPolygon(ctx, points) {
+      if (!points || points.length === 0) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+    }
+    
+    function drawLine(ctx, points) {
+      if (!points || points.length < 2) return;
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+    }
+    
+    function drawSmoothSpline(ctx, points, controlPoints) {
+      if (!points || points.length < 2) return;
+      
+      if (controlPoints && controlPoints.length >= (points.length - 1) * 2) {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp1 = controlPoints[i * 2];
+          const cp2 = controlPoints[i * 2 + 1];
+          ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, points[i + 1].x, points[i + 1].y);
+        }
+      } else {
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+      }
+    }
+    
+    function drawSplineCircle(ctx, points, controlPoints, closed) {
+      if (!points || points.length < 4) return;
+      if (!controlPoints || controlPoints.length < 8) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      
+      if (closed !== false) {
+        ctx.closePath();
+      }
+    }
+    
+    function drawSplineRing(ctx, points, controlPoints) {
+      if (!points || points.length < 8) return;
+      if (!controlPoints || controlPoints.length < 16) {
+        drawPolygon(ctx, points);
+        return;
+      }
+      
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[(i + 1) % 4];
+        const cp1 = controlPoints[i * 2];
+        const cp2 = controlPoints[i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+      
+      ctx.moveTo(points[4].x, points[4].y);
+      for (let i = 0; i < 4; i++) {
+        const endPoint = points[4 + ((i + 1) % 4)];
+        const cp1 = controlPoints[8 + i * 2];
+        const cp2 = controlPoints[8 + i * 2 + 1];
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y);
+      }
+      ctx.closePath();
+    }
+    
+    function getShapeBounds(points) {
+      if (!points || points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      points.forEach(function(p) {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+    
+    function renderShape(ctx, shape) {
+      if (!shape.points || shape.points.length === 0) return;
+      
+      ctx.save();
+      
+      ctx.globalCompositeOperation = shape.properties.blendMode || 'source-over';
+      
+      const artboardX = RENDER_DATA.artboard.x || 0;
+      const artboardY = RENDER_DATA.artboard.y || 0;
+      ctx.translate(shape.transform.x - artboardX, shape.transform.y - artboardY);
+      ctx.rotate((shape.transform.rotation || 0) * Math.PI / 180);
+      ctx.scale(shape.transform.scaleX || 1, shape.transform.scaleY || 1);
+      ctx.transform(1, shape.transform.skewX || 0, shape.transform.skewY || 0, 1, 0, 0);
+      
+      if (shape.properties.blurRadius > 0) {
+        ctx.filter = 'blur(' + shape.properties.blurRadius + 'px)';
+      }
+      
+      ctx.beginPath();
+      
+      const shapeType = shape.type;
+      if (shapeType === 'line' || shapeType === 'line-vector') {
+        drawLine(ctx, shape.points);
+      } else if (shapeType === 'spline-circle' || shapeType === 'spline-ellipse') {
+        drawSplineCircle(ctx, shape.points, shape.controlPoints, shape.closed);
+      } else if (shapeType === 'spline-ring') {
+        drawSplineRing(ctx, shape.points, shape.controlPoints);
+      } else if (shapeType === 'bezier' || shapeType === 'smooth-spline' || shapeType === 'cubic') {
+        drawSmoothSpline(ctx, shape.points, shape.controlPoints);
+        if (shape.closed) ctx.closePath();
+      } else {
+        drawPolygon(ctx, shape.points);
+      }
+      
+      if (shapeType !== 'line' && shapeType !== 'line-vector' && shape.properties.fillColor !== 'none') {
+        ctx.globalAlpha = shape.properties.fillOpacity || 1;
+        
+        if (shape.properties.gradient) {
+          const bounds = getShapeBounds(shape.points);
+          let gradient;
+          const gradientType = shape.properties.gradient.type;
+          
+          if (gradientType === 'conic') {
+            const conicCenterXPercent = shape.properties.gradient.conicCenterX ?? 50;
+            const conicCenterYPercent = shape.properties.gradient.conicCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * conicCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * conicCenterYPercent / 100);
+            const startAngle = (shape.properties.gradient.conicAngle || 0);
+            gradient = ctx.createConicGradient(startAngle, cx, cy);
+          } else if (gradientType === 'radial') {
+            const radialCenterXPercent = shape.properties.gradient.radialCenterX ?? 50;
+            const radialCenterYPercent = shape.properties.gradient.radialCenterY ?? 50;
+            const cx = bounds.x + (bounds.width * radialCenterXPercent / 100);
+            const cy = bounds.y + (bounds.height * radialCenterYPercent / 100);
+            const radius = Math.max(bounds.width, bounds.height) / 2;
+            gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+          } else {
+            const angle = (shape.properties.gradient.angle || 0) * Math.PI / 180;
+            const cx = bounds.x + bounds.width / 2;
+            const cy = bounds.y + bounds.height / 2;
+            const length = Math.max(bounds.width, bounds.height) / 2;
+            const x1 = cx - Math.cos(angle) * length;
+            const y1 = cy - Math.sin(angle) * length;
+            const x2 = cx + Math.cos(angle) * length;
+            const y2 = cy + Math.sin(angle) * length;
+            gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+          }
+          
+          shape.properties.gradient.stops.forEach(function(stop) {
+            gradient.addColorStop(stop.offset, stop.color);
+          });
+          
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = shape.properties.fillColor;
+        }
+        
+        if (shapeType === 'spline-ring') {
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
+      }
+      
+      if (shape.properties.strokeColor !== 'none' && shape.properties.strokeWidth > 0) {
+        ctx.globalAlpha = shape.properties.strokeOpacity || 1;
+        ctx.strokeStyle = shape.properties.strokeColor;
+        ctx.lineWidth = shape.properties.strokeWidth;
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    }
     
     window.renderShapes = function() {
       try {
@@ -2908,100 +3096,25 @@ export class HighResolutionExportService {
         const ctx = canvas.getContext('2d');
         
         // Apply tile offset translation (negative to shift content into view)
-        ctx.translate(-${tileOffsetX}, -${tileOffsetY});
+        ctx.translate(-TILE_OFFSET_X, -TILE_OFFSET_Y);
         
         // Fill background if not transparent
-        if ('${backgroundColor}' !== 'transparent') {
-          ctx.fillStyle = '${backgroundColor}';
-          ctx.fillRect(${tileOffsetX}, ${tileOffsetY}, ${canvasWidth}, ${canvasHeight});
+        const bgColor = RENDER_DATA.exportSettings?.backgroundColor || 'transparent';
+        if (bgColor !== 'transparent') {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(TILE_OFFSET_X, TILE_OFFSET_Y, ${canvasWidth}, ${canvasHeight});
         }
         
-        const shapes = renderData.shapes || [];
-        const scale = renderData.scale || 1;
-        const printExpansion = renderData.exportSettings?.printExpansion || 0;
+        const shapes = RENDER_DATA.shapes || [];
         
-        // Render each shape with proper transforms
-        shapes.forEach((shapeData, index) => {
-          ctx.save();
-          
-          // Apply shape transforms
-          const x = (shapeData.x + printExpansion) * scale;
-          const y = (shapeData.y + printExpansion) * scale;
-          const rotation = shapeData.rotation || 0;
-          
-          ctx.translate(x, y);
-          if (rotation !== 0) {
-            ctx.rotate(rotation * Math.PI / 180);
-          }
-          
-          // Set fill style
-          ctx.fillStyle = shapeData.fillColor || '#000000';
-          ctx.globalAlpha = shapeData.fillOpacity !== undefined ? shapeData.fillOpacity : 1;
-          
-          // Draw based on shape type
-          const type = shapeData.type;
-          const w = (shapeData.width || 0) * scale;
-          const h = (shapeData.height || 0) * scale;
-          const r = (shapeData.radius || 0) * scale;
-          
-          ctx.beginPath();
-          
-          if (type === 'rectangle' || type === 'roundedRectangle') {
-            const cornerRadius = (shapeData.cornerRadius || 0) * scale;
-            if (cornerRadius > 0) {
-              ctx.roundRect(-w/2, -h/2, w, h, cornerRadius);
-            } else {
-              ctx.rect(-w/2, -h/2, w, h);
-            }
-          } else if (type === 'ellipse' || type === 'circle') {
-            const rx = w / 2;
-            const ry = h / 2 || rx;
-            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-          } else if (type === 'triangle') {
-            ctx.moveTo(0, -h/2);
-            ctx.lineTo(w/2, h/2);
-            ctx.lineTo(-w/2, h/2);
-            ctx.closePath();
-          } else if (type === 'polygon' || type === 'star') {
-            const sides = shapeData.sides || 5;
-            const innerRadius = (shapeData.innerRadius || r * 0.5) * scale;
-            const outerRadius = r;
-            
-            if (type === 'star') {
-              for (let i = 0; i < sides * 2; i++) {
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
-                const angle = (i * Math.PI / sides) - Math.PI / 2;
-                const px = Math.cos(angle) * radius;
-                const py = Math.sin(angle) * radius;
-                if (i === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-              }
-            } else {
-              for (let i = 0; i < sides; i++) {
-                const angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
-                const px = Math.cos(angle) * outerRadius;
-                const py = Math.sin(angle) * outerRadius;
-                if (i === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-              }
-            }
-            ctx.closePath();
-          } else {
-            // Default rectangle fallback
-            ctx.rect(-w/2, -h/2, w, h);
-          }
-          
-          ctx.fill();
-          
-          // Draw stroke if present
-          if (shapeData.strokeWidth && shapeData.strokeColor) {
-            ctx.strokeStyle = shapeData.strokeColor;
-            ctx.lineWidth = shapeData.strokeWidth * scale;
-            ctx.globalAlpha = shapeData.strokeOpacity !== undefined ? shapeData.strokeOpacity : 1;
-            ctx.stroke();
-          }
-          
-          ctx.restore();
+        // Sort shapes by z-index for proper layering
+        const sortedShapes = [...shapes].sort((a, b) => 
+          (a.properties?.zIndex || 0) - (b.properties?.zIndex || 0)
+        );
+        
+        // Render each shape
+        sortedShapes.forEach(function(shape) {
+          renderShape(ctx, shape);
         });
         
         return { success: true, shapesRendered: shapes.length };
