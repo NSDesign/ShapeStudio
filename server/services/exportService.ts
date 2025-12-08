@@ -2785,6 +2785,11 @@ export class HighResolutionExportService {
         return (window as any).renderShapes();
       });
       
+      // Log debug info for first tile only
+      if (tile.index === 0 && tileRenderResult.debug) {
+        console.log(`[HighResExport] Tile 1 debug:`, JSON.stringify(tileRenderResult.debug, null, 2));
+      }
+      
       if (!tileRenderResult.success) {
         throw new Error(`Tile ${tile.index + 1} render failed: ${tileRenderResult.error}`);
       }
@@ -3107,6 +3112,16 @@ export class HighResolutionExportService {
         
         const shapes = RENDER_DATA.shapes || [];
         
+        // Debug: Log shape count and first shape structure
+        const debugInfo = {
+          shapeCount: shapes.length,
+          firstShapeKeys: shapes.length > 0 ? Object.keys(shapes[0]) : [],
+          firstShapeTransform: shapes.length > 0 ? shapes[0].transform : null,
+          firstShapeProperties: shapes.length > 0 ? shapes[0].properties : null,
+          firstShapeType: shapes.length > 0 ? shapes[0].type : null,
+          firstShapePointsCount: shapes.length > 0 && shapes[0].points ? shapes[0].points.length : 0
+        };
+        
         // Sort shapes by z-index for proper layering
         const sortedShapes = [...shapes].sort((a, b) => 
           (a.properties?.zIndex || 0) - (b.properties?.zIndex || 0)
@@ -3117,7 +3132,7 @@ export class HighResolutionExportService {
           renderShape(ctx, shape);
         });
         
-        return { success: true, shapesRendered: shapes.length };
+        return { success: true, shapesRendered: shapes.length, debug: debugInfo };
       } catch (error) {
         return { success: false, error: error.message };
       }
